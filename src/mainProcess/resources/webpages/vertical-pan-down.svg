@@ -1,0 +1,8 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="47" cy="47" r="30" stroke="black" stroke-width="3" fill="red" fill-opacity="0" />
+    <line x1="68" y1="68" x2="84" y2="84" stroke="black" stroke-width="6"></line>
+    <!-- <polyline points="42,39 42,27 22,47 42,67 42,55 72,55 72,39 42,39" stroke="black" stroke-width="0" fill="black" fill-opacity="1"></polyline> -->
+    <!-- <polyline points="39,42 27,42 47,22 67,42 55,42 55,72 39,72 39,42" stroke="black" stroke-width="0" fill="black" fill-opacity="1"></polyline> -->
+    <!-- <polyline points="52,39 52,27 72,47 52,67 52,55 22,55 22,39 52,39" stroke="black" stroke-width="0" fill="black" fill-opacity="1"></polyline> -->
+    <polyline points="39,52 27,52 47,72 67,52 55,52 55,22 39,22 39,52" stroke="black" stroke-width="0" fill="black" fill-opacity="1"></polyline>
+</svg>

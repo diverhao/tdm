@@ -1,0 +1,25 @@
+{
+	"Canvas": {
+		"type": "Canvas",
+		"widgetKey": "Canvas",
+		"key": "Canvas",
+		"style": {
+			"position": "absolute",
+			"display": "inline-block",
+			"backgroundColor": "rgba(0, 0, 255, 0)",
+			"margin": 0,
+			"border": 0,
+			"padding": 0,
+			"left": 0,
+			"top": 0,
+			"height": 540,
+			"width": 695,
+			"overflow": "hidden"
+		},
+		"macros": [],
+		"replaceMacros": false,
+		"windowName": ""
+	}
+}
+
+

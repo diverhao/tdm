@@ -1,0 +1,50 @@
+{
+	"Untitled-1": {
+		"EPICS Environment": { "EPICS_CA_ADDR_LIST": ["localhost", "160.91.228.17", "localhost2"], "EPICS_CA_AUTO_ADDR_LIST": "Yes" },
+		"EPICS Custom Environment": { "Default TDL Files": ["/Users/1h7/tmp/Untitled.tdl"], "Default Search Paths": ["./"] },
+		"Preset Colors": {
+			"Background": ["255", "255", "255", "100"],
+			"Attention": ["255", "160", "0", "100"],
+			"Button Background": ["210", "210", "210", "100"],
+			"Disconnected": ["200", "0", "200", "80"],
+			"Invalid": ["255", "0", "255", "100"],
+			"Major": ["255", "0", "0", "100"],
+			"Minor": ["255", "128", "0", "100"],
+			"Off": ["60", "100", "60", "100"],
+			"OK": ["0", "255", "0", "100"],
+			"On": ["0", "255", "0", "100"],
+			"Read Background": ["240", "240", "240", "100"],
+			"Stop": ["255", "0", "0", "100"],
+			"Text": ["0", "0", "0", "100"],
+			"Write Background": ["128", "255", "255", "100"],
+			"Header Background": ["77", "77", "77", "100"],
+			"Header Foreground": ["255", "255", "255", "100"],
+			"Active Text": ["255", "255", "0", "100"],
+			"Grid": ["128", "128", "128", "100"]
+		}
+	},
+	"Untitled-1-1": {
+		"EPICS Environment": { "EPICS_CA_ADDR_LIST": ["localhost"], "EPICS_CA_AUTO_ADDR_LIST": "Yes" },
+		"EPICS Custom Environment": { "Default TDL Files": [], "Default Search Paths": ["./"] },
+		"Preset Colors": {
+			"Background": ["255", "255", "255", "100"],
+			"Attention": ["255", "160", "0", "100"],
+			"Button Background": ["210", "210", "210", "100"],
+			"Disconnected": ["200", "0", "200", "80"],
+			"Invalid": ["255", "0", "255", "100"],
+			"Major": ["255", "0", "0", "100"],
+			"Minor": ["255", "128", "0", "100"],
+			"Off": ["60", "100", "60", "100"],
+			"OK": ["0", "255", "0", "100"],
+			"On": ["0", "255", "0", "100"],
+			"Read Background": ["240", "240", "240", "100"],
+			"Stop": ["255", "0", "0", "100"],
+			"Text": ["0", "0", "0", "100"],
+			"Write Background": ["128", "255", "255", "100"],
+			"Header Background": ["77", "77", "77", "100"],
+			"Header Foreground": ["255", "255", "255", "100"],
+			"Active Text": ["255", "255", "0", "100"],
+			"Grid": ["128", "128", "128", "100"]
+		}
+	}
+}

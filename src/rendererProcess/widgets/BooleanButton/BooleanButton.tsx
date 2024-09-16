@@ -1,0 +1,852 @@
+import { GlobalVariables } from "../../global/GlobalVariables";
+import * as React from "react";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { BaseWidget } from "../BaseWidget/BaseWidget";
+import { BooleanButtonSidebar } from "./BooleanButtonSidebar";
+import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BooleanButtonRules } from "./BooleanButtonRules";
+import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
+import { Log } from "../../global/Log";
+
+export type type_BooleanButton_tdl = {
+    type: string;
+    widgetKey: string;
+    key: string;
+    style: Record<string, any>;
+    text: Record<string, any>;
+    channelNames: string[];
+    groupNames: string[];
+    rules: type_rules_tdl;
+};
+
+export class BooleanButton extends BaseWidget {
+    channelItemsUpdated: boolean = false;
+
+    _rules: BooleanButtonRules;
+
+    constructor(widgetTdl: type_BooleanButton_tdl) {
+        super(widgetTdl);
+
+        this.setStyle({ ...BooleanButton._defaultTdl.style, ...widgetTdl.style });
+        this.setText({ ...BooleanButton._defaultTdl.text, ...widgetTdl.text });
+
+        this._rules = new BooleanButtonRules(this, widgetTdl);
+        // assign the sidebar
+        // this._sidebar = new BooleanButtonSidebar(this);
+    }
+
+    // ------------------------- event ---------------------------------
+    // concretize abstract method
+    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        // todo: remove this method
+    };
+
+    // defined in super class
+    // _handleMouseDown()
+    // _handleMouseMove()
+    // _handleMouseUp()
+    // _handleMouseDownOnResizer()
+    // _handleMouseMoveOnResizer()
+    // _handleMouseUpOnResizer()
+    // _handleMouseDoubleClick()
+
+    // ----------------------------- geometric operations ----------------------------
+
+    // defined in super class
+    // simpleSelect()
+    // selectGroup()
+    // select()
+    // simpleDeSelect()
+    // deselectGroup()
+    // deSelect()
+    // move()
+    // resize()
+
+    // ------------------------------ group ------------------------------------
+
+    // defined in super class
+    // addToGroup()
+    // removeFromGroup()
+
+    // ------------------------------ elements ---------------------------------
+
+    // concretize abstract method
+    _ElementRaw = () => {
+        this.setRulesStyle({});
+        this.setRulesText({});
+        const rulesValues = this.getRules()?.getValues();
+        if (rulesValues !== undefined) {
+            this.setRulesStyle(rulesValues["style"]);
+            this.setRulesText(rulesValues["text"]);
+        }
+
+        // must do it for every widget
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+        this.renderChildWidgets = true;
+        React.useEffect(() => {
+            this.renderChildWidgets = false;
+        });
+
+        return (
+            <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
+                <>
+                    <this._ElementBody></this._ElementBody>
+                    {this._showSidebar() ? this.getSidebar()?.getElement() : null}
+                </>
+            </ErrorBoundary>
+        );
+    };
+
+    _ElementBodyRaw = (): JSX.Element => {
+        return (
+            // always update the div below no matter the TextUpdateBody is .memo or not
+            // TextUpdateResizer does not update if it is .memo
+            <div style={this.getElementBodyRawStyle()}>
+                <this._ElementArea></this._ElementArea>
+                {this._showResizers() ? <this._ElementResizer /> : null}
+            </div>
+        );
+    };
+
+    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
+    _ElementAreaRaw = ({ }: any): JSX.Element => {
+        return (
+            // <div
+            <div
+                style={{
+                    display: "inline-flex",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    userSelect: "none",
+                    overflow: "visible",
+                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
+                    justifyContent: this.getAllText().horizontalAlign,
+                    alignItems: this.getAllText().verticalAlign,
+                    fontFamily: this.getAllText().fontFamily,
+                    fontSize: this.getAllText().fontSize,
+                    fontStyle: this.getAllText().fontStyle,
+                    outline: this._getElementAreaRawOutlineStyle(),
+                }}
+                onMouseDown={this._handleMouseDown}
+                onDoubleClick={this._handleMouseDoubleClick}
+            >
+                <this._ElementBooleanButton></this._ElementBooleanButton>
+            </div>
+        );
+    };
+
+    getLabelsAndValues = () => {
+        const result = {
+            offLabel: this.getAllText()["offLabel"],
+            onLabel: this.getAllText()["onLabel"],
+            offValue: this.getAllText()["offValue"],
+            onValue: this.getAllText()["onValue"],
+        };
+
+        if (!g_widgets1.isEditing()) {
+            const channelName = this.getChannelNames()[0];
+            if (this.getAllText()["useChannelItems"]) {
+                try {
+                    const channel = g_widgets1.getTcaChannel(channelName);
+                    const strs = channel.getStrings();
+                    const numberOfStringsUsed = channel.getNumerOfStringsUsed();
+                    if (this.getAllText()["useChannelItems"] === true && strs !== undefined && numberOfStringsUsed !== undefined) {
+                        // update itemNames and itemValues
+                        result["offLabel"] = strs[0];
+                        result["onLabel"] = strs[1];
+                        result["offValue"] = 0;
+                        result["onValue"] = 1;
+                    }
+                } catch (e) {
+                    Log.error(e);
+                }
+            }
+        }
+
+        return result;
+    };
+
+    buttonPressed: boolean = false;
+
+    _ElementBooleanButton = () => {
+        const channelName = this.getChannelNames()[0];
+        const elementRef = React.useRef<any>(null);
+        const elementRefLabel = React.useRef<any>(null);
+        const [, forceUpdate] = React.useState({});
+
+        const shadowWidth = 2;
+        const calcWidth = () => {
+            const width = this.getAllStyle()["width"];
+            if (this.getAllText()["appearance"] === "traditional") {
+                return width - 2 * shadowWidth;
+            } else {
+                return width;
+            }
+        }
+        const calcHeight = () => {
+            const height = this.getAllStyle()["height"];
+            if (this.getAllText()["appearance"] === "traditional") {
+                return height - 2 * shadowWidth;
+            } else {
+                return height;
+            }
+        }
+
+        const valueIsOn = this.valueIsOn()
+        const highlightColor = (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false) ? "rgba(0,0,0,0)" : "rgba(255,255,255,1)";
+        const shadowColor = (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false) ? "rgba(0,0,0,0)" : "rgba(100,100,100,1)";
+        const calcBorderBottomRight = () => {
+            if (this.getAllText()["appearance"] === "traditional") {
+                if (this.getAllText()["mode"] === "push and reset" || this.getAllText()["mode"] === "push no reset" || this.getAllText()["mode"] === "push nothing and set") {
+                    if (this.buttonPressed) {
+                        return `solid ${shadowWidth}px ${highlightColor}`;
+                    } else {
+                        return `solid ${shadowWidth}px ${shadowColor}`;
+                    }
+                }
+
+                if (this.getAllText()["mode"] === "push and reset") {
+                    if (this.buttonPressed) {
+                        return `solid ${shadowWidth}px ${highlightColor}`;
+                    } else {
+                        return `solid ${shadowWidth}px ${shadowColor}`;
+                    }
+                } else if (this.getAllText()["mode"] === "push no reset") {
+                    if (this.buttonPressed) {
+                        return `solid ${shadowWidth}px ${highlightColor}`;
+                    } else {
+                        if (valueIsOn) {
+                            return `solid ${shadowWidth}px ${highlightColor}`;
+                        } else {
+                            return `solid ${shadowWidth}px ${shadowColor}`;
+                        }
+                    }
+                } else if (this.getAllText()["mode"] === "push nothing and set") {
+                    if (this.buttonPressed) {
+                        return `solid ${shadowWidth}px ${highlightColor}`;
+                    } else {
+                        return `solid ${shadowWidth}px ${shadowColor}`;
+                    }
+                } else if (this.getAllText()["mode"] === "toggle") {
+                    if (valueIsOn) {
+                        return `solid ${shadowWidth}px ${highlightColor}`;
+                    } else {
+                        return `solid ${shadowWidth}px ${shadowColor}`;
+                    }
+                } else {
+                    return "none";
+                }
+            } else {
+                return "none";
+            }
+        }
+
+        const calcBorderTopLeft = () => {
+            if (this.getAllText()["appearance"] === "traditional") {
+                if (this.getAllText()["mode"] === "push and reset" || this.getAllText()["mode"] === "push no reset" || this.getAllText()["mode"] === "push nothing and set") {
+                    if (this.buttonPressed) {
+                        return `solid ${shadowWidth}px ${shadowColor}`;
+                    } else {
+                        return `solid ${shadowWidth}px ${highlightColor}`;
+                    }
+                }
+                if (this.getAllText()["mode"] === "push and reset") {
+                    if (this.buttonPressed) {
+                        return `solid ${shadowWidth}px ${shadowColor}`;
+                    } else {
+                        return `solid ${shadowWidth}px ${highlightColor}`;
+                    }
+                } else if (this.getAllText()["mode"] === "push no reset") {
+                    if (this.buttonPressed) {
+                        return `solid ${shadowWidth}px ${shadowColor}`;
+                    } else {
+                        if (valueIsOn) {
+                            return `solid ${shadowWidth}px ${shadowColor}`;
+                        } else {
+                            return `solid ${shadowWidth}px ${highlightColor}`;
+                        }
+                    }
+                } else if (this.getAllText()["mode"] === "push nothing and set") {
+                    if (this.buttonPressed) {
+                        return `solid ${shadowWidth}px ${shadowColor}`;
+                    } else {
+                        return `solid ${shadowWidth}px ${highlightColor}`;
+                    }
+                } else if (this.getAllText()["mode"] === "toggle") {
+                    if (valueIsOn) {
+                        return `solid ${shadowWidth}px ${shadowColor}`;
+                    } else {
+                        return `solid ${shadowWidth}px ${highlightColor}`;
+                    }
+                } else {
+                    return "none";
+                }
+            } else {
+                return "none";
+            }
+        }
+
+
+        const calcOutline = () => {
+            if (this.getAllText()["appearance"] === "traditional") {
+                if (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false) {
+                    return "none";
+                } else {
+                    return "solid 1px rgba(100, 100, 100, 0.5)";
+                }
+            } else {
+                return "none";
+            }
+        }
+
+        return (
+            <div
+                ref={elementRef}
+                style={{
+                    display: "inline-flex",
+                    width: calcWidth(),
+                    height: calcHeight(),
+                    outline: calcOutline(),
+                    borderRight: calcBorderBottomRight(),
+                    borderBottom: calcBorderBottomRight(),
+                    borderLeft: calcBorderTopLeft(),
+                    borderTop: calcBorderTopLeft(),
+                    alignItems: this.getAllText()["verticalAlign"],
+                    justifyContent: this.getAllText()["horizontalAlign"],
+                    backgroundColor:
+                        this.getAllText()["showLED"] === true
+                            ? "rgba(0,0,0,0)"
+                            : this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false
+                                ? "rgba(0,0,0,0)"
+                                : // : this.calcColor(),
+                                this.getButtonBackgroundColor(),
+                }}
+                onMouseDown={(event: any) => {
+                    if (g_widgets1.isEditing() === true) {
+                        return;
+                    }
+                    this.buttonPressed = true;
+                    this.handleMouseDownOnButton(event);
+
+                    if (this._getChannelAccessRight() < 1.5) {
+                        return;
+                    }
+                    forceUpdate({});
+                }}
+                onMouseUp={(event: any) => {
+                    if (g_widgets1.isEditing() === true) {
+                        return;
+                    }
+                    this.buttonPressed = false;
+                    this.handleMouseUpOnButton(event);
+                    if (this._getChannelAccessRight() < 1.5) {
+                        return;
+                    }
+                    forceUpdate({});
+                }}
+                // do not use onMouseOver, which also applies to the children elements
+                onMouseEnter={(event: any) => {
+                    event.preventDefault();
+                    if (!g_widgets1.isEditing() && elementRef.current !== null) {
+                        elementRef.current.style["outlineStyle"] = "solid";
+                        elementRef.current.style["outlineWidth"] = "3px";
+                        elementRef.current.style["outlineColor"] = "rgba(105,105,105,1)";
+                        if (this._getChannelAccessRight() < 1.5) {
+                            elementRef.current.style["cursor"] = "not-allowed";
+                        } else {
+                            elementRef.current.style["cursor"] = "pointer";
+                        }
+                    }
+                }}
+                // do not use onMouseOut
+                onMouseLeave={(event: any) => {
+                    event.preventDefault();
+                    if (!g_widgets1.isEditing() && elementRef.current !== null) {
+                        elementRef.current.style["outline"] = calcOutline();
+                        elementRef.current.style["cursor"] = "default";
+                    }
+                }}
+            >
+                <div
+                    style={{
+                        position: "relative",
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        opacity: this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false ? 0 : 1,
+                    }}
+                >
+                    {this.getAllText()["showLED"] === true ? (
+                        this.getAllText()["usePictures"] === true ? (
+                            <>
+                                <img
+                                    width={this.getAllText()["boxWidth"]}
+                                    height={this.getAllText()["boxWidth"]}
+                                    style={{
+                                        objectFit: "scale-down",
+                                    }}
+                                // src={this.calcPicture()}
+                                ></img>
+                                &nbsp;
+                            </>
+                        ) : (
+                            <>
+                                <div
+                                    style={{
+                                        width: this.getAllText()["boxWidth"],
+                                        height: this.getAllText()["boxWidth"],
+                                        display: "inline-flex",
+                                        borderRadius: this.getAllText()["boxWidth"] / 2,
+                                        backgroundColor: this.getButtonBackgroundColor(),
+                                        // backgroundColor: this.calcColor(),
+                                        border: "solid 1px rgba(30,30,30,1)",
+                                    }}
+                                ></div>{" "}
+                                &nbsp;
+                            </>
+                        )
+                    ) : null}
+
+                    {/* <div>{this.calcLabel()}</div> */}
+                    <div>{this.getLabel()}</div>
+                </div>
+            </div>
+        );
+    };
+
+    // -------------------------------------------
+
+    /**
+     * If the channel does not exist, return undefined.
+     *
+     * If we use the whole value (bit === -1), return the whole value anyway, do not compare with itemValues <br>
+     *
+     * If we use the bit value (bit >= 0), return this bit's value (0 or 1). <br>
+     */
+    getBitValue = (): number | undefined => {
+        // bot position
+        const bit = this.getAllText()["bit"];
+        try {
+            const channelValue = this._getChannelValue(true);
+
+            if (typeof channelValue === "number") {
+                if (bit < 0) {
+                    return channelValue;
+                } else if (bit >= 0) {
+                    // must be 0 or 1
+                    return (channelValue >> bit) & 0x1;
+                }
+            }
+        } catch (e) {
+            Log.error(e);
+        }
+        return undefined;
+    };
+
+    valueIsOn = (): boolean => {
+        if (g_widgets1.isEditing()) {
+            return false;
+        }
+        const bitValue = this.getBitValue();
+        if (bitValue === undefined) {
+            return false;
+        } else {
+            if (this.getAllText()["bit"] > -1) {
+                // bitValue must be 0 or 1, which can be the index
+                if (bitValue === 1) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                // bitValue is the whole channel value
+                if (bitValue === this.getLabelsAndValues()["offValue"]) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        }
+    }
+
+    getLabel = () => {
+        if (this.getAllText()["mode"] === "push and reset" || this.getAllText()["mode"] === "push no reset" || this.getAllText()["mode"] === "push nothing and set") {
+            if (this.buttonPressed) {
+                return this.getLabelsAndValues()["onLabel"];
+            } else {
+                return this.getLabelsAndValues()["offLabel"];
+            }
+            // }
+        } else if (this.getAllText()["mode"] === "toggle") {
+            const valueIsOn = this.valueIsOn();
+            if (valueIsOn) {
+                return this.getLabelsAndValues()["onLabel"];
+            } else {
+                return this.getLabelsAndValues()["offLabel"];
+            }
+        }
+    };
+
+    // button's background color, if the button is now shown, it becomes the rectangle's background color
+    getButtonBackgroundColor = () => {
+        if (this.getAllText()["mode"] === "push and reset" || this.getAllText()["mode"] === "push no reset" || this.getAllText()["mode"] === "push nothing and set") {
+            if (this.buttonPressed) {
+                return this.getAllText()["onColor"];
+            } else {
+                return this.getAllText()["offColor"];
+            }
+        } else {
+            const valueIsOn = this.valueIsOn();
+            if (valueIsOn) {
+                return this.getAllText()["onColor"];
+            } else {
+                return this.getAllText()["offColor"];
+            }
+        }
+    };
+
+    handleMouseDownOnButton = (event: any) => {
+        event.preventDefault();
+        if (event.button !== 0) {
+            return;
+        }
+
+        if (g_widgets1.isEditing()) {
+            return;
+        }
+
+        if (this._getChannelAccessRight() < 1.5) {
+            return;
+        }
+
+        const oldBitValue = this.getBitValue();
+        const bit = this.getAllText()["bit"];
+        const oldChannelValue = this._getChannelValue(true);
+        let newChannelValue = this.getLabelsAndValues()["offValue"];
+
+        if (oldBitValue === undefined || typeof oldChannelValue !== "number") {
+            // write to channel anyway
+            newChannelValue = this.getLabelsAndValues()["offValue"];
+        } else {
+            if (bit > -1) {
+                // oldBitValue and newBitValue must be 0 or 1 in this case
+                const newBitValue = Math.abs(oldBitValue - 1);
+                if (this.getAllText()["mode"] === "toggle") {
+                    if (newBitValue === 1) {
+                        newChannelValue = Math.floor(oldChannelValue) | (1 << bit);
+                    } else {
+                        newChannelValue = Math.floor(oldChannelValue) & ~(1 << bit);
+                    }
+                } else if (this.getAllText()["mode"] === "push and reset" || this.getAllText()["mode"] === "push no reset") {
+                    newChannelValue = Math.floor(oldChannelValue) | (1 << bit);
+                } else if (this.getAllText()["mode"] === "push nothing and set") {
+                    return;
+                } else {
+                    return;
+                }
+            } else {
+                // whole value, oldBitValue could be any number
+                if (this.getAllText()["mode"] === "toggle") {
+                    if (oldBitValue !== this.getLabelsAndValues()["onValue"]) {
+                        newChannelValue = this.getLabelsAndValues()["onValue"];
+                    } else {
+                        newChannelValue = this.getLabelsAndValues()["offValue"];
+                    }
+                } else if (this.getAllText()["mode"] === "push and reset" || this.getAllText()["mode"] === "push no reset") {
+                    newChannelValue = this.getLabelsAndValues()["onValue"];
+                } else if (this.getAllText()["mode"] === "push nothing and set") {
+                    return;
+                } else {
+                    return;
+                }
+            }
+        }
+
+        try {
+            const channelName = this.getChannelNames()[0];
+            const channel = g_widgets1.getTcaChannel(channelName);
+            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+
+            const dbrData = {
+                value: newChannelValue,
+            };
+            channel.put(displayWindowId, dbrData, 1);
+        } catch (e) {
+            Log.error(e);
+        }
+    };
+
+    handleMouseUpOnButton = (event: any) => {
+        event.preventDefault();
+        if (event.button !== 0) {
+            return;
+        }
+
+        if (g_widgets1.isEditing()) {
+            return;
+        }
+
+        if (this._getChannelAccessRight() < 1.5) {
+            return;
+        }
+
+        const oldBitValue = this.getBitValue();
+        const bit = this.getAllText()["bit"];
+        const oldChannelValue = this._getChannelValue(true);
+        let newChannelValue = this.getLabelsAndValues()["offValue"];
+
+        if (oldBitValue === undefined || typeof oldChannelValue !== "number") {
+            // write to channel anyway
+            newChannelValue = this.getLabelsAndValues()["offValue"];
+        } else {
+            if (bit > -1) {
+                // oldBitValue and newBitValue must be 0 or 1 in this case
+                const newBitValue = Math.abs(oldBitValue - 1);
+                if (this.getAllText()["mode"] === "toggle" || this.getAllText()["mode"] === "push no reset") {
+                    // do nothing on mouse up in "toggle", "push no reset" modes
+                    // and stop here
+                    return;
+                } else if (this.getAllText()["mode"] === "push and reset" || this.getAllText()["mode"] === "push nothing and set") {
+                    newChannelValue = Math.floor(oldChannelValue) & ~(1 << bit);
+                } else {
+                    return;
+                }
+            } else {
+                // whole value, oldBitValue could be any number
+                if (this.getAllText()["mode"] === "toggle" || this.getAllText()["mode"] === "push no reset") {
+                    // do nothing 
+                    // and stop here
+                    return;
+                } else if (this.getAllText()["mode"] === "push and reset" || this.getAllText()["mode"] === "push nothing and set") {
+                    newChannelValue = this.getLabelsAndValues()["offValue"];
+                } else {
+                    return;
+                }
+            }
+        }
+
+        try {
+            const channelName = this.getChannelNames()[0];
+            const channel = g_widgets1.getTcaChannel(channelName);
+            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+
+            const dbrData = {
+                value: newChannelValue,
+            };
+            channel.put(displayWindowId, dbrData, 1);
+        } catch (e) {
+            Log.error(e);
+        }
+    };
+
+
+    handleSelectAFile = (options: Record<string, any>, fileName: string) => {
+        const itemIndex = options["itemIndex"];
+        const sidebar = this.getSidebar();
+        if (typeof itemIndex === "number" && sidebar !== undefined) {
+            (sidebar as BooleanButtonSidebar).setBeingUpdatedItemIndex(itemIndex);
+            sidebar.updateFromWidget(undefined, "select-a-file", fileName);
+        }
+    };
+
+
+    // concretize abstract method
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
+    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
+
+    // defined in super class
+    // getElement()
+    // getSidebarElement()
+    // _ElementResizerRaw
+    // _ElementResizer
+
+    // -------------------- helper functions ----------------
+
+    // defined in super class
+    // _showSidebar()
+    // _showResizers()
+    // _useMemoedElement()
+    // hasChannel()
+    // isInGroup()
+    // isSelected()
+    // _getElementAreaRawOutlineStyle()
+
+    _getChannelValue = (raw: boolean = false) => {
+        const value = this._getFirstChannelValue(raw);
+        if (value === undefined) {
+            return "";
+        } else {
+            return value;
+        }
+    };
+
+    _getChannelSeverity = () => {
+        return this._getFirstChannelSeverity();
+    };
+
+    _getChannelUnit = () => {
+        const unit = this._getFirstChannelUnit();
+        if (unit === undefined) {
+            return "";
+        } else {
+            return unit;
+        }
+    };
+
+    _getChannelAccessRight = () => {
+        return this._getFirstChannelAccessRight();
+    };
+
+    // ----------------------- styles -----------------------
+
+    // defined in super class
+    // _resizerStyle
+    // _resizerStyles
+    // StyledToolTipText
+    // StyledToolTip
+
+    // -------------------------- tdl -------------------------------
+
+    // override BaseWidget
+    static _defaultTdl: type_BooleanButton_tdl = {
+        type: "BooleanButton",
+        widgetKey: "", // "key" is a reserved keyword
+        key: "",
+        style: {
+            // basics
+            position: "absolute",
+            display: "inline-block",
+            // dimensions
+            left: 0,
+            top: 0,
+            width: 100,
+            height: 100,
+            backgroundColor: "rgba(210, 210, 210, 1)",
+            // angle
+            transform: "rotate(0deg)",
+            // font
+            color: "rgba(0,0,0,1)",
+            fontFamily: GlobalVariables.defaultFontFamily,
+            fontSize: GlobalVariables.defaultFontSize,
+            fontStyle: GlobalVariables.defaultFontStyle,
+            fontWeight: GlobalVariables.defaultFontWeight,
+            // border, it is different from the "alarmBorder" below
+            borderStyle: "solid",
+            borderWidth: 0,
+            borderColor: "rgba(0, 0, 0, 1)",
+            // shows when the widget is selected
+            outlineStyle: "none",
+            outlineWidth: 1,
+            outlineColor: "rgba(0,0,0,1)",
+        },
+        text: {
+            // the LED indicator or picture position and size
+            horizontalAlign: "center",
+            verticalAlign: "center",
+            boxWidth: 100,
+            // text styles
+            wrapWord: false,
+            showUnit: false,
+            // if we want to use the itemLabels and itemValues from channel
+            useChannelItems: false,
+            // use picture instead of colors
+            usePictures: false,
+            showLED: true,
+            // which bit to show, -1 means using the channel value
+            bit: 0,
+            alarmBorder: true,
+            // toggle/push and reset/push no reset/push nothing and set/
+            mode: "toggle",
+            // when the channel is not connected
+            fallbackColor: "rgba(255,0,255,1)",
+            // becomes not visible in operation mode, but still clickable
+            invisibleInOperation: false,
+            // items, each category has 2 items
+            onLabel: "On",
+            offLabel: "Off",
+            onValue: 1,
+            offValue: 0,
+            onColor: "rgba(60, 255, 60, 1)",
+            offColor: "rgba(60, 100, 60, 1)",
+            onPicture: "",
+            offPicture: "",
+            // "contemporary" | "traditional"
+            appearance: "traditional",
+        },
+        channelNames: [],
+        groupNames: [],
+        rules: [],
+    };
+
+    // override
+    static generateDefaultTdl = (type: string) => {
+        // defines type, widgetKey, and key
+        const result = super.generateDefaultTdl(type);
+        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
+        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
+        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
+        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
+        return result;
+    };
+
+    // overload
+    getTdlCopy(newKey: boolean = true): Record<string, any> {
+        const result = super.getTdlCopy(newKey);
+        return result;
+    }
+
+    // --------------------- getters -------------------------
+
+    // defined in super class
+    // getType()
+    // getWidgetKey()
+    // getStyle()
+    // getText()
+    // getSidebar()
+    // getGroupName()
+    // getGroupNames()
+    // getUpdateFromWidget()
+    // getResizerStyle()
+    // getResizerStyles()
+
+    // getItemLabels = () => {
+    // 	return this._itemLabels;
+    // };
+    // getItemValues = () => {
+    // 	return this._itemValues;
+    // };
+
+    // getItemPictures = () => {
+    // 	return this._itemPictures;
+    // };
+
+    // getItemColors = () => {
+    // 	return this._itemColors;
+    // };
+
+    // ---------------------- setters -------------------------
+
+    // ---------------------- channels ------------------------
+
+    // defined in super class
+    // getChannelNames()
+    // expandChannelNames()
+    // getExpandedChannelNames()
+    // setExpandedChannelNames()
+    // expandChannelNameMacro()
+
+    // ------------------------ z direction --------------------------
+
+    // defined in super class
+    // moveInZ()
+    // -------------------------- sidebar ---------------------------
+    createSidebar = () => {
+        if (this._sidebar === undefined) {
+            this._sidebar = new BooleanButtonSidebar(this);
+        }
+    }
+}
