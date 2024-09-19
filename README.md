@@ -20,6 +20,9 @@ Then run the following commands:
 
 ```shell
 cd tdm
+# install libs for compilation
+npm i
+npm i --save-dev
 # transpile the TypeScript code to JavaScript
 tsc
 # bundle the discrete JavaScript files to one file, 
