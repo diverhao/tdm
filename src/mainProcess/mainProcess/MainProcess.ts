@@ -245,9 +245,11 @@ export class MainProcess {
             // test if file can be created 
             try {
                 // (3)
+                fs.mkdirSync(path.dirname(filePath), {recursive: true});
                 fs.openSync(filePath, "wx");
                 const newProfiles = new Profiles({});
-                newProfiles.setFilePath("");
+                newProfiles.setFilePath(filePath);
+                newProfiles.save();
                 this.setProfiles(newProfiles);
                 return newProfiles;
             } catch (e) {
