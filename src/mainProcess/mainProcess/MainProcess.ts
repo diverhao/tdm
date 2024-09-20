@@ -245,7 +245,7 @@ export class MainProcess {
             // test if file can be created 
             try {
                 // (3)
-                fs.mkdirSync(path.dirname(filePath), {recursive: true});
+                fs.mkdirSync(path.dirname(filePath), { recursive: true });
                 fs.openSync(filePath, "wx");
                 const newProfiles = new Profiles({});
                 newProfiles.setFilePath(filePath);
@@ -461,7 +461,7 @@ export class MainProcess {
         widgetKey: string,
     }) => {
         // if there is already a worker thread running, do not start
-        let worker = this.getEdlFileConverterThread(); 
+        let worker = this.getEdlFileConverterThread();
         if (worker !== undefined) {
             const displayWindowAgent = this.getWindowAgentsManager().getAgent(options["displayWindowId"]);
             if (displayWindowAgent instanceof DisplayWindowAgent) {
@@ -470,7 +470,7 @@ export class MainProcess {
                     status: "failed",
                     widgetKey: options["widgetKey"],
                 });
-    
+
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
                     messageType: "error",
                     humanReadableMessages: [`There is already a file converter session running.`, "TDM can only run one file converter at a time"],
@@ -481,7 +481,9 @@ export class MainProcess {
         }
 
         this.setEdlFileConverterThread(new Worker(path.join(__dirname, '../helpers/EdlFileConverterThread.js'), {
-            workerData: options
+            workerData: options,
+            stdout: true, // Ignore stdout
+            stderr: true, // Ignore stderr
         }));
 
         worker = this.getEdlFileConverterThread();
@@ -520,6 +522,20 @@ export class MainProcess {
                 //     numWidgetsTdl: 100, // number of widgets in tdl file
                 // }
                 displayWindowAgent.sendFromMainProcess("file-converter-command", { ...message, widgetKey: options["widgetKey"] });
+            } else if (message["type"] === "all-files-conversion-finished") {
+                // successfully finished
+                // same as when the thread successfully quits
+                this.stopEdlFileConverterThread("All files converted, quit file converter thread");
+                displayWindowAgent.sendFromMainProcess("file-converter-command", {
+                    type: "all-file-conversion-finished",
+                    status: "success",
+                    widgetKey: options["widgetKey"],
+                });
+                displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                    messageType: "info",
+                    humanReadableMessages: [`All files successfully converted.`],
+                    rawMessages: [],
+                })
             } else {
             }
         });
@@ -555,6 +571,7 @@ export class MainProcess {
             }
             if (code !== 1) {
                 // successfully finished
+                // same as receving "all-file-conversion-finished" message from thread
                 this.stopEdlFileConverterThread("All files converted, quit file converter thread");
                 displayWindowAgent.sendFromMainProcess("file-converter-command", {
                     type: "all-file-conversion-finished",

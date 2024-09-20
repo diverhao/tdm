@@ -4,7 +4,7 @@
 import { FileReader } from '../file/FileReader';
 import { parentPort, workerData } from 'worker_threads';
 
-const start = (options: {
+const start = async (options: {
     command: "start",
     src: string,
     dest: string,
@@ -13,7 +13,7 @@ const start = (options: {
     widgetKey: string,
 }) => {
     if (options["src"].endsWith(".edl")) {
-        FileReader.readEdlAndSaveTdl(
+        await FileReader.readEdlAndSaveTdl(
             options["src"], // sourceFile: string,
             options["dest"], // destinationFolder: string,
             undefined, // profile: Profile | undefined = undefined,
@@ -21,7 +21,7 @@ const start = (options: {
             parentPort,
         )
     } else {
-        FileReader.readEdlFolderAndSaveTdls(
+        await FileReader.readEdlFolderAndSaveTdls(
             options["src"], // sourceFolder: string,
             options["dest"], // destinationFolder: string,
             options["depth"], // maxDepth: number = 100,
@@ -34,7 +34,11 @@ const start = (options: {
 
 console.log('Received data from main thread:', workerData);
 
-start(workerData);
-// when the work finishes, the "exit" event is emitted, the main process will update with renderer process
-parentPort?.postMessage('========================= File converter completed =====================!');
-
+start(workerData).then(() => {
+    parentPort?.postMessage({
+        type: "all-files-conversion-finished",
+        status: "success",
+    });
+    // when the work finishes, the "exit" event is emitted, the main process will update with renderer process
+    parentPort?.postMessage('========================= File converter completed =====================!');
+})
