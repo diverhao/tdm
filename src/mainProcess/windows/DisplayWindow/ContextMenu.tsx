@@ -438,7 +438,11 @@ export class ContextMenu {
                         accelerator: "CmdOrCtrl+c",
                         click: () => {
                             if (selectedText !== undefined) {
-                                navigator.clipboard.writeText(selectedText)
+                                try {
+                                    navigator.clipboard.writeText(selectedText)
+                                } catch (e) {
+                                    console.log(e);
+                                }
                             }
                         },
                     },
@@ -533,7 +537,12 @@ export class ContextMenu {
                         role: "copy",
                         click: () => {
                             // web mode does not honor the "role" above
-                            navigator.clipboard.writeText(selectedText)
+                            try {
+                                navigator.clipboard.writeText(selectedText)
+                            } catch (e) {
+                                console.log(e);
+                            }
+
                         },
                     },
                     { type: "separator" },

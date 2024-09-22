@@ -2722,7 +2722,7 @@ export class Widgets {
         // no need to flush
     };
 
-    copySelectedWidgets = () => {
+    copySelectedWidgets = async () => {
         const result: Record<string, any>[] = [];
         for (let widgetKey of this.getSelectedWidgetKeys()) {
             const widget = this.getWidget2(widgetKey);
@@ -2731,7 +2731,12 @@ export class Widgets {
                 result.push(widgetTdl);
             }
         }
-        navigator.clipboard.writeText(JSON.stringify(result));
+        try {
+            await navigator.clipboard.writeText(JSON.stringify(result));
+        } catch (e) {
+            console.log(e);
+        }
+
     };
 
     // (1) copy selected widgets
@@ -2843,12 +2848,17 @@ export class Widgets {
         }
     };
 
-    copyDisplayContents = () => {
+    copyDisplayContents = async () => {
         const result = this.getRoot().getDisplayWindowClient().generateTdl();
-        navigator.clipboard.writeText(JSON.stringify(result));
+        try {
+            await navigator.clipboard.writeText(JSON.stringify(result));
+        } catch (e) {
+            console.log(e);
+        }
+
     };
 
-    copyWidgetChannelNames = (widgetKeys: string[]) => {
+    copyWidgetChannelNames = async (widgetKeys: string[]) => {
         if (widgetKeys.length !== 1) {
             Log.error("Only one widgetKey allowed");
             return;
@@ -2856,11 +2866,15 @@ export class Widgets {
         const widget = this.getWidget2(widgetKeys[0]);
         if (widget instanceof BaseWidget) {
             const channelNames = widget.getChannelNames();
-            navigator.clipboard.writeText(JSON.stringify(channelNames));
+            try {
+                await navigator.clipboard.writeText(JSON.stringify(channelNames));
+            } catch (e) {
+                console.log(e);
+            }
         }
     };
 
-    copyWidgetChannelValues = (widgetKeys: string[]) => {
+    copyWidgetChannelValues = async (widgetKeys: string[]) => {
         if (widgetKeys.length !== 1) {
             Log.error("Only one widgetKey allowed");
             return;
@@ -2877,11 +2891,15 @@ export class Widgets {
                     result[channelName] = { value: undefined };
                 }
             }
-            navigator.clipboard.writeText(JSON.stringify(result));
+            try {
+                await navigator.clipboard.writeText(JSON.stringify(result));
+            } catch (e) {
+                console.log(e);
+            }
         }
     };
 
-    copyAllChannelValues = () => {
+    copyAllChannelValues = async () => {
         const result: Record<string, type_dbrData | type_LocalChannel_data> = {};
         for (let channelName of Object.keys(this.getTcaChannels())) {
             try {
@@ -2891,11 +2909,19 @@ export class Widgets {
                 result[channelName] = { value: undefined };
             }
         }
-        navigator.clipboard.writeText(JSON.stringify(result));
+        try {
+            await navigator.clipboard.writeText(JSON.stringify(result));
+        } catch (e) {
+            console.log(e);
+        }
     };
 
-    copyAllChannelNames = () => {
-        navigator.clipboard.writeText(JSON.stringify(Object.keys(this.getTcaChannels())));
+    copyAllChannelNames = async () => {
+        try {
+            await navigator.clipboard.writeText(JSON.stringify(Object.keys(this.getTcaChannels())));
+        } catch (e) {
+            console.log(e);
+        }
     };
 
     // ----------------- arrange selected widgets --------------------
@@ -3191,7 +3217,7 @@ export class Widgets {
     }
 
     // same as the DisplayWindowClient mouse down event
-    createChannelNamePeekDiv = (x: number, y: number, channelName: string | string[]) => {
+    createChannelNamePeekDiv = async (x: number, y: number, channelName: string | string[]) => {
         const id = `channel-name-peek-div`;
         const left = x;
         const top = y;
@@ -3240,9 +3266,11 @@ export class Widgets {
             channelNamePeekDiv.style.left = `${Math.max(left - width / 2, 0)}px`;
             channelNamePeekDiv.style.top = `${Math.max(top - height, 0)}px`;
             // copy channel name to clipboard
-            navigator.clipboard.writeText(`${channelName}`);
+            try {
+                await navigator.clipboard.writeText(`${channelName}`);
+            } catch (e) {
+                console.log(e);
+            }
         }
     }
-
-
 }

@@ -130,6 +130,10 @@ export class DisplayWindowClient {
         // However, we still want the right mouse button event, this function is for that purpose.
         // All the right-button-down events are disabled on BaseWidget and Canvas.
         window.addEventListener("mousedown", (event: MouseEvent) => {
+            // if this window is inside an iframe, focus this iframe first, so, focus it anyway
+            // const thisWindowIsInIframe = window.frameElement !== null;
+            window.focus();
+
             // mid or right button down
             if ((event.button === 1 || event.button === 2) && g_widgets1 !== undefined && !g_widgets1.isEditing()) {
                 event.preventDefault();
@@ -203,7 +207,7 @@ export class DisplayWindowClient {
                                 // focused: widget.getFocusStatus(),
                                 inputElementFocused: true,
                             }
-                        } else if (widgetKeyResult.startsWith("Help") || widgetKeyResult.startsWith("PvMonitor") || widgetKeyResult.startsWith("TdlViewer") || widgetKeyResult.startsWith("LogViewer") || widgetKeyResult.startsWith("TextEditor") || widgetKeyResult.startsWith("ProfilesViewer") || widgetKeyResult.startsWith("CaSnooper") || widgetKeyResult.startsWith("Casw")|| widgetKeyResult.startsWith("FileConverter")) {
+                        } else if (widgetKeyResult.startsWith("Help") || widgetKeyResult.startsWith("PvMonitor") || widgetKeyResult.startsWith("TdlViewer") || widgetKeyResult.startsWith("LogViewer") || widgetKeyResult.startsWith("TextEditor") || widgetKeyResult.startsWith("ProfilesViewer") || widgetKeyResult.startsWith("CaSnooper") || widgetKeyResult.startsWith("Casw") || widgetKeyResult.startsWith("FileConverter")) {
                             // non-input element
                             // if the text is selected in Help or TdlViewer widgets, we show copy option in context menu
                             const widget = g_widgets1.getWidget2(widgetKeyResult);

@@ -231,9 +231,13 @@ export abstract class Prompt {
                 userSelect: "none",
             }}>
                 <ElementRectangleButton
-                    handleClick={(event: React.MouseEvent) => {
+                    handleClick={async (event: React.MouseEvent) => {
                         event.preventDefault();
-                        navigator.clipboard.writeText(JSON.stringify(info))
+                        try {
+                            await navigator.clipboard.writeText(JSON.stringify(info));
+                        } catch (e) {
+                            console.log(e);
+                        }
                         this.removeElement();
                     }}
                 >
