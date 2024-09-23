@@ -1996,18 +1996,19 @@ export class IpcManagerOnMainProcess {
             fileNames = [fileName1];
         } else if (fileName1 === "") {
             if (this.getMainProcess().getMainProcessMode() === "desktop") {
+                const fileFilters = options["filterType"] === "tdl"
+                    ? [{ name: "tdl", extensions: ["tdl", "edl", "bob", "db", "template"] }]
+                    : options["filterType"] === "media"
+                        ? [{ name: "media", extensions: ["jpg", "jpeg", "png", "gif", "svg", "bmp", "pdf", "mp4", "ogg", "webm", "mp3", "mov"] }]
+                        : options["filterType"] === "script"
+                            ? [{ name: "script", extensions: ["py", "js"] }]
+                            : [{ name: "picture", extensions: ["jpg", "jpeg", "png", "gif", "svg", "bmp"] }];
+                // default to open file
+                const properties = options["properties"] === undefined ? ["openFile"] : options["properties"];
                 fileNames = dialog.showOpenDialogSync({
                     title: "Select a file",
-                    // default filter type is image, otherwise we must explicitly define
-                    filters:
-                        options["filterType"] === "tdl"
-                            ? [{ name: "tdl", extensions: ["tdl", "edl", "bob", "db", "template"] }]
-                            : options["filterType"] === "media"
-                                ? [{ name: "media", extensions: ["jpg", "jpeg", "png", "gif", "svg", "bmp", "pdf", "mp4", "ogg", "webm", "mp3", "mov"] }]
-                                : options["filterType"] === "script"
-                                    ? [{ name: "script", extensions: ["py", "js"] }]
-                                    : [{ name: "picture", extensions: ["jpg", "jpeg", "png", "gif", "svg", "bmp"] }],
-                    properties: options["properties"] === undefined ? [] : options["properties"],
+                    filters: fileFilters,
+                    properties: properties,
                 });
             } else if (this.getMainProcess().getMainProcessMode() === "ssh-server" || this.getMainProcess().getMainProcessMode() === "web") {
                 displayWindowAgent.sendFromMainProcess("dialog-show-input-box", {

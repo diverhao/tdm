@@ -529,7 +529,7 @@ export class FileConverter extends BaseWidget {
                                 displayWindowId: displayWindowId,
                                 widgetKey: this.getWidgetKey(),
                                 filterType: "tdl",
-                                properties: ["openDirectory"], // only open folder
+                                properties: ["openDirectory", "createDirectory", "promptToCreate"], // open folder and create directory
                                 inputType: "dest",
                             });
 
