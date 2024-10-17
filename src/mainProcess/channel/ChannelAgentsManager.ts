@@ -53,7 +53,7 @@ export class ChannelAgentsManager {
     createAndInitContext = async () => {
         if (this._context === undefined) {
             logs.info(this.getMainProcessId(), "Creating EPICS CA context");
-            this._context = new Context(this.getProfile().convertToTcaInput()["EPICS Environment"]);
+            this._context = new Context(this.getProfile().convertToTcaInput()["EPICS Environment"], "WARN");
             await this._context.initialize();
         } else {
             logs.info(this.getMainProcessId(), "EPICS CA context already exists");

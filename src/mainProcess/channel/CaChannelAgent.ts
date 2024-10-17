@@ -1,4 +1,4 @@
-import { Channel, ChannelMonitor, Context, Channel_ACCESS_RIGHTS, Channel_DBR_TYPES } from "epics-tca";
+import { Channel, ChannelMonitor, Context, Channel_DBR_TYPES } from "epics-tca";
 import { type_dbrData } from "../../rendererProcess/global/GlobalVariables";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { ChannelAgentsManager } from "./ChannelAgentsManager";
@@ -302,7 +302,7 @@ export class CaChannelAgent {
             this.checkLifeCycle();
         } else {
             // monitor dbrTime data
-            const monitor = await channel.createMonitor((channelMonitor: ChannelMonitor) => {
+            const monitor = await channel.createMonitor(undefined, (channelMonitor: ChannelMonitor) => {
                 const channelAgentsManager = this.getChannelAgentsManager();
                 const mainProcess = channelAgentsManager.getMainProcess();
                 const windowAgentsManager = mainProcess.getWindowAgentsManager();
@@ -311,18 +311,17 @@ export class CaChannelAgent {
                     if (displayWindowAgent === undefined) {
                         continue;
                     } else if (displayWindowAgent instanceof DisplayWindowAgent) {
-                        let newDbrData = JSON.parse(JSON.stringify(channelMonitor.getDbrData()));
-                        displayWindowAgent.addNewChannelData(channelMonitor.name, newDbrData);
+                        let newDbrData = JSON.parse(JSON.stringify(channelMonitor.getChannel().getDbrData()));
+                        displayWindowAgent.addNewChannelData(channelMonitor.getChannel().getName(), newDbrData);
                     }
                 }
-            }, channel.getDbrTypeNum_TIME());
+            }, channel.getDbrType_TIME());
 
             if (monitor === undefined) {
                 this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.MONITOR);
                 this.checkLifeCycle();
                 return;
             }
-            await monitor.subscribe();
         }
     };
 
@@ -343,7 +342,7 @@ export class CaChannelAgent {
             // but we can obtain the epics Channel object from Context
             const context = this.getChannelAgentsManager().getContext();
             if (context !== undefined) {
-                const channel = context.getChannelByName(this.getChannelName());
+                const channel = context.getChannel(this.getChannelName());
                 if (channel instanceof Channel) {
                     channel.destroyHard();
                 } else {
@@ -447,7 +446,7 @@ export class CaChannelAgent {
 
     updateChannelAndMonitor = (monitor: ChannelMonitor) => {
         this._monitor = monitor;
-        this._channel = monitor.channel;
+        this._channel = monitor.getChannel();
     };
 
     /**
@@ -460,7 +459,7 @@ export class CaChannelAgent {
         if (channel === undefined) {
             return "NOT_AVAILABLE";
         } else {
-            return channel.getAccessRight();
+            return channel.getAccessRightStr();
         }
     };
 
@@ -496,8 +495,8 @@ export class CaChannelAgent {
             if (tcpTransport === undefined) {
                 return "";
             } else {
-                const address = tcpTransport.serverAddress;
-                const port = tcpTransport.serverPort;
+                const address = tcpTransport.getServerAddress();
+                const port = tcpTransport.getServerPort();
                 return `${address}:${port}`;
             }
         }
@@ -514,7 +513,7 @@ export class CaChannelAgent {
         if (channel === undefined) {
             return undefined;
         } else {
-            return channel.getDbrTypeNum_GR();
+            return channel.getDbrType_GR();
         }
     };
 
@@ -526,7 +525,7 @@ export class CaChannelAgent {
         if (channel === undefined) {
             return undefined;
         } else {
-            return channel.getDbrTypeNum_RAW();
+            return channel.getDbrType();
         }
     };
 
@@ -535,7 +534,7 @@ export class CaChannelAgent {
         if (channel === undefined) {
             return undefined;
         } else {
-            return channel.getDbrTypeNum_STS();
+            return channel.getDbrType_STS();
         }
     };
 
@@ -544,7 +543,7 @@ export class CaChannelAgent {
         if (channel === undefined) {
             return undefined;
         } else {
-            return channel.getDbrTypeNum_TIME();
+            return channel.getDbrType_TIME();
         }
     };
 
@@ -553,7 +552,7 @@ export class CaChannelAgent {
         if (channel === undefined) {
             return undefined;
         } else {
-            return channel.getDbrTypeNum_CTRL();
+            return channel.getDbrType_CTRL();
         }
     };
 

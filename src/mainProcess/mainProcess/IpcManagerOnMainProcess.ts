@@ -1873,13 +1873,13 @@ export class IpcManagerOnMainProcess {
             if (context === undefined) {
                 utilityOptions["epics-ca-env"] = {};
             } else {
-                const envInstance = context.envInstance;
+                const envInstance = context.getEnvInstance();
                 if (envInstance !== undefined) {
                     utilityOptions["epics-ca-env"] = {
                         "Values used in TDM runtime": envInstance.getEnv(),
                         "TDM uses": envInstance.getEnvSource(),
                         "User defined": envInstance.getEnvUser(),
-                        "Operating system defined": envInstance.getEnvOS(),
+                        "Operating system defined": envInstance.getEnvOs(),
                         "EPICS default": envInstance.getEnvDefault(),
                     };
                 } else {
@@ -1929,7 +1929,7 @@ export class IpcManagerOnMainProcess {
             utilityOptions["profilesFileName"] = this.getMainProcess().getMainProcesses().getProfilesFileName();
             const context = this.getMainProcess().getChannelAgentsManager().getContext();
             if (context !== undefined) {
-                const envInstance = context.envInstance;
+                const envInstance = context.getEnvInstance();
                 if (envInstance !== undefined) {
                     const env = envInstance.getEnv();
                     if (typeof env !== "number" && typeof env !== "string" && !Array.isArray(env) && env !== undefined) {
@@ -1948,7 +1948,7 @@ export class IpcManagerOnMainProcess {
             utilityOptions["profilesFileName"] = this.getMainProcess().getMainProcesses().getProfilesFileName();
             const context = this.getMainProcess().getChannelAgentsManager().getContext();
             if (context !== undefined) {
-                const envInstance = context.envInstance;
+                const envInstance = context.getEnvInstance();
                 if (envInstance !== undefined) {
                     const env = envInstance.getEnv();
                     if (typeof env !== "number" && typeof env !== "string" && !Array.isArray(env) && env !== undefined) {
