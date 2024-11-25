@@ -121,7 +121,7 @@ export class CaChannelAgent {
                 }
                 // this._channelCreationPromise = context.createChannel(this._channelName, 5);
                 let channelName = this.getChannelName();
-                this._channelCreationPromise = context.createChannel(channelName, creationTimeout);
+                this._channelCreationPromise = context.createChannel(channelName, "ca", creationTimeout);
                 channelTmp = await this._channelCreationPromise;
 
             } else {
