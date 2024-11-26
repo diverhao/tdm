@@ -19,6 +19,7 @@ import { generateAboutInfo } from "../../global/GlobalMethods";
 import pidusage from "pidusage";
 import * as os from "os";
 import { getCurrentDateTimeStr } from "../../global/GlobalMethods";
+import { Promises } from "epics-tca";
 
 /**
  * The main process side representation of a display window. <br>
@@ -149,6 +150,9 @@ export class DisplayWindowAgent {
         this.creationReject = reject;
     });
 
+    promises: Promises = new Promises();
+
+
     constructor(windowAgentsManager: WindowAgentsManager, options: type_options_createDisplayWindow, id: string) {
         this._windowAgentsManager = windowAgentsManager;
         this._tdl = JSON.parse(JSON.stringify(options))["tdl"];
@@ -183,6 +187,8 @@ export class DisplayWindowAgent {
                 this._newChannelData = {};
             }
         }, 100);
+
+        this.promises.appendPromise("tca-get-meta", false);
     }
 
 
@@ -363,17 +369,20 @@ export class DisplayWindowAgent {
      * (3) Reduce the number of clients on `CaChannelAgent`, and check the lifecycle of the `CaChannelAgent`..
      *
      * @param {string} channelName Channel name
+     * 
+     * @param {Channel_DBR_TYPES | undefined | string} dbrType the desired DBR type (CA) or the pv rquest (PVA)
+     * 
      * @param {number} ioTimeout Time out [second].
      *
      */
-    tcaGet = async (channelName: string, ioTimeout: number, dbrType: Channel_DBR_TYPES | undefined): Promise<type_dbrData | { value: undefined }> => {
+    tcaGet = async (channelName: string, ioTimeout: number, dbrType: Channel_DBR_TYPES | undefined | string): Promise<type_dbrData | { value: undefined }> => {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
         const channelType = ChannelAgentsManager.determineChannelType(channelName);
         let result: type_LocalChannel_data | type_dbrData = { value: undefined };
 
-        if (channelType === "epics") {
+        if (channelType === "ca" || channelType === "pva") {
             // (1)
             const t0 = Date.now();
             const connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
@@ -388,7 +397,12 @@ export class DisplayWindowAgent {
                 return { value: undefined };
             }
             // (2)
-            result = await channelAgent.get(this.getId(), dbrType, ioTimeout);
+            const channelProtocol = channelAgent.getProtocol();
+            if (channelProtocol === "ca" && (typeof dbrType === "object" || dbrType === undefined)) {
+                result = await channelAgent.get(this.getId(), dbrType, ioTimeout);
+            } else if (channelProtocol === "pva" && typeof dbrType === "string") {
+                result = await channelAgent.getPva(this.getId(), ioTimeout);
+            }
         } else {
             // (1)
             const connectSuccess = this.addAndConnectLocalChannel(channelName);
@@ -408,19 +422,24 @@ export class DisplayWindowAgent {
     };
 
     /**
-     * Get the meta data from CaChanel or LocalChannel, no timeout, no dbr data type specified <br>
+     * Get the meta data from CA/PVA/Local channel, no timeout, no dbr data type specified <br>
      *
-     * (1) if the channel agent does not exist, and/or the CA/Local channel is not connected, create/connect it.<br>
-     *     For CA channel, the connecting to the channel does not time out.  <br>
+     * (1) if the channel agent does not exist, and/or the CA/PVA/Local channel is not connected, create/connect it.<br>
+     *     For CA/PVA channel, connecting to the channel does not time out.  <br>
      *     For Local channel, the channel agent creation is synchronous.<br>
      *     Then the corresponding data structure is created. <br>
      *
      * (2) If the channel is CA channel, asynchronously obtain GR and TIME type data, then add the "value count",
      *     server address, and native dbr type to the result.<br>
      *     If the channel is Local channel, synchronously get the dbr data. <br>
+     * 
+     * (3) If the channel is PVA, get the channel PVA type and the value with pv request "".
      *
-     * (3) Check if there is any active operations for this channel. If not, destry it.
+     * (4) Check if there is any active operations for this channel. If not, destry it.
      */
+
+    
+
     tcaGetMeta = async (channelName: string): Promise<type_dbrData | type_LocalChannel_data | { value: undefined }> => {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
@@ -428,36 +447,46 @@ export class DisplayWindowAgent {
         const channelType = ChannelAgentsManager.determineChannelType(channelName);
         let result: type_LocalChannel_data | type_dbrData = { value: undefined };
 
-        if (channelType === "epics") {
+        if (channelType === "ca" || channelType === "pva") {
             let connectSuccess = false;
             connectSuccess = await this.addAndConnectChannel(channelName, undefined);
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
+            console.log("tca get meta ---------- step 0", connectSuccess)
+
             if (!connectSuccess || channelAgent === undefined) {
                 logs.debug(this.getMainProcessId(), `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
                 return { value: undefined };
             }
 
+            console.log("tca get meta ---------- step 1")
+
             if (channelAgent instanceof CaChannelAgent) {
-                // (2)
-                const dbrTypeNum_GR = channelAgent.getDbrTypeNum_GR();
-                if (dbrTypeNum_GR === undefined) {
-                    logs.debug(this.getMainProcessId(), `Channel ${channelName} does not have a GR type data.`);
-                    return { value: undefined };
-                }
-                result = await channelAgent.get(this.getId(), dbrTypeNum_GR, undefined);
+                if (channelType === "ca") {
+                    // (2)
+                    const dbrTypeNum_GR = channelAgent.getDbrTypeNum_GR();
+                    if (dbrTypeNum_GR === undefined) {
+                        logs.debug(this.getMainProcessId(), `Channel ${channelName} does not have a GR type data.`);
+                        return { value: undefined };
+                    }
+                    result = await channelAgent.get(this.getId(), dbrTypeNum_GR, undefined);
 
-                const dbrTypeNum_TIME = channelAgent.getDbrTypeNum_TIME();
-                if (dbrTypeNum_TIME === undefined) {
-                    logs.debug(this.getMainProcessId(), `Channel ${channelName} does not have a TIME type data.`);
-                } else {
-                    result = { ...result, ...(await channelAgent.get(this.getId(), dbrTypeNum_TIME, undefined)) };
-                }
+                    const dbrTypeNum_TIME = channelAgent.getDbrTypeNum_TIME();
+                    if (dbrTypeNum_TIME === undefined) {
+                        logs.debug(this.getMainProcessId(), `Channel ${channelName} does not have a TIME type data.`);
+                    } else {
+                        result = { ...result, ...(await channelAgent.get(this.getId(), dbrTypeNum_TIME, undefined)) };
+                    }
 
-                if (result.value !== undefined) {
-                    result.DBR_TYPE = dbrTypeNum_GR;
-                    result.valueCount = channelAgent.getValueCount();
-                    result.serverAddress = channelAgent.getServerAddress();
-                    result.accessRight = channelAgent.getAccessRight();
+                    if (result.value !== undefined) {
+                        result.DBR_TYPE = dbrTypeNum_GR;
+                        result.valueCount = channelAgent.getValueCount();
+                        result.serverAddress = channelAgent.getServerAddress();
+                        result.accessRight = channelAgent.getAccessRight();
+                    }
+                } else if (channelType === "pva") {
+                    // (3)
+                    await channelAgent.fetchPvaType();
+                    result = await channelAgent.getPva(this.getId(), undefined, ""); // get the full type
                 }
             }
         } else {
@@ -476,11 +505,14 @@ export class DisplayWindowAgent {
             result = channelAgent.getDbrData();
         }
 
-        // (3)
+        // (4)
         if (this.checkChannelOperations(channelName) === false) {
             // ! shall we remove channel after get meta?
             // this.removeChannel(channelName);
         }
+
+        this.promises.resolvePromise("tca-get-meta", "");
+
         return result;
     };
 
@@ -540,7 +572,7 @@ export class DisplayWindowAgent {
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
         const channelType = ChannelAgentsManager.determineChannelType(channelName);
         // (1)
-        if (channelType === "epics") {
+        if (channelType === "ca") {
             const t0 = Date.now();
             const connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
             const t1 = Date.now();
@@ -579,6 +611,7 @@ export class DisplayWindowAgent {
      * (1) If the channel does not exist, create and connect it. The connection attampt never times out. <br>
      *
      * (2) Create the monitor, the callback function adds new data to interval. <br>
+     *     PVA and CA channels have same method
      *
      * (3) Check the number of "clients" of `CaChannelAgent`. If no "client", destroy this channel <br>
      *
@@ -589,12 +622,17 @@ export class DisplayWindowAgent {
      * @returns {Promise<boolean>} `true` if sucess, `false` if failed
      */
     tcaMonitor = async (channelName: string): Promise<boolean> => {
+
+        const promiseObj = this.promises.getPromise("tca-get-meta");
+        await promiseObj;
+
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
         const channelType = ChannelAgentsManager.determineChannelType(channelName);
 
-        if (channelType == "epics") {
+        console.log("tca monitor ++++++++++++++++++++++++++++++++++++++++++")
+        if (channelType == "ca" || channelType == "pva") {
             // (1)
             const connectSuccess = await this.addAndConnectChannel(channelName, undefined);
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
@@ -812,17 +850,22 @@ export class DisplayWindowAgent {
         // (1)
         let channelAgent = channelAgentsManager.getChannelAgent(channelName);
         if (channelAgent === undefined) {
+            console.log("add and connect channel -------- step 1")
             channelAgent = channelAgentsManager.createChannelAgent(channelName);
 
+            console.log("add and connect channel -------- step 2")
             if (!(channelAgent instanceof CaChannelAgent)) {
                 return false;
             }
+            console.log("add and connect channel -------- step 3")
             const displayWindowAgent = this;
             // (2)
             // channelAgent.addDisplayWindowAgent(displayWindowAgent);
             channelAgent.initDisplayWindowOperations(this.getId());
+            console.log("add and connect channel -------- step 4")
             // (3)
             displayWindowAgent.addChannelAgent(channelAgent);
+            console.log("add and connect channel -------- step 5")
         } else {
             if (!(channelAgent instanceof CaChannelAgent)) {
                 return false;

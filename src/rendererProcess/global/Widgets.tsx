@@ -1732,7 +1732,7 @@ export class Widgets {
      */
     getTcaChannel = (channelName: string): TcaChannel => {
         const parsedChannelName = TcaChannel.checkChannelName(channelName);
-        if (parsedChannelName === "epics") {
+        if (parsedChannelName === "ca" || parsedChannelName === "pva") {
             const tcaChannel = this._tcaChannels[channelName];
             if (tcaChannel !== undefined) {
                 return tcaChannel;

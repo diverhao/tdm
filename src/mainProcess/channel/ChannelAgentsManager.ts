@@ -73,7 +73,7 @@ export class ChannelAgentsManager {
         if (channelAgent !== undefined) {
             return channelAgent;
         } else {
-            if (ChannelAgentsManager.determineChannelType(channelName) === "epics") {
+            if (ChannelAgentsManager.determineChannelType(channelName) === "ca" || ChannelAgentsManager.determineChannelType(channelName) === "pva") {
                 channelAgent = new CaChannelAgent(this, channelName);
             } else {
                 channelAgent = new LocalChannelAgent(this, channelName);
@@ -86,11 +86,14 @@ export class ChannelAgentsManager {
     /**
      * Both loc:// and glb:// are considered as local type in main process
      */
-    static determineChannelType = (channelName: string): "epics" | "local" | undefined => {
+    static determineChannelType = (channelName: string): "ca" | "local" | "pva" | undefined => {
         if (channelName.startsWith("loc://") || channelName.startsWith("glb://")) {
             return "local";
+        } else if (channelName.startsWith("pva://")) {
+            return "pva";
+
         } else {
-            return "epics";
+            return "ca";
         }
     };
 

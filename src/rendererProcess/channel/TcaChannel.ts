@@ -42,10 +42,14 @@ export class TcaChannel {
     // allowed character in EPICS channel name
     // a-z A-Z 0-9 _ - : . ; [ ] < > 
     static regexEpicsChannelName = /^[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]*$/;
+    // "pva://" + regular EPICS PV name
+    static regexPvaChannelName = /^pva:\/\/[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]*$/;
 
     constructor(channelName: string) {
 
-        if (TcaChannel.checkChannelName(channelName) === "epics") {
+        if (TcaChannel.checkChannelName(channelName) === "ca") {
+            this._channelName = channelName;
+        } else if (TcaChannel.checkChannelName(channelName) === "pva") {
             this._channelName = channelName;
         } else if (TcaChannel.checkChannelName(channelName) === "local" || TcaChannel.checkChannelName(channelName) === "global") {
             /**
@@ -97,22 +101,25 @@ export class TcaChannel {
     };
 
 
-    static checkChannelName = (channelName: string | undefined): "local" | "epics" | "global" | undefined => {
+    static checkChannelName = (channelName: string | undefined): "local" | "ca" | "global" | "pva" | undefined => {
         if (channelName === undefined) {
             return undefined;
         } else {
             const resultLocal = channelName.match(this.regexLocalChannelName);
             const resultGlobal = channelName.match(this.regexGlobalChannelName);
-            const resultEpics = channelName.match(this.regexEpicsChannelName);
-            if (resultLocal === null && resultEpics === null && resultGlobal === null) {
+            const resultCa = channelName.match(this.regexEpicsChannelName);
+            const resultPva = channelName.match(this.regexPvaChannelName);
+            if (resultLocal === null && resultCa === null && resultGlobal === null && resultPva === null) {
                 return undefined;
             }
             else if (resultLocal !== null) {
                 return "local";
-            } else if (resultEpics !== null) {
-                return "epics";
+            } else if (resultCa !== null) {
+                return "ca";
             } else if (resultGlobal !== null) {
                 return "global";
+            } else if (resultPva !== null) {
+                return "pva";
             } else {
                 return undefined;
             }
@@ -272,7 +279,7 @@ export class TcaChannel {
 
     updateLocalChannelInitialValue = (channelName: string) => {
         const meta = TcaChannel.extractNameAndMetaFromLocalChannelName(channelName);
-        if (meta !== undefined ) {
+        if (meta !== undefined) {
             if (meta["type"] === "number") {
                 if (meta["initValue"] !== 0) {
                     this.getDbrData()["value"] = meta["initValue"];
@@ -377,6 +384,7 @@ export class TcaChannel {
         }
         return;
     };
+
 
     /**
      * Get meta (GR) data for this channel. Never time out. <br>
@@ -694,34 +702,49 @@ export class TcaChannel {
             return this.getChannelName();
         }
 
-        const value = this.getDbrData()["value"];
-
-        if (value === undefined) {
-            return undefined;
-        }
-
-        // enum
-        if (raw === false) {
-            if (TcaChannel.checkChannelName(this.getChannelName()) === "epics") {
-                const dbrTypeNum = this.getDbrData().DBR_TYPE;
-                if (dbrTypeNum !== undefined && Channel_DBR_TYPES[dbrTypeNum].includes("ENUM")) {
-                    const choices = this.getDbrData().strings;
-                    if (choices !== undefined) {
-                        return choices[value as number];
-                    }
+        if (this.getProtocol() === "pva") {
+            const pvRequest = this.getPvRequest();
+            const pvRequestStrs = pvRequest.split(".");
+            try {
+                let value = this.getDbrData();
+                for (let pvRequestStr of pvRequestStrs) {
+                    value = value[pvRequestStr];
                 }
-            } else if (TcaChannel.checkChannelName(this.getChannelName()) === "local" || TcaChannel.checkChannelName(this.getChannelName()) === "global") {
-                const dbrTypeNum = this.getDbrData()["type"];
-                if (dbrTypeNum !== undefined && dbrTypeNum === "enum") {
-                    const choices = this.getDbrData().strings;
-                    if (choices !== undefined) {
-                        return choices[value as number];
+                return value as any;
+            } catch (e) {
+                return undefined;
+            }
+        } else {
+
+            const value = this.getDbrData()["value"];
+
+            if (value === undefined) {
+                return undefined;
+            }
+
+            // enum
+            if (raw === false) {
+                if (TcaChannel.checkChannelName(this.getChannelName()) === "ca" || TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
+                    const dbrTypeNum = this.getDbrData().DBR_TYPE;
+                    if (dbrTypeNum !== undefined && Channel_DBR_TYPES[dbrTypeNum].includes("ENUM")) {
+                        const choices = this.getDbrData().strings;
+                        if (choices !== undefined) {
+                            return choices[value as number];
+                        }
+                    }
+                } else if (TcaChannel.checkChannelName(this.getChannelName()) === "local" || TcaChannel.checkChannelName(this.getChannelName()) === "global") {
+                    const dbrTypeNum = this.getDbrData()["type"];
+                    if (dbrTypeNum !== undefined && dbrTypeNum === "enum") {
+                        const choices = this.getDbrData().strings;
+                        if (choices !== undefined) {
+                            return choices[value as number];
+                        }
                     }
                 }
             }
-        }
 
-        return value;
+            return value;
+        }
     };
 
     /**
@@ -1037,4 +1060,21 @@ export class TcaChannel {
     getIoPromise = (ioId: number) => {
         return this.getReadWriteIos().getIoPromise(ioId);
     };
+
+    getProtocol = () => {
+        return TcaChannel.checkChannelName(this.getChannelName());
+    }
+
+    getPvRequest = () => {
+        if (this.getProtocol() === "pva") {
+            const channelNameArray = this.getChannelName().split(".");
+            if (channelNameArray.length === 1) {
+                return "";
+            } else {
+                return channelNameArray.slice(1).join(".");
+            }
+        } else {
+            return "";
+        }
+    }
 }

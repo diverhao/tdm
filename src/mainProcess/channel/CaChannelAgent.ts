@@ -110,6 +110,7 @@ export class CaChannelAgent {
     connecting: boolean | undefined = false;
     connect = async (creationTimeout: number | undefined = undefined): Promise<boolean> => {
         try {
+            console.log("connect ---------------- step 0")
             this.connecting = true;
             let channelTmp = undefined;
             if (this._channelCreationPromise === undefined) {
@@ -120,9 +121,17 @@ export class CaChannelAgent {
                     return false;
                 }
                 // this._channelCreationPromise = context.createChannel(this._channelName, 5);
-                let channelName = this.getChannelName();
-                this._channelCreationPromise = context.createChannel(channelName, "ca", creationTimeout);
-                channelTmp = await this._channelCreationPromise;
+                let channelName = this.getBareChannelName();
+                console.log("connect ---------------- step 1", this.getProtocol(), this.getChannelName())
+                if (this.getProtocol() === "ca") {
+                    this._channelCreationPromise = context.createChannel(channelName, "ca", creationTimeout);
+                    channelTmp = await this._channelCreationPromise;
+                } else if (this.getProtocol() === "pva") {
+                    console.log("connect ---------------- step 2")
+                    this._channelCreationPromise = context.createChannel(channelName, "pva", creationTimeout);
+                    channelTmp = await this._channelCreationPromise;
+                    console.log("connect ---------------- step 3")
+                }
 
             } else {
                 // if the channel is being created by another function, it could be a `Channel` object or `undefined`
@@ -198,6 +207,12 @@ export class CaChannelAgent {
                 throw new Error(errMsg);
             }
 
+            const protocol = channel.getProtocol();
+            if (protocol !== "ca") {
+                const errMsg = `Channel ${this.getChannelName()} is not a CA channel.`;
+                throw new Error(errMsg);
+            }
+
             // default ioTimeout = 1 second
             data = JSON.parse(JSON.stringify(await channel.get(ioTimeout, dbrType)));
 
@@ -215,6 +230,58 @@ export class CaChannelAgent {
             return { value: undefined };
         }
     };
+
+    getPva = async (
+        displayWindowId: string,
+        ioTimeout: number = 1,
+        pvRequest: string | undefined = undefined, // when undefined, use CaChannel's own pvRequest,
+    ): Promise<type_dbrData | { value: undefined }> => {
+        this.addDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
+        let data: type_dbrData | undefined = { value: undefined };
+
+        try {
+            const channel = this.getChannel();
+            if (channel === undefined) {
+                const errMsg = `Channel ${this.getChannelName()} does not exist.`;
+                throw new Error(errMsg);
+            }
+
+            const protocol = channel.getProtocol();
+            if (protocol !== "pva") {
+                const errMsg = `Channel ${this.getChannelName()} is not a PVA channel.`;
+                throw new Error(errMsg);
+            }
+
+            // default ioTimeout = 1 second
+            if (pvRequest !== undefined) {
+                data = JSON.parse(JSON.stringify(await channel.getPva(ioTimeout, pvRequest)));
+            } else {
+                data = JSON.parse(JSON.stringify(await channel.getPva(ioTimeout, this.getPvRequest())));
+            }
+
+            this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
+            this.checkLifeCycle();
+            if (data === undefined) {
+                return { value: undefined };
+            } else {
+                return data;
+            }
+        } catch (e) {
+            logs.error(this.getMainProcessId(), e);
+            this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
+            this.checkLifeCycle();
+            return { value: undefined };
+        }
+    };
+
+    fetchPvaType = async () => {
+        const channel = this.getChannel();
+        if (channel !== undefined) {
+            return await channel.fetchPvaType();
+        } else {
+            return undefined;
+        }
+    }
 
     getFieldName = () => {
         const fieldName = this.getChannelName().split(".")[1];
@@ -263,7 +330,7 @@ export class CaChannelAgent {
     };
 
     /**
-     * Create and subscribe a monitor for this channel. <br>
+     * Create and subscribe a monitor for this channel. The channel could be either CA or PVA <br>
      *
      * If there is already a monitor on this channel, return. <br>
      *
@@ -301,30 +368,60 @@ export class CaChannelAgent {
             // this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.MONITOR);
             this.checkLifeCycle();
         } else {
-            // monitor dbrTime data
-            const monitor = await channel.createMonitor(undefined, (channelMonitor: ChannelMonitor) => {
-                const channelAgentsManager = this.getChannelAgentsManager();
-                const mainProcess = channelAgentsManager.getMainProcess();
-                const windowAgentsManager = mainProcess.getWindowAgentsManager();
-                for (let displayWindowId of Object.keys(this.getDisplayWindowsOperations())) {
-                    const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
-                    if (displayWindowAgent === undefined) {
-                        continue;
-                    } else if (displayWindowAgent instanceof DisplayWindowAgent) {
-                        let newDbrData = JSON.parse(JSON.stringify(channelMonitor.getChannel().getDbrData()));
-                        displayWindowAgent.addNewChannelData(channelMonitor.getChannel().getName(), newDbrData);
-                    }
-                }
-            }, channel.getDbrType_TIME());
+            const protocol = this.getProtocol();
 
-            if (monitor === undefined) {
-                this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.MONITOR);
-                this.checkLifeCycle();
-                return;
+            if (protocol === "ca") {
+                // monitor dbrTime data
+                const monitor = await channel.createMonitor(undefined, (channelMonitor: ChannelMonitor) => {
+                    const channelAgentsManager = this.getChannelAgentsManager();
+                    const mainProcess = channelAgentsManager.getMainProcess();
+                    const windowAgentsManager = mainProcess.getWindowAgentsManager();
+                    for (let displayWindowId of Object.keys(this.getDisplayWindowsOperations())) {
+                        const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
+                        if (displayWindowAgent === undefined) {
+                            continue;
+                        } else if (displayWindowAgent instanceof DisplayWindowAgent) {
+                            let newDbrData = JSON.parse(JSON.stringify(channelMonitor.getChannel().getDbrData()));
+                            displayWindowAgent.addNewChannelData(channelMonitor.getChannel().getName(), newDbrData);
+                        }
+                    }
+                }, channel.getDbrType_TIME());
+
+                if (monitor === undefined) {
+                    this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.MONITOR);
+                    this.checkLifeCycle();
+                    return;
+                }
+            } else if (protocol === "pva") {
+                console.log("create montior +++++++++++++++++++++++ 1")
+                const monitor = await channel.createMonitorPva(undefined, this.getPvRequest(), (channelMonitor: ChannelMonitor) => {
+                    console.log("new data is here")
+                    const channelAgentsManager = this.getChannelAgentsManager();
+                    const mainProcess = channelAgentsManager.getMainProcess();
+                    const windowAgentsManager = mainProcess.getWindowAgentsManager();
+                    for (let displayWindowId of Object.keys(this.getDisplayWindowsOperations())) {
+                        const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
+                        if (displayWindowAgent === undefined) {
+                            continue;
+                        } else if (displayWindowAgent instanceof DisplayWindowAgent) {
+                            // let newDbrData = JSON.parse(JSON.stringify(channelMonitor.getChannel().getDbrData()));
+                            let newPvaData = JSON.parse(JSON.stringify(channelMonitor.getPvaData()));
+                            displayWindowAgent.addNewChannelData(this.getChannelName(), newPvaData);
+                        }
+                    }
+                });
+                console.log("create montior +++++++++++++++++++++++ 2")
+
+                if (monitor === undefined) {
+                    this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.MONITOR);
+                    this.checkLifeCycle();
+                    console.log("create montior +++++++++++++++++++++++ 3")
+                    return;
+                }
+
             }
         }
     };
-
     /**
      * Completely destroy this channel. <br>
      *
@@ -342,7 +439,7 @@ export class CaChannelAgent {
             // but we can obtain the epics Channel object from Context
             const context = this.getChannelAgentsManager().getContext();
             if (context !== undefined) {
-                const channel = context.getChannel(this.getChannelName());
+                const channel = context.getChannel(this.getBareChannelName());
                 if (channel instanceof Channel) {
                     channel.destroyHard();
                 } else {
@@ -379,6 +476,22 @@ export class CaChannelAgent {
 
     getChannelName = (): string => {
         return this._channelName;
+    };
+
+
+    /**
+     * channelName: pva://neutrons.proton_charge.timeStamp
+     * 
+     * bareChannelName: neutrons
+     * 
+     * pvRequest: proton_charge.timeStamp
+     * 
+     */
+    getBareChannelName = (): string => {
+        if (this.getProtocol() === "pva") {
+            return this._channelName.replace("pva://", "").split(".")[0];
+        }
+        return this.getChannelName();
     };
 
     // -------------------- display windows -----------------------
@@ -569,5 +682,24 @@ export class CaChannelAgent {
         return this._oldStateStr;
     };
 
+    getProtocol = () => {
+       if (this.getChannelName().startsWith("pva://")) {
+        return "pva"
+       }
+       return "ca";
+    }
+
+    getPvRequest = (): string => {
+        if (this.getProtocol() === "ca") {
+            return "";
+        } else {
+            const channelNameArray = this.getBareChannelName().split(".");
+            if (channelNameArray.length === 1) {
+                return "";
+            } else {
+                return channelNameArray.slice(1).join(".");
+            }
+        }
+    }
 
 }

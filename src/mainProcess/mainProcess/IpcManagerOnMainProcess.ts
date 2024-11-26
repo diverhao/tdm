@@ -1792,11 +1792,12 @@ export class IpcManagerOnMainProcess {
         displayWindowAgent.addNewChannelData(channelName, data);
         // (2)
         // ioId and widgetKey are bounced back
-        logs.info(this.getMainProcessId(), "tca-get-meta result for", channelName);
+        logs.info(this.getMainProcessId(), "tca-get-meta result for", channelName, "is", data);
         displayWindowAgent.sendFromMainProcess("tca-get-result", ioId, widgetKey, data);
     };
 
     handleTcaMonitor = (event: any, displayWindowId: string, channelName: string) => {
+        console.log("tca monitor +++++++++++++++++++++++++++++++++++ 1")
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId) as DisplayWindowAgent;
         // if channel does not exist, create it
