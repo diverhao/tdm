@@ -110,7 +110,6 @@ export class CaChannelAgent {
     connecting: boolean | undefined = false;
     connect = async (creationTimeout: number | undefined = undefined): Promise<boolean> => {
         try {
-            console.log("connect ---------------- step 0")
             this.connecting = true;
             let channelTmp = undefined;
             if (this._channelCreationPromise === undefined) {
@@ -122,15 +121,12 @@ export class CaChannelAgent {
                 }
                 // this._channelCreationPromise = context.createChannel(this._channelName, 5);
                 let channelName = this.getBareChannelName();
-                console.log("connect ---------------- step 1", this.getProtocol(), this.getChannelName())
                 if (this.getProtocol() === "ca") {
                     this._channelCreationPromise = context.createChannel(channelName, "ca", creationTimeout);
                     channelTmp = await this._channelCreationPromise;
                 } else if (this.getProtocol() === "pva") {
-                    console.log("connect ---------------- step 2")
                     this._channelCreationPromise = context.createChannel(channelName, "pva", creationTimeout);
                     channelTmp = await this._channelCreationPromise;
-                    console.log("connect ---------------- step 3")
                 }
 
             } else {
@@ -144,7 +140,6 @@ export class CaChannelAgent {
                     // so that the display window could change its displayed value
                     // this should be done after at least one push cycle, to ensure it is not overriden
                     channelTmp.destroySoftCallback = () => {
-                        console.log("channel", this.getChannelName(), "is destroyed!! ====================================")
                         setTimeout(() => {
                             const channelAgentsManager = this.getChannelAgentsManager();
                             const mainProcess = channelAgentsManager.getMainProcess();
@@ -277,7 +272,8 @@ export class CaChannelAgent {
     fetchPvaType = async () => {
         const channel = this.getChannel();
         if (channel !== undefined) {
-            return await channel.fetchPvaType();
+            const result = await channel.fetchPvaType();
+            return result
         } else {
             return undefined;
         }
@@ -359,7 +355,7 @@ export class CaChannelAgent {
                 const errMsg = `Value to put for channel ${this.getChannelName()} is undefined.`;
                 throw new Error(errMsg);
             }
-            console.log(`Run command await channel.putPva("${pvRequest}", [${[newValue]}], ${ioTimeout})`)
+            // console.log(`Run command await channel.putPva("${pvRequest}", [${[newValue]}], ${ioTimeout})`)
             await channel.putPva(pvRequest, [newValue], ioTimeout);
         } catch (e) {
             logs.error(this.getMainProcessId(), e);
@@ -434,9 +430,7 @@ export class CaChannelAgent {
                     return;
                 }
             } else if (protocol === "pva") {
-                console.log("create montior +++++++++++++++++++++++ 1")
                 const monitor = await channel.createMonitorPva(undefined, this.getPvRequest(), (channelMonitor: ChannelMonitor) => {
-                    console.log("new data is here")
                     const channelAgentsManager = this.getChannelAgentsManager();
                     const mainProcess = channelAgentsManager.getMainProcess();
                     const windowAgentsManager = mainProcess.getWindowAgentsManager();
@@ -451,12 +445,10 @@ export class CaChannelAgent {
                         }
                     }
                 });
-                console.log("create montior +++++++++++++++++++++++ 2")
 
                 if (monitor === undefined) {
                     this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.MONITOR);
                     this.checkLifeCycle();
-                    console.log("create montior +++++++++++++++++++++++ 3")
                     return;
                 }
 

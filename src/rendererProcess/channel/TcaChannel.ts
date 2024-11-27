@@ -441,7 +441,6 @@ export class TcaChannel {
         // todo: array data
         // a number[], e.g. [1.2, 3.4, 5.6] is converted to string "1.2,3.4,5.6"
         const value = this.parseInput(dbrData);
-        console.log(dbrData, value)
         if (value === undefined) {
             // parse failed
             return;
@@ -552,7 +551,6 @@ export class TcaChannel {
                 return undefined;
             }
             let pvRequest = this.getPvRequest();
-            console.log("pva Typpe", pvaType, pvRequest, this.getPvaValueDisplayType())
             if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
                 if (pvRequest !== "") {
                     pvRequest = pvRequest + ".value";
@@ -567,19 +565,22 @@ export class TcaChannel {
             ) {
                 return undefined;
             }
-            console.log(pvaType, pvRequest, this.getPvaValueDisplayType())
 
             let valueTypeIndex = "";
-            try {
-                const pvRequestStrs = pvRequest.split(".");
-                for (const pvRequestStr of pvRequestStrs) {
-                    pvaType = pvaType["fields"][pvRequestStr];
+            if (pvRequest !== "") {
+                try {
+                    const pvRequestStrs = pvRequest.split(".");
+                    for (const pvRequestStr of pvRequestStrs) {
+                        pvaType = pvaType["fields"][pvRequestStr];
+                    }
+                } catch (e) {
+                    return undefined;
                 }
-            } catch (e) {
+            }
+            if (pvaType === undefined) {
                 return undefined;
             }
             valueTypeIndex = pvaType["typeIndex"];
-            console.log(pvaType, pvRequest, valueTypeIndex)
 
             let dbrDataType = "";
 

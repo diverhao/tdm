@@ -449,14 +449,12 @@ export class DisplayWindowAgent {
             let connectSuccess = false;
             connectSuccess = await this.addAndConnectChannel(channelName, undefined);
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-            console.log("tca get meta ---------- step 0", connectSuccess)
 
             if (!connectSuccess || channelAgent === undefined) {
                 logs.debug(this.getMainProcessId(), `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
                 return { value: undefined };
             }
 
-            console.log("tca get meta ---------- step 1")
 
             if (channelAgent instanceof CaChannelAgent) {
                 if (channelType === "ca") {
@@ -530,14 +528,11 @@ export class DisplayWindowAgent {
         let connectSuccess = false;
         connectSuccess = await this.addAndConnectChannel(channelName, undefined);
         let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-        console.log("tca get meta ---------- step 0", connectSuccess)
 
         if (!connectSuccess || channelAgent === undefined) {
             logs.debug(this.getMainProcessId(), `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
             return { value: undefined };
         }
-
-        console.log("tca get meta ---------- step 1")
 
         if (channelAgent instanceof CaChannelAgent) {
             // (3)
@@ -550,7 +545,7 @@ export class DisplayWindowAgent {
             // this.removeChannel(channelName);
         }
 
-        return pvaType;
+        return JSON.parse(JSON.stringify(pvaType));
     };
 
     /**
@@ -604,7 +599,6 @@ export class DisplayWindowAgent {
      * @returns {Promise<boolean>} `true` when the PUT command is sent out, `false` when the PUT command is not sent
      */
     tcaPut = async (channelName: string, dbrData: type_dbrData | type_LocalChannel_data, ioTimeout: number, pvaValueField: string): Promise<boolean> => {
-        console.log("xxx -------------- tca put", dbrData, pvaValueField, channelName)
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
@@ -619,7 +613,6 @@ export class DisplayWindowAgent {
                 return false;
             }
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-            console.log("channelAgent ------", channelAgent === undefined, connectSuccess)
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
                 logs.debug(this.getMainProcessId(), `tcaPut: EPICS channel ${channelName} cannot be created/connected.`);
                 return false;
@@ -674,7 +667,6 @@ export class DisplayWindowAgent {
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
         const channelType = ChannelAgentsManager.determineChannelType(channelName);
 
-        console.log("tca monitor ++++++++++++++++++++++++++++++++++++++++++")
         if (channelType == "ca" || channelType == "pva") {
             // (1)
             const connectSuccess = await this.addAndConnectChannel(channelName, undefined);
@@ -893,22 +885,17 @@ export class DisplayWindowAgent {
         // (1)
         let channelAgent = channelAgentsManager.getChannelAgent(channelName);
         if (channelAgent === undefined) {
-            console.log("add and connect channel -------- step 1")
             channelAgent = channelAgentsManager.createChannelAgent(channelName);
 
-            console.log("add and connect channel -------- step 2")
             if (!(channelAgent instanceof CaChannelAgent)) {
                 return false;
             }
-            console.log("add and connect channel -------- step 3")
             const displayWindowAgent = this;
             // (2)
             // channelAgent.addDisplayWindowAgent(displayWindowAgent);
             channelAgent.initDisplayWindowOperations(this.getId());
-            console.log("add and connect channel -------- step 4")
             // (3)
             displayWindowAgent.addChannelAgent(channelAgent);
-            console.log("add and connect channel -------- step 5")
         } else {
             if (!(channelAgent instanceof CaChannelAgent)) {
                 return false;

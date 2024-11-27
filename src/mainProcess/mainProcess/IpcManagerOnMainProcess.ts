@@ -1795,9 +1795,7 @@ export class IpcManagerOnMainProcess {
         logs.info(this.getMainProcessId(), "tca-get-meta result for", channelName, "is", data);
         displayWindowAgent.sendFromMainProcess("tca-get-result", ioId, widgetKey, data);
         if (channelName.startsWith("pva://")) {
-            console.log("try to get pva type ===============================", )
             const pvaType = await displayWindowAgent.tcaGetPvaType(channelName);
-            console.log("try to get pva type ===============================", pvaType)
             if (pvaType !== undefined) {
                 displayWindowAgent.sendFromMainProcess("tca-get-pva-type-result", channelName, widgetKey, pvaType);
             }
@@ -1805,7 +1803,6 @@ export class IpcManagerOnMainProcess {
     };
 
     handleTcaMonitor = (event: any, displayWindowId: string, channelName: string) => {
-        console.log("tca monitor +++++++++++++++++++++++++++++++++++ 1")
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId) as DisplayWindowAgent;
         // if channel does not exist, create it
@@ -2158,7 +2155,6 @@ export class IpcManagerOnMainProcess {
         displayWindowId: string,
         command: string,
     }) => {
-        console.log("========================== execute command", data)
         try {
             const command = data["command"];
             const commandArray = command.split(" ");

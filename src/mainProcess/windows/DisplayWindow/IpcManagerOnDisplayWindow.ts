@@ -570,7 +570,6 @@ export class IpcManagerOnDisplayWindow {
                         continue;
                     }
 
-                    console.log("tca channel name, ", tcaChannel.getChannelName())
                     let data = newDbrData[channelName];
                     if (data === undefined) {
                         // the reason may be the IOC is offline, network glitch, or other issues that is not initiated
@@ -589,7 +588,6 @@ export class IpcManagerOnDisplayWindow {
                     }
                     // (2)
                     const widgetKeys = tcaChannel.getWidgetKeys();
-                    console.log("widget keys for tcachannel", widgetKeys, tcaChannel.getChannelName())
                     for (let widgetKey of widgetKeys) {
                         g_widgets1.addToForceUpdateWidgets(widgetKey);
                     }
@@ -674,9 +672,8 @@ export class IpcManagerOnDisplayWindow {
         try {
             const channel = g_widgets1.getTcaChannel(channelName);
             channel.setPvaType(pvaType);
-            console.log('set pva type', channelName, pvaType)
         } catch (e) {
-            console.log(e);
+            Log.error(`${e}`);
         }
     };
 
