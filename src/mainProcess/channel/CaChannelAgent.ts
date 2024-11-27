@@ -401,15 +401,18 @@ export class CaChannelAgent {
         const protocol = this.getProtocol();
         let alreadyHasMonitor = false;
         if (protocol === "ca") {
+            // only one monitor allowed for a CA channel
             if (Object.keys(channel.monitors).length !== 0) {
                 alreadyHasMonitor = true;
             }
         } else if (protocol === "pva") {
+            // in here, the pv request string is the unique identifier of a monitor for a PVA channel
+            // if 2 pv requests (with or without ".value") are the same, they are considered as a same monitor
             const monitors = channel.getMonitors();
             const pvRequest = this.getPvRequest();
             for (let monitor of monitors) {
                 const pvRequestTmp = monitor.getPvRequest();
-                if (pvRequest === pvRequestTmp) {
+                if ((pvRequest === pvRequestTmp) || (pvRequest === pvRequestTmp + ".value") || (pvRequest + ".value" === pvRequestTmp)) {
                     alreadyHasMonitor = true;
                     break;
                 }

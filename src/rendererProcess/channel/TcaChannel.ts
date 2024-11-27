@@ -963,6 +963,8 @@ export class TcaChannel {
 
     /**
      * Get the severity of the channel.
+     * 
+     * For PVA channel, the top-level "alarm" field will be used to indicate the channel's severity.
      *
      * @returns {ChannelSeverity} Severity of the channel. If the channel is not connected, return INVALID.
      * If the display window is in editing mode, return NO_ALARM.
@@ -976,13 +978,14 @@ export class TcaChannel {
             return ChannelSeverity.NO_ALARM;
         }
 
-        const value = this.getDbrData()["value"];
 
-        if (value === undefined) {
-            return ChannelSeverity.INVALID;
-        }
 
         if (TcaChannel.checkChannelName(this.getChannelName()) === "ca") {
+
+            const value = this.getDbrData()["value"];
+            if (value === undefined) {
+                return ChannelSeverity.INVALID;
+            }
 
             const severityNum = this.getDbrData()["severity"];
             if (severityNum === 0) {
@@ -998,6 +1001,7 @@ export class TcaChannel {
         } else if (TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
             // try to get the alarm field
             const alarm = this.getDbrData()["alarm"];
+
             if (alarm !== undefined) {
                 const severityNum = alarm["severity"];
                 if (severityNum === 0) {
@@ -1011,7 +1015,8 @@ export class TcaChannel {
                     return ChannelSeverity.INVALID;
                 }
             } else {
-                return ChannelSeverity.INVALID;
+                // return ChannelSeverity.INVALID;
+                return ChannelSeverity.NO_ALARM;
             }
         }
         return ChannelSeverity.INVALID;
