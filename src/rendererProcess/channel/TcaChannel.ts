@@ -7,12 +7,22 @@ import * as GlobalMethods from "../global/GlobalMethods";
 import { type_LocalChannel_data } from "../../mainProcess/channel/LocalChannelAgent";
 import { Channel_ACCESS_RIGHTS } from "../global/GlobalVariables";
 import { Log } from "../global/Log";
+import { re } from "mathjs";
 
 export enum ChannelSeverity {
     NO_ALARM,
     MINOR,
     MAJOR,
     INVALID,
+}
+
+
+export enum pvaValueDisplayType {
+    NOT_DEFINED,
+    OBJECT_RAW_FIELD,
+    OBJECT_VALUE_FIELD,
+    PRIMITIVE_RAW_FIELD,
+    PRIMITIVE_VALUE_FIELD
 }
 
 /**
@@ -31,6 +41,8 @@ export class TcaChannel {
     _widgetKeys: Set<string> = new Set();
     _dbrData: type_dbrData | type_LocalChannel_data = { value: undefined, severity: ChannelSeverity.INVALID };
     autoUpdateInterval: any;
+    _pvaValueDisplayType: pvaValueDisplayType = pvaValueDisplayType.NOT_DEFINED;
+    _pvaType: any = undefined;
 
     // allowed character in LOCAL channel name
     // a-z A-Z 0-9 _ - : . ;
@@ -429,6 +441,7 @@ export class TcaChannel {
         // todo: array data
         // a number[], e.g. [1.2, 3.4, 5.6] is converted to string "1.2,3.4,5.6"
         const value = this.parseInput(dbrData);
+        console.log(dbrData, value)
         if (value === undefined) {
             // parse failed
             return;
@@ -443,11 +456,19 @@ export class TcaChannel {
         const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["WRITE"], ioTimeout, callback);
         // ioId is unique across the display window
         // ioTimeout is for caput in main process, after ioTimeout seconds
+
+        let channelName = this.getChannelName();
+        let pvaValueField = "";
+        if (this.getProtocol() === "pva") {
+            if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
+                pvaValueField = "value";
+            }
+        }
         g_widgets1
             .getRoot()
             .getDisplayWindowClient()
             .getIpcManager()
-            .sendFromRendererProcess("tca-put", this.getChannelName(), displayWindowId, dbrData, ioTimeout);
+            .sendFromRendererProcess("tca-put", channelName, displayWindowId, dbrData, ioTimeout, pvaValueField);
         try {
             // always rejected
             await this.getIoPromise(ioId);
@@ -525,6 +546,159 @@ export class TcaChannel {
                 Log.error("Failed to parse Local channel input", dbrData);
                 return undefined;
             }
+        } else if (TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
+            let pvaType = this.getPvaType();
+            if (pvaType === undefined) {
+                return undefined;
+            }
+            let pvRequest = this.getPvRequest();
+            if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
+                pvRequest = pvRequest + ".value";
+            } else if (this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_RAW_FIELD ||
+                this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_VALUE_FIELD ||
+                this.getPvaValueDisplayType() === pvaValueDisplayType.NOT_DEFINED
+            ) {
+                return undefined;
+            }
+            console.log(pvaType, pvRequest, this.getPvaValueDisplayType())
+
+            let valueTypeIndex = "";
+            try {
+                const pvRequestStrs = pvRequest.split(".");
+                for (const pvRequestStr of pvRequestStrs) {
+                    pvaType = pvaType["fields"][pvRequestStr];
+                }
+            } catch (e) {
+                return undefined;
+            }
+            valueTypeIndex = pvaType["typeIndex"];
+            console.log(pvaType, pvRequest, valueTypeIndex)
+
+            let dbrDataType = "";
+
+            if (
+                valueTypeIndex === "0x43" ||
+                valueTypeIndex === "0x42" ||
+                valueTypeIndex === "0x27" ||
+                valueTypeIndex === "0x26" ||
+                valueTypeIndex === "0x25" ||
+                valueTypeIndex === "0x24" ||
+                valueTypeIndex === "0x23" ||
+                valueTypeIndex === "0x22" ||
+                valueTypeIndex === "0x21" ||
+                valueTypeIndex === "0x20"
+            ) {
+                // number
+                dbrDataType = "number";
+            } else if (valueTypeIndex === "0x83" ||
+                valueTypeIndex === "0x60"
+
+            ) {
+                // string
+                dbrDataType = "string";
+            } else if (
+                valueTypeIndex === "0x5b" ||
+                valueTypeIndex === "0x5a" ||
+                valueTypeIndex === "0x53" ||
+                valueTypeIndex === "0x52" ||
+                valueTypeIndex === "0x4b" ||
+                valueTypeIndex === "0x4a" ||
+                valueTypeIndex === "0x3f" ||
+                valueTypeIndex === "0x3e" ||
+                valueTypeIndex === "0x3d" ||
+                valueTypeIndex === "0x3c" ||
+                valueTypeIndex === "0x3b" ||
+                valueTypeIndex === "0x3a" ||
+                valueTypeIndex === "0x39" ||
+                valueTypeIndex === "0x38" ||
+                valueTypeIndex === "0x37" ||
+                valueTypeIndex === "0x36" ||
+                valueTypeIndex === "0x35" ||
+                valueTypeIndex === "0x34" ||
+                valueTypeIndex === "0x33" ||
+                valueTypeIndex === "0x32" ||
+                valueTypeIndex === "0x31" ||
+                valueTypeIndex === "0x30" ||
+                valueTypeIndex === "0x2f" ||
+                valueTypeIndex === "0x2e" ||
+                valueTypeIndex === "0x2d" ||
+                valueTypeIndex === "0x2c" ||
+                valueTypeIndex === "0x2b" ||
+                valueTypeIndex === "0x2a" ||
+                valueTypeIndex === "0x29" ||
+                valueTypeIndex === "0x28"
+            ) {
+                // number[]
+                dbrDataType = "number[]";
+            } else if (
+                valueTypeIndex === "0x78" ||
+                valueTypeIndex === "0x70" ||
+                valueTypeIndex === "0x68"
+            ) {
+                // string[]
+                dbrDataType = "string[]";
+            } else {
+                return undefined;
+            }
+
+
+            // same as above loc:// and glb://
+            if (dbrDataType === "number") {
+                const result = parseFloat(`${dbrData["value"]}`);
+                if (isNaN(result)) {
+                    return undefined;
+                } else {
+                    return result;
+                }
+            } else if (dbrDataType === "enum") {
+                // dbrData["value"] may be a number (index) or a string (choice)
+                const valueStr = `${dbrData["value"]}`;
+                // if number
+                let value = parseInt(valueStr);
+                // if string
+                if (isNaN(value)) {
+                    const choices = this.getDbrData().strings as string[];
+                    if (choices !== undefined) {
+                        if (choices.includes(valueStr)) {
+                            value = choices.indexOf(valueStr);
+                        } else {
+                            return undefined;
+                        }
+                    } else {
+                        return undefined;
+                    }
+                } else {
+                    return value;
+                }
+            } else if (dbrDataType === "string") {
+                return `${dbrData["value"]}`;
+            } else if (dbrDataType === "string[]") {
+                return `${dbrData["value"]}`.replaceAll("[", "").replaceAll("]", "").replaceAll(`"`, "").replaceAll("'", "").split(",");
+            } else if (dbrDataType === "number[]") {
+                const valueArray = `${dbrData["value"]}`.replaceAll("[", "").replaceAll("]", "").replaceAll(`"`, "").replaceAll("'", "").split(",");
+                // input is empty
+                if (valueArray.length === 1 && valueArray[0] === "") {
+                    return [];
+                }
+                let resultIsCorrect = true;
+                const result = valueArray.map((valueStr: string) => {
+                    if (isNaN(parseFloat(valueStr))) {
+                        resultIsCorrect = false;
+                        return undefined;
+                    } else {
+                        return parseFloat(valueStr);
+                    }
+                });
+                if (resultIsCorrect) {
+                    return result;
+                } else {
+                    return undefined;
+                }
+            } else {
+                Log.error("Failed to parse Local channel input", dbrData);
+                return undefined;
+            }
+
         } else {
             const dbrTypeNum = this.getDbrData().DBR_TYPE;
             if (dbrTypeNum === undefined) {
@@ -692,6 +866,10 @@ export class TcaChannel {
 
     /**
      * Get value of this channel from the cache. No network operation performed at here.
+     * 
+     * For PVA channel, if the value has a .value field, then return the .value field. If not, return 
+     * the raw value. If the returned value is an JSON object, then stringify it. If the returned value
+     * is a string | number | number[] | string[], then return the value.
      *
      * @param {boolean} raw, If we want to return the raw number for enum type PV <br>
      * @returns {string | number | number[] | string[] | undefined} If the channel is not connected, return undefined.
@@ -699,19 +877,46 @@ export class TcaChannel {
      */
     getValue = (raw: boolean = false): string | number | number[] | string[] | undefined => {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            this.setPvaValueDisplayType(pvaValueDisplayType.NOT_DEFINED);
             return this.getChannelName();
         }
+
 
         if (this.getProtocol() === "pva") {
             const pvRequest = this.getPvRequest();
             const pvRequestStrs = pvRequest.split(".");
             try {
                 let value = this.getDbrData();
-                for (let pvRequestStr of pvRequestStrs) {
-                    value = value[pvRequestStr];
+                if (pvRequest !== "") {
+                    for (let pvRequestStr of pvRequestStrs) {
+                        value = value[pvRequestStr];
+                    }
                 }
-                return value as any;
+                // if value is a JSON object, try to find its .value field
+                if (typeof value === "object" && Array.isArray(value) === false) {
+                    if (value["value"] === undefined) {
+                        // do not have .value field, return the value itself as a string
+                        this.setPvaValueDisplayType(pvaValueDisplayType.OBJECT_RAW_FIELD);
+                        return JSON.stringify(value);
+                    } else {
+                        // it has a .value field that is an object
+                        if (typeof value["value"] === "object" && Array.isArray(value["value"]) === false) {
+                            this.setPvaValueDisplayType(pvaValueDisplayType.OBJECT_VALUE_FIELD);
+                            return JSON.stringify(value["value"]);
+                        } else {
+                            // the .value field is a number, string, number[], or string[]
+                            this.setPvaValueDisplayType(pvaValueDisplayType.PRIMITIVE_VALUE_FIELD);
+                            return value["value"]
+                        }
+                    }
+
+                } else {
+                    // value is string | number | string[] | number[] | undefined
+                    this.setPvaValueDisplayType(pvaValueDisplayType.PRIMITIVE_RAW_FIELD);
+                    return value as any;
+                }
             } catch (e) {
+                this.setPvaValueDisplayType(pvaValueDisplayType.NOT_DEFINED);
                 return undefined;
             }
         } else {
@@ -746,6 +951,7 @@ export class TcaChannel {
             return value;
         }
     };
+
 
     /**
      * Get the severity of the channel.
@@ -835,6 +1041,18 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return Channel_ACCESS_RIGHTS.NOT_AVAILABLE;
         }
+
+        // PVA channel
+        if (TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
+            if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_RAW_FIELD || this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
+                return Channel_ACCESS_RIGHTS.READ_WRITE;
+            } else if (this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_RAW_FIELD || this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_VALUE_FIELD) {
+                return Channel_ACCESS_RIGHTS.READ_ONLY;
+            } else {
+                return Channel_ACCESS_RIGHTS.NOT_AVAILABLE;
+            }
+        }
+
 
         // always writable to local channel
         if (TcaChannel.checkChannelName(this.getChannelName()) === "local" || TcaChannel.checkChannelName(this.getChannelName()) === "global") {
@@ -1076,5 +1294,21 @@ export class TcaChannel {
         } else {
             return "";
         }
+    }
+
+    getPvaValueDisplayType = () => {
+        return this._pvaValueDisplayType;
+    }
+
+    setPvaValueDisplayType = (newType: pvaValueDisplayType) => {
+        this._pvaValueDisplayType = newType;
+    }
+
+    getPvaType = () => {
+        return this._pvaType;
+    }
+
+    setPvaType = (newType: any) => {
+        this._pvaType = newType;
     }
 }

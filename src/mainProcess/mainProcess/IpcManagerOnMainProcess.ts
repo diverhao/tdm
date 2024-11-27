@@ -1794,6 +1794,14 @@ export class IpcManagerOnMainProcess {
         // ioId and widgetKey are bounced back
         logs.info(this.getMainProcessId(), "tca-get-meta result for", channelName, "is", data);
         displayWindowAgent.sendFromMainProcess("tca-get-result", ioId, widgetKey, data);
+        if (channelName.startsWith("pva://")) {
+            console.log("try to get pva type ===============================", )
+            const pvaType = await displayWindowAgent.tcaGetPvaType(channelName);
+            console.log("try to get pva type ===============================", pvaType)
+            if (pvaType !== undefined) {
+                displayWindowAgent.sendFromMainProcess("tca-get-pva-type-result", channelName, widgetKey, pvaType);
+            }
+        }
     };
 
     handleTcaMonitor = (event: any, displayWindowId: string, channelName: string) => {
@@ -1830,7 +1838,8 @@ export class IpcManagerOnMainProcess {
         channelName: string,
         displayWindowId: string,
         dbrData: type_dbrData | type_LocalChannel_data,
-        ioTimeout: number // second
+        ioTimeout: number, // second
+        pvaValueField: string,
     ) => {
 
         const mainProcess = this.getMainProcess();
@@ -1842,19 +1851,19 @@ export class IpcManagerOnMainProcess {
             const errMsg = `Cannot find window with ID ${displayWindowId}`;
             throw new Error(errMsg);
         }
-        const success = windowAgent.tcaPut(channelName, dbrData, ioTimeout);
+        const success = windowAgent.tcaPut(channelName, dbrData, ioTimeout, pvaValueField);
 
-        let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-        if (!(channelAgent instanceof CaChannelAgent)) {
-            return;
-        }
-        if (channelAgent === undefined) {
-            channelAgent = channelAgentsManager.createChannelAgent(channelName);
-        }
-        if (!(channelAgent instanceof CaChannelAgent)) {
-            return;
-        }
-        channelAgent.put(displayWindowId, dbrData, ioTimeout);
+        // let channelAgent = channelAgentsManager.getChannelAgent(channelName);
+        // if (!(channelAgent instanceof CaChannelAgent)) {
+        //     return;
+        // }
+        // if (channelAgent === undefined) {
+        //     channelAgent = channelAgentsManager.createChannelAgent(channelName);
+        // }
+        // if (!(channelAgent instanceof CaChannelAgent)) {
+        //     return;
+        // }
+        // channelAgent.put(displayWindowId, dbrData, ioTimeout);
     };
 
     // ------------------------------------------------------------

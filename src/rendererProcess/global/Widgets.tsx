@@ -1737,8 +1737,7 @@ export class Widgets {
             if (tcaChannel !== undefined) {
                 return tcaChannel;
             }
-        }
-        else if (parsedChannelName === "local" || parsedChannelName === "global") {
+        } else if (parsedChannelName === "local" || parsedChannelName === "global") {
             const localChannelNameMeta = TcaChannel.extractNameAndMetaFromLocalChannelName(channelName);
             if (localChannelNameMeta !== undefined) {
                 const locaChannelName = localChannelNameMeta["localChannelName"];
@@ -1751,6 +1750,28 @@ export class Widgets {
         const errMsg = `Channel ${channelName} does not exist`;
         throw new Error(errMsg);
     };
+
+    getTcaSubPvaChannels = (channelName: string): TcaChannel[] => {
+        const parsedChannelName = TcaChannel.checkChannelName(channelName);
+        // remove ".value"
+        if (channelName.endsWith(".value")) {
+            channelName = channelName.substring(0, channelName.length - 6);
+        }
+        const result: TcaChannel[] = [];
+        if (parsedChannelName === "pva") {
+            for (let tmp of Object.keys(this.getTcaChannels())) {
+                if (tmp.includes(channelName)) {
+                    result.push(this.getTcaChannels()[tmp]);
+                }
+            }
+            if (result.length > 0) {
+                return result;
+            }
+        }
+        const errMsg = `Channel ${channelName} does not exist`;
+        throw new Error(errMsg);
+    };
+
 
     // value, severity, unit, dbr type, record type, time stamp, precision, enum choices
     // limits: upper_display_limit; lower_display_limit; upper_alarm_limit;

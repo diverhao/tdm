@@ -438,8 +438,6 @@ export class DisplayWindowAgent {
      * (4) Check if there is any active operations for this channel. If not, destry it.
      */
 
-    
-
     tcaGetMeta = async (channelName: string): Promise<type_dbrData | type_LocalChannel_data | { value: undefined }> => {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
@@ -516,6 +514,45 @@ export class DisplayWindowAgent {
         return result;
     };
 
+
+
+    tcaGetPvaType = async (channelName: string): Promise<undefined | any> => {
+        const windowAgentsManager = this.getWindowAgentsManager();
+        const mainProcess = windowAgentsManager.getMainProcess();
+        const channelAgentsManager = mainProcess.getChannelAgentsManager();
+        const channelType = ChannelAgentsManager.determineChannelType(channelName);
+        let pvaType: any = undefined;
+
+        if (channelType !== "pva") {
+            return undefined;
+        }
+
+        let connectSuccess = false;
+        connectSuccess = await this.addAndConnectChannel(channelName, undefined);
+        let channelAgent = channelAgentsManager.getChannelAgent(channelName);
+        console.log("tca get meta ---------- step 0", connectSuccess)
+
+        if (!connectSuccess || channelAgent === undefined) {
+            logs.debug(this.getMainProcessId(), `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
+            return { value: undefined };
+        }
+
+        console.log("tca get meta ---------- step 1")
+
+        if (channelAgent instanceof CaChannelAgent) {
+            // (3)
+            pvaType = await channelAgent.fetchPvaType();
+        }
+
+        // (4)
+        if (this.checkChannelOperations(channelName) === false) {
+            // ! shall we remove channel after get meta?
+            // this.removeChannel(channelName);
+        }
+
+        return pvaType;
+    };
+
     /**
      * Write meta data to LocalChannel, not applicable to CaChannel<br>
      *
@@ -566,13 +603,14 @@ export class DisplayWindowAgent {
      *
      * @returns {Promise<boolean>} `true` when the PUT command is sent out, `false` when the PUT command is not sent
      */
-    tcaPut = async (channelName: string, dbrData: type_dbrData | type_LocalChannel_data, ioTimeout: number): Promise<boolean> => {
+    tcaPut = async (channelName: string, dbrData: type_dbrData | type_LocalChannel_data, ioTimeout: number, pvaValueField: string): Promise<boolean> => {
+        console.log("xxx -------------- tca put", dbrData, pvaValueField, channelName)
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
         const channelType = ChannelAgentsManager.determineChannelType(channelName);
         // (1)
-        if (channelType === "ca") {
+        if (channelType === "ca" || channelType === "pva") {
             const t0 = Date.now();
             const connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
             const t1 = Date.now();
@@ -581,12 +619,17 @@ export class DisplayWindowAgent {
                 return false;
             }
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
+            console.log("channelAgent ------", channelAgent === undefined, connectSuccess)
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
                 logs.debug(this.getMainProcessId(), `tcaPut: EPICS channel ${channelName} cannot be created/connected.`);
                 return false;
             }
             // (2)
-            await channelAgent.put(this.getId(), dbrData, ioTimeout);
+            if (channelType === "ca") {
+                await channelAgent.put(this.getId(), dbrData, ioTimeout);
+            } else {
+                await channelAgent.putPva(this.getId(), dbrData, ioTimeout, pvaValueField);
+            }
             // (3)
             // channelAgent.reduceClientsNum();
             if (this.checkChannelOperations(channelName) === false) {

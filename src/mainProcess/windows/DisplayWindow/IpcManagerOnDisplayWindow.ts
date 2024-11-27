@@ -26,6 +26,7 @@ import { LogViewer, type_logData } from "../../../rendererProcess/widgets/LogVie
 import { PvMonitor } from "../../../rendererProcess/widgets/PvMonitor/PvMonitor";
 import { type_DialogInputBox, type_DialogMessageBox } from "../../../rendererProcess/helperWidgets/Prompt/Prompt";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
+import { TcaChannel } from "../../../rendererProcess/channel/TcaChannel";
 
 // var recorder;
 // var blobs = [];
@@ -153,6 +154,7 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("new-tdl", this.handleNewTdl);
         this.ipcRenderer.on("preset-colors", this.handlePresetColors);
         this.ipcRenderer.on("tca-get-result", this.handleTcaGetResult);
+        this.ipcRenderer.on("tca-get-pva-type-result", this.handleTcaGetPvaTypeResult);
         this.ipcRenderer.on("dialog-show-message-box", this.handleDialogShowMessageBox);
         this.ipcRenderer.on("dialog-show-input-box", this.handleDialogShowInputBox);
         this.ipcRenderer.on("tdl-file-saved", this.handleTdlFileSaved);
@@ -550,40 +552,53 @@ export class IpcManagerOnDisplayWindow {
         // console.log("received new dbr data", newDbrData);
         Log.debug("received data", JSON.stringify(newDbrData));
 
-        for (let channelName of Object.keys(newDbrData)) {
+        let channelNames = Object.keys(newDbrData);
+        for (let channelName of channelNames) {
             try {
                 // (1)
-                const tcaChannel = g_widgets1.getTcaChannel(channelName);
-                if (tcaChannel === undefined) {
-                    // in case the channel is destroyed in renderer process but still in main process
-                    // does not always happen
-                    continue;
-                }
-                let data = newDbrData[channelName];
-                if (data === undefined) {
-                    // the reason may be the IOC is offline, network glitch, or other issues that is not initiated
-                    // by the channel access client
-                    tcaChannel.appendToDbrData({ value: undefined, severity: ChannelSeverity.INVALID });
+                let tcaChannels: TcaChannel[] = [];
+                if (channelName.startsWith("pva://")) {
+                    tcaChannels = g_widgets1.getTcaSubPvaChannels(channelName);
                 } else {
-                    // (a) normal situation
-                    // (b) if the epics channel is softly destroyed (IOC offline, network down), it sends
-                    //     {value: undefined, severity: 3}, but the `value: undefined` is not serialized 
-                    //     in websocket transmission. So, we only receive {severity: 3}. In this case, the below 
-                    //     appendToDbrData() won't assign "undefined" to the value. Instead, the last valid
-                    //     value is kept. We use this feature (bug) to keep the old value, so that something 
-                    //     can be displayed in the widget. The widget only updates the severity and the corresponding 
-                    //     severity outline.
-                    tcaChannel.appendToDbrData(data);
+                    tcaChannels = [g_widgets1.getTcaChannel(channelName)];
                 }
-                // (2)
-                const widgetKeys = tcaChannel.getWidgetKeys();
-                for (let widgetKey of widgetKeys) {
-                    g_widgets1.addToForceUpdateWidgets(widgetKey);
+                for (let tcaChannel of tcaChannels) {
+
+                    if (tcaChannel === undefined) {
+                        // in case the channel is destroyed in renderer process but still in main process
+                        // does not always happen
+                        continue;
+                    }
+
+                    console.log("tca channel name, ", tcaChannel.getChannelName())
+                    let data = newDbrData[channelName];
+                    if (data === undefined) {
+                        // the reason may be the IOC is offline, network glitch, or other issues that is not initiated
+                        // by the channel access client
+                        tcaChannel.appendToDbrData({ value: undefined, severity: ChannelSeverity.INVALID });
+                    } else {
+                        // (a) normal situation
+                        // (b) if the epics channel is softly destroyed (IOC offline, network down), it sends
+                        //     {value: undefined, severity: 3}, but the `value: undefined` is not serialized 
+                        //     in websocket transmission. So, we only receive {severity: 3}. In this case, the below 
+                        //     appendToDbrData() won't assign "undefined" to the value. Instead, the last valid
+                        //     value is kept. We use this feature (bug) to keep the old value, so that something 
+                        //     can be displayed in the widget. The widget only updates the severity and the corresponding 
+                        //     severity outline.
+                        tcaChannel.appendToDbrData(data);
+                    }
+                    // (2)
+                    const widgetKeys = tcaChannel.getWidgetKeys();
+                    console.log("widget keys for tcachannel", widgetKeys, tcaChannel.getChannelName())
+                    for (let widgetKey of widgetKeys) {
+                        g_widgets1.addToForceUpdateWidgets(widgetKey);
+                    }
                 }
             } catch (e) {
                 Log.error(e);
             }
         }
+
         // (3)
         for (let widgetKey of g_widgets1.getWidgets().keys()) {
             // (3.a)
@@ -654,6 +669,18 @@ export class IpcManagerOnDisplayWindow {
         }
         g_flushWidgets();
     };
+
+    handleTcaGetPvaTypeResult = (event: any, channelName: string, widgetKey: string | undefined, pvaType: any) => {
+        try {
+            const channel = g_widgets1.getTcaChannel(channelName);
+            channel.setPvaType(pvaType);
+            console.log('set pva type', channelName, pvaType)
+        } catch (e) {
+            console.log(e);
+        }
+    };
+
+
 
     handleNewTdl = (
         event: any,

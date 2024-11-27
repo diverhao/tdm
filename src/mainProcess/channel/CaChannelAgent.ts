@@ -314,12 +314,51 @@ export class CaChannelAgent {
                 const errMsg = `Channel ${this.getChannelName()} does not exist.`;
                 throw new Error(errMsg);
             }
+            
             const newValue = dbrData.value;
             if (newValue === undefined) {
                 const errMsg = `Value to put for channel ${this.getChannelName()} is undefined.`;
                 throw new Error(errMsg);
             }
             await channel.put(newValue, ioTimeout);
+        } catch (e) {
+            logs.error(this.getMainProcessId(), e);
+        }
+        // this.reduceClientsNum();
+        // this.addPutOperation();
+        this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.PUT);
+        this.checkLifeCycle();
+    };
+
+    putPva = async (displayWindowId: string, dbrData: type_dbrData, ioTimeout: number = 1, pvaValueField: string): Promise<void> => {
+        console.log("put Pva ----", this.getChannelName(), dbrData, pvaValueField)
+        this.addDisplayWindowOperation(displayWindowId, DisplayOperations.PUT);
+        try {
+            const channel = this.getChannel();
+            if (channel === undefined) {
+                const errMsg = `Channel ${this.getChannelName()} does not exist.`;
+                throw new Error(errMsg);
+            }
+
+            const protocol = channel.getProtocol();
+            if (protocol !== "pva") {
+                const errMsg = `Channel ${this.getChannelName()} is not a PVA channel.`;
+                throw new Error(errMsg);
+            }
+
+            let pvRequest = this.getPvRequest();
+            console.log(this.getPvRequest())
+            if (pvaValueField !== "") {
+                pvRequest = pvRequest + ".value";
+            }
+
+            const newValue = dbrData.value;
+            if (newValue === undefined) {
+                const errMsg = `Value to put for channel ${this.getChannelName()} is undefined.`;
+                throw new Error(errMsg);
+            }
+            console.log("raw channel", channel.getName(), pvRequest, newValue, )
+            await channel.putPva(pvRequest, [newValue], ioTimeout);
         } catch (e) {
             logs.error(this.getMainProcessId(), e);
         }
@@ -693,7 +732,7 @@ export class CaChannelAgent {
         if (this.getProtocol() === "ca") {
             return "";
         } else {
-            const channelNameArray = this.getBareChannelName().split(".");
+            const channelNameArray = this.getChannelName().split(".");
             if (channelNameArray.length === 1) {
                 return "";
             } else {
