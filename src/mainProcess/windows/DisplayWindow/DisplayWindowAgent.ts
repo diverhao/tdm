@@ -448,6 +448,7 @@ export class DisplayWindowAgent {
         if (channelType === "ca" || channelType === "pva") {
             let connectSuccess = false;
             connectSuccess = await this.addAndConnectChannel(channelName, undefined);
+
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
 
             if (!connectSuccess || channelAgent === undefined) {
@@ -481,8 +482,8 @@ export class DisplayWindowAgent {
                     }
                 } else if (channelType === "pva") {
                     // (3)
-                    await channelAgent.fetchPvaType();
-                    result = await channelAgent.getPva(this.getId(), undefined, ""); // get the full type
+                    result = await channelAgent.fetchPvaType();
+                    // result = await channelAgent.getPva(this.getId(), undefined, ""); // get the full type
                 }
             }
         } else {
@@ -527,6 +528,7 @@ export class DisplayWindowAgent {
 
         let connectSuccess = false;
         connectSuccess = await this.addAndConnectChannel(channelName, undefined);
+
         let channelAgent = channelAgentsManager.getChannelAgent(channelName);
 
         if (!connectSuccess || channelAgent === undefined) {
@@ -607,6 +609,7 @@ export class DisplayWindowAgent {
         if (channelType === "ca" || channelType === "pva") {
             const t0 = Date.now();
             const connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
+
             const t1 = Date.now();
             // timeout
             if (t1 - t0 > ioTimeout * 1000) {
@@ -670,6 +673,7 @@ export class DisplayWindowAgent {
         if (channelType == "ca" || channelType == "pva") {
             // (1)
             const connectSuccess = await this.addAndConnectChannel(channelName, undefined);
+
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
                 logs.debug(this.getMainProcessId(), `tcaMonitor: EPICS channel ${channelName} cannot be created/connected.`);

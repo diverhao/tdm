@@ -154,7 +154,6 @@ export class CaChannelAgent {
                                 // last meaningful value for the widget, only updating the severity.
                                 let newDbrData = { value: undefined, severity: ChannelSeverity.INVALID };
                                 (displayWindowAgent as DisplayWindowAgent).addNewChannelData(this.getChannelName(), newDbrData);
-                                console.log("channel", this.getChannelName(), "destroyed softly. Update the severity to INVALID");
                             }
                         }, 200)
                     }
@@ -233,7 +232,6 @@ export class CaChannelAgent {
     ): Promise<type_dbrData | { value: undefined }> => {
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
         let data: type_dbrData | undefined = { value: undefined };
-
         try {
             const channel = this.getChannel();
             if (channel === undefined) {
@@ -256,12 +254,14 @@ export class CaChannelAgent {
 
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
+
             if (data === undefined) {
                 return { value: undefined };
             } else {
                 return data;
             }
         } catch (e) {
+
             logs.error(this.getMainProcessId(), e);
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
@@ -310,7 +310,7 @@ export class CaChannelAgent {
                 const errMsg = `Channel ${this.getChannelName()} does not exist.`;
                 throw new Error(errMsg);
             }
-            
+
             const newValue = dbrData.value;
             if (newValue === undefined) {
                 const errMsg = `Value to put for channel ${this.getChannelName()} is undefined.`;
@@ -393,20 +393,38 @@ export class CaChannelAgent {
         if (channel === undefined) {
             // this.reduceClientsNum();
             // this.reducePutOperation();
+            logs.error(`EPICS TCA Channel ${this.getChannel()} does not exist`);
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.MONITOR);
             this.checkLifeCycle();
             return;
         }
+        const protocol = this.getProtocol();
+        let alreadyHasMonitor = false;
+        if (protocol === "ca") {
+            if (Object.keys(channel.monitors).length !== 0) {
+                alreadyHasMonitor = true;
+            }
+        } else if (protocol === "pva") {
+            const monitors = channel.getMonitors();
+            const pvRequest = this.getPvRequest();
+            for (let monitor of monitors) {
+                const pvRequestTmp = monitor.getPvRequest();
+                if (pvRequest === pvRequestTmp) {
+                    alreadyHasMonitor = true;
+                    break;
+                }
+            }
+        }
+
         // each Channel only has one monitor (to save resources)
-        if (Object.keys(channel.monitors).length !== 0) {
+        // if (Object.keys(channel.monitors).length !== 0) {
+        if (alreadyHasMonitor === true) {
             // monitor already exists, each channel only has one monitor, do nothing
             // this.reduceClientsNum();
             // this.reducePutOperation();
             // this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.MONITOR);
             this.checkLifeCycle();
         } else {
-            const protocol = this.getProtocol();
-
             if (protocol === "ca") {
                 // monitor dbrTime data
                 const monitor = await channel.createMonitor(undefined, (channelMonitor: ChannelMonitor) => {
@@ -430,6 +448,7 @@ export class CaChannelAgent {
                     return;
                 }
             } else if (protocol === "pva") {
+
                 const monitor = await channel.createMonitorPva(undefined, this.getPvRequest(), (channelMonitor: ChannelMonitor) => {
                     const channelAgentsManager = this.getChannelAgentsManager();
                     const mainProcess = channelAgentsManager.getMainProcess();
@@ -716,10 +735,10 @@ export class CaChannelAgent {
     };
 
     getProtocol = () => {
-       if (this.getChannelName().startsWith("pva://")) {
-        return "pva"
-       }
-       return "ca";
+        if (this.getChannelName().startsWith("pva://")) {
+            return "pva"
+        }
+        return "ca";
     }
 
     getPvRequest = (): string => {

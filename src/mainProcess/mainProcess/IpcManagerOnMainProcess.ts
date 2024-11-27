@@ -1793,12 +1793,10 @@ export class IpcManagerOnMainProcess {
         // (2)
         // ioId and widgetKey are bounced back
         logs.info(this.getMainProcessId(), "tca-get-meta result for", channelName, "is", data);
-        displayWindowAgent.sendFromMainProcess("tca-get-result", ioId, widgetKey, data);
         if (channelName.startsWith("pva://")) {
-            const pvaType = await displayWindowAgent.tcaGetPvaType(channelName);
-            if (pvaType !== undefined) {
-                displayWindowAgent.sendFromMainProcess("tca-get-pva-type-result", channelName, widgetKey, pvaType);
-            }
+            displayWindowAgent.sendFromMainProcess("tca-get-pva-type-result", channelName, widgetKey, data);
+        } else {
+            displayWindowAgent.sendFromMainProcess("tca-get-result", ioId, widgetKey, data);
         }
     };
 
