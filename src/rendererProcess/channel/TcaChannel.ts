@@ -552,8 +552,15 @@ export class TcaChannel {
                 return undefined;
             }
             let pvRequest = this.getPvRequest();
+            console.log("pva Typpe", pvaType, pvRequest, this.getPvaValueDisplayType())
             if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
-                pvRequest = pvRequest + ".value";
+                if (pvRequest !== "") {
+                    pvRequest = pvRequest + ".value";
+
+                } else {
+                    pvRequest = pvRequest + "value";
+
+                }
             } else if (this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_RAW_FIELD ||
                 this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_VALUE_FIELD ||
                 this.getPvaValueDisplayType() === pvaValueDisplayType.NOT_DEFINED
@@ -974,17 +981,39 @@ export class TcaChannel {
             return ChannelSeverity.INVALID;
         }
 
-        const severityNum = this.getDbrData()["severity"];
-        if (severityNum === 0) {
-            return ChannelSeverity.NO_ALARM;
-        } else if (severityNum === 1) {
-            return ChannelSeverity.MINOR;
-        } else if (severityNum === 2) {
-            return ChannelSeverity.MAJOR;
-        } else {
-            // any other cases
-            return ChannelSeverity.INVALID;
+        if (TcaChannel.checkChannelName(this.getChannelName()) === "ca") {
+
+            const severityNum = this.getDbrData()["severity"];
+            if (severityNum === 0) {
+                return ChannelSeverity.NO_ALARM;
+            } else if (severityNum === 1) {
+                return ChannelSeverity.MINOR;
+            } else if (severityNum === 2) {
+                return ChannelSeverity.MAJOR;
+            } else {
+                // any other cases
+                return ChannelSeverity.INVALID;
+            }
+        } else if (TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
+            // try to get the alarm field
+            const alarm = this.getDbrData()["alarm"];
+            if (alarm !== undefined) {
+                const severityNum = alarm["severity"];
+                if (severityNum === 0) {
+                    return ChannelSeverity.NO_ALARM;
+                } else if (severityNum === 1) {
+                    return ChannelSeverity.MINOR;
+                } else if (severityNum === 2) {
+                    return ChannelSeverity.MAJOR;
+                } else {
+                    // any other cases
+                    return ChannelSeverity.INVALID;
+                }
+            } else {
+                return ChannelSeverity.INVALID;
+            }
         }
+        return ChannelSeverity.INVALID;
     };
 
     getSeverityStr = () => {

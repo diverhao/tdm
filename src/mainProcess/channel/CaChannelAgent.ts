@@ -331,7 +331,6 @@ export class CaChannelAgent {
     };
 
     putPva = async (displayWindowId: string, dbrData: type_dbrData, ioTimeout: number = 1, pvaValueField: string): Promise<void> => {
-        console.log("put Pva ----", this.getChannelName(), dbrData, pvaValueField)
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.PUT);
         try {
             const channel = this.getChannel();
@@ -347,9 +346,12 @@ export class CaChannelAgent {
             }
 
             let pvRequest = this.getPvRequest();
-            console.log(this.getPvRequest())
             if (pvaValueField !== "") {
-                pvRequest = pvRequest + ".value";
+                if (pvRequest === "") {
+                    pvRequest = pvaValueField;
+                } else {
+                    pvRequest = pvRequest + "." + pvaValueField;
+                }
             }
 
             const newValue = dbrData.value;
@@ -357,7 +359,7 @@ export class CaChannelAgent {
                 const errMsg = `Value to put for channel ${this.getChannelName()} is undefined.`;
                 throw new Error(errMsg);
             }
-            console.log("raw channel", channel.getName(), pvRequest, newValue, )
+            console.log(`Run command await channel.putPva("${pvRequest}", [${[newValue]}], ${ioTimeout})`)
             await channel.putPva(pvRequest, [newValue], ioTimeout);
         } catch (e) {
             logs.error(this.getMainProcessId(), e);
