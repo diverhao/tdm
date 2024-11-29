@@ -1790,6 +1790,7 @@ export class Widgets {
      * In operating mode, if TcaChannel object does not exist or channel not connected, return undefined. <br>
      */
     getChannelValue = (channelName: string, raw: boolean = false): string | number | number[] | string[] | undefined => {
+
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return channelName;
         }

@@ -562,6 +562,7 @@ export class IpcManagerOnDisplayWindow {
                 } else {
                     tcaChannels = [g_widgets1.getTcaChannel(channelName)];
                 }
+                console.log(tcaChannels.length)
                 for (let tcaChannel of tcaChannels) {
 
                     if (tcaChannel === undefined) {

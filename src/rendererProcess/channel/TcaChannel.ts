@@ -43,6 +43,7 @@ export class TcaChannel {
     autoUpdateInterval: any;
     _pvaValueDisplayType: pvaValueDisplayType = pvaValueDisplayType.NOT_DEFINED;
     _pvaType: any = undefined;
+    _enumChoices: string[] = [];
 
     // allowed character in LOCAL channel name
     // a-z A-Z 0-9 _ - : . ;
@@ -460,7 +461,11 @@ export class TcaChannel {
         let pvaValueField = "";
         if (this.getProtocol() === "pva") {
             if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
+                // the pvaValueField is the relative path w.r.t. the TcaChannel.pvRequest
+                // on the main process side, the CaChannel is holding the TcaChannel.pvRequest all the time
                 pvaValueField = "value";
+            } else if (this.isEnumType()) {
+                pvaValueField = "value.index"
             }
         }
         g_widgets1
@@ -546,6 +551,8 @@ export class TcaChannel {
                 return undefined;
             }
         } else if (TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
+            console.log("============ parse input ============")
+            console.log("============ parse input ============ 1", this.getPvaValueDisplayType(), this.isEnumType())
             let pvaType = this.getPvaType();
             if (pvaType === undefined) {
                 return undefined;
@@ -560,29 +567,57 @@ export class TcaChannel {
 
                 }
             } else if (this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_RAW_FIELD ||
-                this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_VALUE_FIELD ||
+                (this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_VALUE_FIELD && this.isEnumType() === false) ||
                 this.getPvaValueDisplayType() === pvaValueDisplayType.NOT_DEFINED
             ) {
                 return undefined;
             }
 
+            console.log("============ parse input ============ 2", this.getPvaValueDisplayType(), this.isEnumType())
             let valueTypeIndex = "";
-            if (pvRequest !== "") {
-                try {
-                    const pvRequestStrs = pvRequest.split(".");
-                    for (const pvRequestStr of pvRequestStrs) {
-                        pvaType = pvaType["fields"][pvRequestStr];
-                    }
-                } catch (e) {
-                    return undefined;
-                }
-            }
+
+            pvaType = this.getPvaTypeAtPvRequest(pvRequest);
             if (pvaType === undefined) {
                 return undefined;
             }
+
             valueTypeIndex = pvaType["typeIndex"];
 
             let dbrDataType = "";
+
+            // enum is special: input could be a string or number, the string is converted back to number
+            if (this.isEnumType()) {
+                console.log("This is an enum in parseInput")
+                const value = dbrData["value"];
+                if (typeof value === "number") {
+                    // return the index
+                    return Math.floor(value);
+                } else if (typeof value === "string") {
+                    // find the corresponding index
+                    // if (pvRequest === "") {
+                    //     pvRequest = "value.choices";
+                    // } else {
+                    //     pvRequest = pvRequest + ".value.choices";
+                    // }
+                    // const choices = this.getPvaTypeAtPvRequest(pvRequest);
+                    const choices = this.getEnumChoices();
+                    if (Array.isArray(choices)) {
+                        // a string array
+                        for (let ii = 0; ii < choices.length; ii++) {
+                            const choice = choices[ii];
+                            if (choice === value) {
+                                return ii;
+                            }
+                        }
+                        return undefined;
+                    } else {
+                        return undefined
+                    }
+
+                } else {
+                    return undefined;
+                }
+            }
 
             if (
                 valueTypeIndex === "0x43" ||
@@ -889,35 +924,54 @@ export class TcaChannel {
             return this.getChannelName();
         }
 
-
         if (this.getProtocol() === "pva") {
-            const pvRequest = this.getPvRequest();
-            const pvRequestStrs = pvRequest.split(".");
             try {
-                let value = this.getDbrData();
-                if (pvRequest !== "") {
-                    for (let pvRequestStr of pvRequestStrs) {
-                        value = value[pvRequestStr];
-                    }
-                }
-                // if value is a JSON object, try to find its .value field
-                if (typeof value === "object" && Array.isArray(value) === false) {
-                    if (value["value"] === undefined) {
+                const type = this.getPvaTypeAtPvRequest() as any;
+                const value = this.getPvaValueAtPvRequest() as any;
+
+                // if the type is struct, try to find the values's .value field
+                if (type["typeIndex"] === "0x80") {
+                    if (type["fields"]["value"] === undefined) {
                         // do not have .value field, return the value itself as a string
                         this.setPvaValueDisplayType(pvaValueDisplayType.OBJECT_RAW_FIELD);
                         return JSON.stringify(value);
                     } else {
-                        // it has a .value field that is an object
-                        if (typeof value["value"] === "object" && Array.isArray(value["value"]) === false) {
-                            this.setPvaValueDisplayType(pvaValueDisplayType.OBJECT_VALUE_FIELD);
-                            return JSON.stringify(value["value"]);
-                        } else {
-                            // the .value field is a number, string, number[], or string[]
+                        // it has a .value field
+                        if (type["fields"]["value"]["typeIndex"] === "0x80" && value["value"] !== undefined) {
+                            // it has a .value field that is a struct
+                            if (type["name"].includes("epics:nt/NTEnum")) {
+                                this.setPvaValueDisplayType(pvaValueDisplayType.OBJECT_VALUE_FIELD);
+                                // if this channel is an nt enum, the value contains 2 fields "int index" and "string[] choices"
+                                const index = (value as any)["value"]["index"];
+                                // the data may not carry "string[] choices", but the first time data must carry it
+                                let choices = (value as any)["value"]["choices"];
+                                if (choices === undefined) {
+                                    choices = this.getEnumChoices();
+                                } else {
+                                    this.setEnumChoices(choices);
+                                }
+                                if (index !== undefined && choices !== undefined && typeof index === "number" && Array.isArray(choices)) {
+                                    const choice = choices[index];
+                                    return choice;
+                                } else {
+                                    return JSON.stringify(value["value"]);
+                                }
+                            } else {
+                                // if this channel is not a enum
+                                this.setPvaValueDisplayType(pvaValueDisplayType.OBJECT_VALUE_FIELD);
+                                return JSON.stringify(value["value"]);
+                            }
+                        } else if (type["fields"]["value"]["typeIndex"] === "0x80" && value["value"] === undefined) {
+                            return undefined;
+                        } else if (type["fields"]["value"]["typeIndex"] !== "0x80" && value["value"] === undefined) {
+                            return undefined;
+                        } else if (type["fields"]["value"]["typeIndex"] !== "0x80" && value["value"] !== undefined) {
                             this.setPvaValueDisplayType(pvaValueDisplayType.PRIMITIVE_VALUE_FIELD);
-                            return value["value"]
+                            return value["value"];
+                        } else {
+                            return undefined;
                         }
                     }
-
                 } else {
                     // value is string | number | string[] | number[] | undefined
                     this.setPvaValueDisplayType(pvaValueDisplayType.PRIMITIVE_RAW_FIELD);
@@ -937,7 +991,7 @@ export class TcaChannel {
 
             // enum
             if (raw === false) {
-                if (TcaChannel.checkChannelName(this.getChannelName()) === "ca" || TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
+                if (TcaChannel.checkChannelName(this.getChannelName()) === "ca") {
                     const dbrTypeNum = this.getDbrData().DBR_TYPE;
                     if (dbrTypeNum !== undefined && Channel_DBR_TYPES[dbrTypeNum].includes("ENUM")) {
                         const choices = this.getDbrData().strings;
@@ -1079,6 +1133,11 @@ export class TcaChannel {
 
         // PVA channel
         if (TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
+            // enum is different: its value field is an object
+            if (this.isEnumType() === true) {
+                return Channel_ACCESS_RIGHTS.READ_WRITE;
+            }
+            // regualr channle
             if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_RAW_FIELD || this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
                 return Channel_ACCESS_RIGHTS.READ_WRITE;
             } else if (this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_RAW_FIELD || this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_VALUE_FIELD) {
@@ -1278,11 +1337,31 @@ export class TcaChannel {
      * If this channel an enum type data
      */
     isEnumType = (): boolean => {
-        const strings = this.getStrings();
-        if (strings !== undefined) {
-            return true;
+        if (this.getProtocol() === "pva") {
+            const pvaType = this.getPvaType();
+            if (pvaType === undefined) {
+                return false;
+            } else {
+                let fieldType = pvaType;
+                if (this.getPvRequest() !== "") {
+                    const pvRequestStrs = this.getPvRequest().split(".");
+                    for (let pvRequestStr of pvRequestStrs) {
+                        fieldType = pvaType["fields"][pvRequestStr];
+                    }
+                }
+                if (fieldType["name"].includes("epics:nt/NTEnum")) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
         } else {
-            return false;
+            const strings = this.getStrings();
+            if (strings !== undefined) {
+                return true;
+            } else {
+                return false;
+            }
         }
     };
 
@@ -1345,5 +1424,54 @@ export class TcaChannel {
 
     setPvaType = (newType: any) => {
         this._pvaType = newType;
+    }
+
+    getEnumChoices = () => {
+        return this._enumChoices;
+    }
+
+    setEnumChoices = (newChoices: string[]) => {
+        this._enumChoices = newChoices;
+    }
+
+    getPvaTypeAtPvRequest = (pvRequest: string | undefined = undefined) => {
+        if (pvRequest === undefined) {
+            pvRequest = this.getPvRequest();
+        }
+        let type = this.getPvaType();
+        if (pvRequest === "") {
+            return type;
+        }
+
+        try {
+            const pvRequestStrs = pvRequest.split(".");
+            for (const pvRequestStr of pvRequestStrs) {
+                type = type["fields"][pvRequestStr];
+            }
+        } catch (e) {
+            return undefined;
+        }
+        return type;
+    }
+
+
+    getPvaValueAtPvRequest = (pvRequest: string | undefined = undefined) => {
+        let data = this.getDbrData();
+        if (pvRequest === undefined) {
+            pvRequest = this.getPvRequest();
+        }
+        if (pvRequest === "") {
+            return data;
+        }
+
+        try {
+            const pvRequestStrs = pvRequest.split(".");
+            for (const pvRequestStr of pvRequestStrs) {
+                data = data[pvRequestStr];
+            }
+        } catch (e) {
+            return undefined;
+        }
+        return data;
     }
 }
