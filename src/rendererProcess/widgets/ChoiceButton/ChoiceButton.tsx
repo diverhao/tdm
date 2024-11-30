@@ -168,8 +168,12 @@ export class ChoiceButton extends BaseWidget {
             if (this.channelItemsUpdated === false) {
                 try {
                     const channel = g_widgets1.getTcaChannel(channelName);
-                    const strs = channel.getStrings();
-                    const numberOfStringsUsed = channel.getNumerOfStringsUsed();
+                    let strs = channel.getStrings();
+                    let numberOfStringsUsed = channel.getNumerOfStringsUsed();
+                    if (channel.getChannelName().startsWith("pva") && channel.isEnumType()) {
+                        strs = channel.getEnumChoices();
+                        numberOfStringsUsed = strs.length;
+                    }
 
                     if (this.getAllText()["useChannelItems"] === true && strs !== undefined && numberOfStringsUsed !== undefined) {
                         // update itemNames and itemValues
@@ -239,9 +243,9 @@ export class ChoiceButton extends BaseWidget {
                 }
             }
         }
-        
-        const highlightColor = (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false)? "rgba(0,0,0,0)": "rgba(255,255,255,1)";
-        const shadowColor = (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false)? "rgba(0,0,0,0)": "rgba(100,100,100,1)";
+
+        const highlightColor = (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false) ? "rgba(0,0,0,0)" : "rgba(255,255,255,1)";
+        const shadowColor = (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false) ? "rgba(0,0,0,0)" : "rgba(100,100,100,1)";
         const calcBorderBottomRight = (isSelected: boolean) => {
             if (this.getAllText()["appearance"] === "traditional") {
                 if (isSelected) {
@@ -333,8 +337,16 @@ export class ChoiceButton extends BaseWidget {
                         if (!g_widgets1.isEditing()) {
                             try {
                                 const channel = g_widgets1.getTcaChannel(channelName);
-                                if (channel.getDbrData()["value"] === itemValues[index]) {
-                                    isSelected = true;
+                                if (channel.getProtocol() === "pva") {
+                                    const dbrData = channel.getDbrData() as any;
+                                    if (dbrData["value"]["index"] === index) {
+                                        isSelected = true;
+                                    }
+                                } else {
+                                    if (channel.getDbrData()["value"] === itemValues[index]) {
+                                        isSelected = true;
+                                    }
+
                                 }
                             } catch (e) {
                                 Log.error(e);
@@ -389,11 +401,15 @@ export class ChoiceButton extends BaseWidget {
             try {
                 const channel = g_widgets1.getTcaChannel(channelName);
                 const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                const value = this.getItemValues()[index];
+                let value = this.getItemValues()[index];
+                if (this.getAllText()["useChannelItems"] === true) {
+                    value = this._itemValuesFromChannel[index];
+                }
                 const dbrData = {
                     value: value,
                 };
                 // 1 second expire
+                console.log("putting", this.getItemValues(), index, dbrData)
                 channel.put(displayWindowId, dbrData, 1);
             } catch (e) {
                 Log.error(e);

@@ -447,6 +447,8 @@ export class TcaChannel {
             return;
         }
 
+        console.log("put value", value)
+
         // might be [1,2,3], "abc", 37.8
         // for array, the number of input array cannot exceed Channel.valueCount, the epics-tca won't
         // accept this input
@@ -468,6 +470,8 @@ export class TcaChannel {
                 pvaValueField = "value.index"
             }
         }
+
+        console.log("send to main process for put", channelName, displayWindowId, dbrData, ioTimeout, pvaValueField)
         g_widgets1
             .getRoot()
             .getDisplayWindowClient()
@@ -589,6 +593,7 @@ export class TcaChannel {
             if (this.isEnumType()) {
                 console.log("This is an enum in parseInput")
                 const value = dbrData["value"];
+                console.log("value = ", value, dbrData)
                 if (typeof value === "number") {
                     // return the index
                     return Math.floor(value);
@@ -1003,6 +1008,7 @@ export class TcaChannel {
                     const dbrTypeNum = this.getDbrData()["type"];
                     if (dbrTypeNum !== undefined && dbrTypeNum === "enum") {
                         const choices = this.getDbrData().strings;
+                        this.setEnumChoices(choices);
                         if (choices !== undefined) {
                             return choices[value as number];
                         }
@@ -1302,6 +1308,11 @@ export class TcaChannel {
         return this.getDbrData()["strings"];
     };
 
+    getEnumChoices = () => {
+        return this._enumChoices;
+    }
+
+
     /**
      * Get number of strings used in enum type channel. <br>
      *
@@ -1319,8 +1330,10 @@ export class TcaChannel {
             } else {
                 return undefined;
             }
-        } else {
+        } else if (TcaChannel.checkChannelName(channelName) === "ca") {
             return this.getDbrData()["number_of_string_used"];
+        } else {
+            return this.getEnumChoices().length;
         }
     };
 
@@ -1426,9 +1439,6 @@ export class TcaChannel {
         this._pvaType = newType;
     }
 
-    getEnumChoices = () => {
-        return this._enumChoices;
-    }
 
     setEnumChoices = (newChoices: string[]) => {
         this._enumChoices = newChoices;
