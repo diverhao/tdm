@@ -24,11 +24,10 @@ export type type_RadioButton_tdl = {
 export class RadioButton extends BaseWidget {
 	_itemLabels: string[];
 	_itemLabelsFromChannel: string[] = [];
-	// _itemPictures: string[];
 	_itemValues: (number | string | number[] | string[] | undefined)[];
-	_itemValuesFromChannel: number[] = [];
-	// _itemColors: string[];
 	channelItemsUpdated: boolean = false;
+    _itemNamesFromChannel: string[];
+    _itemValuesFromChannel: (number | string | number[] | string[] | undefined)[];
 
 	_rules: RadioButtonRules;
 
@@ -56,6 +55,8 @@ export class RadioButton extends BaseWidget {
 		if (this._itemValues.length === 0) {
 			this._itemValues.push(0);
 		}
+        this._itemNamesFromChannel = [];
+        this._itemValuesFromChannel = [];
 
 		this._rules = new RadioButtonRules(this, widgetTdl);
 
@@ -167,7 +168,7 @@ export class RadioButton extends BaseWidget {
 		);
 	};
 
-	updateItemsFromChannel = () => {
+	updateItemsFromChannel1 = () => {
 		const channelName = this.getChannelNames()[0];
 
 		if (!g_widgets1.isEditing()) {
@@ -203,15 +204,55 @@ export class RadioButton extends BaseWidget {
 		}
 	};
 
-	_ElementRadioButton = () => {
-		this.updateItemsFromChannel();
 
-		let tmpLabels = this.getItemLabels();
-		let tmpValues = this.getItemValues();
-		if (this.getAllText()["useChannelItems"] && this._itemLabelsFromChannel.length > 0) {
-			tmpLabels = this._itemLabelsFromChannel;
-			tmpValues = this._itemValuesFromChannel;
-		}
+    updateItemsFromChannel = (channelName: string) => {
+        let itemNames = this.getItemLabels();
+        let itemValues = this.getItemValues();
+
+        if (!g_widgets1.isEditing()) {
+            if (this.channelItemsUpdated === false) {
+                try {
+                    const channel = g_widgets1.getTcaChannel(channelName);
+                    let strs = channel.getStrings();
+                    let numberOfStringsUsed = channel.getNumerOfStringsUsed();
+                    if (channel.getChannelName().startsWith("pva") && channel.isEnumType()) {
+                        strs = channel.getEnumChoices();
+                        numberOfStringsUsed = strs.length;
+                    }
+
+                    if (this.getAllText()["useChannelItems"] === true && strs !== undefined && numberOfStringsUsed !== undefined) {
+                        // update itemNames and itemValues
+                        this._itemNamesFromChannel.length = 0;
+                        this._itemValuesFromChannel.length = 0;
+                        for (let ii = 0; ii < numberOfStringsUsed; ii++) {
+                            this._itemNamesFromChannel.push(strs[ii]);
+                            this._itemValuesFromChannel.push(ii);
+                        }
+                        itemNames = this._itemNamesFromChannel;
+                        itemValues = this._itemValuesFromChannel;
+                        this.channelItemsUpdated = true;
+                    }
+                } catch (e) {
+                    Log.error(e);
+                    return [itemNames, itemValues];
+                }
+            } else {
+                // display window is operating, and the channel items are upated, then simply assign
+                itemNames = this._itemNamesFromChannel;
+                itemValues = this._itemValuesFromChannel;
+            }
+        } else {
+            this._itemNamesFromChannel.length = 0;
+            this._itemValuesFromChannel.length = 0;
+            this.channelItemsUpdated = false;
+        }
+        return [itemNames, itemValues];
+    };
+
+	_ElementRadioButton = () => {
+
+        const channelName = this.getChannelNames()[0];
+        const [itemNames, itemValues] = this.updateItemsFromChannel(channelName) as any;
 
 		const elementRef = React.useRef<any>(null);
 
@@ -225,6 +266,7 @@ export class RadioButton extends BaseWidget {
 					flexDirection: "column",
 					justifyContent: this.getAllText()["verticalAlign"],
 					alignItems: this.getAllText()["horizontalAlign"],
+                    cursor: "pointer",
 					opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
 				}}
 			>
@@ -261,34 +303,57 @@ export class RadioButton extends BaseWidget {
 						}
 					}}
 				>
-					{tmpLabels.map((label: string, index: number) => {
-						const value = tmpValues[index];
+
+					{itemNames.map((name: string, index: number) => {
+						const value = itemValues[index];
+                        let isSelected = false;
+                        if (!g_widgets1.isEditing()) {
+                            try {
+                                const channel = g_widgets1.getTcaChannel(channelName);
+                                if (channel.getProtocol() === "pva") {
+                                    const dbrData = channel.getDbrData() as any;
+                                    if (dbrData["value"]["index"] === index) {
+                                        isSelected = true;
+                                    }
+                                } else {
+                                    if (channel.getDbrData()["value"] === itemValues[index]) {
+                                        isSelected = true;
+                                    }
+
+                                }
+                            } catch (e) {
+                                Log.error(e);
+                            }
+                        }
+
 						return (
 							<div
-                                key={`${label}-${index}`}
+                                key={`${name}-${index}`}
 								style={{
 									display: "inline-flex",
 									flexDirection: "row",
 									justifyContent: "flex-start",
 									alignItems: "center",
+                                    cursor: "pointer",
 									pointerEvents: this._getChannelAccessRight() < 1.5 ? "none" : "auto",
 								}}
 							>
 								<input
 									type="radio"
 									name="radio"
-									id={`${this.getWidgetKey()}-${label}-${index}`}
+									id={`${this.getWidgetKey()}-${name}-${index}`}
 									onChange={(event: any) => {
-										this.handleChange(event);
+										this.handleChange(event, index);
 									}}
-									checked={Math.floor(this._getChannelValue(true) as number) === value ? true : false}
+									checked={isSelected}
 									value={`${value}`}
 									style={{
 										width: this.getAllText()["boxWidth"],
 										height: this.getAllText()["boxWidth"],
+                                        cursor: "pointer",
 									}}
 								></input>
-								<label htmlFor={`${this.getWidgetKey()}-${label}-${index}`}>{label}</label>
+								<label htmlFor={`${this.getWidgetKey()}-${name}-${index}`}>{name}</label>
 							</div>
 						);
 					})}
@@ -297,38 +362,35 @@ export class RadioButton extends BaseWidget {
 		);
 	};
 
-	handleChange = (event: any) => {
-		// do not preventDefault()
 
-		const newChannelValue = event.target.value;
-
-		if (g_widgets1.isEditing()) {
-			return;
-		}
-
-		if (this._getChannelAccessRight() < 1.5) {
-			return;
-		}
-
-		const oldChannelValue = Math.floor(this._getChannelValue(true) as number);
-		if (newChannelValue === oldChannelValue) {
-			return;
-		}
-
-		try {
-			const channelName = this.getChannelNames()[0];
-			const channel = g_widgets1.getTcaChannel(channelName);
-			const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-
-			const dbrData = {
-				value: newChannelValue,
-			};
-
-			channel.put(displayWindowId, dbrData, 1);
-		} catch (e) {
-			Log.error(e);
-		}
-	};
+    handleChange = (event: any, index: number) => {
+        event.preventDefault();
+        const channelName = this.getChannelNames()[0];
+        if (g_widgets1.isEditing()) {
+            return;
+        } else {
+            if (this._getChannelAccessRight() < 1.5) {
+                return;
+            }
+            // write value
+            try {
+                const channel = g_widgets1.getTcaChannel(channelName);
+                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+                let value = this.getItemValues()[index];
+                if (this.getAllText()["useChannelItems"] === true) {
+                    value = this._itemValuesFromChannel[index];
+                }
+                const dbrData = {
+                    value: value,
+                };
+                // 1 second expire
+                console.log("putting", this.getItemValues(), index, dbrData)
+                channel.put(displayWindowId, dbrData, 1);
+            } catch (e) {
+                Log.error(e);
+            }
+        }
+    };
 
 	// concretize abstract method
 	_Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
