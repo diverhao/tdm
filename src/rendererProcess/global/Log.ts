@@ -3,7 +3,7 @@ import { logLevel, logLevels } from "./GlobalVariables";
 /**
  * A simple wrapper of console.log for client output in browser window.
  *
- * fatal, error, info, debug, trace
+ * 5 levels of log: fatal, error, info, debug, trace
  */
 export class Log {
 	constructor() {}

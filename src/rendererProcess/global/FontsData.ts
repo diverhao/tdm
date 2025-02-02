@@ -3,16 +3,24 @@ export class FontsData {
 
     static g_fonts: Record<string, Record<string, FontFace>> = {
         "TDM Default": {
-            Regular: new FontFace("TDM Default", `url(../../resources/fonts/LiberationSans/LiberationSans-Regular.ttf)`),
+            Regular: new FontFace("TDM Default", `url(../../resources/fonts/LiberationSans/LiberationSans-Regular.ttf)`, { style: "normal", weight: "normal" }),
+            Bold: new FontFace("TDM Default", `url(../../resources/fonts//LiberationSans/LiberationSans-Bold.ttf)`, { style: "normal", weight: "bold" }),
+            Italic: new FontFace("TDM Default", `url(../../resources/fonts/LiberationSans/LiberationSans-Italic.ttf)`, { style: "italic", weight: "normal" }),
         },
         Tinos: {
-            Regular: new FontFace("Tinos", `url(../../resources/fonts//Tinos/Tinos-Regular.ttf)`),
+            Regular: new FontFace("Tinos", `url(../../resources/fonts//Tinos/Tinos-Regular.ttf)`, { style: "normal", weight: "normal" }),
+            Bold: new FontFace("Tinos", `url(../../resources/fonts//Tinos/Tinos-Bold.ttf)`, { style: "normal", weight: "bold" }),
+            Italic: new FontFace("Tinos", `url(../../resources/fonts//Tinos/Tinos-Italic.ttf)`, { style: "italic", weight: "normal" }),
         },
         "Courier Prime": {
-            Regular: new FontFace("Courier Prime", `url(../../resources/fonts/CourierPrime/CourierPrime.ttf)`),
+            Regular: new FontFace("Courier Prime", `url(../../resources/fonts/CourierPrime/CourierPrime.ttf)`, { style: "normal", weight: "normal" }),
+            Bold: new FontFace("Courier Prime", `url(../../resources/fonts/CourierPrime/CourierPrimeBold.ttf)`, { style: "normal", weight: "bold" }),
+            Italic: new FontFace("Courier Prime", `url(../../resources/fonts/CourierPrime/CourierPrimeItalic.ttf)`, { style: "italic", weight: "normal" }),
         },
         "Liberation Sans": {
-            Regular: new FontFace("Liberation Sans", `url(../../resources/fonts/LiberationSans/LiberationSans-Regular.ttf)`),
+            Regular: new FontFace("Liberation Sans", `url(../../resources/fonts/LiberationSans/LiberationSans-Regular.ttf)`, { style: "normal", weight: "normal" }),
+            Bold: new FontFace("Liberation Sans", `url(../../resources/fonts/LiberationSans/LiberationSans-Bold.ttf)`, { style: "normal", weight: "bold" }),
+            Italic: new FontFace("Liberation Sans", `url(../../resources/fonts/LiberationSans/LiberationSans-Italic.ttf)`, { style: "italic", weight: "normal" }),
         }
     };
 

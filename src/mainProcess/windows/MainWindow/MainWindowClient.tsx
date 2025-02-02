@@ -7,7 +7,14 @@ import { MainWindowProfileRunPage } from "../../../rendererProcess/mainWindow/Ma
 import { IpcManagerOnMainWindow } from "./IpcManagerOnMainWindow";
 import { FontsData } from "../../../rendererProcess/global/FontsData";
 import { PromptOnMainWindow } from "../../../rendererProcess/helperWidgets/Prompt/PromptOnMainWindow";
-// import * as path from "path";
+import { Log } from "../../../rendererProcess/global/Log";
+
+
+export enum mainWindowState {
+    "start",
+    "edit",
+    "run",
+}
 
 /**
  * Represent one main window on renderer process. <br>
@@ -28,51 +35,53 @@ export class MainWindowClient {
     private _profiles: Record<string, Record<string, any>> = {};
     private _profilesFileName: string = "";
     private _selectedProfileName: string = "";
-    private _windowId: string = "";
-
-    private _profileEditPage: MainWindowProfileEditPage | undefined = undefined;
-    private _startupPage: MainWindowStartupPage | undefined = undefined;
-    _profileRunPage: MainWindowProfileRunPage | undefined = undefined;
-
-    private readonly _ipcManager: IpcManagerOnMainWindow;
-    // ipcRenderer: any;
-    private _processId: string = "";
-
     private _editingProfileName: string = "";
 
-    _wsOpenerPort: number = -1;
 
-    status: "start" | "edit" | "run" = "start";
+    // 3 pages: start, edit, and run
+    private _profileEditPage: MainWindowProfileEditPage | undefined = undefined;
+    private _startupPage: MainWindowStartupPage | undefined = undefined;
+    private _profileRunPage: MainWindowProfileRunPage | undefined = undefined;
 
-    _hostname: string = "localhost";
+    private readonly _ipcManager: IpcManagerOnMainWindow;
+    private _processId: string = "";
+    private _windowId: string = "";
 
-    _prompt: PromptOnMainWindow;
+    private _wsOpenerPort: number = -1;
+
+    private _state: mainWindowState = mainWindowState.start;
+
+    private _hostname: string = "localhost";
+
+    private _prompt: PromptOnMainWindow;
 
     constructor(mainWindowId: string, ipcServerPort: number, hostname: string | undefined = undefined) {
         this._loadCustomFonts();
         this._windowId = mainWindowId;
         this.setProcessId(mainWindowId);
+        this._prompt = new PromptOnMainWindow(this);
 
-        if (hostname === undefined) {
-            this._hostname = "localhost";
-        } else {
+        if (hostname !== undefined) {
             this._hostname = hostname;
         }
-
-        this._prompt = new PromptOnMainWindow(this);
 
         this._ipcManager = new IpcManagerOnMainWindow(this, ipcServerPort);
         this.getIpcManager().startToListen();
         this.getIpcManager().startToListenDragAndDrop();
+
         window.addEventListener("mousedown", this.handleMouseDown)
     }
-    // ------------------------- mouse button events --------------------------
 
-    handleMouseDown = (event: MouseEvent) => {
-        // right button down: context menu
+    // ------------------------- methods --------------------------
+
+    /**
+     * right button down event listener: invoke copy/cut/paste context menu
+     */
+    private handleMouseDown = (event: MouseEvent) => {
         if (event.button === 2) {
+            Log.debug("Context menu invoked");
             const menu = [];
-            // if an <input /> element, show 
+            // if an <input /> element, show paste
             if (event.target instanceof HTMLInputElement && document.activeElement instanceof HTMLInputElement) {
                 menu.push("paste");
                 const windowSelection = window.getSelection();
@@ -88,44 +97,28 @@ export class MainWindowClient {
             }
             if (menu.length > 0) {
                 this.getIpcManager().sendFromRendererProcess("main-window-show-context-menu", menu);
+            } else {
+                // don't show context menu
             }
+        } else {
+            // do nothing
         }
     }
 
-    // ------------------------- profile and profiles -------------------------
-
-    getProfilesFileName = () => {
-        return this._profilesFileName;
-    };
-
-    setProfilesFileName = (newName: string) => {
-        this._profilesFileName = newName;
-    };
-
-    getSelectedProfileName = () => {
-        return this._selectedProfileName;
-    };
-
-    setSelectedProfileName = (newName: string) => {
-        this._selectedProfileName = newName;
-    };
-
-    getSelectedProfile = () => {
-        return this._profiles[this._selectedProfileName];
-    };
-
     /**
-     * Update profiles from a file. <br>
-     *
-     * The whole main window page is re-created and re-rendered.
+     * load fonts that come with TDM, these fonts are guaranteed to be avaiable over different platforms
      */
-    updateProfilesFromFile = (newProfiles: Record<string, any>, newProfilesFileName: string) => {
-        this.setProfiles(newProfiles);
-        this.setProfilesFileName(newProfilesFileName);
-        this.setProfileEditPage(new MainWindowProfileEditPage(this));
-        this.setStartupPage(new MainWindowStartupPage(this));
-        const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
-        root.render(this.getElement());
+    private _loadCustomFonts = () => {
+        for (let font of Object.values(FontsData.g_fonts)) {
+            for (let fontFace of Object.values(font)) {
+                fontFace.load().then((ff) => {
+                    Log.debug("Loading TDM local font --", ff.family);
+                    document.fonts.add(fontFace);
+                }).catch((reason: any) => {
+                    Log.error(`${reason}`)
+                });
+            }
+        }
     };
 
     // ------------------------ Element ------------------------------
@@ -134,41 +127,17 @@ export class MainWindowClient {
         this.forceUpdate = forceUpdate;
         return (
             <>
-                {this.getStatus() === "start"
+                {this.getState() === mainWindowState.start
                     ? this.getStartupPage()?.getElement()
-                    : this.getStatus() === "edit"
+                    : this.getState() === mainWindowState.edit
                         ? this.getProfileEditPage()?.getElement(this.getEditingProfileName())
                         : this.getProfileRunPage()?.getElement()}
             </>
         );
     };
+
     getElement = (): JSX.Element => {
         return <this._Element></this._Element>;
-    };
-
-    // --------------------------- custom fonts ------------------------------------
-    private _loadCustomFonts = () => {
-        for (let font of Object.values(FontsData.g_fonts)) {
-            console.log(font)
-            for (let fontFace of Object.values(font)) {
-                fontFace.load().then(() => {
-                    document.fonts.add(fontFace);
-                }).catch((reason: any) => {
-                    console.log(reason)
-                });
-            }
-        }
-    };
-
-
-    // ----------------------- error page -----------------------------------
-
-    private _ErrorPage = ({ reason }: any) => {
-        return <div>Error: {reason}</div>;
-    };
-
-    getErrorPage = (reason: string) => {
-        return <this._ErrorPage reason={reason}></this._ErrorPage>;
     };
 
     // -------------------------- getters and setters -----------------------
@@ -177,6 +146,9 @@ export class MainWindowClient {
         return this._windowId;
     };
 
+    /**
+     * Get the JSON format profiles
+    */
     getProfiles = (): Record<string, any> => {
         return this._profiles;
     };
@@ -219,12 +191,12 @@ export class MainWindowClient {
         return this._wsOpenerPort;
     };
 
-    getStatus = () => {
-        return this.status;
+    getState = () => {
+        return this._state;
     };
 
-    setStatus = (newStatus: "edit" | "run" | "start") => {
-        this.status = newStatus;
+    setState = (newState: mainWindowState) => {
+        this._state = newState;
     };
 
     getIpcManager = () => {
@@ -238,25 +210,24 @@ export class MainWindowClient {
         return this._editingProfileName;
     };
 
-    // getMainProcessMode = (): "desktop" | "web" | "ssh-client" => {
-    //     const userAgent = navigator.userAgent.toLowerCase();
-    //     if (userAgent.indexOf(' electron/') > -1) {
-    //         return "desktop"
-    //     } else {
-    //         return "web"
-    //     }
-    // }
-
+    /**
+     * get the main process mode: desktop, web or ssh-client
+     * 
+     * if we are running in electron.js, it is desktop or ssh-client. 
+     * 
+     * if the host name is "localhost", then we are running in desktop mode, otherwise ssh-client mode
+     */
     getMainProcessMode = (): "desktop" | "web" | "ssh-client" => {
         const userAgent = navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
-            console.log("=================================", this.getHostname())
+            // electron.js based
             if (this.getHostname() === "localhost") {
                 return "desktop"
             } else {
                 return "ssh-client";
             }
         } else {
+            // web based
             return "web"
         }
     }
@@ -268,6 +239,27 @@ export class MainWindowClient {
     getPrompt = () => {
         return this._prompt;
     }
+
+    getProfilesFileName = () => {
+        return this._profilesFileName;
+    };
+
+    setProfilesFileName = (newName: string) => {
+        this._profilesFileName = newName;
+    };
+
+    getSelectedProfileName = () => {
+        return this._selectedProfileName;
+    };
+
+    setSelectedProfileName = (newName: string) => {
+        this._selectedProfileName = newName;
+    };
+
+    getSelectedProfile = () => {
+        return this._profiles[this._selectedProfileName];
+    };
+
 }
 
 

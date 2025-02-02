@@ -1,9 +1,11 @@
-import { MainWindowClient } from "./MainWindowClient";
+import ReactDOM from "react-dom/client";
+import { MainWindowClient, mainWindowState } from "./MainWindowClient";
 import { type_args } from "../../arg/ArgParser";
-// import { WebSocket, RawData } from "ws";
 import { MainWindowProfileRunPage } from "../../../rendererProcess/mainWindow/MainWindowProfileRunPage";
 import { Log } from "../../../rendererProcess/global/Log";
 import { type_DialogInputBox, type_DialogMessageBox } from "../../../rendererProcess/helperWidgets/Prompt/Prompt";
+import { MainWindowProfileEditPage } from "../../../rendererProcess/mainWindow/MainWindowProfileEditPage";
+import { MainWindowStartupPage } from "../../../rendererProcess/mainWindow/MainWindowStartupPage";
 
 /**
  * Manage IPC messages sent from main process for main window. <br>
@@ -12,8 +14,10 @@ import { type_DialogInputBox, type_DialogMessageBox } from "../../../rendererPro
  */
 export class IpcManagerOnMainWindow {
     private _mainWindowClient: MainWindowClient;
-    // ipcRenderer: any;
     ipcServerPort: number = -1;
+    wsClient: WebSocket | undefined;
+    // object that stores the callback functions for events
+    eventListeners: Record<string, (evnet: any, ...args: any) => any> = {};
 
     constructor(mainWindowClient: MainWindowClient, ipcServerPort: number) {
         this._mainWindowClient = mainWindowClient;
@@ -35,11 +39,13 @@ export class IpcManagerOnMainWindow {
             console.log(host)
             serverAddress = `ws://${host}:${this.getIpcServerPort()}`;
         }
+
         const client = new WebSocket(serverAddress);
+
         client.onopen = () => {
             Log.info("Connected to IPC server on port", this.getIpcServerPort());
             this.wsClient = client;
-            // this.sendFromRendererProcess("websocket-ipc-connected");
+
             this.wsClient.send(
                 JSON.stringify({
                     processId: this.getMainWindowClient().getProcessId(),
@@ -56,17 +62,17 @@ export class IpcManagerOnMainWindow {
         client.onmessage = (event: any) => {
             const messageBuffer = event.data;
             const message = JSON.parse(messageBuffer.toString());
-            console.log("received message", messageBuffer.toString());
-            this.parseMessage(message);
+            Log.debug("received IPC message", messageBuffer.toString());
+            this.handleMessage(message);
         };
 
         client.onerror = (event: any) => {
             const message = event.data;
-            console.log("IPC error happens", message);
+            Log.debug("IPC error happens", message);
         };
     };
 
-    parseMessage = (message: { processId: number; windowId: string; eventName: string; data: any[] }) => {
+    handleMessage = (message: { processId: number; windowId: string; eventName: string; data: any[] }) => {
         const processId = message["processId"];
         const eventName = message["eventName"];
         const windowId = message["windowId"];
@@ -80,9 +86,6 @@ export class IpcManagerOnMainWindow {
         }
     };
 
-    wsClient: WebSocket | undefined;
-
-    eventListeners: Record<string, (evnet: any, ...args: any) => any> = {};
 
     ipcRenderer = {
         // strip off the processId
@@ -100,10 +103,9 @@ export class IpcManagerOnMainWindow {
     };
 
     sendFromRendererProcess = (channelName: string, ...args: any[]) => {
-        console.log("send message to IPC server", channelName);
+        Log.debug("send message to IPC server", channelName);
         const processId = this.getMainWindowClient().getProcessId();
         if (processId !== "") {
-            // electron.ipcRenderer.send(channelName, processId, ...args);
             if (this.wsClient !== undefined) {
                 this.wsClient.send(
                     JSON.stringify({
@@ -220,7 +222,14 @@ export class IpcManagerOnMainWindow {
      * is also invoked when the Profiles is changed. <br>
      */
     private _handleAfterMainWindowGuiCreated = (event: any, profiles: Record<string, any>, profilesFileName: string) => {
-        this.getMainWindowClient().updateProfilesFromFile(profiles, profilesFileName);
+        const mainWindowClient = this.getMainWindowClient();
+        mainWindowClient.setProfiles(profiles);
+        mainWindowClient.setProfilesFileName(profilesFileName);
+        mainWindowClient.setProfileEditPage(new MainWindowProfileEditPage(mainWindowClient));
+        mainWindowClient.setStartupPage(new MainWindowStartupPage(mainWindowClient));
+        const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
+        root.render(mainWindowClient.getElement());
+
     };
 
     /**
@@ -228,8 +237,8 @@ export class IpcManagerOnMainWindow {
      */
     private _handleAfterProfileSelected = (event: any, profileName: string) => {
         this.getMainWindowClient().setSelectedProfileName(profileName);
-        this.getMainWindowClient()._profileRunPage = new MainWindowProfileRunPage(this.getMainWindowClient());
-        this.getMainWindowClient().setStatus("run");
+        this.getMainWindowClient().setProfileRunPage(new MainWindowProfileRunPage(this.getMainWindowClient()));
+        this.getMainWindowClient().setState(mainWindowState.run);
         if (this.getMainWindowClient().forceUpdate !== undefined) {
             this.getMainWindowClient().forceUpdate({});
         }

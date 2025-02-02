@@ -8,11 +8,11 @@ import {
     ElementArrayPropertyItem,
     ElementArrayPropertyItemRight,
 } from "./MainWindowStyledComponents";
-import { MainWindowClient } from "../../mainProcess/windows/MainWindow/MainWindowClient";
+import { MainWindowClient, mainWindowState } from "../../mainProcess/windows/MainWindow/MainWindowClient";
 import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMenu";
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../global/Log";
-import { Profile } from "../../mainProcess/profile/Profile";
+import * as GlobalMethods from "../global/GlobalMethods"
 
 /**
  * Represents the profile editor. This editor edits one profile.  <br>
@@ -21,55 +21,71 @@ import { Profile } from "../../mainProcess/profile/Profile";
  * profiles object is updated only when we try to save the changes.
  *
  * Structure of the profiles object: profiles -- profile -- category -- property -- item (for array value) <br>
+ * 
+ * each category is an object, it contains a "DESCRIPTION_${uuid}" field and various properties
+ * 
+ * each property is an object, it has a "DESCRIPTION" field, a "value" field, and an optional "choices" field
+ * 
+ * the "value" field is either a string or a string array. The function who uses the value should parse the
+ * string or string array.
+ * 
  */
 export class MainWindowProfileEditPage {
     private _mainWindowClient: MainWindowClient;
 
-    private _origProfileName: string = "";
+    // the category name that is being selected, 
+    // it is initialized as the first category name when we navigate to this page
     private _selectedCategoryName: string = "";
+
+    // the profile name when this page is opened
+    // used when we disgard the changes
+    private _origProfileName: string = "";
+
+    // the profile object that is being edited, it is a copy of the clicked profile
+    // every time we return to the startup page, it should be reset to the below value
     private _localProfile: Record<string, any> = { undefined: "I am not defined yet" };
 
-    private _forceUpdateWholePage: any;
+    private _forceUpdatePage: any = () => { };
 
     constructor(mainWindowClient: MainWindowClient) {
         this._mainWindowClient = mainWindowClient;
     }
 
-    // ------------------------- helper functions ---------------------
-
-    insertToObject = (propertyName: string, propertyValue: any, obj: Record<string, any>, index: number) => {
-        // save keys and values
-        const keys = Object.keys(obj);
-        const values = Object.values(obj);
-        // empty the object
-        for (let key of keys) {
-            delete obj[key];
-        }
-        // insert new key and value
-        keys.splice(index, 0, propertyName);
-        values.splice(index, 0, propertyValue);
-        // refill the object
-        for (let ii = 0; ii < keys.length; ii++) {
-            const key = keys[ii];
-            const value = values[ii];
-            obj[key] = value;
-        }
-    };
 
     // ------------------------- main element ----------------------
 
     private _Element = ({ profileName }: any) => {
-        // obtain inputs
-        // const location = useLocation();
-        // navigate to other pages
-        // const navigate = useNavigate();
-        // this._origProfileName = location.state.profileName;
-        this._origProfileName = profileName;
+        const style = {
+            position: "relative",
+            // flex extends over the whole screen
+            display: "flex",
+            flexFlow: "column",
+            fontFamily: GlobalVariables.defaultFontFamily,
+            fontSize: GlobalVariables.defaultFontSize,
+            fontStyle: GlobalVariables.defaultFontStyle,
+            fontWeight: GlobalVariables.defaultFontWeight,
+            height: "100%",
+            overflow: "hidden",
+        } as React.CSSProperties;
 
-        // the local copy is not initialized yet
+        // save the original profile name, in case we want to disgard the changes
+        this.setOrigProfileName(profileName);
+        // assign the local profile name
+        const [localProfileName, setLocalProfileName] = React.useState(profileName);
+        const [, updateState] = React.useState({});
+        const forceUpdate = () => updateState({});
+        this._forceUpdatePage = forceUpdate;
+
+        /**
+         * (1) make a local profile copy if it is not asssigned yet, this copy is a hard copy from the selected profile
+         * 
+         * (2) set the selected category name as the first category name
+         * 
+         * this block is invoked when we select to edit the profile from start page
+         */
         if (this.getLocalProfile()["undefined"] === "I am not defined yet") {
             const profiles = this.getMainWindowClient().getProfiles();
-            this.setLocalProfile(JSON.parse(JSON.stringify(profiles[this._origProfileName])) as Record<string, any>);
+            this.setLocalProfile(JSON.parse(JSON.stringify(profiles[profileName])) as Record<string, any>);
             // select the first category
             const firstCategoryName = Object.keys(this.getLocalProfile())[0];
             if (firstCategoryName !== undefined) {
@@ -79,200 +95,12 @@ export class MainWindowProfileEditPage {
             }
         }
 
-        const [localProfileName, setLocalProfileName] = React.useState(this._origProfileName);
-        // const [deletingThisProfile, setDeletingThisProfile] = React.useState(false);
 
-        const [, updateState] = React.useState({});
-        const forceUpdate = () => updateState({});
-        this._forceUpdateWholePage = forceUpdate;
-
-        const saveAndReturn = () => {
-            // update profiles at MainWindowClient
-            const profiles = this.getMainWindowClient().getProfiles();
-
-            // if profile name is not changed
-            if (this.getOrigProfileName() === localProfileName) {
-                profiles[localProfileName] = JSON.parse(JSON.stringify(this.getLocalProfile()));
-            }
-            // if changed
-            else {
-                // check duplicate
-                const profileNames = Object.keys(profiles);
-                const profileIndex = profileNames.indexOf(this.getOrigProfileName());
-                profileNames.splice(profileIndex, 1);
-                if (profileNames.includes(localProfileName)) {
-                    // this.getMainWindowClient()
-                    //     .getIpcManager()
-                    //     .sendFromRendererProcess(
-                    //         "show-message-box",
-                    //         this.getMainWindowClient().getWindowId(),
-                    //         `New profile name ${localProfileName} conflicts with an existing profile name.`
-                    //     );
-                    const ipcManager = this.getMainWindowClient().getIpcManager();
-                    ipcManager.handleDialogShowMessageBox(undefined, {
-                        // command: string | undefined,
-                        messageType: "error", // | "warning" | "info", // symbol
-                        humanReadableMessages: [`New profile name ${localProfileName} conflicts with an existing profile name.`], // each string has a new line
-                        rawMessages: [], // string[], // computer generated messages
-                        // buttons: type_DialogMessageBoxButton[] | undefined,
-                        // attachment: any,
-
-                    })
-
-                    return;
-                }
-
-                this.renameObjProperty(this.getOrigProfileName(), localProfileName, profiles);
-                profiles[localProfileName] = JSON.parse(JSON.stringify(this.getLocalProfile()));
-            }
-
-            // send this._profiles back to main process which saves it to hard drive
-            this.getMainWindowClient().saveProfiles();
-
-            // go to /
-            // navigate("/");
-            this.getMainWindowClient().setStatus("start");
-            this.getMainWindowClient().forceUpdate({})
-        };
-
-        const disgardChanges = async () => {
-            // reset local data
-            this.setSelectedCategoryName("");
-            this.setLocalProfile({ undefined: "I am not defined yet" });
-            this.getMainWindowClient().setStatus("start");
-            this.getMainWindowClient().forceUpdate({})
-        };
-
-        // const toDeleteThisProfile = () => {
-        // 	setDeletingThisProfile(true);
-        // };
-
-        const doDeleteThisProfile = () => {
-            const profiles = this.getMainWindowClient().getProfiles();
-            delete profiles[this.getOrigProfileName()];
-            this.getMainWindowClient().saveProfiles();
-            this.getMainWindowClient().setStatus("start");
-            this.getMainWindowClient().forceUpdate({})
-            // navigate("/");
-        };
-
-        // const cancelDeleteThisProfile = () => {
-        // 	setDeletingThisProfile(false);
-        // };
-
-        const selectCategory = (event: any, categoryName: string) => {
-            if (event) {
-                event.target.style.fontWeight = "bold";
-            }
-            this.setSelectedCategoryName(categoryName);
-            forceUpdate();
-        };
-
-        const moveCategoryUp = (name: string) => {
-            const oldIndex = Object.keys(this.getLocalProfile()).indexOf(name);
-            if (oldIndex < 1) {
-                return;
-            }
-            const newIndex = oldIndex - 1;
-            const propertyValue = this.getLocalProfile()[name];
-            delete this.getLocalProfile()[name];
-            this.insertToObject(name, propertyValue, this.getLocalProfile(), newIndex);
-            forceUpdate();
-        };
-
-        const moveCategoryDown = (categoryName: string) => {
-            const localProfile = this.getLocalProfile();
-            const oldIndex = Object.keys(localProfile).indexOf(categoryName);
-            if (oldIndex === Object.keys(localProfile).length - 1 || oldIndex < 0) {
-                Log.error("Error in move category down");
-                return;
-            }
-            const newIndex = oldIndex + 1;
-            const propertyValue = localProfile[categoryName];
-            delete localProfile[categoryName];
-            this.insertToObject(categoryName, propertyValue, localProfile, newIndex);
-            forceUpdate();
-        };
-
-        const changeLocalProfileName = (event: any) => {
-            event.preventDefault();
-            setLocalProfileName(event.target.value);
-        };
-
-        const generateEmptyCategory = (): Record<string, any> => {
-            let result: Record<string, any> = {};
-            result[`DESCRIPTION_${uuidv4()}`] = "Description of the category.";
-            return result;
-        };
-
-        const addCategory = () => {
-            let newName = "New Category";
-            while (Object.keys(this.getLocalProfile()).includes(newName)) {
-                newName = `${newName}-1`;
-            }
-            this.getLocalProfile()[newName] = JSON.parse(JSON.stringify(generateEmptyCategory()));
-            selectCategory(undefined, newName);
-            forceUpdate();
-        };
-
-        const addSshCategory = () => {
-            const sshCategory = Profile.generateDefaultSshCategory();
-            let newName = Object.keys(sshCategory)[0];
-            while (Object.keys(this.getLocalProfile()).includes(newName)) {
-                Log.error("There is already a ssh category");
-                // todo: show error message
-                return;
-            }
-            this.getLocalProfile()[newName] = Object.values(sshCategory)[0];
-            selectCategory(undefined, newName);
-            forceUpdate();
-        }
-
-        const toDeleteThisProfile = () => {
-            // bring up prompt
-            // this.getMainWindowClient().getPrompt().createElement("delete-profile", { doDeleteThisProfile: doDeleteThisProfile, profileName: profileName });
-            const ipcManager = this.getMainWindowClient().getIpcManager()
-            const prompt = this.getMainWindowClient().getPrompt();
-            ipcManager.handleDialogShowMessageBox(undefined, {
-                // command?: string | undefined,
-                messageType: "warning", // | "info", // symbol
-                humanReadableMessages: [`This action will permanently delete profile ${profileName}. It cannot be undone`, `Are you ABSOLUTELY sure to delete this it?`], // each string has a new line
-                rawMessages: [], // computer generated messages
-                buttons: [
-                    {
-                        text: "Delete",
-                        handleClick: () => {
-                            doDeleteThisProfile();
-                            prompt.startEventListeners();
-                            prompt.removeElement();
-                        }
-                    },
-                    {
-                        text: "Do Not Delete",
-                        handleClick: () => {
-                            prompt.startEventListeners();
-                            prompt.removeElement();
-                        }
-                    }
-                ],
-            })
-        }
 
         return (
             <>
                 <div
-                    style={{
-                        position: "relative",
-                        // flex extends over the whole screen
-                        display: "flex",
-                        flexFlow: "column",
-                        fontFamily: GlobalVariables.defaultFontFamily,
-                        fontSize: GlobalVariables.defaultFontSize,
-                        fontStyle: GlobalVariables.defaultFontStyle,
-                        fontWeight: GlobalVariables.defaultFontWeight,
-                        height: "100%",
-                        overflow: "hidden",
-                    }}
+                    style={style}
                     onClick={
                         () => {
                             const dropdownMenuDivs = document.querySelectorAll("[id=dropdown-menu]");
@@ -284,114 +112,8 @@ export class MainWindowProfileEditPage {
                         }
                     }
                 >
-                    {/* title */}
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            padding: "12px",
-                            borderBottom: "solid rgb(64,64,64) 1px",
-                        }}
-                    >
-                        <div>
-                            <ElementProfileBlockNameInput value={localProfileName} onChange={changeLocalProfileName}></ElementProfileBlockNameInput>
-                        </div>
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                flexDirection: "row",
-                            }}
-                        >
-                            <ElementRectangleButton handleClick={disgardChanges}>Disgard changes</ElementRectangleButton>
-                            &nbsp;&nbsp;
-                            <ElementRectangleButton handleClick={saveAndReturn}>Save and return</ElementRectangleButton>
-                            &nbsp;&nbsp;
-                            <ElementRectangleButton
-                                defaultBackgroundColor={"red"}
-                                highlightBackgroundColor={"rgba(255,0,0,0.8)"}
-                                handleClick={toDeleteThisProfile}>
-                                Delete this profile
-                            </ElementRectangleButton>
-                        </div>
-                    </div>
-
-                    {/* body */}
-                    <div
-                        style={{
-                            display: "inline-flex",
-                            flexDirection: "row",
-                            // flex: "1 1 auto", // ensures the viewport is filled up
-                            // justifyContent: "space-between",
-                            // alignItems: "flex-start",
-                            // paddingTop: "5px",
-                            paddingTop: "12px",
-                            height: "100%",
-                            // overflowY: "auto", // a local scrollbar
-                            // userSelect: "none",
-                            // backgroundColor: "rgba(255,0,0,0.5)",
-                            overflow: "hidden",
-                        }}
-                    >
-                        {/* sidebar */}
-                        <div
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "flex-start",
-                                maxWidth: "20%",
-                                minWidth: "20%",
-                                fontSize: "13px",
-                                // overflow: "clip",
-                                boxSizing: "border-box",
-                                overflow: "clip",
-                            }}
-                        >
-                            {Object.keys(this.getLocalProfile()).map((categoryName: string, index: number) => {
-                                return (
-                                    <this._ElementSidebarCategory
-                                        categoryName={categoryName}
-                                        index={index}
-                                        selectCategory={selectCategory}
-                                        moveCategoryUp={moveCategoryUp}
-                                        moveCategoryDown={moveCategoryDown}
-                                    >
-                                    </this._ElementSidebarCategory>
-                                );
-                            })}
-
-                            <div
-                                style={{
-                                    display: "inline-flex",
-                                    flexDirection: "row",
-                                    height: 30,
-                                    width: "100%",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                }}
-                            >
-                                <div style={{
-                                    display: "inline-flex",
-                                    paddingLeft: 12,
-                                    width: "100%",
-                                }}>
-                                    <ElementDropDownMenu
-                                        callbacks={{
-                                            "Add Empty Category": () => { addCategory() },
-                                            // "Add SSH Category": () => { addSshCategory() },
-                                        }}
-                                    ></ElementDropDownMenu>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        {/* contents */}
-                        <this._Category></this._Category>
-                    </div>
+                    <this._ElementTitle profileName={profileName} localProfileName={localProfileName} setLocalProfileName={setLocalProfileName} />
+                    <this._ElementBody></this._ElementBody>
                 </div >
             </>
         );
@@ -490,60 +212,381 @@ export class MainWindowProfileEditPage {
         )
     }
 
+    /**
+     * title area: the profile name and the control buttons for this page
+     */
+    private _ElementTitle = ({ profileName, localProfileName, setLocalProfileName }: any) => {
+
+        const style = {
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "12px",
+            borderBottom: "solid rgb(64,64,64) 1px",
+        } as React.CSSProperties;
+
+        const changeLocalProfileName = (event: any) => {
+            event.preventDefault();
+            setLocalProfileName(event.target.value);
+        };
+
+        return (
+            <div
+                style={style}
+            >
+                <div>
+                    <ElementProfileBlockNameInput value={localProfileName} onChange={changeLocalProfileName}></ElementProfileBlockNameInput>
+                </div>
+                <this._ElementTitleControls profileName={profileName} localProfileName={localProfileName} />
+            </div>
+        )
+    }
+
+    private _ElementBody = () => {
+
+        const style = {
+            display: "inline-flex",
+            flexDirection: "row",
+            paddingTop: "12px",
+            height: "100%",
+            overflow: "hidden",
+        } as React.CSSProperties;
+
+
+        return (
+            <div
+                style={style}
+            >
+                <this._ElementSidebar></this._ElementSidebar>
+                <this._ElementCategory></this._ElementCategory>
+            </div>
+        )
+    }
+
     getElement = (profileName: string): JSX.Element => {
         return <this._Element profileName={profileName}></this._Element>;
     };
 
-    // contents is a reference, modifying it would directly modify the localProfile.current
-    private _Category = ({ }: any) => {
-        if (this.getLocalProfile()[this.getSelectedCategoryName()] === undefined) {
+    private _ElementSidebar = () => {
+
+        const style = {
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            maxWidth: "20%",
+            minWidth: "20%",
+            fontSize: "13px",
+            boxSizing: "border-box",
+            overflow: "clip",
+        } as React.CSSProperties;
+
+        const selectCategory = (event: any, categoryName: string) => {
+            if (event) {
+                event.target.style.fontWeight = "bold";
+            }
+            this.setSelectedCategoryName(categoryName);
+            this._forceUpdatePage();
+        };
+
+        const moveCategoryUp = (name: string) => {
+            const oldIndex = Object.keys(this.getLocalProfile()).indexOf(name);
+            if (oldIndex < 1) {
+                return;
+            }
+            const newIndex = oldIndex - 1;
+            const propertyValue = this.getLocalProfile()[name];
+            delete this.getLocalProfile()[name];
+            GlobalMethods.insertToObject(name, propertyValue, this.getLocalProfile(), newIndex);
+            this._forceUpdatePage();
+        };
+
+        const moveCategoryDown = (categoryName: string) => {
+            const localProfile = this.getLocalProfile();
+            const oldIndex = Object.keys(localProfile).indexOf(categoryName);
+            if (oldIndex === Object.keys(localProfile).length - 1 || oldIndex < 0) {
+                Log.error("Error in move category down");
+                return;
+            }
+            const newIndex = oldIndex + 1;
+            const propertyValue = localProfile[categoryName];
+            delete localProfile[categoryName];
+            GlobalMethods.insertToObject(categoryName, propertyValue, localProfile, newIndex);
+            this._forceUpdatePage();
+        };
+
+
+        return (
+            <div
+                style={style}
+            >
+                {/* cateogry names on sidebar */}
+                {Object.keys(this.getLocalProfile()).map((categoryName: string, index: number) => {
+                    return (
+                        <this._ElementSidebarCategory
+                            categoryName={categoryName}
+                            index={index}
+                            selectCategory={selectCategory}
+                            moveCategoryUp={moveCategoryUp}
+                            moveCategoryDown={moveCategoryDown}
+                        >
+                        </this._ElementSidebarCategory>
+                    );
+                })}
+                <this._ElementSidebarControls selectCategory={selectCategory}></this._ElementSidebarControls>
+            </div>
+        )
+    }
+
+    private _ElementSidebarControls = ({ selectCategory }: any) => {
+
+        const style = {
+            display: "inline-flex",
+            flexDirection: "row",
+            height: 30,
+            width: "100%",
+            alignItems: "center",
+            justifyContent: "space-between",
+        } as React.CSSProperties;
+
+        const generateEmptyCategory = (): Record<string, any> => {
+            let result: Record<string, any> = {};
+            result[`DESCRIPTION_${uuidv4()}`] = "Description of the category.";
+            return result;
+        };
+
+        const addCategory = () => {
+            let newName = "New Category";
+            while (Object.keys(this.getLocalProfile()).includes(newName)) {
+                newName = `${newName}-1`;
+            }
+            this.getLocalProfile()[newName] = JSON.parse(JSON.stringify(generateEmptyCategory()));
+            selectCategory(undefined, newName);
+            this._forceUpdatePage();
+        };
+
+        return (
+            <div
+                style={style}
+            >
+                <div style={{
+                    display: "inline-flex",
+                    paddingLeft: 12,
+                    width: "100%",
+                }}>
+                    <ElementDropDownMenu
+                        callbacks={{
+                            "Add Empty Category": () => { addCategory() },
+                        }}
+                    ></ElementDropDownMenu>
+                </div>
+            </div>
+        )
+    }
+
+    private _ElementTitleControls = ({ localProfileName, profileName }: any) => {
+
+        const style = {
+            display: "flex",
+            justifyContent: "space-between",
+            flexDirection: "row",
+        } as React.CSSProperties;
+
+        const doDeleteThisProfile = () => {
+            const profiles = this.getMainWindowClient().getProfiles();
+            delete profiles[this.getOrigProfileName()];
+            this.getMainWindowClient().saveProfiles();
+            this.getMainWindowClient().setState(mainWindowState.start);
+            this.getMainWindowClient().forceUpdate({})
+            this.resetLocalProfile()
+
+        };
+
+        const saveAndReturn = () => {
+            // update profiles at MainWindowClient
+            const profiles = this.getMainWindowClient().getProfiles();
+
+            // if profile name is not changed
+            if (this.getOrigProfileName() === localProfileName) {
+                profiles[localProfileName] = JSON.parse(JSON.stringify(this.getLocalProfile()));
+            }
+            // if changed
+            else {
+                // check duplicate
+                const profileNames = Object.keys(profiles);
+                const profileIndex = profileNames.indexOf(this.getOrigProfileName());
+                profileNames.splice(profileIndex, 1);
+                if (profileNames.includes(localProfileName)) {
+                    // this.getMainWindowClient()
+                    //     .getIpcManager()
+                    //     .sendFromRendererProcess(
+                    //         "show-message-box",
+                    //         this.getMainWindowClient().getWindowId(),
+                    //         `New profile name ${localProfileName} conflicts with an existing profile name.`
+                    //     );
+                    const ipcManager = this.getMainWindowClient().getIpcManager();
+                    ipcManager.handleDialogShowMessageBox(undefined, {
+                        // command: string | undefined,
+                        messageType: "error", // | "warning" | "info", // symbol
+                        humanReadableMessages: [`New profile name ${localProfileName} conflicts with an existing profile name.`], // each string has a new line
+                        rawMessages: [], // string[], // computer generated messages
+                        // buttons: type_DialogMessageBoxButton[] | undefined,
+                        // attachment: any,
+
+                    })
+
+                    return;
+                }
+
+                this.renameObjProperty(this.getOrigProfileName(), localProfileName, profiles);
+                profiles[localProfileName] = JSON.parse(JSON.stringify(this.getLocalProfile()));
+            }
+
+            // send this._profiles back to main process which saves it to hard drive
+            this.getMainWindowClient().saveProfiles();
+
+            this.getMainWindowClient().setState(mainWindowState.start);
+            this.getMainWindowClient().forceUpdate({})
+            this.resetLocalProfile()
+        };
+
+        const toDeleteThisProfile = () => {
+            // bring up prompt
+            // this.getMainWindowClient().getPrompt().createElement("delete-profile", { doDeleteThisProfile: doDeleteThisProfile, profileName: profileName });
+            const ipcManager = this.getMainWindowClient().getIpcManager()
+            const prompt = this.getMainWindowClient().getPrompt();
+            ipcManager.handleDialogShowMessageBox(undefined, {
+                // command?: string | undefined,
+                messageType: "warning", // | "info", // symbol
+                humanReadableMessages: [`This action will permanently delete profile ${profileName}. It cannot be undone`, `Are you ABSOLUTELY sure to delete this it?`], // each string has a new line
+                rawMessages: [], // computer generated messages
+                buttons: [
+                    {
+                        text: "Delete",
+                        handleClick: () => {
+                            doDeleteThisProfile();
+                            prompt.startEventListeners();
+                            prompt.removeElement();
+                        }
+                    },
+                    {
+                        text: "Do Not Delete",
+                        handleClick: () => {
+                            prompt.startEventListeners();
+                            prompt.removeElement();
+                        }
+                    }
+                ],
+            })
+        }
+
+        const disgardChanges = async () => {
+            // reset local data
+            this.setSelectedCategoryName("");
+            this.setLocalProfile({ undefined: "I am not defined yet" });
+            this.getMainWindowClient().setState(mainWindowState.start);
+            this.getMainWindowClient().forceUpdate({})
+            this.resetLocalProfile()
+
+        };
+
+        return (
+            <div
+                style={style}
+            >
+                <ElementRectangleButton marginRight={10} handleClick={disgardChanges}>Disgard changes</ElementRectangleButton>
+                <ElementRectangleButton marginRight={10} handleClick={saveAndReturn}>Save and return</ElementRectangleButton>
+                <ElementRectangleButton
+                    defaultBackgroundColor={"red"}
+                    highlightBackgroundColor={"rgba(255,0,0,0.8)"}
+                    handleClick={toDeleteThisProfile}>
+                    Delete this profile
+                </ElementRectangleButton>
+            </div>
+
+        )
+    }
+
+    /**
+     * display contents of one category
+     * 
+     * contents is a reference, modifying it would directly modify the localProfile.current
+     */
+    private _ElementCategory = ({ }: any) => {
+
+        const style = {
+            display: "flex",
+            flexDirection: "column",
+            width: "100%",
+            paddingLeft: 10,
+            paddingBottom: 30,
+            borderLeft: "solid 1px rgb(190, 190, 190)",
+            boxSizing: "border-box",
+            overflow: "auto",
+        } as React.CSSProperties;
+
+        const selectedCategoryName = this.getSelectedCategoryName();
+        const localProfile = this.getLocalProfile();
+        const category = localProfile[selectedCategoryName];
+        const propertyNames = Object.keys(category);
+
+        if (category === undefined) {
             return (
                 <div>
                     <h2>{`Category ${this.getSelectedCategoryName()} does not exist`}</h2>
                 </div>
             );
         }
+
         return (
             <div
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    width: "100%",
-                    // minWidth: "80%",
-                    paddingLeft: 10,
-                    paddingBottom: 30,
-                    borderLeft: "solid 1px rgb(190, 190, 190)",
-                    boxSizing: "border-box",
-                    overflow: "auto",
-                }}
+                style={style}
             >
-                <this._CategoryTitle></this._CategoryTitle>
-                {Object.keys(this.getLocalProfile()[this.getSelectedCategoryName()]).map((propertyName: string, index: number) => {
-                    const category = this.getLocalProfile()[this.getSelectedCategoryName()];
-                    if ((propertyName.split("_")[0] === "DESCRIPTION" && uuidValidate(propertyName.split("_")[1])) || category[propertyName] === "") {
+                {/* category title */}
+                <this._ElementCategoryTitle></this._ElementCategoryTitle>
+
+                {/* category content: each property */}
+                {propertyNames.map((propertyName: string, index: number) => {
+                    const property = category[propertyName];
+                    const propertyValue = property["value"];
+                    const propertyDescription = property["DESCRIPTION"];
+                    const propertyChoices = property["choices"];
+
+                    if (propertyName.startsWith("DESCRIPTION_") && uuidValidate(propertyName.replace("DESCRIPTION_", ""))) {
+                        // DESCRIPTION_${uuid} property, it is shown in the category title, not as a regular property
+                        return null;
+                    } else if (typeof property !== "object") {
+                        // property must be an object that has "value" field and "DESCRIPTION" field
+                        return null;
+                    } else if (typeof propertyDescription !== "string") {
+                        // the "DESCRIPTION" must be a string
+                        return null;
+                    } else if (typeof propertyValue !== "string" && Array.isArray(propertyValue) === false) {
+                        // the "value" field must be a string or a string array
                         return null;
                     } else {
-                        // names "value" and "DESCRIPTION" are fixed
-                        const propertyValue = category[propertyName]["value"];
-                        const propertyDescription = category[propertyName]["DESCRIPTION"];
-                        if (propertyValue === "") {
-                            return null;
-                        }
                         if (Array.isArray(propertyValue)) {
                             return (
-                                <this._ArrayProperty
+                                <this._ElementArrayProperty
                                     key={`${propertyName}-${index}`}
                                     propertyName={propertyName}
                                     category={category}
-                                ></this._ArrayProperty>
+                                ></this._ElementArrayProperty>
                             );
+                        } else if (Array.isArray(propertyChoices)) {
+                            return (
+                                <this._ElementChoiceProperty
+                                    propertyName={propertyName}
+                                    category={category}
+                                >
+                                </this._ElementChoiceProperty>
+                            )
                         } else {
                             return (
-                                <this._PrimitiveProperty
+                                <this._ElementPrimitiveProperty
                                     key={`${propertyName}-${index}`}
                                     propertyName={propertyName}
                                     category={category}
-                                ></this._PrimitiveProperty>
+                                ></this._ElementPrimitiveProperty>
                             );
                         }
                     }
@@ -552,49 +595,153 @@ export class MainWindowProfileEditPage {
         );
     };
 
-    getSelectedCategoryDescription = () => {
-        const categoryContents = this.getLocalProfile()[this.getSelectedCategoryName()];
-        if (categoryContents === undefined) {
-            return "";
-        }
-        for (let itemName of Object.keys(categoryContents)) {
-            if (itemName.includes("DESCRIPTION_")) {
-                const id = itemName.split("_")[1];
-                if (uuidValidate(id)) {
-                    return categoryContents[itemName];
-                }
-            }
-        }
-        return "";
-    };
+    private _ElementCategoryTitle = ({ }: any) => {
 
-    setSelectedCategoryDescription = (newDescription: string) => {
-        const categoryContents = this.getLocalProfile()[this.getSelectedCategoryName()];
-        if (categoryContents === undefined) {
-            return;
-        }
-        for (let itemName of Object.keys(categoryContents)) {
-            if (itemName.includes("DESCRIPTION_")) {
-                const id = itemName.split("_")[1];
-                if (uuidValidate(id)) {
-                    categoryContents[itemName] = newDescription;
-                    return;
-                }
-            }
-        }
-    };
+        const style = {
+            display: "flex",
+            flexDirection: "column",
+            // width: "100%",
+            // justifyContent: "space-between",
+            marginBottom: 7,
+        } as React.CSSProperties;
 
-    private _CategoryTitle = ({ }: any) => {
-        // const description = this.getCategoryDescription();
-        const [editingMode, setEditingMode] = React.useState(false);
-        const [localCategoryName, setLocalCategoryName] = React.useState(this.getSelectedCategoryName());
-        const [localCategoryDescription, setLocalCategoryDescription] = React.useState(this.getSelectedCategoryDescription());
+        const styleDiv = {
+            display: "flex",
+            width: "100%",
+            justifyContent: "space-between",
+        } as React.CSSProperties;
+
+        const [isEditing, setIsEditing] = React.useState(false);
+        const [categoryName, setCategoryName] = React.useState(this.getSelectedCategoryName());
+        const [categoryDescription, setCategoryDescription] = React.useState(this.getSelectedCategoryDescription());
 
         // make sure localCategoryName is up to date
         React.useEffect(() => {
-            setLocalCategoryName(this.getSelectedCategoryName());
-            setLocalCategoryDescription(this.getSelectedCategoryDescription());
+            setCategoryName(this.getSelectedCategoryName());
+            setCategoryDescription(this.getSelectedCategoryDescription());
         }, [this.getSelectedCategoryName(), this.getSelectedCategoryDescription()]);
+
+        return (
+            <div
+                style={style}
+            >
+                <div
+                    style={styleDiv}
+                >
+                    <this._ElementCategoryTitleName
+                        categoryName={categoryName}
+                        setCategoryName={setCategoryName}
+                        isEditing={isEditing}
+                    />
+
+                    <this._ElementCategoryTitleControl
+                        isEditing={isEditing}
+                        setCategoryName={setCategoryName}
+                        setCategoryDescription={setCategoryDescription}
+                        setIsEditing={setIsEditing}
+                        categoryName={categoryName}
+                        categoryDescription={categoryDescription}
+                    />
+                </div>
+                <this._ElementCategoryTitleDescription
+                    categoryDescription={categoryDescription}
+                    setCategoryDescription={setCategoryDescription}
+                    isEditing={isEditing}
+                />
+            </div>
+        );
+    };
+
+    private _ElementCategoryTitleName = ({ categoryName, setCategoryName, isEditing }: any) => {
+
+        const inputStyle = {
+            fontSize: 25,
+            paddingLeft: 6,
+            paddingRight: 6,
+            paddingTop: 4,
+            paddingBottom: 4,
+            margin: 0,
+            outline: "none",
+            border: "1px solid rgb(190, 190, 190)",
+            width: "70%",
+            marginBottom: 3,
+        } as React.CSSProperties;
+
+        const divStyle = {
+            fontSize: 25,
+            paddingLeft: 7,
+            paddingRight: 7,
+            paddingTop: 5,
+            paddingBottom: 5,
+        } as React.CSSProperties;
+
+        return (
+            isEditing === true ?
+                <input
+                    style={inputStyle}
+                    value={categoryName}
+                    onChange={(event: any) => {
+                        event.preventDefault();
+                        setCategoryName(event.target.value);
+                    }}
+                ></input>
+                :
+                <div
+                    style={divStyle}
+                >
+                    {categoryName}
+                </div>
+        )
+    }
+
+    /**
+     * When the title is being edited, the 2 buttons "OK" and "Cancel" are displayed;
+     * 
+     * when the title is not being edited, we show the dropdown menu with 4 options: edit, delete, add primitive property, add array property
+     */
+    private _ElementCategoryTitleControl = ({ isEditing, setCategoryName, setCategoryDescription, setIsEditing, categoryName, categoryDescription }: any) => {
+
+        const style = {
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+        } as React.CSSProperties;
+
+        const addPrimitive = () => {
+            let name = "new-primitive";
+            const category = this.getLocalProfile()[this.getSelectedCategoryName()];
+            while (category[name] !== undefined) {
+                name = `${name}-1`;
+            }
+            const value = "new-value";
+            category[name] = { DESCRIPTION: `${name} description`, value: value };
+            this._forceUpdatePage();
+        };
+
+
+        const addChoices = () => {
+            let name = "new-choices";
+            const category = this.getLocalProfile()[this.getSelectedCategoryName()];
+            while (category[name] !== undefined) {
+                name = `${name}-1`;
+            }
+            const value = "new-choice-1";
+            const choices = ["new-choice-1", "new-choice-2"]
+            category[name] = { DESCRIPTION: `Put description here. This is a choice menu.`, value: value, choices: choices };
+            this._forceUpdatePage();
+        };
+
+        const addArray = () => {
+            let name = "new-array";
+            const category = this.getLocalProfile()[this.getSelectedCategoryName()];
+            while (category[name] !== undefined) {
+                name = `${name}-1`;
+            }
+            const value = ["new-value-0", "new-value-1"];
+            category[name] = { DESCRIPTION: `${name} description`, value: value };
+            this._forceUpdatePage();
+        };
 
         const deleteCategory = () => {
             // highlight the next category
@@ -620,7 +767,7 @@ export class MainWindowProfileEditPage {
                 this.setSelectedCategoryName(Object.keys(localProfile)[newIndex]);
             }
 
-            this._forceUpdateWholePage();
+            this._forceUpdatePage();
         };
 
         const renameCategoryAndUpdateDescription = () => {
@@ -628,19 +775,12 @@ export class MainWindowProfileEditPage {
             const categoryNames = Object.keys(this.getLocalProfile());
             const categoryIndex = categoryNames.indexOf(this.getSelectedCategoryName());
             categoryNames.splice(categoryIndex, 1);
-            if (categoryNames.includes(localCategoryName)) {
-                // this.getMainWindowClient()
-                //     .getIpcManager()
-                //     .sendFromRendererProcess(
-                //         "show-message-box",
-                //         this.getMainWindowClient().getWindowId(),
-                //         `${localCategoryName} conflicts with an existing category name.`
-                //     );
+            if (categoryNames.includes(categoryName)) {
                 const ipcManager = this.getMainWindowClient().getIpcManager();
                 ipcManager.handleDialogShowMessageBox(undefined, {
                     // command: string | undefined,
                     messageType: "error", // | "warning" | "info", // symbol
-                    humanReadableMessages: [`${localCategoryName} conflicts with an existing category name.`], // each string has a new line
+                    humanReadableMessages: [`${categoryName} conflicts with an existing category name.`], // each string has a new line
                     rawMessages: [], // string[], // computer generated messages
                     // buttons: type_DialogMessageBoxButton[] | undefined,
                     // attachment: any,
@@ -648,252 +788,192 @@ export class MainWindowProfileEditPage {
                 return;
             }
 
-            this.renameObjProperty(this.getSelectedCategoryName(), localCategoryName, this.getLocalProfile());
-            setEditingMode(false);
-            this.setSelectedCategoryName(localCategoryName);
-            this.setSelectedCategoryDescription(localCategoryDescription);
-            this._forceUpdateWholePage();
+            this.renameObjProperty(this.getSelectedCategoryName(), categoryName, this.getLocalProfile());
+            setIsEditing(false);
+            this.setSelectedCategoryName(categoryName);
+            this.setSelectedCategoryDescription(categoryDescription);
+            this._forceUpdatePage();
         };
 
-        const addPrimitive = () => {
-            let name = "new-primitive";
-            const category = this.getLocalProfile()[this.getSelectedCategoryName()];
-            while (category[name] !== undefined) {
-                name = `${name}-1`;
-            }
-            const value = "new-value";
-            category[name] = { DESCRIPTION: `${name} description`, value: value };
-            this._forceUpdateWholePage();
-        };
-
-        const addArray = () => {
-            let name = "new-array";
-            const category = this.getLocalProfile()[this.getSelectedCategoryName()];
-            while (category[name] !== undefined) {
-                name = `${name}-1`;
-            }
-            const value = ["new-value-0", "new-value-1"];
-            category[name] = { DESCRIPTION: `${name} description`, value: value };
-            this._forceUpdateWholePage();
-        };
-
-        if (editingMode === true) {
-            return (
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        marginBottom: 7,
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            width: "100%",
-                            justifyContent: "space-between",
-                        }}
-                    >
-                        <input
-                            style={{
-                                fontSize: 25,
-                                paddingLeft: 6,
-                                paddingRight: 6,
-                                paddingTop: 4,
-                                paddingBottom: 4,
-                                margin: 0,
-                                outline: "none",
-                                border: "1px solid rgb(190, 190, 190)",
-                                width: "70%",
-                                marginBottom: 3,
-                            }}
-                            value={localCategoryName}
-                            onChange={(event: any) => {
-                                event.preventDefault();
-                                setLocalCategoryName(event.target.value);
-                            }}
-                        ></input>
-                        <div
-                            style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <ElementRectangleButton
-                                marginRight={12}
-                                paddingTop={3}
-                                paddingBottom={3}
-                                paddingLeft={5}
-                                paddingRight={5}
-                                handleClick={renameCategoryAndUpdateDescription}
-                            >
-                                OK
-                            </ElementRectangleButton>
-                            <ElementRectangleButton
-                                marginRight={5}
-                                paddingTop={3}
-                                paddingBottom={3}
-                                paddingLeft={5}
-                                paddingRight={5}
-                                handleClick={(event: any) => {
-                                    setLocalCategoryName(this.getSelectedCategoryName());
-                                    setLocalCategoryDescription(this.getSelectedCategoryDescription());
-                                    setEditingMode(false);
-                                }}
-                            >
-                                Cancel
-                            </ElementRectangleButton>
-                        </div>
-                    </div>
-                    <div>
-                        <input
-                            style={{
-                                fontSize: 13,
-                                paddingLeft: 6,
-                                paddingRight: 6,
-                                paddingTop: 3,
-                                paddingBottom: 3,
-                                margin: 0,
-                                outline: "none",
-                                border: "1px solid rgb(190, 190, 190)",
-                                width: "70%",
-                            }}
-                            value={localCategoryDescription}
-                            onChange={(event: any) => {
-                                event.preventDefault();
-                                setLocalCategoryDescription(event.target.value);
-                            }}
-                        ></input>
-                    </div>
-                </div>
-            );
-        } else {
-            return (
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        marginBottom: 7,
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            width: "100%",
-                            justifyContent: "space-between",
-                            marginBottom: 3,
-                            paddingRight: 13,
-                            boxSizing: "border-box",
-                        }}
-                    >
-                        <div
-                            style={{
-                                fontSize: 25,
-                                paddingLeft: 7,
-                                paddingRight: 7,
-                                paddingTop: 5,
-                                paddingBottom: 5,
-                            }}
-                        >
-                            {this.getSelectedCategoryName()}
-                        </div>
-                        <ElementDropDownMenu
-                            callbacks={{
-                                "Edit": () => { setEditingMode(true) },
-                                "Delete": deleteCategory,
-                                "Add primitive type data": addPrimitive,
-                                "Add array type data": addArray,
-                            }}
-                        ></ElementDropDownMenu>
-                    </div>
-                    <div
-                        style={{
-                            color: "rgb(180, 180, 180)",
-                            fontSize: 13,
-                            width: "70%",
-                            paddingLeft: 7,
-                            paddingRight: 7,
-                            paddingTop: 4,
-                            paddingBottom: 4,
-                        }}
-                    >
-                        {this.getSelectedCategoryDescription()} &nbsp;
-                    </div>
-                </div>
-            );
-        }
-    };
-
-    private _PrimitiveProperty = ({ propertyName, category }: any) => {
-        const refElement = React.useRef<any>(null);
         return (
-            <div
-                ref={refElement}
-                style={{
-                    paddingTop: 8,
-                    paddingBottom: 11,
-                    paddingLeft: 13,
-                    paddingRight: 13,
-                }}
-                onMouseEnter={() => {
-                    if (refElement.current !== null) {
-                        refElement.current.style["backgroundColor"] = "rgb(248, 248, 248, 1)";
-                    }
-                }}
-                onMouseLeave={() => {
-                    if (refElement.current !== null) {
-                        refElement.current.style["backgroundColor"] = "rgb(248, 248, 248, 0)";
-                    }
-                }}
-            >
-                <this._PrimitivePropertyTitle propertyName={propertyName} category={category}></this._PrimitivePropertyTitle>
-                <this._PrimitivePropertyValue propertyName={propertyName} category={category}></this._PrimitivePropertyValue>
-            </div>
-        );
-    };
-    private _ArrayProperty = ({ propertyName, category }: any) => {
-        const refElement = React.useRef<any>(null);
-        const propertyValue = category[propertyName];
-        const addItem = () => {
-            const stringArray = category[propertyName]["value"];
-            stringArray.push("");
-            this._forceUpdateWholePage();
-        };
-        return (
-            <div
-                ref={refElement}
-                style={{
-                    paddingTop: 8,
-                    paddingBottom: 11,
-                    paddingLeft: 13,
-                    paddingRight: 13,
-                }}
-                onMouseEnter={() => {
-                    if (refElement.current !== null) {
-                        refElement.current.style["backgroundColor"] = "rgb(248, 248, 248, 1)";
-                    }
-                }}
-                onMouseLeave={() => {
-                    if (refElement.current !== null) {
-                        refElement.current.style["backgroundColor"] = "rgb(248, 248, 248, 0)";
-                    }
-                }}
-            >
-                <this._ArrayPropertyTitle propertyName={propertyName} category={category}></this._ArrayPropertyTitle>
-                <this._ArrayPropertyValue propertyName={propertyName} category={category}></this._ArrayPropertyValue>
-            </div>
-        );
-    };
+            isEditing ?
+                <div
+                    style={style}
+                >
+                    <ElementRectangleButton
+                        marginRight={12}
+                        paddingTop={3}
+                        paddingBottom={3}
+                        paddingLeft={5}
+                        paddingRight={5}
+                        handleClick={renameCategoryAndUpdateDescription}
+                    >
+                        OK
+                    </ElementRectangleButton>
+                    <ElementRectangleButton
+                        marginRight={5}
+                        paddingTop={3}
+                        paddingBottom={3}
+                        paddingLeft={5}
+                        paddingRight={5}
+                        handleClick={(event: any) => {
+                            setCategoryName(this.getSelectedCategoryName());
+                            setCategoryDescription(this.getSelectedCategoryDescription());
+                            setIsEditing(false);
+                        }}
+                    >
+                        Cancel
+                    </ElementRectangleButton>
+                </div>
+                :
+                <ElementDropDownMenu
+                    callbacks={{
+                        "Edit": () => { setIsEditing(true) },
+                        "Delete": deleteCategory,
+                        "Add primitive type data": addPrimitive,
+                        "Add array type data": addArray,
+                        "Add choices type data": addChoices,
+                    }}
+                ></ElementDropDownMenu>
+        )
+    }
 
-    private _PrimitivePropertyTitle = ({ propertyName, category }: any) => {
-        const [editingMode, setEditingMode] = React.useState(false);
+    private _ElementCategoryTitleDescription = ({ categoryDescription, setCategoryDescription, isEditing }: any) => {
+
+        const styleDiv = {
+            color: "rgb(180, 180, 180)",
+            fontSize: 13,
+            width: "70%",
+            paddingLeft: 7,
+            paddingRight: 7,
+            paddingTop: 4,
+            paddingBottom: 4,
+        } as React.CSSProperties;
+
+        const styleInput = {
+            fontSize: 13,
+            paddingLeft: 6,
+            paddingRight: 6,
+            paddingTop: 3,
+            paddingBottom: 3,
+            margin: 0,
+            outline: "none",
+            border: "1px solid rgb(190, 190, 190)",
+            width: "70%",
+        } as React.CSSProperties;
+
+        return (
+            isEditing ?
+                <div>
+
+                    <input
+                        style={styleInput}
+                        value={categoryDescription}
+                        onChange={(event: any) => {
+                            event.preventDefault();
+                            setCategoryDescription(event.target.value);
+                        }}
+                    ></input>
+                </div>
+                :
+                <div
+                    style={styleDiv}
+                >
+                    {this.getSelectedCategoryDescription()} &nbsp;
+                </div>
+        )
+    }
+
+    private _ElementPropertyTitle = ({ propertyName, category }: any) => {
+        const [isEditing, setIsEditing] = React.useState(false);
         const [localPropertyName, setLocalPropertyName] = React.useState(propertyName);
         const [localPropertyDescription, setLocalPropertyDescription] = React.useState(category[propertyName]["DESCRIPTION"]);
+        return (
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                }}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    }}
+                >
+                    <this._ElementPropertyTitleName
+                        isEditing={isEditing}
+                        localPropertyName={localPropertyName}
+                        setLocalPropertyName={setLocalPropertyName}
+                    />
+                    <this._ElementPropertyTitleControl
+                        isEditing={isEditing}
+                        category={category}
+                        propertyName={propertyName}
+                        localPropertyName={localPropertyName}
+                        setLocalPropertyName={setLocalPropertyName}
+                        localPropertyDescription={localPropertyDescription}
+                        setLocalPropertyDescription={setLocalPropertyDescription}
+                        setIsEditing={setIsEditing}
+                    />
+                </div>
+                <this._ElementPropertyDescription
+                    isEditing={isEditing}
+                    localPropertyDescription={localPropertyDescription}
+                    setLocalPropertyDescription={setLocalPropertyDescription}
+                />
+            </div>
+        )
+    };
+
+    private _ElementPropertyTitleName = ({ isEditing, localPropertyName, setLocalPropertyName }: any) => {
+        return (
+            isEditing ?
+                <input
+                    style={{
+                        fontSize: 13,
+                        margin: 0,
+                        outline: "none",
+                        border: "solid 1px rgb(190, 190, 190)",
+                        width: "70%",
+                        fontWeight: "bold",
+                        paddingLeft: 6,
+                        paddingRight: 6,
+                        paddingTop: 3,
+                        paddingBottom: 3,
+                    }}
+                    value={localPropertyName}
+                    onChange={(event: any) => {
+                        event.preventDefault();
+                        setLocalPropertyName(event.target.value);
+                    }}
+                ></input>
+                :
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 13,
+                        fontWeight: "bold",
+                        paddingTop: 4,
+                        paddingBottom: 4,
+                        paddingLeft: 7,
+                        paddingRight: 7,
+                    }}
+                >
+                    {localPropertyName}
+                </div>
+        )
+    }
+
+    private _ElementPropertyTitleControl = ({ isEditing, category, propertyName, localPropertyName, setLocalPropertyName, localPropertyDescription, setLocalPropertyDescription, setIsEditing }: any) => {
 
         const deleteProperty = () => {
             delete category[propertyName];
-            this._forceUpdateWholePage();
+            this._forceUpdatePage();
         };
 
         const renamePropertyAndUpdateDescription = () => {
@@ -902,13 +982,6 @@ export class MainWindowProfileEditPage {
             const propertyIndex = propertyNames.indexOf(propertyName);
             propertyNames.splice(propertyIndex, 1);
             if (propertyNames.includes(localPropertyName)) {
-                // this.getMainWindowClient()
-                //     .getIpcManager()
-                //     .sendFromRendererProcess(
-                //         "show-message-box",
-                //         this.getMainWindowClient().getWindowId(),
-                //         `${localPropertyName} conflicts with an existing property name.`
-                //     );
                 const ipcManager = this.getMainWindowClient().getIpcManager();
                 ipcManager.handleDialogShowMessageBox(undefined, {
                     // command: string | undefined,
@@ -925,13 +998,10 @@ export class MainWindowProfileEditPage {
             // update description
             category[propertyName]["DESCRIPTION"] = localPropertyDescription;
             this.renameObjProperty(propertyName, localPropertyName, category);
-            setEditingMode(false);
-            this._forceUpdateWholePage();
+            setIsEditing(false);
+            this._forceUpdatePage();
         };
 
-        const [textAreaHeight, setTextAreaHeight] = React.useState(20);
-
-        const textInputRef = React.useRef(null);
         const moveUpProperty = () => {
             const index = Object.keys(category).indexOf(propertyName);
             if (index < 1) {
@@ -939,8 +1009,8 @@ export class MainWindowProfileEditPage {
             }
             const origProperty = category[propertyName];
             delete category[propertyName];
-            this.insertToObject(propertyName, origProperty, category, index - 1);
-            this._forceUpdateWholePage();
+            GlobalMethods.insertToObject(propertyName, origProperty, category, index - 1);
+            this._forceUpdatePage();
         };
         const moveDownProperty = () => {
             const index = Object.keys(category).indexOf(propertyName);
@@ -949,176 +1019,404 @@ export class MainWindowProfileEditPage {
             }
             const origProperty = category[propertyName];
             delete category[propertyName];
-            this.insertToObject(propertyName, origProperty, category, index + 1);
-            this._forceUpdateWholePage();
+            GlobalMethods.insertToObject(propertyName, origProperty, category, index + 1);
+            this._forceUpdatePage();
         };
 
-        if (editingMode) {
-            return (
+        return (
+            isEditing ?
                 <div
                     style={{
                         display: "flex",
-                        flexDirection: "column",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
                     }}
                 >
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            alignItems: "center",
+                    <ElementRectangleButton
+                        marginRight={12}
+                        paddingTop={3}
+                        paddingBottom={3}
+                        paddingLeft={5}
+                        paddingRight={5}
+                        handleClick={(event: any) => {
+                            renamePropertyAndUpdateDescription();
                         }}
                     >
-                        <input
-                            style={{
-                                fontSize: 13,
-                                margin: 0,
-                                outline: "none",
-                                border: "solid 1px rgb(190, 190, 190)",
-                                width: "70%",
-                                fontWeight: "bold",
-                                paddingLeft: 6,
-                                paddingRight: 6,
-                                paddingTop: 3,
-                                paddingBottom: 3,
-                            }}
-                            value={localPropertyName}
-                            onChange={(event: any) => {
-                                event.preventDefault();
-                                setLocalPropertyName(event.target.value);
-                            }}
-                        ></input>
-                        <div
-                            style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <ElementRectangleButton
-                                marginRight={12}
-                                paddingTop={3}
-                                paddingBottom={3}
-                                paddingLeft={5}
-                                paddingRight={5}
-                                handleClick={(event: any) => {
-                                    renamePropertyAndUpdateDescription();
-                                }}
-                            >
-                                Save
-                            </ElementRectangleButton>
-                            <ElementRectangleButton
-                                marginRight={5}
-                                paddingTop={3}
-                                paddingBottom={3}
-                                paddingLeft={5}
-                                paddingRight={5}
-                                handleClick={(event: any) => {
-                                    setLocalPropertyName(propertyName);
-                                    setLocalPropertyDescription(category[propertyName]["DESCRIPTION"]);
-                                    setEditingMode(false);
-                                }}
-                            >
-                                Cancel
-                            </ElementRectangleButton>
-                        </div>
-                    </div>
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            color: "rgb(180, 180, 180)",
-                            fontSize: 13,
-                            marginTop: 2,
+                        Save
+                    </ElementRectangleButton>
+                    <ElementRectangleButton
+                        marginRight={5}
+                        paddingTop={3}
+                        paddingBottom={3}
+                        paddingLeft={5}
+                        paddingRight={5}
+                        handleClick={(event: any) => {
+                            setLocalPropertyName(propertyName);
+                            setLocalPropertyDescription(category[propertyName]["DESCRIPTION"]);
+                            setIsEditing(false);
                         }}
                     >
-                        <input
-                            style={{
-                                fontSize: 13,
-                                margin: 0,
-                                outline: "none",
-                                border: "solid 1px rgb(190, 190, 190)",
-                                width: "70%",
-                                paddingLeft: 6,
-                                paddingRight: 6,
-                                paddingTop: 3,
-                                paddingBottom: 3,
-                            }}
-                            value={localPropertyDescription}
-                            onChange={(event: any) => {
-                                event.preventDefault();
-                                setLocalPropertyDescription(event.target.value);
-                            }}
-                        ></input>
-                    </div>
+                        Cancel
+                    </ElementRectangleButton>
                 </div>
-            );
-        } else {
-            return (
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
+                :
+                <ElementDropDownMenu
+                    callbacks={{
+                        "Edit": () => setIsEditing(true),
+                        "Delete": deleteProperty,
+                        "Move up": moveUpProperty,
+                        "Move down": moveDownProperty,
                     }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                        }}
-                    >
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: 13,
-                                fontWeight: "bold",
-                                paddingTop: 4,
-                                paddingBottom: 4,
-                                paddingLeft: 7,
-                                paddingRight: 7,
-                            }}
-                        >
-                            {propertyName}
-                        </div>
+                ></ElementDropDownMenu>
 
-                        <ElementDropDownMenu
-                            callbacks={{
-                                "Edit": () => setEditingMode(true),
-                                "Delete": deleteProperty,
-                                "Move up": moveUpProperty,
-                                "Move down": moveDownProperty,
-                            }}
-                        ></ElementDropDownMenu>
-                    </div>
-                    <div
+        )
+    }
+
+    private _ElementPropertyDescription = ({ isEditing, localPropertyDescription, setLocalPropertyDescription }: any) => {
+        return (
+            isEditing ?
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        color: "rgb(180, 180, 180)",
+                        fontSize: 13,
+                        marginTop: 2,
+                    }}
+                >
+                    <input
                         style={{
-                            display: "flex",
-                            alignItems: "center",
-                            color: "rgb(180, 180, 180)",
                             fontSize: 13,
+                            margin: 0,
+                            outline: "none",
+                            border: "solid 1px rgb(190, 190, 190)",
                             width: "70%",
-                            marginTop: 2,
-                            paddingTop: 4,
-                            paddingBottom: 4,
-                            paddingLeft: 7,
-                            paddingRight: 7,
+                            paddingLeft: 6,
+                            paddingRight: 6,
+                            paddingTop: 3,
+                            paddingBottom: 3,
                         }}
-                    >
-                        {localPropertyDescription} &nbsp;
-                    </div>
+                        value={localPropertyDescription}
+                        onChange={(event: any) => {
+                            event.preventDefault();
+                            setLocalPropertyDescription(event.target.value);
+                        }}
+                    ></input>
                 </div>
-            );
-        }
+                :
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        color: "rgb(180, 180, 180)",
+                        fontSize: 13,
+                        width: "70%",
+                        marginTop: 2,
+                        paddingTop: 4,
+                        paddingBottom: 4,
+                        paddingLeft: 7,
+                        paddingRight: 7,
+                    }}
+                >
+                    {localPropertyDescription} &nbsp;
+                </div>
+
+        )
+    }
+
+    private _ElementArrayProperty = ({ propertyName, category }: any) => {
+        const refElement = React.useRef<any>(null);
+        return (
+            <div
+                ref={refElement}
+                style={{
+                    paddingTop: 8,
+                    paddingBottom: 11,
+                    paddingLeft: 13,
+                    paddingRight: 13,
+                }}
+                onMouseEnter={() => {
+                    if (refElement.current !== null) {
+                        refElement.current.style["backgroundColor"] = "rgb(248, 248, 248, 1)";
+                    }
+                }}
+                onMouseLeave={() => {
+                    if (refElement.current !== null) {
+                        refElement.current.style["backgroundColor"] = "rgb(248, 248, 248, 0)";
+                    }
+                }}
+            >
+                <this._ElementPropertyTitle propertyName={propertyName} category={category}></this._ElementPropertyTitle>
+                <this._ElementArrayPropertyValue propertyName={propertyName} category={category}></this._ElementArrayPropertyValue>
+            </div>
+        );
     };
 
-    private _ArrayPropertyTitle = this._PrimitivePropertyTitle;
+    private _ElementPrimitiveProperty = ({ propertyName, category }: any) => {
+        const refElement = React.useRef<any>(null);
+        return (
+            <div
+                ref={refElement}
+                style={{
+                    paddingTop: 8,
+                    paddingBottom: 11,
+                    paddingLeft: 13,
+                    paddingRight: 13,
+                }}
+                onMouseEnter={() => {
+                    if (refElement.current !== null) {
+                        refElement.current.style["backgroundColor"] = "rgb(248, 248, 248, 1)";
+                    }
+                }}
+                onMouseLeave={() => {
+                    if (refElement.current !== null) {
+                        refElement.current.style["backgroundColor"] = "rgb(248, 248, 248, 0)";
+                    }
+                }}
+            >
+                <this._ElementPropertyTitle propertyName={propertyName} category={category}></this._ElementPropertyTitle>
+                <this._ElementPrimitivePropertyValue propertyName={propertyName} category={category}></this._ElementPrimitivePropertyValue>
+            </div>
+        );
+    };
 
-    private _PrimitivePropertyValue = ({ propertyName, category }: any) => {
+
+    private _ElementChoiceProperty = ({ propertyName, category }: any) => {
+        const refElement = React.useRef<any>(null);
+        const [isEditing, setIsEditing] = React.useState(false);
+
+        return (
+            <div
+                ref={refElement}
+                style={{
+                    paddingTop: 8,
+                    paddingBottom: 11,
+                    paddingLeft: 13,
+                    paddingRight: 13,
+                }}
+                onMouseEnter={() => {
+                    if (refElement.current !== null) {
+                        refElement.current.style["backgroundColor"] = "rgb(248, 248, 248, 1)";
+                    }
+                }}
+                onMouseLeave={() => {
+                    if (refElement.current !== null) {
+                        refElement.current.style["backgroundColor"] = "rgb(248, 248, 248, 0)";
+                    }
+                }}
+            >
+                <this._ElementPropertyTitle propertyName={propertyName} category={category}></this._ElementPropertyTitle>
+                <this._ElementChoicePropertyValue propertyName={propertyName} category={category} isEditing={isEditing}></this._ElementChoicePropertyValue>
+                <this._ElementChoicePropertyControls category={category} propertyName={propertyName} isEditing={isEditing} setIsEditing={setIsEditing} />
+            </div>
+        );
+    };
+
+    private _ElementChoicePropertyValue = ({ propertyName, category, isEditing }: any) => {
+        const [localPropertyValue, setLocalPropertyValue] = React.useState(category[propertyName]["value"]);
+        const choices = category[propertyName]["choices"];
+
+        const styleDropDownMenu = {
+            display: "flex",
+            alignItems: "center",
+            marginTop: 6,
+            marginLeft: 7,
+        } as React.CSSProperties;
+
+        const styleChoices = {
+            display: "flex",
+            alignItems: "flex-start",
+            marginTop: 6,
+            marginLeft: 7,
+            flexDirection: "column"
+        } as React.CSSProperties;
+
+        return (
+            isEditing ?
+                <div style={styleChoices}>
+                    {choices.map((choice: string, index: number) => {
+                        return (
+                            <this._ElementChoicePropertyChoicesItem
+                                choice={choice}
+                                index={index}
+                                category={category}
+                                propertyName={propertyName}
+                            >
+                            </this._ElementChoicePropertyChoicesItem>
+                        )
+                    })}
+                </div>
+                :
+                <div
+                    style={styleDropDownMenu}
+                >
+                    <select
+                        value={localPropertyValue}
+                        onChange={(event: any) => {
+                            event.preventDefault();
+                            const newValue = `${event.target.value}`;
+                            setLocalPropertyValue(newValue);
+                            category[propertyName]["value"] = newValue;
+
+                        }}
+                    >
+                        {category[propertyName]["choices"].map((choice: string) => {
+                            return <option value={choice}>{choice}</option>;
+                        })}
+                    </select>
+                </div>
+        )
+    }
+
+    private _ElementChoicePropertyChoicesItem = ({ choice, index, category, propertyName }: any) => {
+        const [localChoice, setLocalChoice] = React.useState(choice);
+        const [showControl, setShowControl] = React.useState(false);
+        const elementRef = React.useRef<any>(null);
+
+        const style = {
+            display: "flex",
+            flexDirection: "row",
+            boxSizing: "border-box",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "100%",
+            marginBottom: 2,
+
+        } as React.CSSProperties;
+
+        const styleInput = {
+            backgroundColor: "rgba(0,0,0,0)",
+            width: "30%",
+            border: "solid 1px rgb(190, 190, 190)",
+            paddingLeft: "6px",
+            outline: "none",
+            fontSize: "13px",
+            background: "white",
+        } as React.CSSProperties;
+
+        const deleteChoice = () => {
+            const property = category[propertyName];
+            const choices = property["choices"];
+            choices.splice(index, 1);
+        }
+
+        return (
+            <div style={style}
+                ref={elementRef}
+                onMouseEnter={() => {
+                    if (elementRef.current !== null) {
+                        elementRef.current.style["backgroundColor"] = "rgba(239, 239, 239, 1)";
+                    }
+                    setShowControl(true);
+                }}
+                onMouseLeave={() => {
+                    if (elementRef.current !== null) {
+                        elementRef.current.style["backgroundColor"] = "rgba(239, 239, 239, 0)";
+                    }
+                    setShowControl(false);
+                }}
+            >
+                <input
+                    style={styleInput}
+                    value={localChoice}
+                    onChange={(event: any) => {
+                        setLocalChoice(event.target.value);
+                        const property = category[propertyName];
+                        const choices = property["choices"];
+                        choices[index] = event.target.value;
+                    }}
+                >
+                </input>
+
+                <ElementArrayPropertyItemRight
+                    additionalStyle={{
+                        display: showControl === true ? "inline-flex" : "none",
+                        height: 19.5,
+                    }}
+                    onClick={() => {
+                        deleteChoice();
+                    }}
+                >
+                    <img
+                        style={{
+                            height: "10px",
+                        }}
+                        src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                    ></img>
+                </ElementArrayPropertyItemRight>
+
+            </div>
+        )
+    }
+
+    private _ElementChoicePropertyControls = ({ category, propertyName, isEditing, setIsEditing }: any) => {
+        const addChoice = () => {
+            const choices = category[propertyName]["choices"];
+            let newChoiceName = "new-choice";
+            while(true) {
+                if (choices.includes(newChoiceName)) {
+                    newChoiceName = newChoiceName + "-1";
+                } else {
+                    break;
+                }
+            }
+            choices.push(newChoiceName);
+            this._forceUpdatePage();
+        }
+
+        const style = {
+            display: "flex",
+            alignItems: "center",
+            marginTop: 6,
+            marginLeft: 7,
+        } as React.CSSProperties;
+
+
+        return (
+            isEditing ?
+                <div style={style}>
+                    <ElementRectangleButton
+                        marginRight={10}
+                        paddingTop={3}
+                        paddingBottom={3}
+                        paddingLeft={5}
+                        paddingRight={5}
+                        handleClick={() => { addChoice() }}
+                    >
+                        Add choice
+                    </ElementRectangleButton>
+                    <ElementRectangleButton
+                        marginRight={10}
+                        paddingTop={3}
+                        paddingBottom={3}
+                        paddingLeft={5}
+                        paddingRight={5}
+                        handleClick={() => { setIsEditing(false); this._forceUpdatePage() }}
+                    >
+                        OK
+                    </ElementRectangleButton>
+                </div>
+                :
+                <div
+                    style={style}
+                >
+
+                    <ElementRectangleButton
+                        marginRight={10}
+                        paddingTop={3}
+                        paddingBottom={3}
+                        paddingLeft={5}
+                        paddingRight={5}
+                        handleClick={() => { setIsEditing(true); this._forceUpdatePage() }}
+                    >
+                        Edit
+                    </ElementRectangleButton>
+                </div>
+        )
+    }
+
+    private _ElementPrimitivePropertyValue = ({ propertyName, category }: any) => {
         const [localPropertyValue, setLocalPropertyValue] = React.useState(category[propertyName]["value"]);
 
         if (category[propertyName]["choices"] !== undefined) {
@@ -1194,7 +1492,47 @@ export class MainWindowProfileEditPage {
         }
     };
 
-    private _ArrayPropertyValue = ({ propertyName, category }: any) => {
+    private _ElementArrayPropertyValue = ({ propertyName, category }: any) => {
+        const style = {
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-start",
+            paddingLeft: 7,
+            marginTop: 4,
+        } as React.CSSProperties;
+
+        return (
+            <div
+                style={style}
+            >
+                {category[propertyName]["value"].map((element: string, index: number) => {
+                    return (
+                        <this._ElementArrayPropertyValueItem
+                            key={`${propertyName}-${element}-${index}`}
+                            // string array
+                            propertyValue={category[propertyName]["value"]}
+                            // type of element, e.g. "string" or "[string, string]", if it is undefined, its type is "string"
+                            propertyType={category[propertyName]["type"]}
+                            // index in the string array
+                            index={index}
+                        ></this._ElementArrayPropertyValueItem>
+                    );
+                })}
+                <this._ElementArrayPropertyAddItemButton
+                    category={category}
+                    propertyName={propertyName}
+                />
+            </div>
+        );
+    };
+
+    private _ElementArrayPropertyAddItemButton = ({ category, propertyName }: any) => {
+
+        const style = {
+            marginTop: "5px",
+            marginBottom: "6px",
+        } as React.CSSProperties;
+
         const addItem = () => {
             if (category[propertyName]["type"] === "[string,string][]") {
                 const stringArray = category[propertyName]["value"];
@@ -1203,57 +1541,31 @@ export class MainWindowProfileEditPage {
                 const stringArray = category[propertyName]["value"];
                 stringArray.push("");
             }
-            this._forceUpdateWholePage();
+            this._forceUpdatePage();
         };
 
         return (
             <div
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "flex-start",
-                    paddingLeft: 7,
-                    marginTop: 4,
-                }}
+                style={style}
             >
-                {category[propertyName]["value"].map((element: string, index: number) => {
-                    return (
-                        <this._ArrayPropertyValueItem
-                            key={`${propertyName}-${element}-${index}`}
-                            // string array
-                            propertyValue={category[propertyName]["value"]}
-                            // type of element, e.g. "string" or "[string, string]", if it is undefined, its type is "string"
-                            propertyType={category[propertyName]["type"]}
-                            // index in the string array
-                            index={index}
-                        ></this._ArrayPropertyValueItem>
-                    );
-                })}
-                <div
-                    style={{
-                        marginTop: "5px",
-                        marginBottom: "6px",
+                <ElementRectangleButton
+                    marginRight={10}
+                    paddingTop={3}
+                    paddingBottom={3}
+                    paddingLeft={5}
+                    paddingRight={5}
+                    handleClick={(event: any) => {
+                        addItem();
                     }}
                 >
-                    <ElementRectangleButton
-                        marginRight={10}
-                        paddingTop={3}
-                        paddingBottom={3}
-                        paddingLeft={5}
-                        paddingRight={5}
-                        handleClick={(event: any) => {
-                            addItem();
-                        }}
-                    >
-                        Add item
-                    </ElementRectangleButton>
-                </div>
+                    Add item
+                </ElementRectangleButton>
             </div>
-        );
-    };
+        )
+    }
 
     // propertyValue is a string array
-    private _ArrayPropertyValueItem = ({ propertyValue, index, propertyType }: any) => {
+    private _ElementArrayPropertyValueItem = ({ propertyValue, index, propertyType }: any) => {
         const [localItemValue, setLocalItemValue] = React.useState(propertyValue[index]);
         const [editingMode, setEditingMode] = React.useState(false);
         const refSubElementType1 = React.useRef<any>(null);
@@ -1261,9 +1573,19 @@ export class MainWindowProfileEditPage {
         const refSubElementType3 = React.useRef<any>(null);
         const refSubElementType4 = React.useRef<any>(null);
 
+        const styleInput = {
+            backgroundColor: "rgba(0,0,0,0)",
+            width: "30%",
+            border: "solid 1px rgb(190, 190, 190)",
+            paddingLeft: "6px",
+            outline: "none",
+            fontSize: "13px",
+            background: "white",
+        } as React.CSSProperties;
+
         const deleteItem = () => {
             propertyValue.splice(index, 1);
-            this._forceUpdateWholePage();
+            this._forceUpdatePage();
         };
 
         const moveUp = () => {
@@ -1274,7 +1596,7 @@ export class MainWindowProfileEditPage {
                 propertyValue.splice(index, 1);
                 propertyValue.splice(index - 1, 0, itemValue);
             }
-            this._forceUpdateWholePage();
+            this._forceUpdatePage();
         };
 
         const moveDown = () => {
@@ -1285,7 +1607,7 @@ export class MainWindowProfileEditPage {
                 propertyValue.splice(index, 1);
                 propertyValue.splice(index + 1, 0, itemValue);
             }
-            this._forceUpdateWholePage();
+            this._forceUpdatePage();
         };
 
         if (propertyType !== undefined && propertyType.replace(" ", "") === "[string,string][]") {
@@ -1293,15 +1615,7 @@ export class MainWindowProfileEditPage {
                 return (
                     <ElementArrayPropertyItem refSubElement={refSubElementType1}>
                         <input
-                            style={{
-                                backgroundColor: "rgba(0,0,0,0)",
-                                width: "30%",
-                                border: "solid 1px rgb(190, 190, 190)",
-                                paddingLeft: "6px",
-                                outline: "none",
-                                fontSize: "13px",
-                                background: "white",
-                            }}
+                            style={styleInput}
                             value={localItemValue[0]}
                             onChange={(event: any) => {
                                 event.preventDefault();
@@ -1309,15 +1623,7 @@ export class MainWindowProfileEditPage {
                             }}
                         ></input>{" "}
                         <input
-                            style={{
-                                backgroundColor: "rgba(0,0,0,0)",
-                                width: "30%",
-                                border: "solid 1px rgb(190, 190, 190)",
-                                paddingLeft: "6px",
-                                outline: "none",
-                                fontSize: "13px",
-                                background: "white",
-                            }}
+                            style={styleInput}
                             value={localItemValue[1]}
                             onChange={(event: any) => {
                                 event.preventDefault();
@@ -1339,7 +1645,7 @@ export class MainWindowProfileEditPage {
                                 handleClick={(event: any) => {
                                     propertyValue[index] = localItemValue;
                                     setEditingMode(false);
-                                    this._forceUpdateWholePage();
+                                    this._forceUpdatePage();
                                 }}
                             >
                                 OK
@@ -1354,7 +1660,7 @@ export class MainWindowProfileEditPage {
                                 handleClick={(event: any) => {
                                     setLocalItemValue(propertyValue[index]);
                                     setEditingMode(false);
-                                    this._forceUpdateWholePage();
+                                    this._forceUpdatePage();
                                 }}
                             >
                                 Cancel
@@ -1393,7 +1699,7 @@ export class MainWindowProfileEditPage {
                             <ElementArrayPropertyItemRight
                                 onClick={() => {
                                     setEditingMode(true);
-                                    this._forceUpdateWholePage();
+                                    this._forceUpdatePage();
                                 }}
                             >
                                 <img
@@ -1468,7 +1774,7 @@ export class MainWindowProfileEditPage {
                                 handleClick={(event: any) => {
                                     propertyValue[index] = localItemValue;
                                     setEditingMode(false);
-                                    this._forceUpdateWholePage();
+                                    this._forceUpdatePage();
                                 }}
                             >
                                 OK
@@ -1481,7 +1787,7 @@ export class MainWindowProfileEditPage {
                                 handleClick={(event: any) => {
                                     setLocalItemValue(propertyValue[index]);
                                     setEditingMode(false);
-                                    this._forceUpdateWholePage();
+                                    this._forceUpdatePage();
                                 }}
                             >
                                 Cancel
@@ -1512,7 +1818,7 @@ export class MainWindowProfileEditPage {
                             <ElementArrayPropertyItemRight
                                 onClick={() => {
                                     setEditingMode(true);
-                                    this._forceUpdateWholePage();
+                                    this._forceUpdatePage();
                                 }}
                             >
                                 <img
@@ -1567,7 +1873,7 @@ export class MainWindowProfileEditPage {
         }
         const value = obj[oldName];
         delete obj[oldName];
-        this.insertToObject(newName, value, obj, index);
+        GlobalMethods.insertToObject(newName, value, obj, index);
     };
 
     // --------------------- getters and setters ----------------
@@ -1587,7 +1893,49 @@ export class MainWindowProfileEditPage {
     setSelectedCategoryName = (newCategoryName: string) => {
         this._selectedCategoryName = newCategoryName;
     };
+
+    resetLocalProfile = () => {
+        this.setLocalProfile({ undefined: "I am not defined yet" });
+    }
+
     getOrigProfileName = () => {
         return this._origProfileName;
+    };
+    setOrigProfileName = (newName: string) => {
+        this._origProfileName = newName;
+    }
+
+    getSelectedCategoryDescription = () => {
+        const selectedCategoryName = this.getSelectedCategoryName();
+        const selectedCategoryContents = this.getLocalProfile()[selectedCategoryName];
+        if (selectedCategoryContents === undefined) {
+            return "";
+        }
+        for (let itemName of Object.keys(selectedCategoryContents)) {
+            if (itemName.startsWith("DESCRIPTION_")) {
+                const id = itemName.split("_")[1];
+                if (uuidValidate(id)) {
+                    return selectedCategoryContents[itemName];
+                }
+            }
+        }
+        return "";
+    };
+
+    setSelectedCategoryDescription = (newDescription: string) => {
+        const selectedCategoryName = this.getSelectedCategoryName();
+        const selectedCategoryContents = this.getLocalProfile()[selectedCategoryName];
+        if (selectedCategoryContents === undefined) {
+            return;
+        }
+        for (let itemName of Object.keys(selectedCategoryContents)) {
+            if (itemName.startsWith("DESCRIPTION_")) {
+                const id = itemName.split("_")[1];
+                if (uuidValidate(id)) {
+                    selectedCategoryContents[itemName] = newDescription;
+                    return;
+                }
+            }
+        }
     };
 }

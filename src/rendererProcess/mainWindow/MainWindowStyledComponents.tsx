@@ -80,7 +80,7 @@ export const ElementProfileBlockNameInput = ({ additionalStyle, value, onChange 
 };
 
 
-export const ElementArrayPropertyItemRight = ({ children, onClick }: any) => {
+export const ElementArrayPropertyItemRight = ({ children, onClick, additionalStyle }: any) => {
     const refElement = React.useRef<any>(null);
     return <div
         ref={refElement}
@@ -94,6 +94,7 @@ export const ElementArrayPropertyItemRight = ({ children, onClick }: any) => {
             opacity: 0.2,
             cursor: "pointer",
             fontSize: 20,
+            ...additionalStyle
         }}
         onClick={onClick}
         onMouseEnter={() => {
