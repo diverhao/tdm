@@ -528,6 +528,8 @@ export class MainWindowProfileEditPage {
         const localProfile = this.getLocalProfile();
         const category = localProfile[selectedCategoryName];
         const propertyNames = Object.keys(category);
+        // const [filteredPropertyNames, setFilteredPropertyNames] = React.useState<string[]>([]);
+        const [filterText, setFilterText] = React.useState("");
 
         if (category === undefined) {
             return (
@@ -544,14 +546,29 @@ export class MainWindowProfileEditPage {
                 {/* category title */}
                 <this._ElementCategoryTitle></this._ElementCategoryTitle>
 
+                {/* Filter */}
+                <this._ElementCategoryFilter
+                    category={category}
+                    // setFilteredPropertyNames={setFilteredPropertyNames}
+                    filterText={filterText}
+                    setFilterText={setFilterText}
+                ></this._ElementCategoryFilter>
+
                 {/* category content: each property */}
                 {propertyNames.map((propertyName: string, index: number) => {
                     const property = category[propertyName];
                     const propertyValue = property["value"];
                     const propertyDescription = property["DESCRIPTION"];
                     const propertyChoices = property["choices"];
+                    const propertyType = property["type"];
 
-                    if (propertyName.startsWith("DESCRIPTION_") && uuidValidate(propertyName.replace("DESCRIPTION_", ""))) {
+                    if (
+                        filterText.trim() !== "" &&
+                        !propertyName.toLowerCase().includes(filterText.trim().toLowerCase()) &&
+                        !`${propertyDescription}`.toLowerCase().includes(filterText.trim().toLowerCase())) {
+                        // filtered
+                        return null;
+                    } else if (propertyName.startsWith("DESCRIPTION_") && uuidValidate(propertyName.replace("DESCRIPTION_", ""))) {
                         // DESCRIPTION_${uuid} property, it is shown in the category title, not as a regular property
                         return null;
                     } else if (typeof property !== "object") {
@@ -564,13 +581,21 @@ export class MainWindowProfileEditPage {
                         // the "value" field must be a string or a string array
                         return null;
                     } else {
-                        if (Array.isArray(propertyValue)) {
+                        if (Array.isArray(propertyValue) && propertyType === undefined) {
                             return (
                                 <this._ElementArrayProperty
                                     key={`${propertyName}-${index}`}
                                     propertyName={propertyName}
                                     category={category}
                                 ></this._ElementArrayProperty>
+                            );
+                        } else if (Array.isArray(propertyValue) && propertyType === "[string,string][]") {
+                            return (
+                                <this._ElementMapProperty
+                                    key={`${propertyName}-${index}`}
+                                    propertyName={propertyName}
+                                    category={category}
+                                ></this._ElementMapProperty>
                             );
                         } else if (Array.isArray(propertyChoices)) {
                             return (
@@ -594,6 +619,55 @@ export class MainWindowProfileEditPage {
             </div>
         );
     };
+
+    private _ElementCategoryFilter = ({ category, filterText, setFilterText }: any) => {
+        const style = {
+            display: "inline-flex",
+            paddingLeft: 7,
+            paddingRight: 7,
+            paddingTop: 5,
+            paddingBottom: 5,
+        } as React.CSSProperties;
+
+        const inputStyle = {
+            fontSize: 13,
+            paddingLeft: 2,
+            paddingRight: 2,
+            paddingTop: 1,
+            paddingBottom: 1,
+            margin: 0,
+            outline: "none",
+            border: "1px solid rgb(190, 190, 190)",
+            width: "40%",
+            marginBottom: 3,
+        } as React.CSSProperties;
+
+        return (
+            <div style={style}>
+                <input style={inputStyle}
+                    value={filterText}
+                    placeholder={"Filter properties"}
+                    spellCheck={false}
+                    onChange={(event: any) => {
+                        setFilterText(event.target.value);
+                        // const filteredPropertyNames: string[] = [];
+                        // for (let propertyName of Object.keys(category)) {
+                        //     const propertyValue = category[propertyName];
+                        //     if (propertyName.startsWith("DESCRIPTION_")) {
+                        //         continue;
+                        //     }
+                        //     const propertyDescription = propertyValue["DESCRIPTION"];
+                        //     if (!propertyName.toLowerCase().includes(filterText.toLowerCase()) && !propertyDescription.toLowerCase().includes(filterText.toLowerCase())) {
+                        //         filteredPropertyNames.push(propertyName);
+                        //     }
+                        //     setFilteredPropertyNames(filteredPropertyNames)
+                        // }
+                    }}
+                >
+                </input>
+            </div>
+        )
+    }
 
     private _ElementCategoryTitle = ({ }: any) => {
 
@@ -719,7 +793,6 @@ export class MainWindowProfileEditPage {
             this._forceUpdatePage();
         };
 
-
         const addChoices = () => {
             let name = "new-choices";
             const category = this.getLocalProfile()[this.getSelectedCategoryName()];
@@ -729,6 +802,18 @@ export class MainWindowProfileEditPage {
             const value = "new-choice-1";
             const choices = ["new-choice-1", "new-choice-2"]
             category[name] = { DESCRIPTION: `Put description here. This is a choice menu.`, value: value, choices: choices };
+            this._forceUpdatePage();
+        };
+
+        const addMap = () => {
+            let name = "new-map";
+            const category = this.getLocalProfile()[this.getSelectedCategoryName()];
+            while (category[name] !== undefined) {
+                name = `${name}-1`;
+            }
+            const value = [["key-1", "value-1"], ["key-2", "value-2"]];
+            const type = "[string,string][]";
+            category[name] = { DESCRIPTION: `Put description here. This is a map.`, value: value, type: type };
             this._forceUpdatePage();
         };
 
@@ -833,6 +918,7 @@ export class MainWindowProfileEditPage {
                         "Add primitive type data": addPrimitive,
                         "Add array type data": addArray,
                         "Add choices type data": addChoices,
+                        "Add map type data": addMap
                     }}
                 ></ElementDropDownMenu>
         )
@@ -1153,6 +1239,34 @@ export class MainWindowProfileEditPage {
         );
     };
 
+    private _ElementMapProperty = ({ propertyName, category }: any) => {
+        const refElement = React.useRef<any>(null);
+        return (
+            <div
+                ref={refElement}
+                style={{
+                    paddingTop: 8,
+                    paddingBottom: 11,
+                    paddingLeft: 13,
+                    paddingRight: 13,
+                }}
+                onMouseEnter={() => {
+                    if (refElement.current !== null) {
+                        refElement.current.style["backgroundColor"] = "rgb(248, 248, 248, 1)";
+                    }
+                }}
+                onMouseLeave={() => {
+                    if (refElement.current !== null) {
+                        refElement.current.style["backgroundColor"] = "rgb(248, 248, 248, 0)";
+                    }
+                }}
+            >
+                <this._ElementPropertyTitle propertyName={propertyName} category={category}></this._ElementPropertyTitle>
+                <this._ElementMapPropertyValue propertyName={propertyName} category={category}></this._ElementMapPropertyValue>
+            </div>
+        );
+    };
+
     private _ElementPrimitiveProperty = ({ propertyName, category }: any) => {
         const refElement = React.useRef<any>(null);
         return (
@@ -1354,7 +1468,7 @@ export class MainWindowProfileEditPage {
         const addChoice = () => {
             const choices = category[propertyName]["choices"];
             let newChoiceName = "new-choice";
-            while(true) {
+            while (true) {
                 if (choices.includes(newChoiceName)) {
                     newChoiceName = newChoiceName + "-1";
                 } else {
@@ -1410,7 +1524,7 @@ export class MainWindowProfileEditPage {
                         paddingRight={5}
                         handleClick={() => { setIsEditing(true); this._forceUpdatePage() }}
                     >
-                        Edit
+                        Edit choices
                     </ElementRectangleButton>
                 </div>
         )
@@ -1526,6 +1640,40 @@ export class MainWindowProfileEditPage {
         );
     };
 
+    private _ElementMapPropertyValue = ({ propertyName, category }: any) => {
+        const style = {
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-start",
+            paddingLeft: 7,
+            marginTop: 4,
+        } as React.CSSProperties;
+
+        return (
+            <div
+                style={style}
+            >
+                {category[propertyName]["value"].map((element: [string, string], index: number) => {
+                    return (
+                        <this._ElementMapPropertyValueItem
+                            key={`${propertyName}-${element}-${index}`}
+                            // string array
+                            propertyValue={category[propertyName]["value"]}
+                            // type of element, fixed as "[string,string][]"
+                            propertyType={category[propertyName]["type"]}
+                            // index in the string array
+                            index={index}
+                        ></this._ElementMapPropertyValueItem>
+                    );
+                })}
+                <this._ElementArrayPropertyAddItemButton
+                    category={category}
+                    propertyName={propertyName}
+                />
+            </div>
+        );
+    };
+
     private _ElementArrayPropertyAddItemButton = ({ category, propertyName }: any) => {
 
         const style = {
@@ -1567,7 +1715,8 @@ export class MainWindowProfileEditPage {
     // propertyValue is a string array
     private _ElementArrayPropertyValueItem = ({ propertyValue, index, propertyType }: any) => {
         const [localItemValue, setLocalItemValue] = React.useState(propertyValue[index]);
-        const [editingMode, setEditingMode] = React.useState(false);
+        const [isEditing, setIsEditing] = React.useState(false);
+        const refSubElement = React.useRef<any>(null);
         const refSubElementType1 = React.useRef<any>(null);
         const refSubElementType2 = React.useRef<any>(null);
         const refSubElementType3 = React.useRef<any>(null);
@@ -1610,256 +1759,299 @@ export class MainWindowProfileEditPage {
             this._forceUpdatePage();
         };
 
-        if (propertyType !== undefined && propertyType.replace(" ", "") === "[string,string][]") {
-            if (editingMode) {
-                return (
-                    <ElementArrayPropertyItem refSubElement={refSubElementType1}>
-                        <input
-                            style={styleInput}
-                            value={localItemValue[0]}
-                            onChange={(event: any) => {
-                                event.preventDefault();
-                                setLocalItemValue([event.target.value, localItemValue[1]]);
-                            }}
-                        ></input>{" "}
-                        <input
-                            style={styleInput}
-                            value={localItemValue[1]}
-                            onChange={(event: any) => {
-                                event.preventDefault();
-                                setLocalItemValue([localItemValue[0], event.target.value]);
-                            }}
-                        ></input>{" "}
-                        <div
-                            ref={refSubElementType1}
-                            style={{
-                                display: "none",
-                            }}
-                        >
-                            <ElementRectangleButton
-                                marginRight={10}
-                                paddingTop={3}
-                                paddingBottom={3}
-                                paddingLeft={5}
-                                paddingRight={5}
-                                handleClick={(event: any) => {
-                                    propertyValue[index] = localItemValue;
-                                    setEditingMode(false);
-                                    this._forceUpdatePage();
-                                }}
-                            >
-                                OK
-                            </ElementRectangleButton>
+        return (
+            <ElementArrayPropertyItem refSubElement={refSubElement}>
+                <this._ElementArrayPropertyValueItemContent
+                    isEditing={isEditing}
+                    localItemValue={localItemValue}
+                    setLocalItemValue={setLocalItemValue}
+                ></this._ElementArrayPropertyValueItemContent>
+                <this._ElementArrayAndMapPropertyValueItemControls
+                    propertyValue={propertyValue}
+                    index={index}
+                    isEditing={isEditing}
+                    setIsEditing={setIsEditing}
+                    setLocalItemValue={setLocalItemValue}
+                    localItemValue={localItemValue}
+                    refSubElement={refSubElement}
+                ></this._ElementArrayAndMapPropertyValueItemControls>
 
-                            <ElementRectangleButton
-                                marginRight={10}
-                                paddingTop={3}
-                                paddingBottom={3}
-                                paddingLeft={5}
-                                paddingRight={5}
-                                handleClick={(event: any) => {
-                                    setLocalItemValue(propertyValue[index]);
-                                    setEditingMode(false);
-                                    this._forceUpdatePage();
-                                }}
-                            >
-                                Cancel
-                            </ElementRectangleButton>
-                        </div>
-                    </ElementArrayPropertyItem>
-                );
-            } else {
-                return (
-                    <ElementArrayPropertyItem refSubElement={refSubElementType2}>
-                        <div
-                            style={{
-                                paddingLeft: "7px",
-                                fontSize: "13px",
-                            }}
-                        >
-                            {localItemValue[0]}
-                        </div>
-                        <div
-                            style={{
-                                paddingLeft: "7px",
-                                fontSize: "13px",
-                            }}
-                        >
-                            {localItemValue[1]}
-                        </div>
-                        <div
-                            style={{
-                                display: "none",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                            ref={refSubElementType2}
-                        >
-                            <ElementArrayPropertyItemRight
-                                onClick={() => {
-                                    setEditingMode(true);
-                                    this._forceUpdatePage();
-                                }}
-                            >
-                                <img
-                                    style={{
-                                        height: "15px",
-                                    }}
-                                    src={`../../../webpack/resources/webpages/modify-symbol.svg`}
-                                ></img>
-                            </ElementArrayPropertyItemRight>
-                            <ElementArrayPropertyItemRight
-                                onClick={() => {
-                                    deleteItem();
-                                }}
-                            >
-                                <img
-                                    style={{
-                                        height: "13px",
-                                    }}
-                                    src={`../../../webpack/resources/webpages/delete-symbol.svg`}
-                                ></img>
-                            </ElementArrayPropertyItemRight>
-                            <ElementArrayPropertyItemRight
-                                onClick={() => {
-                                    moveUp();
-                                }}
-                            >
-                                &#8593;
-                            </ElementArrayPropertyItemRight>
-                            <ElementArrayPropertyItemRight
-                                onClick={() => {
-                                    moveDown();
-                                }}
-                            >
-                                &#8595;
-                            </ElementArrayPropertyItemRight>
-                        </div>
-                    </ElementArrayPropertyItem>
-                );
-            }
+            </ElementArrayPropertyItem>
+
+        )
+    };
+
+    private _ElementArrayPropertyValueItemContent = ({ isEditing, localItemValue, setLocalItemValue }: any) => {
+
+        const style = {
+            display: "inline-flex",
+            justifyContent: "flex-start",
+            flexDirection: "row",
+            width: "100%",
+        } as React.CSSProperties;
+
+        const styleInput = {
+            backgroundColor: "rgba(0,0,0,0)",
+            width: "30%",
+            border: "solid 1px rgb(190, 190, 190)",
+            paddingLeft: "6px",
+            outline: "none",
+            fontSize: "13px",
+            background: "white",
+        } as React.CSSProperties;
+
+
+        // if (propertyType !== undefined && propertyType.replace(" ", "") === "[string,string][]") {
+        if (isEditing) {
+            return (
+                <input
+                    style={{
+                        backgroundColor: "rgba(0,0,0,0)",
+                        width: "70%",
+                        border: "solid 1px rgb(190, 190, 190)",
+                        paddingLeft: "6px",
+                        outline: "none",
+                        fontSize: "13px",
+                        background: "white",
+                    }}
+                    value={localItemValue}
+                    onChange={(event: any) => {
+                        event.preventDefault();
+                        setLocalItemValue(event.target.value);
+                    }}
+                ></input>
+            );
         } else {
-            if (editingMode) {
-                return (
-                    <ElementArrayPropertyItem refSubElement={refSubElementType3}>
-                        <input
-                            style={{
-                                backgroundColor: "rgba(0,0,0,0)",
-                                width: "70%",
-                                border: "solid 1px rgb(190, 190, 190)",
-                                paddingLeft: "6px",
-                                outline: "none",
-                                fontSize: "13px",
-                                background: "white",
-                            }}
-                            value={localItemValue}
-                            onChange={(event: any) => {
-                                event.preventDefault();
-                                setLocalItemValue(event.target.value);
-                            }}
-                        ></input>{" "}
-                        <div
-                            ref={refSubElementType3}
-                            style={{
-                                display: "none",
-                            }}
-                        >
-                            <ElementRectangleButton
-                                marginRight={10}
-                                paddingTop={3}
-                                paddingBottom={3}
-                                paddingLeft={5}
-                                paddingRight={5}
-                                handleClick={(event: any) => {
-                                    propertyValue[index] = localItemValue;
-                                    setEditingMode(false);
-                                    this._forceUpdatePage();
-                                }}
-                            >
-                                OK
-                            </ElementRectangleButton>
-                            <ElementRectangleButton
-                                paddingTop={3}
-                                paddingBottom={3}
-                                paddingLeft={5}
-                                paddingRight={5}
-                                handleClick={(event: any) => {
-                                    setLocalItemValue(propertyValue[index]);
-                                    setEditingMode(false);
-                                    this._forceUpdatePage();
-                                }}
-                            >
-                                Cancel
-                            </ElementRectangleButton>
-                        </div>
-                    </ElementArrayPropertyItem>
-                );
-            } else {
-                return (
-                    <ElementArrayPropertyItem refSubElement={refSubElementType4}>
-                        <div
-                            style={{
-                                paddingLeft: "7px",
-                                fontSize: "13px",
-                            }}
-                        >
-                            {localItemValue}
-                        </div>
-                        <div
-                            style={{
-                                display: "none",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                            ref={refSubElementType4}
-                        >
-                            <ElementArrayPropertyItemRight
-                                onClick={() => {
-                                    setEditingMode(true);
-                                    this._forceUpdatePage();
-                                }}
-                            >
-                                <img
-                                    style={{
-                                        height: "15px",
-                                    }}
-                                    src={`../../../webpack/resources/webpages/modify-symbol.svg`}
-                                ></img>
-                            </ElementArrayPropertyItemRight>
-                            <ElementArrayPropertyItemRight
-                                onClick={() => {
-                                    deleteItem();
-                                }}
-                            >
-                                <img
-                                    style={{
-                                        height: "13px",
-                                    }}
-                                    src={`../../../webpack/resources/webpages/delete-symbol.svg`}
-                                ></img>
-                            </ElementArrayPropertyItemRight>
-                            <ElementArrayPropertyItemRight
-                                onClick={() => {
-                                    moveUp();
-                                }}
-                            >
-                                &#8593;
-                            </ElementArrayPropertyItemRight>
-                            <ElementArrayPropertyItemRight
-                                onClick={() => {
-                                    moveDown();
-                                }}
-                            >
-                                &#8595;
-                            </ElementArrayPropertyItemRight>
-                        </div>
-                    </ElementArrayPropertyItem>
-                );
-            }
+            return (
+                <div
+                    style={{
+                        paddingLeft: "7px",
+                        fontSize: "13px",
+                    }}
+                >
+                    {localItemValue}
+                </div>
+            );
         }
     };
+
+    // propertyValue is an array with elements in form of 2-element string array ["ABC", "DEF"].
+    private _ElementMapPropertyValueItem = ({ propertyValue, index, propertyType }: any) => {
+        const [localItemValue, setLocalItemValue] = React.useState(propertyValue[index]);
+        const [isEditing, setIsEditing] = React.useState(false);
+        const refSubElement = React.useRef<any>(null);
+
+        return (
+            <ElementArrayPropertyItem refSubElement={refSubElement}>
+
+                <this._ElementMapPropertyValueItemContent
+                    isEditing={isEditing}
+                    localItemValue={localItemValue}
+                    setLocalItemValue={setLocalItemValue}
+                ></this._ElementMapPropertyValueItemContent>
+                <this._ElementArrayAndMapPropertyValueItemControls
+                    propertyValue={propertyValue}
+                    index={index}
+                    isEditing={isEditing}
+                    setIsEditing={setIsEditing}
+                    setLocalItemValue={setLocalItemValue}
+                    localItemValue={localItemValue}
+                    refSubElement={refSubElement}
+                ></this._ElementArrayAndMapPropertyValueItemControls>
+
+            </ElementArrayPropertyItem>
+        )
+    };
+
+    private _ElementMapPropertyValueItemContent = ({ isEditing, localItemValue, setLocalItemValue }: any) => {
+
+        const style = {
+            display: "inline-flex",
+            justifyContent: "flex-start",
+            flexDirection: "row",
+            width: "100%",
+        } as React.CSSProperties;
+
+        const styleInput = {
+            backgroundColor: "rgba(0,0,0,0)",
+            width: "30%",
+            border: "solid 1px rgb(190, 190, 190)",
+            paddingLeft: "6px",
+            outline: "none",
+            fontSize: "13px",
+            background: "white",
+        } as React.CSSProperties;
+
+
+        // if (propertyType !== undefined && propertyType.replace(" ", "") === "[string,string][]") {
+        if (isEditing) {
+            return (
+                <div style={style}>
+                    <input
+                        style={{ ...styleInput, width: "20%" }}
+                        value={localItemValue[0]}
+                        onChange={(event: any) => {
+                            event.preventDefault();
+                            setLocalItemValue([event.target.value, localItemValue[1]]);
+                        }}
+                    ></input>{" "}
+                    <input
+                        style={{ ...styleInput, width: "20%" }}
+                        value={localItemValue[1]}
+                        onChange={(event: any) => {
+                            event.preventDefault();
+                            setLocalItemValue([localItemValue[0], event.target.value]);
+                        }}
+                    ></input>{" "}
+                </div>
+            );
+        } else {
+            return (
+                <div style={style}>
+                    <div
+                        style={{
+                            width: "20%",
+                            paddingLeft: "7px",
+                            fontSize: "13px",
+                        }}
+                    >
+                        {localItemValue[0]}
+                    </div>
+                    <div
+                        style={{
+                            width: "20%",
+                            paddingLeft: "7px",
+                            fontSize: "13px",
+                        }}
+                    >
+                        {localItemValue[1]}
+                    </div>
+                </div>
+            );
+        }
+    };
+
+    /**
+     * The controls buttons on each item for map and array property
+     */
+    private _ElementArrayAndMapPropertyValueItemControls = ({ propertyValue, index, isEditing, setIsEditing, setLocalItemValue, localItemValue, refSubElement }: any) => {
+
+        const deleteItem = () => {
+            propertyValue.splice(index, 1);
+            this._forceUpdatePage();
+        };
+
+        const moveUp = () => {
+            if (index === 0) {
+                return;
+            } else {
+                const itemValue = propertyValue[index];
+                propertyValue.splice(index, 1);
+                propertyValue.splice(index - 1, 0, itemValue);
+            }
+            this._forceUpdatePage();
+        };
+
+        const moveDown = () => {
+            if (index === propertyValue.length - 1) {
+                return;
+            } else {
+                const itemValue = propertyValue[index];
+                propertyValue.splice(index, 1);
+                propertyValue.splice(index + 1, 0, itemValue);
+            }
+            this._forceUpdatePage();
+        };
+
+        return (
+            isEditing ?
+                <div
+                    ref={refSubElement}
+                    style={{
+                        display: "none",
+                    }}
+                >
+                    <ElementRectangleButton
+                        marginRight={10}
+                        paddingTop={3}
+                        paddingBottom={3}
+                        paddingLeft={5}
+                        paddingRight={5}
+                        handleClick={(event: any) => {
+                            propertyValue[index] = localItemValue;
+                            setIsEditing(false);
+                            this._forceUpdatePage();
+                        }}
+                    >
+                        OK
+                    </ElementRectangleButton>
+                    <ElementRectangleButton
+                        marginRight={10}
+                        paddingTop={3}
+                        paddingBottom={3}
+                        paddingLeft={5}
+                        paddingRight={5}
+                        handleClick={(event: any) => {
+                            setLocalItemValue(propertyValue[index]);
+                            setIsEditing(false);
+                            this._forceUpdatePage();
+                        }}
+                    >
+                        Cancel
+                    </ElementRectangleButton>
+                </div>
+                :
+                <div
+                    style={{
+                        display: "none",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                    ref={refSubElement}
+                >
+                    <ElementArrayPropertyItemRight
+                        onClick={() => {
+                            setIsEditing(true);
+                            this._forceUpdatePage();
+                        }}
+                    >
+                        <img
+                            style={{
+                                height: "15px",
+                            }}
+                            src={`../../../webpack/resources/webpages/modify-symbol.svg`}
+                        ></img>
+                    </ElementArrayPropertyItemRight>
+                    <ElementArrayPropertyItemRight
+                        onClick={() => {
+                            deleteItem();
+                        }}
+                    >
+                        <img
+                            style={{
+                                height: "13px",
+                            }}
+                            src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                        ></img>
+                    </ElementArrayPropertyItemRight>
+                    <ElementArrayPropertyItemRight
+                        onClick={() => {
+                            moveUp();
+                        }}
+                    >
+                        &#8593;
+                    </ElementArrayPropertyItemRight>
+                    <ElementArrayPropertyItemRight
+                        onClick={() => {
+                            moveDown();
+                        }}
+                    >
+                        &#8595;
+                    </ElementArrayPropertyItemRight>
+                </div>
+        )
+    }
 
 
     // -------------------- helper functions --------------------
