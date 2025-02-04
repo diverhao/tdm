@@ -229,9 +229,10 @@ export class IpcManagerOnMainProcess {
         const mainProcessMode = mainProcess.getMainProcessMode();
         const windowId = data["windowId"];
         if (ipcManager.getClients()[windowId] === undefined) {
-            console.log("register window", windowId, "for WebSocket IPC");
+            logs.debug("-1", "register window", windowId, "for WebSocket IPC");
             if (mainProcessMode === "desktop" || mainProcessMode === "web") {
                 // desktop mode: websocket client on main/display window
+
                 ipcManager.getClients()[windowId] = event;
             } else if (mainProcessMode === "ssh-server") {
                 // ssh-server mode: an arbitrary string
@@ -247,11 +248,25 @@ export class IpcManagerOnMainProcess {
                 const windowAgent = mainProcess.getWindowAgentsManager().getAgent(windowId);
                 if ((windowAgent instanceof MainWindowAgent) || (windowAgent instanceof DisplayWindowAgent)) {
                     // fs.writeFileSync("/Users/haohao/tdm.log", `handleMainWidowBrowserWindowCreated ===================== lift ${JSON.stringify(data)}\n`, { flag: "a" });
-                    console.log("lift window creation block for window", windowId);
+                    logs.debug("-1", "lift window creation block for window", windowId);
                     windowAgent.creationResolve("");
+                } else if (windowAgent === undefined) {
+                    // a client connects to the websocket IPC server, and provides a process ID and a window ID
+                    // however, there is no such resource (i.e. DisplayWindowAgent) for this window ID
+                    // this is a non-legit client, it may come from refreshing a web page
+                    // we need to undo the above operation
+                    // no need to disconnec the websocket connection, the client 
+                    // will close the connection when the web page closes
+                    logs.error("-1", "There is no display window agent for this window ID on server side, stop.");
+                    delete ipcManager.getClients()[windowId];
                 }
+            } else {
+                logs.error("-1", "There is no such a main process on server side, stop.");
+                delete ipcManager.getClients()[windowId];
             }
 
+        } else {
+            logs.error("-1", "There is already a websocket client with this window ID", windowId, "stop proceeding.")
         }
     }
     // ----------------------- Profiles ------------------------
@@ -952,7 +967,7 @@ export class IpcManagerOnMainProcess {
             }
         } else  // regular profile
         {
-            if (httpResponse === undefined) {
+            if (httpResponse === undefined) { // non-web mode
                 // (1)
                 this.getMainProcess().getProfiles().setSelectedProfileName(selectedProfileName);
                 // (2)
@@ -1168,6 +1183,7 @@ export class IpcManagerOnMainProcess {
             replaceMacros: boolean;
             currentTdlFolder?: string;
             windowId?: string;
+            postCommand?: string;
         },
         httpResponse: any = undefined
     ) => {
@@ -1212,7 +1228,6 @@ export class IpcManagerOnMainProcess {
                     editable = true;
                 }
             }
-
             windowAgentsManager.createDisplayWindow(
                 {
                     tdl: tdl,
@@ -1222,6 +1237,7 @@ export class IpcManagerOnMainProcess {
                     macros: options["macros"],
                     replaceMacros: options["replaceMacros"],
                     hide: false,
+                    postCommand: options["postCommand"],
                 },
                 httpResponse
             );
@@ -1308,7 +1324,6 @@ export class IpcManagerOnMainProcess {
                         FileReader.readTdlFile(tdlFileName, selectedProfile, options["currentTdlFolder"]).then((tdlFileResult) => {
                             if (tdlFileResult !== undefined) {
                                 const tdl = tdlFileResult["tdl"];
-                                // fs.writeFileSync("/Users/haohao/tdm.log", `successfully opened tdl file ${tdlFileName}\n`, { flag: "a" });
                                 windowAgentsManager.createDisplayWindow(
                                     {
                                         tdl: tdl,
@@ -1318,6 +1333,7 @@ export class IpcManagerOnMainProcess {
                                         macros: options["macros"],
                                         replaceMacros: options["replaceMacros"],
                                         hide: false,
+                                        postCommand: options["postCommand"],
                                     },
                                     httpResponse
                                 );

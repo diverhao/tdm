@@ -343,7 +343,8 @@ export class MainProcess {
      * @returns {string | undefined} The process ID and available display window html file index connected by hypher, e.g. `1-22`.
      */
     obtainDisplayWindowHtmlIndex = (): string => {
-        for (let ii = 0; ii < 500; ii++) {
+        const maxWindowId = this.getMainProcessMode() === "web" ? 100000 : 500;
+        for (let ii = 0; ii < maxWindowId; ii++) {
             if (!this.displayWindowHtmlIndices.includes(ii)) {
                 this.displayWindowHtmlIndices.push(ii);
                 return `${this.getProcessId()}-${ii}`;
@@ -356,6 +357,7 @@ export class MainProcess {
         return "";
     };
 
+    // release the display window ID when the window is closed
     // input is a string like "1-22"
     releaseDisplayWindowHtmlIndex = (displayWindowId: string) => {
         const index = this.displayWindowHtmlIndices.indexOf(parseInt(displayWindowId.split("-")[1]));

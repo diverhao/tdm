@@ -19,6 +19,7 @@ export type type_options_createDisplayWindow = {
     hide: boolean;
     utilityType?: string;
     utilityOptions?: Record<string, any>;
+    postCommand?: string;
 };
 
 export class WindowAgentsManager {
@@ -207,7 +208,7 @@ export class WindowAgentsManager {
                 const displayWindowId = this.getMainProcess().obtainDisplayWindowHtmlIndex();
                 const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
                 // (2)
-                await displayWindowAgent.createBrowserWindow(httpResponse);
+                await displayWindowAgent.createBrowserWindow(httpResponse, options);
                 // (3)
                 // GUI is created
                 // the uuid and process ID on client side are obtained from the html file name, e.g. "DisplayWindow-1-22.html"

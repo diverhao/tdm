@@ -133,7 +133,6 @@ export class MainProcesses {
             this._localFontNames = [...new Set(this._localFontNames)].sort();
         })
 
-        // todo: 10.1.20.108 should be from user input
         const newProcess = new MainProcess(this, newProcessId, this.getProfilesFileName(), callback, mainProcessMode, sshServerConfig);
         this.getProcesses().push(newProcess);
         return newProcess;

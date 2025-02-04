@@ -613,7 +613,7 @@ export class ActionButton extends BaseWidget {
                     windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
                 });
             } else {
-
+                // web mode
                 const currentSite = `http://${window.location.host}/`;
 
                 g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendPostRequestCommand(
@@ -632,7 +632,11 @@ export class ActionButton extends BaseWidget {
                 }).then(data => {
                     const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`)
+                    const href = `${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`;
+                    // open in new tab
+                    window.open(href)
+                    // open in current tab
+                    // window.location.href = href;
                 })
 
             }

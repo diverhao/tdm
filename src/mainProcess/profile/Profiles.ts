@@ -44,7 +44,7 @@ export class Profiles {
             throw new Error(errMsg);
         } else {
             try {
-                fs.writeFileSync(this.getFilePath(), JSON.stringify(this.serialize()));
+                fs.writeFileSync(this.getFilePath(), JSON.stringify(this.serialize(), null, 4));
             } catch (e) {
                 const errMsg = `Cannot save Profiles to ${this.getFilePath()}.`;
                 throw new Error(errMsg);

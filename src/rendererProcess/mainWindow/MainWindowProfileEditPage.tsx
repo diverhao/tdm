@@ -20,13 +20,13 @@ import * as GlobalMethods from "../global/GlobalMethods"
  * It creates a local copy of profile JSON object. This object is updated internally. The upper-level
  * profiles object is updated only when we try to save the changes.
  *
- * Structure of the profiles object: profiles -- profile -- category -- property -- item (for array value) <br>
+ * Structure of the profiles object: profiles -- profile -- category -- property -- item (for array or map value) <br>
  * 
  * each category is an object, it contains a "DESCRIPTION_${uuid}" field and various properties
  * 
  * each property is an object, it has a "DESCRIPTION" field, a "value" field, and an optional "choices" field
  * 
- * the "value" field is either a string or a string array. The function who uses the value should parse the
+ * the "value" field is a string, a string array, or a [string, string] array. The function who uses the value should parse the
  * string or string array.
  * 
  */
@@ -549,7 +549,7 @@ export class MainWindowProfileEditPage {
                 {/* Filter */}
                 <this._ElementCategoryFilter
                     category={category}
-                    // setFilteredPropertyNames={setFilteredPropertyNames}
+                    skipFilter={selectedCategoryName === "About"}
                     filterText={filterText}
                     setFilterText={setFilterText}
                 ></this._ElementCategoryFilter>
@@ -620,7 +620,7 @@ export class MainWindowProfileEditPage {
         );
     };
 
-    private _ElementCategoryFilter = ({ category, filterText, setFilterText }: any) => {
+    private _ElementCategoryFilter = ({ skipFilter, filterText, setFilterText }: any) => {
         const style = {
             display: "inline-flex",
             paddingLeft: 7,
@@ -642,6 +642,10 @@ export class MainWindowProfileEditPage {
             marginBottom: 3,
         } as React.CSSProperties;
 
+        if (skipFilter) {
+            return null;
+        }
+
         return (
             <div style={style}>
                 <input style={inputStyle}
@@ -650,18 +654,6 @@ export class MainWindowProfileEditPage {
                     spellCheck={false}
                     onChange={(event: any) => {
                         setFilterText(event.target.value);
-                        // const filteredPropertyNames: string[] = [];
-                        // for (let propertyName of Object.keys(category)) {
-                        //     const propertyValue = category[propertyName];
-                        //     if (propertyName.startsWith("DESCRIPTION_")) {
-                        //         continue;
-                        //     }
-                        //     const propertyDescription = propertyValue["DESCRIPTION"];
-                        //     if (!propertyName.toLowerCase().includes(filterText.toLowerCase()) && !propertyDescription.toLowerCase().includes(filterText.toLowerCase())) {
-                        //         filteredPropertyNames.push(propertyName);
-                        //     }
-                        //     setFilteredPropertyNames(filteredPropertyNames)
-                        // }
                     }}
                 >
                 </input>
@@ -789,7 +781,7 @@ export class MainWindowProfileEditPage {
                 name = `${name}-1`;
             }
             const value = "new-value";
-            category[name] = { DESCRIPTION: `${name} description`, value: value };
+            category[name] = { DESCRIPTION: `This is a scalar property.`, value: value };
             this._forceUpdatePage();
         };
 
@@ -801,7 +793,7 @@ export class MainWindowProfileEditPage {
             }
             const value = "new-choice-1";
             const choices = ["new-choice-1", "new-choice-2"]
-            category[name] = { DESCRIPTION: `Put description here. This is a choice menu.`, value: value, choices: choices };
+            category[name] = { DESCRIPTION: `This is a choice menu.`, value: value, choices: choices };
             this._forceUpdatePage();
         };
 
@@ -813,7 +805,7 @@ export class MainWindowProfileEditPage {
             }
             const value = [["key-1", "value-1"], ["key-2", "value-2"]];
             const type = "[string,string][]";
-            category[name] = { DESCRIPTION: `Put description here. This is a map.`, value: value, type: type };
+            category[name] = { DESCRIPTION: `This is a map property. Left column is the name, right column is the value.`, value: value, type: type };
             this._forceUpdatePage();
         };
 
@@ -824,7 +816,7 @@ export class MainWindowProfileEditPage {
                 name = `${name}-1`;
             }
             const value = ["new-value-0", "new-value-1"];
-            category[name] = { DESCRIPTION: `${name} description`, value: value };
+            category[name] = { DESCRIPTION: `This is an array property.`, value: value };
             this._forceUpdatePage();
         };
 
@@ -1129,7 +1121,7 @@ export class MainWindowProfileEditPage {
                             renamePropertyAndUpdateDescription();
                         }}
                     >
-                        Save
+                        OK
                     </ElementRectangleButton>
                     <ElementRectangleButton
                         marginRight={5}
@@ -1717,47 +1709,6 @@ export class MainWindowProfileEditPage {
         const [localItemValue, setLocalItemValue] = React.useState(propertyValue[index]);
         const [isEditing, setIsEditing] = React.useState(false);
         const refSubElement = React.useRef<any>(null);
-        const refSubElementType1 = React.useRef<any>(null);
-        const refSubElementType2 = React.useRef<any>(null);
-        const refSubElementType3 = React.useRef<any>(null);
-        const refSubElementType4 = React.useRef<any>(null);
-
-        const styleInput = {
-            backgroundColor: "rgba(0,0,0,0)",
-            width: "30%",
-            border: "solid 1px rgb(190, 190, 190)",
-            paddingLeft: "6px",
-            outline: "none",
-            fontSize: "13px",
-            background: "white",
-        } as React.CSSProperties;
-
-        const deleteItem = () => {
-            propertyValue.splice(index, 1);
-            this._forceUpdatePage();
-        };
-
-        const moveUp = () => {
-            if (index === 0) {
-                return;
-            } else {
-                const itemValue = propertyValue[index];
-                propertyValue.splice(index, 1);
-                propertyValue.splice(index - 1, 0, itemValue);
-            }
-            this._forceUpdatePage();
-        };
-
-        const moveDown = () => {
-            if (index === propertyValue.length - 1) {
-                return;
-            } else {
-                const itemValue = propertyValue[index];
-                propertyValue.splice(index, 1);
-                propertyValue.splice(index + 1, 0, itemValue);
-            }
-            this._forceUpdatePage();
-        };
 
         return (
             <ElementArrayPropertyItem refSubElement={refSubElement}>
@@ -1775,24 +1726,15 @@ export class MainWindowProfileEditPage {
                     localItemValue={localItemValue}
                     refSubElement={refSubElement}
                 ></this._ElementArrayAndMapPropertyValueItemControls>
-
             </ElementArrayPropertyItem>
-
         )
     };
 
     private _ElementArrayPropertyValueItemContent = ({ isEditing, localItemValue, setLocalItemValue }: any) => {
 
         const style = {
-            display: "inline-flex",
-            justifyContent: "flex-start",
-            flexDirection: "row",
-            width: "100%",
-        } as React.CSSProperties;
-
-        const styleInput = {
             backgroundColor: "rgba(0,0,0,0)",
-            width: "30%",
+            width: "70%",
             border: "solid 1px rgb(190, 190, 190)",
             paddingLeft: "6px",
             outline: "none",
@@ -1800,20 +1742,10 @@ export class MainWindowProfileEditPage {
             background: "white",
         } as React.CSSProperties;
 
-
-        // if (propertyType !== undefined && propertyType.replace(" ", "") === "[string,string][]") {
         if (isEditing) {
             return (
                 <input
-                    style={{
-                        backgroundColor: "rgba(0,0,0,0)",
-                        width: "70%",
-                        border: "solid 1px rgb(190, 190, 190)",
-                        paddingLeft: "6px",
-                        outline: "none",
-                        fontSize: "13px",
-                        background: "white",
-                    }}
+                    style={style}
                     value={localItemValue}
                     onChange={(event: any) => {
                         event.preventDefault();
@@ -1836,7 +1768,7 @@ export class MainWindowProfileEditPage {
     };
 
     // propertyValue is an array with elements in form of 2-element string array ["ABC", "DEF"].
-    private _ElementMapPropertyValueItem = ({ propertyValue, index, propertyType }: any) => {
+    private _ElementMapPropertyValueItem = ({ propertyValue, index }: any) => {
         const [localItemValue, setLocalItemValue] = React.useState(propertyValue[index]);
         const [isEditing, setIsEditing] = React.useState(false);
         const refSubElement = React.useRef<any>(null);
@@ -1864,31 +1796,40 @@ export class MainWindowProfileEditPage {
     };
 
     private _ElementMapPropertyValueItemContent = ({ isEditing, localItemValue, setLocalItemValue }: any) => {
-
         const style = {
-            display: "inline-flex",
-            justifyContent: "flex-start",
+            display: "flex",
             flexDirection: "row",
-            width: "100%",
+            width: "70%",
+            paddingLeft: "6px",
+            outline: "none",
+            fontSize: "13px",
         } as React.CSSProperties;
 
         const styleInput = {
             backgroundColor: "rgba(0,0,0,0)",
-            width: "30%",
+            width: "25%",
             border: "solid 1px rgb(190, 190, 190)",
             paddingLeft: "6px",
             outline: "none",
             fontSize: "13px",
             background: "white",
+            boxSizing: "border-box",
         } as React.CSSProperties;
 
+        const styleDiv = {
+            width: "25%",
+            border: "solid 1px rgba(190, 190, 190, 0)",
+            paddingLeft: "6px",
+            outline: "none",
+            fontSize: "13px",
+            boxSizing: "border-box",
+        } as React.CSSProperties;
 
-        // if (propertyType !== undefined && propertyType.replace(" ", "") === "[string,string][]") {
         if (isEditing) {
             return (
                 <div style={style}>
                     <input
-                        style={{ ...styleInput, width: "20%" }}
+                        style={styleInput}
                         value={localItemValue[0]}
                         onChange={(event: any) => {
                             event.preventDefault();
@@ -1896,7 +1837,7 @@ export class MainWindowProfileEditPage {
                         }}
                     ></input>{" "}
                     <input
-                        style={{ ...styleInput, width: "20%" }}
+                        style={styleInput}
                         value={localItemValue[1]}
                         onChange={(event: any) => {
                             event.preventDefault();
@@ -1909,20 +1850,12 @@ export class MainWindowProfileEditPage {
             return (
                 <div style={style}>
                     <div
-                        style={{
-                            width: "20%",
-                            paddingLeft: "7px",
-                            fontSize: "13px",
-                        }}
+                        style={styleDiv}
                     >
                         {localItemValue[0]}
                     </div>
                     <div
-                        style={{
-                            width: "20%",
-                            paddingLeft: "7px",
-                            fontSize: "13px",
-                        }}
+                        style={styleDiv}
                     >
                         {localItemValue[1]}
                     </div>

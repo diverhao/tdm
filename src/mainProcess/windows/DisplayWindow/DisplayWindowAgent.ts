@@ -1439,7 +1439,7 @@ export class DisplayWindowAgent {
      *
      * Create
      */
-    createBrowserWindow = async (httpResponse: any = undefined) => {
+    createBrowserWindow = async (httpResponse: any = undefined, options: any = undefined) => {
         const mainProcesMode = this.getWindowAgentsManager().getMainProcess().getMainProcessMode();
         if (mainProcesMode === "ssh-server") {
             // tell client to create a GUI window
@@ -1564,16 +1564,22 @@ export class DisplayWindowAgent {
                 } catch (e) {
                 }
             } else {
+                // web mode
                 const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager().getPort();
                 const displayWindowId = this.getId();
 
                 const requestMethod = httpResponse.req.method;
                 if (requestMethod === "POST") {
-                    // this is from a regular "/command/open-tdl-file" POST request
-                    httpResponse.json({
-                        ipcServerPort: ipcServerPort,
-                        displayWindowId: displayWindowId,
-                    });
+                    const command = options["postCommand"];
+                    if (command === "open-tdl-file") {
+                        // this is from a regular "/command/open-tdl-file" POST request
+                        const msg = {
+                            ipcServerPort: ipcServerPort,
+                            displayWindowId: displayWindowId,
+                        };
+                        logs.debug("-1", "IPC websocket: replay for", command, msg);
+                        httpResponse.json(msg);
+                    }
                 } else if (requestMethod === "GET") {
                     // this is from "/" GET request
                     httpResponse.send(

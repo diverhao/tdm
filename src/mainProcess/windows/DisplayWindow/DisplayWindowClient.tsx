@@ -35,6 +35,7 @@ import { TextEditor } from "../../../rendererProcess/widgets/TextEditor/TextEdit
 import html2canvas from "html2canvas";
 import { convertEpochTimeToString } from "../../../rendererProcess/global/GlobalMethods";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
+import path from "path";
 
 console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Finished loading modules.")
 
@@ -110,8 +111,101 @@ export class DisplayWindowClient {
             this._hostname = hostname;
         }
 
+        // for refresh webpage in web browser
+        window.addEventListener("beforeunload", (event: any) => {
+            if (this.getMainProcessMode() === "web") {
+                this.savePageData();
+            }
+        })
+
+        // for refresh webpage in web browser
+        // this event is emitted after the IPC websocket is connected, 
+        // i.e. the websocket-ipc-connected is sent back to the IPC websocket server
+        // the server will not continue because this page's old window ID not longer 
+        // has DisplayWindowAgent on server side. Meanwhile, the server keeps the websocket
+        // connection. We use this connection to request a open-tdl-file. In this way,
+        // the server allocates the resources for this tdl file (e.g. creating DisplayWindowAgent)
+        // then we can GET this tdl file by using a new display window ID
+        window.addEventListener("load", () => {
+            if (this.getMainProcessMode() === "web") {
+                this.handlePageRefresh();
+            }
+        })
+
         Log.debug("Finished creating DisplayWindowClient object");
     }
+
+
+    savePageData = () => {
+        // this "if" block is for GET the DisplayWindow.html in the last step of handleRefreshWebPage()
+        // at this stage, there is nothing to save for this page, all it has is a 
+        // websocket connection with server. "AAAA" is a special value to indicate the
+        // webpage at current stage has nothing to save, and we should reset it to empty string "" 
+        if (sessionStorage.getItem("pageData") === "AAAA") {
+            sessionStorage.setItem("pageData", "");
+            return;
+        }
+
+        const currentSite = `http://${window.location.host}/`;
+        const tdlFileName = this.getTdlFileName();
+        const mode = g_widgets1.getRendererWindowStatusStr();
+        const editable = g_widgets1.getRoot().getEditable();
+
+        const canvas = g_widgets1.getWidget("Canvas") as Canvas;
+        const macros = canvas.getAllMacros();
+
+        const replaceMacros = false;
+
+        const currentTdlFolder = path.dirname(tdlFileName);
+        const openInSameWindow = true;
+        const pageData = {
+            tdlFileNames: [tdlFileName],
+            mode: mode,
+            editable: editable,
+            macros: macros,
+            replaceMacros: replaceMacros, // not used
+            currentTdlFolder: currentTdlFolder,
+            openInSameWindow: openInSameWindow,
+            windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+        };
+        sessionStorage.setItem("pageData", JSON.stringify(pageData));
+    }
+
+    /**
+     * After the window refreshed
+     */
+    handlePageRefresh = () => {
+        const pageDataStr = sessionStorage.getItem("pageData");
+        if (pageDataStr === "" || pageDataStr === null) {
+            Log.info("No previous page data");
+            return;
+        }
+        if (this.getMainProcessMode() === "web") {
+            Log.info("Refresh web page.")
+            const currentSite = `http://${window.location.host}/`;
+            console.log(sessionStorage.getItem("pageData"))
+            const pageData = JSON.parse(pageDataStr);
+
+            this.getIpcManager().sendPostRequestCommand(
+                "open-tdl-file", pageData,
+            ).then((response: any) => {
+                // decode string
+                return response.json()
+            }).then(data => {
+                const ipcServerPort = data["ipcServerPort"];
+                const displayWindowId = data["displayWindowId"];
+                Log.info("Try to reload the webpage with new window ID", displayWindowId)
+                // when we load the below DisplayWindow.html, the savePageData() is invoked because
+                // it is the callback for window's "unload" event. However, the webpage does not have
+                // anything to save. In this case, we would like to let the savePageData() do nothing.
+                sessionStorage.setItem("pageData", "AAAA");
+                const href = `${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`;
+                // window.open() is for opening the page in new tab
+                window.location.href = href;
+            })
+        }
+    }
+
 
     // mid or right button down on the window
     // the left-button down event is handled in each widget in a more efficient way
@@ -681,6 +775,7 @@ export class DisplayWindowClient {
                 tdlFileName: tdlFileName,
             });
         } else {
+            // web mode
             const currentSite = `http://${window.location.host}/`;
 
             this.getIpcManager().sendPostRequestCommand("create-utility-display-window", {

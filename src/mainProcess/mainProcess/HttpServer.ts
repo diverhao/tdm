@@ -23,30 +23,38 @@ export class HttpServer {
 
         // start http server
         this.getServer()?.get("/", (request: IncomingMessage, response: any, next: any) => {
-            // this.getMainProcesses().getProcess("0")?.getWindowAgentsManager().createMainWindow(response)
+            console.log("--------------- new GET request -------------- aaa----");
+            logs.debug("0", "New connection coming in from", request.socket.address());
+            // there shoul have been a main process with id = "0" running
             const mainProcess = this.getMainProcesses().getProcess("0");
             if (mainProcess === undefined) {
                 return;
             }
             const profileName = mainProcess.getProfiles().getSelectedProfileName();
+            // select the first profile
+            // invoke DisplayWidnowAgent.createBrowserWindow() to send a html page to client
             mainProcess.getIpcManager().handleProfileSelected(undefined, profileName, undefined, response);
         });
+
+        // this.getServer()?.get("/DisplayWindow.html*", () => {
+        //     console.log("--------------- new GET request ------------------");
+        // })
 
         this.getServer()?.use(express.json({ limit: 10 * 1024 * 1024 })); // Increase the limit to 10 MB
         this.getServer()?.use(express.urlencoded({ limit: 10 * 1024 * 1024, extended: true }));
 
         // main window
         this.getServer()?.post("/command",
-            // this.getJsonParser(), 
             (request: any, response: any) => {
-                logs.debug("-1", request.url);
                 const command = request.body["command"];
+                logs.debug("-1", "Received POST request from", request.socket.address(), "command =", command);
                 const data = request.body["data"];
                 if (command === "profile-selected") {
                     const profileName = data;
                     this.getMainProcesses().getProcess("0")?.getIpcManager().handleProfileSelected(undefined, profileName, undefined, response);
                 } else if (command === "open-tdl-file") {
                     const options = data;
+                    options["postCommand"] = command;
                     logs.debug("-1", data);
                     this.getMainProcesses().getProcess("0")?.getIpcManager().handleOpenTdlFiles(undefined, options, response);
                 } else if (command === "duplicate-display") {
@@ -100,14 +108,6 @@ export class HttpServer {
     setPort = (newPort: number) => {
         this._port = newPort;
     };
-
-    // getJsonParser = () => {
-    //     return this._jsonParser;
-    // };
-
-    // getUrlEncodeParser = () => {
-    //     return this._urlencodedParser;
-    // };
 
     getMainProcesses = () => {
         return this._mainProcesses;

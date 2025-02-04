@@ -124,31 +124,31 @@ export class Profile {
     static generateDefaultProfile = (): Record<string, any> => {
         return {
             "About": {
-                "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Put the description of this profile here.",
+                "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Description of this profile.",
             },
             "EPICS Environment": {
                 "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Basic EPIC Environment",
-                "EPICS_CA_ADDR_LIST": { value: ["localhost"], DESCRIPTION: "Hosts where the data come from. Format: host-name[:port] or ip-address[:port] " },
+                "EPICS_CA_ADDR_LIST": { value: ["localhost"], DESCRIPTION: "Hosts where the EPICS data come from. Format: hostName, hostName:port, ipAddress, or ipAddress:port " },
                 "EPICS_CA_AUTO_ADDR_LIST": { value: "Yes", DESCRIPTION: "Whether to search PV name in local network.", choices: ["Yes", "No"] },
             },
             "EPICS Custom Environment": {
                 "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Custom EPICS environment.",
-                "Default TDL Files": { value: [], DESCRIPTION: "Open these tdl files after run." },
-                "Default Search Paths": { value: ["./", "$HOME"], DESCRIPTION: "Look for the tdl files in these paths on local disks. Web path is not recognized." },
+                "Default TDL Files": { value: [], DESCRIPTION: "Open these tdl files when this profile starts to run. It could be an absolute path, relative path, or a web path." },
+                "Default Search Paths": { value: ["./", "$HOME"], DESCRIPTION: "Paths where TDM looks for the relative path tdl files. Note: web path is not honored in TDM." },
                 // speical type for "Default Mode"
                 "Default Mode": { value: "operating", DESCRIPTION: "Mode for default tdl files.", choices: ["operating", "editing"] },
                 // manually opened displays and newly created blank displays are always editable
-                "Editable": { value: "No", DESCRIPTION: "If the default TDL files and the TDL opened from them are editable.", choices: ["Yes", "No"] },
+                "Editable": { value: "No", DESCRIPTION: "Whether the default TDL files and the TDLs opened from them are editable. The newly created TDL files are always editable.", choices: ["Yes", "No"] },
                 // manually opened displays and newly created blank displays are always editable
-                "Manually Opened TDL Editable": { value: "Yes", DESCRIPTION: "If the manually opened TDL files and the TDL opened from them are editable.", choices: ["Yes", "No"] },
+                "Manually Opened TDL Editable": { value: "Yes", DESCRIPTION: "Whether the manually opened TDL files and the TDL opened from them are editable.", choices: ["Yes", "No"] },
                 // manually opened displays and newly created blank displays are always editable
-                "Manually Opened TDL Mode": { value: "operating", DESCRIPTION: "The manually opened TDL files' mode.", choices: ["operating", "editing"] },
+                "Manually Opened TDL Mode": { value: "operating", DESCRIPTION: "The mode for manually opened TDL files.", choices: ["operating", "editing"] },
                 // speical type for "Macros"
-                Macros: { value: [], DESCRIPTION: "Macros for default tdl files.", type: "[string,string][]" },
+                Macros: { value: [], DESCRIPTION: "Macros for default tdl files. Left column is the macro name, right column is the macro value.", type: "[string,string][]" },
                 "Log file": { value: " ", DESCRIPTION: "Logs of this profile are written to this file. If empty, the logs are output to default output device." },
-                "Video Saving Folder": { value: " ", DESCRIPTION: "Save video files to this folder. Default is HOME dir." },
-                "Image Saving Folder": { value: " ", DESCRIPTION: "Automatically save image files to this folder. Default is HOME dir." },
-                "Python Command": { value: "python3", DESCRIPTION: "The python command for running script attached to the display window. You can add options to it." }
+                "Video Saving Folder": { value: " ", DESCRIPTION: "Save video files to this folder. Default is HOME folder." },
+                "Image Saving Folder": { value: " ", DESCRIPTION: "Automatically save image files to this folder. Default is HOME folder." },
+                "Python Command": { value: "python3", DESCRIPTION: "The python command for running script attached to the display windows. You can add options to it." }
             },
             "Preset Colors": {
                 "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Colors.",
