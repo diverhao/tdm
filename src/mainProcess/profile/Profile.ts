@@ -115,20 +115,21 @@ export class Profile {
         return undefined;
     };
 
+    
     getLdapUri = () => {
-        return this.getEntry("EPICS Custom Environment", "LDAP URI");
+        return this.getEntry("Web Server", "LDAP URI");
     }
 
     getLdapDistinguishedName = () => {
-        return this.getEntry("EPICS Custom Environment", "LDAP Distinguished Name");
+        return this.getEntry("Web Server", "LDAP Distinguished Name");
     }
 
     getHttpsKeyFile = () => {
-        return this.getEntry("EPICS Custom Environment", "Https Key File");
+        return this.getEntry("Web Server", "Https Key File");
     }
 
     getHttpsCertificate = () => {
-        return this.getEntry("EPICS Custom Environment", "Https Certificate");
+        return this.getEntry("Web Server", "Https Certificate");
     }
 
     isSshConfig = () => {
@@ -226,4 +227,28 @@ export class Profile {
             },
         };
     };
+
+    static generateWebServerCategory = () => {
+        return {
+            "Web Server": {
+                "DESCRIPTION_691a2740-e41f-4dac-94d8-d614af03d100": "The web server configurations.",
+                "LDAP URI": {
+                    "DESCRIPTION": "LDAP URI.",
+                    "value": "ldap://localhost:3890"
+                },
+                "LDAP Distinguished Name": {
+                    "DESCRIPTION": "User's distinguished name. The ${username} will be replaced with the user's input user name.",
+                    "value": "uid=${username},ou=users,dc=example,dc=com"
+                },
+                "Https Key File": {
+                    "DESCRIPTION": "HTTPS key file.",
+                    "value": "/path/to/server.key"
+                },
+                "Https Certificate": {
+                    "DESCRIPTION": "HTTPS certificate.",
+                    "value": "/path/to/server.cert"
+                }
+            },
+        }
+    }
 }

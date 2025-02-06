@@ -9,6 +9,9 @@ import { HttpServer } from "./HttpServer";
 import { type_sshServerConfig } from "./SshClient";
 import { ApplicationMenu } from "./ApplicationMenu";
 import { LocalFontsReader } from "../file/LocalFontsReader";
+import * as fs from "fs";
+import { Profiles } from "../profile/Profiles";
+import { FileReader } from "../file/FileReader";
 
 export class MainProcesses {
     _processes: MainProcess[] = [];
@@ -29,7 +32,6 @@ export class MainProcesses {
         // if this profile is not found, show profile-selection page
         // 9527 is the starting port for opener server, if this port is being used, increase it until there is an available one
         this._wsOpenerServer = new WsOpenerServer(this, websocketOpenerServerPort);
-        this._ipcManager = new IpcManagerOnMainProcesses(this, websocketIpcServerPort);
         // menubar on top of the window or top of the screen
         this._applicationMenu = new ApplicationMenu(this);
 
@@ -38,23 +40,59 @@ export class MainProcesses {
             // this port is not dynamically assigned, if this port is not available, quit
             let port = args["httpServerPort"];
             if (typeof port !== "number") {
-                port = httpServerPort;
+                port = httpServerPort; // default 3000
             }
+
+            // read profiles file for https certificate and key file names
+            // this is done before creating the Profiles object
+            // then create the HttpServer object
+            const profilesJson = this.readProfilesJsonFromFileSync();
+            const firstProfileJson = Object.values(profilesJson)[0];
+            if (firstProfileJson === undefined) {
+                throw new Error("Web mode: no profile. Quit");
+            }
+            const webServerCategoryJson = firstProfileJson["Web Server"];
+            if (webServerCategoryJson === undefined) {
+                throw new Error("Web mode: no Web Server cateogry in first profile. Quit");
+            }
+            const httpsKeyFileProperty = webServerCategoryJson["Https Key File"];
+            const httpsCertificateProperty = webServerCategoryJson["Https Certificate"];
+            if (httpsKeyFileProperty === undefined || httpsCertificateProperty === undefined) {
+                throw new Error("Web mode: https key file or certificate property not defined in profile. Quit");
+            }
+            const httpsKeyFileName = httpsKeyFileProperty["value"];
+            const httpsCertificateFileName = httpsCertificateProperty["value"];
+            if (httpsKeyFileName === undefined || httpsCertificateFileName === undefined) {
+                throw new Error("Web mode: https key file name or certificate file name not defined in profile. Quit");
+            }
+
+            const httpsOptions: {key: Buffer, cert: Buffer} = {
+                key: fs.readFileSync(httpsKeyFileName),
+                cert: fs.readFileSync(httpsCertificateFileName),
+            };
+
             this._httpServer = new HttpServer(this, port);
+            this._httpServer.setHttpsOptions(httpsOptions);
+            this._httpServer.createServer();
+
             // in web mode, the websocket (wss://) server port must be the same as the https port
-            const websocketIpcServerPort = this._httpServer.getPort();
+            const websocketIpcServerPort = port;
             this._ipcManager = new IpcManagerOnMainProcesses(this, websocketIpcServerPort, this._httpServer.getHttpsServer());
 
         } else if (args["mainProcessMode"] === "desktop") {
+            this._ipcManager = new IpcManagerOnMainProcesses(this, websocketIpcServerPort);
             // Create a custom menu template
             this.getApplicationMenu().createApplicationMenu()
         } else if (args["mainProcessMode"] === "ssh-server") {
+            this._ipcManager = new IpcManagerOnMainProcesses(this, websocketIpcServerPort);
             // self destruction count down until tcp server heartbeat starts to run
             this.startSshServerSelfDestructionCountDown();
             this.getIpcManager().createSshServer();
             // if this port is occupied, use the next available one
             // it will retry 100 times
             this.getIpcManager().getSshServer()?.createTcpServer(sshTcpServerPort);
+        } else {
+            throw new Error(`Unrecognized mode ${args["mainProcessMode"]}`);
         }
     }
 
@@ -190,5 +228,29 @@ export class MainProcesses {
     clearSshServerSelfDestructionCountDown = () => {
         clearTimeout(this._sshServerSelfDestructionCountDown);
     }
+
+    /**
+     * For web mode reading the profiles file content
+     */
+    readProfilesJsonFromFileSync = (): Record<string, any> => {
+        // test if file exists
+        const filePath = this._profilesFileName;
+        const fileExists = fs.existsSync(filePath);
+        if (fileExists) {
+            try {
+                // (1)
+                let profilesFileContents: Record<string, any> = FileReader.readJSONsync(filePath, false);
+                // throws an exception, re-throw below
+                Profiles.validateProfiles(profilesFileContents);
+                return profilesFileContents
+            } catch (e) {
+                // (2)
+                throw new Error("This is not a valid profiles file");
+            }
+        } else {
+            throw new Error("Profiles file does not exist.");
+        }
+    };
+
 }
 

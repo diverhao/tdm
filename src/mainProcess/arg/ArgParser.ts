@@ -1,7 +1,8 @@
 import { app } from "electron";
 import path from "path";
 import os from "os";
-import { httpServerPort } from "../global/GlobalVariables";
+import { httpServerPort, logs } from "../global/GlobalVariables";
+import { type_log_levels } from "../log/Logs";
 
 export type type_args = {
     macros: [string, string][];
@@ -30,6 +31,7 @@ const dashdashAlsoOpenDefaults = `${dashdash}also-open-defaults`;
 const dashdashHttpServerPort = `${dashdash}http-server-port`;
 const dashdashAttach = `${dashdash}attach`;
 const dashdashHelp = `${dashdash}help`;
+const dashdashLogLevel = `${dashdash}log-level`;
 const dashMainProcessMode = `${dashdash}main-process-mode`; // "web" | "desktop"
 
 export class ArgParser {
@@ -49,6 +51,7 @@ Options:
   --profile "Control Room"                The profile that will be selected
                                           If this options is absent, no profile is selected
   --macros "SYS=ring, SUB_SYS=bpm"        Macros for the TDL files
+  --log-level level                       Log level in main process, could be fatal, error, warn, info, debug, or trace
   --also-open-defaults                    Open default TDL files for the selected profile
                                           If this option is absent, default TDL files are not opened 
   --main-process-mode web                 Run the web server
@@ -95,6 +98,9 @@ Options:
                 } else if (arg === dashdashProfile) {
                     ii++;
                     result["profile"] = this.parseProfile(argv[ii]);
+                } else if (arg === dashdashLogLevel) {
+                    ii++;
+                    this.parseLogLevel(argv[ii]);
                 } else if (arg === dashdashAttach) {
                     ii++;
                     result["attach"] = this.parseAttach(argv[ii]);
@@ -164,6 +170,15 @@ Options:
         }
         return profileRawStr;
     };
+
+    static parseLogLevel = (logLevelRawStr: string) => {
+        const logLevel = type_log_levels[logLevelRawStr as keyof typeof type_log_levels];
+        if (logLevel !== undefined) {
+            logs.setLogLevel(logLevel);
+        } else {
+            logs.error("-1", "Error parsing --log-level argument", logLevelRawStr);
+        }
+    }
 
     static parseMacros = (macrosRawStr: string) => {
         if (macrosRawStr.startsWith("-")) {

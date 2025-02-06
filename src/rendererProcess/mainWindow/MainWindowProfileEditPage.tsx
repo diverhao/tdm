@@ -13,6 +13,7 @@ import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMen
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../global/Log";
 import * as GlobalMethods from "../global/GlobalMethods"
+import { Profile } from "../../mainProcess/profile/Profile";
 
 /**
  * Represents the profile editor. This editor edits one profile.  <br>
@@ -364,6 +365,18 @@ export class MainWindowProfileEditPage {
             this._forceUpdatePage();
         };
 
+        const addWebServerCategory = () => {
+            const categoryJson = Profile.generateWebServerCategory() as Record<string, any>;
+            const categoryName = Object.keys(categoryJson)[0]; // should be "Web Server"
+            if (Object.keys(this.getLocalProfile()).includes(categoryName)) {
+                Log.error("Web Server category already exists");
+                return;
+            }
+            this.getLocalProfile()[categoryName] = JSON.parse(JSON.stringify(categoryJson[categoryName]));
+            selectCategory(undefined, categoryName);
+            this._forceUpdatePage();
+        }
+
         return (
             <div
                 style={style}
@@ -376,6 +389,7 @@ export class MainWindowProfileEditPage {
                     <ElementDropDownMenu
                         callbacks={{
                             "Add Empty Category": () => { addCategory() },
+                            "Add Web Server Category": () => { addWebServerCategory() },
                         }}
                     ></ElementDropDownMenu>
                 </div>

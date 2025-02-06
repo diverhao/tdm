@@ -22,7 +22,7 @@ export class HttpServer {
     constructor(mainProcesses: MainProcesses, port: number) {
         this._port = port;
         this._mainProcesses = mainProcesses;
-        this.createServer();
+        // this.createServer();
     }
 
     authGuard = (req: any, res: any, next: any) => {
@@ -32,48 +32,9 @@ export class HttpServer {
         next();  // Proceed to the next middleware or route handler
     };
 
-    setHttpsOptions = () => {
-        // const mainProcess = this.getMainProcesses().getProcess("0");
-        // if (mainProcess === undefined) {
-        //     logs.error("-1", "Cannot find main process 0 in web mode. Quit.")
-        //     this._httpsOptions = undefined;
-        //     return;
-        // }
-        // const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
-        // if (selectedProfile === undefined) {
-        //     logs.error("-1", "Profile not selected in web mode. Quit.")
-        //     this._httpsOptions = undefined;
-        //     return undefined;
-        // }
-        // const httpsKeyFile = selectedProfile.getHttpsKeyFile();
-        // const httpsCertificate = selectedProfile.getHttpsCertificate();
-        // if (httpsKeyFile === undefined || httpsCertificate === undefined) {
-        //     logs.error("-1", "Https key file or certificate not defined in profile. Cannot proceed web mode server.")
-        //     this._httpsOptions = undefined;
-        //     return undefined;
-        // }
-
-        this._httpsOptions = {
-            // key: fs.readFileSync(httpsKeyFile),
-            // cert: fs.readFileSync(httpsCertificate),
-            key: fs.readFileSync("/Users/1h7/projects2/javascript/test89-https-express/server.key"),
-            cert: fs.readFileSync("/Users/1h7/projects2/javascript/test89-https-express/server.cert"),
-        }
-    }
-
-    // setHttpsOptions = (newOptions: {key: Buffer, cert: Buffer}) => {
-    //     this._httpsOptions = newOptions;
-    // }
-
-    getHttpsOptions = () => {
-        return this._httpsOptions;
-    }
-
     // this server must be created after the main 
     createServer = () => {
         this._server = express();
-
-        this.setHttpsOptions();
 
         // start http server
         this.getServer()?.get("/main", (request: IncomingMessage, response: any, next: any) => {
@@ -213,14 +174,12 @@ export class HttpServer {
 
 
         const httpsOptions = this.getHttpsOptions();
-        console.log("--------------------------------------- 1", httpsOptions, this.getPort())
         // Create HTTPS server
         if (httpsOptions === undefined) {
             return;
         }
         this._httpsServer = https.createServer(httpsOptions, this.getServer()).listen(this.getPort(), () => {
-            console.log("---------------------------------------")
-            console.log("HTTPS Server running on https://localhost");
+            logs.info(`HTTPS Server running on https://localhost:${this.getPort()}`);
         });
     };
 
@@ -243,4 +202,13 @@ export class HttpServer {
     getHttpsServer = () => {
         return this._httpsServer;
     }
+
+    setHttpsOptions = (newOptions: {key: Buffer, cert: Buffer}) => {
+        this._httpsOptions = newOptions;
+    }
+
+    getHttpsOptions = () => {
+        return this._httpsOptions;
+    }
+
 }

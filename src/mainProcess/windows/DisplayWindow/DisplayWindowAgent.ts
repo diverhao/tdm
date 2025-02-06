@@ -1288,7 +1288,7 @@ export class DisplayWindowAgent {
             const browserWindow = this.getBrowserWindow();
             if (browserWindow instanceof BrowserWindow) {
                 const webContents = browserWindow.webContents;
-                console.log("=================== take thumbnail ================\n");
+                // console.log("=================== take thumbnail ================\n");
                 webContents.capturePage().then((image: Electron.NativeImage) => {
                     const size = image.getSize();
                     let resizedImage: any = image;

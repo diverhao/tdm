@@ -7,7 +7,16 @@ export type type_logViewer = {
     widgetKey: string
 };
 
-export type type_log_levels = "fatal" | "error" | "warn" | "info" | "debug" | "trace";
+export enum type_log_levels {
+    "trace",
+    "debug",
+    "info",
+    "warn",
+    "error",
+    "fatal",
+};
+
+// export type type_log_levels = "fatal" | "error" | "warn" | "info" | "debug" | "trace";
 
 /**
  * A simple logger for main process
@@ -26,7 +35,7 @@ export type type_log_levels = "fatal" | "error" | "warn" | "info" | "debug" | "t
 export class Logs {
     // private _logs: Record<string, Log> = {};
     private _logViewers: type_logViewer[] = [];
-    private _logLevel: type_log_levels = "info";
+    private _logLevel: type_log_levels = type_log_levels.info;
     private _logFile: string | undefined = undefined;
 
     private _mainProcesses: MainProcesses | undefined;
@@ -63,7 +72,7 @@ export class Logs {
                 }
             }
         }
-        const logMeta = `[${timeStr}] [${profileName}] [${type}]`;
+        const logMeta = `[${timeStr}] [${profileName}] [${type_log_levels[type]}]`;
         // (1) standard output
         if (((this.getModeMask() >> 0) & 1) === 0) {
             console.log(logMeta, ...args);
@@ -85,27 +94,39 @@ export class Logs {
     // print log
 
     fatal = (mainProcessId: string, ...args: any[]) => {
-        this.printLog(mainProcessId, "fatal", ...args)
+        if (type_log_levels.fatal >= this.getLogLevel()) {
+            this.printLog(mainProcessId, type_log_levels.fatal, ...args)
+        }
     };
 
     error = (mainProcessId: string, ...args: any[]) => {
-        this.printLog(mainProcessId, "error", ...args)
+        if (type_log_levels.error >= this.getLogLevel()) {
+            this.printLog(mainProcessId, type_log_levels.error, ...args)
+        }
     };
 
     warn = (mainProcessId: string, ...args: any[]) => {
-        this.printLog(mainProcessId, "warn", ...args)
+        if (type_log_levels.warn >= this.getLogLevel()) {
+            this.printLog(mainProcessId, type_log_levels.warn, ...args)
+        }
     };
 
     info = (mainProcessId: string, ...args: any[]) => {
-        this.printLog(mainProcessId, "info", ...args)
+        if (type_log_levels.info >= this.getLogLevel()) {
+            this.printLog(mainProcessId, type_log_levels.info, ...args)
+        }
     };
 
     debug = (mainProcessId: string, ...args: any[]) => {
-        this.printLog(mainProcessId, "debug", ...args)
+        if (type_log_levels.debug >= this.getLogLevel()) {
+            this.printLog(mainProcessId, type_log_levels.debug, ...args)
+        }
     };
 
     trace = (mainProcessId: string, ...args: any[]) => {
-        this.printLog(mainProcessId, "trace", ...args)
+        if (type_log_levels.trace >= this.getLogLevel()) {
+            this.printLog(mainProcessId, type_log_levels.trace, ...args)
+        }
     };
 
     // LogViewer

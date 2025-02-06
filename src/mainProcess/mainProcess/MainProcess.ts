@@ -104,9 +104,6 @@ export class MainProcess {
                             return;
                         }
 
-                        // read https server certificate and key, this can only be done after the MainProcess is created
-                        // this.getMainProcesses().getHttpServer()?.createServer();
-
                         const channelAgentsManager = new ChannelAgentsManager(selectedProfile, this);
                         await channelAgentsManager.createAndInitContext();
                         this.setChannelAgentsManager(channelAgentsManager);
@@ -230,6 +227,7 @@ export class MainProcess {
                     this.setProfiles(newProfiles);
                     return newProfiles;
                 } else {
+                    // web mode
                     // use the first profile
                     const key = Object.keys(profilesFileContents)[0];
                     const value = Object.values(profilesFileContents)[0];
@@ -239,6 +237,7 @@ export class MainProcess {
                     const newProfiles = new Profiles(singleProfileFileContents);
                     newProfiles.setFilePath(filePath);
                     this.setProfiles(newProfiles);
+
                     return newProfiles;
                 }
             } catch (e) {
@@ -265,6 +264,8 @@ export class MainProcess {
         }
 
     };
+
+
 
 
     getProfiles = () => {
