@@ -68,6 +68,7 @@ import { type_LocalChannel_data } from "../../mainProcess/channel/LocalChannelAg
 import path, { dirname } from "path";
 import { Log } from "./Log";
 import { SidebarWidgetsList } from "../helperWidgets/SidebarComponents/SidebarWidgetsList";
+import { logs } from "../../mainProcess/global/GlobalVariables";
 
 /**
  * Widget object types union: 3 special types + BaseWidget.
@@ -2133,6 +2134,7 @@ export class Widgets {
                     .getIpcManager()
                     .sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: toBeOpenedChannelNames });
             } else {
+                // web mode
                 const currentSite = `http://${window.location.host}/`;
 
                 this.getRoot()
@@ -2318,9 +2320,10 @@ export class Widgets {
     // (2) obtain the channel names in this widget
     // (3) tell main process to create a Probe browser window
     // (4) if the widgetKeys is empty, the returned channelNames is empty
-    openPvTableWindow = (widgetKeys: string[] | null) => {
+    openPvTableWindow = (widgetKeys: string[] | null | undefined) => {
+
         let channelNames: string[] = [];
-        if (widgetKeys === null) {
+        if (widgetKeys === null || widgetKeys === undefined) {
             for (let channelName of Object.keys(this.getTcaChannels())) {
                 channelNames.push(channelName);
             }
@@ -2349,11 +2352,6 @@ export class Widgets {
             }
         }
 
-        // this.getRoot()
-        // 	.getDisplayWindowClient()
-        // 	.getIpcManager()
-        // 	.sendFromRendererProcess("create-utility-display-window", "PvTable", { channelNames: [...new Set(channelNames)] });
-
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
             this.getRoot()
                 .getDisplayWindowClient()
@@ -2361,7 +2359,6 @@ export class Widgets {
                 .sendFromRendererProcess("create-utility-display-window", "PvTable", { channelNames: [...new Set(channelNames)] });
         } else {
             const currentSite = `http://${window.location.host}/`;
-
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()

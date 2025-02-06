@@ -1449,9 +1449,7 @@ export class DisplayWindowAgent {
             }
         }
         else {
-
             if (httpResponse === undefined) { // "desktop", "ssh-client"
-
                 const canvasWidgetTdl = this.getTdl().Canvas;
                 let windowName = canvasWidgetTdl?.windowName;
                 let title = windowName;
@@ -1570,18 +1568,24 @@ export class DisplayWindowAgent {
 
                 const requestMethod = httpResponse.req.method;
                 if (requestMethod === "POST") {
+                    // when we want to open a new window or refresh a window in web mode, the client sends a POST request
+                    // to server, this request eventually arrives at here
+                    // the server allocates the resources (basically create this object), 
+                    // then reply with the ipc server port and this display window id. 
+                    // after received these information, the client will GET the DisplayWindow.html with 
+                    // the port and window id.
                     const command = options["postCommand"];
-                    if (command === "open-tdl-file") {
-                        // this is from a regular "/command/open-tdl-file" POST request
-                        const msg = {
-                            ipcServerPort: ipcServerPort,
-                            displayWindowId: displayWindowId,
-                        };
-                        logs.debug("-1", "IPC websocket: replay for", command, msg);
-                        httpResponse.json(msg);
-                    }
+                    const msg = {
+                        ipcServerPort: ipcServerPort,
+                        displayWindowId: displayWindowId,
+                    };
+                    logs.debug("-1", "IPC websocket: replay for", command, msg);
+                    httpResponse.json(msg);
                 } else if (requestMethod === "GET") {
                     // this is from "/" GET request
+                    // it is a special way to open a display window, it happens only when we visit the website 
+                    // for the first time with "/" path. After that the newly opened window should have a
+                    // path like "/DisplayWindow.html?ipcServerPort=7527&displayWindowId=0-5"
                     httpResponse.send(
                         `
                     <!DOCTYPE html>

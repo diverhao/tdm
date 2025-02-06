@@ -115,6 +115,14 @@ export class Profile {
         return undefined;
     };
 
+    getLdapUri = () => {
+        return this.getEntry("EPICS Custom Environment", "LDAP URI");
+    }
+
+    getLdapDistinguishedName = () => {
+        return this.getEntry("EPICS Custom Environment", "LDAP Distinguished Name");
+    }
+
     isSshConfig = () => {
         return this._isSshConfig;
     }

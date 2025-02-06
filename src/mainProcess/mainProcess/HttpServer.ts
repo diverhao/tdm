@@ -1,6 +1,10 @@
 import express, { Express } from "express";
 const bodyParser = require('body-parser');
 
+
+import session from "express-session";
+import ldap from 'ldapjs';
+
 import { IncomingMessage, ServerResponse } from "http";
 import * as BodyParser from "body-parser";
 import { MainProcesses } from "./MainProcesses";
@@ -18,12 +22,19 @@ export class HttpServer {
         this._mainProcesses = mainProcesses;
         this.createServer();
     }
+
+    authGuard = (req: any, res: any, next: any) => {
+        if (!req.session.authenticated) {
+            return res.status(403).send("Access Denied. Please <a href='/'>log in</a>.");
+        }
+        next();  // Proceed to the next middleware or route handler
+    };
+
     createServer = () => {
         this._server = express();
 
         // start http server
-        this.getServer()?.get("/", (request: IncomingMessage, response: any, next: any) => {
-            console.log("--------------- new GET request -------------- aaa----");
+        this.getServer()?.get("/main", (request: IncomingMessage, response: any, next: any) => {
             logs.debug("0", "New connection coming in from", request.socket.address());
             // there shoul have been a main process with id = "0" running
             const mainProcess = this.getMainProcesses().getProcess("0");
@@ -36,12 +47,76 @@ export class HttpServer {
             mainProcess.getIpcManager().handleProfileSelected(undefined, profileName, undefined, response);
         });
 
+
         // this.getServer()?.get("/DisplayWindow.html*", () => {
         //     console.log("--------------- new GET request ------------------");
         // })
 
         this.getServer()?.use(express.json({ limit: 10 * 1024 * 1024 })); // Increase the limit to 10 MB
         this.getServer()?.use(express.urlencoded({ limit: 10 * 1024 * 1024, extended: true }));
+
+        // ----------------- LDAP -------------------------
+
+        this.getServer()?.use(session({
+            secret: 'supersecretkey',
+            resave: false,
+            saveUninitialized: true
+        }));
+
+
+        this.getServer()?.use((req, res, next) => {
+            const excludedRoutes = ['/login', "/"];  // Routes to exclude from authGuard
+            if (excludedRoutes.includes(req.path) || req.path.startsWith("/resources/webpages/")) {
+                return next();  // Skip authGuard and move to next middleware/route handler
+            }
+            this.authGuard(req, res, next);  // Apply authGuard to all other routes
+        });
+
+        // root access to login page
+        this.getServer()?.get("/", (request: IncomingMessage, response: any, next: any) => {
+            response.sendFile(path.join(__dirname, "../../webpack/resources/webpages/login.html"))
+        });
+
+        // LDAP Authentication Route
+        this.getServer()?.post('/login', (req: any, res: any) => {
+            const { username, password } = req.body;
+            const mainProcess = this.getMainProcesses().getProcess("0");
+            if (mainProcess === undefined) {
+                logs.error("-1", "Cannot find main process 0 in web mode. Quit.")
+                return;
+            }
+            const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
+            if (selectedProfile === undefined) {
+                logs.error("-1", "Profile not selected in web mode. Quit.")
+                return;
+            }
+            const ldapUri = selectedProfile.getLdapUri();
+            const ldapDistinguishedName = selectedProfile.getLdapDistinguishedName();
+            if (ldapUri === undefined || ldapDistinguishedName === undefined) {
+                logs.error("-1", "LDAP URI or LDAP Authentication String not defined in profile. Cannot proceed web mode server.")
+                return;
+            }
+
+            // const client = ldap.createClient({ url: 'ldap://localhost:3890' });
+            const client = ldap.createClient({ url: ldapUri });
+
+            // const dn = `uid=${username},ou=users,dc=example,dc=com`;
+            const dn = `uid=${username},` + ldapDistinguishedName;
+
+            client.bind(dn, password, (err: any) => {
+                if (err) {
+                    return res.send("Authentication failed. Check username or password.");
+                }
+
+                // Store authentication status in session
+                req.session.authenticated = true;
+                req.session.username = username;
+
+                client.unbind();
+                res.redirect('/main');  // Redirect to the protected page
+            });
+        });
+
 
         // main window
         this.getServer()?.post("/command",
@@ -80,8 +155,6 @@ export class HttpServer {
                         logs.error("-1", "Cannot read file", data["imageFileName"])
                         response.send(JSON.stringify({ image: "" }));
                     }
-                    // console.log("\n\n\n", imageBase64Str)
-                    // this.getMainProcesses().getProcess("0")?.getIpcManager().handleOpenTdlFiles(undefined, data, response);
                 }
             });
 

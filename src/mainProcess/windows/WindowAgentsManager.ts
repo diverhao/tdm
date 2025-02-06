@@ -175,7 +175,6 @@ export class WindowAgentsManager {
                 }
             }
             // writeFileSync("/Users/haohao/tdm.log", `--------------------- createDisplayWindow() A1 ${tdlFileName}\n`, {flag: "a"});
-
             logs.debug(
                 this.getMainProcessId(),
                 `Try to create a new display window for ${tdlFileName === "" ? "<blank string>" : tdlFileName} in ${httpResponse === undefined ? "desktop" : "web"
