@@ -566,7 +566,8 @@ export class MainWindowStartupPage {
                 }).then(data => {
                     const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`)
+                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`)
+                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`)
                 })
             }
         }, [profileName, mainProcessMode]);

@@ -7,6 +7,8 @@ import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent"
 import { MainProcess } from "./MainProcess";
 import { SshServer } from "./SshServer";
 import { writeFileSync } from "fs";
+import { HttpServer } from "./HttpServer";
+import https from "https";
 
 /**
  * Inter-process communication server. <br>
@@ -19,29 +21,35 @@ export class IpcManagerOnMainProcesses {
     _port: number;
     _sshServer: SshServer | undefined = undefined;
 
-    constructor(mainProcesses: MainProcesses, port: number) {
+    constructor(mainProcesses: MainProcesses, port: number, httpsServer: https.Server | undefined = undefined) {
         this._mainProcesses = mainProcesses;
         this._port = port;
-        this.createServer();
+        this.createServer(httpsServer);
     }
 
     createSshServer = () => {
         this._sshServer = new SshServer(this);
     }
 
-    createServer = () => {
+    createServer = (httpsServer: https.Server | undefined) => {
         logs.info('-1', `Creating WebSocket IPC server on port ${this.getPort()}`);
 
-        this.server = new WebSocketServer({
-            port: this.getPort(),
-        });
+        // if the main process mode is desktop, ssh-server, or ssh-client, websocket uses a unique port
+        if (httpsServer === undefined) {
+            this.server = new WebSocketServer({
+                port: this.getPort(),
+            });
+        } else {
+            // if in web mode, use the same port as https server
+            this.server = new WebSocketServer({ server: httpsServer });
+        }
 
         this.server.on("error", (err: Error) => {
             if (err["message"].includes("EADDRINUSE")) {
                 logs.info('-1', `Port ${this.getPort()} is occupied, try port ${this.getPort() + 1} for websocket IPC server`);
                 let newPort = this.getPort() + 1;
                 this.setPort(newPort);
-                this.createServer();
+                this.createServer(httpsServer);
             }
         });
 

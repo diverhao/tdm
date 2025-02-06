@@ -1,6 +1,7 @@
 import { app } from "electron";
 import path from "path";
 import os from "os";
+import { httpServerPort } from "../global/GlobalVariables";
 
 export type type_args = {
     macros: [string, string][];
@@ -68,7 +69,7 @@ Options:
             attach: -1,
             cwd: process.cwd(),
             mainProcessMode: "desktop",
-            httpServerPort: 3000,
+            httpServerPort: httpServerPort,
         };
 
         // the process.argv is different for development mode and packaged TDM

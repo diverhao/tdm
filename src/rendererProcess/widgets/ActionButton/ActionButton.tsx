@@ -614,7 +614,7 @@ export class ActionButton extends BaseWidget {
                 });
             } else {
                 // web mode
-                const currentSite = `http://${window.location.host}/`;
+                const currentSite = `https://${window.location.host}/`;
 
                 g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendPostRequestCommand(
                     "open-tdl-file", {
@@ -632,7 +632,8 @@ export class ActionButton extends BaseWidget {
                 }).then(data => {
                     const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    const href = `${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`;
+                    // const href = `${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`;
+                    const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
                     // open in new tab
                     window.open(href)
                     // open in current tab

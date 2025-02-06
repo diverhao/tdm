@@ -242,7 +242,9 @@ export class WindowAgentsManager {
                 );
                 return displayWindowAgent;
             } catch (e) {
+                console.log("aaa")
                 logs.error(this.getMainProcessId(), e);
+                console.log("bbb")
                 return undefined;
             }
         }

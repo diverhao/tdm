@@ -281,8 +281,8 @@ export class EmbeddedDisplay extends BaseWidget {
 
             let iframeSrc = `../../../mainProcess/windows/DisplayWindow/DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${this.iframeDisplayId}`;
             if (mainProcessMode === "web") {
-                const currentSite = `http://${window.location.host}/`;
-                iframeSrc = `${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${this.iframeDisplayId}`
+                const currentSite = `https://${window.location.host}/`;
+                iframeSrc = `${currentSite}DisplayWindow.html?displayWindowId=${this.iframeDisplayId}`
             }
             return (
                 <iframe

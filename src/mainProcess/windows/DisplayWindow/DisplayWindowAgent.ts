@@ -1449,7 +1449,7 @@ export class DisplayWindowAgent {
             }
         }
         else {
-            if (httpResponse === undefined) { // "desktop", "ssh-client"
+            if (httpResponse === undefined) { // "desktop", "ssh-client" mode
                 const canvasWidgetTdl = this.getTdl().Canvas;
                 let windowName = canvasWidgetTdl?.windowName;
                 let title = windowName;
@@ -1565,6 +1565,7 @@ export class DisplayWindowAgent {
                 // web mode
                 const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager().getPort();
                 const displayWindowId = this.getId();
+                console.log("====================AAA =====================", ipcServerPort)
 
                 const requestMethod = httpResponse.req.method;
                 if (requestMethod === "POST") {
@@ -1582,6 +1583,7 @@ export class DisplayWindowAgent {
                     logs.debug("-1", "IPC websocket: replay for", command, msg);
                     httpResponse.json(msg);
                 } else if (requestMethod === "GET") {
+
                     // this is from "/" GET request
                     // it is a special way to open a display window, it happens only when we visit the website 
                     // for the first time with "/" path. After that the newly opened window should have a
@@ -1611,7 +1613,8 @@ export class DisplayWindowAgent {
                     			const ipcServerPort = urlParams.get("ipcServerPort");
                     			const displayWindowId = urlParams.get("displayWindowId");
                                 console.log(window.DisplayWindowClientClass)
-                                new window.DisplayWindowClientClass("${displayWindowId}", ${ipcServerPort})
+                                // new window.DisplayWindowClientClass("${displayWindowId}", ${ipcServerPort})
+                                new window.DisplayWindowClientClass("${displayWindowId}", -1)
                     		</script>
                     	</body>
                     </html>

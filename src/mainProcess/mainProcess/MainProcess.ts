@@ -56,13 +56,13 @@ export class MainProcess {
         sshServerConfig?: type_sshServerConfig & { callingProcessId: string }
     ) {
         this._mainProcesses = mainProcesses;
+        this._mainProcessMode = mainProcessMode;
         this._ipcManager = new IpcManagerOnMainProcess(this);
         this._channelAgentsManager = new ChannelAgentsManager(new Profile("tmp", {}), this);
         this._ipcManager.startToListen();
         this._wsPvServer = new WsPvServer(this, websocketPvServerPort);
         this._processId = processId;
         this._windowAgentsManager = new WindowAgentsManager(this);
-        this._mainProcessMode = mainProcessMode;
 
         // hide menu bar for all renderer windows
         // this.hideMenubar();
@@ -81,8 +81,8 @@ export class MainProcess {
                 logs.error(this.getProcessId(), "Input for MainProcess constructor error: sshServerConfig cannot be undefined in ssh-client mode");
             }
         } else {
+            this.setWindowAgentsManager(new WindowAgentsManager(this));
             this.createProfilesFromFile(profilesFileName).then(() => {
-                this.setWindowAgentsManager(new WindowAgentsManager(this));
                 app.whenReady().then(async () => {
                     if (this.getMainProcessMode() === "desktop") {
                         await this.getWindowAgentsManager().createMainWindow();
@@ -103,6 +103,10 @@ export class MainProcess {
                             logs.error(this.getProcessId(), `Profile ${profileName} does not exist`);
                             return;
                         }
+
+                        // read https server certificate and key, this can only be done after the MainProcess is created
+                        // this.getMainProcesses().getHttpServer()?.createServer();
+
                         const channelAgentsManager = new ChannelAgentsManager(selectedProfile, this);
                         await channelAgentsManager.createAndInitContext();
                         this.setChannelAgentsManager(channelAgentsManager);
@@ -111,8 +115,9 @@ export class MainProcess {
                         await this.getWindowAgentsManager().createMainWindow();
                         // no need to run callback in ssh-server mode, it is about the manually select profile
                     }
+
                 });
-            });
+            })
         }
     }
 

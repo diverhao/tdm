@@ -83,11 +83,29 @@ export class DisplayWindowClient {
 
     private _textEditorModified: boolean = false;
 
-    constructor(displayWindowId: string, ipcServerPort: number, hostname: string | undefined = undefined) {
+    constructor(displayWindowId: string, ipcServerPort: number | undefined, hostname: string | undefined = undefined) {
         Log.debug("Start to create DisplayWindowClient object");
         this._loadCustomFonts();
         // do it first
         this.setWindowId(displayWindowId);
+
+        // in web mode, the server does not provide the ipcServerPort, the websocket server
+        // uses the https port (default 443)
+        if (this.getMainProcessMode() === "web") {
+            const host = window.location.host;
+            if (ipcServerPort === -1 || ipcServerPort === undefined || isNaN(ipcServerPort)) {
+                ipcServerPort = parseInt(host.split(":")[1]);
+            }
+            // we may be using the default https port
+            if (isNaN(ipcServerPort)) {
+                ipcServerPort = 443;
+            }
+        } else {
+            // in desktop, ssh-server, ssh-client modes, there must be an ipcServerPort
+            if (ipcServerPort === -1 || ipcServerPort === undefined || isNaN(ipcServerPort)) {
+                throw new Error(`Failed to obatain the ipcServerPort, ${ipcServerPort}`);
+            }
+        }
 
         this._ipcManager = new IpcManagerOnDisplayWindow(this, ipcServerPort);
         this._root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
@@ -146,7 +164,6 @@ export class DisplayWindowClient {
             return;
         }
 
-        const currentSite = `http://${window.location.host}/`;
         const tdlFileName = this.getTdlFileName();
         const mode = g_widgets1.getRendererWindowStatusStr();
         const editable = g_widgets1.getRoot().getEditable();
@@ -182,8 +199,7 @@ export class DisplayWindowClient {
         }
         if (this.getMainProcessMode() === "web") {
             Log.info("Refresh web page.")
-            const currentSite = `http://${window.location.host}/`;
-            console.log(sessionStorage.getItem("pageData"))
+            const currentSite = `https://${window.location.host}/`;
             const pageData = JSON.parse(pageDataStr);
 
             this.getIpcManager().sendPostRequestCommand(
@@ -199,7 +215,8 @@ export class DisplayWindowClient {
                 // it is the callback for window's "unload" event. However, the webpage does not have
                 // anything to save. In this case, we would like to let the savePageData() do nothing.
                 sessionStorage.setItem("pageData", "AAAA");
-                const href = `${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`;
+                // const href = `${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`;
+                const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
                 // window.open() is for opening the page in new tab
                 window.location.href = href;
             })
@@ -776,7 +793,7 @@ export class DisplayWindowClient {
             });
         } else {
             // web mode
-            const currentSite = `http://${window.location.host}/`;
+            const currentSite = `https://${window.location.host}/`;
 
             this.getIpcManager().sendPostRequestCommand("create-utility-display-window", {
                 utilityType: "TdlViewer", utilityOptions: {
@@ -921,7 +938,7 @@ export class DisplayWindowClient {
             const reader = new FileReader();
             reader.onload = (event: any) => {
                 const fileContents = event.target.result;
-                const currentSite = `http://${window.location.host}/`;
+                const currentSite = `https://${window.location.host}/`;
                 const tdl = JSON.parse(event.target.result);
                 this.getIpcManager().sendPostRequestCommand("open-tdl-file", {
                     tdl: tdl,
@@ -955,7 +972,7 @@ export class DisplayWindowClient {
                 Log.debug(tdlFileName);
                 const reader = new FileReader();
                 reader.onload = (event: any) => {
-                    const currentSite = `http://${window.location.host}/`;
+                    const currentSite = `https://${window.location.host}/`;
                     const tdl = JSON.parse(event.target.result);
                     this.getIpcManager().sendPostRequestCommand("open-tdl-file", {
                         tdl: tdl,
@@ -999,7 +1016,6 @@ export class DisplayWindowClient {
                 Log.debug("TextEditor reads file", fileName);
                 const reader = new FileReader();
                 reader.onload = (event: any) => {
-                    const currentSite = `http://${window.location.host}/`;
                     const fileContents = event.target.result;
                     widget.loadFileContents({
                         fileName: fileName,

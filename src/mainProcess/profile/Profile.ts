@@ -123,6 +123,14 @@ export class Profile {
         return this.getEntry("EPICS Custom Environment", "LDAP Distinguished Name");
     }
 
+    getHttpsKeyFile = () => {
+        return this.getEntry("EPICS Custom Environment", "Https Key File");
+    }
+
+    getHttpsCertificate = () => {
+        return this.getEntry("EPICS Custom Environment", "Https Certificate");
+    }
+
     isSshConfig = () => {
         return this._isSshConfig;
     }

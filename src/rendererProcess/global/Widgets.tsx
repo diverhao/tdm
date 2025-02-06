@@ -2135,7 +2135,7 @@ export class Widgets {
                     .sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: toBeOpenedChannelNames });
             } else {
                 // web mode
-                const currentSite = `http://${window.location.host}/`;
+                const currentSite = `https://${window.location.host}/`;
 
                 this.getRoot()
                     .getDisplayWindowClient()
@@ -2151,7 +2151,8 @@ export class Widgets {
                     .then((data) => {
                         const ipcServerPort = data["ipcServerPort"];
                         const displayWindowId = data["displayWindowId"];
-                        window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                        // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                        window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                     });
             }
             return;
@@ -2181,7 +2182,7 @@ export class Widgets {
                         .getIpcManager()
                         .sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: toBeOpenedChannelNames });
                 } else {
-                    const currentSite = `http://${window.location.host}/`;
+                    const currentSite = `https://${window.location.host}/`;
 
                     this.getRoot()
                         .getDisplayWindowClient()
@@ -2197,7 +2198,8 @@ export class Widgets {
                         .then((data) => {
                             const ipcServerPort = data["ipcServerPort"];
                             const displayWindowId = data["displayWindowId"];
-                            window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                            // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                            window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                         });
                 }
             } else {
@@ -2213,7 +2215,7 @@ export class Widgets {
                         .getIpcManager()
                         .sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: [] });
                 } else {
-                    const currentSite = `http://${window.location.host}/`;
+                    const currentSite = `https://${window.location.host}/`;
 
                     this.getRoot()
                         .getDisplayWindowClient()
@@ -2229,7 +2231,8 @@ export class Widgets {
                         .then((data) => {
                             const ipcServerPort = data["ipcServerPort"];
                             const displayWindowId = data["displayWindowId"];
-                            window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                            // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                            window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                         });
                 }
             }
@@ -2261,7 +2264,7 @@ export class Widgets {
                     .getIpcManager()
                     .sendFromRendererProcess("create-utility-display-window", "PvMonitor", { channelNames: toBeOpenedChannelNames });
             } else {
-                const currentSite = `http://${window.location.host}/`;
+                const currentSite = `https://${window.location.host}/`;
 
                 this.getRoot()
                     .getDisplayWindowClient()
@@ -2277,7 +2280,8 @@ export class Widgets {
                     .then((data) => {
                         const ipcServerPort = data["ipcServerPort"];
                         const displayWindowId = data["displayWindowId"];
-                        window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                        // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                        window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                     });
             }
         } else {
@@ -2293,7 +2297,7 @@ export class Widgets {
                     .getIpcManager()
                     .sendFromRendererProcess("create-utility-display-window", "PvMonitor", { channelNames: [] });
             } else {
-                const currentSite = `http://${window.location.host}/`;
+                const currentSite = `https://${window.location.host}/`;
 
                 this.getRoot()
                     .getDisplayWindowClient()
@@ -2309,7 +2313,8 @@ export class Widgets {
                     .then((data) => {
                         const ipcServerPort = data["ipcServerPort"];
                         const displayWindowId = data["displayWindowId"];
-                        window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                        // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                        window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                     });
             }
         }
@@ -2358,7 +2363,7 @@ export class Widgets {
                 .getIpcManager()
                 .sendFromRendererProcess("create-utility-display-window", "PvTable", { channelNames: [...new Set(channelNames)] });
         } else {
-            const currentSite = `http://${window.location.host}/`;
+            const currentSite = `https://${window.location.host}/`;
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
@@ -2373,7 +2378,8 @@ export class Widgets {
                 .then((data) => {
                     const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                 });
         }
     };
@@ -2417,7 +2423,7 @@ export class Widgets {
                 .getIpcManager()
                 .sendFromRendererProcess("create-utility-display-window", "DataViewer", { channelNames: channelNameArray });
         } else {
-            const currentSite = `http://${window.location.host}/`;
+            const currentSite = `https://${window.location.host}/`;
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
@@ -2432,7 +2438,8 @@ export class Widgets {
                 .then((data) => {
                     const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                 });
         }
     };
@@ -2452,7 +2459,7 @@ export class Widgets {
     }) => {
         // in web mode, it reads the file on server, not the local computer
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "web") {
-            const currentSite = `http://${window.location.host}/`;
+            const currentSite = `https://${window.location.host}/`;
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
@@ -2467,7 +2474,8 @@ export class Widgets {
                 .then((data) => {
                     const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                 });
             return;
         } else if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
@@ -2484,7 +2492,7 @@ export class Widgets {
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
             this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Terminal", {});
         } else {
-            const currentSite = `http://${window.location.host}/`;
+            const currentSite = `https://${window.location.host}/`;
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
@@ -2499,7 +2507,8 @@ export class Widgets {
                 .then((data) => {
                     const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                 });
         }
     };
@@ -2509,7 +2518,7 @@ export class Widgets {
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
             this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "ChannelGraph", {});
         } else {
-            const currentSite = `http://${window.location.host}/`;
+            const currentSite = `https://${window.location.host}/`;
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
@@ -2524,7 +2533,8 @@ export class Widgets {
                 .then((data) => {
                     const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                 });
         }
 
@@ -2535,7 +2545,7 @@ export class Widgets {
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
             this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Calculator", {});
         } else {
-            const currentSite = `http://${window.location.host}/`;
+            const currentSite = `https://${window.location.host}/`;
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
@@ -2550,7 +2560,8 @@ export class Widgets {
                 .then((data) => {
                     const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                 });
         }
     };
@@ -2560,7 +2571,7 @@ export class Widgets {
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
             this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Help", {});
         } else {
-            const currentSite = `http://${window.location.host}/`;
+            const currentSite = `https://${window.location.host}/`;
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
@@ -2575,7 +2586,8 @@ export class Widgets {
                 .then((data) => {
                     const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                 });
         }
     };
@@ -2662,7 +2674,7 @@ export class Widgets {
         const ipcManager = this.getRoot().getDisplayWindowClient().getIpcManager();
 
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "web") {
-            const currentSite = `http://${window.location.host}/`;
+            const currentSite = `https://${window.location.host}/`;
 
             ipcManager
                 .sendPostRequestCommand("duplicate-display", {
@@ -2677,7 +2689,8 @@ export class Widgets {
                 .then((data) => {
                     const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                 });
         } else {
             ipcManager.sendFromRendererProcess("duplicate-display", {

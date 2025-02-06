@@ -24,6 +24,7 @@ export class MainProcesses {
 
         logs.setMainProcesses(this);
 
+
         this._profilesFileName = args["settings"];
         // if this profile is not found, show profile-selection page
         // 9527 is the starting port for opener server, if this port is being used, increase it until there is an available one
@@ -40,6 +41,10 @@ export class MainProcesses {
                 port = httpServerPort;
             }
             this._httpServer = new HttpServer(this, port);
+            // in web mode, the websocket (wss://) server port must be the same as the https port
+            const websocketIpcServerPort = this._httpServer.getPort();
+            this._ipcManager = new IpcManagerOnMainProcesses(this, websocketIpcServerPort, this._httpServer.getHttpsServer());
+
         } else if (args["mainProcessMode"] === "desktop") {
             // Create a custom menu template
             this.getApplicationMenu().createApplicationMenu()

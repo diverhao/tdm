@@ -62,8 +62,8 @@ export class IpcManagerOnDisplayWindow {
         let serverAddress = `ws://localhost:${this.getIpcServerPort()}`;
         if (this.getDisplayWindowClient().getMainProcessMode() === "web") {
             const host = window.location.host.split(":")[0];
-            Log.info(host);
-            serverAddress = `ws://${host}:${this.getIpcServerPort()}`;
+            Log.info("Web mode host:", host);
+            serverAddress = `wss://${host}:${this.getIpcServerPort()}`;
         }
         const client = new WebSocket(serverAddress);
         client.onopen = () => {
@@ -82,6 +82,10 @@ export class IpcManagerOnDisplayWindow {
                 })
             );
         };
+
+        client.onerror = (err: any) => {
+            Log.error("IPC websocket client error:", err)
+        }
 
         client.onmessage = (event: any) => {
             const messageBuffer = event.data;
@@ -481,7 +485,7 @@ export class IpcManagerOnDisplayWindow {
 
     // only in display mode
     handleCreateNewDisplayInWebMode = () => {
-        const currentSite = `http://${window.location.host}/`;
+        const currentSite = `https://${window.location.host}/`;
 
         this.sendPostRequestCommand("create-new-display-in-web-mode", {})
             .then((response: any) => {
@@ -866,7 +870,7 @@ export class IpcManagerOnDisplayWindow {
     };
 
     sendPostRequestCommand = (command: string, data: Record<string, any>) => {
-        const currentSite = `http://${window.location.host}/`;
+        const currentSite = `https://${window.location.host}/`;
         Log.debug("currentSite = ", currentSite);
         return fetch(`${currentSite}command`, {
             method: "POST",

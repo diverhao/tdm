@@ -83,6 +83,49 @@ export class FileReader {
         }
     };
 
+    static readJSONsync = (filePath: string, readProfileJSON: boolean = false): Record<string, any> => {
+        let fileContents: Record<string, any> = {};
+        // try hard drive
+        try {
+            fileContents = JSON.parse(fs.readFileSync(filePath).toString());
+            logs.debug("-1", `Found file ${filePath} on hard drive`);
+            return fileContents;
+        } catch (e) {
+            logs.error("-1", "Cannot read profile file", filePath, "from local disk");
+            logs.error("-1", e);
+        }
+
+        // try network
+        // try {
+        //     fileContents = await this.fetchWithTimeout(filePath);
+        //     logs.debug("-1", `Found file ${filePath} on network`);
+        //     return fileContents;
+        // } catch (e) {
+        //     logs.error("-1", "Cannot read profile file", filePath, "at network", e);
+        // }
+
+        if (readProfileJSON) {
+            // read file failed, copy the default profile
+            try {
+                logs.debug("-1", "Trying to create default file", filePath, "from", path.join(__dirname, "../resources/tdls/profiles_default.json"));
+                fs.mkdirSync(path.dirname(filePath), { recursive: true });
+
+                fs.copyFileSync(path.join(__dirname, "../resources/tdls/profiles_default.json"), filePath);
+                // copy GetStarted.tdl
+                fs.copyFileSync(path.join(__dirname, "../resources/tdls/GetStarted.tdl"), path.join(path.dirname(filePath), "GetStarted.tdl"));
+                logs.debug("-1", "Created an empty file", filePath);
+                logs.debug("-1", "read this file");
+                fileContents = JSON.parse(fs.readFileSync(filePath).toString());
+                return fileContents;
+            } catch (e) {
+                logs.error("-1", e);
+                throw new Error(`Cannot create empty file ${filePath}`);
+            }
+        } else {
+            throw new Error(`Cannot create empty file ${filePath}`);
+        }
+    };
+
     static readDb = (fileName: string, profile?: Profile, currentTdlFolder?: string) => {
         const fullFileName = this.resolveTdlFileName(fileName, profile, currentTdlFolder);
         if (fullFileName === undefined) {
