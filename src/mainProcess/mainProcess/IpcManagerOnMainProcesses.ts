@@ -60,7 +60,7 @@ export class IpcManagerOnMainProcesses {
 
             wsClient.on("message", (messageBuffer: RawData) => {
                 const message = JSON.parse(messageBuffer.toString());
-                logs.info("-1", "IPC socket server received message", message);
+                logs.debug("-1", "IPC websocket server received message", message);
                 this.parseMessage(wsClient, message);
             });
 

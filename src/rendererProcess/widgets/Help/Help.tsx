@@ -22,6 +22,7 @@ import { Profile } from "./contents/Profile";
 import { Operation } from "./contents/Operation";
 import { Edit } from "./contents/Edit";
 import { Macro } from "./contents/Macro";
+import { ConfigureWebServer } from "./contents/ConfigureWebServer";
 
 export type type_article = {
     articleName: string,
@@ -417,6 +418,17 @@ export class Help extends BaseWidget {
                     articleName: "Channel Graph",
                     linkPath: "/ChannelGraph",
                     element: Dummy,
+                },
+            ]
+
+        },
+        {
+            chapterName: "Web Server",
+            articles: [
+                {
+                    articleName: "Configure Web Server",
+                    linkPath: "/ConfigureWebServer",
+                    element: ConfigureWebServer,
                 },
             ]
 
