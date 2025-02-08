@@ -56,7 +56,7 @@ export class IpcManagerOnMainProcesses {
         // IPC websocket server
         // when the display window becomes operating mode
         this.server.on("connection", (wsClient: WebSocket, request: IncomingMessage) => {
-            logs.info('-1', `WebSocket IPC Server got a connection`);
+            logs.info('-1', `WebSocket IPC Server got a connection from ${request.socket.remoteAddress}:${request.socket.remotePort}`);
 
             wsClient.on("message", (messageBuffer: RawData) => {
                 const message = JSON.parse(messageBuffer.toString());

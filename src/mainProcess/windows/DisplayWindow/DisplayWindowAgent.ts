@@ -1565,7 +1565,6 @@ export class DisplayWindowAgent {
                 // web mode
                 const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager().getPort();
                 const displayWindowId = this.getId();
-                console.log("====================AAA =====================", ipcServerPort)
 
                 const requestMethod = httpResponse.req.method;
                 if (requestMethod === "POST") {

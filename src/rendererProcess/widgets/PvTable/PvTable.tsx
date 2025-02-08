@@ -422,11 +422,7 @@ export class PvTable extends BaseWidget {
                             // level 5 channel name is level 0 channel name without field
                             const channelNameLevel5 = this.getChannelNamesLevel5()[channelNameIndex];
                             const channelNameLevel4 = BaseWidget.channelNameLevel0to4(channelNameLevel5);
-                            g_widgets1
-                                .getRoot()
-                                .getDisplayWindowClient()
-                                .getIpcManager()
-                                .sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: [channelNameLevel4] });
+                            g_widgets1.openProbeWindow([], channelNameLevel4);
                         },
                         "Copy data": () => {
                             // level 5 channel name is level 0 channel name without field

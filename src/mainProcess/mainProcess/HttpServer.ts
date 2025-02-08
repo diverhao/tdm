@@ -38,7 +38,7 @@ export class HttpServer {
 
         // start http server
         this.getServer()?.get("/main", (request: IncomingMessage, response: any, next: any) => {
-            logs.debug("0", "New connection coming in from", request.socket.address());
+            logs.debug("0", "New https connection coming in from", request.socket.address());
             // there shoul have been a main process with id = "0" running
             const mainProcess = this.getMainProcesses().getProcess("0");
             if (mainProcess === undefined) {

@@ -1,4 +1,4 @@
-import { Context } from "epics-tca";
+import { Context, type_log_levels } from "epics-tca";
 // import { WindowAgentsManager } from "../windows/WindowAgentsManager";
 import { CaChannelAgent } from "./CaChannelAgent";
 import { Profile } from "../profile/Profile";
@@ -53,7 +53,12 @@ export class ChannelAgentsManager {
     createAndInitContext = async () => {
         if (this._context === undefined) {
             logs.info(this.getMainProcessId(), "Creating EPICS CA context");
-            this._context = new Context(this.getProfile().convertToTcaInput()["EPICS Environment"], "WARN");
+            let epicsLogLevel: type_log_levels = type_log_levels.error;
+            const epicsLogLevelEntry = this.getProfile().getEpicsLogLevel();
+            if (epicsLogLevelEntry !== undefined && epicsLogLevelEntry["value"] !== undefined) {
+                epicsLogLevel = type_log_levels[epicsLogLevelEntry["value"] as keyof typeof type_log_levels];
+            }
+            this._context = new Context(this.getProfile().convertToTcaInput()["EPICS Environment"], epicsLogLevel);
             await this._context.initialize();
         } else {
             logs.info(this.getMainProcessId(), "EPICS CA context already exists");

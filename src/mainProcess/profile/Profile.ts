@@ -115,7 +115,7 @@ export class Profile {
         return undefined;
     };
 
-    
+
     getLdapUri = () => {
         return this.getEntry("Web Server", "LDAP URI");
     }
@@ -130,6 +130,10 @@ export class Profile {
 
     getHttpsCertificate = () => {
         return this.getEntry("Web Server", "Https Certificate");
+    }
+
+    getEpicsLogLevel = () => {
+        return this.getEntry("EPICS Custom Environment", "EPICS Log Level");
     }
 
     isSshConfig = () => {
@@ -162,6 +166,7 @@ export class Profile {
                 "Manually Opened TDL Mode": { value: "operating", DESCRIPTION: "The mode for manually opened TDL files.", choices: ["operating", "editing"] },
                 // speical type for "Macros"
                 Macros: { value: [], DESCRIPTION: "Macros for default tdl files. Left column is the macro name, right column is the macro value.", type: "[string,string][]" },
+                "EPICS Log Level": { value: "error", DESCRIPTION: "The log level for EPICS library (epics-tca).", choices: ["trace", "debug", "info", "warn", "error", "fatal"] },
                 "Log file": { value: " ", DESCRIPTION: "Logs of this profile are written to this file. If empty, the logs are output to default output device." },
                 "Video Saving Folder": { value: " ", DESCRIPTION: "Save video files to this folder. Default is HOME folder." },
                 "Image Saving Folder": { value: " ", DESCRIPTION: "Automatically save image files to this folder. Default is HOME folder." },

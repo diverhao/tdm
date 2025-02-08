@@ -183,11 +183,13 @@ export class Calculator extends BaseWidget {
         const inputElementRef = React.useRef<any>(null);
         const [inputLine, setInputLine] = React.useState("");
         const [historyLine, setHistoryLine] = React.useState("\u00A0");
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const mode = displayWindowClient.getMainProcessMode();
         return (
             <div
                 style={{
-                    width: "100%",
-                    height: "100%",
+                    width: mode === "web"? 500: "100%",
+                    height: mode === "web"? 550: "100%",
                     display: "inline-flex",
                     flexDirection: "column",
                     backgroundColor: "rgba(29, 30, 33, 1)",

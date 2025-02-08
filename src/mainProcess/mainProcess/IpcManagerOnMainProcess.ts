@@ -1027,6 +1027,11 @@ export class IpcManagerOnMainProcess {
                         // editable = false;
                     }
 
+                    // only read the first tdl file in web mode
+                    if (this.getMainProcess().getMainProcessMode() === "web" && tdlFileName !== tdlFileNames[0]) {
+                        break;
+                    }
+
                     FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder).then(
                         (tdlResult) => {
                             if (tdlResult !== undefined) {
@@ -1041,7 +1046,6 @@ export class IpcManagerOnMainProcess {
                                     replaceMacros: false,
                                     hide: false,
                                 };
-                                // fs.writeFileSync("/Users/haohao/tdm.log", `--------------------- opening ${tdlFileName}\n`, { flag: "a" });
                                 windowAgentsManager.createDisplayWindow(options, httpResponse);
                             } else {
                                 logs.error(this.getMainProcessId(), `Cannot read file ${tdlFileName}`);
@@ -1808,7 +1812,7 @@ export class IpcManagerOnMainProcess {
         displayWindowAgent.addNewChannelData(channelName, data);
         // (2)
         // ioId and widgetKey are bounced back
-        logs.info(this.getMainProcessId(), "tca-get-meta result for", channelName, "is", data);
+        logs.debug(this.getMainProcessId(), "tca-get-meta result for", channelName, "is", data);
         if (channelName.startsWith("pva://")) {
             displayWindowAgent.sendFromMainProcess("tca-get-pva-type-result", channelName, widgetKey, data);
         } else {

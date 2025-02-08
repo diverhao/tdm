@@ -192,7 +192,7 @@ export class CaChannelAgent {
         ioTimeout: number = 1
     ): Promise<type_dbrData | { value: undefined }> => {
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
-        let data: type_dbrData | undefined = { value: undefined };
+        let data: type_dbrData = { value: undefined };
 
         try {
             const channel = this.getChannel();
@@ -208,15 +208,17 @@ export class CaChannelAgent {
             }
 
             // default ioTimeout = 1 second
-            data = JSON.parse(JSON.stringify(await channel.get(ioTimeout, dbrType)));
+            const dataRaw = await channel.get(ioTimeout, dbrType);
+            if (dataRaw === undefined) {
+                data = {value: undefined};
+            } else {
+                data = JSON.parse(JSON.stringify(dataRaw));
+            }
 
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
-            if (data === undefined) {
-                return { value: undefined };
-            } else {
-                return data;
-            }
+            return data;
+
         } catch (e) {
             logs.error(this.getMainProcessId(), e);
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);

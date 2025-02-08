@@ -56,23 +56,27 @@ export class Logs {
     printLog = (mainProcessId: string, type: type_log_levels, ...args: any) => {
         const timeMsSinceEpoch = Date.now();
         const timeStr = new Date(timeMsSinceEpoch).toISOString();
-        let profileName = "N/A";
-        if (mainProcessId === "-1") {
-            profileName = "Main Processes";
-        } else {
-            const mainProcesses = this.getMainProcesses();
-            if (mainProcesses !== undefined) {
-                const mainProcess = mainProcesses.getProcess(mainProcessId);
-                if (mainProcess !== undefined) {
-                    profileName = "Main Process " + mainProcessId;
-                    const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
-                    if (selectedProfile !== undefined) {
-                        profileName = selectedProfile._name;
-                    }
-                }
-            }
-        }
-        const logMeta = `[${timeStr}] [${profileName}] [${type_log_levels[type]}]`;
+
+        // skip this for efficiency
+        // let profileName = "N/A";
+        // if (mainProcessId === "-1") {
+        //     profileName = "Main Processes";
+        // } else {
+        //     const mainProcesses = this.getMainProcesses();
+        //     if (mainProcesses !== undefined) {
+        //         const mainProcess = mainProcesses.getProcess(mainProcessId);
+        //         if (mainProcess !== undefined) {
+        //             profileName = "Main Process " + mainProcessId;
+        //             const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
+        //             if (selectedProfile !== undefined) {
+        //                 profileName = selectedProfile._name;
+        //             }
+        //         }
+        //     }
+        // }
+        // const logMeta = `[${timeStr}] [${profileName}] [${type_log_levels[type]}]`;
+        
+        const logMeta = `[${timeStr}] [${mainProcessId}] [${type_log_levels[type]}]`;
         // (1) standard output
         if (((this.getModeMask() >> 0) & 1) === 0) {
             console.log(logMeta, ...args);
@@ -84,7 +88,8 @@ export class Logs {
         if (((this.getModeMask() >> 2) & 1) === 0) {
             this.sendToLogViewers({
                 timeMsSinceEpoch: timeMsSinceEpoch,
-                profileName: profileName,
+                // profileName: profileName,
+                profileName: mainProcessId,
                 type: type,
                 args: args,
             });
