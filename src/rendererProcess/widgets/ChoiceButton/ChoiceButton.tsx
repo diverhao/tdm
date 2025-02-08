@@ -6,7 +6,7 @@ import { ChoiceButtonSidebar } from "./ChoiceButtonSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ChoiceButtonRules } from "./ChoiceButtonRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_ChoiceButton_tdl = {
     type: string;

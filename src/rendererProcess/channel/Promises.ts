@@ -1,4 +1,4 @@
-import { Log } from "../global/Log";
+import {Log} from "../../mainProcess/log/Log";
 
 export type type_promise = {
 	resolveFunc: any;

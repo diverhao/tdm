@@ -1,5 +1,5 @@
 import oracledb from 'oracledb';
-import { logs } from '../global/GlobalVariables';
+import { Log } from '../log/Log';
 
 export enum SqlState {
     "DISCONNECTED",
@@ -42,17 +42,17 @@ export class Sql {
 
     periodicTaskFunc = () => {
         if (this.getState() === SqlState.CONNECTED || this.getState() === SqlState.CONNECTING) {
-            logs.info("-1", "We are either connected to SQL db or connecting to SQL db.");
+            Log.info("-1", "We are either connected to SQL db or connecting to SQL db.");
             return;
         } else {
-            logs.error("-1", "Seems like the SQL db connection is broken, re-connect.")
+            Log.error("-1", "Seems like the SQL db connection is broken, re-connect.")
             this.reconnectDb()
         }
     }
 
     connectDb = async () => {
         if (this.getState() === SqlState.CONNECTED || this.getState() === SqlState.CONNECTING) {
-            logs.info("-1", "We already initiated to connect SQL db, be patient ...");
+            Log.info("-1", "We already initiated to connect SQL db, be patient ...");
             return;
         }
         this.setState(SqlState.CONNECTING);
@@ -65,11 +65,11 @@ export class Sql {
                 }
             ));
             this.setState(SqlState.CONNECTED);
-            logs.info("-1", "Successfully connected to Oracle Database");
+            Log.info("-1", "Successfully connected to Oracle Database");
         } catch (e) {
             this.setState(SqlState.DISCONNECTED);
             this.setConnection(undefined);
-            logs.error("-1", e);
+            Log.error("-1", e);
         }
     }
 

@@ -2,7 +2,7 @@ import * as React from "react";
 import { PvTable } from "./PvTable";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarPvTableProperties } from "../../helperWidgets/SidebarComponents/SidebarPvTableProperties";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class PvTableSidebar extends BaseWidgetSidebar {

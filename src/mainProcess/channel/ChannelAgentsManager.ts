@@ -5,7 +5,7 @@ import { Profile } from "../profile/Profile";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { LocalChannelAgent } from "./LocalChannelAgent";
 import { DbdFiles } from "../file/DbdFiles";
-import { logs } from "../global/GlobalVariables";
+import { Log } from "../log/Log";
 
 //todo: singleton class
 
@@ -52,7 +52,7 @@ export class ChannelAgentsManager {
      */
     createAndInitContext = async () => {
         if (this._context === undefined) {
-            logs.info(this.getMainProcessId(), "Creating EPICS CA context");
+            Log.info(this.getMainProcessId(), "Creating EPICS CA context");
             let epicsLogLevel: type_log_levels = type_log_levels.error;
             const epicsLogLevelEntry = this.getProfile().getEpicsLogLevel();
             if (epicsLogLevelEntry !== undefined && epicsLogLevelEntry["value"] !== undefined) {
@@ -61,7 +61,7 @@ export class ChannelAgentsManager {
             this._context = new Context(this.getProfile().convertToTcaInput()["EPICS Environment"], epicsLogLevel);
             await this._context.initialize();
         } else {
-            logs.info(this.getMainProcessId(), "EPICS CA context already exists");
+            Log.info(this.getMainProcessId(), "EPICS CA context already exists");
         }
     };
 

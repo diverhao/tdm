@@ -9,7 +9,7 @@ import { IncomingMessage, ServerResponse } from "http";
 import * as BodyParser from "body-parser";
 import { MainProcesses } from "./MainProcesses";
 import * as fs from "fs";
-import { logs } from "../global/GlobalVariables";
+import { Log } from "../log/Log";
 import path from "path";
 
 export class HttpServer {
@@ -38,7 +38,7 @@ export class HttpServer {
 
         // start http server
         this.getServer()?.get("/main", (request: IncomingMessage, response: any, next: any) => {
-            logs.debug("0", "New https connection coming in from", request.socket.address());
+            Log.debug("0", "New https connection coming in from", request.socket.address());
             // there shoul have been a main process with id = "0" running
             const mainProcess = this.getMainProcesses().getProcess("0");
             if (mainProcess === undefined) {
@@ -85,18 +85,18 @@ export class HttpServer {
             const { username, password } = req.body;
             const mainProcess = this.getMainProcesses().getProcess("0");
             if (mainProcess === undefined) {
-                logs.error("-1", "Cannot find main process 0 in web mode. Quit.")
+                Log.error("-1", "Cannot find main process 0 in web mode. Quit.")
                 return;
             }
             const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
             if (selectedProfile === undefined) {
-                logs.error("-1", "Profile not selected in web mode. Quit.")
+                Log.error("-1", "Profile not selected in web mode. Quit.")
                 return;
             }
             const ldapUri = selectedProfile.getLdapUri();
             const ldapDistinguishedName = selectedProfile.getLdapDistinguishedName();
             if (ldapUri === undefined || ldapDistinguishedName === undefined) {
-                logs.error("-1", "LDAP URI or LDAP Authentication String not defined in profile. Cannot proceed web mode server.")
+                Log.error("-1", "LDAP URI or LDAP Authentication String not defined in profile. Cannot proceed web mode server.")
                 return;
             }
 
@@ -125,7 +125,7 @@ export class HttpServer {
         this.getServer()?.post("/command",
             (request: any, response: any) => {
                 const command = request.body["command"];
-                logs.debug("-1", "Received POST request from", request.socket.address(), "command =", command);
+                Log.debug("-1", "Received POST request from", request.socket.address(), "command =", command);
                 const data = request.body["data"];
                 if (command === "profile-selected") {
                     const profileName = data;
@@ -133,29 +133,29 @@ export class HttpServer {
                 } else if (command === "open-tdl-file") {
                     const options = data;
                     options["postCommand"] = command;
-                    logs.debug("-1", data);
+                    Log.debug("-1", data);
                     this.getMainProcesses().getProcess("0")?.getIpcManager().handleOpenTdlFiles(undefined, options, response);
                 } else if (command === "duplicate-display") {
                     const options = data;
-                    logs.debug("-1", data);
+                    Log.debug("-1", data);
                     this.getMainProcesses().getProcess("0")?.getIpcManager().handleDuplicateDisplay(undefined, options, response);
                 } else if (command === "create-utility-display-window") {
                     const utilityType = data["utilityType"];
                     const utilityOptions = data["utilityOptions"];
-                    logs.debug("-1", data);
+                    Log.debug("-1", data);
                     this.getMainProcesses().getProcess("0")?.getIpcManager().createUtilityDisplayWindow(undefined, utilityType, utilityOptions, response);
                 } else if (command === "create-new-display-in-web-mode") {
-                    logs.debug("-1", data);
+                    Log.debug("-1", data);
                     this.getMainProcesses().getProcess("0")?.getWindowAgentsManager().createBlankDisplayWindow(response);
                 } else if (command === "media") {
-                    logs.debug("-1", data);
+                    Log.debug("-1", data);
                     try {
                         const fullFileName = data["fullFileName"];
                         const fileBuffer = fs.readFileSync(fullFileName);
                         const fileBase64Str = fileBuffer.toString("base64");
                         response.send(JSON.stringify({ content: fileBase64Str }));
                     } catch (e) {
-                        logs.error("-1", "Cannot read file", data["imageFileName"])
+                        Log.error("-1", "Cannot read file", data["imageFileName"])
                         response.send(JSON.stringify({ image: "" }));
                     }
                 }
@@ -167,8 +167,8 @@ export class HttpServer {
         // this.getServer()
         //     ?.listen(this.getPort())
         //     .on("error", (err: any) => {
-        //         logs.error("-1", "Cannot create http server", err);
-        //         logs.error("-1", "Quit program");
+        //         Log.error("-1", "Cannot create http server", err);
+        //         Log.error("-1", "Quit program");
         //         this.getMainProcesses().quit();
         //     });
 
@@ -179,7 +179,7 @@ export class HttpServer {
             return;
         }
         this._httpsServer = https.createServer(httpsOptions, this.getServer()).listen(this.getPort(), () => {
-            logs.info(`HTTPS Server running on https://localhost:${this.getPort()}`);
+            Log.info(`HTTPS Server running on https://localhost:${this.getPort()}`);
         });
     };
 

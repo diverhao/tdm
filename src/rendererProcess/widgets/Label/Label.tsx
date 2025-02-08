@@ -11,7 +11,7 @@ import { LabelRules } from "./LabelRules";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import katex from "katex";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_Label_tdl = {
     type: string;

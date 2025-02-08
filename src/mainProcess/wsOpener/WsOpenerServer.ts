@@ -4,7 +4,7 @@ import { WebSocket, WebSocketServer, RawData } from "ws";
 import { FileReader } from "../file/FileReader";
 import { type_args } from "../arg/ArgParser";
 import { MainProcess } from "../mainProcess/MainProcess";
-import { logs } from "../global/GlobalVariables";
+import { Log } from "../log/Log";
 
 // this class is part of MainProcesses, it has nothing to do with the runtime MainProcess
 // it runs before any MainProcess or profile selection
@@ -23,12 +23,12 @@ export class WsOpenerServer {
 	}
 
     quit = () => {
-        logs.info("-1", "Close WS Opener Server")
+        Log.info("-1", "Close WS Opener Server")
         this.server?.close();
     }
 
 	createServer = () => {
-		logs.info("-1", `Creating WebSocket opener server on port ${this.getPort()}`);
+		Log.info("-1", `Creating WebSocket opener server on port ${this.getPort()}`);
 
         this.server = new WebSocket.Server({
 			port: this.getPort(),
@@ -36,7 +36,7 @@ export class WsOpenerServer {
 
 		this.server.on("error", (err: Error) => {
 			if (err["message"].includes("EADDRINUSE")) {
-				logs.info("-1", `Port ${this.getPort()} is occupied, try port ${this.getPort() + 1}`);
+				Log.info("-1", `Port ${this.getPort()} is occupied, try port ${this.getPort() + 1}`);
 				let newPort = this.getPort() + 1;
 				this.setPort(newPort);
 				this.updatePort();
@@ -46,7 +46,7 @@ export class WsOpenerServer {
 
 		// when the display window becomes operating mode
 		this.server.on("connection", (wsClient: WebSocket, request: IncomingMessage) => {
-            logs.info("-1", `WebSocket Opener Server got a connection`);
+            Log.info("-1", `WebSocket Opener Server got a connection`);
 			wsClient.on("message", async (messageBuffer: RawData) => {
 				const message = JSON.parse(messageBuffer.toString());
 				this.parseMessage(message);
@@ -54,7 +54,7 @@ export class WsOpenerServer {
 
 			// when the websocket client quits, un-MONITOR
 			wsClient.on("close", () => {
-                logs.info("-1", `WebSocket Opener Server disconnects with client.`);
+                Log.info("-1", `WebSocket Opener Server disconnects with client.`);
 			});
 		});
 	};

@@ -15,7 +15,7 @@ import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarC
 // import { SidebarBooleanButtonUsePictures } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonUsePictures";
 // import { SidebarRadioButtonItems } from "../../helperWidgets/SidebarComponents/SidebarRadioButtonItems";
 import { SidebarChoiceButtonItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonItems";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 

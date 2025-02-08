@@ -6,7 +6,7 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import * as mathjs from "mathjs";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_Calculator_tdl = {
     type: string;

@@ -3,7 +3,7 @@ import { calcSidebarWidth, GlobalVariables } from "../../global/GlobalVariables"
 import { Collapsible } from "../ColorPicker/Collapsible";
 import { Canvas } from "./Canvas";
 import { SidebarCanvasScript } from "../SidebarComponents/SidebarCanvasScript";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import * as GlobalMethods from "../../global/GlobalMethods";
 import { g_flushWidgets } from "../Root/Root";

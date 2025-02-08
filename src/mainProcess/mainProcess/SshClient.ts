@@ -1,9 +1,8 @@
 import { Client, ClientChannel } from "ssh2";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { MainProcess } from "./MainProcess";
-import { logs } from "../global/GlobalVariables";
+import { Log } from "../log/Log";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
-import net from "net";
 import { type_options_createDisplayWindow } from "../windows/WindowAgentsManager";
 
 export type type_sshServerConfig = {
@@ -97,7 +96,7 @@ export class SshClient {
      */
     configSshClient = () => {
         this.getSshClient().on("ready", () => {
-            logs.info(this.getMainProcessId(), "SSH tunnel has been digged through, we are ready to establish TCP connection with", `${this.getServerIP()}:${this.getTcpServerPort()}`);
+            Log.info(this.getMainProcessId(), "SSH tunnel has been digged through, we are ready to establish TCP connection with", `${this.getServerIP()}:${this.getTcpServerPort()}`);
             this.connectSshResolve();
         }
         );
@@ -177,7 +176,7 @@ export class SshClient {
             // the "data" event is the "console.log()" from remote TDM
             tdmStream.on("data", (data: Buffer) => {
                 const dataStr = data.toString();
-                logs.debug(this.getMainProcessId(), "[ssh server]", dataStr);
+                Log.debug(this.getMainProcessId(), "[ssh server]", dataStr);
                 // when the Tcp server is successfully created and starts to listen in remote TDM
                 // the remote TDM console.log() a stdout that looks like ... we have successfully created on port 3000 ...
                 if (dataStr.includes("we have successfully created TCP server on port")) {
@@ -192,7 +191,7 @@ export class SshClient {
             })
             // error message
             tdmStream.stderr.on("data", (data: Buffer) => {
-                logs.error(this.getMainProcessId(), "[ssh server]", data.toString());
+                Log.error(this.getMainProcessId(), "[ssh server]", data.toString());
             })
         }
         return tdmStream;
@@ -248,7 +247,7 @@ export class SshClient {
         // when the stream is ended
         tcpStream.on("end", () => {
             const msg = "Forwardout tcp stream ended. Quit program";
-            logs.debug(this.getMainProcessId(), msg)
+            Log.debug(this.getMainProcessId(), msg)
             // this.getSshClient().end();
             this.handleConnectionError("tcp", new Error(msg));
         })
@@ -324,7 +323,7 @@ export class SshClient {
             // update message box on calling process main window
             this.updateCallingProcessMainWindowMessageBox("success");
         } catch (e) {
-            logs.error("-1", `${e}`);
+            Log.error("-1", `${e}`);
             this.updateCallingProcessMainWindowMessageBox("fail");
         }
     };
@@ -375,7 +374,7 @@ export class SshClient {
             const command = dataJSON["command"];
             if (command !== undefined) {
                 if (command !== "tcp-server-heartbeat") {
-                    logs.debug(this.getMainProcessId(), "recevied data from TCP server:", data.toString())
+                    Log.debug(this.getMainProcessId(), "recevied data from TCP server:", data.toString())
                 }
                 const callback = this.tcpEventListeners[command];
                 if (callback !== undefined) {
@@ -494,7 +493,7 @@ export class SshClient {
         const message2 = `${err}`;
         const message3 = "Disconnect";
 
-        logs.error(this.getMainProcessId(), `SshClient connection error:`, err);
+        Log.error(this.getMainProcessId(), `SshClient connection error:`, err);
 
         this.getCallingMainProcess()?.getWindowAgentsManager().getMainWindowAgent()?.sendFromMainProcess("dialog-show-message-box", {
             messageType: "error",
@@ -503,7 +502,7 @@ export class SshClient {
         });
 
         // no retry
-        logs.error(this.getMainProcessId(), "-----------> quit main process")
+        Log.error(this.getMainProcessId(), "-----------> quit main process")
         // this.getMainProcess().quit()
     }
 
@@ -520,13 +519,13 @@ export class SshClient {
     authHandler = (methodsLeft: string[], partialSuccess: boolean, callback: any) => {
         // first try: public key, use the user name provided by the profiles
         if (this._loginTries === 0) {
-            logs.debug(this.getMainProcessId(), "try to use key to login ssh")
+            Log.debug(this.getMainProcessId(), "try to use key to login ssh")
             this._loginTries++;
             this.loginWithKey(callback);
         }
         // second try: password, user can input both username and password from GUI
         else if (this._loginTries === 1) {
-            logs.debug(this.getMainProcessId(), "try password");
+            Log.debug(this.getMainProcessId(), "try password");
             this._loginTries++;
             this.loginWithPassword(callback);
         }
@@ -539,7 +538,7 @@ export class SshClient {
                 rawMessages: [],
             });
 
-            logs.info(this.getMainProcessId(), "quit connecting tries ---> quit this main process");
+            Log.info(this.getMainProcessId(), "quit connecting tries ---> quit this main process");
             this.getMainProcess().quit()
         }
     };
@@ -562,7 +561,7 @@ export class SshClient {
             // if the key file cannot be read or the key file is not defined, 
             // use a mock key so that authHandler() is called again and we can proceed to password authentication
             // todo: show error message on calling process' main window if the 
-            logs.error(this.getMainProcessId(), e);
+            Log.error(this.getMainProcessId(), e);
             callback({
                 type: "publickey",
                 username: this.getUserName(),
@@ -621,12 +620,12 @@ export class SshClient {
         const tcpStream = this.getTcpStream();
         if (tcpStream !== undefined) {
             if (message["command"] !== "tcp-client-heartbeat") {
-                logs.debug(this.getMainProcessId(), "send to tcp server:", message)
+                Log.debug(this.getMainProcessId(), "send to tcp server:", message)
             }
             // if error, caught in this.getForwardOutStream().on("error") , handled by handleConnectionError()
             tcpStream.write(JSON.stringify(message));
         } else {
-            logs.error(this.getMainProcessId(), "SSH WebSocket error: there is no forward out stream");
+            Log.error(this.getMainProcessId(), "SSH WebSocket error: there is no forward out stream");
         }
         // }
     }
@@ -810,7 +809,7 @@ export class SshClient {
     checkLastHeartbeatTime = () => {
         const tDiff = Date.now() - this.getLastHeartbeatTime();
         if (tDiff > 15 * 1000) {
-            logs.error(this.getMainProcessId(), `SSH client heartbeat expires.`)
+            Log.error(this.getMainProcessId(), `SSH client heartbeat expires.`)
             // show error messages on all visible windows
             this.showDisconnectMessage();
             // quit the heartbeat

@@ -1,6 +1,6 @@
 import { DisplayWindowClient } from "../../mainProcess/windows/DisplayWindow/DisplayWindowClient";
 import { type_tdl } from "../../mainProcess/file/FileReader";
-import { Log } from "../global/Log";
+import {Log} from "../../mainProcess/log/Log";
 
 export class ActionHistory {
 	private _tdls: type_tdl[] = [];

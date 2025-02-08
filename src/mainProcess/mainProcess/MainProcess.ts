@@ -7,7 +7,7 @@ import { ChannelAgentsManager } from "../channel/ChannelAgentsManager";
 import { Profile } from "../profile/Profile";
 import { WsPvServer } from "../wsPv/WsPvServer";
 import { MainProcesses } from "./MainProcesses";
-import { logs } from "../global/GlobalVariables";
+import { Log } from "../log/Log";
 import { websocketPvServerPort } from "../global/GlobalVariables";
 import { SshClient, type_sshServerConfig } from "./SshClient";
 import { CaSnooperServer } from "./CaSnooperServer";
@@ -78,7 +78,7 @@ export class MainProcess {
                 let callingProcessId = sshServerConfig["callingProcessId"];
                 this._sshClient = new SshClient(this, sshServerConfig, callingProcessId)
             } else {
-                logs.error(this.getProcessId(), "Input for MainProcess constructor error: sshServerConfig cannot be undefined in ssh-client mode");
+                Log.error(this.getProcessId(), "Input for MainProcess constructor error: sshServerConfig cannot be undefined in ssh-client mode");
             }
         } else {
             this.setWindowAgentsManager(new WindowAgentsManager(this));
@@ -100,14 +100,14 @@ export class MainProcess {
                         this.getProfiles().setSelectedProfileName(profileName);
                         const selectedProfile = this.getProfiles().getSelectedProfile();
                         if (selectedProfile === undefined) {
-                            logs.error(this.getProcessId(), `Profile ${profileName} does not exist`);
+                            Log.error(this.getProcessId(), `Profile ${profileName} does not exist`);
                             return;
                         }
 
                         const channelAgentsManager = new ChannelAgentsManager(selectedProfile, this);
                         await channelAgentsManager.createAndInitContext();
                         this.setChannelAgentsManager(channelAgentsManager);
-                        logs.debug(this.getProcessId(), "Main process for web mode started. Profile is", profileName);
+                        Log.debug(this.getProcessId(), "Main process for web mode started. Profile is", profileName);
                     } else if (this.getMainProcessMode() === "ssh-server") {
                         await this.getWindowAgentsManager().createMainWindow();
                         // no need to run callback in ssh-server mode, it is about the manually select profile
@@ -329,7 +329,7 @@ export class MainProcess {
         if (mainWindowAgent !== undefined) {
             mainWindowAgent.sendFromMainProcess("update-ws-opener-port", newPort);
         } else {
-            logs.error(this.getProcessId(), "Main window agent does not exist");
+            Log.error(this.getProcessId(), "Main window agent does not exist");
         }
     };
 
@@ -356,7 +356,7 @@ export class MainProcess {
                 return `${this.getProcessId()}-${ii}`;
             }
         }
-        logs.error(
+        Log.error(
             this.getProcessId(),
             `You have used up indices in DisplayWindow-index.html. There are 500 of them, are you opening 500 display windows?`
         );
@@ -370,7 +370,7 @@ export class MainProcess {
         if (index !== -1) {
             this.displayWindowHtmlIndices.splice(index, 1);
         } else {
-            logs.error(this.getProcessId(), `Display window html file index ${displayWindowId} was not registered, so it cannot be released`);
+            Log.error(this.getProcessId(), `Display window html file index ${displayWindowId} was not registered, so it cannot be released`);
         }
     };
 
@@ -436,7 +436,7 @@ export class MainProcess {
                     connectionString: connectionString,
                 }));
             } else {
-                logs.error(this.getProcessId(), "Archive cannot be connected");
+                Log.error(this.getProcessId(), "Archive cannot be connected");
             }
         }
     }
@@ -452,7 +452,7 @@ export class MainProcess {
     }
 
     stopEdlFileConverterThread = (reason: string = "") => {
-        logs.debug(this.getProcessId(), "File converter thread stopped:", reason);
+        Log.debug(this.getProcessId(), "File converter thread stopped:", reason);
         const worker = this.getEdlFileConverterThread();
         if (worker !== undefined) {
             worker.terminate();
@@ -501,7 +501,7 @@ export class MainProcess {
 
         // Communicate with the worker
         worker.on('message', (message) => {
-            logs.debug(this.getProcessId(), "Received message from file converter thread:", message);
+            Log.debug(this.getProcessId(), "Received message from file converter thread:", message);
             const displayWindowAgent = this.getWindowAgentsManager().getAgent(options["displayWindowId"]);
             if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
                 // the display window is closed, quit the thread
@@ -549,7 +549,7 @@ export class MainProcess {
         });
 
         worker.on('error', (error) => {
-            logs.error(this.getProcessId(), 'File converter thread error:', error);
+            Log.error(this.getProcessId(), 'File converter thread error:', error);
             this.stopEdlFileConverterThread("Error in file converter thread");
             const displayWindowAgent = this.getWindowAgentsManager().getAgent(options["displayWindowId"]);
             if (!(displayWindowAgent instanceof DisplayWindowAgent)) {

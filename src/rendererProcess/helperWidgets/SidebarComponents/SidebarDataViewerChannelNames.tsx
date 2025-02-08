@@ -8,7 +8,7 @@ import { DataViewerSidebar } from "../../widgets/DataViewer/DataViewerSidebar";
 import { DataViewer } from "../../widgets/DataViewer/DataViewer";
 import { Collapsible } from "../ColorPicker/Collapsible";
 import * as GlobalMethods from "../../global/GlobalMethods";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 /**
  * Represents the channel names component in sidebar. <br>

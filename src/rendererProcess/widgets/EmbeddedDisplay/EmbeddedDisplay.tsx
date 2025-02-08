@@ -11,7 +11,7 @@ import { EmbeddedDisplayRules } from "./EmbeddedDisplayRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import * as path from "path";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_EmbeddedDisplay_tdl = {
     type: string;

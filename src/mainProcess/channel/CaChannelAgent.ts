@@ -2,8 +2,7 @@ import { Channel, ChannelMonitor, Context, Channel_DBR_TYPES } from "epics-tca";
 import { type_dbrData } from "../../rendererProcess/global/GlobalVariables";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { ChannelAgentsManager } from "./ChannelAgentsManager";
-import { logs } from "../global/GlobalVariables";
-import { v4 as uuidv4 } from "uuid";
+import { Log } from "../log/Log";
 
 export enum DisplayOperations {
     GET,
@@ -115,7 +114,7 @@ export class CaChannelAgent {
             if (this._channelCreationPromise === undefined) {
                 const context = this.getChannelAgentsManager().getContext();
                 if (context === undefined) {
-                    logs.error(this.getMainProcessId(), "Context not initialized");
+                    Log.error(this.getMainProcessId(), "Context not initialized");
                     this.connecting = false;
                     return false;
                 }
@@ -220,7 +219,7 @@ export class CaChannelAgent {
             return data;
 
         } catch (e) {
-            logs.error(this.getMainProcessId(), e);
+            Log.error(this.getMainProcessId(), e);
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
             return { value: undefined };
@@ -264,7 +263,7 @@ export class CaChannelAgent {
             }
         } catch (e) {
 
-            logs.error(this.getMainProcessId(), e);
+            Log.error(this.getMainProcessId(), e);
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
             return { value: undefined };
@@ -320,7 +319,7 @@ export class CaChannelAgent {
             }
             await channel.put(newValue, ioTimeout);
         } catch (e) {
-            logs.error(this.getMainProcessId(), e);
+            Log.error(this.getMainProcessId(), e);
         }
         // this.reduceClientsNum();
         // this.addPutOperation();
@@ -360,7 +359,7 @@ export class CaChannelAgent {
             // console.log(`Run command await channel.putPva("${pvRequest}", [${[newValue]}], ${ioTimeout})`)
             await channel.putPva(pvRequest, [newValue], ioTimeout);
         } catch (e) {
-            logs.error(this.getMainProcessId(), e);
+            Log.error(this.getMainProcessId(), e);
         }
         // this.reduceClientsNum();
         // this.addPutOperation();
@@ -395,7 +394,7 @@ export class CaChannelAgent {
         if (channel === undefined) {
             // this.reduceClientsNum();
             // this.reducePutOperation();
-            logs.error(`EPICS TCA Channel ${this.getChannel()} does not exist`);
+            Log.error(`EPICS TCA Channel ${this.getChannel()} does not exist`);
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.MONITOR);
             this.checkLifeCycle();
             return;

@@ -6,10 +6,7 @@ import { MainProcesses } from "./mainProcess/MainProcesses";
 import { app } from "electron";
 import { MainProcess } from "./mainProcess/MainProcess";
 import { MainWindowAgent } from "./windows/MainWindow/MainWindowAgent";
-import { logs } from "./global/GlobalVariables";
-// import { writeFileSync } from "fs";
-import path from "path";
-import * as os from "os";
+import { Log } from "./log/Log";
 
 // true for the first TDM instance 
 // false for the later TDM instances
@@ -50,7 +47,7 @@ const args = ArgParser.parseArgs(process.argv);
 
 console.error = console.log;
 
-logs.info('-1', "Input arguments:", args);
+Log.info('-1', "Input arguments:", args);
 
 if (args["attach"] !== -1) {
     // when we use "attach"
@@ -67,7 +64,7 @@ if (args["attach"] !== -1) {
         // (2) send process.argv
         ws.send(JSON.stringify(args));
         // (3) quit
-        logs.info('-1', `Send data to WebSocket Opener Sever port ${port}`);
+        Log.info('-1', `Send data to WebSocket Opener Sever port ${port}`);
         setTimeout(() => {
             // make sure the data is sent out
             ws.close();
@@ -75,16 +72,16 @@ if (args["attach"] !== -1) {
         }, 500);
     });
     ws.on("close", () => {
-        logs.error('-1', "Socket closed by server");
+        Log.error('-1', "Socket closed by server");
     });
     ws.on("error", (err: Error) => {
         // do nothing
-        logs.error('-1', err);
+        Log.error('-1', err);
         ws.close();
         app.quit();
     });
 } else {
-    logs.info('-1', "Creating TDM main processes.");
+    Log.info('-1', "Creating TDM main processes.");
     const mainProcesses = new MainProcesses(args);
     /**
      * In ssh-server mode, the createProcess() is invoked after we receive the process Id from ssh client
@@ -269,24 +266,24 @@ if (args["attach"] !== -1) {
                     mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", profileNames[0], args);
                 } else {
                     // do nothing
-                    logs.info('-1', "User did not provided a profile, show main window.");
+                    Log.info('-1', "User did not provided a profile, show main window.");
                 }
             } else if (cmdLineSelectedProfile === "" && cmdLineOpenFileNames.length === 0) {
-                logs.info('-1', "User did not provided a profile, show main window.");
+                Log.info('-1', "User did not provided a profile, show main window.");
                 // do nothing
             } else if (cmdLineSelectedProfile !== "" && cmdLineOpenFileNames.length === 0) {
                 if (profileNames.includes(cmdLineSelectedProfile)) {
                     mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", cmdLineSelectedProfile, args);
                 } else {
                     // do nothing
-                    logs.error('-1', "The profile name provided in command line does not exist. You can select a profile from the main window.");
+                    Log.error('-1', "The profile name provided in command line does not exist. You can select a profile from the main window.");
                 }
             } else if (cmdLineSelectedProfile !== "" && cmdLineOpenFileNames.length > 0) {
                 if (profileNames.includes(cmdLineSelectedProfile)) {
                     mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", cmdLineSelectedProfile, args);
                 } else {
                     // do nothing
-                    logs.error('-1', "The profile name provided in command line does not exist. You can select a profile from the main window.");
+                    Log.error('-1', "The profile name provided in command line does not exist. You can select a profile from the main window.");
                 }
             }
         };

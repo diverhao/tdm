@@ -92,7 +92,7 @@ import { RuleOutlineStyle } from "../../helperWidgets/RuleComponents/RuleOutline
 import { RuleOutlineWidth } from "../../helperWidgets/RuleComponents/RuleOutlineWidth";
 import { RuleEmbeddedDisplaySelectTabIndex } from "../../helperWidgets/RuleComponents/RuleEmbeddedDisplaySelectTabIndex";
 import { BaseWidget } from "./BaseWidget";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_rule_tdl = {
     boolExpression: string;

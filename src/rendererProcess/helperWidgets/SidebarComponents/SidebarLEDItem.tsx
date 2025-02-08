@@ -5,7 +5,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { Collapsible } from "../ColorPicker/Collapsible";
 import * as GlobalMethods from "../../global/GlobalMethods";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import { ElementButton } from "../SharedElements/MacrosTable";
 
 export class SidebarLEDItem {

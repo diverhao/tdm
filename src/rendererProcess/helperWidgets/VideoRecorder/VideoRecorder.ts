@@ -3,7 +3,7 @@ import fs from "fs";
 import { DisplayWindowClient } from "../../../mainProcess/windows/DisplayWindow/DisplayWindowClient";
 import path from "path";
 import { GlobalVariables } from "../../global/GlobalVariables";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export class VideoRecorder {
 	private _sourceId: string = "";

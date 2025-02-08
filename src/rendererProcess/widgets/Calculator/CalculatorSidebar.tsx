@@ -2,7 +2,7 @@ import * as React from "react";
 import { Calculator } from "./Calculator";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export class CalculatorSidebar extends BaseWidgetSidebar {
     constructor(calculator: Calculator) {

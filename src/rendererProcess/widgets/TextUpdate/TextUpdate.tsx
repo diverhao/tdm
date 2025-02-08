@@ -10,7 +10,7 @@ import { TextUpdateRules } from "./TextUpdateRules";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 // import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 
 export type type_TextUpdate_tdl = {

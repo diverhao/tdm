@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { Log } from "./Log";
+import { Log } from "../../mainProcess/log/Log";
 
 export const rgbaArrayToRgbaStr = (rgbaArray: number[]): string => {
     const rStr = rgbaArray[0].toString();

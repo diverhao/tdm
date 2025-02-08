@@ -9,7 +9,7 @@ import { SidebarEmbeddedDisplayTabSelectedColor } from "../../helperWidgets/Side
 import { SidebarEmbeddedDisplayTabWidth } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabWidth";
 import { SidebarEmbeddedDisplayTabHeight } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabHeight";
 import { SidebarEmbeddedDisplayShowTab } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayShowTab";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {

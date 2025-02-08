@@ -1,8 +1,9 @@
 import { app } from "electron";
 import path from "path";
 import os from "os";
-import { httpServerPort, logs } from "../global/GlobalVariables";
-import { type_log_levels } from "../log/Logs";
+import { httpServerPort } from "../global/GlobalVariables";
+import { Log } from "../log/Log";
+import { type_log_levels } from "../log/Log";
 
 export type type_args = {
     macros: [string, string][];
@@ -32,6 +33,7 @@ const dashdashHttpServerPort = `${dashdash}http-server-port`;
 const dashdashAttach = `${dashdash}attach`;
 const dashdashHelp = `${dashdash}help`;
 const dashdashLogLevel = `${dashdash}log-level`;
+const dashdashLogStackTrace = `${dashdash}log-stack-trace`;
 const dashMainProcessMode = `${dashdash}main-process-mode`; // "web" | "desktop"
 
 export class ArgParser {
@@ -52,6 +54,7 @@ Options:
                                           If this options is absent, no profile is selected
   --macros "SYS=ring, SUB_SYS=bpm"        Macros for the TDL files
   --log-level level                       Log level in main process, could be fatal, error, warn, info, debug, or trace
+  --log-stack-trace                       If the log prints stack trace
   --also-open-defaults                    Open default TDL files for the selected profile
                                           If this option is absent, default TDL files are not opened 
   --main-process-mode web                 Run the web server
@@ -101,6 +104,8 @@ Options:
                 } else if (arg === dashdashLogLevel) {
                     ii++;
                     this.parseLogLevel(argv[ii]);
+                } else if (arg === dashdashLogStackTrace) {
+                    this.parseLogStackTrace();
                 } else if (arg === dashdashAttach) {
                     ii++;
                     result["attach"] = this.parseAttach(argv[ii]);
@@ -174,10 +179,14 @@ Options:
     static parseLogLevel = (logLevelRawStr: string) => {
         const logLevel = type_log_levels[logLevelRawStr as keyof typeof type_log_levels];
         if (logLevel !== undefined) {
-            logs.setLogLevel(logLevel);
+            Log.setLogLevel(logLevel);
         } else {
-            logs.error("-1", "Error parsing --log-level argument", logLevelRawStr);
+            Log.error("-1", "Error parsing --log-level argument", logLevelRawStr);
         }
+    }
+
+    static parseLogStackTrace = () => {
+        Log.setUseStackTrace(true);
     }
 
     static parseMacros = (macrosRawStr: string) => {

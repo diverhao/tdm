@@ -15,7 +15,7 @@ import * as mathjs from "mathjs";
 // import * as os from "os";
 // import fs from "fs";
 import { TerminalIos } from "./TerminalIos";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 
 export type type_Terminal_tdl = {

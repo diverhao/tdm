@@ -14,7 +14,7 @@ import { type_LocalChannel_data } from "../../channel/LocalChannelAgent";
 import { Canvas } from "../../../rendererProcess/helperWidgets/Canvas/Canvas";
 import { XYPlot } from "../../../rendererProcess/widgets/XYPlot/XYPlot";
 import { Terminal } from "../../../rendererProcess/widgets/Terminal/Terminal";
-import { Log } from "../../../rendererProcess/global/Log";
+import { Log } from "../../log/Log";
 import { Media } from "../../../rendererProcess/widgets/Media/Media";
 import { GlobalVariables } from "../../../rendererProcess/global/GlobalVariables";
 import { FontsData } from "../../../rendererProcess/global/FontsData";

@@ -1,7 +1,8 @@
 import { MainProcess } from "./MainProcess";
 import { WsOpenerServer } from "../wsOpener/WsOpenerServer";
 import { type_args } from "../arg/ArgParser";
-import { logs, sshTcpServerPort, httpServerPort } from "../global/GlobalVariables";
+import { sshTcpServerPort, httpServerPort } from "../global/GlobalVariables";
+import { Log } from "../log/Log";
 import { app, BrowserWindow, Menu } from "electron";
 import { IpcManagerOnMainProcesses } from "./IpcManagerOnMainProcesses";
 import { websocketIpcServerPort, websocketOpenerServerPort } from "../global/GlobalVariables";
@@ -24,9 +25,6 @@ export class MainProcesses {
     _sshServerSelfDestructionCountDown: NodeJS.Timeout | undefined = undefined;
 
     constructor(args: type_args) {
-
-        logs.setMainProcesses(this);
-
 
         this._profilesFileName = args["settings"];
         // if this profile is not found, show profile-selection page
@@ -97,7 +95,7 @@ export class MainProcesses {
     }
 
     quit = () => {
-        logs.debug("-1", "------------------------ quit main processes ------------------------------");
+        Log.debug("-1", "------------------------ quit main processes ------------------------------");
         // quit Websocket Opener Server
         this.getWsOpenerServer().quit();
         // quit electron
@@ -133,7 +131,7 @@ export class MainProcesses {
         // there should be only one main process in "web" mode
         if (mainProcessMode === "web") {
             if (this.getProcesses().length >= 1) {
-                logs.info('-1', "The web mode only host one process");
+                Log.info('-1', "The web mode only host one process");
                 return this.getProcesses()[0];
             }
         }
@@ -156,7 +154,7 @@ export class MainProcesses {
             // todo: id collission
             newProcessId = mainProcessId;
         }
-        logs.info('-1', `Creating TDM process #${newProcessId} in ${mainProcessMode} mode`);
+        Log.info('-1', `Creating TDM process #${newProcessId} in ${mainProcessMode} mode`);
 
         // read local fonts
         LocalFontsReader.readLocalFontsMeta().then((fontsMeta: {

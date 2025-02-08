@@ -13,7 +13,7 @@ import { SidebarByteMonitorBitLength } from "../../helperWidgets/SidebarComponen
 import { SidebarByteMonitorBitValueColors } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorBitValueColors";
 import { SidebarByteMonitorBitNamesTable } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorBitNamesTable";
 import { SidebarByteMonitorSequence } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorSequence";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class ByteMonitorSidebar extends BaseWidgetSidebar {

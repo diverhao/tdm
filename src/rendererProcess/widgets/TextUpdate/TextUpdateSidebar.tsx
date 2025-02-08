@@ -2,7 +2,7 @@ import * as React from "react";
 import { TextUpdate } from "./TextUpdate";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export class TextUpdateSidebar extends BaseWidgetSidebar {
     constructor(textUpdate: TextUpdate) {

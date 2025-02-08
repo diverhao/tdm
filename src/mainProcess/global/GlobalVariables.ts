@@ -1,9 +1,8 @@
-import {Logs} from "../log/Logs";
 
 // Global variables in main process
 
 
-export let logs: Logs = new Logs();
+// export let logs: Logs = new Logs();
 
 // there are 3 types of websocket services, below are their starting port
 // they are dynamically assigned: if the port is occupied, tdm will find the next available port

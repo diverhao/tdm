@@ -11,7 +11,7 @@ import {
 import { MainWindowClient, mainWindowState } from "../../mainProcess/windows/MainWindow/MainWindowClient";
 import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMenu";
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
-import { Log } from "../global/Log";
+import {Log} from "../../mainProcess/log/Log";
 import * as GlobalMethods from "../global/GlobalMethods"
 import { Profile } from "../../mainProcess/profile/Profile";
 

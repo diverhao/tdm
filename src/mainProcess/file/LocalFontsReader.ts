@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { promises as fsPromises } from 'fs';
 import * as path from 'path';
-import { logs } from '../global/GlobalVariables';
+import { Log } from '../log/Log';
 
 /**
  * Collection of methods for reading system font names.
@@ -155,7 +155,7 @@ export class LocalFontsReader {
             fs.readFile(fontName,
                 (err: any, data: Buffer) => {
                     if (err !== null) {
-                        logs.error("-1", "error reading")
+                        Log.error("-1", "error reading")
                         resolve(undefined);
                     } else {
                         try {
@@ -223,13 +223,13 @@ export class LocalFontsReader {
                 folders.push(path.join(winDir, 'Fonts'));
             }
         } else {
-            logs.error("-1", "OS", platform, "is not recognized");
+            Log.error("-1", "OS", platform, "is not recognized");
         }
         return folders;
     }
 
     static getFontFileNames = async (folderName: string, result: string[]) => {
-        logs.debug("-1", "reading", folderName);
+        Log.debug("-1", "reading", folderName);
         try {
             const entries = await fsPromises.readdir(folderName, { withFileTypes: true });
             for (const entry of entries) {
@@ -242,11 +242,11 @@ export class LocalFontsReader {
                     }
                 } else {
                     // soft link ...
-                    logs.error("-1", "Error: entry", entry.name, "is not a file or folder");
+                    Log.error("-1", "Error: entry", entry.name, "is not a file or folder");
                 }
             }
         } catch (e) {
-            logs.error("-1", "Error reading folder", folderName, e);
+            Log.error("-1", "Error reading folder", folderName, e);
         }
     }
 

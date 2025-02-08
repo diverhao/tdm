@@ -12,7 +12,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Table } from "../../helperWidgets/Table/Table";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 
 export type type_PvMonitor_tdl = {

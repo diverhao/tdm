@@ -13,7 +13,7 @@ import { homedir } from "os";
 import { WebSocket } from "ws";
 import { Worker } from "worker_threads";
 import * as child_process from "child_process";
-import { logs } from "../../global/GlobalVariables";
+import { Log } from "../../log/Log";
 import { v4 as uuidv4 } from "uuid";
 import { generateAboutInfo } from "../../global/GlobalMethods";
 import pidusage from "pidusage";
@@ -221,7 +221,7 @@ export class DisplayWindowAgent {
     // invoked when the display window is switched to editing mode and the display window is a "real" window (not preloaded)
     createWebSocketClientThread = (port: number, script: string) => {
         if (!(script.endsWith(".py") || script.endsWith(".js"))) {
-            logs.debug(this.getMainProcessId(), `Script ${script} won't run for window ${this.getId()}.`);
+            Log.debug(this.getMainProcessId(), `Script ${script} won't run for window ${this.getId()}.`);
             this.sendFromMainProcess("dialog-show-message-box", {
                 // command?: string | undefined,
                 messageType: "error", // | "warning" | "info", // symbol
@@ -240,7 +240,7 @@ export class DisplayWindowAgent {
             this.getWindowAgentsManager().preloadedDisplayWindowAgent === this ||
             this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === this
         ) {
-            logs.debug(this.getMainProcessId(), "This is a preloaded display window, skip creating websocket client thread");
+            Log.debug(this.getMainProcessId(), "This is a preloaded display window, skip creating websocket client thread");
             return;
         }
 
@@ -248,7 +248,7 @@ export class DisplayWindowAgent {
         // instead, it talks to the main process via WebSocket
         try {
             if (script.endsWith(".py")) {
-                logs.debug(this.getMainProcessId(), `Create new Python thread on display window ${this.getId()}`);
+                Log.debug(this.getMainProcessId(), `Create new Python thread on display window ${this.getId()}`);
                 const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
                 if (selectedProfile !== undefined) {
                     const pythonCommand = selectedProfile.getEntry("EPICS Custom Environment", "Python Command");
@@ -262,16 +262,16 @@ export class DisplayWindowAgent {
                         }
                         // output
                         this.webSocketClientThread.stdout?.on("data", (data) => {
-                            logs.debug(this.getMainProcessId(), `Python stdout: ${data}`);
+                            Log.debug(this.getMainProcessId(), `Python stdout: ${data}`);
                         });
                         this.webSocketClientThread.stderr?.on("data", (data) => {
-                            logs.error(this.getMainProcessId(), `Python stderr: ${data}`);
+                            Log.error(this.getMainProcessId(), `Python stderr: ${data}`);
                         });
 
                     }
                 }
             } else if (script.endsWith(".js")) {
-                logs.debug(this.getMainProcessId(), `Create new Javascript thread on display window ${this.getId()}`);
+                Log.debug(this.getMainProcessId(), `Create new Javascript thread on display window ${this.getId()}`);
                 this.webSocketClientThread = new Worker(script, {
                     workerData: {
                         mainProcessId: this.getMainProcessId(),
@@ -284,12 +284,12 @@ export class DisplayWindowAgent {
                 this.windowAttachedScriptPid = process.pid;
             }
         } catch (e) {
-            logs.error(this.getMainProcessId(), e);
+            Log.error(this.getMainProcessId(), e);
         }
 
         // prevent popup window upon error
         this.webSocketClientThread?.on("error", (err: Error) => {
-            logs.error(this.getMainProcessId(), err);
+            Log.error(this.getMainProcessId(), err);
             this.sendFromMainProcess("dialog-show-message-box", {
                 // command?: string | undefined,
                 messageType: "error", // | "warning" | "info", // symbol
@@ -303,14 +303,14 @@ export class DisplayWindowAgent {
 
     // invoked when (1) the display window closed, or (2) the display window is switched to editing mode
     terminateWebSocketClientThread = () => {
-        logs.debug(this.getMainProcessId(), `Terminate websocket client thread for display window ${this.getId()}`);
+        Log.debug(this.getMainProcessId(), `Terminate websocket client thread for display window ${this.getId()}`);
 
         if (this.webSocketClientThread instanceof Worker) {
             this.webSocketClientThread.terminate();
         } else if (this.webSocketClientThread instanceof child_process.ChildProcess) {
             this.webSocketClientThread.kill();
         } else {
-            logs.debug(this.getMainProcessId(), "There was no worker thread for WebSocket client");
+            Log.debug(this.getMainProcessId(), "There was no worker thread for WebSocket client");
         }
     };
 
@@ -321,7 +321,7 @@ export class DisplayWindowAgent {
         if (browserView instanceof BrowserView || browserView instanceof BrowserWindow) {
             browserView.setBounds(newBounds);
         } else {
-            logs.error(this.getMainProcessId(), "Cannot set bounds, it is not an embedded display.");
+            Log.error(this.getMainProcessId(), "Cannot set bounds, it is not an embedded display.");
         }
     };
 
@@ -330,7 +330,7 @@ export class DisplayWindowAgent {
         if (browserView instanceof BrowserView) {
             browserView.setBackgroundColor(newColor);
         } else {
-            logs.error(this.getMainProcessId(), "Cannot set background color, it is not an embedded display.");
+            Log.error(this.getMainProcessId(), "Cannot set background color, it is not an embedded display.");
         }
     };
 
@@ -339,7 +339,7 @@ export class DisplayWindowAgent {
         if (browserView instanceof BrowserView || browserView instanceof BrowserWindow) {
             return browserView.getBounds();
         } else {
-            logs.error(this.getMainProcessId(), "Cannot get bounds, it is not an embedded display.");
+            Log.error(this.getMainProcessId(), "Cannot get bounds, it is not an embedded display.");
             return undefined;
         }
     };
@@ -393,7 +393,7 @@ export class DisplayWindowAgent {
             }
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
-                logs.debug(this.getMainProcessId(), `tcaGet: EPICS channel ${channelName} cannot be created/connected.`);
+                Log.debug(this.getMainProcessId(), `tcaGet: EPICS channel ${channelName} cannot be created/connected.`);
                 return { value: undefined };
             }
             // (2)
@@ -408,7 +408,7 @@ export class DisplayWindowAgent {
             const connectSuccess = this.addAndConnectLocalChannel(channelName);
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-                logs.debug(this.getMainProcessId(), `tcaGet: Local channel ${channelName} cannot be created/connected.`);
+                Log.debug(this.getMainProcessId(), `tcaGet: Local channel ${channelName} cannot be created/connected.`);
                 return result;
             }
             // (2)
@@ -452,7 +452,7 @@ export class DisplayWindowAgent {
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
 
             if (!connectSuccess || channelAgent === undefined) {
-                logs.debug(this.getMainProcessId(), `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
+                Log.debug(this.getMainProcessId(), `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
                 return { value: undefined };
             }
 
@@ -462,14 +462,14 @@ export class DisplayWindowAgent {
                     // (2)
                     const dbrTypeNum_GR = channelAgent.getDbrTypeNum_GR();
                     if (dbrTypeNum_GR === undefined) {
-                        logs.debug(this.getMainProcessId(), `Channel ${channelName} does not have a GR type data.`);
+                        Log.debug(this.getMainProcessId(), `Channel ${channelName} does not have a GR type data.`);
                         return { value: undefined };
                     }
                     result = await channelAgent.get(this.getId(), dbrTypeNum_GR, undefined);
 
                     const dbrTypeNum_TIME = channelAgent.getDbrTypeNum_TIME();
                     if (dbrTypeNum_TIME === undefined) {
-                        logs.debug(this.getMainProcessId(), `Channel ${channelName} does not have a TIME type data.`);
+                        Log.debug(this.getMainProcessId(), `Channel ${channelName} does not have a TIME type data.`);
                     } else {
                         result = { ...result, ...(await channelAgent.get(this.getId(), dbrTypeNum_TIME, undefined)) };
                     }
@@ -493,7 +493,7 @@ export class DisplayWindowAgent {
             connectSuccess = this.addAndConnectLocalChannel(channelName);
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-                logs.debug(this.getMainProcessId(), `tcaGetMeta: Local channel ${channelName} cannot be created/connected.`);
+                Log.debug(this.getMainProcessId(), `tcaGetMeta: Local channel ${channelName} cannot be created/connected.`);
                 return result;
             }
 
@@ -532,7 +532,7 @@ export class DisplayWindowAgent {
         let channelAgent = channelAgentsManager.getChannelAgent(channelName);
 
         if (!connectSuccess || channelAgent === undefined) {
-            logs.debug(this.getMainProcessId(), `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
+            Log.debug(this.getMainProcessId(), `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
             return { value: undefined };
         }
 
@@ -583,7 +583,7 @@ export class DisplayWindowAgent {
             channelAgent.setDbrType(dbrMetaData["type"]);
             channelAgent.setDbrStrings(dbrMetaData["strings"]);
         } else {
-            logs.error(this.getMainProcessId(), `Cannot find the agent for local channel ${channelName}`);
+            Log.error(this.getMainProcessId(), `Cannot find the agent for local channel ${channelName}`);
         }
     };
 
@@ -617,7 +617,7 @@ export class DisplayWindowAgent {
             }
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
-                logs.debug(this.getMainProcessId(), `tcaPut: EPICS channel ${channelName} cannot be created/connected.`);
+                Log.debug(this.getMainProcessId(), `tcaPut: EPICS channel ${channelName} cannot be created/connected.`);
                 return false;
             }
             // (2)
@@ -636,7 +636,7 @@ export class DisplayWindowAgent {
             const connectSuccess = this.addAndConnectLocalChannel(channelName);
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-                logs.debug(this.getMainProcessId(), `tcaPut: Local channel ${channelName} cannot be created/connected.`);
+                Log.debug(this.getMainProcessId(), `tcaPut: Local channel ${channelName} cannot be created/connected.`);
                 return false;
             }
             channelAgent.put(this.getId(), dbrData as type_LocalChannel_data);
@@ -676,7 +676,7 @@ export class DisplayWindowAgent {
 
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
-                logs.debug(this.getMainProcessId(), `tcaMonitor: EPICS channel ${channelName} cannot be created/connected.`);
+                Log.debug(this.getMainProcessId(), `tcaMonitor: EPICS channel ${channelName} cannot be created/connected.`);
                 return false;
             }
             // (2)
@@ -685,7 +685,7 @@ export class DisplayWindowAgent {
             const connectSuccess = await this.addAndConnectLocalChannel(channelName);
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-                logs.debug(this.getMainProcessId(), `tcaMonitor: Local channel ${channelName} cannot be created/connected.`);
+                Log.debug(this.getMainProcessId(), `tcaMonitor: Local channel ${channelName} cannot be created/connected.`);
                 return false;
             }
             // (2)
@@ -719,7 +719,7 @@ export class DisplayWindowAgent {
      * (8) remove casnooper registration for this window. Shut down ca snooper server if there is no window registered.
      */
     handleWindowClosed = () => {
-        logs.info(this.getMainProcessId(), "close display window", this.getId())
+        Log.info(this.getMainProcessId(), "close display window", this.getId())
         // (7)
         this.getWindowAgentsManager().getMainProcess().releaseDisplayWindowHtmlIndex(this.getId());
         // (1)
@@ -1054,7 +1054,7 @@ export class DisplayWindowAgent {
             const menu = Menu.buildFromTemplate(contextMenuTemplate);
             menu.popup();
         } else {
-            logs.error(this.getMainProcessId(), "Cannot show context menu");
+            Log.error(this.getMainProcessId(), "Cannot show context menu");
         }
     };
 
@@ -1097,7 +1097,7 @@ export class DisplayWindowAgent {
             const menu = Menu.buildFromTemplate(contextMenuTemplate);
             menu.popup();
         } else {
-            logs.error(this.getMainProcessId(), "Cannot show context menu");
+            Log.error(this.getMainProcessId(), "Cannot show context menu");
         }
     };
 
@@ -1122,7 +1122,7 @@ export class DisplayWindowAgent {
                     // .then((pdfContents: Buffer) => {
                     let pdfFileName = dialog.showSaveDialogSync({ title: "save pdf file", filters: [{ name: "pdf", extensions: ["pdf"] }] });
                     if (pdfFileName === undefined) {
-                        logs.debug(this.getMainProcessId(), "pdf file not selected.");
+                        Log.debug(this.getMainProcessId(), "pdf file not selected.");
                         return;
                     }
                     fs.writeFile(pdfFileName, pdfContentsBuffer, (err) => {
@@ -1138,7 +1138,7 @@ export class DisplayWindowAgent {
                     });
                 }
             } catch (e) {
-                logs.error(this.getMainProcessId(), e);
+                Log.error(this.getMainProcessId(), e);
             }
             // });
         }
@@ -1147,7 +1147,7 @@ export class DisplayWindowAgent {
     takeScreenshot = () => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow === undefined) {
-            logs.error(this.getMainProcessId(), "Browser window does not exist");
+            Log.error(this.getMainProcessId(), "Browser window does not exist");
             return;
         }
         const webContents = browserWindow.webContents;
@@ -1157,7 +1157,7 @@ export class DisplayWindowAgent {
                 filters: [{ name: "Image Files", extensions: ["png"] }],
             });
             if (imageFileName === undefined) {
-                logs.debug(this.getMainProcessId(), "Image file not selected, image not saved");
+                Log.debug(this.getMainProcessId(), "Image file not selected, image not saved");
                 return;
             }
             fs.writeFile(imageFileName, image.toPNG(), (err) => {
@@ -1177,7 +1177,7 @@ export class DisplayWindowAgent {
     takeScreenshotToFolder = () => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow === undefined) {
-            logs.error(this.getMainProcessId(), "Browser window does not exist");
+            Log.error(this.getMainProcessId(), "Browser window does not exist");
             return;
         }
         let folder = os.homedir();
@@ -1212,7 +1212,7 @@ export class DisplayWindowAgent {
                 // )
             });
         }).catch((err) => {
-            logs.error(this.getMainProcessId(), err)
+            Log.error(this.getMainProcessId(), err)
             this.sendFromMainProcess("dialog-show-message-box",
                 {
                     messageType: "error",
@@ -1226,7 +1226,7 @@ export class DisplayWindowAgent {
     takeScreenshotToClipboard = () => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow === undefined) {
-            logs.error(this.getMainProcessId(), "Browser window does not exist");
+            Log.error(this.getMainProcessId(), "Browser window does not exist");
             return;
         }
         const webContents = browserWindow.webContents;
@@ -1271,7 +1271,7 @@ export class DisplayWindowAgent {
         if (mainWindowAgent !== undefined) {
             mainWindowAgent.sendFromMainProcess("new-thumbnail", result);
         } else {
-            logs.error(this.getMainProcessId(), "Main window not ready");
+            Log.error(this.getMainProcessId(), "Main window not ready");
         }
     };
 
@@ -1312,14 +1312,14 @@ export class DisplayWindowAgent {
         } catch (e) {
             // ! When the app quits, it may cause an unexpected error that pops up in GUI.
             // ! The worst part is I cannot catch it, as it happens in the worker thread.
-            // logs.error(this.getMainProcessId(), e);
+            // Log.error(this.getMainProcessId(), e);
         }
     };
 
     print = () => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow === undefined) {
-            logs.error(this.getMainProcessId(), "Browser window does not exist");
+            Log.error(this.getMainProcessId(), "Browser window does not exist");
             return;
         }
         browserWindow.webContents.print({
@@ -1337,9 +1337,7 @@ export class DisplayWindowAgent {
      * to avoid stack overflow. In this case, we only send the message out to the renderer process.
      */
     sendFromMainProcess(channel: string, ...args: any[]) {
-        const oldLogsModeMask = logs.getModeMask();
         if (args[args.length - 1] === "temporarily-disable-log-mechanism") {
-            logs.setModeMask(0b111);
             args.splice(args.length - 1, 1);
         }
 
@@ -1361,7 +1359,7 @@ export class DisplayWindowAgent {
 
             if (wsClient === undefined) {
                 // temporarily disable writing the LogViewer to avoid stack overflow
-                logs.error(this.getMainProcessId(), "Cannot find WebSocket IPC client for window", this.getId());
+                Log.error(this.getMainProcessId(), "Cannot find WebSocket IPC client for window", this.getId());
                 return;
             }
 
@@ -1369,7 +1367,7 @@ export class DisplayWindowAgent {
                 // add processId
                 // this._browserWindow?.webContents.send(channel, processId, ...args);
                 // wsClient.send(channel, ...[processId, ...args]);
-                logs.debug(this.getMainProcessId(), "send from main process:", { processId: processId, windowId: this.getId(), eventName: channel, data: args })
+                Log.debug(this.getMainProcessId(), "send from main process:", { processId: processId, windowId: this.getId(), eventName: channel, data: args })
                 if (typeof wsClient !== "string") {
                     wsClient.send(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: args }));
                 }
@@ -1390,10 +1388,9 @@ export class DisplayWindowAgent {
                     }
                 }
             } catch (e) {
-                logs.error(this.getMainProcessId(), e);
+                Log.error(this.getMainProcessId(), e);
             }
         }
-        logs.setModeMask(oldLogsModeMask);
     }
 
     // --------------------- window --------------------
@@ -1412,7 +1409,7 @@ export class DisplayWindowAgent {
                     saveFolder = saveFolderTmp;
                 }
             } catch (e) {
-                logs.error(this.getMainProcessId(), e);
+                Log.error(this.getMainProcessId(), e);
             }
         }
 
@@ -1421,7 +1418,7 @@ export class DisplayWindowAgent {
             const windowTitle = browserWindow.getTitle();
             desktopCapturer.getSources({ types: ["window"] }).then(async (sources: Electron.DesktopCapturerSource[]) => {
                 for (const source of sources) {
-                    logs.debug(this.getMainProcessId(), source.name);
+                    Log.debug(this.getMainProcessId(), source.name);
                     // if there are multiple windows that have the same title, the
                     // first one will be picked. This one is the one that
                     // we initiate the context menu
@@ -1489,7 +1486,7 @@ export class DisplayWindowAgent {
                     const window = new BrowserWindow(windowOptions);
                     this._browserWindow = window;
                     this._browserWindow.webContents.setWindowOpenHandler(({ url }) => {
-                        logs.debug(this.getMainProcessId(), `open new window ${url}`);
+                        Log.debug(this.getMainProcessId(), `open new window ${url}`);
                         return { action: "allow" };
                     });
                     // events
@@ -1579,7 +1576,7 @@ export class DisplayWindowAgent {
                         ipcServerPort: ipcServerPort,
                         displayWindowId: displayWindowId,
                     };
-                    logs.debug("-1", "IPC websocket: replay for", command, msg);
+                    Log.debug("-1", "IPC websocket: replay for", command, msg);
                     httpResponse.json(msg);
                 } else if (requestMethod === "GET") {
 
@@ -1649,7 +1646,7 @@ export class DisplayWindowAgent {
             this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === this
         ) {
             this.getBrowserWindow()?.webContents.close();
-            logs.error(this.getMainProcessId(), `You are trying to close a preloaded display window or preloaded embedded display`);
+            Log.error(this.getMainProcessId(), `You are trying to close a preloaded display window or preloaded embedded display`);
             return;
         }
         this.sendFromMainProcess("window-will-be-closed");
@@ -1667,7 +1664,7 @@ export class DisplayWindowAgent {
     setZoomFactor = (level: number) => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow instanceof BrowserWindow) {
-            logs.debug(this.getMainProcessId(), this.getId());
+            Log.debug(this.getMainProcessId(), this.getId());
             browserWindow.webContents.setZoomFactor(level);
         } else {
             // do nothing
@@ -1793,7 +1790,7 @@ export class DisplayWindowAgent {
             this.hiddenWindow = true;
             browserWindow.hide();
         } else {
-            logs.error(this.getMainProcessId(), `Error: cannot hide window ${this.getId()}`);
+            Log.error(this.getMainProcessId(), `Error: cannot hide window ${this.getId()}`);
         }
     };
 
@@ -1803,11 +1800,11 @@ export class DisplayWindowAgent {
     show = () => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow instanceof BrowserWindow) {
-            logs.debug(this.getMainProcessId(), `Show display window ${this.getId()} with ${this.getTdlFileName()}`);
+            Log.debug(this.getMainProcessId(), `Show display window ${this.getId()} with ${this.getTdlFileName()}`);
             this.hiddenWindow = false;
             browserWindow.show();
         } else {
-            logs.error(this.getMainProcessId(), `Error: cannot show window ${this.getId()}`);
+            Log.error(this.getMainProcessId(), `Error: cannot show window ${this.getId()}`);
         }
     };
 
@@ -1816,7 +1813,7 @@ export class DisplayWindowAgent {
         if (browserWindow instanceof BrowserWindow) {
             browserWindow.focus();
         } else {
-            logs.error(this.getMainProcessId(), `Error: cannot focus window ${this.getId()}`);
+            Log.error(this.getMainProcessId(), `Error: cannot focus window ${this.getId()}`);
         }
     };
 
@@ -1825,7 +1822,7 @@ export class DisplayWindowAgent {
         if (browserWindow instanceof BrowserWindow) {
             browserWindow.close();
         } else {
-            logs.error(this.getMainProcessId(), `Error: cannot close window ${this.getId()}`);
+            Log.error(this.getMainProcessId(), `Error: cannot close window ${this.getId()}`);
         }
     };
 

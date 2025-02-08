@@ -21,7 +21,7 @@ import { XYPlot } from "../../../rendererProcess/widgets/XYPlot/XYPlot";
 import { Terminal } from "../../../rendererProcess/widgets/Terminal/Terminal";
 import { Calculator } from "../../../rendererProcess/widgets/Calculator/Calculator";
 import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/ChannelGraph";
-import { Log } from "../../../rendererProcess/global/Log";
+import { Log, type_log_levels } from "../../log/Log";
 import { LogViewer } from "../../../rendererProcess/widgets/LogViewer/LogViewer";
 import { ContextMenu } from "./ContextMenu";
 import { PromptOnDisplayWindow } from "../../../rendererProcess/helperWidgets/Prompt/PromptOnDisplayWindow";
@@ -84,6 +84,9 @@ export class DisplayWindowClient {
     private _textEditorModified: boolean = false;
 
     constructor(displayWindowId: string, ipcServerPort: number | undefined, hostname: string | undefined = undefined) {
+        // set log level
+        Log.setLogLevel(type_log_levels.error);
+        
         Log.debug("Start to create DisplayWindowClient object");
         this._loadCustomFonts();
         // do it first

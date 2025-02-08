@@ -6,7 +6,7 @@ import { CheckBoxSidebar } from "./CheckBoxSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { CheckBoxRules } from "./CheckBoxRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_CheckBox_tdl = {
 	type: string;

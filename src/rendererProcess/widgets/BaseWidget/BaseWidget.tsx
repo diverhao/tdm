@@ -10,7 +10,7 @@ import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { BaseWidgetSidebar } from "./BaseWidgetSidebar";
 import { rendererWindowStatus } from "../../global/Widgets";
 import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import { GlobalVariables } from "../../global/GlobalVariables";
 
 export type type_BaseWidget_tdl = {

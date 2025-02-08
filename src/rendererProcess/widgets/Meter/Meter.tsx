@@ -5,7 +5,7 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { MeterRules } from "./MeterRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import { ChannelSeverity } from "../../channel/TcaChannel";
 import { refineTicks, calcTicks } from "../../global/GlobalMethods";
 

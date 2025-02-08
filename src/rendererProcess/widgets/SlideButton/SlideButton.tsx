@@ -6,7 +6,7 @@ import { SlideButtonSidebar } from "./SlideButtonSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { SlideButtonRules } from "./SlideButtonRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_SlideButton_tdl = {
 	type: string;

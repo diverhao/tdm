@@ -1,9 +1,7 @@
 // import { writeFileSync } from "fs";
 import { IpcManagerOnMainProcesses } from "./IpcManagerOnMainProcesses";
 import net from "net";
-import { logs } from "../global/GlobalVariables";
-import path from "path";
-import * as os from "os";
+import { Log } from "../log/Log";
 
 /**
  * 
@@ -92,7 +90,7 @@ export class SshServer {
                 }, 1000)
                 // clear the self destruction countdown of the insance
                 this.getIpcManager().getMainProcesses().clearSshServerSelfDestructionCountDown();
-                logs.debug("-1", "SSH TCP server got a client:", socket.remoteAddress, socket.remotePort)
+                Log.debug("-1", "SSH TCP server got a client:", socket.remoteAddress, socket.remotePort)
                 this.startTcpEventListeners();
 
                 // tell client the port once the connection is established

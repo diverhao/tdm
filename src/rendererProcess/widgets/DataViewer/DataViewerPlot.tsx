@@ -4,7 +4,7 @@ import { ElementProfileBlockNameInput } from "../../mainWindow/MainWindowStyledC
 import * as GlobalMethods from "../../global/GlobalMethods";
 import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 type type_yAxis = {
     label: string;

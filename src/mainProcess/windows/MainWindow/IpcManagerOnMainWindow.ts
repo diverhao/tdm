@@ -2,7 +2,7 @@ import ReactDOM from "react-dom/client";
 import { MainWindowClient, mainWindowState } from "./MainWindowClient";
 import { type_args } from "../../arg/ArgParser";
 import { MainWindowProfileRunPage } from "../../../rendererProcess/mainWindow/MainWindowProfileRunPage";
-import { Log } from "../../../rendererProcess/global/Log";
+import { Log } from "../../log/Log";
 import { type_DialogInputBox, type_DialogMessageBox } from "../../../rendererProcess/helperWidgets/Prompt/Prompt";
 import { MainWindowProfileEditPage } from "../../../rendererProcess/mainWindow/MainWindowProfileEditPage";
 import { MainWindowStartupPage } from "../../../rendererProcess/mainWindow/MainWindowStartupPage";

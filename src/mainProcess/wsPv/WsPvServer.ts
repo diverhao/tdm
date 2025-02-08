@@ -4,7 +4,7 @@ import { MainProcess } from "../mainProcess/MainProcess";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { CaChannelAgent } from "../channel/CaChannelAgent";
 import { LocalChannelAgent } from "../channel/LocalChannelAgent";
-import { logs } from "../global/GlobalVariables";
+import { Log } from "../log/Log";
 
 export class WsPvServer {
     server: WebSocketServer | undefined;
@@ -18,19 +18,19 @@ export class WsPvServer {
     }
 
     quit = () => {
-        logs.info(this.getMainProcessId(), "Close WebSocket PV Server");
+        Log.info(this.getMainProcessId(), "Close WebSocket PV Server");
         this.server?.close();
     };
 
     createServer = () => {
-        logs.info(this.getMainProcessId(), `Creating WebSocket PV server on port ${this.getPort()}`);
+        Log.info(this.getMainProcessId(), `Creating WebSocket PV server on port ${this.getPort()}`);
         this.server = new WebSocket.Server({
             port: this.getPort(),
         });
 
         this.server.on("error", (err: Error) => {
             if (err["message"].includes("EADDRINUSE")) {
-                logs.debug(this.getMainProcessId(), `Port ${this.port} is occupied, try port ${this.port + 1}`);
+                Log.debug(this.getMainProcessId(), `Port ${this.port} is occupied, try port ${this.port + 1}`);
                 this.port = this.port + 1;
                 this.createServer();
             }
@@ -45,19 +45,19 @@ export class WsPvServer {
                     const type = message["type"];
                     const args = message["args"];
                     if (type === "fatal") {
-                        logs.fatal(this.getMainProcessId(), args);
+                        Log.fatal(this.getMainProcessId(), args);
                     } else if (type === "error") {
-                        logs.error(this.getMainProcessId(), args);
+                        Log.error(this.getMainProcessId(), args);
                     } else if (type === "warn") {
-                        logs.warn(this.getMainProcessId(), args);
+                        Log.warn(this.getMainProcessId(), args);
                     } else if (type === "info") {
-                        logs.info(this.getMainProcessId(), args);
+                        Log.info(this.getMainProcessId(), args);
                     } else if (type === "debug") {
-                        logs.debug(this.getMainProcessId(), args);
+                        Log.debug(this.getMainProcessId(), args);
                     } else if (type === "trace") {
-                        logs.trace(this.getMainProcessId(), args);
+                        Log.trace(this.getMainProcessId(), args);
                     } else {
-                        logs.error(this.getMainProcessId(), "Received the following WS PV log message, but it is in wrong format");
+                        Log.error(this.getMainProcessId(), "Received the following WS PV log message, but it is in wrong format");
                         console.log(args);
                     }
                     return;
@@ -67,7 +67,7 @@ export class WsPvServer {
                 const command = message["command"];
                 const displayWindowId = message["displayWindowId"];
                 if (channelName === undefined || command === undefined || displayWindowId === undefined) {
-                    logs.debug(this.getMainProcessId(), "Message does not have channelName, command, or displayWindowId");
+                    Log.debug(this.getMainProcessId(), "Message does not have channelName, command, or displayWindowId");
                     return;
                 }
                 const channelAgentsManager = this.getMainProcess().getChannelAgentsManager();
@@ -75,20 +75,20 @@ export class WsPvServer {
                 const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
                 const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
                 if (displayWindowAgent === undefined) {
-                    logs.debug(this.getMainProcessId(), `Cannot find display window ${displayWindowId}`);
+                    Log.debug(this.getMainProcessId(), `Cannot find display window ${displayWindowId}`);
                     // the incoming request looks suspacious, do not reply
                     return;
                 }
 
                 if (channelAgent === undefined) {
-                    logs.debug(this.getMainProcessId(), `Cannot find channel ${channelName}`);
+                    Log.debug(this.getMainProcessId(), `Cannot find channel ${channelName}`);
                     // bounce back the message with an undefined value
                     wsClient.send(JSON.stringify({ ...message, value: undefined }));
                     return;
                 }
 
                 if (command === "GET") {
-                    logs.debug(this.getMainProcessId(), `WebSocket PV server, GET ${message}`);
+                    Log.debug(this.getMainProcessId(), `WebSocket PV server, GET ${message}`);
                     // send data
                     let dbrData: Record<string, any> = {};
                     // may be undefined
@@ -98,7 +98,7 @@ export class WsPvServer {
                     } else if (channelAgent instanceof LocalChannelAgent) {
                         dbrData = await channelAgent.getDbrData();
                     } else {
-                        logs.debug(this.getMainProcessId(), `Cannot find channel ${channelName}`);
+                        Log.debug(this.getMainProcessId(), `Cannot find channel ${channelName}`);
                     }
                     wsClient.send(JSON.stringify({ ...dbrData, ...message, channelName: channelName }));
                 } else if (command === "MONITOR") {
@@ -113,7 +113,7 @@ export class WsPvServer {
                 } else if (command === "PUT") {
                     const value = message["value"];
                     if (value === undefined) {
-                        logs.debug(this.getMainProcessId(), "PUT command does not have value");
+                        Log.debug(this.getMainProcessId(), "PUT command does not have value");
                         return;
                     }
                     if (channelAgent instanceof CaChannelAgent) {
@@ -125,10 +125,10 @@ export class WsPvServer {
                             value: value,
                         });
                     } else {
-                        logs.debug(this.getMainProcessId(), `Cannot find channel ${channelName}`);
+                        Log.debug(this.getMainProcessId(), `Cannot find channel ${channelName}`);
                     }
                 } else {
-                    logs.debug(this.getMainProcessId(), `Unknow command ${command}`);
+                    Log.debug(this.getMainProcessId(), `Unknow command ${command}`);
                 }
             });
 
@@ -139,7 +139,7 @@ export class WsPvServer {
                 for (const displayWindowAgent of Object.values(displayWindowAgents)) {
                     if (displayWindowAgent instanceof DisplayWindowAgent) {
                         if (wsClient === displayWindowAgent.getWebSocketMonitorClient()) {
-                            logs.debug(this.getMainProcessId(), `Remove WebSocket PV for display window ${displayWindowAgent.getId()}`);
+                            Log.debug(this.getMainProcessId(), `Remove WebSocket PV for display window ${displayWindowAgent.getId()}`);
                             displayWindowAgent.setWebSocketMonitorClient(undefined);
                             displayWindowAgent.setWebSocketMonitorChannelNames([]);
                         }

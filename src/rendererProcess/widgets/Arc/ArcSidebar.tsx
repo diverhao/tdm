@@ -5,7 +5,7 @@ import { SidebarPolylineFill } from "../../helperWidgets/SidebarComponents/Sideb
 import { SidebarArcAngleStart } from "../../helperWidgets/SidebarComponents/SidebarArcAngleStart";
 import { SidebarArcAngleRange } from "../../helperWidgets/SidebarComponents/SidebarArcAngleRange";
 import { SidebarArcShowRadius } from "../../helperWidgets/SidebarComponents/SidebarArcShowRadius";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class ArcSidebar extends BaseWidgetSidebar {

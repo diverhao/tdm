@@ -1,5 +1,5 @@
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
-import { logs } from "../../global/GlobalVariables";
+import { Log } from "../../log/Log";
 
 /**
  * Singleton class representing the context menu in desktop mode and ssh-client mode.<br>
@@ -185,7 +185,7 @@ export class ContextMenuDesktop {
                         })
                     }
                 } else {
-                    logs.error(this.getMainProcessId(), "main process mode must be desktop or ssh-client");
+                    Log.error(this.getMainProcessId(), "main process mode must be desktop or ssh-client");
                 }
             },
         },
@@ -881,7 +881,7 @@ export class ContextMenuDesktop {
                     }
 
                 } else {
-                    logs.error(this.getMainProcessId(), "main process mode must be desktop or ssh-client");
+                    Log.error(this.getMainProcessId(), "main process mode must be desktop or ssh-client");
                 }
             },
 
@@ -1161,7 +1161,7 @@ export class ContextMenuDesktop {
                         })
                     }
                 } else {
-                    logs.error(this.getMainProcessId(), "main process mode must be desktop or ssh-client");
+                    Log.error(this.getMainProcessId(), "main process mode must be desktop or ssh-client");
                 }
             },
 

@@ -66,9 +66,8 @@ import { PvMonitor } from "../widgets/PvMonitor/PvMonitor";
 import { ActionButton } from "../widgets/ActionButton/ActionButton";
 import { type_LocalChannel_data } from "../../mainProcess/channel/LocalChannelAgent";
 import path, { dirname } from "path";
-import { Log } from "./Log";
+import { Log } from "../../mainProcess/log/Log";
 import { SidebarWidgetsList } from "../helperWidgets/SidebarComponents/SidebarWidgetsList";
-import { logs } from "../../mainProcess/global/GlobalVariables";
 
 /**
  * Widget object types union: 3 special types + BaseWidget.

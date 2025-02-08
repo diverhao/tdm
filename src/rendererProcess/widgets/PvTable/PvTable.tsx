@@ -15,7 +15,7 @@ import { Table } from "../../helperWidgets/Table/Table";
 import { AlarmOutlineStyle } from "../BaseWidget/BaseWidget";
 import { ElementDropDownMenu } from "../../helperWidgets/SharedElements/DropDownMenu";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_PvTable_tdl = {
     type: string;

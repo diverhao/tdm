@@ -8,7 +8,7 @@ import { calcTicks, refineTicks } from "../../global/GlobalMethods";
 import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import * as GlobalMethods from "../../global/GlobalMethods";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_yAxis = {
     label: string;

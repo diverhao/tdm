@@ -10,7 +10,7 @@ import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { XYPlot } from "../XYPlot/XYPlot";
 import { convertDateObjToString } from "../../global/GlobalMethods";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_CaProtoSearchData = {
     msSinceEpoch: number,

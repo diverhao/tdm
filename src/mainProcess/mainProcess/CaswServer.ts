@@ -1,6 +1,6 @@
 import { MainProcess } from "./MainProcess";
 import dgram from "dgram";
-import { logs } from "../global/GlobalVariables";
+import { Log } from "../log/Log";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 
 type type_CaUdpMessage = {
@@ -55,10 +55,10 @@ export class CaswServer {
             this.getDisplayWindowIds().splice(index, 1);
         }
         if (this.getDisplayWindowIds().length === 0 || forceClose === true) {
-            logs.info(this.getMainProcess().getProcessId(), "------------------- close CASW server ---------------------------- ")
+            Log.info(this.getMainProcess().getProcessId(), "------------------- close CASW server ---------------------------- ")
             this.closeServer();
         } else {
-            logs.info(this.getMainProcess().getProcessId(), "-------------------- not close CASW server ---------------------------- ")
+            Log.info(this.getMainProcess().getProcessId(), "-------------------- not close CASW server ---------------------------- ")
         }
     }
 

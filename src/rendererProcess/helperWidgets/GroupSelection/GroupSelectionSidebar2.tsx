@@ -1,7 +1,7 @@
 import * as React from "react";
 import { GroupSelection2 } from "./GroupSelection2";
 import { calcSidebarWidth, g_widgets1, GlobalVariables } from "../../global/GlobalVariables";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export class GroupSelectionSidebar2 {
     private _widgetKey: string;

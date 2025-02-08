@@ -2,7 +2,7 @@ import { nativeImage, WebContents, BrowserWindow, Menu, App } from "electron";
 import * as path from "path";
 import * as url from "url";
 import { WindowAgentsManager } from "../WindowAgentsManager";
-import { logs } from "../../global/GlobalVariables";
+import { Log } from "../../log/Log";
 import { generateAboutInfo } from "../../global/GlobalMethods";
 import pidusage from "pidusage";
 import { writeFileSync } from "fs";
@@ -126,10 +126,10 @@ export class MainWindowAgent {
                 //             const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
                 //             if (selectedProfile === undefined) {
                 //                 // pop-up an error message if no profile is selected
-                //                 logs.error("-1", "No profile selected, failed to open", openFilePath);
+                //                 Log.error("-1", "No profile selected, failed to open", openFilePath);
                 //                 const mainWindowAgent = mainProcess.getWindowAgentsManager().getMainWindowAgent();
                 //                 if (mainWindowAgent instanceof MainWindowAgent) {
-                //                     logs.debug("-1", "sending prompt to show the error message");
+                //                     Log.debug("-1", "sending prompt to show the error message");
                 //                     mainWindowAgent.sendFromMainProcess("show-prompt", {
                 //                         type: "error-message",
                 //                         messages: [`Failed to open ${openFilePath}.`, "Reason: no profile selected"],
@@ -268,7 +268,7 @@ export class MainWindowAgent {
      */
     handleWindowClosed = () => {
         // writeFileSync("/Users/haohao/tdm.log", `main window closed ===================== cleaning up stuff\n`, {flag: "a"});
-        logs.info(this.getMainProcessId(), "close main window", this.getId())
+        Log.info(this.getMainProcessId(), "close main window", this.getId())
         this.getWindowAgentsManager().removeAgent(this._id);
 
         // check if there is any other BrowserWindow,
@@ -311,7 +311,7 @@ export class MainWindowAgent {
     show = () => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow === undefined) {
-            logs.error(this.getMainProcessId(), "Main window does not exist, nothing to pop up");
+            Log.error(this.getMainProcessId(), "Main window does not exist, nothing to pop up");
         } else {
             browserWindow.show();
         }
@@ -319,7 +319,7 @@ export class MainWindowAgent {
     focus = () => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow === undefined) {
-            logs.error(this.getMainProcessId(), "Main window does not exist, nothing to pop up");
+            Log.error(this.getMainProcessId(), "Main window does not exist, nothing to pop up");
         } else {
             browserWindow.focus();
         }
@@ -384,7 +384,7 @@ export class MainWindowAgent {
             const wsClient = ipcManagerOnMainProcesses.getClients()[this.getId()];
 
             if (wsClient === undefined) {
-                logs.error(this.getMainProcessId(), "Cannot find WebSocket IPC client for window", this.getId());
+                Log.error(this.getMainProcessId(), "Cannot find WebSocket IPC client for window", this.getId());
                 return;
             }
             try {
@@ -394,7 +394,7 @@ export class MainWindowAgent {
                     wsClient.send(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: args }));
                 }
             } catch (e) {
-                logs.error(this.getMainProcessId(), e);
+                Log.error(this.getMainProcessId(), e);
             }
         }
     }
@@ -488,7 +488,7 @@ export class MainWindowAgent {
                         }
                         const imageBuffer = resizedImage.toPNG();
                         const imageBase64 = imageBuffer.toString("base64");
-                        logs.error(this.getMainProcessId(), "There is something wrong with take iamge in main window ???", `data:image/png;base64,${imageBase64}`.length)
+                        Log.error(this.getMainProcessId(), "There is something wrong with take iamge in main window ???", `data:image/png;base64,${imageBase64}`.length)
                         resolve(`data:image/png;base64,${imageBase64}`);
                         // const displayWindowId = this.getId();
                         // if (this.readyToClose === false) {
@@ -500,9 +500,9 @@ export class MainWindowAgent {
         } catch (e) {
             // ! When the app quits, it may cause an unexpected error that pops up in GUI.
             // ! The worst part is I cannot catch it, as it happens in the worker thread.
-            // logs.error(this.getMainProcessId(), e);
+            // Log.error(this.getMainProcessId(), e);
         }
-        logs.error(this.getMainProcessId(), "There is something wrong with take iamge in main window")
+        Log.error(this.getMainProcessId(), "There is something wrong with take iamge in main window")
         return thumbnail
     };
 
@@ -574,7 +574,7 @@ export class MainWindowAgent {
         if (browserWindow instanceof BrowserWindow) {
             browserWindow.close();
         } else {
-            logs.error(this.getMainProcessId(), `Error: cannot close window ${this.getId()}`);
+            Log.error(this.getMainProcessId(), `Error: cannot close window ${this.getId()}`);
         }
     };
 

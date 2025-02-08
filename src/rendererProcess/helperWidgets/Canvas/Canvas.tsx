@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import {
     getMouseEventClientX,
     getMouseEventClientY,

@@ -3,7 +3,7 @@ import path from "path";
 import { Profile } from "./Profile";
 import { v4 as uuidv4, validate as uuidValidate } from "uuid";
 const fetch = (...args: any[]) => import("node-fetch").then(({ default: fetch }: any) => fetch(...(args as any)));
-import { logs } from "../global/GlobalVariables";
+import { Log } from "../log/Log";
 
 /**
  * Represents the profiles contained in the JSON-style file. If the file cannot be read/written, the profiles are always
@@ -153,26 +153,26 @@ export class Profiles {
                 const val = entry[key];
                 if (typeof val !== "string") {
                     const errMsg = `Entry ${entryName}'s description is not a string.`;
-                    logs.error('-1', errMsg);
+                    Log.error('-1', errMsg);
                     // throw new Error(errMsg);
                 }
             } else if (key === "type") {
                 const val = entry[key];
                 if (typeof val !== "string") {
                     const errMsg = `Entry ${entryName}'s type is not a string.`;
-                    logs.error('-1', errMsg);
+                    Log.error('-1', errMsg);
                     // throw new Error(errMsg);
                 }
             } else if (key === "choices") {
                 const val = entry[key];
                 if (!Array.isArray(val)) {
                     const errMsg = `Entry ${entryName}'s choices is not a string array.`;
-                    logs.error('-1', errMsg);
+                    Log.error('-1', errMsg);
                     // throw new Error(errMsg);
                 }
             } else {
                 const errMsg = `Entry ${entryName} should not have a ${key} property.`;
-                logs.error('-1', errMsg);
+                Log.error('-1', errMsg);
                 // no need to throw
                 // throw new Error(errMsg);
             }

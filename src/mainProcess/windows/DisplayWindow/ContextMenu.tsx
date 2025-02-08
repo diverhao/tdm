@@ -1,7 +1,7 @@
 import * as React from "react";
 import { DisplayWindowClient } from "./DisplayWindowClient";
 import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
-import { Log } from "../../../rendererProcess/global/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import ReactDOM from 'react-dom/client';
 
 

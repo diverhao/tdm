@@ -7,7 +7,7 @@ import { TextUpdate } from "../../widgets/TextUpdate/TextUpdate";
 import { Canvas } from "../Canvas/Canvas";
 import { DisplayWindowClient } from "../../../mainProcess/windows/DisplayWindow/DisplayWindowClient";
 import { type_tdl } from "../../../mainProcess/file/FileReader";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 /**
  * Update the widgets.

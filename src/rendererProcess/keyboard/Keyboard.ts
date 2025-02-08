@@ -2,7 +2,7 @@ import { DisplayWindowClient } from "../../mainProcess/windows/DisplayWindow/Dis
 import { g_widgets1 } from "../global/GlobalVariables";
 import { BaseWidget } from "../widgets/BaseWidget/BaseWidget";
 import { rendererWindowStatus } from "../global/Widgets";
-import { Log } from "../global/Log";
+import {Log} from "../../mainProcess/log/Log";
 
 export class Keyboard {
     private _displayWindowClient: DisplayWindowClient;

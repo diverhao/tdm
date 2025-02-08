@@ -12,7 +12,7 @@ import { SidebarSlideButtonBoxRatio } from "../../helperWidgets/SidebarComponent
 // import { SidebarBooleanButtonItems } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonItems";
 import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems"
 import { SidebarSlideButtonItems } from "../../helperWidgets/SidebarComponents/SidebarSlideButtonItems";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class SlideButtonSidebar extends BaseWidgetSidebar {

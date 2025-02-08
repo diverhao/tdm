@@ -1,4 +1,4 @@
-import { logs, websocketIpcServerPort } from "../global/GlobalVariables";
+import { Log } from "../log/Log";
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import { MainProcesses } from "./MainProcesses";
 import { IncomingMessage } from "http";
@@ -32,7 +32,7 @@ export class IpcManagerOnMainProcesses {
     }
 
     createServer = (httpsServer: https.Server | undefined) => {
-        logs.info('-1', `Creating WebSocket IPC server on port ${this.getPort()}`);
+        Log.info('-1', `Creating WebSocket IPC server on port ${this.getPort()}`);
 
         // if the main process mode is desktop, ssh-server, or ssh-client, websocket uses a unique port
         if (httpsServer === undefined) {
@@ -46,7 +46,7 @@ export class IpcManagerOnMainProcesses {
 
         this.server.on("error", (err: Error) => {
             if (err["message"].includes("EADDRINUSE")) {
-                logs.info('-1', `Port ${this.getPort()} is occupied, try port ${this.getPort() + 1} for websocket IPC server`);
+                Log.info('-1', `Port ${this.getPort()} is occupied, try port ${this.getPort() + 1} for websocket IPC server`);
                 let newPort = this.getPort() + 1;
                 this.setPort(newPort);
                 this.createServer(httpsServer);
@@ -56,17 +56,17 @@ export class IpcManagerOnMainProcesses {
         // IPC websocket server
         // when the display window becomes operating mode
         this.server.on("connection", (wsClient: WebSocket, request: IncomingMessage) => {
-            logs.info('-1', `WebSocket IPC Server got a connection from ${request.socket.remoteAddress}:${request.socket.remotePort}`);
+            Log.info('-1', `WebSocket IPC Server got a connection from ${request.socket.remoteAddress}:${request.socket.remotePort}`);
 
             wsClient.on("message", (messageBuffer: RawData) => {
                 const message = JSON.parse(messageBuffer.toString());
-                logs.debug("-1", "IPC websocket server received message", message);
+                Log.debug("-1", "IPC websocket server received message", message);
                 this.parseMessage(wsClient, message);
             });
 
             wsClient.on("error", (err: Error) => {
-                logs.error("-1", "ws IPC client got an error", err)
-                logs.error("-1", "close connection (as well as the renderer process window)");
+                Log.error("-1", "ws IPC client got an error", err)
+                Log.error("-1", "close connection (as well as the renderer process window)");
                 // same as "close" event below
                 const index = Object.values(this.getClients()).indexOf(wsClient);
                 if (index !== -1) {
@@ -134,7 +134,7 @@ export class IpcManagerOnMainProcesses {
 
         // find the MainProcess
         if (mainProcess === undefined) {
-            logs.error('-1', `Cannot find main process ${processId}`);
+            Log.error('-1', `Cannot find main process ${processId}`);
             return;
         } else {
             if (mainProcess.getMainProcessMode() === "ssh-client") {
@@ -176,7 +176,7 @@ export class IpcManagerOnMainProcesses {
                 // same as desktoip or web mode, always register the websocket client
                 // also forward the message to to ssh server, so that the window can be registered
                 if (this.getClients()[fullWindowId] === undefined) {
-                    logs.debug("-1", "register window", windowId, "for WebSocket IPC");
+                    Log.debug("-1", "register window", windowId, "for WebSocket IPC");
                     this.getClients()[fullWindowId] = wsClient;
                     // lift the block in create window method
                     // const windowAgent = mainProcess.getWindowAgentsManager().getAgent(windowId);
@@ -194,7 +194,7 @@ export class IpcManagerOnMainProcesses {
                 if (sshClient !== undefined) {
                     sshClient.sendToTcpServer(tcpMessage);
                 } else {
-                    logs.error("-1", "Error: the main process", processId, "is not a ssh client");
+                    Log.error("-1", "Error: the main process", processId, "is not a ssh client");
                 }
             } else if (mainProcess.getMainProcessMode() === "desktop" || mainProcess.getMainProcessMode() === "web") {
                 let fullWindowId = windowId;
@@ -202,12 +202,12 @@ export class IpcManagerOnMainProcesses {
                 // we register the client (window) upon this very first message from client
                 // no dedicated event listener needed for this message
                 // if (this.getClients()[fullWindowId] === undefined) {
-                //     logs.debug("-1", "register window", windowId, "for WebSocket IPC");
+                //     Log.debug("-1", "register window", windowId, "for WebSocket IPC");
                 //     this.getClients()[fullWindowId] = wsClient;
                 //     // lift the block in create window method
                 //     const windowAgent = mainProcess.getWindowAgentsManager().getAgent(windowId);
                 //     if (windowAgent instanceof MainWindowAgent || windowAgent instanceof DisplayWindowAgent) {
-                //         logs.debug("-1", "lift block for", windowId);
+                //         Log.debug("-1", "lift block for", windowId);
                 //         windowAgent.creationResolve("");
                 //     }
                 // } else {
@@ -284,7 +284,7 @@ export class IpcManagerOnMainProcesses {
         }
         // (2)
         delete this.getClients()[id];
-        logs.info("-1", "Remove websocket IPC client", id);
+        Log.info("-1", "Remove websocket IPC client", id);
     };
 
 

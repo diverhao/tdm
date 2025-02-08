@@ -6,7 +6,7 @@ import { LEDSidebar } from "./LEDSidebar";
 import { rgbaStrToRgbaArray } from "../../global/GlobalMethods";
 import { LEDRules } from "./LEDRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_LED_tdl = {
 	type: string;

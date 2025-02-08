@@ -6,7 +6,7 @@ import { TextEntrySidebar } from "./TextEntrySidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { TextEntryRules } from "./TextEntryRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_TextEntry_tdl = {
     type: string;

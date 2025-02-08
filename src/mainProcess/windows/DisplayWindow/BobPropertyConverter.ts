@@ -40,7 +40,7 @@ import { TextEntryHelper } from "../../../rendererProcess/widgets/TextEntry/Text
 import { TextUpdateHelper } from "../../../rendererProcess/widgets/TextUpdate/TextUpdateHelper";
 // import { ThermometerHelper } from "../../../rendererProcess/widgets/Thermometer/ThermometerHelper";
 // import { ThumbWheelHelper } from "../../../rendererProcess/widgets/ThumbWheel/ThumbWheelHelper";
-import { logs } from "../../global/GlobalVariables";
+import { Log } from "../../log/Log";
 
 export class BobPropertyConverter {
 	constructor() {}
@@ -123,7 +123,7 @@ export class BobPropertyConverter {
 				case "group":
 					break;
 				default:
-					logs.error("-1", "I don't recognize type", type);
+					Log.error("-1", "I don't recognize type", type);
 					return;
 			}
 		}
@@ -136,7 +136,7 @@ export class BobPropertyConverter {
 			let groupId = "";
 
 			if (bob["type"] === "group") {
-				logs.info("-1",`------------------- parsing "group" ----------------`);
+				Log.info("-1",`------------------- parsing "group" ----------------`);
 				startingPoint = Object.keys(result).length;
 				if (bob["x"] !== undefined) {
 					groupLeft = parseInt(bob["x"]);
@@ -150,7 +150,7 @@ export class BobPropertyConverter {
 			const widget = bob["widget"];
 			if (Array.isArray(widget)) {
 				for (let widgetMember of widget) {
-					logs.info("-1","parsing widget array");
+					Log.info("-1","parsing widget array");
 					this.parseBob(widgetMember, result);
 				}
 			} else {

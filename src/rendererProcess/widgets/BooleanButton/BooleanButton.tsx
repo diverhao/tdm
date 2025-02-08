@@ -6,7 +6,7 @@ import { BooleanButtonSidebar } from "./BooleanButtonSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { BooleanButtonRules } from "./BooleanButtonRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 export type type_BooleanButton_tdl = {
     type: string;

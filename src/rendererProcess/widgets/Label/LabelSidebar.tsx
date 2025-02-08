@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Label } from "./Label";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class LabelSidebar extends BaseWidgetSidebar {

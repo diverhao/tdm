@@ -6,7 +6,7 @@ import { v4 as uuid } from "uuid";
 import { UtilityWindow } from "./UtilityWindow/UtilityWindow";
 import { type_tdl } from "../file/FileReader";
 import { FileReader } from "../file/FileReader";
-import { logs } from "../global/GlobalVariables";
+import { Log } from "../log/Log";
 import { write, writeFileSync } from "fs";
 
 export type type_options_createDisplayWindow = {
@@ -144,7 +144,7 @@ export class WindowAgentsManager {
             // check if the window already exist
             const exisitedDisplayWindow = this.checkExistedDisplayWindow(tdlFileName, macros);
             if (exisitedDisplayWindow !== undefined) {
-                logs.debug(this.getMainProcessId(), `File ${tdlFileName} is already opened.`);
+                Log.debug(this.getMainProcessId(), `File ${tdlFileName} is already opened.`);
                 // bring up this window if in desktop mode
                 if (httpResponse === undefined) {
                     exisitedDisplayWindow.show();
@@ -166,7 +166,7 @@ export class WindowAgentsManager {
                 const exisitedDisplayWindow = this.checkExistedDisplayWindow(tdlFileName, macros);
                 // writeFileSync("/Users/haohao/tdm.log", `--------------------- createDisplayWindow() A0.5 ${exisitedDisplayWindow}\n`, {flag: "a"});
                 if (exisitedDisplayWindow !== undefined) {
-                    logs.debug(this.getMainProcessId(), `File ${tdlFileName} is already opened.`);
+                    Log.debug(this.getMainProcessId(), `File ${tdlFileName} is already opened.`);
                     // bring up this window if in desktop mode
                     if (httpResponse === undefined) {
                         exisitedDisplayWindow.show();
@@ -175,7 +175,7 @@ export class WindowAgentsManager {
                 }
             }
             // writeFileSync("/Users/haohao/tdm.log", `--------------------- createDisplayWindow() A1 ${tdlFileName}\n`, {flag: "a"});
-            logs.debug(
+            Log.debug(
                 this.getMainProcessId(),
                 `Try to create a new display window for ${tdlFileName === "" ? "<blank string>" : tdlFileName} in ${httpResponse === undefined ? "desktop" : "web"
                 } mode`
@@ -187,14 +187,14 @@ export class WindowAgentsManager {
                 if (this.getMainProcess().getMainProcessMode() !== "ssh-server") {
                     let displayWindowAgent = this.replacePreloadedDisplayWindow(options);
                     if (displayWindowAgent !== undefined) {
-                        logs.debug(this.getMainProcessId(), `Preloaded display window is consumed, created a new one.`);
+                        Log.debug(this.getMainProcessId(), `Preloaded display window is consumed, created a new one.`);
                         this.createPreloadedDisplayWindow();
                         return displayWindowAgent;
                     } else {
                         if (this.creatingPreloadedDisplayWindow === true) {
-                            logs.debug(this.getMainProcessId(), `Preloaded display window does not exist, but it is being created.`);
+                            Log.debug(this.getMainProcessId(), `Preloaded display window does not exist, but it is being created.`);
                         } else {
-                            logs.debug(this.getMainProcessId(), `Preloaded display window does not exist, create one in background.`);
+                            Log.debug(this.getMainProcessId(), `Preloaded display window does not exist, create one in background.`);
                             this.createPreloadedDisplayWindow();
                         }
                     }
@@ -232,18 +232,18 @@ export class WindowAgentsManager {
                 // (5)
                 const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
-                    logs.error(this.getMainProcessId(), "Profile not selected!");
+                    Log.error(this.getMainProcessId(), "Profile not selected!");
                     return undefined;
                 }
                 displayWindowAgent.sendFromMainProcess("preset-colors", selectedProfile.getCategory("Preset Colors"));
-                logs.debug(
+                Log.debug(
                     this.getMainProcessId(),
                     `Created display window ${displayWindowAgent.getId()} for ${tdlFileName === "" ? "<blank string>" : tdlFileName}`
                 );
                 return displayWindowAgent;
             } catch (e) {
                 console.log("aaa")
-                logs.error(this.getMainProcessId(), e);
+                Log.error(this.getMainProcessId(), e);
                 console.log("bbb")
                 return undefined;
             }
@@ -276,18 +276,18 @@ export class WindowAgentsManager {
         } else {
 
 
-            // logs.debug(this.getMainProcessId(), `Try to create a new display window for ${tdlFileName === "" ? "<blank string>" : tdlFileName}`);
+            // Log.debug(this.getMainProcessId(), `Try to create a new display window for ${tdlFileName === "" ? "<blank string>" : tdlFileName}`);
             // // (0)
             // let displayWindowAgent = this.replacePreloadedDisplayWindow(options);
             // if (displayWindowAgent !== undefined) {
-            // 	logs.debug(this.getMainProcessId(), `Preloaded display window is consumed, created a new one.`);
+            // 	Log.debug(this.getMainProcessId(), `Preloaded display window is consumed, created a new one.`);
             // 	this.createPreloadedDisplayWindow();
             // 	return displayWindowAgent;
             // } else {
             // 	if (this.creatingPreloadedDisplayWindow === true) {
-            // 		logs.debug(this.getMainProcessId(), `Preloaded display window does not exist, but it is being created.`);
+            // 		Log.debug(this.getMainProcessId(), `Preloaded display window does not exist, but it is being created.`);
             // 	} else {
-            // 		logs.debug(this.getMainProcessId(), `Preloaded display window does not exist, create one in background.`);
+            // 		Log.debug(this.getMainProcessId(), `Preloaded display window does not exist, create one in background.`);
             // 		this.createPreloadedDisplayWindow();
             // 	}
             // }
@@ -325,9 +325,9 @@ export class WindowAgentsManager {
                         }))
                     }
                 }
-                logs.debug(this.getMainProcessId(), "we have obtained ifram uuid", displayWindowId);
+                Log.debug(this.getMainProcessId(), "we have obtained ifram uuid", displayWindowId);
                 await displayWindowAgent.creationPromise;
-                logs.debug(this.getMainProcessId(), "lifted", displayWindowAgent.getId());
+                Log.debug(this.getMainProcessId(), "lifted", displayWindowAgent.getId());
 
                 // (4)
                 displayWindowAgent.sendFromMainProcess("new-tdl", {
@@ -343,17 +343,17 @@ export class WindowAgentsManager {
                 // (5)
                 const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
-                    logs.error(this.getMainProcessId(), "Profile not selected!");
+                    Log.error(this.getMainProcessId(), "Profile not selected!");
                     return undefined;
                 }
                 displayWindowAgent.sendFromMainProcess("preset-colors", selectedProfile.getCategory("Preset Colors"));
-                logs.debug(
+                Log.debug(
                     this.getMainProcessId(),
                     `Created display window ${displayWindowAgent.getId()} for ${tdlFileName === "" ? "<blank string>" : tdlFileName}`
                 );
                 return displayWindowAgent;
             } catch (e) {
-                logs.error(this.getMainProcessId(), e);
+                Log.error(this.getMainProcessId(), e);
                 return undefined;
             }
         }
@@ -385,7 +385,7 @@ export class WindowAgentsManager {
         // return undefined;
 
         let { mode, editable, tdl, tdlFileName, macros, replaceMacros } = options;
-        logs.debug(this.getMainProcessId(), `Trying to replace preloaded display window with ${tdlFileName}.`);
+        Log.debug(this.getMainProcessId(), `Trying to replace preloaded display window with ${tdlFileName}.`);
         // (1)
         let displayWindowAgent = this.preloadedDisplayWindowAgent;
         if (displayWindowAgent === undefined) {
@@ -411,7 +411,7 @@ export class WindowAgentsManager {
             utilityType: options["utilityType"],
             utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
         });
-        logs.info(this.getMainProcessId(), `Replaced preloaded display window ${displayWindowAgent.getId()} with new TDL: ${options["tdlFileName"]}`);
+        Log.info(this.getMainProcessId(), `Replaced preloaded display window ${displayWindowAgent.getId()} with new TDL: ${options["tdlFileName"]}`);
         return displayWindowAgent;
     };
 
@@ -451,13 +451,13 @@ export class WindowAgentsManager {
         };
         const displayWindowAgent = await this.createDisplayWindow(options);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
-            logs.info(this.getMainProcessId(), `Created preload display window ${displayWindowAgent.getId()}`);
+            Log.info(this.getMainProcessId(), `Created preload display window ${displayWindowAgent.getId()}`);
             // (3)
             this.preloadedDisplayWindowAgent = displayWindowAgent;
             this.creatingPreloadedDisplayWindow = false;
             return displayWindowAgent;
         } else {
-            logs.error(this.getMainProcessId(), `Failed to create preloaded display window`);
+            Log.error(this.getMainProcessId(), `Failed to create preloaded display window`);
             this.creatingPreloadedDisplayWindow = false;
             return undefined;
         }
@@ -537,7 +537,7 @@ export class WindowAgentsManager {
             const displayWindowAgent = await this.createDisplayWindow(windowOptions, httpResponse);
 
             if (displayWindowAgent === undefined) {
-                logs.error(this.getMainProcessId(), `Cannot create display window for utility ${utilityType}`);
+                Log.error(this.getMainProcessId(), `Cannot create display window for utility ${utilityType}`);
                 return;
             }
 
@@ -572,7 +572,7 @@ export class WindowAgentsManager {
 
             // displayWindowAgent.sendFromMainProcess("preset-colors", selectedProfile.getCategory("Preset Colors"));
         } catch (e) {
-            logs.error(this.getMainProcessId(), e);
+            Log.error(this.getMainProcessId(), e);
         }
     };
 
@@ -612,7 +612,7 @@ export class WindowAgentsManager {
             const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
             await displayWindowAgent.createWebBrowserWindow(url);
         } catch (e) {
-            logs.error(this.getMainProcessId(), e);
+            Log.error(this.getMainProcessId(), e);
         }
     };
 

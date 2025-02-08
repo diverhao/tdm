@@ -2,7 +2,7 @@ import ReactDOM from "react-dom/client";
 import * as React from "react";
 import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 
 
 type type_DialogMessageBoxButton = { text: string, handleClick?: (() => void) | undefined };

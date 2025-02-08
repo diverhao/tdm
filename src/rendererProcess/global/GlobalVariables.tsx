@@ -28,15 +28,23 @@ import * as React from "react";
 // 	)
 // );
 
-export enum logLevels {
+/**
+ * renderer process log
+ */
+export enum type_log_levels {
     "trace",
     "debug",
     "info",
+    "warn",
     "error",
     "fatal",
 };
 
-export const logLevel: logLevels = logLevels.debug;
+export let logLevel: type_log_levels = type_log_levels.debug;
+
+export const setLogLevel = (newLogLevel: type_log_levels) => {
+    logLevel = newLogLevel;
+}
 
 // a mockup is used to silence TypeScript
 export let g_widgets1: Widgets = undefined; // g_widgets1_mockup;

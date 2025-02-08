@@ -4,7 +4,7 @@ import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarPolylineFill } from "../../helperWidgets/SidebarComponents/SidebarPolylineFill";
 import { SidebarRectangleCornerWidth } from "../../helperWidgets/SidebarComponents/SidebarRectangleCornerWidth";
 import { SidebarRectangleCornerHeight } from "../../helperWidgets/SidebarComponents/SidebarRectangleCornerHeight";
-import { Log } from "../../global/Log";
+import {Log} from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class RectangleSidebar extends BaseWidgetSidebar {

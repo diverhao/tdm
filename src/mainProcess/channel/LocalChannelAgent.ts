@@ -2,7 +2,7 @@ import { ChannelAgentsManager } from "./ChannelAgentsManager";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { DisplayOperations } from "./CaChannelAgent";
 import EventEmitter from "events";
-import { logs } from "../global/GlobalVariables";
+
 
 export type type_LocalChannel_data = {
     value: number | string | number[] | string[] | undefined;
