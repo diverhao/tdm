@@ -7,7 +7,6 @@ import * as GlobalMethods from "../global/GlobalMethods";
 import { type_LocalChannel_data } from "../../mainProcess/channel/LocalChannelAgent";
 import { Channel_ACCESS_RIGHTS } from "../global/GlobalVariables";
 import {Log} from "../../mainProcess/log/Log";
-import { re } from "mathjs";
 
 export enum ChannelSeverity {
     NO_ALARM,

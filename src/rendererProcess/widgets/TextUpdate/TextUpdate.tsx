@@ -10,7 +10,7 @@ import { TextUpdateRules } from "./TextUpdateRules";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 // import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 
 export type type_TextUpdate_tdl = {
@@ -114,6 +114,8 @@ export class TextUpdate extends BaseWidget {
             this.setRulesStyle(rulesValues["style"]);
             this.setRulesText(rulesValues["text"]);
         }
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
@@ -151,27 +153,31 @@ export class TextUpdate extends BaseWidget {
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): JSX.Element => {
+        const allStyle = this.getAllStyle();
+        const allText = this.getAllText();
+        const style = {
+            display: "inline-flex",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            userSelect: "none",
+            overflow: "hidden",
+            whiteSpace: allText.wrapWord ? "normal" : "pre",
+            justifyContent: allText.horizontalAlign,
+            alignItems: allText.verticalAlign,
+            fontFamily: allStyle.fontFamily,
+            fontSize: allStyle.fontSize,
+            fontStyle: allStyle.fontStyle,
+            fontWeight: allStyle.fontWeight,
+            outline: this._getElementAreaRawOutlineStyle(),
+            color: allStyle["color"],
+        } as React.CSSProperties;
+
+
         return (
             <div
-                style={{
-                    display: "inline-flex",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    userSelect: "none",
-                    overflow: "hidden",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllStyle().fontFamily,
-                    fontSize: this.getAllStyle().fontSize,
-                    fontStyle: this.getAllStyle().fontStyle,
-                    fontWeight: this.getAllStyle().fontWeight,
-                    outline: this._getElementAreaRawOutlineStyle(),
-                    color: this.getAllStyle()["color"],
-                }}
-                // title={"tooltip"}
+                style={style}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
@@ -206,7 +212,7 @@ export class TextUpdate extends BaseWidget {
     // _getElementAreaRawOutlineStyle()
 
     _parseChannelValueElement = (channelValueElement: number | string | boolean | undefined) => {
-        // const channelValue = this.getChannelValueForMonitorWidget(raw);
+
 
         if (typeof channelValueElement === "number") {
             const scale = Math.max(this.getAllText()["scale"], 0);
@@ -244,6 +250,7 @@ export class TextUpdate extends BaseWidget {
     // they are suitable to display array data in various formats,
     // other types of widgets, such as Meter, Spinner, Tanks, ProgressBar, Thermometer, ScaledSlider are not for array data
     _getChannelValue = (raw: boolean = false) => {
+
         const channelValue = this.getChannelValueForMonitorWidget(raw);
 
         if (typeof channelValue === "number" || typeof channelValue === "string") {

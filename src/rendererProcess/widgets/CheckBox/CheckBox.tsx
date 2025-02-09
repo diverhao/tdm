@@ -82,6 +82,8 @@ export class CheckBox extends BaseWidget {
 			this.setRulesStyle(rulesValues["style"]);
 			this.setRulesText(rulesValues["text"]);
 		}
+        this.setAllStyle({...this.getStyle(), ...this.getRulesStyle()});
+        this.setAllText({...this.getText(), ...this.getRulesText()});
 
 		// must do it for every widget
 		g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());

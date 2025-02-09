@@ -529,34 +529,26 @@ export class IpcManagerOnDisplayWindow {
         }
     };
 
-    // handleUuid = (event: any, processId: number, uuid: string) => {
-    // 	Log.debug("Received uuid message", uuid, "from process", processId);
-    // 	if (this.getDisplayWindowClient().getProcessId() === -1) {
-    // 		this.getDisplayWindowClient().setProcessId(processId);
-    // 	}
-    // 	this.getDisplayWindowClient().setWindowId(uuid);
-    // 	this.connectServer(9529);
-    // };
-
-    // handleErrorMessage = (event: any, message: string) => {
-    //     window.alert(message);
-    // };
-
-    // channelIsDestroyed = (str: string) => {
-    //     const regex = /^destroyed_[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
-    //     return regex.test(str);
-    // }
-
-    // (1) append new data to each TcaChannel
-    // (2) find which widgets should be updated, add them to g_widgets1.forceUpdateWidgets
-    // (3) (i)  if there is PvTable widget, send updated channel names to it
-    //     (ii)
-    // (4) flush
+    /**
+     * New channel data arrives.
+     * 
+     * (1) append new data to each TcaChannel
+     * 
+     * (2) find which widgets should be updated, add them to g_widgets1.forceUpdateWidgets
+     * 
+     * (3) if the widget has mapDbrDataWitNewData() method, do it, do it once
+     * 
+     * (4) flush widgets
+     */
     handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_LocalChannel_data | undefined>) => {
-        // console.log("received new dbr data", newDbrData);
+
         Log.debug("received data", JSON.stringify(newDbrData));
 
         let channelNames = Object.keys(newDbrData);
+
+        // special widgets that has new dbr data mapping, this mapping should only occurs once
+        const dbrDataMappedWidgetKeys: string[] = [];
+
         for (let channelName of channelNames) {
             try {
                 // (1)
@@ -566,7 +558,7 @@ export class IpcManagerOnDisplayWindow {
                 } else {
                     tcaChannels = [g_widgets1.getTcaChannel(channelName)];
                 }
-                console.log(tcaChannels.length)
+
                 for (let tcaChannel of tcaChannels) {
 
                     if (tcaChannel === undefined) {
@@ -595,6 +587,18 @@ export class IpcManagerOnDisplayWindow {
                     const widgetKeys = tcaChannel.getWidgetKeys();
                     for (let widgetKey of widgetKeys) {
                         g_widgets1.addToForceUpdateWidgets(widgetKey);
+
+                        // (3)
+                        const widget = g_widgets1.getWidget2(widgetKey);
+                        if (!dbrDataMappedWidgetKeys.includes(widgetKey)) {
+                            if (widget instanceof DataViewer) {
+                                g_widgets1.removeFromForceUpdateWidgets(widgetKey);
+                            }
+                            if (widget instanceof DataViewer || widget instanceof XYPlot || widget instanceof Terminal) {
+                                widget.mapDbrDataWitNewData(Object.keys(newDbrData));
+                                dbrDataMappedWidgetKeys.push(widgetKey)
+                            }
+                        }
                     }
                 }
             } catch (e) {
@@ -602,32 +606,6 @@ export class IpcManagerOnDisplayWindow {
             }
         }
 
-        // (3)
-        for (let widgetKey of g_widgets1.getWidgets().keys()) {
-            // (3.a)
-            if (widgetKey.includes("PvTable")) {
-                const widget = g_widgets1.getWidget2(widgetKey) as PvTable;
-                // widget.setNewDataChannelNames(Object.keys(newDbrData));
-            }
-            // (3.b)
-            if (widgetKey.includes("DataViewer")) {
-                g_widgets1.removeFromForceUpdateWidgets(widgetKey);
-                const widget = g_widgets1.getWidget2(widgetKey) as DataViewer;
-                widget.mapDbrDataWitNewData(Object.keys(newDbrData));
-            }
-            // (3.c)
-            if (widgetKey.includes("XYPlot")) {
-                // g_widgets1.removeFromForceUpdateWidgets(widgetKey);
-                const widget = g_widgets1.getWidget2(widgetKey) as XYPlot;
-                widget.mapDbrDataWitNewData(Object.keys(newDbrData));
-            }
-            // (3.d)
-            if (widgetKey.includes("Terminal")) {
-                // g_widgets1.removeFromForceUpdateWidgets(widgetKey);
-                const widget = g_widgets1.getWidget2(widgetKey) as Terminal;
-                widget.mapDbrDataWitNewData(Object.keys(newDbrData));
-            }
-        }
         // (4)
         g_widgets1.addToForceUpdateWidgets("GroupSelection2");
         g_flushWidgets();

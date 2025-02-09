@@ -209,7 +209,7 @@ export class CaChannelAgent {
             // default ioTimeout = 1 second
             const dataRaw = await channel.get(ioTimeout, dbrType);
             if (dataRaw === undefined) {
-                data = {value: undefined};
+                data = { value: undefined };
             } else {
                 data = JSON.parse(JSON.stringify(dataRaw));
             }
@@ -440,7 +440,8 @@ export class CaChannelAgent {
                         if (displayWindowAgent === undefined) {
                             continue;
                         } else if (displayWindowAgent instanceof DisplayWindowAgent) {
-                            let newDbrData = JSON.parse(JSON.stringify(channelMonitor.getChannel().getDbrData()));
+                            // let newDbrData = JSON.parse(JSON.stringify(channelMonitor.getChannel().getDbrData()));
+                            let newDbrData = channelMonitor.getChannel().getDbrData();
                             displayWindowAgent.addNewChannelData(channelMonitor.getChannel().getName(), newDbrData);
                         }
                     }
@@ -463,7 +464,8 @@ export class CaChannelAgent {
                             continue;
                         } else if (displayWindowAgent instanceof DisplayWindowAgent) {
                             // let newDbrData = JSON.parse(JSON.stringify(channelMonitor.getChannel().getDbrData()));
-                            let newPvaData = JSON.parse(JSON.stringify(channelMonitor.getPvaData()));
+                            // let newPvaData = JSON.parse(JSON.stringify(channelMonitor.getPvaData()));
+                            let newPvaData = channelMonitor.getPvaData();
                             displayWindowAgent.addNewChannelData(this.getChannelName(), newPvaData);
                         }
                     }
@@ -486,24 +488,28 @@ export class CaChannelAgent {
      * (2) Remove this object from the `ChannelAgentsManager`.
      */
     destroyHard = () => {
-        // (1)
-        const channel = this.getChannel();
-        if (channel !== undefined) {
-            channel.destroyHard();
-        } else {
-            // the channel may not be connected yet, in this case, this._channel is not assigned
-            // but we can obtain the epics Channel object from Context
-            const context = this.getChannelAgentsManager().getContext();
-            if (context !== undefined) {
-                const channel = context.getChannel(this.getBareChannelName());
-                if (channel instanceof Channel) {
-                    channel.destroyHard();
-                } else {
-                    console.log("Error: cannot find EPICS channel for", this.getChannelName());
-                }
+        try {
+            // (1)
+            const channel = this.getChannel();
+            if (channel !== undefined) {
+                channel.destroyHard();
             } else {
-                console.log("Error: cannot find EPICS context");
+                // the channel may not be connected yet, in this case, this._channel is not assigned
+                // but we can obtain the epics Channel object from Context
+                const context = this.getChannelAgentsManager().getContext();
+                if (context !== undefined) {
+                    const channel = context.getChannel(this.getBareChannelName());
+                    if (channel instanceof Channel) {
+                        channel.destroyHard();
+                    } else {
+                        console.log("Error: cannot find EPICS channel for", this.getChannelName());
+                    }
+                } else {
+                    // console.log("Error: cannot find EPICS context");
+                }
             }
+        } catch (e) {
+            Log.error(this.getMainProcessId(), e);
         }
         // (2)
         this.getChannelAgentsManager().removeChannelAgent(this.getChannelName());

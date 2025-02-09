@@ -63,6 +63,9 @@ export abstract class BaseWidget {
     _groupNames: string[] = [];
     _rules: BaseWidgetRules | undefined;
 
+    _allStyle: Record<string, any> = {};
+    _allText: Record<string, any> = {};
+
     // _expandedChannelNames: string[] = [];
 
     // sidebar
@@ -1071,7 +1074,8 @@ export abstract class BaseWidget {
      *
      */
     getAllStyle = () => {
-        return { ...this.getStyle(), ...this.getRulesStyle() };
+        // return { ...this.getStyle(), ...this.getRulesStyle() };
+        return this._allStyle;
     };
 
     /**
@@ -1081,25 +1085,28 @@ export abstract class BaseWidget {
      *
      */
     getAllText() {
-        return { ...this.getText(), ...this.getRulesText() };
+        // return { ...this.getText(), ...this.getRulesText() };
+        return this._allText;
     }
 
     getElementBodyRawStyle = () => {
+        const allStyle = this.getAllStyle();
+        const allText = this.getAllText();
         const result: Record<string, any> = {
             ...this.getStyle(),
             ...this.getRulesStyle(),
-            left: this.getBorderType() === "outside" ? this.getAllStyle()["left"] - this.getAllStyle()["borderWidth"] : this.getAllStyle()["left"],
-            top: this.getBorderType() === "outside" ? this.getAllStyle()["top"] - this.getAllStyle()["borderWidth"] : this.getAllStyle()["top"],
+            left: this.getBorderType() === "outside" ? allStyle["left"] - allStyle["borderWidth"] : allStyle["left"],
+            top: this.getBorderType() === "outside" ? allStyle["top"] - allStyle["borderWidth"] : allStyle["top"],
             // if it is a readback-type widget, we skip the mouse left-button-down event in operating mode, 
             // the "read" type widget is transparent to any mouse button
             // the right/mid-button-down event is handled in a global function in DisplayWindowClient
             pointerEvents: this.getReadWriteType() === "read" && !g_widgets1.isEditing() ? "none" : "auto",
             backgroundColor:
-                this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false
+                allText["invisibleInOperation"] === true && g_widgets1.isEditing() === false
                     ? "rgba(0,0,0,0)"
-                    : this.getAllStyle()["backgroundColor"],
+                    : allStyle["backgroundColor"],
             borderWidth:
-                this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false ? 0 : this.getAllStyle()["borderWidth"],
+                allText["invisibleInOperation"] === true && g_widgets1.isEditing() === false ? 0 : allStyle["borderWidth"],
         };
         return result;
     };
@@ -1208,6 +1215,14 @@ export abstract class BaseWidget {
     setText = (newText: Record<string, any>) => {
         this._text = newText;
     };
+
+    setAllStyle = (newAllStyle: Record<string, any>) => {
+        this._allStyle = newAllStyle;
+    }
+
+    setAllText = (newAllText: Record<string, any>) => {
+        this._allText = newAllText;
+    }
 
 
     setRulesStyle = (newStyle: Record<string, any>) => {
