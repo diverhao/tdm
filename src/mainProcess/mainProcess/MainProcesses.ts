@@ -64,13 +64,47 @@ export class MainProcesses {
                 throw new Error("Web mode: https key file name or certificate file name not defined in profile. Quit");
             }
 
-            const httpsOptions: {key: Buffer, cert: Buffer} = {
+            const ldapUriProperty = webServerCategoryJson["LDAP URI"]
+            if (ldapUriProperty === undefined) {
+                throw new Error("");
+            }
+            const ldapDistinguishedNameProperty = webServerCategoryJson["LDAP Distinguished Name"]
+            if (ldapDistinguishedNameProperty === undefined) {
+                throw new Error("");
+            }
+            const ldapSearchBaseProperty = webServerCategoryJson["LDAP Search Base"]
+            if (ldapSearchBaseProperty === undefined) {
+                throw new Error("");
+            }
+            const ldapSearchFilterProperty = webServerCategoryJson["LDAP Search Filter"]
+            if (ldapSearchFilterProperty === undefined) {
+                throw new Error("");
+            }
+            const ldapSearchScopeProperty = webServerCategoryJson["LDAP Search Scope"]
+            if (ldapSearchScopeProperty === undefined) {
+                throw new Error("");
+            }
+            const ldapUri = ldapUriProperty["value"];
+            const ldapDistinguishedName = ldapDistinguishedNameProperty["value"];
+            const ldapSearchBase = ldapSearchBaseProperty["value"];
+            const ldapSearchFilter = ldapSearchFilterProperty["value"];
+            const ldapSearchScope =  ldapSearchScopeProperty["value"];
+    
+
+            const httpsOptions: {url: string, bindDN: string, searchBase: string, searchFilter: string, searchScope: string, key: Buffer, cert: Buffer} = {
+                url: ldapUri,
+                bindDN: ldapDistinguishedName,
+                // bindCredentials: ldapBindCredentials,
+                searchBase: ldapSearchBase,
+                searchFilter: ldapSearchFilter,
+                searchScope: ldapSearchScope,
                 key: fs.readFileSync(httpsKeyFileName),
                 cert: fs.readFileSync(httpsCertificateFileName),
             };
 
             this._httpServer = new HttpServer(this, port);
             this._httpServer.setHttpsOptions(httpsOptions);
+            this._httpServer.setLdapOptions(httpsOptions);
             this._httpServer.createServer();
 
             // in web mode, the websocket (wss://) server port must be the same as the https port

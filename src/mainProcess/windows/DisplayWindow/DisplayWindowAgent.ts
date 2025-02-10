@@ -1359,7 +1359,7 @@ export class DisplayWindowAgent {
 
             if (wsClient === undefined) {
                 // temporarily disable writing the LogViewer to avoid stack overflow
-                Log.error(this.getMainProcessId(), "Cannot find WebSocket IPC client for window", this.getId());
+                Log.debug(this.getMainProcessId(), "Cannot find WebSocket IPC client for window", this.getId());
                 return;
             }
 

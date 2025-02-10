@@ -6,7 +6,7 @@ import { TextEntrySidebar } from "./TextEntrySidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { TextEntryRules } from "./TextEntryRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_TextEntry_tdl = {
     type: string;
@@ -79,8 +79,8 @@ export class TextEntry extends BaseWidget {
             this.setRulesStyle(rulesValues["style"]);
             this.setRulesText(rulesValues["text"]);
         }
-        this.setAllStyle({...this.getStyle(), ...this.getRulesStyle()});
-        this.setAllText({...this.getText(), ...this.getRulesText()});
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
@@ -91,10 +91,19 @@ export class TextEntry extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this._showSidebar() ? this.getSidebar()?.getElement() : null}
-                </>
+
+                {
+                    // skip _ElementBody in operating mode
+                    // the re-render efficiency can be improved by 10% by doing this
+                    // this technique is used on a few most re-rendered widgets, like TextUpdate and TextEntry
+                    g_widgets1?.isEditing() ?
+                        <>
+                            <this._ElementBody></this._ElementBody>
+                            {this._showSidebar() ? this.getSidebar()?.getElement() : null}
+                        </>
+                        :
+                        <this._ElementArea></this._ElementArea>
+                }
             </ErrorBoundary>
         );
     };
@@ -113,28 +122,49 @@ export class TextEntry extends BaseWidget {
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): JSX.Element => {
-        // const [value, setValue] = React.useState(this._getChannelValue());
-        // const isFocused = React.useRef<boolean>(false);
+
+        let style: React.CSSProperties = {};
+        if (g_widgets1.isEditing()) {
+            style = {
+                display: "inline-flex",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                userSelect: "none",
+                overflow: "visible",
+                whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
+                justifyContent: this.getAllText().horizontalAlign,
+                alignItems: this.getAllText().verticalAlign,
+                fontFamily: this.getAllText().fontFamily,
+                fontSize: this.getAllText().fontSize,
+                fontStyle: this.getAllText().fontStyle,
+                outline: this._getElementAreaRawOutlineStyle(),
+            };
+        } else {
+            style = {
+                // display: "inline-flex",
+                // top: 0,
+                // left: 0,
+                // width: "100%",
+                // height: "100%",
+                userSelect: "none",
+                overflow: "visible",
+                whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
+                justifyContent: this.getAllText().horizontalAlign,
+                alignItems: this.getAllText().verticalAlign,
+                fontFamily: this.getAllText().fontFamily,
+                fontSize: this.getAllText().fontSize,
+                fontStyle: this.getAllText().fontStyle,
+                ...this.getElementBodyRawStyle(),
+                outline: this._getElementAreaRawOutlineStyle(),
+            };
+        }
 
         return (
             // <div
             <div
-                style={{
-                    display: "inline-flex",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    userSelect: "none",
-                    overflow: "visible",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllText().fontFamily,
-                    fontSize: this.getAllText().fontSize,
-                    fontStyle: this.getAllText().fontStyle,
-                    outline: this._getElementAreaRawOutlineStyle(),
-                }}
+                style={style}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
@@ -145,8 +175,6 @@ export class TextEntry extends BaseWidget {
             </div>
         );
     };
-
-
 
     // _ValueInputForm = ({ valueRaw }: { valueRaw: string | number | string[] | number[] }) => {
     _ValueInputForm = () => {

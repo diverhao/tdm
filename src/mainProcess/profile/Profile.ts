@@ -120,6 +120,21 @@ export class Profile {
         return this.getEntry("Web Server", "LDAP URI");
     }
 
+
+    getLdapBindCredentials = () => {
+        return this.getEntry("Web Server", "LDAP Bind Credential");
+    }
+
+    getLdapSearchBase = () => {
+        return this.getEntry("Web Server", "LDAP Search Base");
+    }
+    getLdapSearchFilter = () => {
+        return this.getEntry("Web Server", "LDAP Search Filter");
+    }
+    getLdapSearchScope = () => {
+        return this.getEntry("Web Server", "LDAP Search Scope");
+    }
+
     getLdapDistinguishedName = () => {
         return this.getEntry("Web Server", "LDAP Distinguished Name");
     }
@@ -244,6 +259,18 @@ export class Profile {
                 "LDAP Distinguished Name": {
                     "DESCRIPTION": "User's distinguished name. The ${username} will be replaced with the user's input user name.",
                     "value": "uid=${username},ou=users,dc=example,dc=com"
+                },
+                "LDAP Search Base": {
+                    "DESCRIPTION": "Search base for the LDAP.",
+                    "value": "ou=users,dc=example,dc=com"
+                },
+                "LDAP Search Filter": {
+                    "DESCRIPTION": "Search filter for the LDAP. The ${username} will be replaced with the user's input user name.",
+                    "value": "(uid={{username}})"
+                },
+                "LDAP Search Scope": {
+                    "DESCRIPTION": "The search scope for LDAP.",
+                    "value": "sub"
                 },
                 "Https Key File": {
                     "DESCRIPTION": "HTTPS key file.",

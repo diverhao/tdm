@@ -127,8 +127,20 @@ export class TextUpdate extends BaseWidget {
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()} >
                 <>
-                    <this._ElementBody></this._ElementBody>
-                    {this._showSidebar() ? this._sidebar?.getElement() : null}
+                    {
+                        // skip _ElementBody in operating mode
+                        // the re-render efficiency can be improved by 10% by doing this
+                        // this technique is used on a few most re-rendered widgets, like TextUpdate and TextEntry
+                        g_widgets1.isEditing()
+                            ?
+                            <>
+                                <this._ElementBody></this._ElementBody>
+                                {this._showSidebar() ? this._sidebar?.getElement() : null}
+                            </>
+                            :
+                            <this._ElementArea></this._ElementArea>
+
+                    }
                 </>
             </ErrorBoundary>
         );
@@ -155,24 +167,48 @@ export class TextUpdate extends BaseWidget {
     _ElementAreaRaw = ({ }: any): JSX.Element => {
         const allStyle = this.getAllStyle();
         const allText = this.getAllText();
-        const style = {
-            display: "inline-flex",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            userSelect: "none",
-            overflow: "hidden",
-            whiteSpace: allText.wrapWord ? "normal" : "pre",
-            justifyContent: allText.horizontalAlign,
-            alignItems: allText.verticalAlign,
-            fontFamily: allStyle.fontFamily,
-            fontSize: allStyle.fontSize,
-            fontStyle: allStyle.fontStyle,
-            fontWeight: allStyle.fontWeight,
-            outline: this._getElementAreaRawOutlineStyle(),
-            color: allStyle["color"],
-        } as React.CSSProperties;
+
+        let style: React.CSSProperties = {};
+        if (g_widgets1.isEditing()) {
+            style = {
+                display: "inline-flex",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                userSelect: "none",
+                overflow: "hidden",
+                whiteSpace: allText.wrapWord ? "normal" : "pre",
+                justifyContent: allText.horizontalAlign,
+                alignItems: allText.verticalAlign,
+                fontFamily: allStyle.fontFamily,
+                fontSize: allStyle.fontSize,
+                fontStyle: allStyle.fontStyle,
+                fontWeight: allStyle.fontWeight,
+                outline: this._getElementAreaRawOutlineStyle(),
+                color: allStyle["color"],
+            } as React.CSSProperties;
+        } else {
+            style = {
+                // display: "inline-flex",
+                // top: 0,
+                // left: 0,
+                // width: "100%",
+                // height: "100%",
+                userSelect: "none",
+                overflow: "hidden",
+                whiteSpace: allText.wrapWord ? "normal" : "pre",
+                justifyContent: allText.horizontalAlign,
+                alignItems: allText.verticalAlign,
+                fontFamily: allStyle.fontFamily,
+                fontSize: allStyle.fontSize,
+                fontStyle: allStyle.fontStyle,
+                fontWeight: allStyle.fontWeight,
+                color: allStyle["color"],
+                ...this.getElementBodyRawStyle(),
+                outline: this._getElementAreaRawOutlineStyle(),
+            } as React.CSSProperties;
+        }
 
 
         return (
@@ -189,6 +225,9 @@ export class TextUpdate extends BaseWidget {
             </div>
         );
     };
+
+
+
 
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());

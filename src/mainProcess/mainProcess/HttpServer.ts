@@ -1,12 +1,12 @@
 import express, { Express } from "express";
-const bodyParser = require('body-parser');
 import https from "https";
 
+import passport from "passport";
+import LdapStrategy from "passport-ldapauth";
+
 import session from "express-session";
-import ldap from 'ldapjs';
 
 import { IncomingMessage, ServerResponse } from "http";
-import * as BodyParser from "body-parser";
 import { MainProcesses } from "./MainProcesses";
 import * as fs from "fs";
 import { Log } from "../log/Log";
@@ -25,20 +25,75 @@ export class HttpServer {
         // this.createServer();
     }
 
-    authGuard = (req: any, res: any, next: any) => {
-        if (!req.session.authenticated) {
+    isAuthenticated(req: any, res: any, next: any) {
+        if (req.isAuthenticated()) {
+            return next(); // Proceed to the requested route if authenticated
+        } else {
             return res.status(403).send("Access Denied. Please <a href='/'>log in</a>.");
         }
-        next();  // Proceed to the next middleware or route handler
+    }
+
+    setLdapOptions = (newOptions: {url: string, bindDN: string, searchBase: string, searchFilter: string, searchScope: string, key: Buffer, cert: Buffer}) => {
+        this.LDAP_OPTIONS = {
+            server: {
+                ...this.LDAP_OPTIONS.server,
+                url: newOptions.url,
+                bindDN: newOptions.bindDN,
+                // bindCredentials: ldapBindCredentials,
+                searchBase: newOptions.searchBase,
+                searchFilter: newOptions.searchFilter,
+                searchScope: newOptions.searchScope as any,
+            },
+        };
+
+    }
+
+    LDAP_OPTIONS: LdapStrategy.Options = {
+        server: {
+            url: "ldap://localhost:3890",
+            bindDN: "",
+            bindCredentials: "",
+            searchBase: "ou=users,dc=example,dc=com",
+            searchFilter: "(uid={{username}})",
+            searchScope: "sub",
+            tlsOptions: { rejectUnauthorized: false },
+        },
     };
 
     // this server must be created after the main 
     createServer = () => {
         this._server = express();
 
+        Log.info("LDAP options:", this.LDAP_OPTIONS);
+        // LDAP
+        passport.use(new LdapStrategy(this.LDAP_OPTIONS));
+        passport.serializeUser((user, done) => done(null, user));
+        passport.deserializeUser((user: any, done) => done(null, user));
+
+        this._server.use(session({ secret: "secretKey", resave: false, saveUninitialized: true }));
+        this._server.use(express.json()); // Middleware to parse JSON requests
+        this._server.use(passport.initialize());
+        this._server.use(passport.session());
+
+
+        // Skip authentication for specific routes (like "/" and "/login")
+        this._server.use((req: any, res: any, next: any) => {
+            if (req.path === '/' || req.path === '/login' || req.path.startsWith("/resources/webpages/")) {
+                return next(); // Skip authentication for these routes
+            }
+            this.isAuthenticated(req, res, next); // Apply authentication middleware to all other routes
+        });
+
+        this.getServer()?.use(session({
+            secret: 'supersecretkey',
+            resave: false,
+            saveUninitialized: true
+        }));
+
+
         // start http server
         this.getServer()?.get("/main", (request: IncomingMessage, response: any, next: any) => {
-            Log.debug("0", "New https connection coming in from", request.socket.address());
+            Log.info("0", "New https connection coming in from", request.socket.address());
             // there shoul have been a main process with id = "0" running
             const mainProcess = this.getMainProcesses().getProcess("0");
             if (mainProcess === undefined) {
@@ -51,29 +106,12 @@ export class HttpServer {
         });
 
 
-        // this.getServer()?.get("/DisplayWindow.html*", () => {
-        //     console.log("--------------- new GET request ------------------");
-        // })
-
         this.getServer()?.use(express.json({ limit: 10 * 1024 * 1024 })); // Increase the limit to 10 MB
         this.getServer()?.use(express.urlencoded({ limit: 10 * 1024 * 1024, extended: true }));
 
         // ----------------- LDAP -------------------------
 
-        this.getServer()?.use(session({
-            secret: 'supersecretkey',
-            resave: false,
-            saveUninitialized: true
-        }));
 
-
-        this.getServer()?.use((req, res, next) => {
-            const excludedRoutes = ['/login', "/"];  // Routes to exclude from authGuard
-            if (excludedRoutes.includes(req.path) || req.path.startsWith("/resources/webpages/")) {
-                return next();  // Skip authGuard and move to next middleware/route handler
-            }
-            this.authGuard(req, res, next);  // Apply authGuard to all other routes
-        });
 
         // root access to login page
         this.getServer()?.get("/", (request: IncomingMessage, response: any, next: any) => {
@@ -81,44 +119,24 @@ export class HttpServer {
         });
 
         // LDAP Authentication Route
-        this.getServer()?.post('/login', (req: any, res: any) => {
-            const { username, password } = req.body;
-            const mainProcess = this.getMainProcesses().getProcess("0");
-            if (mainProcess === undefined) {
-                Log.error("-1", "Cannot find main process 0 in web mode. Quit.")
-                return;
-            }
-            const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
-            if (selectedProfile === undefined) {
-                Log.error("-1", "Profile not selected in web mode. Quit.")
-                return;
-            }
-            const ldapUri = selectedProfile.getLdapUri();
-            const ldapDistinguishedName = selectedProfile.getLdapDistinguishedName();
-            if (ldapUri === undefined || ldapDistinguishedName === undefined) {
-                Log.error("-1", "LDAP URI or LDAP Authentication String not defined in profile. Cannot proceed web mode server.")
-                return;
-            }
+        this.getServer()?.post('/login',
 
-            // const client = ldap.createClient({ url: 'ldap://localhost:3890' });
-            const client = ldap.createClient({ url: ldapUri });
+            passport.authenticate("ldapauth", { session: true }),
 
-            // const dn = `uid=${username},ou=users,dc=example,dc=com`;
-            const dn = ldapDistinguishedName.replace("${username}", username);
-
-            client.bind(dn, password, (err: any) => {
-                if (err) {
-                    return res.send("Authentication failed. Check username or password.");
+            (req: any, res: any) => {
+                // const { username, password } = req.body;
+                const mainProcess = this.getMainProcesses().getProcess("0");
+                if (mainProcess === undefined) {
+                    Log.error("-1", "Cannot find main process 0 in web mode. Quit.")
+                    return;
                 }
-
-                // Store authentication status in session
-                req.session.authenticated = true;
-                req.session.username = username;
-
-                client.unbind();
+                const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
+                if (selectedProfile === undefined) {
+                    Log.error("-1", "Profile not selected in web mode. Quit.")
+                    return;
+                }
                 res.redirect('/main');  // Redirect to the protected page
             });
-        });
 
 
         // main window
@@ -203,7 +221,7 @@ export class HttpServer {
         return this._httpsServer;
     }
 
-    setHttpsOptions = (newOptions: {key: Buffer, cert: Buffer}) => {
+    setHttpsOptions = (newOptions: { key: Buffer, cert: Buffer }) => {
         this._httpsOptions = newOptions;
     }
 
