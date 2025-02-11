@@ -184,6 +184,9 @@ export class PvTable extends BaseWidget {
         // this function uses g_widgets1. It cannot be invoked in constructor
         // this.setExpanedBaseChannelNames();
         // }
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
+
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());

@@ -109,6 +109,9 @@ export class XYPlot extends BaseWidget {
 		// 	g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
 		// });
 
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
+
 		// must do it for every widget
 		g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
 		this.renderChildWidgets = true;

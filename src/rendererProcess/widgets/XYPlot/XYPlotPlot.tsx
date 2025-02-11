@@ -2323,7 +2323,6 @@ export class XYPlotPlot {
     };
 
     getCursorValue = (event: any) => {
-
         let pointX0 = -100000;
         let pointY0 = -100000;
         if (event.clientX !== undefined) {
@@ -2350,6 +2349,10 @@ export class XYPlotPlot {
         if (this.setCursorValue !== undefined) {
 
             const yIndex = this.selectedTraceIndex;
+            if (this.yAxes[yIndex] === undefined) {
+                return;
+            }
+
             let useLog10Scale = false;
             if (this.yAxes[yIndex] !== undefined) {
                 useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;

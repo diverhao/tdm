@@ -196,6 +196,9 @@ export class DataViewer extends BaseWidget {
             // g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
         });
 
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
+
         // the web mode needs this to adjust the plot area in the beginning
         React.useEffect(() => {
             const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();

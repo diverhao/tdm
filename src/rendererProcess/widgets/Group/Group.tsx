@@ -119,6 +119,10 @@ export class Group extends BaseWidget {
 
     // Body + sidebar
     _ElementRaw = () => {
+
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
+
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
         this.renderChildWidgets = true;

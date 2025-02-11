@@ -11,7 +11,7 @@ import {
 import { MainWindowClient, mainWindowState } from "../../mainProcess/windows/MainWindow/MainWindowClient";
 import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMenu";
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
-import {Log} from "../../mainProcess/log/Log";
+import { Log } from "../../mainProcess/log/Log";
 import * as GlobalMethods from "../global/GlobalMethods"
 import { Profile } from "../../mainProcess/profile/Profile";
 
@@ -598,7 +598,7 @@ export class MainWindowProfileEditPage {
                         if (Array.isArray(propertyValue) && propertyType === undefined) {
                             return (
                                 <this._ElementArrayProperty
-                                    key={`${propertyName}-${index}`}
+                                    key={`${selectedCategoryName}-${propertyName}-${index}`}
                                     propertyName={propertyName}
                                     category={category}
                                 ></this._ElementArrayProperty>
@@ -606,7 +606,7 @@ export class MainWindowProfileEditPage {
                         } else if (Array.isArray(propertyValue) && propertyType === "[string,string][]") {
                             return (
                                 <this._ElementMapProperty
-                                    key={`${propertyName}-${index}`}
+                                    key={`${selectedCategoryName}-${propertyName}-${index}`}
                                     propertyName={propertyName}
                                     category={category}
                                 ></this._ElementMapProperty>
@@ -614,6 +614,7 @@ export class MainWindowProfileEditPage {
                         } else if (Array.isArray(propertyChoices)) {
                             return (
                                 <this._ElementChoiceProperty
+                                    key={`${selectedCategoryName}-${propertyName}-${index}`}
                                     propertyName={propertyName}
                                     category={category}
                                 >
@@ -622,7 +623,7 @@ export class MainWindowProfileEditPage {
                         } else {
                             return (
                                 <this._ElementPrimitiveProperty
-                                    key={`${propertyName}-${index}`}
+                                    key={`${selectedCategoryName}-${propertyName}-${index}`}
                                     propertyName={propertyName}
                                     category={category}
                                 ></this._ElementPrimitiveProperty>
