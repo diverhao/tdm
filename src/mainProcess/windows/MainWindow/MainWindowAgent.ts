@@ -488,7 +488,6 @@ export class MainWindowAgent {
                         }
                         const imageBuffer = resizedImage.toPNG();
                         const imageBase64 = imageBuffer.toString("base64");
-                        Log.error(this.getMainProcessId(), "There is something wrong with take iamge in main window ???", `data:image/png;base64,${imageBase64}`.length)
                         resolve(`data:image/png;base64,${imageBase64}`);
                         // const displayWindowId = this.getId();
                         // if (this.readyToClose === false) {
@@ -502,7 +501,6 @@ export class MainWindowAgent {
             // ! The worst part is I cannot catch it, as it happens in the worker thread.
             // Log.error(this.getMainProcessId(), e);
         }
-        Log.error(this.getMainProcessId(), "There is something wrong with take iamge in main window")
         return thumbnail
     };
 

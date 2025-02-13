@@ -21,6 +21,7 @@ import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import pidusage from "pidusage";
 import { spawn } from "child_process";
 import { SqlState } from "../archive/Sql";
+import { type_network_stats } from "epics-tca";
 
 /**
  * Manage IPC messages sent from renderer process.
@@ -110,6 +111,7 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("create-utility-display-window", this.createUtilityDisplayWindow);
         this.ipcMain.on("data-viewer-export-data", this.handleDataViewerExportData);
         this.ipcMain.on("processes-info", this.handleProcessesInfo);
+        this.ipcMain.on("epics-stats", this.handleEpicsStats);
         this.ipcMain.on("ca-snooper-command", this.handleCaSnooperCommand);
         this.ipcMain.on("ca-sw-command", this.handleCaswCommand);
 
@@ -2386,6 +2388,31 @@ export class IpcManagerOnMainProcess {
                 processesInfo: processesInfo,
             });
         }
+    }
+
+    handleEpicsStats = async (event: any, data: {
+        displayWindowId: string,
+        widgetKey: string,
+    }) => {
+
+        const channelAgentsManager = this.getMainProcess().getChannelAgentsManager();
+        const epicsContext = channelAgentsManager.getContext();
+        if (epicsContext !== undefined) {
+            const epicsStats: {
+                udp: type_network_stats,
+                tcp: Record<string, type_network_stats>
+            } = epicsContext.getNetworkStats();
+
+            const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
+            if (displayWindowAgent instanceof DisplayWindowAgent) {
+                displayWindowAgent.sendFromMainProcess("epics-stats", {
+                    widgetKey: data["widgetKey"],
+                    epicsStats: epicsStats,
+                });
+            }
+    
+        }
+
     }
 
     handleCaSnooperCommand = (event: any, options: {

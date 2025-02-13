@@ -180,6 +180,7 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("terminal-command-result", this.handleTerminalCommandResult);
 
         this.ipcRenderer.on("processes-info", this.handleProcessesInfo)
+        this.ipcRenderer.on("epics-stats", this.handleEpicsStats)
         this.ipcRenderer.on("ca-snooper-data", this.handleCaSnooperData)
         this.ipcRenderer.on("ca-sw-data", this.handleCaswData)
         this.ipcRenderer.on("text-file-contents", this.handleTextFileContents)
@@ -1164,6 +1165,25 @@ export class IpcManagerOnDisplayWindow {
             const widget = g_widgets1.getWidget2(data["widgetKey"]);
             if (widget instanceof ProfilesViewer) {
                 widget.updateProcessesInfo(data["processesInfo"]);
+            }
+        } catch (e) {
+            Log.error(e);
+        }
+    }
+
+
+    handleEpicsStats = (event: any, data: {
+        widgetKey: string,
+        epicsStats: {
+            udp: Record<string, any>,
+            tcp: Record<string, Record<string, any>>,
+        };
+    }) => {
+        try {
+            const widget = g_widgets1.getWidget2(data["widgetKey"]);
+            if (widget instanceof ProfilesViewer) {
+                widget.updateEpicsStats(data["epicsStats"]);
+                console.log("a===============================")
             }
         } catch (e) {
             Log.error(e);

@@ -19,6 +19,7 @@ export type type_ProfilesViewer_tdl = {
 
 export class ProfilesViewer extends BaseWidget {
     showProcessInfo = false;
+    showEpicsStats = false;
 
     processesInfo: {
         "Type": string;
@@ -33,6 +34,15 @@ export class ProfilesViewer extends BaseWidget {
         "Memory usage [MB]": number;
         "Thumbnail": string;
     }[] = [];
+
+    epicsStats: {
+        udp: Record<string, any>,
+        tcp: Record<string, Record<string, any>>,
+    } = {
+            udp: {},
+            tcp: {},
+        }
+
 
     constructor(widgetTdl: type_ProfilesViewer_tdl) {
         super(widgetTdl);
@@ -59,6 +69,9 @@ export class ProfilesViewer extends BaseWidget {
                 if (this.showProcessInfo === true) {
                     this.requestProcessesInfo();
                 }
+                if (this.showEpicsStats === true) {
+                    this.requestEpicsStats();
+                }
             }, 1000)
         )
     }
@@ -70,6 +83,16 @@ export class ProfilesViewer extends BaseWidget {
                 displayWindowId: displayWindowClient.getWindowId(),
                 widgetKey: this.getWidgetKey(),
                 withThumbnail: true,
+            })
+        }
+    }
+
+    requestEpicsStats = () => {
+        if (g_widgets1 !== undefined) {
+            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+            g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("epics-stats", {
+                displayWindowId: displayWindowClient.getWindowId(),
+                widgetKey: this.getWidgetKey(),
             })
         }
     }
@@ -167,6 +190,7 @@ export class ProfilesViewer extends BaseWidget {
                         handleClick={() => {
                             setSelection("profiles");
                             this.showProcessInfo = false;
+                            this.showEpicsStats = false;
                         }}>
                         Profiles
                     </ElementRectangleButton>
@@ -177,6 +201,7 @@ export class ProfilesViewer extends BaseWidget {
                         handleClick={() => {
                             setSelection("epics-ca-env");
                             this.showProcessInfo = false;
+                            this.showEpicsStats = false;
                         }}>
                         EPICS Environments
                     </ElementRectangleButton>
@@ -190,17 +215,104 @@ export class ProfilesViewer extends BaseWidget {
                                 this.requestProcessesInfo();
                             }
                             this.showProcessInfo = true;
+                            this.showEpicsStats = false;
                         }}>
                         Processes
+                    </ElementRectangleButton>
+
+                    <ElementRectangleButton
+                        defaultBackgroundColor={selection === "epics-stats" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
+                        marginRight={10}
+                        handleClick={() => {
+                            setSelection("epics-stats");
+                            this.showProcessInfo = false;
+                            this.showEpicsStats = true;
+                        }}>
+                        EPICS Network Statistics
                     </ElementRectangleButton>
                 </div>
 
                 <this._ElementProfiles show={selection === "profiles"}></this._ElementProfiles>
                 <this._ElementEpicsCaEnv show={selection === "epics-ca-env"}></this._ElementEpicsCaEnv>
                 <this._ElementProcesses show={selection === "processes-info"}></this._ElementProcesses>
+                <this._ElementEpicsStats show={selection === "epics-stats"}></this._ElementEpicsStats>
             </div>
         );
     };
+
+    _ElementEpicsStats = ({ show }: any) => {
+
+        return <div style={
+            {
+                display: show ? "inline-flex" : "none",
+                flexDirection: 'column',
+            }
+        }>
+            <div style={{
+                color: "rgba(100, 100, 100, 1)",
+            }}>
+                <p>
+                    The EPICS network traffic for Channel Access. The byte rate only counts the payload in TCP or UDP packets.
+                </p>
+            </div>
+            <h3>
+                UDP
+            </h3>
+            <table>
+
+                <col style={{ width: "70%" }}></col>
+                <col style={{ width: "30%" }}></col>
+                {Object.keys(this.epicsStats["udp"]).map((name: string, index: number) => {
+                    const value = this.epicsStats["udp"][name];
+                    if (name.toLowerCase().includes("time")) {
+                        return null
+                    }
+                    return <tr key={`${name}-${index}`}
+                        style={{
+                            backgroundColor: index % 2 === 0 ? "rgba(230, 230, 230, 1)" : ""
+                        }}
+                    >
+                        <td>{name.replace(/([A-Z])/g, ' $1').toLowerCase()}</td>
+                        <td>{value}</td>
+                    </tr>
+                })}
+            </table>
+            <h3>
+                TCP
+            </h3>
+            <table>
+                <col style={{ width: "70%" }}></col>
+                <col style={{ width: "30%" }}></col>
+                {Object.keys(this.epicsStats["tcp"]).map((hostName: string, index: number) => {
+                    const hostInfo = this.epicsStats["tcp"][hostName];
+                    return <>
+                        <tr>
+                            <td><b>{`${hostName.split(":")[0]}:${hostName.split(":")[1]}`}</b></td>
+                            <td></td>
+                        </tr>
+                        {Object.keys(hostInfo).map((name: string, index: number) => {
+                            const value = this.epicsStats["tcp"][hostName][name];
+                            if (name.toLowerCase().includes("time")) {
+                                return null
+                            }
+                            return <tr key={`${name}-${index}`}
+                                style={{
+                                    backgroundColor: index % 2 === 0 ? "rgba(230, 230, 230, 1)" : ""
+                                }}
+                            >
+                                <td>{name.replace(/([A-Z])/g, ' $1').toLowerCase()}</td>
+                                <td>{value}</td>
+                            </tr>
+                        })}
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td></td>
+                        </tr>
+                    </>
+                })}
+            </table>
+        </div>
+    }
 
     _ElementSelectionButton = ({ text, selectionText, selection, onMouseDown }: any) => {
         const elementRef = React.useRef<any>(null);
@@ -483,6 +595,16 @@ export class ProfilesViewer extends BaseWidget {
         "Thumbnail": string;
     }[]) => {
         this.processesInfo = processesInfo;
+        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+        g_flushWidgets();
+    }
+
+
+    updateEpicsStats = (epicsStats: {
+        udp: Record<string, any>,
+        tcp: Record<string, Record<string, any>>,
+    }) => {
+        this.epicsStats = epicsStats;
         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
         g_flushWidgets();
     }
