@@ -66,7 +66,7 @@ export class CaSnooperServer {
         this._mainProcess = mainProcess;
         const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
         if (selectedProfile !== undefined) {
-            const epicsCaServerPort = selectedProfile.getEntry("EPICS Environment", "EPICS_CA_SERVER_PORT");
+            const epicsCaServerPort = selectedProfile.getEntry("EPICS CA Settings", "EPICS_CA_SERVER_PORT");
             if (epicsCaServerPort !== undefined) {
                 this.epicsCaServerPort = epicsCaServerPort;
             }

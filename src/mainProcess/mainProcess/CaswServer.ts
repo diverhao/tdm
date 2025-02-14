@@ -66,7 +66,7 @@ export class CaswServer {
         this._mainProcess = mainProcess;
         const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
         if (selectedProfile !== undefined) {
-            const epicsCaRepeaterPort = selectedProfile.getEntry("EPICS Environment", "EPICS_CA_REPEATER_PORT");
+            const epicsCaRepeaterPort = selectedProfile.getEntry("EPICS CA Settings", "EPICS_CA_REPEATER_PORT");
             if (epicsCaRepeaterPort !== undefined) {
                 this.epicsCaRepeaterPort = epicsCaRepeaterPort;
             }

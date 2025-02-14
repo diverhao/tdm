@@ -754,6 +754,7 @@ export class MainWindowProfileEditPage {
             paddingRight: 7,
             paddingTop: 5,
             paddingBottom: 5,
+            marginBottom:3,
         } as React.CSSProperties;
 
         return (
@@ -920,8 +921,8 @@ export class MainWindowProfileEditPage {
                 :
                 <ElementDropDownMenu
                     callbacks={{
-                        "Edit": () => { setIsEditing(true) },
-                        "Delete": deleteCategory,
+                        "Edit category title": () => { setIsEditing(true) },
+                        "Delete category": deleteCategory,
                         "Add primitive type data": addPrimitive,
                         "Add array type data": addArray,
                         "Add choices type data": addChoices,
@@ -937,10 +938,14 @@ export class MainWindowProfileEditPage {
             color: "rgb(180, 180, 180)",
             fontSize: 13,
             width: "70%",
-            paddingLeft: 7,
-            paddingRight: 7,
-            paddingTop: 4,
-            paddingBottom: 4,
+            borderWidth: 1,
+            borderStyle: "solid",
+            borderColor: "rgba(0,0,0,0)",
+            paddingLeft: 6,
+            paddingRight: 6,
+            paddingTop: 3,
+            paddingBottom: 3,
+            margin: 0,
         } as React.CSSProperties;
 
         const styleInput = {
@@ -957,17 +962,14 @@ export class MainWindowProfileEditPage {
 
         return (
             isEditing ?
-                <div>
-
-                    <input
-                        style={styleInput}
-                        value={categoryDescription}
-                        onChange={(event: any) => {
-                            event.preventDefault();
-                            setCategoryDescription(event.target.value);
-                        }}
-                    ></input>
-                </div>
+                <input
+                    style={styleInput}
+                    value={categoryDescription}
+                    onChange={(event: any) => {
+                        event.preventDefault();
+                        setCategoryDescription(event.target.value);
+                    }}
+                ></input>
                 :
                 <div
                     style={styleDiv}
@@ -981,6 +983,11 @@ export class MainWindowProfileEditPage {
         const [isEditing, setIsEditing] = React.useState(false);
         const [localPropertyName, setLocalPropertyName] = React.useState(propertyName);
         const [localPropertyDescription, setLocalPropertyDescription] = React.useState(category[propertyName]["DESCRIPTION"]);
+        // if this property is an environment property 
+        const envOs = this.getMainWindowClient().getEnvOs();
+        const envDefault = this.getMainWindowClient().getEnvDefault();
+        const envOsValue = envOs[propertyName];
+        const envDefaultValue = envDefault[propertyName];
         return (
             <div
                 style={{
@@ -1014,6 +1021,8 @@ export class MainWindowProfileEditPage {
                 </div>
                 <this._ElementPropertyDescription
                     isEditing={isEditing}
+                    envOsValue={envOsValue}
+                    envDefaultValue={envDefaultValue}
                     localPropertyDescription={localPropertyDescription}
                     setLocalPropertyDescription={setLocalPropertyDescription}
                 />
@@ -1156,8 +1165,8 @@ export class MainWindowProfileEditPage {
                 :
                 <ElementDropDownMenu
                     callbacks={{
-                        "Edit": () => setIsEditing(true),
-                        "Delete": deleteProperty,
+                        "Edit property title": () => setIsEditing(true),
+                        "Delete property": deleteProperty,
                         "Move up": moveUpProperty,
                         "Move down": moveDownProperty,
                     }}
@@ -1166,16 +1175,24 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementPropertyDescription = ({ isEditing, localPropertyDescription, setLocalPropertyDescription }: any) => {
+    private _ElementPropertyDescription = ({ isEditing, localPropertyDescription, setLocalPropertyDescription, envOsValue, envDefaultValue }: any) => {
         return (
             isEditing ?
                 <div
                     style={{
                         display: "flex",
-                        alignItems: "center",
+                        alignItems: "flex-start",
+                        flexDirection: "column",
                         color: "rgb(180, 180, 180)",
                         fontSize: 13,
+                        width: "70%",
+                        margin: 0,
                         marginTop: 2,
+                        paddingTop: 4,
+                        paddingBottom: 4,
+                        paddingLeft: 7,
+                        paddingRight: 7,
+
                     }}
                 >
                     <input
@@ -1184,7 +1201,8 @@ export class MainWindowProfileEditPage {
                             margin: 0,
                             outline: "none",
                             border: "solid 1px rgb(190, 190, 190)",
-                            width: "70%",
+                            width: "100%",
+                            marginBottom: 2,
                             paddingLeft: 6,
                             paddingRight: 6,
                             paddingTop: 3,
@@ -1196,15 +1214,18 @@ export class MainWindowProfileEditPage {
                             setLocalPropertyDescription(event.target.value);
                         }}
                     ></input>
+                    <this._ElementPropertyDefaultOsValues envDefaultValue={envDefaultValue} envOsValue={envOsValue}></this._ElementPropertyDefaultOsValues>
                 </div>
                 :
                 <div
                     style={{
                         display: "flex",
-                        alignItems: "center",
+                        alignItems: "flex-start",
+                        flexDirection: "column",
                         color: "rgb(180, 180, 180)",
                         fontSize: 13,
                         width: "70%",
+                        margin: 0,
                         marginTop: 2,
                         paddingTop: 4,
                         paddingBottom: 4,
@@ -1212,9 +1233,56 @@ export class MainWindowProfileEditPage {
                         paddingRight: 7,
                     }}
                 >
-                    {localPropertyDescription} &nbsp;
+                    <div style={{
+                        margin: 0,
+                        marginBottom: 2,
+                        borderWidth: 1,
+                        borderStyle: "solid",
+                        borderColor: "rgba(0,0,0,0)",
+                        paddingTop: 3,
+                        paddingBottom: 3,
+                        paddingLeft: 6,
+                        paddingRight: 6,
+                    }}>
+                        {localPropertyDescription} &nbsp;
+                    </div>
+                    <this._ElementPropertyDefaultOsValues envDefaultValue={envDefaultValue} envOsValue={envOsValue}></this._ElementPropertyDefaultOsValues>
                 </div>
+        )
+    }
 
+    private _ElementPropertyDefaultOsValues = ({ envDefaultValue, envOsValue }: any) => {
+        return (
+            envDefaultValue === undefined ? null :
+                <table style={{
+                    color: "rgb(180, 180, 180)",
+                    fontSize: 13,
+                    width: "100%",
+                    backgroundColor: "rgba(90, 90, 90, 1)",
+                    paddingLeft: 6,
+                    paddingRight: 6,
+                }}>
+                    <col style={{ width: "30%" }}>
+                    </col>
+                    <col style={{ width: "70%" }}>
+                    </col>
+                    <tr>
+                        <td>
+                            Default:
+                        </td>
+                        <td>
+                            {`${envDefaultValue}`}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Operating system:
+                        </td>
+                        <td>
+                            {envOsValue === undefined ? "DO NOT USE" : `${envOsValue}`}
+                        </td>
+                    </tr>
+                </table>
         )
     }
 
@@ -1420,6 +1488,7 @@ export class MainWindowProfileEditPage {
             const property = category[propertyName];
             const choices = property["choices"];
             choices.splice(index, 1);
+            this._forceUpdatePage();
         }
 
         return (

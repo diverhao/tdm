@@ -48,7 +48,10 @@ export class ChannelAgentsManager {
     /**
      * Create and initialize the epics-tca context from profile. <br>
      *
-     * It is invoked when the profile is selected.
+     * It is invoked when the profile is selected. <br>
+     * 
+     * The "DO NOT USE" values in EPICS_CA_ADDR_LIST, EPICS_PVA_ADDR_LIST, EPICS_CA_NAME_SERVERS, and EPICS_PVA_NAME_SERVERS 
+     * are converted to an invalid IP address 0.0.0.0.0 so that the user-defined value is ignored
      */
     createAndInitContext = async () => {
         if (this._context === undefined) {
@@ -58,7 +61,7 @@ export class ChannelAgentsManager {
             if (epicsLogLevelEntry !== undefined && epicsLogLevelEntry["value"] !== undefined) {
                 epicsLogLevel = type_log_levels[epicsLogLevelEntry["value"] as keyof typeof type_log_levels];
             }
-            this._context = new Context(this.getProfile().convertToTcaInput()["EPICS Environment"], epicsLogLevel);
+            this._context = new Context(this.getProfile().convertToTcaInput()["EPICS CA Settings"], epicsLogLevel);
             await this._context.initialize();
         } else {
             Log.info(this.getMainProcessId(), "EPICS CA context already exists");

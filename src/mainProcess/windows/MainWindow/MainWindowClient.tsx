@@ -55,6 +55,9 @@ export class MainWindowClient {
 
     private _prompt: PromptOnMainWindow;
 
+    private _envDefault: Record<string, any> = {};
+    private _envOs: Record<string, any> = {};
+
     constructor(mainWindowId: string, ipcServerPort: number, hostname: string | undefined = undefined) {
         this._loadCustomFonts();
         this._windowId = mainWindowId;
@@ -259,6 +262,22 @@ export class MainWindowClient {
     getSelectedProfile = () => {
         return this._profiles[this._selectedProfileName];
     };
+
+    getEnvDefault = () => {
+        return this._envDefault;
+    }
+
+    getEnvOs = () => {
+        return this._envOs;
+    }
+
+    setEnvDefault = (newEnv: Record<string, any>) => {
+        this._envDefault = newEnv;
+    }
+
+    setEnvOs = (newEnv: Record<string, any>) => {
+        this._envOs = newEnv;
+    }
 
 }
 

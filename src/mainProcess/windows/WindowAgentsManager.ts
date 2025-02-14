@@ -8,6 +8,7 @@ import { type_tdl } from "../file/FileReader";
 import { FileReader } from "../file/FileReader";
 import { Log } from "../log/Log";
 import { write, writeFileSync } from "fs";
+import { Environment } from "epics-tca";
 
 export type type_options_createDisplayWindow = {
     tdl: type_tdl;
@@ -654,10 +655,18 @@ export class WindowAgentsManager {
             const wsOpenerPort = wsOpenerServer.getPort();
             mainWindowAgent.sendFromMainProcess("update-ws-opener-port", wsOpenerPort);
 
+            // read default and OS-defined EPICS environment variables
+            // in main window editing page, we need env default and env os
+            const env = Environment.getTempInstance();
+            const envDefault = env.getEnvDefault();
+            const envOs = env.getEnvOs();
+
             mainWindowAgent.sendFromMainProcess(
                 "after-main-window-gui-created",
                 this.getMainProcess().getProfiles().serialize(),
-                this.getMainProcess().getProfilesFileName()
+                this.getMainProcess().getProfilesFileName(),
+                envDefault,
+                envOs,
             );
 
             // "Emitted when the application is activated"
@@ -671,7 +680,9 @@ export class WindowAgentsManager {
                     mainWindowAgent.sendFromMainProcess(
                         "after-main-window-gui-created",
                         this._mainProcess.getProfiles().serialize(),
-                        this._mainProcess.getProfilesFileName()
+                        this._mainProcess.getProfilesFileName(),
+                        envDefault,
+                        envOs,
                     );
                     // if (cmdLineSelectedProfile !== "") {
                     // 	mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", cmdLineSelectedProfile);

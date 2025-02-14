@@ -221,8 +221,12 @@ export class IpcManagerOnMainWindow {
      * After the main window GUI is created, the profiles and its file name are sent from main process. This function
      * is also invoked when the Profiles is changed. <br>
      */
-    private _handleAfterMainWindowGuiCreated = (event: any, profiles: Record<string, any>, profilesFileName: string) => {
+    private _handleAfterMainWindowGuiCreated = (event: any, profiles: Record<string, any>, profilesFileName: string, envDefault: Record<string, any>, envOs: Record<string, any>) => {
         const mainWindowClient = this.getMainWindowClient();
+        // in editing page, we need the env default and env os
+        console.log("===============+++++++++++++++++++", envDefault, envOs)
+        mainWindowClient.setEnvDefault(envDefault);
+        mainWindowClient.setEnvOs(envOs);
         mainWindowClient.setProfiles(profiles);
         mainWindowClient.setProfilesFileName(profilesFileName);
         mainWindowClient.setProfileEditPage(new MainWindowProfileEditPage(mainWindowClient));

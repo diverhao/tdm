@@ -34,7 +34,20 @@ export class Profile {
                 if (Array.isArray(entry)) {
                     let result = "";
                     for (let ii = 0; ii < entry.length; ii++) {
-                        const element = entry[ii].toString();
+                        let elementRaw = entry[ii];
+                        // special case: if the user sets "DO NOT USE" for the following properties,
+                        //               replace it to an invalid IP address 0.0.0.0.0 so that this
+                        //               property is ignored. 
+                        if (entryName === "EPICS_CA_ADDR_LIST"
+                            || entryName === "EPICS_PVA_ADDR_LIST"
+                            || entryName === "EPICS_CA_NAME_SERVERS"
+                            || entryName === "EPICS_PVA_NAME_SERVERS"
+                        ) {
+                            if (elementRaw === "DO NOT USE") {
+                                elementRaw = "0.0.0.0.0";
+                            }
+                        }
+                        const element = elementRaw.toString();
                         result = `${result} ${element}`;
                     }
                     categoryCopy[entryName] = result.trim();

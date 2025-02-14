@@ -21,7 +21,7 @@ import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import pidusage from "pidusage";
 import { spawn } from "child_process";
 import { SqlState } from "../archive/Sql";
-import { type_network_stats } from "epics-tca";
+import { Environment, type_network_stats } from "epics-tca";
 
 /**
  * Manage IPC messages sent from renderer process.
@@ -338,8 +338,14 @@ export class IpcManagerOnMainProcess {
             // read file
             const newProfiles = await this.getMainProcess().createProfilesFromFile(profilesFileName);
 
+            // read default and OS-defined EPICS environment variables
+            // in main window editing page, we need env default and env os
+            const env = Environment.getTempInstance();
+            const envDefault = env.getEnvDefault();
+            const envOs = env.getEnvOs();
+
             // tell main window to update
-            mainWindowAgent.sendFromMainProcess("after-main-window-gui-created", newProfiles.serialize(), profilesFileName);
+            mainWindowAgent.sendFromMainProcess("after-main-window-gui-created", newProfiles.serialize(), profilesFileName, envDefault, envOs);
         } catch (e) {
             mainWindowAgent.sendFromMainProcess("dialog-show-message-box",
                 {
