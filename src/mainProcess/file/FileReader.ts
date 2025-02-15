@@ -140,6 +140,24 @@ export class FileReader {
             encoding: "utf8",
         });
 
+        return this.parseDb(dbFileContentsRaw);
+
+    }
+
+    static parseDb = (dbFileContentsRaw: string) => {
+        // const fullFileName = this.resolveTdlFileName(fileName, profile, currentTdlFolder);
+        // if (fullFileName === undefined) {
+        //     Log.debug("-1", "readTdlFile() cannot find file", fileName);
+        //     return undefined;
+        // }
+
+        const leftParenthesis = uuidv4();
+        const rightParenthesis = uuidv4();
+
+        // const dbFileContentsRaw = fs.readFileSync(fullFileName, {
+        //     encoding: "utf8",
+        // });
+
         // remove comments, take care of ( and ) inside quotes
         const dbFileContentsArray = dbFileContentsRaw.split("\n");
         const dbFileContentsArray1: string[] = [];

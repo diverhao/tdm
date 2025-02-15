@@ -15,7 +15,7 @@ import { Table } from "../../helperWidgets/Table/Table";
 import { AlarmOutlineStyle } from "../BaseWidget/BaseWidget";
 import { ElementDropDownMenu } from "../../helperWidgets/SharedElements/DropDownMenu";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_PvTable_tdl = {
     type: string;
@@ -1015,9 +1015,10 @@ export class PvTable extends BaseWidget {
 
     _ElementChannelValueInputDiv = ({ channelNameLevel4, fieldName }: any) => {
         // always string type
-        const [value, setValue] = React.useState(`${this.getChannelValue(channelNameLevel4, fieldName)}`);
+        const currentValueRaw = this.getChannelValue(channelNameLevel4, fieldName);
+        const currentValue = currentValueRaw === undefined? "": currentValueRaw;
+        const [value, setValue] = React.useState(`${currentValue}`);
         const elementRef = React.useRef<any>(null);
-        const currentValue = this.getChannelValue(channelNameLevel4, fieldName);
         if (fieldName === "" || channelNameLevel4 === "") {
             return null;
         } else {
@@ -1038,6 +1039,8 @@ export class PvTable extends BaseWidget {
                         } catch (e) {
                             Log.error(e);
                         }
+                        // clear the input box, the updated value will write it
+                        setValue("");
 
                         elementRef.current?.blur();
                     }}
@@ -1073,7 +1076,8 @@ export class PvTable extends BaseWidget {
                         }}
                         onFocus={(event: any) => {
                             event.preventDefault();
-                            setValue(`${this.getChannelValue(channelNameLevel4, fieldName)}`);
+                            const valueShown = this.getChannelValue(channelNameLevel4, fieldName);
+                            setValue(`${valueShown === undefined? "": valueShown}`);
                             if (elementRef.current !== null) {
                                 elementRef.current.style["border"] = "solid 1px rgba(0,0,0,1)";
                             }

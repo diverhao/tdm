@@ -942,9 +942,9 @@ export class DisplayWindowClient {
             reader.onload = (event: any) => {
                 const fileContents = event.target.result;
                 const currentSite = `https://${window.location.host}/`;
-                const tdl = JSON.parse(event.target.result);
+                const tdlStr = event.target.result;
                 this.getIpcManager().sendPostRequestCommand("open-tdl-file", {
-                    tdl: tdl,
+                    tdlStr: tdlStr,
                     tdlFileNames: [tdlFileName],
                     mode: g_widgets1.isEditing() ? "editing" : "operating",
                     editable: true,
@@ -971,14 +971,15 @@ export class DisplayWindowClient {
             inputElement.type = "file";
             inputElement.style.display = "none";
             inputElement.addEventListener("change", (event: any) => {
-                const tdlFileName = event.target.files[0];
-                Log.debug(tdlFileName);
+                const tdlFileNameBlob = event.target.files[0];
+                const tdlFileName = tdlFileNameBlob["name"];
                 const reader = new FileReader();
                 reader.onload = (event: any) => {
                     const currentSite = `https://${window.location.host}/`;
-                    const tdl = JSON.parse(event.target.result);
+                    // may be tdl or db file
+                    const tdlStr = event.target.result;
                     this.getIpcManager().sendPostRequestCommand("open-tdl-file", {
-                        tdl: tdl,
+                        tdlStr: tdlStr,
                         tdlFileNames: [tdlFileName],
                         mode: g_widgets1.isEditing() ? "editing" : "operating",
                         editable: true,
@@ -997,7 +998,7 @@ export class DisplayWindowClient {
                     })
                         ;
                 };
-                reader.readAsText(tdlFileName);
+                reader.readAsText(tdlFileNameBlob);
                 event.target.remove();
             })
             document.body.appendChild(inputElement);

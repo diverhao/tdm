@@ -1186,6 +1186,7 @@ export class IpcManagerOnMainProcess {
         event: any,
         options: {
             tdl?: type_tdl;
+            tdlStr?: string; // for web mode only, the web mode reads contents of the file (.tdl or .db), but it cannot parse the file contents in browser
             tdlFileNames?: string[];
             mode: "editing" | "operating";
             editable: boolean;
@@ -1198,8 +1199,6 @@ export class IpcManagerOnMainProcess {
         },
         httpResponse: any = undefined
     ) => {
-        // fs.writeFileSync("/Users/haohao/tdm.log", `trying to open tdl file step A ${JSON.stringify(options)}\n`, { flag: "a" });
-
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
@@ -1216,42 +1215,68 @@ export class IpcManagerOnMainProcess {
         }
 
         // open a local tdl file from web page, the "tdl" field is not empty
-        if (options["tdl"] !== undefined && options["tdlFileNames"]?.length === 1 && httpResponse !== undefined) {
-            const tdl = options["tdl"];
+        if (options["tdlStr"] !== undefined && options["tdlFileNames"]?.length === 1 && httpResponse !== undefined) {
+            const tdlFileName = options["tdlFileNames"][0];
+            const tdlStr = options["tdlStr"];
             // let editable = selectedProfile.getManuallyOpenedTdlEditable();
 
-            const editableForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Editable"];
-            if (editableForManuallyOpenedFiles !== undefined) {
-                if (editableForManuallyOpenedFiles["value"] === "Yes") {
-                    editable = true;
-                } else {
-                    editable = false;
+            if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl") {
+                if (path.extname(tdlFileName) !== ".tdl") {
+                    // we are able to edit ".edl" files, however, when we save them, the saving dialog is shown to "save as"
+                    // editable = false;
                 }
+
+                const editableForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Editable"];
+                if (editableForManuallyOpenedFiles !== undefined) {
+                    if (editableForManuallyOpenedFiles["value"] === "Yes") {
+                        editable = true;
+                    } else {
+                        editable = false;
+                    }
+                }
+
+                const modeForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Mode"];
+                if (modeForManuallyOpenedFiles !== undefined) {
+                    if (modeForManuallyOpenedFiles["value"] === "operating") {
+                        mode = "operating";
+                    } else {
+                        mode = "editing";
+                        // "editing" mode overrides "editable"
+                        editable = true;
+                    }
+                }
+                // parse file contents
+                const tdl = JSON.parse(tdlStr);
+                windowAgentsManager.createDisplayWindow(
+                    {
+                        tdl: tdl,
+                        mode: mode,
+                        editable: editable,
+                        tdlFileName: options["tdlFileNames"][0],
+                        macros: options["macros"],
+                        replaceMacros: options["replaceMacros"],
+                        hide: false,
+                        postCommand: options["postCommand"],
+                    },
+                    httpResponse
+                );
+            } else if (path.extname(tdlFileName) === ".db" || path.extname(tdlFileName) === ".template") {
+                const db = FileReader.parseDb(tdlStr);
+                // const db = FileReader.readDb(tdlFileName, selectedProfile, options["currentTdlFolder"]);
+                const channelNames: string[] = [];
+                if (db !== undefined) {
+                    for (let ii = 0; ii < db.length; ii++) {
+                        const channelName = db[ii]["NAME"];
+                        if (channelName !== undefined) {
+                            channelNames.push(channelName);
+                        }
+                    }
+                }
+                this.createUtilityDisplayWindow(undefined, "PvTable", { channelNames: channelNames }, httpResponse);
+            } else {
+
             }
 
-            const modeForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Mode"];
-            if (modeForManuallyOpenedFiles !== undefined) {
-                if (modeForManuallyOpenedFiles["value"] === "operating") {
-                    mode = "operating";
-                } else {
-                    mode = "editing";
-                    // "editing" mode overrides "editable"
-                    editable = true;
-                }
-            }
-            windowAgentsManager.createDisplayWindow(
-                {
-                    tdl: tdl,
-                    mode: mode,
-                    editable: editable,
-                    tdlFileName: options["tdlFileNames"][0],
-                    macros: options["macros"],
-                    replaceMacros: options["replaceMacros"],
-                    hide: false,
-                    postCommand: options["postCommand"],
-                },
-                httpResponse
-            );
             return;
         }
 
@@ -1259,6 +1284,7 @@ export class IpcManagerOnMainProcess {
         let tdlFileNames = options["tdlFileNames"];
         try {
             if (tdlFileNames === undefined || tdlFileNames.length > 0) {
+
                 // open dialog to select tdl files
                 // in this case, the file is manually opened
                 if (tdlFileNames === undefined) {
@@ -1331,7 +1357,7 @@ export class IpcManagerOnMainProcess {
                             // we are able to edit ".edl" files, however, when we save them, the saving dialog is shown to "save as"
                             // editable = false;
                         }
-                        // fs.writeFileSync("/Users/haohao/tdm.log", `trying to open tdl file ${tdlFileName}\n`, { flag: "a" });
+
                         FileReader.readTdlFile(tdlFileName, selectedProfile, options["currentTdlFolder"]).then((tdlFileResult) => {
                             if (tdlFileResult !== undefined) {
                                 const tdl = tdlFileResult["tdl"];
@@ -2416,7 +2442,7 @@ export class IpcManagerOnMainProcess {
                     epicsStats: epicsStats,
                 });
             }
-    
+
         }
 
     }
