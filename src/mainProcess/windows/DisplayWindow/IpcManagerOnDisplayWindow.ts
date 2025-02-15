@@ -1183,7 +1183,6 @@ export class IpcManagerOnDisplayWindow {
             const widget = g_widgets1.getWidget2(data["widgetKey"]);
             if (widget instanceof ProfilesViewer) {
                 widget.updateEpicsStats(data["epicsStats"]);
-                console.log("a===============================")
             }
         } catch (e) {
             Log.error(e);

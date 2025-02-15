@@ -401,13 +401,13 @@ export class ProfilesViewer extends BaseWidget {
                 >
                     {profileName}
                     {showJson ?
-                        <img src="../../../webpack/resources/webpages/arrowDown.svg" style={{
+                        <img src="../../../webpack/resources/webpages/arrowUp.svg" style={{
                             width: 8,
                             height: 8,
                             marginLeft: 15,
                         }}></img>
                         :
-                        <img src="../../../webpack/resources/webpages/arrowUp.svg" style={{
+                        <img src="../../../webpack/resources/webpages/arrowDown.svg" style={{
                             width: 8,
                             height: 8,
                             marginLeft: 15,
@@ -430,6 +430,18 @@ export class ProfilesViewer extends BaseWidget {
     }
 
     _ElementEpicsCaEnv = ({ show }: any) => {
+        const envJson = this.getText()["epics-ca-env"];
+        let envUser: Record<string, any> = {}
+        let envOs: Record<string, any> = {}
+        let envDefault: Record<string, any> = {}
+        let envSource: Record<string, any> = {}
+        if (envJson !== undefined) {
+            envUser = envJson["User defined"];
+            envOs = envJson["Operating system defined"];
+            envDefault = envJson["EPICS default"];
+            envSource = envJson["TDM uses"];
+        }
+
         return (
             <div style={{
                 display: show ? "inline-flex" : "none",
@@ -438,11 +450,110 @@ export class ProfilesViewer extends BaseWidget {
                 <div>
                     <hr></hr>
                 </div>
-                It shows the various
+                <p style={{ margin: 0, marginBottom: 4, color: "rgba(100, 100, 100, 1)" }}>
+                    The table shows the environment variables used by TDM. The are all for EPICS.
+                </p>
+                <p style={{ margin: 0, marginBottom: 4, color: "rgba(100, 100, 100, 1)"  }}>
+                    There are 3 sources
+                    that the environment come from: default, operating system, and user. TDM tries to use the user-defined
+                    value first. If it does not exist or not valid (shown as NOT SET in the table below),
+                    TDM will try the operating system defined value, then
+                    the default value. The values being used by TDM are in red color.
+                </p>
+                <p style={{ margin: 0, marginBottom: 0, color: "rgba(100, 100, 100, 1)"  }}>
+                    The user-defined values can be set in profile editor.
+                </p>
                 <div>
                     <hr></hr>
                 </div>
-                {Object.keys(this.getText()["epics-ca-env"]).map((profileName: string) => {
+                <table style={{ border: "none", borderCollapse: "collapse" }}>
+                    <tr style={{ backgroundColor: "rgba(210, 210, 210, 1)" }}>
+                        <th align="left">
+                            Environment variable name
+                        </th>
+                        <th align="left">
+                            User
+                        </th>
+                        <th align="left">
+                            Operation system
+                        </th>
+                        <th align="left">
+                            Default
+                        </th>
+                    </tr>
+                    {Object.keys(envSource).map((envName: string, index: number) => {
+                        let envUserValue = envUser[envName];
+                        let envOsValue = envOs[envName];
+                        let envDefaultValue = envDefault[envName];
+                        let envSourceValue = envSource[envName];
+                        if (envUserValue === undefined) {
+                            envUserValue = "NOT SET";
+                        }
+                        if (envOsValue === undefined) {
+                            envOsValue = "NOT SET";
+                        }
+                        return (
+                            <tr
+                                key={envName}
+                                style={{
+                                    backgroundColor: index % 2 === 0 ? "" : "rgba(210, 210, 210, 1)"
+                                }}>
+                                <td>
+                                    {envName}
+                                </td>
+                                <td style={{
+                                    color: envSourceValue === "user" ? "rgba(255,0,0,1)" : "",
+                                }}>
+                                    {Array.isArray(envUserValue) ?
+                                        <>
+                                            {envUserValue.map((element: any, index: number) => {
+                                                return (<>
+                                                    {`${element}`} <br></br>
+                                                </>
+                                                )
+                                            })}
+                                        </>
+                                        :
+                                        `${envUserValue}`
+                                    }
+                                </td>
+                                <td style={{
+                                    color: envSourceValue === "os" ? "rgba(255,0,0,1)" : "",
+                                }}>
+                                    {Array.isArray(envOsValue) ?
+                                        <>
+                                            {envOsValue.map((element: any, index: number) => {
+                                                return (<>
+                                                    {`${element}`} <br></br>
+                                                </>
+                                                )
+                                            })}
+                                        </>
+                                        :
+                                        `${envOsValue}`
+                                    }
+                                </td>
+                                <td style={{
+                                    color: envSourceValue === "default" ? "rgba(255,0,0,1)" : "",
+                                }}>
+                                    {Array.isArray(envDefaultValue) ?
+                                        <>
+                                            {envDefaultValue.map((element: any, index: number) => {
+                                                return (<>
+                                                    {`${element}`} <br></br>
+                                                </>
+                                                )
+                                            })}
+                                        </>
+                                        :
+                                        `${envDefaultValue}`
+                                    }
+                                </td>
+                            </tr>
+                        )
+                    })}
+                </table>
+                {/* {Object.keys(this.getText()["epics-ca-env"]).map((profileName: string) => {
                     const profileJson = this.getText()["epics-ca-env"][profileName];
                     return (
                         <this._ElementProfileButton
@@ -452,7 +563,7 @@ export class ProfilesViewer extends BaseWidget {
                         </this._ElementProfileButton>
                     )
                 })
-                }
+                } */}
             </div>
         )
     }

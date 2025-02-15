@@ -1279,7 +1279,7 @@ export class MainWindowProfileEditPage {
                             Operating system:
                         </td>
                         <td>
-                            {envOsValue === undefined ? "DO NOT USE" : `${envOsValue}`}
+                            {envOsValue === undefined ? "DO NOT SET" : `${envOsValue}`}
                         </td>
                     </tr>
                 </table>

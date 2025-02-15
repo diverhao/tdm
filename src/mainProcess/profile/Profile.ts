@@ -35,7 +35,7 @@ export class Profile {
                     let result = "";
                     for (let ii = 0; ii < entry.length; ii++) {
                         let elementRaw = entry[ii];
-                        // special case: if the user sets "DO NOT USE" for the following properties,
+                        // special case: if the user sets "DO NOT SET" for the following properties,
                         //               replace it to an invalid IP address 0.0.0.0.0 so that this
                         //               property is ignored. 
                         if (entryName === "EPICS_CA_ADDR_LIST"
@@ -43,7 +43,7 @@ export class Profile {
                             || entryName === "EPICS_CA_NAME_SERVERS"
                             || entryName === "EPICS_PVA_NAME_SERVERS"
                         ) {
-                            if (elementRaw === "DO NOT USE") {
+                            if (elementRaw === "DO NOT SET") {
                                 elementRaw = "0.0.0.0.0";
                             }
                         }
@@ -175,11 +175,11 @@ export class Profile {
             "About": {
                 "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Description of this profile.",
             },
-            "EPICS Environment": {
-                "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Basic EPIC Environment",
-                "EPICS_CA_ADDR_LIST": { value: ["localhost"], DESCRIPTION: "Hosts where the EPICS data come from. Format: hostName, hostName:port, ipAddress, or ipAddress:port " },
-                "EPICS_CA_AUTO_ADDR_LIST": { value: "Yes", DESCRIPTION: "Whether to search PV name in local network.", choices: ["Yes", "No"] },
-            },
+            // "EPICS Environment": {
+            //     "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Basic EPIC Environment",
+            //     "EPICS_CA_ADDR_LIST": { value: ["localhost"], DESCRIPTION: "Hosts where the EPICS data come from. Format: hostName, hostName:port, ipAddress, or ipAddress:port " },
+            //     "EPICS_CA_AUTO_ADDR_LIST": { value: "Yes", DESCRIPTION: "Whether to search PV name in local network.", choices: ["Yes", "No"] },
+            // },
             "EPICS Custom Environment": {
                 "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Custom EPICS environment.",
                 "Default TDL Files": { value: [], DESCRIPTION: "Open these tdl files when this profile starts to run. It could be an absolute path, relative path, or a web path." },

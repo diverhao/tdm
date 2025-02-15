@@ -75,7 +75,7 @@ export class PvMonitor extends BaseWidget {
         this.setText({ ...PvMonitor._defaultTdl.text, ...widgetTdl.text });
 
         this._table = new Table(this.initColumnWidths(), this);
-        this.lineHeight = this.getAllStyle()["fontSize"] * 1.5;
+        this.lineHeight = this.getStyle()["fontSize"] * 1.5;
 
         this._ElementTableCell = this.getTable().getElementTableCell();
         this._ElementTableLine = this.getTable().getElementTableLine();
@@ -90,7 +90,7 @@ export class PvMonitor extends BaseWidget {
         const result: number[] = [];
         const firstColumnWidth = "30%"; this.getAllStyle()["width"] * 0.2;
         const secondColumnWidth = "30%"; this.getAllStyle()["width"] * 0.7;
-        result.push(this.getAllStyle()["fontSize"] * 15);
+        result.push(this.getStyle()["fontSize"] * 15);
         result.push(200);
         return result;
     }
@@ -307,7 +307,7 @@ export class PvMonitor extends BaseWidget {
             forceUpdate({});
         });
         this.updateDataUponRender();
-
+        console.log("this.columnWidths === ", this.getTable().columnWidths)
         React.useEffect(() => {
             if (tableRef.current !== null) {
                 const scrollHeight = tableRef.current.scrollHeight;

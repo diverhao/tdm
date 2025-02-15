@@ -50,7 +50,7 @@ export class ChannelAgentsManager {
      *
      * It is invoked when the profile is selected. <br>
      * 
-     * The "DO NOT USE" values in EPICS_CA_ADDR_LIST, EPICS_PVA_ADDR_LIST, EPICS_CA_NAME_SERVERS, and EPICS_PVA_NAME_SERVERS 
+     * The "DO NOT SET" values in EPICS_CA_ADDR_LIST, EPICS_PVA_ADDR_LIST, EPICS_CA_NAME_SERVERS, and EPICS_PVA_NAME_SERVERS 
      * are converted to an invalid IP address 0.0.0.0.0 so that the user-defined value is ignored
      */
     createAndInitContext = async () => {
