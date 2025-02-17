@@ -385,6 +385,8 @@ export class IpcManagerOnDisplayWindow {
                 g_widgets1.createWidgetFromMouse("DataViewer");
             } else if (subcommand === "xy-plot") {
                 g_widgets1.createWidgetFromMouse("XYPlot");
+            } else if (subcommand === "channel-graph") {
+                g_widgets1.createWidgetFromMouse("ChannelGraph");
             } else if (subcommand === "embedded-display") {
                 g_widgets1.createWidgetFromMouse("EmbeddedDisplay");
             } else if (subcommand === "group") {

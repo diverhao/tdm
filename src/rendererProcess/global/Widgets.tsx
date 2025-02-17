@@ -314,13 +314,6 @@ export class Widgets {
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
-            case "ChannelGraph":
-                tdl = ChannelGraph.generateDefaultTdl("ChannelGraph");
-                tdl.style.left = x;
-                tdl.style.top = y;
-                tdl.style.width = width;
-                tdl.style.height = height;
-                break;
             case "Calculator":
                 tdl = Calculator.generateDefaultTdl("Calculator");
                 tdl.style.left = x;
@@ -545,6 +538,13 @@ export class Widgets {
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
+            case "ChannelGraph":
+                tdl = ChannelGraph.generateDefaultTdl("ChannelGraph");
+                tdl.style.left = x;
+                tdl.style.top = y;
+                tdl.style.width = width;
+                tdl.style.height = height;
+                break;
             case "PvTable":
                 tdl = PvTable.generateDefaultTdl("PvTable");
                 tdl.style.left = x;
@@ -590,10 +590,6 @@ export class Widgets {
             }
             case "Terminal": {
                 widget = new Terminal(widgetTdl);
-                break;
-            }
-            case "ChannelGraph": {
-                widget = new ChannelGraph(widgetTdl);
                 break;
             }
             case "Calculator": {
@@ -734,6 +730,10 @@ export class Widgets {
             }
             case "XYPlot": {
                 widget = new XYPlot(widgetTdl);
+                break;
+            }
+            case "ChannelGraph": {
+                widget = new ChannelGraph(widgetTdl);
                 break;
             }
             case "PvTable": {

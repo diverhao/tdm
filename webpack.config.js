@@ -31,7 +31,7 @@ module.exports = {
 			process: "process/browser",
 		}),
 		new webpack.HotModuleReplacementPlugin(),
-        // new BundleAnalyzerPlugin()
+		// new BundleAnalyzerPlugin()
 	],
 	//HH ------------ javascript -----------------
 	//HH the webpack inject this file's transpilation to generated html file: dist/index.html
@@ -45,8 +45,8 @@ module.exports = {
 
 	output: {
 		path: path.resolve(__dirname, "dist/webpack"),
-        // otherwise comes with a blank window
-        publicPath: "",
+		// otherwise comes with a blank window
+		publicPath: "",
 	},
 
 	// entry: './src/mainProcess/windows/DisplayWindow/DisplayWindowClient.tsx',
@@ -85,9 +85,9 @@ module.exports = {
 			// fs: require.resolve("browserify-fs"),
 			// os: require.resolve("os-browserify/browser"),
 			path: require.resolve("path-browserify"),
-            fs: false,
-            os: false,
-            // path: false,
+			fs: false,
+			os: false,
+			// path: false,
 			//! the only place that uses child_process on client side is the ActionButton "execute command" choice
 			child_process: false,
 		},
@@ -98,11 +98,22 @@ module.exports = {
 	//HH very convenient: automatic udpate ...
 	devServer: {
 		// open: true,
-        // hot update bundle file 
-        hot: true,
-        devMiddleware: {
-            writeToDisk: true,
-         },    
-      
+		// hot update bundle file
+		hot: true,
+		devMiddleware: {
+			writeToDisk: true,
+		},
+        // catch errors produced by vis-network lib in ChannelGraph, 
+        // this error is more like a warning
+		client: {
+			overlay: {
+				runtimeErrors: (error) => {
+					if (error.message.includes("ResizeObserver loop completed with undelivered notifications")) {
+						return false;
+					}
+					return true;
+				},
+			},
+		},
 	},
 };

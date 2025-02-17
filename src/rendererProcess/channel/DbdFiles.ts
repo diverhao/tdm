@@ -20,6 +20,46 @@ export class DbdFiles {
 		return result;
 	};
 
+
+    getRecordTypeInLinkFieldNames = (recordType: string) => {
+		const result: string[] = [];
+		const data = this.getRecordTypes()[recordType];
+		if (data !== undefined) {
+			for (let field of data["fields"]) {
+				if (field["TYPE"] === "DBF_INLINK") {
+					result.push(field["NAME"]);
+				}
+			}
+		}
+		return result;
+    }
+
+    getRecordTypeOutLinkFieldNames = (recordType: string) => {
+		const result: string[] = [];
+		const data = this.getRecordTypes()[recordType];
+		if (data !== undefined) {
+			for (let field of data["fields"]) {
+				if (field["TYPE"] === "DBF_OUTLINK") {
+					result.push(field["NAME"]);
+				}
+			}
+		}
+		return result;
+    }
+
+    getRecordTypeFwdLinkFieldNames = (recordType: string) => {
+		const result: string[] = [];
+		const data = this.getRecordTypes()[recordType];
+		if (data !== undefined) {
+			for (let field of data["fields"]) {
+				if (field["TYPE"] === "DBF_FWDLINK") {
+					result.push(field["NAME"]);
+				}
+			}
+		}
+		return result;
+    }
+
 	// get all choices of a menu
 	getMenuChoices = (menu: string): string[] => {
 		const result: string[] = [];
@@ -73,6 +113,7 @@ export class DbdFiles {
 		}
 		return result;
 	};
+
 
     // get the default value for each field of a record type, the default value is either a number or (empty) string
 	getRecordTypeFieldDefaultValues = (recrodType: string, type: "all" | "readable" = "readable"): (number | string)[] => {

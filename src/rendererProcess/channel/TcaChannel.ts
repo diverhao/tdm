@@ -53,9 +53,9 @@ export class TcaChannel {
     static regexGlobalChannelName = /^glb:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(<([(number)(string)(number\[\])(string\[\])(enum)]+)>)?(\(([a-zA-Z0-9\:\-\_\.;,]+)\))?$/;
     // allowed character in EPICS channel name
     // a-z A-Z 0-9 _ - : . ; [ ] < > 
-    static regexEpicsChannelName = /^[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]*$/;
+    static regexEpicsChannelName = /^[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+$/;
     // "pva://" + regular EPICS PV name
-    static regexPvaChannelName = /^pva:\/\/[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]*$/;
+    static regexPvaChannelName = /^pva:\/\/[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+$/;
 
     constructor(channelName: string) {
 
@@ -365,9 +365,9 @@ export class TcaChannel {
         widgetKey: string | undefined,
         ioTimeout: number,
         dbrType: Channel_DBR_TYPES | undefined,
-        useInterval: boolean,
+        useInterval: boolean, // only use interval (0.1 s) to send back data, the return value is undefined in this case
         callback?: () => void
-    ): Promise<type_dbrData | type_LocalChannel_data | void> => {
+    ): Promise<type_dbrData | type_LocalChannel_data > => {
 
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const ipcManager = displayWindowClient.getIpcManager();
@@ -394,7 +394,7 @@ export class TcaChannel {
                 return { value: undefined };
             }
         }
-        return;
+        return { value: undefined };
     };
 
 

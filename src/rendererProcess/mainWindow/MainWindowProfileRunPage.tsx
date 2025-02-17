@@ -75,6 +75,10 @@ export class MainWindowProfileRunPage {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: [] });
         }
 
+        const openChannelGraphWindow = () => {
+            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "ChannelGraph", {channelNames: []});
+        }
+
         const openPvMonitorWindow = () => {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "PvMonitor", { channelNames: [] });
         }
@@ -118,6 +122,7 @@ export class MainWindowProfileRunPage {
             "Open default windows": openDefaultDisplayWindows,
             "Data Viewer": openDataViewerWindow,
             "Probe": openProbeWindow,
+            "Channel Graph": openChannelGraphWindow,
             "PV Table": openPvTablesWindow,
             "PV Monitor": openPvMonitorWindow,
             "CaSnooper": openCaSnooperWindow,

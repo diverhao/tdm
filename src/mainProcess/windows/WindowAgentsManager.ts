@@ -218,7 +218,6 @@ export class WindowAgentsManager {
                 // for ssh-server, resolved when websocket-ipc-connected is received in IpcManagerOnMainProcess
                 // it means the ssh-client's display window has connected to its own websocket IPC
                 await displayWindowAgent.creationPromise;
-
                 // (4)
                 displayWindowAgent.sendFromMainProcess("new-tdl", {
                     newTdl: tdl,
@@ -243,9 +242,7 @@ export class WindowAgentsManager {
                 );
                 return displayWindowAgent;
             } catch (e) {
-                console.log("aaa")
                 Log.error(this.getMainProcessId(), e);
-                console.log("bbb")
                 return undefined;
             }
         }
@@ -515,7 +512,7 @@ export class WindowAgentsManager {
         httpResponse: any = undefined,
     ) => {
         try {
-            if (utilityType === "Probe") {
+            if (utilityType === "Probe" || utilityType === "ChannelGraph") {
                 // utilityOptions["recordTypesFieldNames"] = this.getMainProcess().getDbdFiles().getAllRecordTypeFieldNames();
                 // utilityOptions["recordTypesMenus"] = this.getMainProcess().getDbdFiles().getAllMenusChoices();
                 utilityOptions["recordTypes"] = this.getMainProcess().getChannelAgentsManager().getDbdFiles().getRecordTypes();

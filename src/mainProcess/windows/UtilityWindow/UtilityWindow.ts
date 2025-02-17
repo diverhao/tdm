@@ -207,7 +207,7 @@ export class UtilityWindow {
                     style: {
                         position: "absolute",
                         display: "inline-block",
-                        backgroundColor: `rgba(255, 255, 255,1)`,
+                        backgroundColor: `rgba(232,232,232,1)`,
                         // all 0
                         margin: 0,
                         border: 0,
@@ -215,9 +215,7 @@ export class UtilityWindow {
                         left: 0,
                         top: 0,
                         height: 500,
-                        width: 800,
-                        // height: "100%",
-                        // width: "100%",
+                        width: 500,
                         overflow: "hidden",
                     },
                     macros: [],
@@ -231,6 +229,7 @@ export class UtilityWindow {
                     showGrid: true,
                 } as type_Canvas_tdl,
             };
+
         } else if (utilityType === "Calculator") {
             return {
                 Canvas: {
