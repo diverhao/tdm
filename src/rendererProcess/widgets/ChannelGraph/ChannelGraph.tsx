@@ -3,7 +3,7 @@ import { MouseEvent } from "react";
 import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
-import { ChannelGraphSidebar } from "./ChannelGraphSidebar";
+
 import * as GlobalMethods from "../../global/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 // import { TextUpdateRules } from "./TextUpdateRules";
@@ -1403,7 +1403,7 @@ export class ChannelGraph extends BaseWidget {
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {
-            this._sidebar = new ChannelGraphSidebar(this);
+            // this._sidebar = new ChannelGraphSidebar(this);
         }
     }
 }
