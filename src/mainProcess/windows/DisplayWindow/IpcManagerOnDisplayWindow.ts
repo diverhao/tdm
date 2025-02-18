@@ -1,6 +1,6 @@
 import { DisplayWindowClient } from "./DisplayWindowClient";
 import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
-import { rendererWindowStatus } from "../../../rendererProcess/global/Widgets";
+import { rendererWindowStatus, type_widget, Widgets } from "../../../rendererProcess/global/Widgets";
 import { type_dbrData } from "../../../rendererProcess/global/GlobalVariables";
 import { g_flushWidgets } from "../../../rendererProcess/helperWidgets/Root/Root";
 import { type_tdl } from "../../file/FileReader";
@@ -27,6 +27,7 @@ import { PvMonitor } from "../../../rendererProcess/widgets/PvMonitor/PvMonitor"
 import { type_DialogInputBox, type_DialogMessageBox } from "../../../rendererProcess/helperWidgets/Prompt/Prompt";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
 import { TcaChannel } from "../../../rendererProcess/channel/TcaChannel";
+import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/ChannelGraph";
 
 // var recorder;
 // var blobs = [];
@@ -165,6 +166,7 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("select-a-file", this.handleSelectAFile);
         this.ipcRenderer.on("widget-specific-action", this.handleWidgetSpecificAction);
         this.ipcRenderer.on("local-font-names", this.handleLocalFontNames);
+        this.ipcRenderer.on("db-file-contents", this.handleDbFileContents);
 
         this.ipcRenderer.on("start-record-video", this.handleStartRecordVideo);
 
@@ -327,8 +329,6 @@ export class IpcManagerOnDisplayWindow {
                 g_widgets1.createWidgetFromMouse("BinaryImage");
             } else if (subcommand === "terminal") {
                 g_widgets1.createWidgetFromMouse("Terminal");
-            } else if (subcommand === "channel-graph") {
-                g_widgets1.createWidgetFromMouse("ChannelGraph");
             } else if (subcommand === "calculator") {
                 g_widgets1.createWidgetFromMouse("Calculator");
             } else if (subcommand === "label") {
@@ -468,7 +468,7 @@ export class IpcManagerOnDisplayWindow {
         } else if (command === "terminal") {
             g_widgets1.openTerminalWindow();
         } else if (command === "channel-graph") {
-            g_widgets1.openChannelGraphWindow();
+            g_widgets1.openChannelGraphWindow(subcommand as string[]);
         } else if (command === "calculator") {
             g_widgets1.openCalculatorWindow();
         } else if (command === "help") {
@@ -551,6 +551,7 @@ export class IpcManagerOnDisplayWindow {
 
         // special widgets that has new dbr data mapping, this mapping should only occurs once
         const dbrDataMappedWidgetKeys: string[] = [];
+        const dbrDataMappedWidgets: type_widget[] = [];
 
         for (let channelName of channelNames) {
             try {
@@ -587,6 +588,7 @@ export class IpcManagerOnDisplayWindow {
                         tcaChannel.appendToDbrData(data);
                     }
                     // (2)
+                    console.log(channelName, "--", tcaChannel.getDbrData());
                     const widgetKeys = tcaChannel.getWidgetKeys();
                     for (let widgetKey of widgetKeys) {
                         g_widgets1.addToForceUpdateWidgets(widgetKey);
@@ -597,8 +599,8 @@ export class IpcManagerOnDisplayWindow {
                             if (widget instanceof DataViewer) {
                                 g_widgets1.removeFromForceUpdateWidgets(widgetKey);
                             }
-                            if (widget instanceof DataViewer || widget instanceof XYPlot || widget instanceof Terminal) {
-                                widget.mapDbrDataWitNewData(Object.keys(newDbrData));
+                            if (widget instanceof DataViewer || widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph) {
+                                dbrDataMappedWidgets.push(widget);
                                 dbrDataMappedWidgetKeys.push(widgetKey)
                             }
                         }
@@ -606,6 +608,12 @@ export class IpcManagerOnDisplayWindow {
                 }
             } catch (e) {
                 Log.error(e);
+            }
+        }
+
+        for (const widget of dbrDataMappedWidgets) {
+            if (widget instanceof DataViewer || widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph) {
+                widget.mapDbrDataWitNewData(Object.keys(newDbrData));
             }
         }
 
@@ -1126,6 +1134,21 @@ export class IpcManagerOnDisplayWindow {
 
     handleLocalFontNames = (event: any, localFontNames: string[]) => {
         FontsData.g_localFonts = localFontNames;
+    }
+
+    handleDbFileContents = (event: any, data: {
+        displayWindowId: string,
+        fileName: string,
+        db: Record<string, any>[]
+    }) => {
+        console.log("received db file", data)
+        const widgets = g_widgets1.getWidgets2().values();
+        for (const widget of widgets) {
+            if (widget instanceof ChannelGraph) {
+                widget.loadDbFile(data["fileName"], data["db"]);
+                break;
+            }
+        }
     }
 
     handleTerminalCommandResult = (event: any, result: {

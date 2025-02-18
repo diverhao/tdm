@@ -437,12 +437,12 @@ export class ContextMenuDesktop {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "calculator");
                     },
                 },
-                {
-                    label: "Channel Graph",
-                    click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "channel-graph");
-                    },
-                },
+                // {
+                //     label: "Channel Graph",
+                //     click: () => {
+                //         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "channel-graph");
+                //     },
+                // },
                 // do not explicitly create Help widget
                 // {
                 //     label: "Help",
@@ -1237,12 +1237,12 @@ export class ContextMenuDesktop {
                 this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "calculator");
             },
         },
-        // {
-        //     label: "Channel Graph",
-        //     click: () => {
-        //         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "channel-graph");
-        //     },
-        // },
+        {
+            label: "Channel Graph",
+            click: () => {
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "channel-graph", this._widgetKeys);
+            },
+        },
 
         { type: "separator" },
         {

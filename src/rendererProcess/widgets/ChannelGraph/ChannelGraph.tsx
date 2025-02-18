@@ -23,6 +23,10 @@ import { Log } from "../../../mainProcess/log/Log";
 import { DbdFiles } from "../../channel/DbdFiles";
 
 
+enum type_channelSource {
+    dbFile,
+    ioc,
+};
 
 
 export type type_ChannelGraph_tdl = {
@@ -73,6 +77,82 @@ export class ChannelGraph extends BaseWidget {
     readonly rtypWaitingName: string = uuidv4();
     _dbdFiles: DbdFiles;
 
+    networkData: {
+        nodes: DataSet<any, "id">;
+        edges: DataSet<any, "id">;
+
+    } = { nodes: new DataSet({}), edges: new DataSet({}) };
+
+    dbFiles: Record<string, Record<string, any>[]> = {};
+
+    currentId: number = 0;
+
+    networkClickCallback: any = () => { };
+
+    networkDoubleClickCallback: any = () => { };
+
+    forceUpdateConfigPage: () => void = () => { };
+
+    network: undefined | Network = undefined;
+
+    // Define network options
+    // https://rdrr.io/cran/visNetwork/man/visEdges.html
+    // https://rdrr.io/cran/visNetwork/man/visNodes.html
+    networkOptions = {
+        edges: {
+            arrows: 'to',
+            font: {
+                color: '#000',
+                size: 12,
+                align: 'middle'
+            },
+            smooth: true,
+            chosen: {
+                edge: true,
+                label: false,
+            },
+            color: {
+            },
+            width: 1,
+            selectionWidth: 1.5,
+            labelHighlightBold: false,
+            arrowStrikethrough: true,
+        },
+        nodes: {
+            font: {
+                color: "black",
+            },
+            color: {
+                background: "#79b8ff",
+                highlight: "#ff6ab9",
+            },
+            labelHighlightBold: false,
+            borderWidth: 0,
+            borderWidthSelected: 0,
+        },
+        interaction: {
+            hover: false,
+            multiselect: true,   // Enable multi-node selection
+            selectConnectedEdges: true, // Optionally select edges with nodes
+            zoomView: true,
+            dragView: true,
+        },
+        physics: {
+            enabled: true,
+            solver: 'forceAtlas2Based',
+            forceAtlas2Based: {
+                gravitationalConstant: -100, // Increase repulsion
+                springLength: 200, // minimum edge length
+                sprintConstant: 0.05
+            },
+            stabilization: {
+                enabled: true,
+                iterations: 200,
+            }
+        }
+    };
+
+    initialChannelNames: string[] = [];
 
     constructor(widgetTdl: type_ChannelGraph_tdl) {
         super(widgetTdl);
@@ -82,6 +162,8 @@ export class ChannelGraph extends BaseWidget {
         this.setText({ ...ChannelGraph._defaultTdl.text, ...widgetTdl.text });
 
         this._dbdFiles = new DbdFiles(JSON.parse(JSON.stringify(widgetTdl.recordTypes)), JSON.parse(JSON.stringify(widgetTdl.menus)));
+
+        this.initialChannelNames = widgetTdl["channelNames"];
         console.log("---------------------------", this._dbdFiles)
         // const css = document.createElement('link');
         // css.rel = 'stylesheet';
@@ -224,7 +306,6 @@ export class ChannelGraph extends BaseWidget {
                     outline: this._getElementAreaRawOutlineStyle(),
 
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
@@ -233,88 +314,34 @@ export class ChannelGraph extends BaseWidget {
         );
     };
 
-    network: undefined | Network = undefined;
     _ElementChannelGraph = () => {
         const elementRef = React.useRef<any>(null);
-
-        // // Define nodes
-        // const nodes = [
-        //     { id: 1, label: 'Node 1' },
-        //     { id: 2, label: 'Node 2' },
-        //     { id: 3, label: 'Node 3' },
-        //     { id: 4, label: 'Node 4' },
-        //     { id: 5, label: 'Node 5' }
-        // ];
-
-        // // Define edges
-        // const edges = [
-        //     { from: 1, to: 2, label: 'A->B' },
-        //     { from: 1, to: 3, label: 'A->C' },
-        //     { from: 2, to: 4, label: 'B->D' },
-        //     { from: 2, to: 5, label: 'B->E' },
-        //     { from: 3, to: 5, label: 'C->E' }
-        // ] as any;
-
-        // // Provide the data in the proper format
-        // const data = {
-        //     nodes: new DataSet(nodes),
-        //     edges: new DataSet(edges)
-        // } as any;
-
-        // Define network options
-        const options = {
-            edges: {
-                arrows: 'to',
-                font: {
-                    color: '#000',
-                    size: 12,
-                    align: 'middle'
-                },
-                smooth: true,
-                chosen: {
-                    edge: false,
-                    label: true,
-                },
-                labelHighlightBold: false,
-                arrowStrikethrough: false,
-            },
-            interaction: {
-                hover: false
-            },
-            physics: {
-                enabled: true,
-                solver: 'forceAtlas2Based',
-                forceAtlas2Based: {
-                    gravitationalConstant: -100, // Increase repulsion
-                    springLength: 200, // minimum edge length
-                    sprintConstant: 0.05
-                },
-                stabilization: {
-                    enabled: true,
-                    iterations: 200,
-                }
-            }
-        };
-
-
+        const [showConfigPage, setShowConfigPage] = React.useState(false);
+        const [channelName, setChannelName] = React.useState("");
 
         React.useEffect(() => {
-            // Initialize the network
             setTimeout(() => {
                 if (elementRef.current !== null) {
-                    // this.network = new Network(elementRef.current, data, options);
+
+                    this.network = new Network(elementRef.current, this.networkData, this.networkOptions);
+                    this.networkClickCallback = (params: any) => {
+                        this.handleClickNode(params);
+                    };
+                    this.networkDoubleClickCallback = (params: any) => {
+                        this.handleDoubleClickNode(params);
+                    };
+                    // this.network will not be changed in future
+                    this.network.on('click', this.networkClickCallback);
+                    this.network.on("doubleClick", this.networkDoubleClickCallback);
+                    if (this.initialChannelNames.length > 0) {
+                        const initialChannelName = this.initialChannelNames[0];
+                        this.expandNode(initialChannelName);
+                        setChannelName(initialChannelName);
+                    }
+
                 }
             }, 0)
-
-            //     // Add click event for nodes
-            //     // network.on('click', function (params) {
-            //     //     if (params.nodes.length > 0) {
-            //     //         const nodeId = params.nodes[0];
-            //     //         const node = nodes.find(n => n.id === nodeId);
-            //     //         alert(`Clicked on: ${node.label}`);
-            //     //     }
-            //     // });
-        })
+        }, [])
 
         return (
             <div>
@@ -324,7 +351,7 @@ export class ChannelGraph extends BaseWidget {
                     top: 0,
                     width: "100%",
                     height: "100%",
-                    border: "solid 1px black",
+                    border: "solid 0px black",
                     boxSizing: "border-box",
                 }}>
                     <div
@@ -338,49 +365,205 @@ export class ChannelGraph extends BaseWidget {
                         {/* to be replaced by vis */}
                     </div>
                 </div>
+                {/* title */}
                 <div style={{
                     position: "absolute",
                     display: "flex",
-                    flexDirection: "row",
+                    flexDirection: "column",
+                    padding: 20,
+                    alignItems: "flex-start",
+                    width: "100%",
+                    boxSizing: "border-box",
                 }}>
-                    <ElementRectangleButton
-                        handleClick={() => {
-                            // data["nodes"].update(
-                            //     { id: 1, label: `Node 1 updated ${Math.random()}` },
-                            // )
-                            this.network?.redraw()
-                            // await this.createNode("cg01")
-
-                            // console.log("+++", this.getLinksStaticData())
-                        }}
-                    >
-                        Click me
-                    </ElementRectangleButton>
-                    <ElementRectangleButton
-                        handleClick={async () => {
-                            // data["nodes"].update(
-                            //     { id: 1, label: `Node 1 updated ${Math.random()}` },
-                            // )
-                            await this.createNode("cg01")
-                            this.createNetworkData();
-                            this.network = new Network(elementRef.current, this.networkData, options);
-                            this.networkClickCallback = (params: any) => {
-                                this.handleClickNode(params, elementRef, options);
-                            };
-                            this.networkDoubleClickCallback = (params: any) => {
-                                this.handleDoubleClickNode(params, elementRef, options);
-                            };
-                            this.network.on('click', this.networkClickCallback);
-                            this.network.on("doubleClick", this.networkDoubleClickCallback);
-                        }}
-                    >
-                        Click me 2
-                    </ElementRectangleButton>
-                    <this._ElementChannelInput></this._ElementChannelInput>
+                    <div style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        width: "100%",
+                        marginBottom: 15,
+                    }}>
+                        <div style={{
+                            fontSize: 25,
+                            fontWeight: "bold",
+                        }}>
+                            Channel Graph for&nbsp;
+                        </div>
+                        <this._ElementChannelInput channelName={channelName} setChannelName={setChannelName}></this._ElementChannelInput>
+                    </div>
+                    <div style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                    }}>
+                        <ElementRectangleButton
+                            marginRight={10}
+                            handleClick={async () => {
+                                this.clearGraph();
+                            }}
+                        >
+                            Clear
+                        </ElementRectangleButton>
+                        <ElementRectangleButton
+                            handleClick={() => {
+                                setShowConfigPage(true);
+                            }}
+                        >
+                            Configure
+                        </ElementRectangleButton>
+                    </div>
                 </div>
+                {showConfigPage === true ?
+                    <this._ElementConfigPage setShowConfigPage={setShowConfigPage}></this._ElementConfigPage>
+                    : null
+                }
             </div>
         );
     };
+
+    _ElementConfigPage = ({ setShowConfigPage }: any) => {
+        const [, forceUpdate] = React.useState({});
+        this.forceUpdateConfigPage = () => { forceUpdate({}) };
+
+        return (
+            <div style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: "100%",
+                height: "100%",
+                border: "solid 0px black",
+                boxSizing: "border-box",
+                backgroundColor: "white",
+            }}>
+                <div style={{
+                    display: "inline-flex",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    flexDirection: "column",
+                    width: "100%",
+                    height: "100%",
+                }}>
+                    <div style={{
+                        display: "inline-flex",
+                        flexDirection: "column",
+                        width: "80%",
+                        marginBottom: 20,
+                    }}>
+                        <h2>
+                            EPICS database files
+                        </h2>
+                        <div>
+                            <ElementRectangleButton
+                                marginBottom={15}
+
+                                handleClick={async () => {
+                                    this.openDbFile();
+                                }}
+                            >
+                                Open db file
+                            </ElementRectangleButton>
+                        </div>
+                        {Object.keys(this.dbFiles).length === 0 ? "No db file opened." : null}
+                        <table>
+                            <col style={{ width: "80%" }}></col>
+                            <col style={{ width: "15%" }}></col>
+                            {Object.keys(this.dbFiles).map((dbFileName: string, index: number) => {
+                                return (
+                                    <tr key={`${dbFileName}-${index}`}
+                                        style={{
+                                            backgroundColor: index % 2 === 0 ? "rgba(210, 210, 210, 1)" : "white",
+                                        }}
+                                    >
+                                        <td>
+                                            {dbFileName}
+                                        </td>
+                                        <td>
+                                            <img
+                                                style={{
+                                                    width: GlobalVariables.defaultFontSize * 0.8,
+                                                    height: GlobalVariables.defaultFontSize * 0.8,
+                                                    cursor: "pointer",
+                                                }}
+                                                src={`../../resources/webpages/delete-symbol.svg`}
+                                                onClick={() => {
+                                                    delete this.dbFiles[dbFileName];
+                                                    forceUpdate({});
+                                                }}
+                                            >
+                                            </img>
+                                            &nbsp;
+                                            <img
+                                                style={{
+                                                    width: GlobalVariables.defaultFontSize * 1,
+                                                    height: GlobalVariables.defaultFontSize * 1,
+                                                    cursor: "pointer",
+                                                }}
+                                                src={`../../resources/webpages/modify-symbol.svg`}
+                                                onClick={() => {
+                                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                                    displayWindowClient.getIpcManager().sendFromRendererProcess("create-utility-display-window", "TextEditor", { fileName: dbFileName });
+                                                }}
+                                            >
+                                            </img>
+                                            &nbsp;
+                                            <img
+                                                style={{
+                                                    width: GlobalVariables.defaultFontSize * 0.8,
+                                                    height: GlobalVariables.defaultFontSize * 0.8,
+                                                    cursor: "pointer",
+                                                }}
+                                                src={`../../resources/webpages/refresh-symbol.svg`}
+                                                onClick={() => {
+                                                    this.openDbFile(dbFileName);
+
+                                                }}
+                                            >
+                                            </img>
+                                        </td>
+                                    </tr>
+                                )
+                            })}
+                        </table>
+                    </div>
+                    <ElementRectangleButton
+                        handleClick={() => {
+                            setShowConfigPage(false);
+                        }}
+                    >
+                        OK
+                    </ElementRectangleButton>
+                </div>
+            </div>
+        )
+    }
+
+    /**
+     * Bring up a prompt to open db file
+     */
+    openDbFile = (dbFileName: string | undefined = undefined) => {
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        // we are expecting to have a "db-file-contents" message from main process: {db: dbJson}
+        displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file",
+            {
+                // tdl?: type_tdl;
+                // tdlStr?: string; // for web mode only, the web mode reads contents of the file (.tdl or .db), but it cannot parse the file contents in browser
+                tdlFileNames: dbFileName === undefined ? undefined : [dbFileName],
+                mode: "operating",
+                editable: false,
+                // external macros: user-provided and parent display macros
+                macros: [],
+                replaceMacros: false,
+                // currentTdlFolder?: string;
+                windowId: displayWindowClient.getWindowId(),
+                // postCommand?: string;
+                sendContentsToWindow: true, // whether to send the file contents back to the display window, for Channel Graph window
+            })
+    }
+
+
+    loadDbFile = (fileName: string, db: Record<string, any>[]) => {
+        this.dbFiles[fileName] = db;
+        this.forceUpdateConfigPage();
+    }
 
 
     /**
@@ -389,7 +572,7 @@ export class ChannelGraph extends BaseWidget {
      * (2) find the channel name for this node
      * 
      */
-    handleClickNode = async (params: any, elementRef: any, options: any) => {
+    handleClickNode = async (params: any) => {
         // (1)
         const ids = params.nodes;
         const nodes = this.networkData["nodes"];
@@ -399,28 +582,28 @@ export class ChannelGraph extends BaseWidget {
             // (2)
             console.log("clicked node", clickedNode)
             const nodeLabel = clickedNode["label"];
-            const success = await this.createNode(nodeLabel);
-            console.log("create node", success, nodeLabel)
-            if (success) {
-                this.createNetworkData();
-                this.network?.off("click", this.networkClickCallback);
-                this.network = new Network(elementRef.current, this.networkData, options);
-                this.networkClickCallback = (params: any) => {
-                    this.handleClickNode(params, elementRef, options);
-                };
-                this.networkDoubleClickCallback = (params: any) => {
-                    this.handleDoubleClickNode(params, elementRef, options);
-                };
-                this.network.on('click', this.networkClickCallback);
-                this.network.on("doubleClick", this.networkDoubleClickCallback);
+            const channelName = nodeLabel.split(" ")[0].split(".")[0];
+            const channelNameType = TcaChannel.checkChannelName(channelName);
+            if (channelNameType !== "ca" && channelName !== "pva") {
+                console.log("Channel", channelName, "is not a valid CA or PVA channel. Stop expanding.");
+                return false;
             }
+
+            // already expaned, or still in expansion
+            if (this.getLinksStaticData()[channelName] !== undefined) {
+                console.log("static link data for", channelName, "already exist")
+                return false;
+            }
+            const success = await this.expandNode(nodeLabel);
+            console.log("create node", success, nodeLabel)
         }
+        return true;
     }
 
     /**
      * Open the Probe for this node
      */
-    handleDoubleClickNode = async (params: any, elementRef: any, options: any) => {
+    handleDoubleClickNode = async (params: any) => {
         // (1)
         const ids = params.nodes;
         const nodes = this.networkData["nodes"];
@@ -441,23 +624,64 @@ export class ChannelGraph extends BaseWidget {
         }
     }
 
-    networkClickCallback: any = () => { };
 
-    networkDoubleClickCallback: any = () => { };
+    private _ElementChannelInput = ({channelName, setChannelName}: any) => {
+        const elementRef = React.useRef<any>(null);
 
-
-    private _ElementChannelInput = () => {
-        const [channelName, setChannelName] = React.useState("");
         return (
             <form onSubmit={(event: any) => {
                 event.preventDefault();
-                this.setChannelNamesLevel0([channelName]);
-            }}>
+                this.expandNode(channelName);
+            }}
+                style={{
+                    width: "100%",
+                }}
+            >
                 <input
+                    ref={elementRef}
+                    style={{
+                        fontSize: 25,
+                        outline: "none",
+                        backgroundColor: "rgba(0,0,0,0)",
+                        border: "solid 0px black",
+                        padding: 0,
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        width: "100%",
+                        fontWeight: "bold",
+                    }}
+                    spellCheck={false}
                     value={channelName}
+                    placeholder="channel name"
                     onChange={(event: any) => {
                         event.preventDefault();
                         setChannelName(event.target.value);
+                    }}
+                    onMouseEnter={(event: any) => {
+                        event.preventDefault();
+                        if (elementRef.current !== null) {
+                            elementRef.current.style["color"] = "red";
+                        }
+                    }}
+                    onMouseLeave={(event: any) => {
+                        event.preventDefault();
+                        if (elementRef.current !== null) {
+                            if (document.activeElement !== elementRef.current) {
+                                elementRef.current.style["color"] = "black";
+                            }
+                        }
+                    }}
+                    onFocus={(event: any) => {
+                        event.preventDefault();
+                        if (elementRef.current !== null) {
+                            elementRef.current.style["color"] = "red";
+                        }
+                    }}
+                    onBlur={(event: any) => {
+                        event.preventDefault();
+                        if (elementRef.current !== null) {
+                            elementRef.current.style["color"] = "black";
+                        }
                     }}
                 >
                 </input>
@@ -465,173 +689,238 @@ export class ChannelGraph extends BaseWidget {
         )
     }
 
-    networkData: {
-        nodes: any,
-        edges: any,
-    } = { nodes: new DataSet({}), edges: new DataSet({}) };
+    clearGraph = () => {
+        // clear all nodes
+        const allNodes = this.networkData["nodes"];
+        const allEdges = this.networkData["edges"];
+        allNodes.clear();
+        allEdges.clear();
+        // reset view port
+        this.network?.moveTo({
+            position: { x: 0, y: 0 }, // Default center position
+            scale: 1,                 // Default zoom level
+            animation: false
+        });
+        // clear the data
+        const linksStaticData = this.getLinksStaticData();
+        Object.keys(linksStaticData).forEach(key => delete linksStaticData[key]);
+        // destroy the live channels
+        g_widgets1.destroyAllTcaChannels();
+        // clear channel names
+        this.getChannelNamesLevel0().length = 0;
+        this.processChannelNames();
+    }
+
+    mapDbrDataWitNewData = (channelNames: string[]) => {
+        const allNodes = this.networkData["nodes"];
+        for (const node of allNodes.get()) {
+            const label = node["label"];
+            const nodeChannelName = label.split(" ")[0].split(".")[0]; // the node must use the base channel name
+            if (channelNames.includes(nodeChannelName)) {
+                try {
+                    const tcaChannel = g_widgets1.getTcaChannel(nodeChannelName);
+                    const dbrData = tcaChannel.getDbrData();
+                    const value = dbrData["value"];
+                    const currentPosition = this.network?.getPositions(node["id"])[node["id"]];
+
+                    allNodes.update(
+                        {
+                            ...node,
+                            label: node["label"].split("\n")[0] + `\n${value}`,
+                            x: currentPosition?.x,
+                            y: currentPosition?.y,
+                        }
+                    )
+                } catch (e) {
+
+                }
+            }
+        }
+    }
+
 
     /**
-     * It reads this.linksStaticData and generate all 
+     * channelName is a valid base channel name
+     * 
+     * This node already exists in the network, we are expanding it: find all the related channels
+     * and create new nodes if necessary.
      */
-    createNetworkData = () => {
-
-        console.log("this.getLinksStaticData() = ", this.getLinksStaticData())
-
-        const edgeColors: Record<string, any> = {
-            inLinks: { color: "purple", highlight: "purple", hover: "purple" },
-            outLinks: { color: "#005f79", highlight: "#005f79", hover: "#005f79" },
-            fwdLinks: { color: "blue", highlight: "blue", hover: "blue" },
+    expandNode = async (nodeLabel: string): Promise<boolean> => {
+        // the base channel name, could be "pv1", "@dev3 c3 s2", or "27"
+        const channelName = nodeLabel.split(" ")[0].split(".")[0];
+        // if the base channel name is not a valid CA or PVA channel, no need to expand, stop here
+        const channelNameType = TcaChannel.checkChannelName(channelName);
+        if (channelNameType !== "ca" && channelName !== "pva") {
+            console.log("Channel", channelName, "is not a valid CA or PVA channel. Stop expanding.");
+            return false;
         }
 
-        // the object for nodes, its values are needed by vis-network
-        const nodesObj: Record<string, { id: number, label: string } & Record<string, any>> = {};
-        const edges: ({ from: number, to: number, label: string, color: Record<string, any> } & Record<string, any>)[] = [];
-        let id = 0;
+        // create the data for main node, the main node was a satellite node, it did not have
+        // an entry in this this.linksStaticData
+        const success = await this.createNode(channelName);
+        if (success === false) {
+            console.log("Cannot create data for", channelName);
+            return false;
+        } else {
+            console.log("create node data:", this.getLinksStaticData())
+        }
+        const channelData = this.getLinksStaticData()[channelName];
 
-        // create nodes for main channel first
-        for (const channelName of Object.keys(this.getLinksStaticData())) {
-            if (nodesObj[channelName] === undefined) {
-                const rtyp = this.getLinksStaticData()[channelName]["rtyp"];
-                id = id + 1;
-                const shape = this.getLinksStaticData()[channelName]["status"] === type_nodeStatus.expaneded ? "box" : "dot";
-                nodesObj[channelName] = {
-                    id: id,
-                    label: channelName + " (" + rtyp + ")",
-                    shape: shape,
-                    physics: false,
-                    x: this.calcNodeX(id),
-                    y: this.calcNodeY(id),
-                };
+        // find the existing node in this.networkData. 
+        // If this node is already expanded, then return. If not continue.
+        let mainNode: any = undefined;
+        // let nodeObj: any = undefined;
+        const allNodes = this.networkData["nodes"];
+        const allEdges = this.networkData["edges"];
+
+        for (const nodeTmp of allNodes.get()) {
+            const label = nodeTmp.label;
+            const baseChannelName = label.split(" ")[0].split(".")[0];
+            if (baseChannelName === channelName) {
+                mainNode = nodeTmp;
+                break;
             }
         }
 
-        for (const channelName of Object.keys(this.getLinksStaticData())) {
+        const dbFileNodeColor = "#a7bdff"
+        const iocNodeColor = "#8bd6ff"
 
-            // create links related to this node
-            // each channelData is like this:
-            // {
-            //     inLinks: {
-            //         INP: "pv1 PP MS",
-            //         INPA: "",
-            //         ...
-            //     },
-            //     outLinks: {
-            //         OUT: "@dev3 c3 s5",
-            //         OUTA: "pv1",
-            //         OUTB: "",
-            //         ...
-            //     },
-            //     fwdLinks: {
-            //         FLNK: "pv2 NPP NMS",
-            //         ...
-            //     }
-            // }
-            const channelData = this.getLinksStaticData()[channelName];
+        console.log("vis-network node", channelName, "does not exist, create a new one");
+        const source = channelData["source"];
+        const rtyp = channelData["rtyp"];
+        if (mainNode === undefined) {
+            // create one
+            this.currentId = this.currentId + 1;
+            if (rtyp === undefined || rtyp === "") {
+                console.log("There is no rtyp for", nodeLabel);
+                return false;
+            }
+            mainNode = {
+                id: this.currentId,
+                label: `${nodeLabel} (${rtyp})`,
+                shape: "box",
+                physics: false,
+                color: {
+                    background: source === "IOC" ? iocNodeColor : dbFileNodeColor,
+                }
+            };
+            allNodes.add(mainNode)
+        } else {
+            console.log("vis-network node", channelName, "already exists, update it");
 
-            // iterate over 3 linkTypes: inLinks, outLinks, and fwdLinks
-            for (const [linkType, links] of Object.entries(channelData)) { // [inLinks | outLinks | fwdLinks, {INPA:..., INPB: ...}]
+            // update the node's label and shape
+            // Assuming you have a nodes DataSet
+            mainNode = {
+                id: mainNode.id,
+                label: mainNode.label + ` (${rtyp})`,
+                shape: "box",
+                physics: mainNode.physics,
+                color: {
+                    background: source === "IOC" ? iocNodeColor : dbFileNodeColor,
+                }
+            };
+            allNodes.update(mainNode);
+        }
 
-                // make sure we are iterating inLinks, outLinks and fwdLinks
-                if (linkType === "rtyp" || linkType === "status") {
+
+        // iterate over all fields of the new data, create new nodes if necessary (these nodes should be unexpanded)
+        // establish edges for each link
+        // iterate over 3 linkTypes: inLinks, outLinks, and fwdLinks
+        for (const [linkType, links] of Object.entries(channelData)) { // [inLinks | outLinks | fwdLinks, {INPA:..., INPB: ...}]
+            const edgeColors: Record<string, any> = {
+                inLinks: { color: "purple", highlight: "#ff6ab9", hover: "purple" },
+                outLinks: { color: "#005f79", highlight: "#ff6ab9", hover: "#005f79" },
+                fwdLinks: { color: "blue", highlight: "#ff6ab9", hover: "blue" },
+            }
+
+            // make sure we are iterating inLinks, outLinks and fwdLinks
+            if (linkType === "rtyp" || linkType === "status" || linkType === "source") {
+                continue;
+            }
+            if (typeof links === "string" || typeof links !== "object") {
+                continue;
+            }
+
+            for (let linkFieldName of Object.keys(links)) { // INP, INPA, FLNK, OUT, ...
+
+                const linkFieldValue = links[linkFieldName]; // "pv1.VAL3 NPP MS", "1", "@dev3 c5 s7", or undefined
+                console.log("linkFieldName, linkfieldValue", linkFieldName, linkFieldValue)
+                if (linkFieldValue === "" || linkFieldValue === undefined) {
                     continue;
                 }
-                if (typeof links === "string" || typeof links !== "object") {
-                    continue;
+                let linkFieldTargetChannelBaseName = linkFieldValue.split(" ")[0].split(".")[0]; // "pv1", "1", or "@dev3"
+
+                // link field target channel name must be a valid CA or PVA base name
+                const linkFieldTargetChannelBaseNameType = TcaChannel.checkChannelName(linkFieldTargetChannelBaseName);
+                // if the base name of the link target is not a CA or PVA channel name, this link may be 
+                // a device address
+                if (linkFieldTargetChannelBaseNameType !== "pva" && linkFieldTargetChannelBaseNameType !== "ca") {
+                    // "@dev3 c5 s7"
+                    linkFieldTargetChannelBaseName = linkFieldValue;
                 }
 
-                for (let linkFieldName of Object.keys(links)) { // INP, INPA, FLNK, OUT, ...
+                // update the node if it already exists
+                let linkFieldTargetChannelNode: any = undefined;
 
-                    const linkFieldValue = links[linkFieldName]; // "pv1.VAL3 NPP MS", "1", "@dev3 c5 s7", or undefined
-                    console.log("linkFieldName, linkfieldValue", linkFieldName, linkFieldValue)
-                    if (linkFieldValue === "" || linkFieldValue === undefined) {
-                        continue;
+                for (const nodeTmp of allNodes.get()) {
+                    const label = nodeTmp.label; // may be like "pv1 (ai)", we only compare "pv1"
+                    if (label.split(" ")[0] === linkFieldTargetChannelBaseName) {
+                        linkFieldTargetChannelNode = nodeTmp;
+                        break;
                     }
-                    let linkFieldTargetChannelBaseName = linkFieldValue.split(" ")[0].split(".")[0]; // "pv1", "1", or "@dev3"
+                }
 
-                    // link field target channel name must be a valid CA or PVA base name
-                    const linkFieldTargetChannelBaseNameType = TcaChannel.checkChannelName(linkFieldTargetChannelBaseName);
-                    // if the base name of the link target is not a CA or PVA channel name, this link may be 
-                    // a device address
-                    if (linkFieldTargetChannelBaseNameType !== "pva" && linkFieldTargetChannelBaseNameType !== "ca") {
-                        // "@dev3 c5 s7"
-                        linkFieldTargetChannelBaseName = linkFieldValue;
-                    }
+                // insert a new node if it does not exist
+                if (linkFieldTargetChannelNode === undefined && this.network !== undefined) {
+                    this.currentId = this.currentId + 1;
+                    const viewPosition = this.network.getViewPosition();   // Current center in canvas coordinates
+                    const x = viewPosition.x;
+                    const y = viewPosition.y;
 
-                    // create node for the link target channels
-                    if (nodesObj[linkFieldTargetChannelBaseName] === undefined) {
-                        id = id + 1;
-                        nodesObj[linkFieldTargetChannelBaseName] = {
-                            id: id,
-                            label: linkFieldTargetChannelBaseName,
-                            shape: "big ellipse",
-                            physics: false,
-                            x: this.calcNodeX(id),
-                            y: this.calcNodeY(id),
-                        };
-                    }
-
-                    // create edge between the main channel and its link's target channel 
-                    // INPA: .VAL3 NPP NMS
-                    let targetName = linkFieldValue;
-                    if (linkFieldTargetChannelBaseNameType === "pva" || linkFieldTargetChannelBaseNameType === "ca") {
-                        // "pv1.VAL3 NPP NMS" -> ".VAL3 NPP NMS", or "pv1 NPP NMS" -> " NPP NMS"
-                        targetName = targetName.replace(linkFieldTargetChannelBaseName, "");
-                        if (!targetName.startsWith(".")) { // " NPP NMS" -> ".VAL NPP NMS"
-                            targetName = ".VAL" + targetName;
+                    linkFieldTargetChannelNode = {
+                        id: this.currentId,
+                        label: linkFieldTargetChannelBaseName,
+                        shape: "big ellipse",
+                        physics: false,
+                        x: x + 100 * (Math.random() - 0.5),
+                        y: y + 100 * (Math.random() - 0.5),
+                        color: {
+                            background: source === "IOC" ? iocNodeColor : dbFileNodeColor,
                         }
-                    }
-                    // "OUTA: .VAL NPP NMS", or "INP: @dev3 c5 s7"
-                    const edgeLabel = `${linkFieldName}: ${targetName}`
-                    // create edge for each link
-                    const to = linkType === "inLinks" ? nodesObj[channelName]["id"] : nodesObj[linkFieldTargetChannelBaseName]["id"];
-                    const from = linkType === "inLinks" ? nodesObj[linkFieldTargetChannelBaseName]["id"] : nodesObj[channelName]["id"];
-                    edges.push({
-                        from: from,
-                        to: to,
-                        label: edgeLabel,
-                        color: edgeColors[linkType],
-                        arrows: { to: { enabled: true, scaleFactor: 0.5 } },
-                    })
+                    };
+                    console.log("insert satellite node", linkFieldTargetChannelBaseName)
+                    allNodes.add(linkFieldTargetChannelNode)
                 }
+
+                // create the edge between the main node and satellite node, this edge is always new
+                // labe is like "INPA: .VAL3 NPP NMS"
+                let targetName = linkFieldValue;
+                if (linkFieldTargetChannelBaseNameType === "pva" || linkFieldTargetChannelBaseNameType === "ca") {
+                    // "pv1.VAL3 NPP NMS" -> ".VAL3 NPP NMS", or "pv1 NPP NMS" -> " NPP NMS"
+                    targetName = targetName.replace(linkFieldTargetChannelBaseName, "");
+                    if (!targetName.startsWith(".")) { // " NPP NMS" -> ".VAL NPP NMS"
+                        targetName = ".VAL" + targetName;
+                    }
+                }
+                // "OUTA: .VAL NPP NMS", or "INP: @dev3 c5 s7"
+                const edgeLabel = `${linkFieldName}: ${targetName}`
+                // create edge for each link
+                const from = linkType === "inLinks" ? linkFieldTargetChannelNode.id : mainNode.id;
+                const to = linkType === "inLinks" ? mainNode.id : linkFieldTargetChannelNode.id;
+                console.log("new edge:", "from = ", from, "to = ", to, "label = ", edgeLabel, "with color", edgeColors[linkType])
+                allEdges.add({
+                    from: from,
+                    to: to,
+                    label: edgeLabel,
+                    color: edgeColors[linkType],
+                    arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+                })
             }
         }
-
-        console.log("nodesObj = ", nodesObj);
-        console.log("edgeObj = ", edges);
-
-        // const nodes1 = [
-        //     { id: 1, label: 'Node 1' },
-        //     { id: 2, label: 'Node 2' },
-        //     { id: 3, label: 'Node 3' },
-        //     { id: 4, label: 'Node 4' },
-        //     { id: 5, label: 'Node 5' }
-        // ];
-
-        // const edges = [
-        //     { from: 1, to: 2, label: 'A->B' },
-        //     { from: 1, to: 3, label: 'A->C' },
-        //     { from: 2, to: 4, label: 'B->D' },
-        //     { from: 2, to: 5, label: 'B->E' },
-        //     { from: 3, to: 5, label: 'C->E' }
-        // ] as any;
-
-
-
-        // // Provide the data in the proper format
-        const data = {
-            nodes: new DataSet(Object.values(nodesObj)),
-            edges: new DataSet(edges as any)
-        } as any;
-        this.networkData = data;
-
+        g_widgets1.connectAllTcaChannels(true);
+        return true;
     }
 
-    calcNodeX = (id: number) => {
-        return 300 + id * 300;
-    }
-    calcNodeY = (id: number) => {
-        return 300 + id * 300;
-    }
 
     /**
      * Get this channel's all IN_LINK/OUT_LINK/FWD_LINK fields' value, add the data structure
@@ -641,9 +930,13 @@ export class ChannelGraph extends BaseWidget {
      * 
      * It modifies this.linksStaticData
      * 
-     * (1) clear this._channelNamesLevel0 and append new channel name to it
+     * (0) assign an empty linksStaticData to this.linksStaticData, in this way
+     *     we can avoid duplicate creation of the node (e.g. in double click), and no matter if the creation
+     *     success or not, we always have an entry
+     * (1) determine if the channel is in db file
      * (2) get this channel's RTYP
-     * (3) start to monitor this channel
+     * (3) append new channel name to this._channelNamesLevel0 if this channel source is IOC
+     *     the channels will be connected at the end of expandNode()
      * (4) get this new channel's IN_LINK, OUT_LINK and FWD_LINK values (they are channel names)
      * (5) monitor all channels for the link target channels
      */
@@ -669,48 +962,69 @@ export class ChannelGraph extends BaseWidget {
             return false;
         }
 
-        // (1)
-        this._channelNamesLevel0.length = 0;
-        this.getChannelNamesLevel0().push(newChannelName);
-        this.processChannelNames();
-        // (2)
-        const rtyp = await this.getRTYP(newChannelName);
-        if (typeof rtyp !== "string") {
-            console.log("RTYP of", newChannelName, "is", rtyp, "quit...")
-            return false;
-        }
-        // (3)
-        try {
-            const tcaChannel = g_widgets1.getTcaChannel(newChannelName);
-            await tcaChannel.getMeta(this.getWidgetKey());
-            await tcaChannel.get(this.getWidgetKey(), 1, undefined, true);
-            tcaChannel.monitor();
-        } catch (e) {
-            const tcaChannel = g_widgets1.createTcaChannel(newChannelName, this.getWidgetKey());
-            if (tcaChannel !== undefined) {
-                await tcaChannel.getMeta(this.getWidgetKey());
-                await tcaChannel.get(this.getWidgetKey(), 1, undefined, true);
-                tcaChannel.monitor();
-            }
-        }
-        // (4)
-        const dbdFiles = this.getDbdFiles();
-        const inLinkFieldNames = dbdFiles.getRecordTypeInLinkFieldNames(rtyp);
-        const outLinkFieldNames = dbdFiles.getRecordTypeOutLinkFieldNames(rtyp);
-        const fwdLinkFieldNames = dbdFiles.getRecordTypeFwdLinkFieldNames(rtyp);
+        // (0)
         const linksStaticData: {
             inLinks: Record<string, string | undefined>,
             outLinks: Record<string, string | undefined>,
             fwdLinks: Record<string, string | undefined>,
             status: type_nodeStatus,
             rtyp: string,
+            source: string,
         } = {
             inLinks: {},
             outLinks: {},
             fwdLinks: {},
             status: type_nodeStatus.not_expanded,
-            rtyp: rtyp,
+            rtyp: "",
+            source: "",
         };
+        this.getLinksStaticData()[newChannelName] = linksStaticData;
+
+        // (1)
+        // if channel is coming from db file, channelJson is an object        
+        let channelJson: Record<string, any> | undefined = undefined;
+        for (const [dbFileName, dbFileContents] of Object.entries(this.dbFiles)) {
+            if (channelJson !== undefined) {
+                break;
+            }
+            for (const recordJson of dbFileContents) {
+                const channelName = recordJson["NAME"];
+                if (newChannelName === channelName) {
+                    channelJson = recordJson;
+                    break;
+                }
+            }
+        }
+
+        // (2)
+        let rtyp: string | number | string[] | number[] | undefined = "";
+        if (channelJson !== undefined) {
+            rtyp = channelJson["RTYP"]; // channel is coming from db file
+        } else {
+            rtyp = await this.getRTYP(newChannelName); // 1 second timeout, channel is coming from IOC
+        }
+
+        if (typeof rtyp !== "string") {
+            console.log("RTYP of", newChannelName, "is", rtyp, "quit...")
+            return false;
+        }
+
+        linksStaticData["rtyp"] = rtyp;
+        linksStaticData["source"] = channelJson === undefined ? "IOC" : "dbFile";
+
+        // (3)
+        if (channelJson === undefined) {
+            this.getChannelNamesLevel0().push(newChannelName);
+            this.processChannelNames();
+            console.log("this.getChannelNamesLevel0 = ", this.getChannelNamesLevel0())
+        }
+
+
+        // (4)
+        const dbdFiles = this.getDbdFiles();
+        const inLinkFieldNames = dbdFiles.getRecordTypeInLinkFieldNames(rtyp);
+        const outLinkFieldNames = dbdFiles.getRecordTypeOutLinkFieldNames(rtyp);
+        const fwdLinkFieldNames = dbdFiles.getRecordTypeFwdLinkFieldNames(rtyp);
         for (const linkFieldName of inLinkFieldNames) {
             linksStaticData.inLinks[linkFieldName] = undefined;
         }
@@ -721,13 +1035,14 @@ export class ChannelGraph extends BaseWidget {
             linksStaticData.fwdLinks[linkFieldName] = undefined;
         }
 
-        this.getLinksStaticData()[newChannelName] = linksStaticData;
 
         console.log("----------- step 1-----------------")
+        const fieldValuesePromises: Promise<boolean>[] = [];
+        const tcaChannels: TcaChannel[] = [];
         for (const [dataFieldName, links] of Object.entries(linksStaticData)) { // inLink, outLink, fwdLink
 
             // make sure we are iterating inLinks, outLinks and fwdLinks
-            if (dataFieldName === "rtyp" || dataFieldName === "status") {
+            if (dataFieldName === "rtyp" || dataFieldName === "status" || dataFieldName === "source") {
                 continue;
             }
             if (typeof links === "string" || typeof links !== "object") {
@@ -735,102 +1050,71 @@ export class ChannelGraph extends BaseWidget {
             }
 
             for (const linkFieldName of Object.keys(links)) { // INP, INPA, OUT, FLNK, ...
-                const fieldFullName = `${newChannelName}.${linkFieldName}`;
-                try {
-                    const fieldTcaChannel = g_widgets1.getTcaChannel(fieldFullName);
-                    // trigger the data so that the
-                    await fieldTcaChannel.getMeta(this.getWidgetKey());
-                    const dbrData = await fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
-                    const value = dbrData["value"];
-                    if (typeof value === "string") {
-                        links[linkFieldName] = value;
-                    } else {
-                        links[linkFieldName] = undefined;
+                if (channelJson !== undefined) {
+                    // channel is from db file
+                    const linkFieldValue = channelJson[linkFieldName];
+                    if (linkFieldValue !== undefined) {
+                        links[linkFieldName] = linkFieldValue;
                     }
-                    // fieldTcaChannel.monitor();
-                } catch (e) {
-                    const fieldTcaChannel = g_widgets1.createTcaChannel(fieldFullName, this.getWidgetKey());
-                    if (fieldTcaChannel !== undefined) {
-                        await fieldTcaChannel.getMeta(this.getWidgetKey());
-                        const dbrData = await fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
-                        const value = dbrData["value"];
-                        if (typeof value === "string") {
-                            links[linkFieldName] = value;
-                        } else {
-                            links[linkFieldName] = undefined;
+                } else {
+                    const fieldFullName = `${newChannelName}.${linkFieldName}`;
+                    try {
+                        const fieldTcaChannel = g_widgets1.getTcaChannel(fieldFullName);
+                        tcaChannels.push(fieldTcaChannel);
+                        // trigger the data so that the
+                        // await fieldTcaChannel.getMeta(this.getWidgetKey());
+                        const promise = fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false).then((dbrData: any) => {
+                            const value = dbrData["value"];
+                            if (typeof value === "string") {
+                                links[linkFieldName] = value;
+                                return true;
+                            } else {
+                                links[linkFieldName] = undefined;
+                                return false;
+                            }
+                            // fieldTcaChannel.monitor();
+                        });
+                        fieldValuesePromises.push(promise);
+                    } catch (e) {
+                        const fieldTcaChannel = g_widgets1.createTcaChannel(fieldFullName, this.getWidgetKey());
+                        if (fieldTcaChannel !== undefined) {
+                            tcaChannels.push(fieldTcaChannel);
+                            // await fieldTcaChannel.getMeta(this.getWidgetKey());
+                            const promise = fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false).then((dbrData: any) => {
+                                const value = dbrData["value"];
+                                if (typeof value === "string") {
+                                    links[linkFieldName] = value;
+                                    return true;
+                                } else {
+                                    links[linkFieldName] = undefined;
+                                    return false
+                                }
+                                // fieldTcaChannel.monitor();
+                            })
+                            fieldValuesePromises.push(promise);
                         }
-                        // fieldTcaChannel.monitor();
                     }
                 }
             }
         }
+
+        const fieldValueResultsOk = await Promise.all(fieldValuesePromises);
+
+        for (const tcaChannel of tcaChannels) {
+            tcaChannel.destroy(this.getWidgetKey());
+        }
+
+        for (let result of fieldValueResultsOk) {
+            if (result === true) {
+
+            }
+        }
+
         linksStaticData["status"] = type_nodeStatus.expaneded;
 
         console.log(this.getLinksStaticData())
         console.log("----------- step 2 -----------------")
-
-        // (5)
-        for (const [dataFieldName, links] of Object.entries(linksStaticData)) { // inLink, outLink, fwdLink
-            console.log("dataFieldName = ", dataFieldName, links)
-            // make sure we are iterating inLinks, outLinks and fwdLinks
-            if (dataFieldName === "rtyp" || dataFieldName === "status") {
-                continue;
-            }
-            if (typeof links === "string" || typeof links !== "object") {
-                continue;
-            }
-
-
-            for (const linkFieldValue of Object.values(links)) {
-                const linkFieldTargetChannelName = linkFieldValue?.split(" ")[0];
-                // linkFieldValue is a channel name, it is the link field's target
-                if (linkFieldTargetChannelName === undefined) {
-                    continue;
-                }
-
-                // new channel name must be a valid CA or PVA base name
-                const linkFieldValueType = TcaChannel.checkChannelName(linkFieldTargetChannelName);
-                if (linkFieldValueType !== "pva" && linkFieldValueType !== "ca") {
-                    continue;
-                }
-
-                try {
-                    const fieldTcaChannel = g_widgets1.getTcaChannel(linkFieldTargetChannelName);
-                    await fieldTcaChannel.getMeta(this.getWidgetKey());
-                    await fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
-                    fieldTcaChannel.monitor();
-                } catch (e) {
-                    const fieldTcaChannel = g_widgets1.createTcaChannel(linkFieldTargetChannelName, this.getWidgetKey());
-                    if (fieldTcaChannel !== undefined) {
-                        await fieldTcaChannel.getMeta(this.getWidgetKey());
-                        await fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
-                        fieldTcaChannel.monitor();
-                    }
-                }
-                // if the link field target value is like RNG:ENG.A, monitor its base channel name RNG:ENG
-                if (linkFieldTargetChannelName.includes(".")) {
-                    const linkFieldTargetChannelBaseName = linkFieldTargetChannelName.split(".")[0];
-                    try {
-                        const fieldTcaChannel = g_widgets1.getTcaChannel(linkFieldTargetChannelBaseName);
-                        await fieldTcaChannel.getMeta(this.getWidgetKey());
-                        await fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
-                        fieldTcaChannel.monitor();
-                    } catch (e) {
-                        const fieldTcaChannel = g_widgets1.createTcaChannel(linkFieldTargetChannelBaseName, this.getWidgetKey());
-                        if (fieldTcaChannel !== undefined) {
-                            await fieldTcaChannel.getMeta(this.getWidgetKey());
-                            await fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
-                            fieldTcaChannel.monitor();
-                        }
-                    }
-                }
-            }
-        }
-        console.log("----------- step 3 -----------------")
         return true;
-        // g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-        // g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-        // g_flushWidgets();
     };
 
     linksStaticData: Record<string, // channel name
@@ -840,6 +1124,7 @@ export class ChannelGraph extends BaseWidget {
             fwdLinks: Record<string, string | undefined>,
             rtyp: string,
             status: type_nodeStatus,
+            source: string,
         } & Record<string, any>
     > = {};
 
@@ -849,7 +1134,7 @@ export class ChannelGraph extends BaseWidget {
 
 
     getRTYP = async (channelName: string) => {
-        console.log("okokok", channelName)
+        console.log("getting RTYP of", channelName)
         // if (this.rtyp !== "" || this.rtyp === this.rtypWaitingName) {
         //     console.log("RTYP already obtained or waiting");
         //     return;
@@ -1008,7 +1293,7 @@ export class ChannelGraph extends BaseWidget {
             top: 0,
             width: "100%",
             height: "100%",
-            backgroundColor: "rgba(240, 240, 240, 1)",
+            backgroundColor: "rgba(255, 255, 255, 1)",
             // angle
             transform: "rotate(0deg)",
             // border, it is different from the "alarmBorder" below,
@@ -1067,7 +1352,7 @@ export class ChannelGraph extends BaseWidget {
     // static method for generating a widget tdl with external PV name
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_ChannelGraph_tdl => {
         const result = this.generateDefaultTdl("ChannelGraph");
-        // result.channelNames = utilityOptions.channelNames as string[];
+        result.channelNames = utilityOptions.channelNames as string[];
         result.recordTypes = utilityOptions.recordTypes as Record<string, any>;
         result.menus = utilityOptions.menus as Record<string, any>;
         return result;

@@ -1616,6 +1616,7 @@ export class Widgets {
     connectAllTcaChannels = (reconnect: boolean = false) => {
         // there should be no TcaChannel
         if (Object.keys(this.getTcaChannels()).length > 0 && reconnect === false) {
+            Log.debug("There should be no channel connection on this window for connectAllTcaChannels().")
             return;
         }
         // (1)
@@ -2512,10 +2513,38 @@ export class Widgets {
         }
     };
 
-    openChannelGraphWindow = () => {
-        // this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "ChannelGraph", {});
+    openChannelGraphWindow = (widgetKeys: string[] | undefined = undefined) => {  
+        let channelName: string = "";
+        let options = {};
+        if (widgetKeys?.length === 0 || widgetKeys === undefined) {
+
+        } else {
+            const widgetKey = widgetKeys[0];
+            let widget = undefined;
+            try {
+                widget = this.getWidget2(widgetKey);
+            } catch (e) {
+                Log.error(e);
+            }
+            if (widget !== undefined && widget instanceof BaseWidget) {
+                const channelNames = widget.getChannelNames();
+                channelName = channelNames[0];
+            }
+        }
+
+        if (channelName !== "") {
+            options = {
+                channelNames: [channelName],
+            }
+        } else {
+            options = {
+                channelNames: [],
+            }
+        }
+
+
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "ChannelGraph", {});
+            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "ChannelGraph", options);
         } else {
             const currentSite = `https://${window.location.host}/`;
             this.getRoot()
@@ -2523,7 +2552,7 @@ export class Widgets {
                 .getIpcManager()
                 .sendPostRequestCommand("create-utility-display-window", {
                     utilityType: "ChannelGraph",
-                    utilityOptions: {},
+                    utilityOptions: options,
                 })
                 .then((response: any) => {
                     // decode string

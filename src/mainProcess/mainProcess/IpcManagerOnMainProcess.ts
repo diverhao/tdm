@@ -1196,6 +1196,7 @@ export class IpcManagerOnMainProcess {
             currentTdlFolder?: string;
             windowId?: string;
             postCommand?: string;
+            sendContentsToWindow?: boolean; // whether to send the file contents back to the display window, for Channel Graph window
         },
         httpResponse: any = undefined
     ) => {
@@ -1390,16 +1391,32 @@ export class IpcManagerOnMainProcess {
                         });
                     } else if (path.extname(tdlFileName) === ".db" || path.extname(tdlFileName) === ".template") {
                         const db = FileReader.readDb(tdlFileName, selectedProfile, options["currentTdlFolder"]);
-                        const channelNames: string[] = [];
-                        if (db !== undefined) {
-                            for (let ii = 0; ii < db.length; ii++) {
-                                const channelName = db[ii]["NAME"];
-                                if (channelName !== undefined) {
-                                    channelNames.push(channelName);
+                        if (options["sendContentsToWindow"] === true) {
+                            // for ChannelGraph
+                            const displayWindowId = options["windowId"];
+                            if (displayWindowId !== undefined) {
+                                const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+                                if (displayWindowAgent instanceof DisplayWindowAgent) {
+                                    displayWindowAgent.sendFromMainProcess("db-file-contents", {
+                                        displayWindowId: options["windowId"],
+                                        fileName: tdlFileName,
+                                        db: db, // array of objects, each object is a channel, e.g. channel name is NAME entry
+                                    })
                                 }
                             }
+                        } else {
+                            // for PvTable
+                            const channelNames: string[] = [];
+                            if (db !== undefined) {
+                                for (let ii = 0; ii < db.length; ii++) {
+                                    const channelName = db[ii]["NAME"];
+                                    if (channelName !== undefined) {
+                                        channelNames.push(channelName);
+                                    }
+                                }
+                            }
+                            this.createUtilityDisplayWindow(undefined, "PvTable", { channelNames: channelNames });
                         }
-                        this.createUtilityDisplayWindow(undefined, "PvTable", { channelNames: channelNames });
                     } else {
                         if (windowAgent !== undefined) {
                             windowAgent.sendFromMainProcess("dialog-show-message-box", {

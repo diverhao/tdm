@@ -139,7 +139,6 @@ export class FileReader {
         const dbFileContentsRaw = fs.readFileSync(fullFileName, {
             encoding: "utf8",
         });
-
         return this.parseDb(dbFileContentsRaw);
 
     }
@@ -191,9 +190,9 @@ export class FileReader {
 
         const dbFileContents = dbFileContentsArray1.join("\n");
 
-        let regRecord = /(record([^(]*)\(([^)]*),([^)]*)\)([\n\s\t]*)\{(([\n\s\t]*)(field|info)([^(]*)\(([^),]*),([^)]*)\)([\n\s\t]*))*\}([\n\s\t]*))/g;
+        let regRecord = /(record([^(]*)\(([^)]*),([^)]*)\)([\n\s\t]*)\{([\n\s\t]*)((((field|info)([^(]*)\(([^),]*),([^)]*)\)([\n\s\t]*))*)|([\n\s\t]*))\}([\n\s\t]*))/g;
         let regRecordHeader = /record([^(]*)\(([^)]*),([^)]*)\)/g;
-        let regRecordBody = /field([^(]*)\(([^),]*),([^)]*)\)/g;
+        let regRecordBody = /(field([^(]*)\(([^),]*),([^)]*)\))|([\n\s\t]*)/g;
 
         let records = dbFileContents.match(regRecord);
         const result: Record<string, any>[] = [];
