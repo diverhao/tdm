@@ -119,7 +119,6 @@ export class TankHelper extends BaseWidgetHelper {
             "w",
             "h",
             "indicatorColor",
-            "indicatorAlarm",
             "fgColor",
             "fgAlarm",
             "bgColor",
@@ -129,6 +128,7 @@ export class TankHelper extends BaseWidgetHelper {
             "limitsFromDb",
             "origin", // not in tdm
             "font",
+            "indicatorAlarm", // bar color sensitive to alarm
             "labelTicks",
             "majorTicks", // ! not in tdm, "Majors per Label"
             "minorTicks", // ! not in tdm, "Minors per Label"
@@ -160,6 +160,7 @@ export class TankHelper extends BaseWidgetHelper {
         tdl["style"]["transform"] = "rotate(90deg)";
         tdl["text"]["showScaleInnerLabel"] = false;
 
+
         const alarmPropertyNames: string[] = [];
 
         for (const propertyName of propertyNames) {
@@ -178,6 +179,8 @@ export class TankHelper extends BaseWidgetHelper {
                     tdl["style"]["height"] = EdlConverter.convertEdlWorH(propertyValue, undefined);
                 } else if (propertyName === "indicatorColor") {
                     tdl["text"]["fillColor"] = EdlConverter.convertEdlColor(propertyValue);
+                    tdl["text"]["fillColorMinor"] = tdl["text"]["fillColor"];
+                    tdl["text"]["fillColorMajor"] = tdl["text"]["fillColor"];
                 } else if (propertyName === "indicatorAlarm") {
                     alarmPropertyNames.push(propertyName);
                 } else if (propertyName === "fgColor") {
@@ -234,8 +237,8 @@ export class TankHelper extends BaseWidgetHelper {
             const he = tdl["style"]["height"];
             const ht = we;
             const wt = he;
-            const xt = xe + (ht-wt)/2;
-            const yt = ye + (wt-ht)/2;
+            const xt = xe + (ht - wt) / 2;
+            const yt = ye + (wt - ht) / 2;
             tdl["style"]["left"] = xt;
             tdl["style"]["top"] = yt;
             tdl["style"]["width"] = wt;
@@ -245,8 +248,11 @@ export class TankHelper extends BaseWidgetHelper {
         // all alarm-sensitive rules override others
         for (let alarmPropertyName of alarmPropertyNames) {
             if (alarmPropertyName === "indicatorAlarm") {
-                const newRules = EdlConverter.convertEdlColorAlarm(EdlConverter.convertEdlPv(edl["indicatorPv"]), 1, "Water Color") as type_rules_tdl;
-                tdl["rules"].push(...newRules);
+                // const newRules = EdlConverter.convertEdlColorAlarm(EdlConverter.convertEdlPv(edl["indicatorPv"]), 1, "Water Color") as type_rules_tdl;
+                // tdl["rules"].push(...newRules);
+                tdl["text"]["fillColor"] = "rgba(0,200,0,1)";
+                tdl["text"]["fillColorMinor"] = "rgba(255,255,0,1)";
+                tdl["text"]["fillColorMajor"] = "rgba(255,0,0,1)";
             } else if (alarmPropertyName === "fgAlarm") {
                 const newRules_Labels = EdlConverter.convertEdlColorAlarm(EdlConverter.convertEdlPv(edl["indicatorPv"]), 1, "Dial Font Color") as type_rules_tdl;
                 tdl["rules"].push(...newRules_Labels);

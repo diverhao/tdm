@@ -66,7 +66,10 @@ export class EdlConverter {
             } else if (widgetKey.includes("Group")) {
                 EdlConverter.convertEdlGroup(edlJSON[widgetKey], tdl, widgetKey, edlFileName, convertEdlSufffix);
             } else if (widgetKey.includes("Lines")) {
-                tdl[widgetKey] = PolylineHelper.convertEdlToTdl(edlJSON[widgetKey]);
+                const widgetJson = PolylineHelper.convertEdlToTdl(edlJSON[widgetKey]);
+                if (widgetJson !== undefined) {
+                    tdl[widgetKey] = widgetJson;
+                }
             } else if (widgetKey.includes("Shell Command")) {
                 tdl[widgetKey] = ActionButtonHelper.convertEdlToTdl_ShellCommand(edlJSON[widgetKey]);
             } else if (widgetKey.includes("Related Display")) {
@@ -1088,13 +1091,16 @@ export class EdlConverter {
         const pvList = this.extractPvsFromFullPv(fullPv);
         let result = "";
         for (let pv of pvList) {
+            if (pv.replaceAll('"', "").trim() === "" || pv.startsWith(".") === true) {
+                continue;
+            }
             if (result === "") {
                 result = result + `[${pv}] == undefined`
             } else {
-                result = result + ` && [${pv}] == undefined`
+                result = result + ` or [${pv}] == undefined`
             }
         }
-        if (result === "") {
+        if (result.trim() === "") {
             return "true";
         } else {
             return result;
@@ -1102,6 +1108,7 @@ export class EdlConverter {
     }
 
     static convertEdlPv = (propertyValue: string | undefined, fullPv: boolean = true) => {
+
         if (propertyValue === undefined) {
             return "";
         } else {
@@ -1116,18 +1123,28 @@ export class EdlConverter {
     static convertEdlCalcChannelName = (channelName: string, fullPv: boolean) => {
         if (channelName.replaceAll(`"`, "").replaceAll('"', "").startsWith("CALC\\")) {
             let newChannelName = channelName.replaceAll(`'`, "").replaceAll('"', "").replaceAll("\\", "");
+            // get expression string
             const expression = newChannelName.match(/{(.*?)}/);
-            // const variablesStr = newChannelName.match(/\((.*?)\)/);
-            const variablesStr = newChannelName.match(/\(([^)]*)\)[^(]*$/);
+            // get the string that contains all variables
+            const newChannelNameSplits = newChannelName.split("}");
+            newChannelNameSplits.splice(0, 1);
+            let variablesStr = newChannelNameSplits.join("}").trim();
+            if (variablesStr.startsWith("(")) {
+                variablesStr = variablesStr.replace("(", "");
+            }
+            if (variablesStr.endsWith(")")) {
+                variablesStr = variablesStr.slice(0, -1);
+            }
+
             if (expression !== null && variablesStr !== null) {
-                const variablesArray = variablesStr[1].replaceAll("(", "").replaceAll(")", "").split(",");
+                // const variablesArray = variablesStr[1].replaceAll("(", "").replaceAll(")", "").split(",");
+                const variablesArray = variablesStr.split(",");
                 let result = "";
                 const expression1 = expression[1].replaceAll("{", "").replaceAll("}", "");
                 for (let ii = 0; ii < expression1.length; ii++) {
                     const charCode = expression1.charCodeAt(ii);
                     if (charCode >= 65 && charCode < 65 + variablesArray.length) {
                         let pv = variablesArray[charCode - 65].trim();
-
                         let isConstant = true;
                         for (let ii = 0; ii < pv.length; ii++) {
                             if ((pv.charCodeAt(ii) >= 48 && pv.charCodeAt(ii) < 58) || pv.charCodeAt(ii) === 46) {
@@ -1146,7 +1163,8 @@ export class EdlConverter {
                     }
                 }
                 if (fullPv) {
-                    return result.replaceAll("&&", " and ").replaceAll("!", " not ").replaceAll("||", " or ");
+                    // replace standalone = to ==, but keep >=, <= and ==
+                    return result.replaceAll("&&", " and ").replaceAll("!", " not ").replaceAll("||", " or ").replaceAll(/(?<![><=!])=(?![=>])/g, "==");
                 } else {
                     let res = result.match(/\[(.*?)\]/g);
                     // use the last channel name if the fullPv is false
@@ -1187,6 +1205,21 @@ export class EdlConverter {
     //     }
     // }
 
+    /**
+     * LOC\$(!CCL)BLMWindow=i:0 -> LOC\CCLBLMWindow=i:0
+     */
+    static replaceLocalChannelMacro = (str: string) => {
+        const macroMatch = str.match(/\$\(\!([a-zA-Z:0-9]+)\)/);
+        if (macroMatch !== null) {
+            const macro = macroMatch[1];
+            if (macro !== undefined) {
+                const expandedStr = str.replace(/\$\(\!([a-zA-Z:0-9_-]+)\)/, macro);
+                return expandedStr;
+            }
+        }
+        return str;
+    }
+
     static convertEdlLocalChannelName = (channelName: string) => {
         if (channelName.replaceAll(`"`, "").replaceAll('"', "").startsWith("LOC\\")) {
             let newChannelName = channelName
@@ -1195,10 +1228,14 @@ export class EdlConverter {
                 .replace("$(!W)", "$(DID)") // window-wide local pv
                 .replace("$(!A)", "") // application-wide local pv
                 .replace("$(!WZ)", "$(DID)")
-                .replace("$(!AZ)", "$(DID)")
+                .replace("$(!Z)", "") // I don't know what is it
+                .replace("$(!X)", "") // I don't know what is it
+                .replace("$(!AZ)", "")
                 .replace("$(!M)", "$(DID)")
                 .replaceAll("\\x24\\x28\\x21[A-Z]{1}\\x29", "\\$(DID)")
                 .replace("LOC\\\\", "loc://");
+            newChannelName = this.replaceLocalChannelMacro(newChannelName);
+
             let newChannelNameArray = newChannelName.split("=");
             if (newChannelNameArray[1] !== undefined) {
                 let part1 = newChannelNameArray[1].trim();
@@ -1431,6 +1468,9 @@ export class EdlConverter {
             return [];
         }
         const channelName = channelNameRaw.replaceAll(`"`, "");
+        if (channelName.trim() === "") {
+            return [];
+        }
         const channelSevrityPv = `${channelName.split(".")[0]}.SEVR`;
         const sevrExpression = this.generatePvExpression(channelSevrityPv);
         const rule_NO_ALARM: Record<string, any> = {
@@ -1980,7 +2020,6 @@ export class EdlConverter {
         symbols: string[] | undefined,
         convertEdlSufffix: boolean
     ) => {
-        // console.log(propertyValue);
         const tdlFileNames: string[] = [];
         if (displayFileName !== undefined) {
             for (let fileNameRaw of displayFileName) {

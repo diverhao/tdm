@@ -163,6 +163,15 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
 			}
 		}
 
+        if (tdl["channelNames"].length >= 1) {
+            // there is a control pv, controlling colors
+            const onColorPropertyValue = edl["onColor"];
+            if (onColorPropertyValue !== undefined) {
+                const controlPv = tdl["channelNames"];
+                EdlConverter.convertEdlColor(onColorPropertyValue, controlPv[0], "Background Color", tdl);
+            }
+        }
+
         if (tdl["style"]["width"] > tdl["style"]["height"]) {
             tdl["text"]["direction"] = "horizontal";
         } else {

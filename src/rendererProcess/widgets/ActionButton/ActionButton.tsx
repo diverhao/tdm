@@ -8,7 +8,7 @@ import { ActionButtonRules } from "./ActionButtonRules";
 import path from "path";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_action_opendisplay_tdl = {
     type: "OpenDisplay";
@@ -157,8 +157,8 @@ export class ActionButton extends BaseWidget {
             this.setRulesStyle(rulesValues["style"]);
             this.setRulesText(rulesValues["text"]);
         }
-        this.setAllStyle({...this.getStyle(), ...this.getRulesStyle()});
-        this.setAllText({...this.getText(), ...this.getRulesText()});
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
@@ -313,7 +313,7 @@ export class ActionButton extends BaseWidget {
                             backgroundColor: `rgba(0, 0, 0, 0)`,
                             outline: "none",
                             border: "none",
-                            overflow: "visible",
+                            overflow: "hidden",
                             textOverflow: "hidden",
                         }}
                         // outline is not affected by opacity of the ElementBody
@@ -359,7 +359,7 @@ export class ActionButton extends BaseWidget {
                                         backgroundColor: "rgba(0,0,0,0)",
                                     }}
                                 >
-                                    {this.getAllText()["text"]}
+                                    {this.getButtonText()}
                                 </div>
                                 <select
                                     ref={selectRef}
@@ -505,7 +505,7 @@ export class ActionButton extends BaseWidget {
                                     }
                                 }}
                             >
-                                {this.getAllText()["text"]}
+                                {this.getButtonText()}
                             </div>
                         )}
                     </div>
@@ -513,6 +513,16 @@ export class ActionButton extends BaseWidget {
             </div>
         );
     };
+
+    getButtonText = () => {
+        const rawText = this.getAllText()["text"];
+        const macros = (g_widgets1.getWidget2("Canvas") as Canvas).getAllMacros();
+        // "\\n" is "\n"
+        const result = BaseWidget.expandChannelName(rawText, macros, true).replaceAll("\\n", "\n");
+        console.log("rawText ===============", rawText, macros, result, rawText === result)
+
+        return result;
+    }
 
     handleSelectAFile = (options: Record<string, any>, fileName: string) => {
         const itemIndex = options["itemIndex"];
@@ -547,7 +557,8 @@ export class ActionButton extends BaseWidget {
 
     openDisplay = (index: number) => {
         const tdl = this.getActions()[index] as type_action_opendisplay_tdl;
-        const tdlFileName = tdl["fileName"];
+        let tdlFileName = tdl["fileName"];
+
         // the display must be in "operating" mode to open another display
         const mode = "operating";
         const editable = g_widgets1.getRoot().getEditable();
@@ -580,6 +591,9 @@ export class ActionButton extends BaseWidget {
         if (tdl["useParentMacros"]) {
             externalMacros = [...externalMacros, ...parentMacros];
         }
+        // if the file is like $(S).tdl, try to replace $(S) with the macros.
+        tdlFileName = BaseWidget.expandChannelName(tdlFileName, externalMacros)
+
 
         const replaceMacros = false;
         const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();

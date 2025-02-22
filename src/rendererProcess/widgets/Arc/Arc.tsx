@@ -403,6 +403,7 @@ export class Arc extends BaseWidget {
 			arrowWidth: 6,
 			// becomes not visible in operation mode, but still clickable
 			invisibleInOperation: false,
+            alarmBorder: false,
 		},
 		channelNames: [],
 		groupNames: [],

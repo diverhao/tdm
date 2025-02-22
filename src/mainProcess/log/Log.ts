@@ -26,7 +26,7 @@ export enum type_log_levels {
  * [2024-07-04 15:23:15.123] [info] -1 Main process is created
  */
 export class Log {
-    private static _logLevel: type_log_levels = type_log_levels.error;
+    private static _logLevel: type_log_levels = type_log_levels.info;
     private static _useStackTrace: boolean = false;
 
     private static _inBrowser: boolean = (() => {

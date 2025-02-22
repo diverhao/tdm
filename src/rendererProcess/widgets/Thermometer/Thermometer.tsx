@@ -528,11 +528,11 @@ export class Thermometer extends BaseWidget {
             const channel = g_widgets1.getTcaChannel(channelName);
             if (this.getAllText()["usePvLimits"]) {
                 const upper_display_limit = channel.getUpperDisplayLimit();
-                if (upper_display_limit && typeof upper_display_limit === "number") {
+                if (upper_display_limit !== undefined && typeof upper_display_limit === "number") {
                     maxPvValue = upper_display_limit;
                 }
                 const lower_display_limit = channel.getLowerDisplayLimit();
-                if (lower_display_limit && typeof lower_display_limit === "number") {
+                if (lower_display_limit !== undefined && typeof lower_display_limit === "number") {
                     minPvValue = lower_display_limit;
                 }
             }

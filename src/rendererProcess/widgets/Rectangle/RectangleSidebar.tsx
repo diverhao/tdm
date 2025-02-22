@@ -4,6 +4,7 @@ import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarPolylineFill } from "../../helperWidgets/SidebarComponents/SidebarPolylineFill";
 import { SidebarRectangleCornerWidth } from "../../helperWidgets/SidebarComponents/SidebarRectangleCornerWidth";
 import { SidebarRectangleCornerHeight } from "../../helperWidgets/SidebarComponents/SidebarRectangleCornerHeight";
+import { SidebarAlarmBorder } from "../../helperWidgets/SidebarComponents/SidebarAlarmBorder";
 import {Log} from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
@@ -137,6 +138,7 @@ export class RectangleSidebar extends BaseWidgetSidebar {
                     {this.getSidebarPolylineFill().getElement()}
                     {this.getSidebarFillColor().getElement()}
                     {this.getSidebarInvisibleInOperation().getElement()}
+                    {this.getSidebarAlarmBorder().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ------------------- arrow ----------------------------- */}

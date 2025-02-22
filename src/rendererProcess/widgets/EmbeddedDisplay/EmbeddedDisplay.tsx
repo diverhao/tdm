@@ -484,7 +484,7 @@ export class EmbeddedDisplay extends BaseWidget {
             verticalAlign: "flex-start",
             wrapWord: true,
             showUnit: false,
-            alarmBorder: true,
+            alarmBorder: false,
             useParentMacros: false,
             useExternalMacros: false,
             tabPosition: "top",
@@ -712,7 +712,7 @@ export class EmbeddedDisplay extends BaseWidget {
                 for (let macro of itemMacros) {
                     expandedItemMacros.push([macro[0], BaseWidget.expandChannelName(macro[1], thisDisplayMacros)]);
                 }
-                if (this.getAllText()["useParentMacros"]) {
+                if (this.getText()["useParentMacros"]) {
                     expandedItemMacros.push(...thisDisplayMacros)
                 }
 
@@ -737,7 +737,7 @@ export class EmbeddedDisplay extends BaseWidget {
             tdlFileName: tdlFileName,
             macros: macros,
             currentTdlFolder: path.dirname(g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName()),
-            replaceMacros: this.getAllText()["useParentMacros"]
+            replaceMacros: this.getText()["useParentMacros"]
         });
 
         super.jobsAsOperatingModeBegins()

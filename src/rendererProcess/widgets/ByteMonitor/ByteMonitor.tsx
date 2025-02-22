@@ -314,6 +314,15 @@ export class ByteMonitor extends BaseWidget {
 		const horizontalElementNumber = this.getAllText()["direction"] === "horizontal" ? this.getAllText()["bitLength"] : 1;
 		const verticalElementNumber = this.getAllText()["direction"] === "horizontal" ? 1 : this.getAllText()["bitLength"];
 
+        // if there is a rule on the background color, the mechanism of setting the background color does not work
+        // as the fill color of <rect /> is by default from the bit-0/1 color settings
+        let fillColor = this.getItemColors()[bitValue]; // default value
+        const ruledBackgroundColor = this.getRulesStyle()["backgroundColor"];
+        if (ruledBackgroundColor !== undefined) {
+            fillColor = ruledBackgroundColor;
+        }
+        
+
 		// const length = this.getText()["bitLength"];
 		const point1X = this.getAllStyle()["width"] / horizontalElementNumber;
 		const point1Y = 0;
@@ -375,7 +384,7 @@ export class ByteMonitor extends BaseWidget {
 						height={`${this.getAllStyle()["height"] / verticalElementNumber}`}
 						strokeWidth={this.getAllText()["lineWidth"]}
 						stroke={this.getAllText()["lineColor"]}
-						fill={bitValue === -1 ? this.getAllText()["fallbackColor"] : this.getItemColors()[bitValue]}
+						fill={bitValue === -1 ? this.getAllText()["fallbackColor"] : fillColor}
 					></rect>
 				</svg>
 			);
@@ -386,6 +395,15 @@ export class ByteMonitor extends BaseWidget {
 		const horizontalElementNumber = this.getAllText()["direction"] === "horizontal" ? this.getAllText()["bitLength"] : 1;
 		const verticalElementNumber = this.getAllText()["direction"] === "horizontal" ? 1 : this.getAllText()["bitLength"];
 
+
+        // if there is a rule on the background color, the mechanism of setting the background color does not work
+        // as the fill color of <rect /> is by default from the bit-0/1 color settings
+        let fillColor = this.getItemColors()[bitValue]; // default value
+        const ruledBackgroundColor = this.getRulesStyle()["backgroundColor"];
+        if (ruledBackgroundColor !== undefined) {
+            fillColor = ruledBackgroundColor;
+        }
+        
 		// const length = this.getText()["bitLength"];
 		const rX = this.getAllStyle()["width"] / 2 / horizontalElementNumber;
 		const rY = this.getAllStyle()["height"] / 2 / verticalElementNumber;
@@ -439,7 +457,7 @@ export class ByteMonitor extends BaseWidget {
 						ry={`${this.getAllStyle()["height"] / 2 / verticalElementNumber}`}
 						strokeWidth={this.getAllText()["lineWidth"]}
 						stroke={this.getAllText()["lineColor"]}
-						fill={bitValue === -1 ? this.getAllText()["fallbackColor"] : this.getItemColors()[bitValue]}
+						fill={bitValue === -1 ? this.getAllText()["fallbackColor"] : fillColor}
 					></ellipse>
 				</svg>
 			);

@@ -85,7 +85,7 @@ export class PolylineHelper extends BaseWidgetHelper {
 		return result;
 	};
 
-	static convertEdlToTdl = (edl: Record<string, any>): type_Polyline_tdl => {
+	static convertEdlToTdl = (edl: Record<string, any>): type_Polyline_tdl | undefined => {
 		console.log("\n------------", `Parsing "Lines"`, "------------------\n");
 		const tdl = this.generateDefaultTdl("Polyline") as type_Polyline_tdl;
 		// all properties for this widget
@@ -170,6 +170,9 @@ export class PolylineHelper extends BaseWidgetHelper {
 				} else if (propertyName === "xPoints") {
 					const array = EdlConverter.convertEdl2dArray(propertyValue);
 					const left = EdlConverter.convertEdlNumber(edl["x"]);
+                    if (array[1].length <= 1) {
+                        return undefined;
+                    }
 					for (let ii = 0; ii < array[1].length; ii++) {
 						array[1][ii] = array[1][ii] - left * 0;
 					}
@@ -181,6 +184,9 @@ export class PolylineHelper extends BaseWidgetHelper {
 				} else if (propertyName === "yPoints") {
 					const array = EdlConverter.convertEdl2dArray(propertyValue);
 					const top = EdlConverter.convertEdlNumber(edl["y"]);
+                    if (array[1].length <= 1) {
+                        return undefined;
+                    }
 					for (let ii = 0; ii < array[1].length; ii++) {
 						array[1][ii] = array[1][ii] - top * 0;
 					}

@@ -85,7 +85,7 @@ export class DisplayWindowClient {
 
     constructor(displayWindowId: string, ipcServerPort: number | undefined, hostname: string | undefined = undefined) {
         // set log level
-        Log.setLogLevel(type_log_levels.error);
+        Log.setLogLevel(type_log_levels.info);
         
         Log.debug("Start to create DisplayWindowClient object");
         this._loadCustomFonts();

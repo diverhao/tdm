@@ -746,6 +746,7 @@ export class ChannelGraph extends BaseWidget {
      * and create new nodes if necessary.
      */
     expandNode = async (nodeLabel: string): Promise<boolean> => {
+
         // the base channel name, could be "pv1", "@dev3 c3 s2", or "27"
         const channelName = nodeLabel.split(" ")[0].split(".")[0];
         // if the base channel name is not a valid CA or PVA channel, no need to expand, stop here

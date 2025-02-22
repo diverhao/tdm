@@ -162,6 +162,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         tdl["text"]["horizontalAlign"] = "center";
         tdl["text"]["swapButtons"] = false;
         tdl["text"]["appearance"] = "traditional";
+        tdl["text"]["text"] = "";
 
 		for (const propertyName of propertyNames) {
 			const propertyValue = edl[propertyName];

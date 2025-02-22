@@ -588,7 +588,6 @@ export class IpcManagerOnDisplayWindow {
                         tcaChannel.appendToDbrData(data);
                     }
                     // (2)
-                    console.log(channelName, "--", tcaChannel.getDbrData());
                     const widgetKeys = tcaChannel.getWidgetKeys();
                     for (let widgetKey of widgetKeys) {
                         g_widgets1.addToForceUpdateWidgets(widgetKey);
@@ -686,7 +685,7 @@ export class IpcManagerOnDisplayWindow {
             utilityOptions: Record<string, any>;
         }
     ) => {
-        Log.debug("Received new-tdl message", options);
+        Log.info("Received a new-tdl");
         this.getDisplayWindowClient().updateTdl(
             options["newTdl"],
             options["tdlFileName"],
@@ -1141,7 +1140,7 @@ export class IpcManagerOnDisplayWindow {
         fileName: string,
         db: Record<string, any>[]
     }) => {
-        console.log("received db file", data)
+
         const widgets = g_widgets1.getWidgets2().values();
         for (const widget of widgets) {
             if (widget instanceof ChannelGraph) {

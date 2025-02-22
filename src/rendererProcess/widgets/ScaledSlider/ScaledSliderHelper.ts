@@ -148,6 +148,8 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
         tdl["text"]["compactScale"] = true;
         tdl["text"]["appearance"] = "traditional";
         tdl["text"]["showPvValue"] = false; // always false, this is handled by compactScale
+        tdl["text"]["showLabels"] = false;
+        tdl["text"]["usePvLimits"] = true;
         let orientation = "horizontal";
 		for (const propertyName of propertyNames) {
 			const propertyValue = edl[propertyName];
@@ -201,11 +203,13 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
 				} else if (propertyName === "limitsFromDb") {
 					tdl["text"]["usePvLimits"] = EdlConverter.convertEdlBoolean(propertyValue);
 				} else if (propertyName === "showValue") {
-					tdl["text"]["compactScale"] = EdlConverter.convertEdlBoolean(propertyValue);
+					// tdl["text"]["compactScale"] = EdlConverter.convertEdlBoolean(propertyValue);
+                    tdl["text"]["showLabels"] = EdlConverter.convertEdlBoolean(propertyValue);
 				} else if (propertyName === "showLimits") {
-					tdl["text"]["compactScale"] = EdlConverter.convertEdlBoolean(propertyValue);
+					// tdl["text"]["compactScale"] = EdlConverter.convertEdlBoolean(propertyValue);
+                    tdl["text"]["showLabels"] = EdlConverter.convertEdlBoolean(propertyValue);
 				} else if (propertyName === "showLabel") {
-					tdl["text"]["compactScale"] = EdlConverter.convertEdlBoolean(propertyValue);
+					// tdl["text"]["compactScale"] = EdlConverter.convertEdlBoolean(propertyValue);
 				} else if (propertyName === "showSavedValue") {
 					tdl["text"]["compactScale"] = EdlConverter.convertEdlBoolean(propertyValue);
 				} else if (propertyName === "orientation") {

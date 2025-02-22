@@ -214,7 +214,8 @@ export class ScaledSlider extends BaseWidget {
         const channelName = this.getChannelNames()[0];
         try {
             const channel = g_widgets1.getTcaChannel(channelName);
-            const channelValue = channel.getValue();
+            // const channelValue = channel.getValue();
+            const channelValue = g_widgets1.getChannelValue(channelName); // do not use raw = true option, enum choice should not be expanded
             if (typeof channelValue === "number") {
                 let newChannelValue = channelValue;
                 if (direction === "negative") {
@@ -469,11 +470,11 @@ export class ScaledSlider extends BaseWidget {
             const channel = g_widgets1.getTcaChannel(channelName);
             if (this.getAllText()["usePvLimits"]) {
                 const upper_display_limit = channel.getUpperDisplayLimit();
-                if (upper_display_limit && typeof upper_display_limit === "number") {
+                if (upper_display_limit !== undefined && typeof upper_display_limit === "number") {
                     maxPvValue = upper_display_limit;
                 }
                 const lower_display_limit = channel.getLowerDisplayLimit();
-                if (lower_display_limit && typeof lower_display_limit === "number") {
+                if (lower_display_limit !== undefined && typeof lower_display_limit === "number") {
                     minPvValue = lower_display_limit;
                 }
             }
@@ -928,20 +929,17 @@ export class ScaledSlider extends BaseWidget {
                     }}
                 ></div>
                 {/* slider bar -- value highlight region */}
-                <div
+                {/* <div
                     style={{
                         position: "absolute",
                         top: 0,
                         left: 0,
                         width: this.calcSliderBlockPosition(blockWidth) + blockWidth / 2,
                         height: blockSize,
-                        // backgroundColor: "rgba(180,180,180,1)",
                         backgroundColor: this.getAllText()["sliderBarBackgroundColor1"],
-                        // backgroundColor: "rgba(0, 200, 255, 1)",
-                        // borderRadius: 2,
                         border: "solid 0px black",
                     }}
-                ></div>
+                ></div> */}
                 {/* slider block */}
                 <div
                     ref={blockRef}

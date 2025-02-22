@@ -178,6 +178,7 @@ export class ArcSidebar extends BaseWidgetSidebar {
                 <this._BlockBody>
                     {this.getSidebarBorderWidth().getElement()}
                     {this.getSidebarBorderColor().getElement()}
+                    {this.getSidebarAlarmBorder().getElement()}
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
                 {/* ------------------------- rules ---------------------------- */}

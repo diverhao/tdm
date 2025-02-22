@@ -60,7 +60,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
 			// wrapWord: true,
 			// showUnit: false,
 			// actually "alarm outline"
-			alarmBorder: true,
+			alarmBorder: false,
 			// macros
 			externalMacros: [],
 			useParentMacros: false,

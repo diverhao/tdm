@@ -4,7 +4,7 @@ import { ElementProfileBlockNameInput } from "../../mainWindow/MainWindowStyledC
 import * as GlobalMethods from "../../global/GlobalMethods";
 import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 type type_yAxis = {
     label: string;
@@ -454,7 +454,8 @@ export class DataViewerPlot {
 
         try {
             const tcaChannel = g_widgets1.getTcaChannel(channelName);
-            if (tcaChannel.getTimeStamp() === undefined || tcaChannel.getValue() === undefined) {
+            // if (tcaChannel.getTimeStamp() === undefined || tcaChannel.getValue() === undefined) {
+            if (tcaChannel.getTimeStamp() === undefined || g_widgets1.getChannelValue(channelName, true) === undefined) {
                 return;
             }
             //todo: test above code, and remove below code
@@ -475,7 +476,7 @@ export class DataViewerPlot {
                 }
             }
 
-            yAxis.label = `${channelName} [${tcaChannel.getUnit().trim()}]`;
+            yAxis.label = `${channelName} [${g_widgets1.getChannelUnit(channelName).trim()}]`;
 
             const yAxisInterval0 = (yAxis.valMax - yAxis.valMin) / 5;
             const yAxisInterval = parseFloat(yAxisInterval0.toExponential(0));
@@ -2240,7 +2241,7 @@ export class DataViewerPlot {
             // the channel and data in the channel must all be valid
             try {
                 const tcaChannel = g_widgets1.getTcaChannel(channelName);
-                if (tcaChannel.getTimeStamp() === undefined || tcaChannel.getValue() === undefined) {
+                if (tcaChannel.getTimeStamp() === undefined || g_widgets1.getChannelValue(channelName, true) === undefined) {
                     Log.error(`There is no timestamp for ${channelName}`);
                     continue;
                 }
@@ -2373,7 +2374,7 @@ export class DataViewerPlot {
             // the channel and data in the channel must all be valid
             try {
                 const tcaChannel = g_widgets1.getTcaChannel(channelName);
-                if (tcaChannel.getTimeStamp() === undefined || tcaChannel.getValue() === undefined) {
+                if (tcaChannel.getTimeStamp() === undefined || g_widgets1.getChannelValue(channelName, true) === undefined) {
                     // if (tcaChannel.getValue() === undefined) {
                     continue;
                 }

@@ -91,6 +91,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
 
     static convertEdlToTdl = (edl: Record<string, string>): type_ChoiceButton_tdl => {
         console.log("\n------------", `Parsing "Choice Button"`, "------------------\n");
+        console.log(edl)
         const tdl = this.generateDefaultTdl("ChoiceButton") as type_ChoiceButton_tdl;
 
         const propertyNames: string[] = [
@@ -123,7 +124,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
         const alarmPropertyNames: string[] = [];
 
         // default differences
-        tdl["text"]["alarmBorder"] = false;
+        tdl["text"]["alarmBorder"] = true;
         tdl["text"]["showUnit"] = true;
         tdl["text"]["direction"] = "vertical";
 
@@ -206,7 +207,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
         if (edl["controlPv"] !== undefined) {
             tdl["rules"].push({
                 boolExpression: EdlConverter.generatePvUndefinedExpression(edl["controlPv"]),
-                propertyName: "Invisible in Operation ",
+                propertyName: "Invisible in Operation",
                 propertyValue: "true",
                 id: uuidv4(),
             });
@@ -214,7 +215,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
         if (edl["colorPv"] !== undefined) {
             tdl["rules"].push({
                 boolExpression: EdlConverter.generatePvUndefinedExpression(edl["colorPv"]),
-                propertyName: "Invisible in Operation ",
+                propertyName: "Invisible in Operation",
                 propertyValue: "true",
                 id: uuidv4(),
             });

@@ -442,7 +442,7 @@ export class Spinner extends BaseWidget {
         const channelName = this.getChannelNames()[0];
         try {
             const channel = g_widgets1.getTcaChannel(channelName);
-            const channelValue = channel.getValue();
+            const channelValue = g_widgets1.getChannelValue(channelName); // do not use raw = true option, enum value should not be expanded
             if (typeof channelValue === "number") {
                 let newChannelValue = channelValue;
                 if (direction === "negative") {

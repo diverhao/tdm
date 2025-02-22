@@ -702,7 +702,7 @@ export class Media extends BaseWidget {
     };
 
     jobsAsOperatingModeBegins() {
-        const fileType = this.getMediaType(this.getAllText()["fileName"]);
+        const fileType = this.getMediaType(this.getText()["fileName"]);
         if (fileType === "picture") {
             this.setReadWriteType("read");
         } else {

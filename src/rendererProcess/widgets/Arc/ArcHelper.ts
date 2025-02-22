@@ -65,6 +65,7 @@ export class ArcHelper extends BaseWidgetHelper {
 			arrowWidth: 6,
 			// becomes not visible in operation mode, but still clickable
 			invisibleInOperation: false,
+            alarmBorder: false,
 		},
 		channelNames: [],
 		groupNames: [],
@@ -155,6 +156,7 @@ export class ArcHelper extends BaseWidgetHelper {
 					tdl["text"]["angleRange"] = EdlConverter.convertEdlNumber(propertyValue);
 				} else if (propertyName === "visPv") {
                     const newRules = EdlConverter.convertEdlVisPv(EdlConverter.convertEdlPv(edl["visPv"]), edl["visMin"], edl["visMax"], edl["visInvert"]) as type_rules_tdl;
+                    console.log("new rules for visPv", newRules)
 					tdl["rules"].push(...newRules);
 				} else if (propertyName === "lineAlarm") {
 					alarmPropertyNames.push(propertyName);
@@ -189,7 +191,9 @@ export class ArcHelper extends BaseWidgetHelper {
 
 		// if alarmPv exists in edl setting, but its value is not available in operation, the widget becomes invisible
 		// These behaviors override the alarm-sensitive
-		if (edl["alarmPv"] !== undefined) {
+        // in EDM Circle widget, the "alarmPv" is not set anywhere in GUI, but it exists in the edl file
+        // Its value is always a space. We should ignore this case.
+		if (edl["alarmPv"] !== undefined && edl["alarmPv"].replaceAll('"',"").trim() !== "") {
 			tdl["rules"].push({
 				boolExpression: `${EdlConverter.generatePvUndefinedExpression(edl["alarmPv"])} == undefined`,
 				propertyName: "Invisible in Operation",

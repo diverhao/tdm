@@ -49,6 +49,7 @@ export class RectangleHelper extends BaseWidgetHelper {
 			cornerWidth: 0,
 			cornerHeight: 0,
 			invisibleInOperation: false,
+            alarmBorder: false,
 		},
 		channelNames: [],
 		groupNames: [],

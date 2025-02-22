@@ -1616,14 +1616,14 @@ export class Widgets {
     connectAllTcaChannels = (reconnect: boolean = false) => {
         // there should be no TcaChannel
         if (Object.keys(this.getTcaChannels()).length > 0 && reconnect === false) {
-            Log.debug("There should be no channel connection on this window for connectAllTcaChannels().")
+            Log.info("There should be no channel connection on this window for connectAllTcaChannels().")
             return;
         }
         // (1)
         for (let [, widget] of this.getWidgets2()) {
             if (widget instanceof BaseWidget) {
                 for (let channelNameLevel3 of widget.getChannelNamesLevel3()) {
-                    Log.info("connect all tca channels", channelNameLevel3)
+                    Log.debug("connect all tca channels", channelNameLevel3)
                     this.createTcaChannel(channelNameLevel3, widget.getWidgetKey());
                 }
             }
@@ -1795,9 +1795,18 @@ export class Widgets {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return channelName;
         }
+
+        const isSevrChannel = channelName.endsWith(".SEVR");
+
         try {
             const tcaChannel = this.getTcaChannel(channelName);
-            return tcaChannel.getValue(raw);
+            let value = tcaChannel.getValue(raw);
+            if (isSevrChannel === true && value === undefined) {
+                // try the raw channel's dbrData["severity"]
+                const rawTcaChannel = this.getTcaChannel(channelName.replaceAll(".SEVR", ""));
+                value = rawTcaChannel.getDbrData()["severity"];
+            }
+            return value;
         } catch (e) {
             Log.error(e);
             return undefined;
@@ -1806,8 +1815,11 @@ export class Widgets {
 
     /**
      * Get TcaChannel's severity
+     * 
      * @param {string} channelName
+     * 
      * @returns {ChannelSeverity} TcaChannel severity. In editing mode, severity is always NO_ALARM.
+     * 
      * In operating mode, if TcaChannel object does not exist or the channel is not connected, returns INVALID.
      *
      */
@@ -1817,7 +1829,18 @@ export class Widgets {
         }
         try {
             const tcaChannel = this.getTcaChannel(channelName);
-            return tcaChannel.getSeverity();
+            let severity = tcaChannel.getSeverity();
+
+           // in some cases, the IOC does not reply for GET request of xxx.SEVR
+           // So, the channel xxx.SEVR has undefined value and undefined severity
+           // in this case, try to get the raw channel's severity
+            if (severity === ChannelSeverity.INVALID && channelName.endsWith(".SEVR")) {
+                channelName = channelName.replaceAll(".SEVR", "");
+                severity = this.getChannelSeverity(channelName);
+            }
+
+
+            return severity;
         } catch (e) {
             Log.error(e);
             return ChannelSeverity.INVALID;
@@ -2513,7 +2536,7 @@ export class Widgets {
         }
     };
 
-    openChannelGraphWindow = (widgetKeys: string[] | undefined = undefined) => {  
+    openChannelGraphWindow = (widgetKeys: string[] | undefined = undefined) => {
         let channelName: string = "";
         let options = {};
         if (widgetKeys?.length === 0 || widgetKeys === undefined) {

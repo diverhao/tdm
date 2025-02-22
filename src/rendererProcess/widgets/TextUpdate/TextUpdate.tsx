@@ -156,7 +156,10 @@ export class TextUpdate extends BaseWidget {
         return (
             // always update the div below no matter the TextUpdateBody is .memo or not
             // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
+            <div style={{
+                ...this.getElementBodyRawStyle(),
+                // outline: this._getElementAreaRawOutlineStyle(),
+            }}>
                 <this._ElementArea></this._ElementArea>
                 {this._showResizers() ? <this._ElementResizer /> : null}
             </div>
@@ -187,14 +190,17 @@ export class TextUpdate extends BaseWidget {
                 fontWeight: allStyle.fontWeight,
                 outline: this._getElementAreaRawOutlineStyle(),
                 color: allStyle["color"],
+                opacity: 1,
+                // opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
+
             } as React.CSSProperties;
         } else {
             style = {
-                // display: "inline-flex",
-                // top: 0,
-                // left: 0,
-                // width: "100%",
-                // height: "100%",
+                // position: "relative",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
                 userSelect: "none",
                 overflow: "hidden",
                 whiteSpace: allText.wrapWord ? "normal" : "pre",
@@ -204,9 +210,13 @@ export class TextUpdate extends BaseWidget {
                 fontSize: allStyle.fontSize,
                 fontStyle: allStyle.fontStyle,
                 fontWeight: allStyle.fontWeight,
-                color: allStyle["color"],
+                // color: allStyle["color"],
                 ...this.getElementBodyRawStyle(),
+                display: "inline-flex",
+
                 outline: this._getElementAreaRawOutlineStyle(),
+                // opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
+                color: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? "rgba(0,0,0,0)" : allStyle["color"],
             } as React.CSSProperties;
         }
 
@@ -217,16 +227,23 @@ export class TextUpdate extends BaseWidget {
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                <div
-                    style={{
-                        opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                    }}
-                >{`${this._getChannelValue()} ${this.getAllText()["showUnit"] === true ? this._getChannelUnit() : ""}`}</div>
+                {`${this.getChannelValueStrRepresentation()}${this.getAllText()["showUnit"] === true ? this._getChannelUnit().trim() === "" ? "" : " " + this._getChannelUnit() : ""}`}
             </div>
         );
     };
 
-
+    /**
+     * Nomrally we can display the channel value as `${this._getChannelValue()}`
+     * However, for string type data, this produces a lot of "," if the data is an array
+     */
+    getChannelValueStrRepresentation = () => {
+        const rawChannelValue = this._getChannelValue(false);
+        if (Array.isArray(rawChannelValue) && typeof rawChannelValue[0] === "string") {
+            // concate the string
+            return rawChannelValue.join("");
+        }
+        return rawChannelValue;
+    }
 
 
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());

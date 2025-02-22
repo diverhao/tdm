@@ -6,7 +6,7 @@ import { rendererWindowStatus } from "../global/Widgets";
 import * as GlobalMethods from "../global/GlobalMethods";
 import { type_LocalChannel_data } from "../../mainProcess/channel/LocalChannelAgent";
 import { Channel_ACCESS_RIGHTS } from "../global/GlobalVariables";
-import {Log} from "../../mainProcess/log/Log";
+import { Log } from "../../mainProcess/log/Log";
 
 export enum ChannelSeverity {
     NO_ALARM,
@@ -367,7 +367,7 @@ export class TcaChannel {
         dbrType: Channel_DBR_TYPES | undefined,
         useInterval: boolean, // only use interval (0.1 s) to send back data, the return value is undefined in this case
         callback?: () => void
-    ): Promise<type_dbrData | type_LocalChannel_data > => {
+    ): Promise<type_dbrData | type_LocalChannel_data> => {
 
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const ipcManager = displayWindowClient.getIpcManager();
@@ -914,6 +914,8 @@ export class TcaChannel {
     /**
      * Get value of this channel from the cache. No network operation performed at here.
      * 
+     * This method should not be used regularly.
+     * 
      * For PVA channel, if the value has a .value field, then return the .value field. If not, return 
      * the raw value. If the returned value is an JSON object, then stringify it. If the returned value
      * is a string | number | number[] | string[], then return the value.
@@ -997,11 +999,11 @@ export class TcaChannel {
             if (raw === false) {
                 if (TcaChannel.checkChannelName(this.getChannelName()) === "ca") {
                     const dbrTypeNum = this.getDbrData().DBR_TYPE;
-                    if (dbrTypeNum !== undefined && Channel_DBR_TYPES[dbrTypeNum].includes("ENUM")) {
-                        const choices = this.getDbrData().strings;
-                        if (choices !== undefined) {
-                            return choices[value as number];
-                        }
+                    // the dbr type may come late, we only need `strings` to know it is a enum
+                    const choices = this.getDbrData().strings;
+                    if (choices !== undefined && typeof value === "number") {
+                        const result = choices[value];
+                        return result;
                     }
                 } else if (TcaChannel.checkChannelName(this.getChannelName()) === "local" || TcaChannel.checkChannelName(this.getChannelName()) === "global") {
                     const dbrTypeNum = this.getDbrData()["type"];
@@ -1036,8 +1038,6 @@ export class TcaChannel {
         if (TcaChannel.checkChannelName(this.getChannelName()) === "local" || TcaChannel.checkChannelName(this.getChannelName()) === "global") {
             return ChannelSeverity.NO_ALARM;
         }
-
-
 
         if (TcaChannel.checkChannelName(this.getChannelName()) === "ca") {
 

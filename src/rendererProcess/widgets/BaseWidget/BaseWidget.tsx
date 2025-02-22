@@ -1262,6 +1262,7 @@ export abstract class BaseWidget {
         }
         const macros = [...widgetMacros, ...canvas.getAllMacros()];
 
+
         // ------------ level 1 --------------
         // (1) formula channel name or regular channel name
         let resultLevel1: string[] = [];
@@ -1294,6 +1295,16 @@ export abstract class BaseWidget {
             // the .SEVR channel becomes its original channel name
             resultLevel1 = [...resultLevel1, ...rules.getRawChannelNames()];
         }
+
+        // special case: .SEVR channel, append it base channel name. In case the server does not reply
+        // the GET request for .SEVR, we can use the "severity" field value of dbr data in the base channel
+        for (const channelNameLevel1 of resultLevel1) {
+            if (channelNameLevel1.endsWith(".SEVR")) {
+                const rawChannelName = channelNameLevel1.replaceAll(".SEVR", "");
+                this.getChannelNamesLevel0().push(rawChannelName);
+            }
+        }
+
         if (removeDuplicated) {
             const resultSet = new Set(resultLevel1);
             this._channelNamesLevel1 = [...resultSet];
@@ -1413,6 +1424,7 @@ export abstract class BaseWidget {
         }
         const tmp: any[] = [...this.getEqChannelArray()];
         const channelNames = this.getChannelNamesLevel4();
+        console.log("channelNames ===============", channelNames)
 
         Log.debug("evaluating eq channel ================================")
         for (let index = 0; index < channelNames.length; index++) {
@@ -1420,14 +1432,14 @@ export abstract class BaseWidget {
             try {
                 // the val0.SEVR is a real channel on renderer and main processes
                 // but it is interpreted as val0, and the value is the dbrData["severity"]
-                const tcaChannel = g_widgets1.getTcaChannel(channelName);
-                const value = tcaChannel.getValue(true);
+                const value = g_widgets1.getChannelValue(channelName, true);
                 // if value === undefined, the channel value is a string "undefined",
                 // i.e. the "[val0a]" is replaced by "undefined".
                 // In this way we can write the rule like "[val0a] == undefined" to
                 // determine if this channel exists, then apply the rules, e.g. hiding the widget
                 // tmp[this._channelNameIndicesInBoolExpression[index]] = `${value}`;
                 tmp[this.getEqChannelNameIndices()[index]] = `${value}`;
+                console.log("tmp =================", tmp.join(""))
             } catch (e) {
                 Log.error(e);
                 return undefined;
@@ -1435,6 +1447,7 @@ export abstract class BaseWidget {
         }
         try {
             const result = mathjs.evaluate(tmp.join(""));
+            console.log("result ============", result)
             if (typeof result === "boolean") {
                 return result === true ? 1 : 0;
             } else {
@@ -1552,7 +1565,7 @@ export abstract class BaseWidget {
         const severity = this._getChannelSeverity();
         // this is a function used in operation mode, use getAllText()
         const alarmBorder = this.getAllText().alarmBorder;
-        if (alarmBorder) {
+        if (alarmBorder === true) {
             return AlarmOutlineStyle[severity];
         } else {
             return AlarmOutlineStyle[ChannelSeverity.NO_ALARM];

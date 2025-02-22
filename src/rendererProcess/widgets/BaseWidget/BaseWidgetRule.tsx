@@ -92,7 +92,7 @@ import { RuleOutlineStyle } from "../../helperWidgets/RuleComponents/RuleOutline
 import { RuleOutlineWidth } from "../../helperWidgets/RuleComponents/RuleOutlineWidth";
 import { RuleEmbeddedDisplaySelectTabIndex } from "../../helperWidgets/RuleComponents/RuleEmbeddedDisplaySelectTabIndex";
 import { BaseWidget } from "./BaseWidget";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_rule_tdl = {
     boolExpression: string;
@@ -589,11 +589,9 @@ export abstract class BaseWidgetRule {
         const channelNames = this.getExpandedChannelNamesInBoolExpression();
 
         for (let index = 0; index < channelNames.length; index++) {
-            const channelName = channelNames[index];
-
+            let channelName = channelNames[index];
             try {
-                const tcaChannel = g_widgets1.getTcaChannel(channelName);
-                const value = tcaChannel.getValue(true); // get raw value
+                const value = g_widgets1.getChannelValue(channelName, true);
                 tmp[this._channelNameIndicesInBoolExpression[index]] = `${value}`;
             } catch (e) {
                 Log.error(e);
@@ -628,10 +626,11 @@ export abstract class BaseWidgetRule {
         for (let index = 0; index < channelNames.length; index++) {
             const channelName = channelNames[index];
             try {
-                const tcaChannel = g_widgets1.getTcaChannel(channelName);
+                // const tcaChannel = g_widgets1.getTcaChannel(channelName);
                 // const dbrData = tcaChannel.getDbrData();
                 // const value = dbrData["value"];
-                const value = tcaChannel.getValue(true);
+                // const value = tcaChannel.getValue(true);
+                const value = g_widgets1.getChannelValue(channelName, true);
                 if (value === undefined) {
                     return undefined;
                 }

@@ -853,8 +853,8 @@ export class Probe extends BaseWidget {
 
         let accessRight = Channel_ACCESS_RIGHTS.READ_WRITE;
         try {
-            const tcaChannel = g_widgets1.getTcaChannel(channelName);
-            if (tcaChannel.getAccessRight() !== Channel_ACCESS_RIGHTS.READ_WRITE) {
+            // const tcaChannel = g_widgets1.getTcaChannel(channelName);
+            if (g_widgets1.getChannelAccessRight(channelName) !== Channel_ACCESS_RIGHTS.READ_WRITE) {
                 accessRight = Channel_ACCESS_RIGHTS.NO_ACCESS;
             }
         } catch (e) {
