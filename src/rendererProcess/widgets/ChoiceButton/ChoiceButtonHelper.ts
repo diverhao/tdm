@@ -177,7 +177,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
                     const { fontFamily, fontWeight, fontSize, fontStyle } = EdlConverter.convertEdlFont(propertyValue);
                     tdl["style"]["fontFamily"] = fontFamily;
                     tdl["style"]["fontStyle"] = fontStyle;
-                    tdl["style"]["fontSize"] = fontSize;
+                    tdl["style"]["fontSize"] = fontSize * 0.7; // tdm has a lot of margins
                     tdl["style"]["fontWeight"] = fontWeight;
                 } else {
                     console.log("Skip property", `"${propertyName}"`);

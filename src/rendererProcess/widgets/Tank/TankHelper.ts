@@ -155,7 +155,7 @@ export class TankHelper extends BaseWidgetHelper {
         // tdl["text"]["dialPercentage"] = 100;
         // tdl["text"]["showPvValue"] = false;
         tdl["text"]["usePvLimits"] = false;
-        tdl["text"]["alarmBorder"] = false;
+        tdl["text"]["alarmBorder"] = true;
         tdl["text"]["showLabels"] = false;
         tdl["style"]["transform"] = "rotate(90deg)";
         tdl["text"]["showScaleInnerLabel"] = false;

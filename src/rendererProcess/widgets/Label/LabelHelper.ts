@@ -167,7 +167,8 @@ export class LabelHelper extends BaseWidgetHelper {
                     }
                     tdl["style"]["borderWidth"] = EdlConverter.convertEdlNumber(propertyValue);
                 } else if (propertyName === "visPv") {
-                    const newRules = EdlConverter.convertEdlVisPv(EdlConverter.convertEdlPv(propertyValue), edl["visMin"], edl["visMax"], edl["visInvert"]) as type_rules_tdl;
+                    // if the visPv is INVALID, normally edm will hide this widget, but for Static Text, it shows the text as white
+                    const newRules = EdlConverter.convertEdlVisPv(EdlConverter.convertEdlPv(propertyValue), edl["visMin"], edl["visMax"], edl["visInvert"], true) as type_rules_tdl;
                     if (newRules.length > 0) {
                         tdl["rules"].push(...newRules);
                     }

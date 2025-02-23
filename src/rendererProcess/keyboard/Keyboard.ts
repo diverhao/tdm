@@ -2,7 +2,7 @@ import { DisplayWindowClient } from "../../mainProcess/windows/DisplayWindow/Dis
 import { g_widgets1 } from "../global/GlobalVariables";
 import { BaseWidget } from "../widgets/BaseWidget/BaseWidget";
 import { rendererWindowStatus } from "../global/Widgets";
-import {Log} from "../../mainProcess/log/Log";
+import { Log } from "../../mainProcess/log/Log";
 
 export class Keyboard {
     private _displayWindowClient: DisplayWindowClient;
@@ -37,6 +37,9 @@ export class Keyboard {
         }
 
         switch (event.key) {
+            case "Escape":
+                this.on_Escape_down();
+                break;
             case "Meta":
                 this.setMetaDown(true);
                 break;
@@ -56,15 +59,43 @@ export class Keyboard {
                 this.on_x_down();
                 break;
             case "ArrowRight":
+                if (g_widgets1 !== undefined && g_widgets1.isEditing() === true) {
+                    const numberOfWidgetsSelected = g_widgets1.getGroupSelection2().getWidgets().size;
+                    if (numberOfWidgetsSelected > 0) {
+                        // prevent the scrollbar rolling, only move the widget if there is widget selected
+                        event.preventDefault();
+                    }
+                }
                 this.on_ArrowRight_down();
                 break;
             case "ArrowLeft":
+                if (g_widgets1 !== undefined && g_widgets1.isEditing() === true) {
+                    const numberOfWidgetsSelected = g_widgets1.getGroupSelection2().getWidgets().size;
+                    if (numberOfWidgetsSelected > 0) {
+                        // prevent the scrollbar rolling, only move the widget if there is widget selected
+                        event.preventDefault();
+                    }
+                }
                 this.on_ArrowLeft_down();
                 break;
             case "ArrowUp":
+                if (g_widgets1 !== undefined && g_widgets1.isEditing() === true) {
+                    const numberOfWidgetsSelected = g_widgets1.getGroupSelection2().getWidgets().size;
+                    if (numberOfWidgetsSelected > 0) {
+                        // prevent the scrollbar rolling, only move the widget if there is widget selected
+                        event.preventDefault();
+                    }
+                }
                 this.on_ArrowUp_down();
                 break;
             case "ArrowDown":
+                if (g_widgets1 !== undefined && g_widgets1.isEditing() === true) {
+                    const numberOfWidgetsSelected = g_widgets1.getGroupSelection2().getWidgets().size;
+                    if (numberOfWidgetsSelected > 0) {
+                        // prevent the scrollbar rolling, only move the widget if there is widget selected
+                        event.preventDefault();
+                    }
+                }
                 this.on_ArrowDown_down();
                 break;
             case "v":
@@ -516,6 +547,13 @@ export class Keyboard {
             history.registerAction();
         }
     };
+
+    on_Escape_down = () => {
+        if (g_widgets1 !== undefined && g_widgets1.isEditing() === true) {
+            // the this.useShortcuts() ensures this function is invoked only when the <body /> is selected
+            g_widgets1.deselectAllWidgets(true);
+        }
+    }
 
     // -------------------- F1 ... F12 press ----------------------
 

@@ -86,6 +86,8 @@ export class EdlConverter {
                 tdl[widgetKey] = TankHelper.convertEdlToTdl(edlJSON[widgetKey]);
             } else if (widgetKey.includes("Menu Button")) {
                 tdl[widgetKey] = ComboBoxHelper.convertEdlToTdl(edlJSON[widgetKey]);
+            } else if (widgetKey.includes("Menu Mux")) {
+                tdl[widgetKey] = ComboBoxHelper.convertEdlToTdl_Menu_Mux(edlJSON[widgetKey]);
             } else if (widgetKey.includes("Choice Button")) {
                 tdl[widgetKey] = ChoiceButtonHelper.convertEdlToTdl(edlJSON[widgetKey]);
             } else if (widgetKey.includes("Radio Box")) {
@@ -339,8 +341,9 @@ export class EdlConverter {
             }
             let propertyName = "";
             let propertyValue = "";
-            const propertyNameRaw = line.split(" ")[0];
-            const propertyValueRaw = line.split(" ")[1];
+            const lineArray = line.split(" ");
+            const propertyNameRaw = lineArray[0];
+            const propertyValueRaw = lineArray.splice(1, lineArray.length).join(" ");
             if (propertyNameRaw !== undefined) {
                 propertyName = propertyNameRaw.replaceAll(`"`, "").trim();
             }
@@ -1265,7 +1268,8 @@ export class EdlConverter {
     };
 
     static convertEdlTextValue = (propertyValue: string[]) => {
-        return propertyValue.join("\n").replaceAll("\\", "").replaceAll(`"`, "");
+        // convert SOH char to \n
+        return propertyValue.join("\n").replaceAll("\\", "").replaceAll(`"`, "").replace(/\x01/g, "\n");
     };
 
     static convertEdlLineStyle = (propertyValue: string) => {
@@ -1355,6 +1359,30 @@ export class EdlConverter {
         }
         return macros;
     };
+
+    static convertMenuMuxSymbolTag = (symbolTagsEdl: string[]) => {
+        const result: string[] = [];
+        for (let tagRaw of symbolTagsEdl) {
+            let tagRawList = tagRaw.split(" ")
+            const tag = tagRawList.splice(1).join(" ").replaceAll('"', "");
+            result.push(tag);
+        }
+        return result;
+    }
+
+    static convertMenuMuxValue0 = (value0sEdl: string[]) => {
+        const result: number[] = [];
+        for (let value0Raw of value0sEdl) {
+            let value0List = value0Raw.split(" ")
+            const value0Str = value0List.splice(1).join(" ").replaceAll('"', "");
+            if (!isNaN(parseFloat(value0Str))) {
+                result.push(parseFloat(value0Str));
+            } else {
+                return [];
+            }
+        }
+        return result;
+    }
 
     static convertEdlRelatedDisplays = (labelsRaw: string[], fileNamesRaw: string[], externalMacrosRaws: string[], propagateMacrosRaws: string[]) => {
         const actions: Record<string, any>[] = [];
@@ -1880,7 +1908,7 @@ export class EdlConverter {
         }
     };
 
-    static convertEdlVisPv = (visPv: string, visMin: string | undefined, visMax: string | undefined, visInvert: string | undefined) => {
+    static convertEdlVisPv = (visPv: string, visMin: string | undefined, visMax: string | undefined, visInvert: string | undefined, isStaticTextWidget: boolean = false) => {
         const channelName = visPv.replaceAll(`"`, "");
         const result: Record<string, any>[] = [];
         let min = Number.NEGATIVE_INFINITY;
@@ -1912,7 +1940,7 @@ export class EdlConverter {
             result.push(rule);
         } else {
             // default is hiding the widget
-            let rule: Record<string, any> = {
+            let rule = {
                 boolExpression: `true`,
                 propertyName: "Invisible in Operation",
                 propertyValue: "true",
@@ -1927,6 +1955,26 @@ export class EdlConverter {
                 id: uuidv4(),
             };
             result.push(rule);
+
+            // for Static Text widget, if the visPv is undefined, show white text, this is the last one
+            if (isStaticTextWidget) {
+                rule = {
+                    boolExpression: `${this.generatePvExpression(channelName)} == undefined`,
+                    propertyName: "Invisible in Operation",
+                    propertyValue: "false",
+                    id: uuidv4(),
+                };
+                result.push(rule);
+                rule = {
+                    boolExpression: `${this.generatePvExpression(channelName)} == undefined`,
+                    propertyName: "Text Color",
+                    propertyValue: "rgba(255,255,255,1)",
+                    id: uuidv4(),
+                };
+                result.push(rule);
+   
+            }
+            
         }
         return result;
     };

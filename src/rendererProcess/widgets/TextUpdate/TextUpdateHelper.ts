@@ -400,7 +400,10 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                 } else if (propertyName === "fgAlarm") {
                     alarmPropertyNames.push(propertyName);
                 } else if (propertyName === "useAlarmBorder") {
-                    tdl["text"]["alarmBorder"] = true;
+                    // in "Text Monitor", the useAlarmBorder seems not honored
+                    if (type === "Text Control") {
+                        tdl["text"]["alarmBorder"] = true;
+                    }
                 } else if (propertyName === "bgAlarm") {
                     alarmPropertyNames.push(propertyName);
                 } else {
@@ -431,7 +434,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                     if (edl["useAlarmBorder"] !== "true") {
                         const newRules = EdlConverter.convertEdlColorAlarm(
                             EdlConverter.convertEdlPv(edl["controlPv"]),
-                            0,
+                            1,
                             "Text Color"
                         ) as type_rules_tdl;
                         tdl["rules"].push(...newRules);

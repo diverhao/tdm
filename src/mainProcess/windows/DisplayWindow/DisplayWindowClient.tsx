@@ -36,6 +36,7 @@ import html2canvas from "html2canvas";
 import { convertEpochTimeToString } from "../../../rendererProcess/global/GlobalMethods";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
 import path from "path";
+import { KeyboardEvent } from "react";
 
 console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Finished loading modules.")
 
@@ -86,7 +87,7 @@ export class DisplayWindowClient {
     constructor(displayWindowId: string, ipcServerPort: number | undefined, hostname: string | undefined = undefined) {
         // set log level
         Log.setLogLevel(type_log_levels.info);
-        
+
         Log.debug("Start to create DisplayWindowClient object");
         this._loadCustomFonts();
         // do it first
@@ -1056,14 +1057,25 @@ export class DisplayWindowClient {
     manualOpenTdl = (status: rendererWindowStatus) => {
         const statusStr = rendererWindowStatus[status];
         // this.getIpcManager().sendFromRendererProcess("open-tdl-file", undefined, statusStr, false, [], false);
+        // this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
+        //     // tdlFileNames?: string[];
+        //     mode: statusStr,
+        //     editable: false,
+        //     macros: [],
+        //     replaceMacros: false,
+        //     // currentTdlFolder?: string;
+        // });
+
         this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
             // tdlFileNames?: string[];
-            mode: statusStr,
-            editable: false,
+            mode: statusStr, // seems like it is disgarded
+            editable: false, // seems like it is disgarded
             macros: [],
             replaceMacros: false,
             // currentTdlFolder?: string;
+            windowId: this.getWindowId(),
         });
+
     };
 
     // ---------------------- window title ----------------------------

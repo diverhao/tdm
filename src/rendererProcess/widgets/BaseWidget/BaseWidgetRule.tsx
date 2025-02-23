@@ -587,9 +587,13 @@ export abstract class BaseWidgetRule {
         }
         const tmp: any[] = [...this.getBoolExpressionArray()];
         const channelNames = this.getExpandedChannelNamesInBoolExpression();
-
         for (let index = 0; index < channelNames.length; index++) {
             let channelName = channelNames[index];
+            // in some cases channelName is just a number
+            if (!isNaN(parseFloat(channelName))) {
+                tmp[this._channelNameIndicesInBoolExpression[index]] = `${parseFloat(channelName)}`;
+                continue;
+            }
             try {
                 const value = g_widgets1.getChannelValue(channelName, true);
                 tmp[this._channelNameIndicesInBoolExpression[index]] = `${value}`;
@@ -623,6 +627,7 @@ export abstract class BaseWidgetRule {
         const tmp: any[] = [...this.getPropertyValueArray()];
         const channelNames = this.getExpandedChannelNamesInPropertyValue();
 
+        console.log("channelNames =========================", channelNames, tmp)
         for (let index = 0; index < channelNames.length; index++) {
             const channelName = channelNames[index];
             try {
@@ -640,7 +645,6 @@ export abstract class BaseWidgetRule {
                 return undefined;
             }
         }
-
         try {
             // the result's type must be correct for this property
             // e.g. the "left" property must be a number

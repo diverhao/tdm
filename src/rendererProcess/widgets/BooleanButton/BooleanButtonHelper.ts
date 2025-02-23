@@ -167,7 +167,7 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
         tdl["text"]["wrapWord"] = false;
         tdl["text"]["alarmBorder"] = false;
         if (type === "Button") {
-            tdl["text"]["useChannelItems"] = true;
+            tdl["text"]["useChannelItems"] = false;
         } else if (type === "Message Button") {
             tdl["text"]["useChannelItems"] = false;
             tdl["text"]["bit"] = -1;
@@ -348,7 +348,8 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
         }
         // if controlPv exists in edl setting, but its value is not available in operation, the widget becomes invisible
         // These behaviors override the alarm-sensitive
-        if (edl["controlPv"] !== undefined) {
+        // this behavior is only for Button, not for "Message Button"
+        if (edl["controlPv"] !== undefined && type === "Button") {
             tdl["rules"].push({
                 boolExpression: EdlConverter.generatePvUndefinedExpression(edl["controlPv"]),
                 propertyName: "Invisible in Operation",

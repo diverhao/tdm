@@ -10,7 +10,7 @@ import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { BaseWidgetSidebar } from "./BaseWidgetSidebar";
 import { rendererWindowStatus } from "../../global/Widgets";
 import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import { GlobalVariables } from "../../global/GlobalVariables";
 
 export type type_BaseWidget_tdl = {
@@ -322,6 +322,11 @@ export abstract class BaseWidget {
         }
     };
 
+    _handleMouseDoubleClickOnResizer = (event: MouseEvent) => {
+        event.preventDefault();
+        this._handleMouseDoubleClick(event);
+    }
+
     // (1) set window state to "resizingX"
     // (2) create the custom "mouse move" and "mouse up" listener functions
     // (3) let the window to listen to "mouse move" and "mouse up" events
@@ -330,6 +335,14 @@ export abstract class BaseWidget {
     //     no flush in this function
     _handleMouseDownOnResizer(event: MouseEvent, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
         event.preventDefault();
+        if (event.ctrlKey === true && event.button === 0) {
+            this._handleMouseDown(event);
+            return;
+        }
+        if (event.button === 2) { // right click on resizer
+            this._handleMouseDown(event)
+            return;
+        }
 
 
         // (1)
@@ -350,6 +363,7 @@ export abstract class BaseWidget {
         // group.saveInitValues(event.clientX, event.clientY);
         group.saveInitValues(getMouseEventClientX(event), getMouseEventClientY(event));
     }
+
 
     // (1) resize all elements in GroupSelection2
     // (2) update sidebar with flush
@@ -720,14 +734,14 @@ export abstract class BaseWidget {
         return (
             <>
                 {/* order is important: BDFH -> ACEG */}
-                <div style={this.getResizerStyles().B} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "B")}></div>
-                <div style={this.getResizerStyles().D} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "D")}></div>
-                <div style={this.getResizerStyles().F} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "F")}></div>
-                <div style={this.getResizerStyles().H} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "H")}></div>
-                <div style={this.getResizerStyles().A} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "A")}></div>
-                <div style={this.getResizerStyles().C} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "C")}></div>
-                <div style={this.getResizerStyles().E} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "E")}></div>
-                <div style={this.getResizerStyles().G} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "G")}></div>
+                <div style={this.getResizerStyles().B} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "B")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().D} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "D")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().F} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "F")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().H} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "H")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().A} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "A")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().C} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "C")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().E} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "E")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().G} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "G")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
             </>
         );
     };
@@ -1424,11 +1438,15 @@ export abstract class BaseWidget {
         }
         const tmp: any[] = [...this.getEqChannelArray()];
         const channelNames = this.getChannelNamesLevel4();
-        console.log("channelNames ===============", channelNames)
 
         Log.debug("evaluating eq channel ================================")
         for (let index = 0; index < channelNames.length; index++) {
             const channelName = channelNames[index];
+            // in some cases channelName is just a number
+            if (!isNaN(parseFloat(channelName))) {
+                tmp[this.getEqChannelNameIndices()[index]] = `${parseFloat(channelName)}`;
+                continue;
+            }
             try {
                 // the val0.SEVR is a real channel on renderer and main processes
                 // but it is interpreted as val0, and the value is the dbrData["severity"]
@@ -1439,7 +1457,6 @@ export abstract class BaseWidget {
                 // determine if this channel exists, then apply the rules, e.g. hiding the widget
                 // tmp[this._channelNameIndicesInBoolExpression[index]] = `${value}`;
                 tmp[this.getEqChannelNameIndices()[index]] = `${value}`;
-                console.log("tmp =================", tmp.join(""))
             } catch (e) {
                 Log.error(e);
                 return undefined;
@@ -1447,7 +1464,6 @@ export abstract class BaseWidget {
         }
         try {
             const result = mathjs.evaluate(tmp.join(""));
-            console.log("result ============", result)
             if (typeof result === "boolean") {
                 return result === true ? 1 : 0;
             } else {

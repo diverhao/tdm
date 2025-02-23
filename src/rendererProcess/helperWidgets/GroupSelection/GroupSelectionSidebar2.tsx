@@ -22,9 +22,7 @@ export class GroupSelectionSidebar2 {
         // check the window vertical scrollbar width one more time to have a correct sidebar width
         const [sidebarWidthUpdater, setSidebarWidthUpdater] = React.useState<number>(calcSidebarWidth());
         React.useEffect(() => {
-            console.log("===================+++++++++++++++++++++++++++++++++++++ aaa", calcSidebarWidth(), sidebarWidthUpdater )
             if (sidebarWidthUpdater !== calcSidebarWidth()) {
-                console.log("===================+++++++++++++++++++++++++++++++++++++", calcSidebarWidth(), sidebarWidthUpdater )
                 setSidebarWidthUpdater(calcSidebarWidth());
                 g_widgets1.updateSidebar(true);
             }
