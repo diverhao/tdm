@@ -197,6 +197,7 @@ export class BooleanButton extends BaseWidget {
         }
 
         const valueIsOn = this.valueIsOn()
+        const valueIsLegal = this.valueIsLegal();
         const highlightColor = (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false) ? "rgba(0,0,0,0)" : "rgba(255,255,255,1)";
         const shadowColor = (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false) ? "rgba(0,0,0,0)" : "rgba(100,100,100,1)";
         const calcBorderBottomRight = () => {
@@ -474,6 +475,33 @@ export class BooleanButton extends BaseWidget {
         }
     }
 
+    valueIsLegal = (): boolean => {
+        if (g_widgets1.isEditing()) {
+            return true;
+        }
+        const bitValue = this.getBitValue();
+        if (bitValue === undefined) {
+            return false;
+        } else {
+            if (this.getAllText()["bit"] > -1) {
+                // bitValue must be 0 or 1, which can be the index
+                if (bitValue === 1 || bitValue === 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                // bitValue is the whole channel value
+                if (bitValue === this.getLabelsAndValues()["onValue"] || bitValue === this.getLabelsAndValues()["offValue"]) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+    }
+
+
     getLabel = () => {
         if (this.getAllText()["mode"] === "push and reset" || this.getAllText()["mode"] === "push no reset" || this.getAllText()["mode"] === "push nothing and set") {
             if (this.buttonPressed) {
@@ -494,6 +522,10 @@ export class BooleanButton extends BaseWidget {
 
     // button's background color, if the button is now shown, it becomes the rectangle's background color
     getButtonBackgroundColor = () => {
+        const valueIsLegal = this.valueIsLegal();
+        if (valueIsLegal === false) {
+            return this.getAllText()["fallbackColor"];
+        }
         if (this.getAllText()["mode"] === "push and reset" || this.getAllText()["mode"] === "push no reset" || this.getAllText()["mode"] === "push nothing and set") {
             if (this.buttonPressed) {
                 return this.getAllText()["onColor"];
@@ -774,7 +806,7 @@ export class BooleanButton extends BaseWidget {
             offValue: 0,
             onColor: "rgba(60, 255, 60, 1)",
             offColor: "rgba(60, 100, 60, 1)",
-            onPicture: "",
+            onPicture: "", // not implemented yet
             offPicture: "",
             // "contemporary" | "traditional"
             appearance: "traditional",

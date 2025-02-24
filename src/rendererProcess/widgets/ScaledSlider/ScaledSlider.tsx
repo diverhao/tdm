@@ -7,7 +7,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ScaledSliderRules } from "./ScaledSliderRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { rgbaStrToRgbaArray, parseIntAngle, rgbaArrayToRgbaStr } from "../../global/GlobalMethods";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import { calcTicks, refineTicks } from "../../global/GlobalMethods";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 
@@ -88,8 +88,8 @@ export class ScaledSlider extends BaseWidget {
             this.setRulesStyle(rulesValues["style"]);
             this.setRulesText(rulesValues["text"]);
         }
-        this.setAllStyle({...this.getStyle(), ...this.getRulesStyle()});
-        this.setAllText({...this.getText(), ...this.getRulesText()});
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
@@ -141,6 +141,7 @@ export class ScaledSlider extends BaseWidget {
                     fontStyle: this.getAllText().fontStyle,
                     outline: this._getElementAreaRawOutlineStyle(),
                     position: "relative",
+                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
@@ -176,6 +177,7 @@ export class ScaledSlider extends BaseWidget {
                     alignItems: "center",
                     flexShrink: "0",
                     opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
+                    color: this._getElementAreaRawTextStyle(),
                 }}
             >
                 {this.getAllText()["showPvValue"] === true ? <this._ElementValue></this._ElementValue> : null}
@@ -201,6 +203,7 @@ export class ScaledSlider extends BaseWidget {
                     alignItems: "center",
                     flexShrink: "0",
                     opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
+                    color: this._getElementAreaRawTextStyle(),
                 }}
             >
                 {this.getAllText()["showPvValue"] === true ? <this._ElementValue></this._ElementValue> : null}
@@ -537,12 +540,14 @@ export class ScaledSlider extends BaseWidget {
                 >
                     <div
                         style={{
-                            color: this.getAllStyle()["color"],
+                            // color: this.getAllStyle()["color"],
+                            color: this._getElementAreaRawTextStyle(),
                         }}
                     >{`step=${this.getAllText()["stepSize"]}`}</div>
                     <div
                         style={{
-                            color: this.getAllStyle()["color"],
+                            // color: this.getAllStyle()["color"],
+                            color: this._getElementAreaRawTextStyle(),
                         }}
                     >{`${this._getChannelValueForReadback()} ${this.getAllText().showUnit ? this._getChannelUnit() : ""}`}</div>
                 </div>
@@ -690,7 +695,8 @@ export class ScaledSlider extends BaseWidget {
                         width: "100%",
                         height: blockSize / 3,
                         // backgroundColor: "rgba(180,180,180,1)",
-                        backgroundColor: this.getAllText()["sliderBarBackgroundColor"],
+                        // backgroundColor: this.getAllText()["fillColor"],
+                        backgroundColor: this._getElementAreaRawFillStyle(),
                         borderRadius: blockSize / 2,
                         border: "solid 0px black",
                     }}
@@ -704,7 +710,8 @@ export class ScaledSlider extends BaseWidget {
                         width: this.calcSliderBlockPosition(blockSize) + blockSize / 2,
                         height: blockSize / 3,
                         // backgroundColor: "rgba(0, 200, 255, 1)",
-                        backgroundColor: this.getAllText()["sliderBarBackgroundColor1"],
+                        // backgroundColor: this.getAllText()["fillColor"],
+                        backgroundColor: this._getElementAreaRawFillStyle(),
                         borderRadius: blockSize / 2,
                         border: "solid 0px black",
                     }}
@@ -923,7 +930,8 @@ export class ScaledSlider extends BaseWidget {
                         width: "100%",
                         height: blockSize,
                         // backgroundColor: "rgba(180,180,180,1)",
-                        backgroundColor: this.getAllText()["sliderBarBackgroundColor"],
+                        // backgroundColor: this.getAllText()["fillColor"],
+                        backgroundColor: this._getElementAreaRawFillStyle(),
                         // borderRadius: 2,
                         border: "solid 0px black",
                     }}
@@ -1051,7 +1059,14 @@ export class ScaledSlider extends BaseWidget {
                     }}
                 >
                     {/* line, 2px gap above */}
-                    <path d={`M 0 2 L ${fullSize} 2`} strokeWidth="2" stroke={this.getAllStyle()["color"]} fill="none"></path>
+                    <path
+                        d={`M 0 2 L ${fullSize} 2`}
+                        strokeWidth="2"
+                        //  stroke={this.getAllStyle()["color"]} 
+                        stroke={this._getElementAreaRawTextStyle()}
+                        fill="none"
+                    >
+                    </path>
 
                     {/* ticks */}
                     {tickPositions.map((position: number, index: number) => {
@@ -1066,7 +1081,8 @@ export class ScaledSlider extends BaseWidget {
                                 <path
                                     d={`M ${position} 2 L ${position} ${scaleTickSize}`}
                                     strokeWidth="2"
-                                    stroke={this.getAllStyle()["color"]}
+                                    // stroke={this.getAllStyle()["color"]}
+                                    stroke={this._getElementAreaRawTextStyle()}
                                     fill="none"
                                 ></path>
                             </>
@@ -1074,57 +1090,62 @@ export class ScaledSlider extends BaseWidget {
                     })}
                 </svg>
                 {/* labels */}
-                {tickPositions.map((value: number, index: number) => {
-                    if (this.getAllText()["compactScale"]) {
-                        if (!(index === 0 || index === tickPositions.length - 1)) {
-                            return null;
+                {
+                    tickPositions.map((value: number, index: number) => {
+                        if (this.getAllText()["compactScale"]) {
+                            if (!(index === 0 || index === tickPositions.length - 1)) {
+                                return null;
+                            }
                         }
-                    }
 
-                    return (
-                        <div
-                            style={{
-                                position: "absolute",
-                                left: value,
-                                // top: scaleTickSize,
-                                top: 5 + this.getAllStyle()["fontSize"],
-                                width: 0,
-                                height: 0,
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: index === 0 ? "flex-start" : index === tickPositions.length - 1 ? "flex-end" : "center",
-                                color: this.getAllStyle()["color"],
-                            }}
-                        >
-                            {/* {calcTickValues()[index]} */}
-                            {refinedTicks[index]}
-                        </div>
-                    );
-                })}
-                {(() => {
-                    if (this.getAllText()["compactScale"]) {
                         return (
                             <div
                                 style={{
                                     position: "absolute",
-                                    left: this.getAllStyle()["width"] / 2,
-                                    top: scaleTickSize,
+                                    left: value,
+                                    // top: scaleTickSize,
+                                    top: 5 + this.getAllStyle()["fontSize"],
                                     width: 0,
                                     height: 0,
                                     display: "inline-flex",
-                                    alignItems: "flex-start",
-                                    justifyContent: "center",
-                                    color: this.getAllStyle()["color"],
+                                    alignItems: "center",
+                                    justifyContent: index === 0 ? "flex-start" : index === tickPositions.length - 1 ? "flex-end" : "center",
+                                    // color: this.getAllStyle()["color"],
+                                    color: this._getElementAreaRawTextStyle(),
                                 }}
                             >
-                                {`${this._getChannelValueForReadback()}`}
+                                {/* {calcTickValues()[index]} */}
+                                {refinedTicks[index]}
                             </div>
                         );
-                    } else {
-                        return null;
-                    }
-                })()}
-            </div>
+                    })
+                }
+                {
+                    (() => {
+                        if (this.getAllText()["compactScale"]) {
+                            return (
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        left: this.getAllStyle()["width"] / 2,
+                                        top: scaleTickSize,
+                                        width: 0,
+                                        height: 0,
+                                        display: "inline-flex",
+                                        alignItems: "flex-start",
+                                        justifyContent: "center",
+                                        color: this.getAllStyle()["color"],
+                                    }}
+                                >
+                                    {`${this._getChannelValueForReadback()}`}
+                                </div>
+                            );
+                        } else {
+                            return null;
+                        }
+                    })()
+                }
+            </div >
         );
     };
 
@@ -1221,7 +1242,8 @@ export class ScaledSlider extends BaseWidget {
                                 display: "inline-flex",
                                 alignItems: "center",
                                 justifyContent: index === 0 ? "flex-start" : index === this.getAllText()["numTickIntervals"] ? "flex-end" : "center",
-                                color: this.getAllStyle()["color"],
+                                // color: this.getAllStyle()["color"],
+                                color: this._getElementAreaRawTextStyle(),
                             }}
                         >
                             {/* {calcTickValues()[index]} */}
@@ -1244,7 +1266,8 @@ export class ScaledSlider extends BaseWidget {
                                     // alignItems: "flex-start",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    color: this.getAllStyle()["color"],
+                                    // color: this.getAllStyle()["color"],
+                                    color: this._getElementAreaRawTextStyle(),
                                 }}
                             >
                                 {`${this._getChannelValueForReadback()}`}
@@ -1384,7 +1407,6 @@ export class ScaledSlider extends BaseWidget {
         // the ElementBody style
         text: {
             showUnit: true,
-            alarmBorder: true,
             minPvValue: 0,
             maxPvValue: 10,
             usePvLimits: false,
@@ -1403,9 +1425,14 @@ export class ScaledSlider extends BaseWidget {
             // "contemporary" | "traditional"
             appearance: "traditional",
             // slide bar background color
-            sliderBarBackgroundColor: "rgba(180, 180, 180, 1)",
+            fillColor: "rgba(180, 180, 180, 1)",
             // slide bar highlight area color
-            sliderBarBackgroundColor1: "rgba(180, 180, 180, 1)",
+            // sliderBarBackgroundColor1: "rgba(180, 180, 180, 1)",
+            alarmBorder: true,
+            alarmText: false,
+            alarmFill: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

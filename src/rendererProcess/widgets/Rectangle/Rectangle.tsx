@@ -154,7 +154,7 @@ export class Rectangle extends BaseWidget {
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): JSX.Element => {
         // const hideRectangle = this.getChannelNamesLevel4().length > 0 && this._getChannelSeverity() === ChannelSeverity.INVALID && this._getChannelValue() === undefined;
-        const hideRectangle = this.getChannelNamesLevel4().length > 0 && this._getFirstChannelValue() === undefined;
+        // const hideRectangle = this.getChannelNamesLevel4().length > 0 && this._getFirstChannelValue() === undefined;
         return (
             // <div
             <div
@@ -175,12 +175,12 @@ export class Rectangle extends BaseWidget {
                     fontStyle: this.getAllStyle().fontStyle,
                     fontWeight: this.getAllStyle().fontWeight,
                     outline: this._getElementAreaRawOutlineStyle(),
+                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                {/* hide the rectangle if the associated PV is INVALID */}
-                {hideRectangle ? null : <this._ElementRectangle></this._ElementRectangle>}
+                <this._ElementRectangle></this._ElementRectangle>
             </div>
         );
     };
@@ -189,7 +189,7 @@ export class Rectangle extends BaseWidget {
         const width = this.getAllStyle()["width"];
         const height = this.getAllStyle()["height"];
         const strokeWidth = this.getAllText()["lineWidth"];
-        console.log("width, height, strokeWidth", width, height, strokeWidth)
+        console.log("width, height, strokeWidth", width, height, strokeWidth, this._getElementAreaRawFillStyle(), this._getElementAreaRawShapeStyle(), this._getElementAreaRawBackgroundStyle(), this._getElementAreaRawTextStyle())
         return (
             <svg
                 width="100%"
@@ -209,25 +209,25 @@ export class Rectangle extends BaseWidget {
                         width={`${this.getAllStyle()["width"] - this.getAllText()["lineWidth"]}`}
                         height={`${this.getAllStyle()["height"] - this.getAllText()["lineWidth"]}`}
                         strokeWidth={this.getAllText()["lineWidth"]}
-                        stroke={this.getAllText()["lineColor"]}
+                        stroke={this._getElementAreaRawShapeStyle()}
                         strokeDasharray={this.calcStrokeDasharray()}
                         strokeLinecap={"butt"}
                         rx={`${this.getAllText()["cornerWidth"]}`}
                         ry={`${this.getAllText()["cornerHeight"]}`}
-                        fill={this.getAllText()["fill"] ? this.getAllText()["fillColor"] : "none"}
+                        fill={this.getAllText()["fill"] ? this._getElementAreaRawFillStyle() : "none"}
                     ></rect>
                     :
                     width <= strokeWidth && height > strokeWidth ?
                         <path
                             d={`M ${width / 2} 0 v ${height}`}
-                            stroke={this.getAllText()["lineColor"]}
+                            stroke={this._getElementAreaRawShapeStyle()}
                             strokeWidth={width} />
                         :
                         width > strokeWidth && height <= strokeWidth ?
                             <path
                                 // d={`M 0 ${height / 2} ${width} ${height / 2}`}
                                 d={`M 0 ${height / 2} h ${width}`}
-                                stroke={this.getAllText()["lineColor"]}
+                                stroke={this._getElementAreaRawShapeStyle()}
                                 strokeWidth={height} />
                             :
                             null
@@ -344,7 +344,11 @@ export class Rectangle extends BaseWidget {
             cornerWidth: 0,
             cornerHeight: 0,
             invisibleInOperation: false,
-            alarmBorder: false, // Rectangle should use the fill color to indicate the alarm state
+            alarmBorder: false,
+            alarmShape: false,
+            alarmFill: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

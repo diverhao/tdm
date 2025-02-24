@@ -48,6 +48,15 @@ import { SidebarNumberScale } from "../../helperWidgets/SidebarComponents/Sideba
 import { SidebarNumberFormat } from "../../helperWidgets/SidebarComponents/SidebarNumberFormat";
 import { SidebarShowLegend } from "../../helperWidgets/SidebarComponents/SidebarShowLegend";
 import { SidebarWidgetAppearance } from "../../helperWidgets/SidebarComponents/SidebarWidgetAppearance"
+import { SidebarAlarmLevel } from "../../helperWidgets/SidebarComponents/SidebarAlarmLevel";
+import { SidebarAlarmBackground } from "../../helperWidgets/SidebarComponents/SidebarAlarmBackground";
+import { SidebarAlarmShape } from "../../helperWidgets/SidebarComponents/SidebarAlarmShape";
+import { SidebarAlarmText } from "../../helperWidgets/SidebarComponents/SidebarAlarmText";
+import { SidebarAlarmFill } from "../../helperWidgets/SidebarComponents/SidebarAlarmFill";
+import { SidebarAlarmDial } from "../../helperWidgets/SidebarComponents/SidebarAlarmDial";
+import { SidebarAlarmPointer } from "../../helperWidgets/SidebarComponents/SidebarAlarmPointer";
+import { SidebarTankAlarmContainer } from "../../helperWidgets/SidebarComponents/SidebarTankAlarmContainer";
+import { SidebarTankContainerColor } from "../../helperWidgets/SidebarComponents/SidebarTankContainerColor";
 
 export abstract class BaseWidgetSidebar {
     private _sidebarX: SidebarX;
@@ -96,6 +105,16 @@ export abstract class BaseWidgetSidebar {
     private _sidebarNumberFormat;
     private _sidebarShowLegend;
     private _sidebarWidgetAppearance;
+    private _sidebarAlarmLevel;
+    private _sidebarAlarmBackground;
+    private _sidebarAlarmShape;
+    private _sidebarAlarmText;
+    private _sidebarAlarmFill;
+    private _sidebarAlarmPointer: SidebarAlarmPointer;
+    private _sidebarAlarmDial: SidebarAlarmDial;
+    private _sidebarTankAlarmContainer: SidebarTankAlarmContainer;
+    private _sidebarTankContainerColor: SidebarTankContainerColor
+
 
     _widgetKey: string;
     _mainWidget: BaseWidget;
@@ -152,7 +171,16 @@ export abstract class BaseWidgetSidebar {
         this._sidebarNumberFormat = new SidebarNumberFormat(this);
         this._sidebarShowLegend = new SidebarShowLegend(this);
         this._sidebarWidgetAppearance = new SidebarWidgetAppearance(this);
-    }
+        this._sidebarAlarmLevel = new SidebarAlarmLevel(this);
+        this._sidebarAlarmBackground = new SidebarAlarmBackground(this);
+        this._sidebarAlarmShape = new SidebarAlarmShape(this);
+        this._sidebarAlarmText = new SidebarAlarmText(this);
+        this._sidebarAlarmFill = new SidebarAlarmFill(this);
+        this._sidebarAlarmPointer = new SidebarAlarmPointer(this);
+        this._sidebarAlarmDial = new SidebarAlarmDial(this);
+        this._sidebarTankAlarmContainer = new SidebarTankAlarmContainer(this);
+        this._sidebarTankContainerColor = new SidebarTankContainerColor(this);
+        }
 
     // ------------------------------------- elements --------------------------------------
 
@@ -431,6 +459,42 @@ export abstract class BaseWidgetSidebar {
         return g_widgets1.getSidebarWidgetsList();
     }
 
+    getSidebarAlarmLevel = () => {
+        return this._sidebarAlarmLevel;
+    }
+
+    getSidebarAlarmBackground = () => {
+        return this._sidebarAlarmBackground;
+    }
+
+    getSidebarAlarmShape = () => {
+        return this._sidebarAlarmShape;
+    }
+
+    getSidebarAlarmText = () => {
+        return this._sidebarAlarmText;
+    }
+
+    getSidebarAlarmFill = () => {
+        return this._sidebarAlarmFill;
+    }
+
+    getSidebarAlarmPointer = () => {
+        return this._sidebarAlarmPointer;
+    }
+
+    getSidebarAlarmDial = () => {
+        return this._sidebarAlarmDial;
+    }
+
+    getSidebarTankAlarmContainer = () => {
+        return this._sidebarTankAlarmContainer;
+    }
+
+    getSidebarTankContainerColor = () => {
+        return this._sidebarTankContainerColor;
+    }
+    
     // ------------------------- style -------------------------
     _style: Record<string, any> = {
         // inline-flex

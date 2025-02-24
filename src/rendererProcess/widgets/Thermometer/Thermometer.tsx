@@ -6,7 +6,7 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ThermometerRules } from "./ThermometerRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import { ChannelSeverity } from "../../channel/TcaChannel";
 import { calcTicks, refineTicks } from "../../global/GlobalMethods";
 
@@ -111,8 +111,8 @@ export class Thermometer extends BaseWidget {
             this.setRulesStyle(rulesValues["style"]);
             this.setRulesText(rulesValues["text"]);
         }
-        this.setAllStyle({...this.getStyle(), ...this.getRulesStyle()});
-        this.setAllText({...this.getText(), ...this.getRulesText()});
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
@@ -164,6 +164,8 @@ export class Thermometer extends BaseWidget {
                     fontStyle: this.getAllStyle().fontStyle,
                     fontWeight: this.getAllStyle().fontWeight,
                     outline: this._getElementAreaRawOutlineStyle(),
+                    color: this._getElementAreaRawTextStyle(),
+                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
@@ -222,8 +224,9 @@ export class Thermometer extends BaseWidget {
                     // strokeWidth={`${this.getAllText()["wallThickness"]}`}
                     strokeWidth={`${this.containerWallThickness}`}
                     // stroke={this.getAllText()["wallColor"]}
-                    stroke={"rgba(0,0,0,1)"}
-                    fill={this.getAllText()["backgroundColor"]}
+                    // stroke={"rgba(0,0,0,1)"}
+                    stroke={this._getElementAreaRawContainerStyle()}
+                    fill={this._getElementAreaRawContainerStyle()}
                 ></path>
             </svg>
         );
@@ -232,17 +235,6 @@ export class Thermometer extends BaseWidget {
     containerWallThickness = 1;
 
     _ElementMercury = () => {
-        const severity = g_widgets1.getChannelSeverity(this.getChannelNames()[0]);
-        let mercuryColor = this.getAllText()["fillColor"];
-        if (severity === ChannelSeverity.INVALID) {
-            mercuryColor = this.getAllText()["fillColorInvalid"];;
-        }
-        else if (severity === ChannelSeverity.MAJOR) {
-            mercuryColor = this.getAllText()["fillColorMajor"];;
-        }
-        else if (severity === ChannelSeverity.MINOR) {
-            mercuryColor = this.getAllText()["fillColorMinor"];;
-        }
 
         const rBulb = this.getAllText()["bulbDiameter"] / 2;
         const widthTube = this.getAllText()["tubeWidth"];
@@ -272,7 +264,7 @@ export class Thermometer extends BaseWidget {
                         } A ${widthMercury / 2} ${widthMercury / 2} 0 0 1 ${widthMercury + distance + wallThickness / 2} ${widthTube / 2 + (calcFullHeight() - widthTube / 2) * (1 - this.calcMercuryLevel() / 100)
                         } L ${widthMercury + distance + wallThickness / 2} ${calcFullHeight()} A ${rMercury} ${rMercury} 0 1 1 ${distance + wallThickness / 2
                         } ${calcFullHeight()} z`}
-                    fill={mercuryColor}
+                    fill={this._getElementAreaRawFillStyle()}
                 ></path>
             </svg>
         );
@@ -330,7 +322,7 @@ export class Thermometer extends BaseWidget {
                     if (tickValue === Infinity || tickValue === -Infinity || isNaN(tickValue)) {
                         tickValue = 0
                     }
-                    result.push((1-((tickValue - minPvValue) / (maxPvValue - minPvValue))) * fullSize);
+                    result.push((1 - ((tickValue - minPvValue) / (maxPvValue - minPvValue))) * fullSize);
                 }
             } else {
                 const d = fullSize / numTickIntervals;
@@ -380,7 +372,13 @@ export class Thermometer extends BaseWidget {
                         }}
                     >
                         {/* line, 2px gap above */}
-                        <path d={`M 2 0 L 2 ${fullSize}`} strokeWidth="2" stroke={this.getAllStyle()["color"]} fill="none"></path>
+                        <path
+                            d={`M 2 0 L 2 ${fullSize}`}
+                            strokeWidth="2"
+                            stroke={this._getElementAreaRawTextStyle()}
+                            fill="none">
+
+                        </path>
 
                         {/* ticks */}
                         {calcTickPositions().map((position: number, index: number) => {
@@ -395,7 +393,8 @@ export class Thermometer extends BaseWidget {
                                     <path
                                         d={`M 2 ${position} L ${scaleTickSize} ${position}`}
                                         strokeWidth="2"
-                                        stroke={this.getAllStyle()["color"]}
+                                        // stroke={this.getAllStyle()["color"]}
+                                        stroke={this._getElementAreaRawTextStyle()}
                                         fill="none"
                                     ></path>
                                 </>
@@ -423,7 +422,8 @@ export class Thermometer extends BaseWidget {
                                     alignItems: "flex-start",
                                     justifyContent:
                                         index === 0 ? "flex-start" : index === this.getAllText()["numTickIntervals"] ? "flex-end" : "center",
-                                    color: this.getAllStyle()["color"],
+                                    color: this._getElementAreaRawTextStyle(),
+
                                 }}
                             >
                                 {/* {calcTickValues()[index]} */}
@@ -445,7 +445,8 @@ export class Thermometer extends BaseWidget {
                                         display: "inline-flex",
                                         alignItems: "flex-start",
                                         justifyContent: "center",
-                                        color: this.getAllStyle()["color"],
+                                        // color: this.getAllStyle()["color"],
+                                        color: this._getElementAreaRawTextStyle()
                                     }}
                                 >
                                     {`${this._getChannelValue()}`}
@@ -624,16 +625,15 @@ export class Thermometer extends BaseWidget {
         text: {
             wrapWord: false,
             showUnit: true,
-            alarmBorder: true,
             usePvLimits: false,
             minPvValue: 0,
             maxPvValue: 10,
             useLogScale: false,
             fillColor: "rgba(0,200,0,1)",
-            fillColorMinor: "rgba(255, 150, 100, 1)",
-            fillColorMajor: "rgba(255,0,0,1)",
-            fillColorInvalid: "rgba(200,0,200,1)",
-            backgroundColor: "rgba(210,210,210,1)",
+            // fillColorMinor: "rgba(255, 150, 100, 1)",
+            // fillColorMajor: "rgba(255,0,0,1)",
+            // fillColorInvalid: "rgba(200,0,200,1)",
+            containerColor: "rgba(210,210,210,1)",
             showLabels: true,
             bulbDiameter: 30,
             tubeWidth: 15,
@@ -645,6 +645,12 @@ export class Thermometer extends BaseWidget {
             numTickIntervals: 5,
             compactScale: false,
             displayScale: "Linear", // "Linear" | "Log10"
+            alarmContainer: false,
+            alarmFill: false,
+            alarmText: false,
+            alarmBorder: true,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

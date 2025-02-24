@@ -34,6 +34,62 @@ export enum AlarmOutlineStyle {
     "dotted 1.5px red",
 }
 
+export enum AlarmBackgroundStyle {
+    "rgba(0,0,0,0)",
+    "rgba(255,128,0,1)",
+    "rgba(255,0,0,1)",
+    "rgba(255,0,255,1)",
+}
+
+export enum AlarmTextStyle {
+    "rgba(0,0,0,0)",
+    "rgba(255,128,0,1)",
+    "rgba(255,0,0,1)",
+    "rgba(255,0,255,1)",
+}
+
+export enum AlarmShapeStyle {
+    "rgba(0,0,0,0)",
+    "rgba(255,128,0,1)",
+    "rgba(255,0,0,1)",
+    "rgba(255,0,255,1)",
+}
+
+export enum AlarmFillStyle {
+    "rgba(0,0,0,0)",
+    "rgba(255,128,0,1)",
+    "rgba(255,0,0,1)",
+    "rgba(255,0,255,1)",
+}
+
+export enum AlarmPointerStyle {
+    "rgba(0,0,0,0)",
+    "rgba(255,128,0,1)",
+    "rgba(255,0,0,1)",
+    "rgba(255,0,255,1)",
+}
+
+export enum AlarmDialStyle {
+    "rgba(0,0,0,0)",
+    "rgba(255,128,0,1)",
+    "rgba(255,0,0,1)",
+    "rgba(255,0,255,1)",
+}
+
+export enum AlarmContainerStyle {
+    "rgba(0,0,0,0)",
+    "rgba(255,128,0,1)",
+    "rgba(255,0,0,1)",
+    "rgba(255,0,255,1)",
+}
+
+export enum AlarmSelectedBackgroundStyle {
+    "rgba(0,0,0,0)",
+    "rgba(255,128,0,1)",
+    "rgba(255,0,0,1)",
+    "rgba(255,0,255,1)",
+}
+
 /**
  * Abstract base class for regular widgets, e.g. TextUpdate and Probe <br>
  *
@@ -1587,6 +1643,149 @@ export abstract class BaseWidget {
             return AlarmOutlineStyle[ChannelSeverity.NO_ALARM];
         }
     };
+
+    _getElementAreaRawBackgroundStyle = (): string => {
+        const severity = this._getChannelSeverity();
+        // this is a function used in operation mode, use getAllText()
+        const alarmBackground = this.getAllText().alarmBackground;
+        if (g_widgets1.isEditing()) {
+            return this.getStyle()["backgroundColor"];
+        }
+
+        if (alarmBackground === true) {
+            const alarmLevelStr = this.getText()["alarmLevel"];
+            const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
+            if (severity >= alarmLevel) {
+                return AlarmBackgroundStyle[severity];
+            }
+        }
+        return this.getAllStyle()["backgroundColor"];
+    };
+
+    _getElementAreaRawTextStyle = (): string => {
+        const severity = this._getChannelSeverity();
+        const alarmText = this.getText().alarmText;
+        if (g_widgets1.isEditing()) {
+            return this.getStyle()["color"];
+        }
+
+        if (alarmText === true) {
+            const alarmLevelStr = this.getText()["alarmLevel"];
+            const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
+            if (severity >= alarmLevel) {
+                return AlarmTextStyle[severity];
+            }
+        }
+        return this.getAllStyle()["color"];
+    }
+
+
+    _getElementAreaRawShapeStyle = (): string => {
+        const severity = this._getChannelSeverity();
+        const alarmShape = this.getText().alarmShape;
+        if (g_widgets1.isEditing()) {
+            return this.getText()["lineColor"];
+        }
+
+        if (alarmShape === true) {
+            const alarmLevelStr = this.getText()["alarmLevel"];
+            const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
+            console.log("alarm shape = ", alarmShape, alarmLevel, alarmLevelStr)
+
+            if (severity >= alarmLevel) {
+                return AlarmShapeStyle[severity];
+            }
+        }
+        return this.getAllText()["lineColor"];
+    }
+
+
+    _getElementAreaRawFillStyle = (): string => {
+        const severity = this._getChannelSeverity();
+        const alarmFill = this.getText().alarmFill;
+        if (g_widgets1.isEditing()) {
+            return this.getText()["fillColor"];
+        }
+
+        if (alarmFill === true) {
+            const alarmLevelStr = this.getText()["alarmLevel"];
+            const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
+            if (severity >= alarmLevel) {
+                return AlarmFillStyle[severity];
+            }
+        }
+        return this.getAllText()["fillColor"];
+    }
+
+    _getElementAreaRawPointerStyle = (): string => {
+        const severity = this._getChannelSeverity();
+        const alarmPointer = this.getText().alarmPointer;
+        if (g_widgets1.isEditing()) {
+            return this.getText()["pointerColor"];
+        }
+
+        if (alarmPointer === true) {
+            const alarmLevelStr = this.getText()["alarmLevel"];
+            const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
+            if (severity >= alarmLevel) {
+                return AlarmPointerStyle[severity];
+            }
+        }
+        return this.getAllText()["pointerColor"];
+    }
+
+
+    _getElementAreaRawDialStyle = (): string => {
+        const severity = this._getChannelSeverity();
+        const alarmDial = this.getText().alarmDial;
+        if (g_widgets1.isEditing()) {
+            return this.getText()["dialColor"];
+        }
+
+        if (alarmDial === true) {
+            const alarmLevelStr = this.getText()["alarmLevel"];
+            const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
+            if (severity >= alarmLevel) {
+                return AlarmDialStyle[severity];
+            }
+        }
+        return this.getAllText()["dialColor"];
+    }
+
+    _getElementAreaRawContainerStyle = (): string => {
+        const severity = this._getChannelSeverity();
+        const alarmContainer = this.getText().alarmContainer;
+        if (g_widgets1.isEditing()) {
+            return this.getText()["containerColor"];
+        }
+
+        if (alarmContainer === true) {
+            const alarmLevelStr = this.getText()["alarmLevel"];
+            const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
+            if (severity >= alarmLevel) {
+                return AlarmContainerStyle[severity];
+            }
+        }
+        return this.getAllText()["containerColor"];
+    }
+
+    _getElementAreaRawSelectedBackgroundStyle = (): string => {
+        const severity = this._getChannelSeverity();
+        const alarmSelectedBackground = this.getText().alarmBackground;
+        if (g_widgets1.isEditing()) {
+            return this.getText()["selectedBackgroundColor"];
+        }
+
+        if (alarmSelectedBackground === true) {
+            const alarmLevelStr = this.getText()["alarmLevel"];
+            const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
+            if (severity >= alarmLevel) {
+                return AlarmSelectedBackgroundStyle[severity];
+            }
+        }
+        return this.getAllText()["selectedBackgroundColor"];
+    }
+
 
     /**
      * Most widgets has only one channel, invoke this function in these widgets' getChannelValue() method

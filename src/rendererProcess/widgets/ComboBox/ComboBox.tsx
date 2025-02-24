@@ -167,6 +167,7 @@ export class ComboBox extends BaseWidget {
                     fontSize: this.getAllStyle().fontSize,
                     fontStyle: this.getAllStyle().fontStyle,
                     outline: this._getElementAreaRawOutlineStyle(),
+                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
@@ -251,7 +252,8 @@ export class ComboBox extends BaseWidget {
                 >
                     <select
                         style={{
-                            color: this.getAllStyle()["color"],
+                            // color: this.getAllStyle()["color"],
+                            color: this._getElementAreaRawTextStyle(),
                             width: "100%",
                             height: "100%",
                             fontSize: this.getAllStyle()["fontSize"],
@@ -757,6 +759,9 @@ export class ComboBox extends BaseWidget {
             alarmBorder: true,
             useChannelItems: false,
             invisibleInOperation: false,
+            alarmText: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

@@ -102,6 +102,9 @@ export class ActionButtonHelper extends BaseWidgetHelper {
             invisibleInOperation: false,
             // "contemporary" | "traditional"
             appearance: "traditional",
+            alarmText: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

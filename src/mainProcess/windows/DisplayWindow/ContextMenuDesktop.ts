@@ -279,12 +279,6 @@ export class ContextMenuDesktop {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "thermometer");
                     },
                 },
-                {
-                    label: "Binary Image",
-                    click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "binary-image");
-                    },
-                },
                 { type: "separator" },
 
                 {
@@ -396,6 +390,12 @@ export class ContextMenuDesktop {
                     label: "Group",
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "group");
+                    },
+                },
+                {
+                    label: "Binary Image",
+                    click: () => {
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "binary-image");
                     },
                 },
 

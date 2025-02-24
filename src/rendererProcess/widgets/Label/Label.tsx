@@ -167,6 +167,8 @@ export class Label extends BaseWidget {
                     fontStyle: this.getAllStyle().fontStyle,
                     fontWeight: this.getAllStyle().fontWeight,
                     outline: this._getElementAreaRawOutlineStyle(),
+                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
+                    color: this._getElementAreaRawTextStyle(),
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
@@ -307,8 +309,11 @@ export class Label extends BaseWidget {
             horizontalAlign: "flex-start",
             verticalAlign: "flex-start",
             wrapWord: false,
-            alarmBorder: true,
             invisibileInOperation: false,
+            alarmBorder: true,
+            alarmBackground: false,
+            alarmText: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

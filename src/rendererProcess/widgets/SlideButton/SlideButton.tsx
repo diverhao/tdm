@@ -188,6 +188,8 @@ export class SlideButton extends BaseWidget {
 	_ElementSlideButton = () => {
 		const height = this.getAllText()["boxWidth"] / this.getAllText()["boxRatio"];
 		const elementRef = React.useRef<any>(null);
+
+
 		return (
 			<div
 				ref={elementRef}
@@ -240,10 +242,11 @@ export class SlideButton extends BaseWidget {
 							height: height,
 							display: "inline-flex",
 							borderRadius: height / 2,
-							backgroundColor: g_widgets1.isEditing() ? "" : this.getButtonBackgroundColor(),
+							// backgroundColor: g_widgets1.isEditing() ? "" : this.getButtonBackgroundColor(),
+                            // backgroundColor: "rgba(0,0,255,1)",
 							background: g_widgets1.isEditing()
 								? `linear-gradient(to right, ${this.getItemColors()[0]}, ${this.getItemColors()[1]})`
-								: "",
+								: this.getButtonBackgroundColor(),
 
 							flexDirection: "row",
 							justifyContent: this.getButtonPosition(),
@@ -319,6 +322,7 @@ export class SlideButton extends BaseWidget {
 	};
 
 	getButtonBackgroundColor = () => {
+
 		const bitValue = this.getBitValue();
 		if (bitValue === undefined) {
 			return this.getAllText()["fallbackColor"];
@@ -567,7 +571,7 @@ export class SlideButton extends BaseWidget {
 		groupNames: [],
 		rules: [],
 		itemLabels: ["False", "True"],
-		itemValues: [33, 27],
+		itemValues: [0, 1],
 		itemColors: ["rgba(60, 100, 60, 1)", "rgba(60, 255, 60, 1)"],
 	};
 

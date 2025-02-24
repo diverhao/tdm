@@ -75,17 +75,13 @@ export class SpinnerSidebar extends BaseWidgetSidebar {
                 <this._BlockBody>
                     {this.getSidebarChannelName().getElement()}
                     {this.getSidebarShowUnit().getElement()}
-                    {this.getSidebarAlarmBorder().getElement()}
-                    {/* {this.getSidebarMaxPvValue().getElement()} */}
-                    {/* {this.getSidebarMinPvValue().getElement()} */}
-                    {/* {this.getSidebarUsePvLimits().getElement()} */}
-                    {/* {this.getSidebarScaledSliderSliderBlockWidth().getElement()} */}
-                    {/* {this.getSidebarDirection().getElement()} */}
-                    {/* {this.getSidebarShowPvValue().getElement()} */}
                     {this.getSidebarNumberScale().getElement()}
                     {this.getSidebarNumberFormat().getElement()}
-
                     {this.getSidebarStepSize().getElement()}
+                    {this.getSidebarAlarmText().getElement()}
+                    {this.getSidebarAlarmBackground().getElement()}
+                    {this.getSidebarAlarmBorder().getElement()}
+                    {this.getSidebarAlarmLevel().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}

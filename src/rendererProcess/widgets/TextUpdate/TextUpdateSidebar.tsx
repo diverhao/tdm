@@ -73,7 +73,10 @@ export class TextUpdateSidebar extends BaseWidgetSidebar {
                 <this._BlockBody>
                     {this.getSidebarChannelName().getElement()}
                     {this.getSidebarShowUnit().getElement()}
+                    {this.getSidebarAlarmText().getElement()}
+                    {this.getSidebarAlarmBackground().getElement()}
                     {this.getSidebarAlarmBorder().getElement()}
+                    {this.getSidebarAlarmLevel().getElement()}
                     {this.getSidebarNumberScale().getElement()}
                     {this.getSidebarNumberFormat().getElement()}
                 </this._BlockBody>

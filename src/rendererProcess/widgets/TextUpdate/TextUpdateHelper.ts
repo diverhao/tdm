@@ -55,12 +55,15 @@ export class TextUpdateHelper extends BaseWidgetHelper {
             verticalAlign: "flex-start",
             wrapWord: false,
             showUnit: true,
-            // actually "alarm outline"
-            alarmBorder: true,
             // default, decimal, exponential, hexadecimal
             format: "default",
             // scale, >= 0
             scale: 0,
+            // actually "alarm outline"
+            alarmBorder: true,
+            alarmText: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

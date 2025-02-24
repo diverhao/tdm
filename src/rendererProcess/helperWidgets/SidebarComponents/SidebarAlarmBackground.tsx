@@ -10,23 +10,27 @@ import { SidebarComponent } from "./SidebarComponent";
  * It provides: (1) the JSX element, (2) the method to udpate the widget from sidebar, and (3) the method to
  * update this sidebar component from widget.
  */
-export class SidebarAlarmBorder extends SidebarComponent {
+export class SidebarAlarmBackground extends SidebarComponent {
 	constructor(sidebar: BaseWidgetSidebar) {
 		super(sidebar);
 	}
 
 	_Element = () => {
-		const [alarmBorder, setAlarmBorder] = React.useState<boolean>(this.getMainWidget().getText().alarmBorder);
+        let tmp = false;
+        if (this.getMainWidget().getText().alarmBackground !== undefined) {
+            tmp = this.getMainWidget().getText().alarmBackground;
+        }
+		const [alarmBackground, setAlarmBackground] = React.useState<boolean>(tmp);
 
 		return (
-			<form onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, alarmBorder)} style={this.getFormStyle()}>
-				<div>Alarm border:</div>
+			<form onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, alarmBackground)} style={this.getFormStyle()}>
+				<div>Alarm background:</div>
 				<input
 					type="checkbox"
-					checked={alarmBorder}
+					checked={alarmBackground}
 					onChange={(event: any) => {
-						this.updateWidget(event, !alarmBorder);
-						setAlarmBorder((prevVal: boolean) => {
+						this.updateWidget(event, !alarmBackground);
+						setAlarmBackground((prevVal: boolean) => {
 							return !prevVal;
 						});
 					}}
@@ -38,11 +42,11 @@ export class SidebarAlarmBorder extends SidebarComponent {
 	updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // do not preventDefault()
 
-		const oldVal = this.getText()["alarmBorder"];
+		const oldVal = this.getText()["alarmBackground"];
 		if (propertyValue === oldVal) {
 			return;
 		} else {
-			this.getText()["alarmBorder"] = propertyValue;
+			this.getText()["alarmBackground"] = propertyValue;
 		}
 
 		const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();

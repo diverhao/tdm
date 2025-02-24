@@ -65,7 +65,11 @@ export class ArcHelper extends BaseWidgetHelper {
 			arrowWidth: 6,
 			// becomes not visible in operation mode, but still clickable
 			invisibleInOperation: false,
-            alarmBorder: false,
+            alarmBorder: true,
+            alarmShape: false,
+            alarmFill: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
 		},
 		channelNames: [],
 		groupNames: [],

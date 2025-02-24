@@ -140,6 +140,8 @@ export class Spinner extends BaseWidget {
                     fontStyle: this.getAllText().fontStyle,
                     outline: this._getElementAreaRawOutlineStyle(),
                     position: "relative",
+                    color: this._getElementAreaRawTextStyle(),
+                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
@@ -217,6 +219,7 @@ export class Spinner extends BaseWidget {
                             alignItems: "center",
                             backgroundColor: "rgba(150,150,150,1)",
                             border: "solid 1px black",
+                            cursor: "pointer",
                         }}
                         onMouseDown={(event: any) => {
                             event.preventDefault();
@@ -269,6 +272,7 @@ export class Spinner extends BaseWidget {
                             alignItems: "center",
                             backgroundColor: "rgba(150,150,150,1)",
                             border: "solid 1px black",
+                            cursor: "pointer",
                         }}
                         onMouseDown={(event: any) => {
                             event.preventDefault();
@@ -386,11 +390,12 @@ export class Spinner extends BaseWidget {
                                 : this.getAllText().horizontalAlign === "center"
                                     ? "center"
                                     : "right",
-                        color: this.getAllStyle()["color"],
+                        color: this._getElementAreaRawTextStyle(),
                         fontFamily: this.getAllStyle()["fontFamily"],
                         fontSize: this.getAllStyle()["fontSize"],
                         fontStyle: this.getAllStyle()["fontStyle"],
                         fontWeight: this.getAllStyle()["fontWeight"],
+                        
                     }}
                     onMouseOver={(event: any) => {
                         event.preventDefault();
@@ -738,13 +743,16 @@ export class Spinner extends BaseWidget {
             verticalAlign: "flex-start",
             wrapWord: false,
             showUnit: true,
-            alarmBorder: true,
             stepSize: 1,
             invisibleInOperation: false,
             // decimal, exponential, hexadecimal
             format: "default",
             // scale, >= 0
             scale: 0,
+            alarmBorder: true,
+            alarmText: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

@@ -62,6 +62,7 @@ export class LEDHelper extends BaseWidgetHelper {
 			bit: -1,
 			// if the value is not valid
 			fallbackColor: "rgba(255,0,255,1)",
+            fallbackText: "Err",
 			// use channel's value and label, only valid for EPICS enum channels
 			// that has "strings" property
 			useChannelItems: false,

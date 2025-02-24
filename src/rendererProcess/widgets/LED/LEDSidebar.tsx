@@ -8,6 +8,7 @@ import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/S
 import { SidebarLEDShape } from "../../helperWidgets/SidebarComponents/SidebarLEDShape";
 import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
 import { SidebarLEDBit } from "../../helperWidgets/SidebarComponents/SidebarLEDBit";
+import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
 import {Log} from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
@@ -19,6 +20,7 @@ export class LEDSidebar extends BaseWidgetSidebar {
     _sidebarLEDShape: SidebarLEDShape;
     _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
     _sidebarLEDBit: SidebarLEDBit;
+    _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
     // _sidebarPolylineFill: SidebarPolylineFill;
 
     beingUpdatedItemIndex: number = -1;
@@ -32,6 +34,7 @@ export class LEDSidebar extends BaseWidgetSidebar {
         this._sidebarLEDShape = new SidebarLEDShape(this);
         this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
         this._sidebarLEDBit = new SidebarLEDBit(this);
+        this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
         // this._sidebarPolylineFill = new SidebarPolylineFill(this);
     }
 
@@ -61,6 +64,10 @@ export class LEDSidebar extends BaseWidgetSidebar {
 
     getSidebarLEDBit = () => {
         return this._sidebarLEDBit;
+    }
+
+    getSidebarLEDMultiStateFallbackText = () => {
+        return this._sidebarLEDMultiStateFallbackText;
     }
 
     // ------------------------------------- elements --------------------------------------
@@ -171,10 +178,11 @@ export class LEDSidebar extends BaseWidgetSidebar {
                 {/* <this._HorizontalLine /> */}
                 {/* ------------------ fallback color ---------------------- */}
                 <this._BlockTitle>
-                    <b>Fallback Color</b>
+                    <b>Fallback</b>
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarLEDFallbackColor().getElement()}
+                    {this.getSidebarLEDMultiStateFallbackText().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
 

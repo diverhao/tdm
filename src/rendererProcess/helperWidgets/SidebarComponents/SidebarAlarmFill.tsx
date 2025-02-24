@@ -10,23 +10,27 @@ import { SidebarComponent } from "./SidebarComponent";
  * It provides: (1) the JSX element, (2) the method to udpate the widget from sidebar, and (3) the method to
  * update this sidebar component from widget.
  */
-export class SidebarAlarmBorder extends SidebarComponent {
+export class SidebarAlarmFill extends SidebarComponent {
 	constructor(sidebar: BaseWidgetSidebar) {
 		super(sidebar);
 	}
 
 	_Element = () => {
-		const [alarmBorder, setAlarmBorder] = React.useState<boolean>(this.getMainWidget().getText().alarmBorder);
+        let tmp = false;
+        if (this.getMainWidget().getText().alarmFill !== undefined) {
+            tmp = this.getMainWidget().getText().alarmFill;
+        }
+		const [alarmFill, setAlarmFill] = React.useState<boolean>(tmp);
 
 		return (
-			<form onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, alarmBorder)} style={this.getFormStyle()}>
-				<div>Alarm border:</div>
+			<form onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, alarmFill)} style={this.getFormStyle()}>
+				<div>Alarm fill:</div>
 				<input
 					type="checkbox"
-					checked={alarmBorder}
+					checked={alarmFill}
 					onChange={(event: any) => {
-						this.updateWidget(event, !alarmBorder);
-						setAlarmBorder((prevVal: boolean) => {
+						this.updateWidget(event, !alarmFill);
+						setAlarmFill((prevVal: boolean) => {
 							return !prevVal;
 						});
 					}}
@@ -38,11 +42,11 @@ export class SidebarAlarmBorder extends SidebarComponent {
 	updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // do not preventDefault()
 
-		const oldVal = this.getText()["alarmBorder"];
+		const oldVal = this.getText()["alarmFill"];
 		if (propertyValue === oldVal) {
 			return;
 		} else {
-			this.getText()["alarmBorder"] = propertyValue;
+			this.getText()["alarmFill"] = propertyValue;
 		}
 
 		const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();

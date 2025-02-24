@@ -51,6 +51,9 @@ export class ComboBoxHelper extends BaseWidgetHelper {
             outlineStyle: "none",
             outlineWidth: 1,
             outlineColor: "black",
+            alarmText: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         // the ElementBody style
         text: {

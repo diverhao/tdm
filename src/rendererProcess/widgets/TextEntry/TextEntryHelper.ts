@@ -56,8 +56,6 @@ export class TextEntryHelper extends BaseWidgetHelper {
 			verticalAlign: "center",
 			wrapWord: false,
 			showUnit: true,
-			// actuall "alarm outline"
-			alarmBorder: true,
 			// when the input box is focused
 			highlightBackgroundColor: "rgba(255, 255, 0, 1)",
 			invisibleInOperation: false,
@@ -67,6 +65,12 @@ export class TextEntryHelper extends BaseWidgetHelper {
             scale: 0,
             // "contemporary" | "traditional"
             appearance: "contemporary",
+            // actuall "alarm outline"
+            alarmBorder: true,
+            alarmText: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
+
 		},
 		channelNames: [],
 		groupNames: [],

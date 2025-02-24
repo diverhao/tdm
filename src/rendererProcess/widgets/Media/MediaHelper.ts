@@ -42,8 +42,6 @@ export class MediaHelper extends BaseWidgetHelper {
 			outlineColor: "black",
 		},
 		text: {
-			// actually "alarm outline"
-			alarmBorder: true,
 			// media file name, could be picture types, pdf, or video type
 			fileName: "../../../mainProcess/resources/webpages/tdm-logo.svg",
 			// opacity
@@ -52,6 +50,11 @@ export class MediaHelper extends BaseWidgetHelper {
 			stretchToFit: false,
 			invisibleInOperation: false,
             fileContents: "",
+			// actually "alarm outline"
+			alarmBorder: true,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
+
 		},
 		channelNames: [],
 		groupNames: [],

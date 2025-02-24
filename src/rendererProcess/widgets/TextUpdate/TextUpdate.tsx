@@ -213,10 +213,11 @@ export class TextUpdate extends BaseWidget {
                 // color: allStyle["color"],
                 ...this.getElementBodyRawStyle(),
                 display: "inline-flex",
+                backgroundColor: this._getElementAreaRawBackgroundStyle(),
 
                 outline: this._getElementAreaRawOutlineStyle(),
                 // opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                color: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? "rgba(0,0,0,0)" : allStyle["color"],
+                color: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? "rgba(0,0,0,0)" : this._getElementAreaRawTextStyle(),
             } as React.CSSProperties;
         }
 
@@ -389,13 +390,16 @@ export class TextUpdate extends BaseWidget {
             verticalAlign: "flex-start",
             wrapWord: false,
             showUnit: true,
-            // actually "alarm outline"
-            alarmBorder: true,
             invisibleInOperation: false,
             // default, decimal, exponential, hexadecimal
             format: "default",
             // scale, >= 0
             scale: 0,
+            // actually "alarm outline"
+            alarmBorder: true,
+            alarmText: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

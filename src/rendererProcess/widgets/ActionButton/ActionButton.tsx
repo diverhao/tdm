@@ -210,6 +210,8 @@ export class ActionButton extends BaseWidget {
                     fontStyle: this.getAllStyle().fontStyle,
                     fontWeight: this.getAllStyle().fontWeight,
                     outline: this._getElementAreaRawOutlineStyle(),
+                    color: this._getElementAreaRawTextStyle(),
+                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
@@ -798,6 +800,9 @@ export class ActionButton extends BaseWidget {
             invisibleInOperation: false,
             // "contemporary" | "traditional"
             appearance: "traditional",
+            alarmText: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

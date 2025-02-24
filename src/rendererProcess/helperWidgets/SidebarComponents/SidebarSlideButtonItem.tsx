@@ -178,12 +178,13 @@ export class SidebarSlideButtonItem {
 					>
 						<div>Value:</div>
 						<input
-							style={{ ...this.getInputStyle(), color: (mainWidget.getText()["useChannelItems"] || mainWidget.getText()["bit"] > -1) ? "rgba(175, 175, 175, 1)" : "inherit" }}
+							style={{ ...this.getInputStyle(), color: (mainWidget.getText()["useChannelItems"]) ? "rgba(175, 175, 175, 1)" : "inherit" }}
 							type="string"
 							name="item-value"
 							// value={itemValue}
-							value={mainWidget.getText()["bit"] > -1 ? this.getIndex(): itemValue}
-							readOnly={mainWidget.getText()["useChannelItems"] || mainWidget.getText()["bit"] > -1 === true ? true : false}
+							// value={mainWidget.getText()["bit"] > -1 ? this.getIndex(): itemValue}
+                            value={itemValue}
+							readOnly={mainWidget.getText()["useChannelItems"] === true ? true : false}
 							onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
 								const newVal = event.target.value;
 								setItemValue(newVal);

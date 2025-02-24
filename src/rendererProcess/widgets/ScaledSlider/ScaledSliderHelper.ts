@@ -52,7 +52,6 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
 		},
 		text: {
 			showUnit: true,
-			alarmBorder: true,
 			// PV related
 			minPvValue: 0,
 			maxPvValue: 10,
@@ -72,9 +71,14 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
             // "contemporary" | "traditional"
             appearance: "traditional",
             // slide bar background color
-            sliderBarBackgroundColor: "rgba(180, 180, 180, 1)",
+            fillColor: "rgba(180, 180, 180, 1)",
             // slide bar highlight area color
-            sliderBarBackgroundColor1: "rgba(180, 180, 180, 1)",
+            // sliderBarBackgroundColor1: "rgba(180, 180, 180, 1)",
+            alarmBorder: true,
+            alarmText: false,
+            alarmFill: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
 		},
 		channelNames: [],
 		groupNames: [],

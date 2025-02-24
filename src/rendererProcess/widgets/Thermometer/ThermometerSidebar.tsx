@@ -20,6 +20,7 @@ export class ThermometerSidebar extends BaseWidgetSidebar {
     _sidebarScaledSliderNumTickIntervals: SidebarScaledSliderNumTickIntervals;
     _sidebarScaledSliderCompactScale: SidebarScaledSliderCompactScale;
     _sidebarDisplayScale: SidebarDisplayScale;
+    
 
     constructor(thermometer: Thermometer) {
         super(thermometer);
@@ -95,6 +96,12 @@ export class ThermometerSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarChannelName().getElement()}
+                    {this.getSidebarAlarmText().getElement()}
+                    {this.getSidebarAlarmFill().getElement()}
+                    {this.getSidebarTankAlarmContainer().getElement()}
+                    {this.getSidebarAlarmBackground().getElement()}
+                    {this.getSidebarAlarmBorder().getElement()}
+                    {this.getSidebarAlarmLevel().getElement()}
                     {this.getSidebarInvisibleInOperation().getElement()}
                     {this.getSidebarNumberFormat().getElement()}
                 </this._BlockBody>
@@ -138,9 +145,9 @@ export class ThermometerSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarFillColor().getElement()}
-                    {this.getSidebarFillColorMinor().getElement()}
+                    {/* {this.getSidebarFillColorMinor().getElement()}
                     {this.getSidebarFillColorMajor().getElement()}
-                    {this.getSidebarFillColorInvalid().getElement()}
+                    {this.getSidebarFillColorInvalid().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
 

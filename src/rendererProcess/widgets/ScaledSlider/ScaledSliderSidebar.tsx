@@ -113,6 +113,11 @@ export class ScaledSliderSidebar extends BaseWidgetSidebar {
                     {this.getSidebarInvisibleInOperation().getElement()}
                     {this.getSidebarNumberScale().getElement()}
                     {this.getSidebarNumberFormat().getElement()}
+                    {this.getSidebarAlarmText().getElement()}
+                    {this.getSidebarAlarmFill().getElement()}
+                    {this.getSidebarAlarmBackground().getElement()}
+                    {this.getSidebarAlarmBorder().getElement()}
+                    {this.getSidebarAlarmLevel().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- ticks -------------------------- */}
@@ -146,8 +151,15 @@ export class ScaledSliderSidebar extends BaseWidgetSidebar {
                 <this._BlockBody>
                     {/* color */}
                     {this.getSidebarBackgroundColor().getElement()}
-                    {this.getSidebarScaledSliderSliderBarBackgroundColor().getElement()}
-                    {this.getSidebarScaledSliderSliderBarBackgroundColor1().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
+                {/* ----------------------- fill area --------------------------- */}
+                <this._BlockTitle>
+                    <b>Fill</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {/* color */}
+                    {this.getSidebarFillColor().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ----------------------- font --------------------------- */}
@@ -169,7 +181,6 @@ export class ScaledSliderSidebar extends BaseWidgetSidebar {
                 <this._BlockBody>
                     {this.getSidebarBorderWidth().getElement()}
                     {this.getSidebarBorderColor().getElement()}
-                    {this.getSidebarAlarmBorder().getElement()}
 
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />

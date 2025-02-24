@@ -90,15 +90,18 @@ export class RectangleSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- channel -------------------------- */}
-                {/* <this._BlockTitle>
+                <this._BlockTitle>
 					<b>Channel</b>
 				</this._BlockTitle>
 				<this._BlockBody>
-					{this.getSidebarChannelName().getElement()}
-					{this.getSidebarShowUnit().getElement()}
+                {this.getSidebarChannelName().getElement()}
+					{this.getSidebarAlarmShape().getElement()}
+					{this.getSidebarAlarmFill().getElement()}
+					{this.getSidebarAlarmBackground().getElement()}
 					{this.getSidebarAlarmBorder().getElement()}
+					{this.getSidebarAlarmLevel().getElement()}
 				</this._BlockBody>
-				<this._HorizontalLine /> */}
+				<this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
                 {/* <this._BlockTitle> */}
                 {/* <b>Background</b> */}
@@ -138,7 +141,6 @@ export class RectangleSidebar extends BaseWidgetSidebar {
                     {this.getSidebarPolylineFill().getElement()}
                     {this.getSidebarFillColor().getElement()}
                     {this.getSidebarInvisibleInOperation().getElement()}
-                    {this.getSidebarAlarmBorder().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ------------------- arrow ----------------------------- */}

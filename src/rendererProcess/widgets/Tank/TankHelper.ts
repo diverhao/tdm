@@ -49,10 +49,8 @@ export class TankHelper extends BaseWidgetHelper {
             outlineWidth: 1,
             outlineColor: "black",
         },
-        text: {
+        text: {            
             // showUnit: true,
-            // actually alarm outline
-            alarmBorder: true,
             // channel
             // showPvValue: true,
             usePvLimits: false,
@@ -61,10 +59,10 @@ export class TankHelper extends BaseWidgetHelper {
             useLogScale: false,
             // tank and water colors
             fillColor: "rgba(0,200,0,1)",
-            fillColorMinor: "rgba(255, 150, 100, 1)",
-            fillColorMajor: "rgba(255,0,0,1)",
-            fillColorInvalid: "rgba(200,0,200,1)",
-            backgroundColor: "rgba(210,210,210,1)",
+            // fillColorMinor: "rgba(255, 150, 100, 1)",
+            // fillColorMajor: "rgba(255,0,0,1)",
+            // fillColorInvalid: "rgba(200,0,200,1)",
+            containerColor: "rgba(210,210,210,1)",
             // layout
             // direction: "vertical",
             // dialPercentage: 75,
@@ -88,6 +86,12 @@ export class TankHelper extends BaseWidgetHelper {
             // show inner labels
             showScaleInnerLabel: true,
             displayScale: "Linear", // "Linear" | "Log10"
+            alarmContainer: false,
+            alarmFill: false,
+            alarmText: false,
+            alarmBorder: true,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],
@@ -188,7 +192,7 @@ export class TankHelper extends BaseWidgetHelper {
                 } else if (propertyName === "fgAlarm") {
                     alarmPropertyNames.push(propertyName);
                 } else if (propertyName === "bgColor") {
-                    tdl["text"]["backgroundColor"] = EdlConverter.convertEdlColor(propertyValue);
+                    tdl["text"]["containerColor"] = EdlConverter.convertEdlColor(propertyValue);
                     tdl["style"]["backgroundColor"] = EdlConverter.convertEdlColor(propertyValue);
                 } else if (propertyName === "indicatorPv") {
                     tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true));

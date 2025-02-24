@@ -96,15 +96,18 @@ export class PolylineSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- channel -------------------------- */}
-                {/* <this._BlockTitle>
+                <this._BlockTitle>
 					<b>Channel</b>
 				</this._BlockTitle>
 				<this._BlockBody>
 					{this.getSidebarChannelName().getElement()}
-					{this.getSidebarShowUnit().getElement()}
+					{this.getSidebarAlarmShape().getElement()}
+					{this.getSidebarAlarmFill().getElement()}
+					{this.getSidebarAlarmBackground().getElement()}
 					{this.getSidebarAlarmBorder().getElement()}
+					{this.getSidebarAlarmLevel().getElement()}
 				</this._BlockBody>
-				<this._HorizontalLine /> */}
+				<this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
                 <this._BlockTitle>
                     <b>Background</b>

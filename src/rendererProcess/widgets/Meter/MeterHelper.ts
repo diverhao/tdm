@@ -53,7 +53,6 @@ export class MeterHelper extends BaseWidgetHelper {
 			verticalAlign: "flex-start",
 			wrapWord: false,
 			showUnit: true,
-			alarmBorder: true,
 			// PV
 			usePvLimits: true,
 			minPvValue: 0,
@@ -80,6 +79,12 @@ export class MeterHelper extends BaseWidgetHelper {
 			format: "default",
 			// scale, >= 0
 			scale: 0,
+            alarmText: false,
+            alarmPointer: false,
+            alarmDial: false,
+            alarmBackground: false,
+            alarmBorder: true,
+            alarmLevel: "MINOR",
 		},
 		channelNames: [],
 		groupNames: [],

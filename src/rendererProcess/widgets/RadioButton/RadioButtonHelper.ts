@@ -61,6 +61,9 @@ export class RadioButtonHelper extends BaseWidgetHelper {
 			// button size
 			boxWidth: 13,
 			invisibleInOperation: false,
+            alarmText: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
 		},
 		channelNames: [],
 		groupNames: [],

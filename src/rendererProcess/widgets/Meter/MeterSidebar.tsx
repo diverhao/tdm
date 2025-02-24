@@ -11,6 +11,7 @@ import { SidebarMeterPointerThickness } from "../../helperWidgets/SidebarCompone
 import { SidebarMeterDialLabelPositionPercentage } from "../../helperWidgets/SidebarComponents/SidebarMeterLabelPositionPercentage";
 import { SidebarMeterPointerLengthPercentage } from "../../helperWidgets/SidebarComponents/SidebarMeterPointerLengthPercentage";
 import { SidebarScaledSliderNumTickIntervals } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderNumTickIntervals";
+
 import {Log} from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
@@ -103,6 +104,12 @@ export class MeterSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarChannelName().getElement()}
+                    {this.getSidebarAlarmText().getElement()}
+                    {this.getSidebarAlarmPointer().getElement()}
+                    {this.getSidebarAlarmDial().getElement()}
+                    {this.getSidebarAlarmBackground().getElement()}
+                    {this.getSidebarAlarmBorder().getElement()}
+                    {this.getSidebarAlarmLevel().getElement()}
                     {this.getSidebarInvisibleInOperation().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
@@ -163,9 +170,9 @@ export class MeterSidebar extends BaseWidgetSidebar {
                     {this.getSidebarMeterPointerLengthPercentage().getElement()}
                     {this.getSidebarMeterPointerThickness().getElement()}
                     {this.getSidebarMeterPointerColor().getElement()}
-                    {this.getSidebarFillColorMinor().getElement()}
+                    {/* {this.getSidebarFillColorMinor().getElement()}
                     {this.getSidebarFillColorMajor().getElement()}
-                    {this.getSidebarFillColorInvalid().getElement()}
+                    {this.getSidebarFillColorInvalid().getElement()} */}
 
                 </this._BlockBody>
                 <this._HorizontalLine />
@@ -176,7 +183,6 @@ export class MeterSidebar extends BaseWidgetSidebar {
                 <this._BlockBody>
                     {this.getSidebarBorderWidth().getElement()}
                     {this.getSidebarBorderColor().getElement()}
-                    {this.getSidebarAlarmBorder().getElement()}
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
                 {/* ------------------------- rules ---------------------------- */}
@@ -244,6 +250,7 @@ export class MeterSidebar extends BaseWidgetSidebar {
     getSidebarScaledSliderNumTickIntervals = () => {
         return this._sidebarScaledSliderNumTickIntervals;
     }
+
     // ------------------------- style -------------------------
 
     // defined in super class

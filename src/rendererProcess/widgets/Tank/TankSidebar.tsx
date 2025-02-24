@@ -10,7 +10,7 @@ import { SidebarScaledSliderCompactScale } from "../../helperWidgets/SidebarComp
 import { SidebarTankScalePosition } from "../../helperWidgets/SidebarComponents/SidebarTankScalePosition";
 import { SidebarTankShowScaleInnerLabel } from "../../helperWidgets/SidebarComponents/SidebarTankShowScaleInnerLabel";
 import { SidebarDisplayScale } from "../../helperWidgets/SidebarComponents/SidebarDisplayScale";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class TankSidebar extends BaseWidgetSidebar {
@@ -98,6 +98,12 @@ export class TankSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarChannelName().getElement()}
+                    {this.getSidebarAlarmText().getElement()}
+                    {this.getSidebarAlarmFill().getElement()}
+                    {this.getSidebarTankAlarmContainer().getElement()}
+                    {this.getSidebarAlarmBackground().getElement()}
+                    {this.getSidebarAlarmBorder().getElement()}
+                    {this.getSidebarAlarmLevel().getElement()}
                     {this.getSidebarInvisibleInOperation().getElement()}
                     {this.getSidebarNumberFormat().getElement()}
                 </this._BlockBody>
@@ -128,7 +134,7 @@ export class TankSidebar extends BaseWidgetSidebar {
                     <b>Tank</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {this.getSidebarProgressBarBackgroundColor().getElement()}
+                    {this.getSidebarTankContainerColor().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- water -------------------------- */}
@@ -137,9 +143,9 @@ export class TankSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarFillColor().getElement()}
-                    {this.getSidebarFillColorMinor().getElement()}
-                    {this.getSidebarFillColorMajor().getElement()}
-                    {this.getSidebarFillColorInvalid().getElement()}
+                    {/* {this.getSidebarFillColorMinor().getElement()} */}
+                    {/* {this.getSidebarFillColorMajor().getElement()} */}
+                    {/* {this.getSidebarFillColorInvalid().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- ticks -------------------- */}
@@ -165,7 +171,6 @@ export class TankSidebar extends BaseWidgetSidebar {
                 <this._BlockBody>
                     {this.getSidebarBorderWidth().getElement()}
                     {this.getSidebarBorderColor().getElement()}
-                    {this.getSidebarAlarmBorder().getElement()}
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
                 {/* ------------------------- rules ---------------------------- */}
@@ -225,6 +230,7 @@ export class TankSidebar extends BaseWidgetSidebar {
     getSidebarDisplayScale = () => {
         return this._sidebarDisplayScale;
     }
+
 
     // ------------------------- style -------------------------
 

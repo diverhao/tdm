@@ -165,6 +165,8 @@ export class Meter extends BaseWidget {
                     fontStyle: this.getAllStyle().fontStyle,
                     fontWeight: this.getAllStyle().fontWeight,
                     outline: this._getElementAreaRawOutlineStyle(),
+                    color: this._getElementAreaRawTextStyle(),
+                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
@@ -186,7 +188,7 @@ export class Meter extends BaseWidget {
                     d={`M ${points[4]} ${points[5]} A ${points[2]} ${points[3]} 0 ${this.getAllText()["angleRange"] > 180 ? 1 : 0} 0 ${points[6]} ${points[7]
                         }`}
                     strokeWidth={this.getAllText()["dialThickness"]}
-                    stroke={this.getAllText()["dialColor"]}
+                    stroke={this._getElementAreaRawDialStyle()}
                     strokeLinecap={"butt"}
                     fill="none"
                 ></path>
@@ -198,24 +200,11 @@ export class Meter extends BaseWidget {
         const points = this.calcPointerTangentPoints(circle1, circle2);
         const arcBit = angle > this.pi / 2 && angle < (3 * this.pi) / 2 ? 0 : 1;
 
-        const severity = g_widgets1.getChannelSeverity(this.getChannelNames()[0]);
-        let pointerColor = this.getAllText()["pointerColor"];
-        if (severity === ChannelSeverity.INVALID) {
-            pointerColor = this.getAllText()["fillColorInvalid"];;
-        }
-        else if (severity === ChannelSeverity.MAJOR) {
-            pointerColor = this.getAllText()["fillColorMajor"];;
-        }
-        else if (severity === ChannelSeverity.MINOR) {
-            pointerColor = this.getAllText()["fillColorMinor"];;
-        }
-
-
         return (
             <>
                 <path
                     d={`M ${points[0][0]} ${points[0][1]} L ${points[1][0]} ${points[1][1]} A ${circle2[2]} ${circle2[2]} 0 0 ${arcBit} ${points[3][0]} ${points[3][1]} L ${points[2][0]} ${points[2][1]} A ${circle1[2]} ${circle1[2]} 0 0 ${arcBit} ${points[0][0]} ${points[0][1]}`}
-                    fill={pointerColor}
+                    fill={this._getElementAreaRawPointerStyle()}
                 ></path>
             </>
         );
@@ -238,7 +227,8 @@ export class Meter extends BaseWidget {
                         <path
                             d={`M ${x1} ${y1} L ${x2} ${y2}`}
                             strokeWidth="2"
-                            stroke={this.getAllText()["dialColor"]}
+                            // stroke={this.getAllText()["dialColor"]}
+                            stroke={this._getElementAreaRawDialStyle()}
                             strokeLinecap={"butt"}
                             fill="none"
                         ></path>
@@ -638,7 +628,6 @@ export class Meter extends BaseWidget {
             verticalAlign: "flex-start",
             wrapWord: false,
             showUnit: true,
-            alarmBorder: true,
             // PV
             usePvLimits: true,
             minPvValue: 0,
@@ -651,9 +640,9 @@ export class Meter extends BaseWidget {
             dialThickness: 5, // dial arc thickness
             // pointer
             pointerColor: "rgba(0,200,0,1)",
-            fillColorMinor: "rgba(255, 150, 100, 1)",
-            fillColorMajor: "rgba(255,0,0,1)",
-            fillColorInvalid: "rgba(200,0,200,1)",
+            // fillColorMinor: "rgba(255, 150, 100, 1)",
+            // fillColorMajor: "rgba(255,0,0,1)",
+            // fillColorInvalid: "rgba(200,0,200,1)",
 
             pointerLengthPercentage: 75, // pointer length percentage
             pointerThickness: 5,
@@ -671,6 +660,12 @@ export class Meter extends BaseWidget {
             scale: 0,
             // new
             numTickIntervals: 5,
+            alarmText: false,
+            alarmPointer: false,
+            alarmDial: false,
+            alarmBackground: false,
+            alarmBorder: true,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

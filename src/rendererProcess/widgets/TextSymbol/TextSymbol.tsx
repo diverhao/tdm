@@ -169,6 +169,8 @@ export class TextSymbol extends BaseWidget {
 					fontStyle: this.getAllStyle().fontStyle,
 					fontWeight: this.getAllStyle().fontWeight,
 					outline: this._getElementAreaRawOutlineStyle(),
+                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
+                    color: this._getElementAreaRawTextStyle(),
 				}}
 				// title={"tooltip"}
 				onMouseDown={this._handleMouseDown}
@@ -245,7 +247,7 @@ export class TextSymbol extends BaseWidget {
 						height: "100%",
 					}}
 				>
-					{`No symbol ${this._getChannelValue()}${this.getAllText().showUnit ? this._getChannelUnit() : ""}`}
+					{`No symbol ${this._getChannelValue()}${this.getAllText().showUnit ? " " + this._getChannelUnit() : ""}`}
 				</div>
 			</div>
 		);
@@ -343,8 +345,11 @@ export class TextSymbol extends BaseWidget {
 			verticalAlign: "flex-start",
 			wrapWord: false,
 			showUnit: false,
-			alarmBorder: true,
 			invisibleInOperation: false,
+			alarmBorder: true,
+            alarmBackground: false,
+            alarmText: false,
+            alarmLevel: "MINOR",
 		},
 		channelNames: [],
 		groupNames: [],

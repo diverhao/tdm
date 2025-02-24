@@ -12,7 +12,8 @@ import { SidebarSlideButtonBoxRatio } from "../../helperWidgets/SidebarComponent
 // import { SidebarBooleanButtonItems } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonItems";
 import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems"
 import { SidebarSlideButtonItems } from "../../helperWidgets/SidebarComponents/SidebarSlideButtonItems";
-import {Log} from "../../../mainProcess/log/Log";
+import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
+import { Log } from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class SlideButtonSidebar extends BaseWidgetSidebar {
@@ -27,6 +28,7 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
     // _sidebarBooleanButtonItems: SidebarBooleanButtonItems;
     _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
     _sidebarSlideButtonItems: SidebarSlideButtonItems;
+    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
 
     constructor(slideButton: SlideButton) {
         super(slideButton);
@@ -41,6 +43,7 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
         // this._sidebarBooleanButtonItems = new SidebarBooleanButtonItems(this);
         this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
         this._sidebarSlideButtonItems = new SidebarSlideButtonItems(this);
+        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
     }
     // getSidebarChoiceButtonUnselectedBackgroundColor = () => {
     // 	return this._sidebarChoiceButtonUnselectedBackgroundColor;
@@ -78,7 +81,9 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
         return this._sidebarSlideButtonItems;
     }
 
-
+    getSidebarLEDFallbackColor = () => {
+        return this._sidebarLEDFallbackColor;
+    }
 
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
@@ -145,8 +150,10 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarChannelName().getElement()}
-                    {/* {this.getSidebarShowUnit().getElement()} */}
+                    {this.getSidebarAlarmText().getElement()}
+                    {this.getSidebarAlarmBackground().getElement()}
                     {this.getSidebarAlarmBorder().getElement()}
+                    {this.getSidebarAlarmLevel().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
@@ -170,6 +177,7 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarSlideButtonBoxWidth().getElement()}
                     {this.getSidebarSlideButtonBoxRatio().getElement()}
                     {this.getSidebarLEDBit().getElement()}
+                    {this.getSidebarLEDFallbackColor().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
 
@@ -210,8 +218,10 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
                 <this._HorizontalLine />
                 {/* --------------------------- items -------------------------- */}
                 {/* --------------------------- items -------------------------- */}
-                <this._BlockBody></this._BlockBody> {this.getSidebarSlideButtonItems().getElement()}
-                {this.getSidebarChoiceButtonUseChannelItems().getElement()}
+                <this._BlockBody>
+                    {this.getSidebarSlideButtonItems().getElement()}
+                    {this.getSidebarChoiceButtonUseChannelItems().getElement()}
+                </this._BlockBody>
                 {/* {this.getSidebarChoiceButtonItems().getElement()} */}
                 {/* {this.getSidebarChoiceButtonUseChannelItems().getElement()} */}
                 <this._HorizontalLine />

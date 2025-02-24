@@ -10,23 +10,27 @@ import { SidebarComponent } from "./SidebarComponent";
  * It provides: (1) the JSX element, (2) the method to udpate the widget from sidebar, and (3) the method to
  * update this sidebar component from widget.
  */
-export class SidebarAlarmBorder extends SidebarComponent {
+export class SidebarAlarmPointer extends SidebarComponent {
 	constructor(sidebar: BaseWidgetSidebar) {
 		super(sidebar);
 	}
 
 	_Element = () => {
-		const [alarmBorder, setAlarmBorder] = React.useState<boolean>(this.getMainWidget().getText().alarmBorder);
+        let tmp = false;
+        if (this.getMainWidget().getText().alarmPointer !== undefined) {
+            tmp = this.getMainWidget().getText().alarmPointer;
+        }
+		const [alarmPointer, setalarmPointer] = React.useState<boolean>(tmp);
 
 		return (
-			<form onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, alarmBorder)} style={this.getFormStyle()}>
-				<div>Alarm border:</div>
+			<form onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, alarmPointer)} style={this.getFormStyle()}>
+				<div>Alarm pointer:</div>
 				<input
 					type="checkbox"
-					checked={alarmBorder}
+					checked={alarmPointer}
 					onChange={(event: any) => {
-						this.updateWidget(event, !alarmBorder);
-						setAlarmBorder((prevVal: boolean) => {
+						this.updateWidget(event, !alarmPointer);
+						setalarmPointer((prevVal: boolean) => {
 							return !prevVal;
 						});
 					}}
@@ -38,11 +42,11 @@ export class SidebarAlarmBorder extends SidebarComponent {
 	updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // do not preventDefault()
 
-		const oldVal = this.getText()["alarmBorder"];
+		const oldVal = this.getText()["alarmPointer"];
 		if (propertyValue === oldVal) {
 			return;
 		} else {
-			this.getText()["alarmBorder"] = propertyValue;
+			this.getText()["alarmPointer"] = propertyValue;
 		}
 
 		const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();

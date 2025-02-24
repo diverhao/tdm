@@ -6,7 +6,7 @@ import { ChoiceButtonSidebar } from "./ChoiceButtonSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ChoiceButtonRules } from "./ChoiceButtonRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_ChoiceButton_tdl = {
     type: string;
@@ -100,8 +100,8 @@ export class ChoiceButton extends BaseWidget {
             this.setRulesStyle(rulesValues["style"]);
             this.setRulesText(rulesValues["text"]);
         }
-        this.setAllStyle({...this.getStyle(), ...this.getRulesStyle()});
-        this.setAllText({...this.getText(), ...this.getRulesText()});
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
@@ -370,8 +370,12 @@ export class ChoiceButton extends BaseWidget {
                                     borderTop: calcBorderTopLeft(isSelected),
                                     width: calcItemWidth(),
                                     height: calcItemHeight(),
+                                    color: isSelected
+                                        ? this._getElementAreaRawTextStyle()
+                                        : this.getAllStyle()["color"],
                                     backgroundColor: isSelected
-                                        ? this.getAllText()["selectedBackgroundColor"]
+                                        // ? this.getAllText()["selectedBackgroundColor"]
+                                        ? this._getElementAreaRawSelectedBackgroundStyle()
                                         : this.getAllText()["unselectedBackgroundColor"],
                                     borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 3,
                                     overflow: "visible",
@@ -525,6 +529,9 @@ export class ChoiceButton extends BaseWidget {
             direction: "horizontal",
             // "contemporary" | "traditional"
             appearance: "traditional",
+            alarmText: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

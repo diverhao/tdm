@@ -170,6 +170,8 @@ export class Tank extends BaseWidget {
                     fontStyle: this.getAllStyle().fontStyle,
                     fontWeight: this.getAllStyle().fontWeight,
                     outline: this._getElementAreaRawOutlineStyle(),
+                    color: this._getElementAreaRawTextStyle(),
+                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
@@ -207,16 +209,16 @@ export class Tank extends BaseWidget {
 
     _ElementWater = () => {
         const severity = g_widgets1.getChannelSeverity(this.getChannelNames()[0]);
-        let waterColor = this.getAllText()["fillColor"];
-        if (severity === ChannelSeverity.INVALID) {
-            waterColor = this.getAllText()["fillColorInvalid"];;
-        }
-        else if (severity === ChannelSeverity.MAJOR) {
-            waterColor = this.getAllText()["fillColorMajor"];;
-        }
-        else if (severity === ChannelSeverity.MINOR) {
-            waterColor = this.getAllText()["fillColorMinor"];;
-        }
+        // let waterColor = this.getAllText()["fillColor"];
+        // if (severity === ChannelSeverity.INVALID) {
+        //     waterColor = this.getAllText()["fillColorInvalid"];;
+        // }
+        // else if (severity === ChannelSeverity.MAJOR) {
+        //     waterColor = this.getAllText()["fillColorMajor"];;
+        // }
+        // else if (severity === ChannelSeverity.MINOR) {
+        //     waterColor = this.getAllText()["fillColorMinor"];;
+        // }
         return (
             <div
                 style={{
@@ -228,7 +230,8 @@ export class Tank extends BaseWidget {
                     height: "100%",
                     // 10 is scaleTickSize, 2 is extra space for scale line
                     width: this.getAllText()["showLabels"] === true ? this.getAllStyle()["width"] - (this.getAllStyle()["fontSize"] + 10 + 2) : "100%",
-                    backgroundColor: this.getAllText()["backgroundColor"],
+                    // backgroundColor: this.getAllText()["backgroundColor"],
+                    backgroundColor: this._getElementAreaRawContainerStyle(),
                     borderRadius: 0,
                 }}
             >
@@ -237,7 +240,8 @@ export class Tank extends BaseWidget {
                     style={{
                         height: this.calcWaterLevel(),
                         width: "100%",
-                        backgroundColor: waterColor,
+                        // backgroundColor: waterColor,
+                        backgroundColor: this._getElementAreaRawFillStyle(),
                         borderRadius: 0,
                     }}
                 ></div>
@@ -337,7 +341,7 @@ export class Tank extends BaseWidget {
                     <path
                         d={`M ${scaleTickSize + fontSize} 0 L ${scaleTickSize + fontSize} ${fullSize}`}
                         strokeWidth="2"
-                        stroke={this.getAllStyle()["color"]}
+                        stroke={this._getElementAreaRawTextStyle()}
                         fill="none"
                     ></path>
 
@@ -354,7 +358,7 @@ export class Tank extends BaseWidget {
                                 <path
                                     d={`M ${2 + fontSize} ${position} L ${scaleTickSize + fontSize} ${position}`}
                                     strokeWidth="2"
-                                    stroke={this.getAllStyle()["color"]}
+                                    stroke={this._getElementAreaRawTextStyle()}
                                     fill="none"
                                 ></path>
                             </>
@@ -382,7 +386,7 @@ export class Tank extends BaseWidget {
                                 display: "inline-flex",
                                 alignItems: "flex-start",
                                 justifyContent: index === 0 ? "flex-start" : index === this.getAllText()["numTickIntervals"] ? "flex-end" : "center",
-                                color: this.getAllStyle()["color"],
+                                // color: this._getElementAreaRawTextStyle(),
                             }}
                         >
                             {this.getAllText()["showScaleInnerLabel"] === true ? refinedTicks[index] : (index === 0 || index === this.getAllText()["numTickIntervals"]) ? refinedTicks[index] : ""}
@@ -403,7 +407,7 @@ export class Tank extends BaseWidget {
                                     display: "inline-flex",
                                     alignItems: "flex-start",
                                     justifyContent: "center",
-                                    color: this.getAllStyle()["color"],
+                                    // color: this._getElementAreaRawTextStyle(),
                                 }}
                             >
                                 {`${this._getChannelValue()}`}
@@ -508,7 +512,8 @@ export class Tank extends BaseWidget {
                     <path
                         d={`M 2 0 L 2 ${fullSize}`}
                         strokeWidth="2"
-                        stroke={this.getAllStyle()["color"]}
+                        // stroke={this.getAllStyle()["color"]}
+                        stroke={this._getElementAreaRawTextStyle()}
                         fill="none"
                     ></path>
 
@@ -525,7 +530,8 @@ export class Tank extends BaseWidget {
                                 <path
                                     d={`M 2 ${position} L ${scaleTickSize} ${position}`}
                                     strokeWidth="2"
-                                    stroke={this.getAllStyle()["color"]}
+                                    // stroke={this.getAllStyle()["color"]}
+                                    stroke={this._getElementAreaRawTextStyle()}
                                     fill="none"
                                 ></path>
                             </>
@@ -552,7 +558,7 @@ export class Tank extends BaseWidget {
                                 display: "inline-flex",
                                 alignItems: "flex-start",
                                 justifyContent: index === 0 ? "flex-start" : index === this.getAllText()["numTickIntervals"] ? "flex-end" : "center",
-                                color: this.getAllStyle()["color"],
+                                // color: this.getAllStyle()["color"],
                             }}
                         >
                             {this.getAllText()["showScaleInnerLabel"] === true ? refinedTicks[index] : (index === 0 || index === this.getAllText()["numTickIntervals"]) ? refinedTicks[index] : ""}
@@ -574,7 +580,7 @@ export class Tank extends BaseWidget {
                                     display: "inline-flex",
                                     alignItems: "flex-start",
                                     justifyContent: "center",
-                                    color: this.getAllStyle()["color"],
+                                    // color: this.getAllStyle()["color"],
                                 }}
                             >
                                 {`${this._getChannelValue()}`}
@@ -777,8 +783,6 @@ export class Tank extends BaseWidget {
         },
         text: {
             // showUnit: true,
-            // actually alarm outline
-            alarmBorder: true,
             // channel
             // showPvValue: true,
             usePvLimits: false,
@@ -787,10 +791,10 @@ export class Tank extends BaseWidget {
             useLogScale: false,
             // tank and water colors
             fillColor: "rgba(0,200,0,1)",
-            fillColorMinor: "rgba(255, 150, 100, 1)",
-            fillColorMajor: "rgba(255,0,0,1)",
-            fillColorInvalid: "rgba(200,0,200,1)",
-            backgroundColor: "rgba(210,210,210,1)",
+            // fillColorMinor: "rgba(255, 150, 100, 1)",
+            // fillColorMajor: "rgba(255,0,0,1)",
+            // fillColorInvalid: "rgba(200,0,200,1)",
+            containerColor: "rgba(210,210,210,1)",
             // layout
             // direction: "vertical",
             // dialPercentage: 75,
@@ -814,6 +818,12 @@ export class Tank extends BaseWidget {
             // show inner labels
             showScaleInnerLabel: true,
             displayScale: "Linear", // "Linear" | "Log10"
+            alarmContainer: false,
+            alarmFill: false,
+            alarmText: false,
+            alarmBorder: true,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

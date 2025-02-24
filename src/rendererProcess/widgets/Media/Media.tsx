@@ -168,6 +168,7 @@ export class Media extends BaseWidget {
                     fontStyle: this.getAllStyle().fontStyle,
                     fontWeight: this.getAllStyle().fontWeight,
                     outline: this._getElementAreaRawOutlineStyle(),
+                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
@@ -636,8 +637,6 @@ export class Media extends BaseWidget {
             outlineColor: "black",
         },
         text: {
-            // actually "alarm outline"
-            alarmBorder: true,
             // media file name, could be picture types, pdf, or video type
             fileName: "../../../mainProcess/resources/webpages/tdm-logo.svg",
             // opacity
@@ -646,6 +645,10 @@ export class Media extends BaseWidget {
             stretchToFit: false,
             invisibleInOperation: false,
             fileContents: "",
+            // actually "alarm outline"
+            alarmBorder: true,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

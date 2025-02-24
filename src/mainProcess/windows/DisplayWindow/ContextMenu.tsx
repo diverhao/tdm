@@ -704,12 +704,6 @@ export class ContextMenu {
                         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "thermometer");
                     },
                 },
-                {
-                    label: "Binary Image",
-                    click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "binary-image");
-                    },
-                },
                 { type: "separator" },
 
                 {
@@ -821,6 +815,12 @@ export class ContextMenu {
                     label: "Group",
                     click: () => {
                         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "group");
+                    },
+                },
+                {
+                    label: "Binary Image",
+                    click: () => {
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "binary-image");
                     },
                 },
 

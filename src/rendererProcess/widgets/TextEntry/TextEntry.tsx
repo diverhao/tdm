@@ -158,6 +158,7 @@ export class TextEntry extends BaseWidget {
                 fontStyle: this.getAllText().fontStyle,
                 ...this.getElementBodyRawStyle(),
                 outline: this._getElementAreaRawOutlineStyle(),
+                backgroundColor: this._getElementAreaRawBackgroundStyle(),
             };
         }
 
@@ -170,7 +171,6 @@ export class TextEntry extends BaseWidget {
                 onDoubleClick={this._handleMouseDoubleClick}
             >
                 <this._ValueInputForm
-                // valueRaw={`${this._getChannelValue()} ${this.getAllText().showUnit ? this._getChannelUnit() : ""}`}
                 ></this._ValueInputForm>
             </div>
         );
@@ -270,7 +270,8 @@ export class TextEntry extends BaseWidget {
                                 : this.getAllText().horizontalAlign === "center"
                                     ? "center"
                                     : "right",
-                        color: this.getAllStyle()["color"],
+                        // color: this.getAllStyle()["color"],
+                        color: this._getElementAreaRawTextStyle(),
                         fontFamily: this.getAllStyle()["fontFamily"],
                         fontSize: this.getAllStyle()["fontSize"],
                         fontStyle: this.getAllStyle()["fontStyle"],
@@ -305,23 +306,8 @@ export class TextEntry extends BaseWidget {
                         this.setFocusStatus(true);
                         keyRef.current?.select();
 
-                        // The widget is not re-rendered, we must use
-                        // const rulesValues = this.getRules()?.getValues();
-                        // if (rulesValues !== undefined) {
-                        // 	const rulesText = rulesValues["text"];
-                        // 	if (rulesText !== undefined) {
-                        // 		if (rulesText["highlightBackgroundColor"] !== undefined) {
-                        // 			event.target.style["backgroundColor"] = rulesText["highlightBackgroundColor"];
-                        // 			return;
-                        // 		}
-                        // 	}
-                        // }
                         if (keyRef.current !== null) {
                             keyRef.current.style["backgroundColor"] = this.getAllText()["highlightBackgroundColor"];
-                            // keyRef.current.style["borderRight"] = this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none";
-                            // keyRef.current.style["borderBottom"] = this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none";
-                            // keyRef.current.style["borderLeft"] = this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(150,150,150,1)` : "none";
-                            // keyRef.current.style["borderTop"] = this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(150,150,150,1)` : "none";
                         }
                     }}
                     onChange={(event: any) => {
@@ -337,15 +323,8 @@ export class TextEntry extends BaseWidget {
                         this.setFocusStatus(false);
                         setValue(`${this.parseValue()}`);
                         if (keyRef.current !== null) {
-                            keyRef.current.style["backgroundColor"] = `rgba(0,0,0,0)`;
-                            // keyRef.current.style["borderRight"] = this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none";
-                            // keyRef.current.style["borderBottom"] = this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none";
-                            // keyRef.current.style["borderLeft"] = this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(150,150,150,1)` : "none";
-                            // keyRef.current.style["borderTop"] = this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(150,150,150,1)` : "none";
-                            // keyRef.current.style["borderLeft"] = this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none";
-                            // keyRef.current.style["borderTop"] = this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none";
-                            // keyRef.current.style["borderRight"] = this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(150,150,150,1)` : "none";
-                            // keyRef.current.style["borderBottom"] = this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(150,150,150,1)` : "none";
+                            // keyRef.current.style["backgroundColor"] = `rgba(0,0,0,0)`;
+                            keyRef.current.style["backgroundColor"] = this._getElementAreaRawBackgroundStyle();
                         }
                     }}
                 />
@@ -547,8 +526,6 @@ export class TextEntry extends BaseWidget {
             verticalAlign: "center",
             wrapWord: false,
             showUnit: true,
-            // actuall "alarm outline"
-            alarmBorder: true,
             // when the input box is focused
             highlightBackgroundColor: "rgba(255, 255, 0, 1)",
             invisibleInOperation: false,
@@ -558,6 +535,11 @@ export class TextEntry extends BaseWidget {
             scale: 0,
             // "contemporary" | "traditional"
             appearance: "contemporary",
+            // actuall "alarm outline"
+            alarmBorder: true,
+            alarmText: false,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
         },
         channelNames: [],
         groupNames: [],

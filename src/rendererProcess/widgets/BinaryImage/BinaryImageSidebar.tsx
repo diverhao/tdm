@@ -84,38 +84,38 @@ export class BinaryImageSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- channel -------------------------- */}
-                <this._BlockTitle>
-                    <b>Channel</b>
-                </this._BlockTitle>
-                <this._BlockBody>
-                    {this.getSidebarChannelName().getElement()}
+                {/* <this._BlockTitle> */}
+                    {/* <b>Channel</b> */}
+                {/* </this._BlockTitle> */}
+                {/* <this._BlockBody> */}
+                    {/* {this.getSidebarChannelName().getElement()} */}
                     {/* {this.getSidebarShowUnit().getElement()} */}
                     {/* {this.getSidebarAlarmBorder().getElement()} */}
                     {/* {this.getSidebarNumberScale().getElement()} */}
                     {/* {this.getSidebarNumberFormat().getElement()} */}
-                </this._BlockBody>
-                <this._HorizontalLine />
+                {/* </this._BlockBody> */}
+                {/* <this._HorizontalLine /> */}
                 {/* ---------------- background -------------------------- */}
-                <this._BlockTitle>
-                    <b>Background</b>
-                </this._BlockTitle>
-                <this._BlockBody>
+                {/* <this._BlockTitle> */}
+                    {/* <b>Background</b> */}
+                {/* </this._BlockTitle> */}
+                {/* <this._BlockBody> */}
                     {/* color */}
-                    {this.getSidebarBackgroundColor().getElement()}
-                </this._BlockBody>
-                <this._HorizontalLine />
+                    {/* {this.getSidebarBackgroundColor().getElement()} */}
+                {/* </this._BlockBody> */}
+                {/* <this._HorizontalLine /> */}
                 {/* ---------------- text -------------------------- */}
-                <this._BlockTitle>
-                    <b>Text</b>
-                </this._BlockTitle>
-                <this._BlockBody>
+                {/* <this._BlockTitle> */}
+                    {/* <b>Text</b> */}
+                {/* </this._BlockTitle> */}
+                {/* <this._BlockBody> */}
                     {/* color */}
                     {/* {this.getSidebarTextColor().getElement()} */}
-                    {this.getSidebarXAlign().getElement()}
-                    {this.getSidebarYAlign().getElement()}
+                    {/* {this.getSidebarXAlign().getElement()} */}
+                    {/* {this.getSidebarYAlign().getElement()} */}
                     {/* {this.getSidebarWrapWord().getElement()} */}
-                </this._BlockBody>
-                <this._HorizontalLine />
+                {/* </this._BlockBody> */}
+                {/* <this._HorizontalLine /> */}
                 {/* ----------------------- font --------------------------- */}
                 {/* ----------------------- image --------------------------- */}
                 <this._BlockTitle>

@@ -168,6 +168,7 @@ export class Symbol extends BaseWidget {
 					fontStyle: this.getAllStyle().fontStyle,
 					fontWeight: this.getAllStyle().fontWeight,
 					outline: this._getElementAreaRawOutlineStyle(),
+                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
 				}}
 				// title={"tooltip"}
 				onMouseDown={this._handleMouseDown}
@@ -345,12 +346,14 @@ export class Symbol extends BaseWidget {
 			verticalAlign: "flex-start",
 			wrapWord: false,
 			showUnit: false,
-			alarmBorder: true,
 			fileName: "../../../webpack/resources/webpages/tdm-logo.svg",
 			opacity: 1,
 			stretchToFit: false,
 			showPvValue: false,
 			invisibleInOperation: false,
+			alarmBorder: true,
+            alarmBackground: false,
+            alarmLevel: "MINOR",
 		},
 		channelNames: [],
 		groupNames: [],

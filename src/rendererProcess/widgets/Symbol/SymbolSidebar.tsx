@@ -117,6 +117,8 @@ export class SymbolSidebar extends BaseWidgetSidebar {
                     {this.getSidebarChannelName().getElement()}
                     {this.getSidebarShowUnit().getElement()}
                     {this.getSidebarAlarmBorder().getElement()}
+                    {this.getSidebarAlarmBackground().getElement()}
+                    {this.getSidebarAlarmLevel().getElement()}
                     {this.getSidebarShowPvValue().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
