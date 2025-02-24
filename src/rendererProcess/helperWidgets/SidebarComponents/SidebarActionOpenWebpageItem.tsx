@@ -50,7 +50,7 @@ export class SidebarActionOpenWebpageItem {
                         backgroundColor: "rgba(240,240,240,1)",
 					}}
 				>
-					<b>{`# ${this.getIndex()} Open Webpage`}</b>
+					<b>{`#${this.getIndex()} Open Webpage`}</b>
 					<div>
 						<this.StyledButton
 							onClick={(event: any) => {

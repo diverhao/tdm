@@ -21,6 +21,7 @@ import { MediaHelper } from "../../../rendererProcess/widgets/Media/MediaHelper"
 import { ScaledSliderHelper } from "../../../rendererProcess/widgets/ScaledSlider/ScaledSliderHelper";
 import { XYPlotHelper } from "../../../rendererProcess/widgets/XYPlot/XYPlotHelper";
 import { Log } from "../../log/Log";
+import { LEDHelper } from "../../../rendererProcess/widgets/LED/LEDHelper";
 
 export class EdlConverter {
 
@@ -31,6 +32,7 @@ export class EdlConverter {
         edlFileName: string | undefined = undefined,
         convertEdlSufffix: boolean = false
     ) => {
+
         for (let widgetKey of Object.keys(edlJSON)) {
             Log.info("-1", "converting ", widgetKey);
             const widgetEdlJSON = edlJSON[widgetKey];
@@ -57,6 +59,12 @@ export class EdlConverter {
                 tdl[widgetKey] = RectangleHelper.convertEdlToTdl(widgetEdlJSON);
             } else if (widgetKey.startsWith("Button")) {
                 tdl[widgetKey] = BooleanButtonHelper.convertEdlToTdl(widgetEdlJSON, "Button");
+            } else if (widgetKey.startsWith("LED")) {
+                // edm does not have this widget, this is from 
+                const widgetTdl = LEDHelper.convertEdlToTdl_Button(widgetEdlJSON, "Button");
+                if (widgetTdl !== undefined) {
+                    tdl[widgetKey] = widgetTdl;
+                }
             } else if (widgetKey.startsWith("Message Button")) {
                 tdl[widgetKey] = BooleanButtonHelper.convertEdlToTdl(widgetEdlJSON, "Message Button");
             } else if (widgetKey.includes("Text Entry") || widgetKey.startsWith("Textentry")) {
@@ -72,6 +80,8 @@ export class EdlConverter {
                 }
             } else if (widgetKey.includes("Shell Command")) {
                 tdl[widgetKey] = ActionButtonHelper.convertEdlToTdl_ShellCommand(edlJSON[widgetKey]);
+            } else if (widgetKey.includes("Exit Button")) {
+                tdl[widgetKey] = ActionButtonHelper.convertEdlToTdl_ExitButton(edlJSON[widgetKey]);
             } else if (widgetKey.includes("Related Display")) {
                 tdl[widgetKey] = ActionButtonHelper.convertEdlToTdl_RelatedDisplay(edlJSON[widgetKey], convertEdlSufffix);
             } else if (widgetKey.includes("Circle")) {
@@ -329,6 +339,7 @@ export class EdlConverter {
         };
     };
 
+
     static readGroupVisibilityRules = (startingLine: number, endingLine: number, fileLines: string[]) => {
         let visPv = "";
         let visMin: string | undefined = undefined;
@@ -362,7 +373,7 @@ export class EdlConverter {
         }
 
         if (visPv !== "") {
-            return this.convertEdlVisPv(visPv, visMin, visMax, visInvert);
+            return this.convertEdlVisPv(visPv, visMin, visMax, visInvert, false, true);
         } else {
             return [];
         }
@@ -395,6 +406,22 @@ export class EdlConverter {
                     const { widgetJSON, endingLine } = this.readGroup(ii, fileLines);
                     edlJSON[widgetKey] = widgetJSON;
                     ii = endingLine;
+                } else if (widgetType === "Button") {
+                    const { widgetJSON, endingLine } = this.readWidget(ii, fileLines);
+
+                    if (widgetJSON["indicatorPv"] !== undefined) {
+                        // create an additional LED widget in edlJSON if the indicatorPv exists for edl Button
+                        // edl does not have a native LED widget
+                        widgetKey = `LED_${uuidv4()}`;
+                        edlJSON[widgetKey] = JSON.parse(JSON.stringify(widgetJSON));
+                        widgetJSON["invisible"] = "true"; // hide the next BooleanButton widget
+                    }
+
+                    widgetKey = `${line.substring(3, line.length - 1)}_${uuidv4()}`;
+                    edlJSON[widgetKey] = widgetJSON;
+
+                    ii = endingLine;
+
                 } else {
                     widgetKey = `${line.substring(3, line.length - 1)}_${uuidv4()}`;
                     const { widgetJSON, endingLine } = this.readWidget(ii, fileLines);
@@ -1245,9 +1272,17 @@ export class EdlConverter {
                 if (part1.startsWith("s:")) {
                     part1 = part1.replace("s:", "<string>(");
                     part1 = `${part1})`;
+                    // in case LOC\A=i:, which should be LOC\A=i:0
+                    if (part1.endsWith("()")) {
+                        part1 = part1.slice(0, part1.length - 1) + '"")';
+                    }
                 } else if (part1.startsWith("d:") || part1.startsWith("i:")) {
                     part1 = part1.replace("d:", "<number>(").replace("i:", "<number>(");
                     part1 = `${part1})`;
+                    // in case LOC\A=i:, which should be LOC\A=i:0
+                    if (part1.endsWith("()")) {
+                        part1 = part1.slice(0, part1.length - 1) + "0)";
+                    }
                 } else if (part1.startsWith("e:")) {
                     part1 = part1.replace("e:", "<enum>(");
                     part1 = `${part1})`;
@@ -1337,6 +1372,22 @@ export class EdlConverter {
             action["command"] = command;
             actions.push(action);
         }
+        return actions;
+    };
+
+    static convertEdlExitButton = (labelRaw: string, exitProgramRaw: string | undefined) => {
+        let quitTDM = false;
+
+        if (exitProgramRaw !== undefined) {
+            quitTDM = true;
+        }
+
+        const actions: Record<string, any>[] = [];
+        const action: Record<string, any> = { type: "CloseDisplayWindow" };
+        const label = labelRaw.replaceAll(`"`, "").trim();
+        action["label"] = label;
+        action["quitTDM"] = quitTDM;
+        actions.push(action);
         return actions;
     };
 
@@ -1908,7 +1959,7 @@ export class EdlConverter {
         }
     };
 
-    static convertEdlVisPv = (visPv: string, visMin: string | undefined, visMax: string | undefined, visInvert: string | undefined, isStaticTextWidget: boolean = false) => {
+    static convertEdlVisPv = (visPv: string, visMin: string | undefined, visMax: string | undefined, visInvert: string | undefined, isStaticTextWidget: boolean = false, forGroup: boolean = false) => {
         const channelName = visPv.replaceAll(`"`, "");
         const result: Record<string, any>[] = [];
         let min = Number.NEGATIVE_INFINITY;
@@ -1924,7 +1975,7 @@ export class EdlConverter {
             let rule: Record<string, any> = {
                 boolExpression: `true`,
                 propertyName: "Invisible in Operation",
-                propertyValue: "false",
+                propertyValue: forGroup === true? "true": "false", // for Group visibility only: its child widgets are invisible when the visPv is undefined
                 id: uuidv4(),
             };
             result.push(rule);
@@ -1972,9 +2023,9 @@ export class EdlConverter {
                     id: uuidv4(),
                 };
                 result.push(rule);
-   
+
             }
-            
+
         }
         return result;
     };

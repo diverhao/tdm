@@ -47,12 +47,19 @@ export type type_action_openwebpage_tdl = {
     url: string;
 };
 
+export type type_action_closedisplaywindow = {
+    type: "CloseDisplayWindow";
+    label: string;
+    quitTDM: boolean;
+};
+
 export type type_actions_tdl = (
     | type_action_opendisplay_tdl
     | type_action_writepv_tdl
     | type_action_executecommand_tdl
     | type_action_executescript_tdl
     | type_action_openwebpage_tdl
+    | type_action_closedisplaywindow
 )[];
 
 export type type_ActionButton_tdl = {
@@ -211,7 +218,7 @@ export class ActionButton extends BaseWidget {
                     fontWeight: this.getAllStyle().fontWeight,
                     outline: this._getElementAreaRawOutlineStyle(),
                     color: this._getElementAreaRawTextStyle(),
-                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
+                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
@@ -413,6 +420,8 @@ export class ActionButton extends BaseWidget {
                                             this.openWebpage(index);
                                         } else if (type === "ExecuteCommand") {
                                             this.executeCommand(index);
+                                        } else if (type === "CloseDisplayWindow") {
+                                            this.closeDisplayWindow(index);
                                         } else {
                                             //todo: ExecuteScript
                                         }
@@ -440,7 +449,8 @@ export class ActionButton extends BaseWidget {
                                                 | type_action_opendisplay_tdl
                                                 | type_action_openwebpage_tdl
                                                 | type_action_writepv_tdl
-                                                | type_action_executescript_tdl,
+                                                | type_action_executescript_tdl
+                                                | type_action_closedisplaywindow,
                                             index: number
                                         ) => {
                                             return (
@@ -502,6 +512,8 @@ export class ActionButton extends BaseWidget {
                                         this.openWebpage(index);
                                     } else if (type === "ExecuteCommand") {
                                         this.executeCommand(index);
+                                    } else if (type === "CloseDisplayWindow") {
+                                        this.closeDisplayWindow(index);
                                     } else {
                                         //todo: ExecuteScript
                                     }
@@ -701,6 +713,25 @@ export class ActionButton extends BaseWidget {
             displayWindowId: displayWindowId,
             command: command,
         })
+    };
+
+    closeDisplayWindow = (index: number) => {
+        const tdl = this.getActions()[index] as type_action_closedisplaywindow;
+        let quitTDM = tdl["quitTDM"];
+        if (typeof quitTDM !== "boolean") {
+            quitTDM = false;
+        }
+
+        if (quitTDM === true) {
+            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+            const ipcManager = displayWindowClient.getIpcManager();
+            ipcManager.sendFromRendererProcess("quit-tdm-process");
+        } else {
+            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+            const ipcManager = displayWindowClient.getIpcManager();
+            const displayWindowId = displayWindowClient.getWindowId();
+            ipcManager.sendFromRendererProcess("close-window", displayWindowId);
+        }
     };
 
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());

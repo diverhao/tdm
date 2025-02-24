@@ -1,9 +1,10 @@
 import { GlobalVariables } from "../../global/GlobalVariables";
 import { BobPropertyConverter } from "../../../mainProcess/windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper, type_BaseWidget_tdl } from "../BaseWidget/BaseWidgetHelper";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../global/GlobalMethods";
 import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
+import { LEDHelper } from "../LED/LEDHelper";
+import { type_LED_tdl } from "../LED/LEDHelper";
 
 export type type_BooleanButton_tdl = {
     type: string;
@@ -113,7 +114,7 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, any>, type: "Button" | "Message Button"): type_BooleanButton_tdl => {
-        console.log("\n------------", `Parsing "Button"`, "------------------\n");
+        console.log("\n------------", `Parsing "Button" or "Message Button"`, "------------------\n");
         const tdl = this.generateDefaultTdl("BooleanButton") as type_BooleanButton_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -161,11 +162,13 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
             "useEnumNumeric", // ! not in tdm, looks like not working
         ];
 
+
         // default differences
         tdl["text"]["showLED"] = false;
         tdl["text"]["verticalAlign"] = "center";
         tdl["text"]["wrapWord"] = false;
         tdl["text"]["alarmBorder"] = false;
+        
         if (type === "Button") {
             tdl["text"]["useChannelItems"] = false;
         } else if (type === "Message Button") {
@@ -363,6 +366,20 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
                 id: uuidv4(),
             });
         }
+        if (edl["controlPv"] !== undefined && type === "Message Button") {
+            tdl["rules"].push({
+                boolExpression: EdlConverter.generatePvUndefinedExpression(edl["controlPv"]),
+                propertyName: "Invisible in Operation",
+                propertyValue: "true",
+                id: uuidv4(),
+            });
+            tdl["rules"].push({
+                boolExpression: EdlConverter.generatePvUndefinedExpression(edl["controlPv"]),
+                propertyName: "Alarm Border",
+                propertyValue: "true",
+                id: uuidv4(),
+            });
+        }
         // if visPv exists in edl setting, but its value is not available in operation, the widget becomes invisible
         // These behaviors override the alarm-sensitive
         if (edl["visPv"] !== undefined) {
@@ -379,6 +396,7 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
                 id: uuidv4(),
             });
         }
+
         return tdl;
     };
 

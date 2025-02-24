@@ -45,7 +45,7 @@ export class SidebarActionWritePvItem {
                         backgroundColor: "rgba(240,240,240,1)",
 					}}
 				>
-					<b>{`# ${this.getIndex()} Write PV`}</b>
+					<b>{`#${this.getIndex()} Write PV`}</b>
 					<div>
 						<this.StyledButton
 							onClick={(event: any) => {

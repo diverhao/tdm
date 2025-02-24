@@ -34,6 +34,11 @@ export type type_action_executecommand_tdl = {
     command: string;
 };
 
+export type type_action_closedisplaywindow = {
+    type: "CloseDisplayWindow";
+    label: string;
+};
+
 export type type_action_openwebpage_tdl = {
     type: "OpenWebPage";
     label: string;
@@ -46,6 +51,7 @@ export type type_actions_tdl = (
     | type_action_executecommand_tdl
     | type_action_executescript_tdl
     | type_action_openwebpage_tdl
+    | type_action_closedisplaywindow
 )[];
 
 export type type_ActionButton_tdl = {
@@ -322,6 +328,81 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                 }
             }
         }
+
+        return tdl;
+    };
+
+    static convertEdlToTdl_ExitButton = (edl: Record<string, any>): type_ActionButton_tdl => {
+        console.log("\n------------", `Parsing "Exit Button"`, "------------------\n");
+        const tdl = this.generateDefaultTdl("ActionButton") as type_ActionButton_tdl;
+        // all properties for this widget
+        const propertyNames: string[] = [
+
+            "beginObjectProperties", // not in tdm
+            "major",  // not in tdm
+            "minor",  // not in tdm
+            "release",  // not in tdm
+            "x",
+            "y",
+            "w",
+            "h",
+            "fgColor",
+            "bgColor",
+            "topShadowColor",  // not in tdm
+            "botShadowColor",  // not in tdm
+            "label",
+            "font",
+            "3d", // not in tdm
+            "invisible",
+            "iconify", // not in tdm
+            "exitProgram",
+            "controlParent", // not in tdm
+            "endObjectProperties", // not in tdm
+        ];
+
+        // default differences
+        tdl["text"]["wrapWord"] = false;
+        tdl["text"]["alarmBorder"] = false;
+        tdl["text"]["horizontalAlign"] = "center";
+        tdl["text"]["swapButtons"] = false;
+        tdl["text"]["appearance"] = "traditional";
+        tdl["text"]["text"] = "";
+
+        for (const propertyName of propertyNames) {
+            const propertyValue = edl[propertyName];
+            if (propertyValue === undefined) {
+                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                continue;
+            } else {
+                if (propertyName === "x") {
+                    tdl["style"]["left"] = parseInt(propertyValue);
+                } else if (propertyName === "y") {
+                    tdl["style"]["top"] = parseInt(propertyValue);
+                } else if (propertyName === "w") {
+                    tdl["style"]["width"] = parseInt(propertyValue);
+                } else if (propertyName === "h") {
+                    tdl["style"]["height"] = parseInt(propertyValue);
+                } else if (propertyName === "fgColor") {
+                    tdl["style"]["color"] = EdlConverter.convertEdlColor(propertyValue);
+                } else if (propertyName === "bgColor") {
+                    tdl["style"]["backgroundColor"] = EdlConverter.convertEdlColor(propertyValue);
+                } else if (propertyName === "font") {
+                    const { fontFamily, fontWeight, fontSize, fontStyle } = EdlConverter.convertEdlFont(propertyValue);
+                    tdl["style"]["fontFamily"] = fontFamily;
+                    tdl["style"]["fontStyle"] = fontStyle;
+                    tdl["style"]["fontSize"] = fontSize;
+                    tdl["style"]["fontWeight"] = fontWeight;
+                } else if (propertyName === "label") {
+                    tdl["text"]["text"] = propertyValue.replaceAll(`"`, "");
+                    tdl["actions"] = EdlConverter.convertEdlExitButton(propertyValue, edl["exitProgram"]) as type_actions_tdl;
+                } else if (propertyName === "invisible") {
+                    tdl["text"]["invisibleInOperation"] = EdlConverter.convertEdlBoolean(propertyValue);
+                } else {
+                    console.log("Skip property", `"${propertyName}"`);
+                }
+            }
+        }
+        console.log("exit button", tdl)
 
         return tdl;
     };

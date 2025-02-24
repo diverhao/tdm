@@ -11,7 +11,7 @@ import { LabelRules } from "./LabelRules";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import katex from "katex";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_Label_tdl = {
     type: string;
@@ -114,8 +114,8 @@ export class Label extends BaseWidget {
             this.setRulesStyle(rulesValues["style"]);
             this.setRulesText(rulesValues["text"]);
         }
-        this.setAllStyle({...this.getStyle(), ...this.getRulesStyle()});
-        this.setAllText({...this.getText(), ...this.getRulesText()});
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
@@ -167,8 +167,9 @@ export class Label extends BaseWidget {
                     fontStyle: this.getAllStyle().fontStyle,
                     fontWeight: this.getAllStyle().fontWeight,
                     outline: this._getElementAreaRawOutlineStyle(),
-                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
                     color: this._getElementAreaRawTextStyle(),
+                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
+
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
@@ -309,7 +310,7 @@ export class Label extends BaseWidget {
             horizontalAlign: "flex-start",
             verticalAlign: "flex-start",
             wrapWord: false,
-            invisibileInOperation: false,
+            invisibleInOperation: false,
             alarmBorder: true,
             alarmBackground: false,
             alarmText: false,

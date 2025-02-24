@@ -69,7 +69,7 @@ export class SidebarActionOpenDisplayItem {
 							overflow: "visible",
 						}}
 					>
-						<b>{`# ${this.getIndex()}`}</b>&nbsp;
+						<b>{`#${this.getIndex()}`}</b>&nbsp;
 						<b
                             style={{
                                 cursor: "pointer",

@@ -1165,6 +1165,7 @@ export abstract class BaseWidget {
         const result: Record<string, any> = {
             ...this.getStyle(),
             ...this.getRulesStyle(),
+            display: "inline-flex",
             left: this.getBorderType() === "outside" ? allStyle["left"] - allStyle["borderWidth"] : allStyle["left"],
             top: this.getBorderType() === "outside" ? allStyle["top"] - allStyle["borderWidth"] : allStyle["top"],
             // if it is a readback-type widget, we skip the mouse left-button-down event in operating mode, 
@@ -1634,14 +1635,31 @@ export abstract class BaseWidget {
     // -----------------------------------------------------------------
 
     _getElementAreaRawOutlineStyle = (): string => {
+        // console.log("======================", this.getAllText()["invisibleInOperation"])
+        // if (!g_widgets1.isEditing() && this.getAllText()["invisibleInOperation"]) {
+        //     return AlarmOutlineStyle[ChannelSeverity.NO_ALARM];
+        // }
+
         const severity = this._getChannelSeverity();
         // this is a function used in operation mode, use getAllText()
         const alarmBorder = this.getAllText().alarmBorder;
-        if (alarmBorder === true) {
-            return AlarmOutlineStyle[severity];
-        } else {
+        if (g_widgets1.isEditing()) {
             return AlarmOutlineStyle[ChannelSeverity.NO_ALARM];
         }
+
+        if (alarmBorder === true) {
+            // return AlarmOutlineStyle[severity];
+            // alarmLevel may not be defined in some widgets
+            let alarmLevelStr = this.getText()["alarmLevel"];
+            if (alarmLevelStr === undefined) {
+                alarmLevelStr = "MINOR";
+            }
+            const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
+            if (severity >= alarmLevel) {
+                return AlarmOutlineStyle[severity];
+            }
+        }
+        return AlarmOutlineStyle[ChannelSeverity.NO_ALARM];
     };
 
     _getElementAreaRawBackgroundStyle = (): string => {

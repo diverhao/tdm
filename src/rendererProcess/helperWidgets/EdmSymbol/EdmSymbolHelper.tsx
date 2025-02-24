@@ -6,6 +6,7 @@ import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConv
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import { GlobalVariables } from "../../global/GlobalVariables";
+import { transform } from "html2canvas/dist/types/css/property-descriptors/transform";
 
 export type type_Label_tdl = {
     type: string;
@@ -548,13 +549,11 @@ export class EdmSymbolHelper extends BaseWidgetHelper {
                 angle = "rotate(90deg)";
             } else if (edl["orientation"].includes("rotateCCW")) {
                 angle = "rotate(270deg)";
+            } else if (edl["orientation"].includes("FlipH")) {
+                angle = "scaleX(-1)";
+            } else if (edl["orientation"].includes("FlipV")) {
+                angle = "scaleY(-1)";
             }
-            // ! SNS does not have flipH or flipV edm screens, skip it
-            // else if (edl["orientation"].includes("flipH")) {
-            // 	angle = "rotate(180deg)";
-            // } else if (edl["orientation"].includes("flipV")) {
-            // 	angle = "rotate(90deg)";
-            // }
 
             // skip the first widget, it is the "Label" widget showing alarm border
             for (let ii = 1; ii < result.length; ii++) {
@@ -570,6 +569,11 @@ export class EdmSymbolHelper extends BaseWidgetHelper {
                 } else if (edl["orientation"].includes("rotateCCW")) {
                     widgetTdl["style"]["left"] = x + y1 - y - (w1 - h1) / 2;
                     widgetTdl["style"]["top"] = y + w - (x1 - x) - w1 + (w1 - h1) / 2;
+                } else if (edl["orientation"].includes("FlipH")) {
+                    widgetTdl["style"]["left"] = 2 * x + w - x1 - w1;
+                    // widgetTdl["style"]["top"] = y + w - (x1 - x) - w1 + (w1 - h1) / 2;
+                } else if (edl["orientation"].includes("FlipV")) {
+                    widgetTdl["style"]["top"] = 2 * y + h - y1 - h1;
                 }
             }
         }

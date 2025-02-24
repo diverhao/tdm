@@ -524,7 +524,7 @@ export class BooleanButton extends BaseWidget {
     getButtonBackgroundColor = () => {
         const valueIsLegal = this.valueIsLegal();
         if (valueIsLegal === false) {
-            return this.getAllText()["fallbackColor"];
+            // return this.getAllText()["fallbackColor"];
         }
         if (this.getAllText()["mode"] === "push and reset" || this.getAllText()["mode"] === "push no reset" || this.getAllText()["mode"] === "push nothing and set") {
             if (this.buttonPressed) {

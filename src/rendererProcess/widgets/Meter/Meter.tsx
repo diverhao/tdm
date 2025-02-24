@@ -166,7 +166,7 @@ export class Meter extends BaseWidget {
                     fontWeight: this.getAllStyle().fontWeight,
                     outline: this._getElementAreaRawOutlineStyle(),
                     color: this._getElementAreaRawTextStyle(),
-                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
+                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}

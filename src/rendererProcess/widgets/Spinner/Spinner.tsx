@@ -141,7 +141,7 @@ export class Spinner extends BaseWidget {
                     outline: this._getElementAreaRawOutlineStyle(),
                     position: "relative",
                     color: this._getElementAreaRawTextStyle(),
-                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
+                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}

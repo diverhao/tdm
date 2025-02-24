@@ -44,7 +44,7 @@ export class SidebarActionExecuteCommandItem {
                         backgroundColor: "rgba(240,240,240,1)",
 					}}
 				>
-					<b>{`# ${this.getIndex()} Execute Cmd`}</b>
+					<b>{`#${this.getIndex()} Execute Cmd`}</b>
 					<div>
 						<this.StyledButton
 							onClick={(event: any) => {

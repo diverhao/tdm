@@ -6,7 +6,7 @@ import { ComboBoxSidebar } from "./ComboBoxSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ComboBoxRules } from "./ComboBoxRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_ComboBox_tdl = {
     type: string;
@@ -115,8 +115,8 @@ export class ComboBox extends BaseWidget {
             this.setRulesStyle(rulesValues["style"]);
             this.setRulesText(rulesValues["text"]);
         }
-        this.setAllStyle({...this.getStyle(), ...this.getRulesStyle()});
-        this.setAllText({...this.getText(), ...this.getRulesText()});
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
@@ -167,7 +167,7 @@ export class ComboBox extends BaseWidget {
                     fontSize: this.getAllStyle().fontSize,
                     fontStyle: this.getAllStyle().fontStyle,
                     outline: this._getElementAreaRawOutlineStyle(),
-                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
+                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
@@ -311,7 +311,7 @@ export class ComboBox extends BaseWidget {
 
                             return (
                                 <option key={`${name}-${index}`}
-                                    value={index} 
+                                    value={index}
                                     selected={isSelected}>
                                     {name}
                                 </option>
@@ -549,7 +549,7 @@ export class ComboBox extends BaseWidget {
             // write value
             try {
                 const index = event.target.value;
-                
+
                 const channel = g_widgets1.getTcaChannel(channelName);
                 const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
                 let value = this.getItemValues()[index];

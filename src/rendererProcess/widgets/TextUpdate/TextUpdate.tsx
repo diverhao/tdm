@@ -213,8 +213,7 @@ export class TextUpdate extends BaseWidget {
                 // color: allStyle["color"],
                 ...this.getElementBodyRawStyle(),
                 display: "inline-flex",
-                backgroundColor: this._getElementAreaRawBackgroundStyle(),
-
+                backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
                 outline: this._getElementAreaRawOutlineStyle(),
                 // opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
                 color: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? "rgba(0,0,0,0)" : this._getElementAreaRawTextStyle(),

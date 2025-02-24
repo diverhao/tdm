@@ -233,7 +233,7 @@ export class RadioButton extends BaseWidget {
                     alignItems: this.getAllText()["horizontalAlign"],
                     cursor: "pointer",
                     opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
+                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
                 }}
             >
                 <form

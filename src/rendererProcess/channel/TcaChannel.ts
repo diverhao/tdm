@@ -49,8 +49,8 @@ export class TcaChannel {
     // allowed characters in LOCAL channel name init value
     // a-z A-Z 0-9 _ - : . ;
     // we should also include macro: $\{\}\(\)
-    static regexLocalChannelName = /^loc:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(<([(number)(string)(number\[\])(string\[\])(enum)]+)>)?(\(([a-zA-Z0-9\:\-\_\.;,\]\[]+)\))?$/;
-    static regexGlobalChannelName = /^glb:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(<([(number)(string)(number\[\])(string\[\])(enum)]+)>)?(\(([a-zA-Z0-9\:\-\_\.;,]+)\))?$/;
+    static regexLocalChannelName = /^loc:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(<([(number)(string)(number\[\])(string\[\])(enum)]+)>)?(\(([a-zA-Z0-9\:\-\_\.;,\]\["']+)\))?$/;
+    static regexGlobalChannelName = /^glb:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(<([(number)(string)(number\[\])(string\[\])(enum)]+)>)?(\(([a-zA-Z0-9\:\-\_\.;,"']+)\))?$/;
     // allowed character in EPICS channel name
     // a-z A-Z 0-9 _ - : . ; [ ] < > 
     static regexEpicsChannelName = /^[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+$/;
@@ -98,7 +98,7 @@ export class TcaChannel {
                 };
             }
         } else {
-            // channel name is in wrong format, e.g. loc://val1<stringa>
+            // channel name is in wrong format, e.g. loc://val1<string>
             // this situation is handled by Widgets.createTcaChannel(), which does nothing but return undefined
         }
     }
@@ -205,7 +205,10 @@ export class TcaChannel {
         if (type === undefined) {
             type = "number";
         }
+
         const initValueRaw = regexArray[5];
+
+
         let initValue: number | string | number[] | string[] = 0;
         let strings: string[] = [];
         if (type === "number") {
@@ -293,34 +296,34 @@ export class TcaChannel {
         const meta = TcaChannel.extractNameAndMetaFromLocalChannelName(channelName);
         if (meta !== undefined) {
             if (meta["type"] === "number") {
-                if (meta["initValue"] !== 0) {
-                    this.getDbrData()["value"] = meta["initValue"];
-                    this.getDbrData()["type"] = meta["type"];
-                }
+                // if (meta["initValue"] !== 0) {
+                this.getDbrData()["value"] = meta["initValue"];
+                this.getDbrData()["type"] = meta["type"];
+                // }
             } else if (meta["type"] === "string") {
-                if (meta["initValue"] !== "") {
-                    this.getDbrData()["value"] = meta["initValue"];
-                    this.getDbrData()["type"] = meta["type"];
-                }
+                // if (meta["initValue"] !== "") {
+                this.getDbrData()["value"] = meta["initValue"];
+                this.getDbrData()["type"] = meta["type"];
+                // }
             } else if (meta["type"] === "number[]") {
-                if ((meta["initValue"] as number[]).length !== 0) {
-                    this.getDbrData()["value"] = meta["initValue"];
-                    this.getDbrData()["type"] = meta["type"];
-                }
+                // if ((meta["initValue"] as number[]).length !== 0) {
+                this.getDbrData()["value"] = meta["initValue"];
+                this.getDbrData()["type"] = meta["type"];
+                // }
             } else if (meta["type"] === "string[]") {
-                if ((meta["initValue"] as string[]).length !== 0) {
-                    this.getDbrData()["value"] = meta["initValue"];
-                    this.getDbrData()["type"] = meta["type"];
-                }
+                // if ((meta["initValue"] as string[]).length !== 0) {
+                this.getDbrData()["value"] = meta["initValue"];
+                this.getDbrData()["type"] = meta["type"];
+                // }
             } else if (meta["type"] === "enum") {
-                if (meta["initValue"] !== 0) {
-                    this.getDbrData()["value"] = meta["initValue"];
-                    this.getDbrData()["type"] = meta["type"];
-                }
-                if (meta["strings"].length !== 0) {
-                    this.getDbrData()["strings"] = meta["strings"];
-                    this.getDbrData()["type"] = meta["type"];
-                }
+                // if (meta["initValue"] !== 0) {
+                this.getDbrData()["value"] = meta["initValue"];
+                this.getDbrData()["type"] = meta["type"];
+                // }
+                // if (meta["strings"].length !== 0) {
+                this.getDbrData()["strings"] = meta["strings"];
+                this.getDbrData()["type"] = meta["type"];
+                // }
             }
         }
     }
@@ -446,8 +449,6 @@ export class TcaChannel {
             return;
         }
 
-        console.log("put value", value)
-
         // might be [1,2,3], "abc", 37.8
         // for array, the number of input array cannot exceed Channel.valueCount, the epics-tca won't
         // accept this input
@@ -470,7 +471,7 @@ export class TcaChannel {
             }
         }
 
-        console.log("send to main process for put", channelName, displayWindowId, dbrData, ioTimeout, pvaValueField)
+        // console.log("send to main process for put", channelName, displayWindowId, dbrData, ioTimeout, pvaValueField)
         g_widgets1
             .getRoot()
             .getDisplayWindowClient()
@@ -554,8 +555,6 @@ export class TcaChannel {
                 return undefined;
             }
         } else if (TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
-            console.log("============ parse input ============")
-            console.log("============ parse input ============ 1", this.getPvaValueDisplayType(), this.isEnumType())
             let pvaType = this.getPvaType();
             if (pvaType === undefined) {
                 return undefined;
@@ -576,7 +575,6 @@ export class TcaChannel {
                 return undefined;
             }
 
-            console.log("============ parse input ============ 2", this.getPvaValueDisplayType(), this.isEnumType())
             let valueTypeIndex = "";
 
             pvaType = this.getPvaTypeAtPvRequest(pvRequest);
@@ -590,9 +588,7 @@ export class TcaChannel {
 
             // enum is special: input could be a string or number, the string is converted back to number
             if (this.isEnumType()) {
-                console.log("This is an enum in parseInput")
                 const value = dbrData["value"];
-                console.log("value = ", value, dbrData)
                 if (typeof value === "number") {
                     // return the index
                     return Math.floor(value);
@@ -988,7 +984,6 @@ export class TcaChannel {
                 return undefined;
             }
         } else {
-
             const value = this.getDbrData()["value"];
 
             if (value === undefined) {

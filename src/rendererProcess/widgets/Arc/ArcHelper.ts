@@ -119,6 +119,7 @@ export class ArcHelper extends BaseWidgetHelper {
 
 		// default differences
 		tdl["text"]["showRadius"] = "none";
+		tdl["text"]["alarmBorder"] = false;
 		tdl["text"]["lineWidth"] = 1;
 		tdl["text"]["fill"] = false;
 		if (type === "Circle") {

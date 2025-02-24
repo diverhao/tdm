@@ -158,7 +158,7 @@ export class TextEntry extends BaseWidget {
                 fontStyle: this.getAllText().fontStyle,
                 ...this.getElementBodyRawStyle(),
                 outline: this._getElementAreaRawOutlineStyle(),
-                backgroundColor: this._getElementAreaRawBackgroundStyle(),
+                backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
             };
         }
 
@@ -324,7 +324,7 @@ export class TextEntry extends BaseWidget {
                         setValue(`${this.parseValue()}`);
                         if (keyRef.current !== null) {
                             // keyRef.current.style["backgroundColor"] = `rgba(0,0,0,0)`;
-                            keyRef.current.style["backgroundColor"] = this._getElementAreaRawBackgroundStyle();
+                            keyRef.current.style["backgroundColor"] = this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle();
                         }
                     }}
                 />
