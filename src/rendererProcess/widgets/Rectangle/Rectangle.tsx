@@ -189,7 +189,6 @@ export class Rectangle extends BaseWidget {
         const width = this.getAllStyle()["width"];
         const height = this.getAllStyle()["height"];
         const strokeWidth = this.getAllText()["lineWidth"];
-        console.log("width, height, strokeWidth", width, height, strokeWidth, this._getElementAreaRawFillStyle(), this._getElementAreaRawShapeStyle(), this._getElementAreaRawBackgroundStyle(), this._getElementAreaRawTextStyle())
         return (
             <svg
                 width="100%"

@@ -259,6 +259,7 @@ export class DisplayWindowClient {
                 const pointerY = getMouseEventClientY(event);
 
                 let widgetKeyResult = "";
+                let encounteredWriteWidget = false;
                 for (let ii = widgets.length - 1; ii >= 0; ii--) {
                     const widget = widgets[ii];
                     if (widget instanceof BaseWidget) {
@@ -274,14 +275,17 @@ export class DisplayWindowClient {
                             // read and write types widgets are treated the same by mid and right buttons
                             // so that the mid button and Probe show the same PV
                             if (widget.getReadWriteType() === "write") {
-                                widgetKeyResult = widgetKey;
-                                break;
+                                if (widget.getChannelNames().length > 0) {
+                                    // only when this widget has a channel
+                                    widgetKeyResult = widgetKey;
+                                    break;
+                                }
                             } else if (widget.getReadWriteType() === "read" && widgetKeyResult === "") {
-                                widgetKeyResult = widgetKey;
-                                // treat read and write types widget the same
-                                // if (event.button === 1) {
-                                break;
-                                // }
+                                if (widget.getChannelNames().length > 0) {
+                                    // only when this widget has a channel
+                                    widgetKeyResult = widgetKey;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -344,7 +348,6 @@ export class DisplayWindowClient {
                                     }
                                 }
                             }
-
                         }
                         this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], options);
                     }

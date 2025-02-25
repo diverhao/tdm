@@ -190,9 +190,25 @@ export class EdlConverter {
             const top2 = widgetTdl2["style"]["top"];
             const bottom2 = top2 + widgetTdl2["style"]["height"];
             const swapButtons2 = widgetTdl2["text"]["swapButtons"] || widgetTdl2["text"]["button3Popup"];
+
+            // determine overlap: >= 3 pixels
+
+            const width1 = Math.abs(right1 - left1);
+            const width2 = Math.abs(right2 - left2);
+            const width0 = Math.max(left1, left2, right1, right2) - Math.min(left1, left2, right1, right2);
+            const height1 = Math.abs(top1 - bottom1);
+            const height2 = Math.abs(top2 - bottom2);
+            const height0 = Math.max(bottom1, top1, bottom2, top2) - Math.min(bottom1, top1, bottom2, top2);
+
+            let overlap = false;
+            if (width0 + 2 < width1 + width2 && height0 + 2 < height1 + height2) {
+                overlap = true;
+            }
+
             if (
-                !((right2 < left1 && left2 < left1) || (right2 > right1 && left2 > right1)) &&
-                !((bottom2 < top1 && top2 < top1) || (bottom2 > bottom1 && top2 > bottom1)) &&
+                // !((right2 < left1 && left2 < left1) || (right2 > right1 && left2 > right1)) &&
+                // !((bottom2 < top1 && top2 < top1) || (bottom2 > bottom1 && top2 > bottom1)) &&
+                overlap &&
                 swapButtons2 !== swapButtons1 &&
                 !toBeDeletedIndices.includes(index)
             ) {
@@ -1375,7 +1391,7 @@ export class EdlConverter {
         return actions;
     };
 
-    static convertEdlExitButton = (labelRaw: string, exitProgramRaw: string | undefined) => {
+    static convertEdlExitButton = (exitProgramRaw: string | undefined) => {
         let quitTDM = false;
 
         if (exitProgramRaw !== undefined) {
@@ -1384,8 +1400,8 @@ export class EdlConverter {
 
         const actions: Record<string, any>[] = [];
         const action: Record<string, any> = { type: "CloseDisplayWindow" };
-        const label = labelRaw.replaceAll(`"`, "").trim();
-        action["label"] = label;
+        // const label = labelRaw.replaceAll(`"`, "").trim();
+        // action["label"] = label;
         action["quitTDM"] = quitTDM;
         actions.push(action);
         return actions;
@@ -1975,10 +1991,27 @@ export class EdlConverter {
             let rule: Record<string, any> = {
                 boolExpression: `true`,
                 propertyName: "Invisible in Operation",
-                propertyValue: forGroup === true? "true": "false", // for Group visibility only: its child widgets are invisible when the visPv is undefined
+                // propertyValue: forGroup === true? "true":"false",
+                propertyValue: "false",
                 id: uuidv4(),
             };
             result.push(rule);
+
+            if (forGroup === true) {
+                let baseChannelName = channelName;
+                // if channel name is a .SEVR, then it is never "undefined", in the worst case it is 3 (INVALID).
+                if (channelName.endsWith(".SEVR")) {
+                    baseChannelName = channelName.replaceAll(".SEVR", "");
+                }
+                let rule: Record<string, any> = {
+                    boolExpression: `${this.generatePvExpression(baseChannelName)} == undefined`,
+                    propertyName: "Invisible in Operation",
+                    propertyValue: "true", // for Group visibility only: its child widgets are invisible when the visPv is undefined
+                    id: uuidv4(),
+                };
+                result.push(rule);
+            }
+
             // then use the boolean condition to determine if we want to show the widget
             // if the below condition is false (e.g. channel value not in truth range, channel not available, or channel macros failed to expand),
             // the rule below is ignored, then according to the rule above, the widget is shown

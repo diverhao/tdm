@@ -533,8 +533,6 @@ export class ActionButton extends BaseWidget {
         const macros = (g_widgets1.getWidget2("Canvas") as Canvas).getAllMacros();
         // "\\n" is "\n"
         const result = BaseWidget.expandChannelName(rawText, macros, true).replaceAll("\\n", "\n");
-        console.log("rawText ===============", rawText, macros, result, rawText === result)
-
         return result;
     }
 

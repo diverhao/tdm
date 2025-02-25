@@ -218,13 +218,13 @@ export class ChoiceButton extends BaseWidget {
         const calcItemWidth = () => {
             if (this.getAllText()["appearance"] === "traditional") {
                 if (this.getAllText()["direction"] === "horizontal") {
-                    return Math.floor(100 / itemNames.length * this.getAllStyle()["width"] - 2 * shadowWidth - 2 * itemMarginWidth);
+                    return Math.floor(1 / itemNames.length * this.getAllStyle()["width"] - 2 * shadowWidth - 2 * itemMarginWidth);
                 } else {
                     return this.getAllStyle()["width"] - 2 * shadowWidth - 2 * itemMarginWidth;
                 }
             } else {
                 if (this.getAllText()["direction"] === "horizontal") {
-                    return Math.floor(100 / itemNames.length * this.getAllStyle()["width"] - 2 * itemMarginWidth);
+                    return Math.floor(1 / itemNames.length * this.getAllStyle()["width"] - 2 * itemMarginWidth);
                 } else {
                     return this.getAllStyle()["width"] - 2 * itemMarginWidth;
                 }
@@ -235,13 +235,13 @@ export class ChoiceButton extends BaseWidget {
                 if (this.getAllText()["direction"] === "horizontal") {
                     return this.getAllStyle()["height"] - 2 * shadowWidth - 2 * itemMarginWidth;
                 } else {
-                    return Math.floor(100 / itemNames.length * this.getAllStyle()["height"] - 2 * shadowWidth - 2 * itemMarginWidth);
+                    return Math.floor(1 / itemNames.length * this.getAllStyle()["height"] - 2 * shadowWidth - 2 * itemMarginWidth);
                 }
             } else {
                 if (this.getAllText()["direction"] === "horizontal") {
                     return this.getAllStyle()["height"] - 2 * itemMarginWidth;
                 } else {
-                    return Math.floor(100 / itemNames.length * this.getAllStyle()["height"] - 2 * itemMarginWidth);
+                    return Math.floor(1 / itemNames.length * this.getAllStyle()["height"] - 2 * itemMarginWidth);
                 }
             }
         }

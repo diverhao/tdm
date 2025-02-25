@@ -196,11 +196,14 @@ export class IpcManagerOnDisplayWindow {
         options: {
             widgetKey: string;
             iframeDisplayId: string;
+            tdlBackgroundColor: string;
+
         }
     ) => {
         const widget = g_widgets1.getWidget2(options["widgetKey"]);
         if (widget instanceof EmbeddedDisplay) {
             widget.loadHtml(options["iframeDisplayId"]);
+            widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
         }
     };
 

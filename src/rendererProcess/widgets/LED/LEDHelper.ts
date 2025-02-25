@@ -18,6 +18,11 @@ export type type_LED_tdl = {
 	itemValues: (number | string | number[] | string[] | undefined)[];
 };
 
+/**
+ * edm does not have LED widget, but its Button widget may come with 
+ * visPv which shows the status of another PV, we generate a regular
+ * button and a LED for this edm Button widget
+ */
 export class LEDHelper extends BaseWidgetHelper {
 	static _defaultTdl: type_LED_tdl = {
 		type: "LED",
@@ -250,23 +255,24 @@ export class LEDHelper extends BaseWidgetHelper {
         //         id: uuidv4(),
         //     });
         // }
-        // // if controlPv exists in edl setting, but its value is not available in operation, the widget becomes invisible
-        // // These behaviors override the alarm-sensitive
-        // // this behavior is only for Button, not for "Message Button"
-        // if (edl["controlPv"] !== undefined && type === "Button") {
-        //     tdl["rules"].push({
-        //         boolExpression: EdlConverter.generatePvUndefinedExpression(edl["controlPv"]),
-        //         propertyName: "Invisible in Operation",
-        //         propertyValue: "true",
-        //         id: uuidv4(),
-        //     });
-        //     tdl["rules"].push({
-        //         boolExpression: EdlConverter.generatePvUndefinedExpression(edl["controlPv"]),
-        //         propertyName: "Alarm Border",
-        //         propertyValue: "true",
-        //         id: uuidv4(),
-        //     });
-        // }
+        
+        // if visPv exists in edl setting, but its value is not available in operation, the widget becomes invisible
+        // These behaviors override the alarm-sensitive
+        // this behavior is only for Button, not for "Message Button"
+        if (edl["indicatorPv"] !== undefined && type === "Button") {
+            tdl["rules"].push({
+                boolExpression: EdlConverter.generatePvUndefinedExpression(edl["indicatorPv"]),
+                propertyName: "Invisible in Operation",
+                propertyValue: "true",
+                id: uuidv4(),
+            });
+            // tdl["rules"].push({
+            //     boolExpression: EdlConverter.generatePvUndefinedExpression(edl["visPv"]),
+            //     propertyName: "Alarm Border",
+            //     propertyValue: "true",
+            //     id: uuidv4(),
+            // });
+        }
 
         // // if visPv exists in edl setting, but its value is not available in operation, the widget becomes invisible
         // // These behaviors override the alarm-sensitive

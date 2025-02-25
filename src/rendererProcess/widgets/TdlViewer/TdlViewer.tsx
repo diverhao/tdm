@@ -184,6 +184,26 @@ export class TdlViewer extends BaseWidget {
                 </div>
                 <div>
                     <div>{this.getText()["tdlFileName"]}</div>
+                    <ElementRectangleButton
+                        defaultBackgroundColor={"grey"}
+                        handleClick={() => {
+                            const tdlFileName = this.getText()["tdlFileName"];
+                            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                            const externalMacros = this.getText()["externalMacros"];
+                            displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file", {
+                                tdlFileNames: [tdlFileName],
+                                mode: "operating",
+                                editable: true,
+                                macros: externalMacros,
+                                replaceMacros: false, // not used
+                                currentTdlFolder: "",
+                                openInSameWindow: false,
+                                windowId: displayWindowClient.getWindowId(),
+                            })
+                        }}
+                    >
+                        Open
+                    </ElementRectangleButton>
                 </div>
                 <div>
                     <hr></hr>

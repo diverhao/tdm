@@ -1,7 +1,10 @@
 import * as React from "react";
 import { GroupSelection2 } from "./GroupSelection2";
 import { calcSidebarWidth, g_widgets1, GlobalVariables } from "../../global/GlobalVariables";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
+import { ElementRectangleButton } from "../SharedElements/RectangleButton";
+import { g_flushWidgets } from "../Root/Root";
+import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 
 export class GroupSelectionSidebar2 {
     private _widgetKey: string;
@@ -158,7 +161,17 @@ export class GroupSelectionSidebar2 {
                             }}
                         />
                     </form>
-                    {this.getSidebarWidgetsList().getElement()}
+                    {/* {this.getSidebarWidgetsList().getElement()} */}
+                    <this._HorizontalLine></this._HorizontalLine>
+                    <this._BlockTitle>
+                        <b>Font size</b>
+                    </this._BlockTitle>
+                    <this._BlockBody>
+                        <this._ElementChangeFontSize dSize={1}></this._ElementChangeFontSize>
+                        <this._ElementChangeFontSize dSize={-1}></this._ElementChangeFontSize>
+                    </this._BlockBody>
+
+
                 </this._BlockBody>
             </div>
         );
@@ -168,6 +181,69 @@ export class GroupSelectionSidebar2 {
         return <this._Element key={this._widgetKey} />;
     };
 
+
+    private _HorizontalLine = () => {
+        return <div>&nbsp;</div>;
+    };
+
+    changeFontSize = (dSize: number) => {
+        if (!g_widgets1.isEditing()) {
+            return;
+        }
+        const selectedWidgetKeys = g_widgets1.getSelectedWidgetKeys();
+        for (let selectedWidgetKey of selectedWidgetKeys) {
+            const widget = g_widgets1.getWidget2(selectedWidgetKey);
+            if (widget instanceof BaseWidget) {
+                const style = widget.getStyle();
+                let fontSize = style["fontSize"];
+                if (typeof fontSize === "string") {
+                    fontSize = parseInt(fontSize.replaceAll("px", ""));
+                    if (isNaN(fontSize)) {
+                        continue;
+                    }
+                }
+                fontSize = fontSize + dSize;
+                style["fontSize"] = fontSize;
+                g_widgets1.addToForceUpdateWidgets(selectedWidgetKey);
+            }
+        }
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+        g_flushWidgets();
+    }
+
+    private _ElementChangeFontSize = ({ dSize }: any) => {
+        const elementRef = React.useRef<any>(null);
+        return <div
+            ref={elementRef}
+            style={{
+                width: "70%",
+                marginTop: 2,
+                marginBottom: 2,
+                backgroundColor: "rgba(230, 230, 230, 1)",
+                cursor: "pointer",
+                borderRadius: 2,
+                padding: 4,
+                paddingLeft: 5,
+                border: "solid 1px rgba(100, 100, 100, 1)"
+            }}
+
+            onMouseEnter={() => {
+                if (elementRef.current !== null) {
+                    elementRef.current.style["backgroundColor"] = "rgba(200, 200, 200, 1)";
+                }
+            }}
+            onMouseLeave={() => {
+                if (elementRef.current !== null) {
+                    elementRef.current.style["backgroundColor"] = "rgba(220, 220, 220, 1)";
+                }
+            }}
+            onClick={() => {
+                this.changeFontSize(dSize);
+            }}
+        >
+            {dSize > 0 ? "Increase" : "Decrease"} {Math.abs(dSize)} px
+        </div>
+    }
     // ----------------------------------- styles ----------------------------
 
     _sidebarStyle: Record<string, any> = {
@@ -230,7 +306,7 @@ export class GroupSelectionSidebar2 {
     };
 
     private _defaultInputStyle: Record<string, any> = {
-        width: "70%",
+        width: "50%",
         fontFamily: GlobalVariables.defaultFontFamily,
         fontSize: GlobalVariables.defaultFontSize,
     };

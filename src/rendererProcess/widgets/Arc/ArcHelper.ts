@@ -161,7 +161,6 @@ export class ArcHelper extends BaseWidgetHelper {
 					tdl["text"]["angleRange"] = EdlConverter.convertEdlNumber(propertyValue);
 				} else if (propertyName === "visPv") {
                     const newRules = EdlConverter.convertEdlVisPv(EdlConverter.convertEdlPv(edl["visPv"]), edl["visMin"], edl["visMax"], edl["visInvert"]) as type_rules_tdl;
-                    console.log("new rules for visPv", newRules)
 					tdl["rules"].push(...newRules);
 				} else if (propertyName === "lineAlarm") {
 					alarmPropertyNames.push(propertyName);

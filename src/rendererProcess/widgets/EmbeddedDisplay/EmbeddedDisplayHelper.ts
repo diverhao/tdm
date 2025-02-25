@@ -40,7 +40,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
 			transform: "rotate(0deg)",
 			// border, it is different from the "alarmBorder" below,
 			borderStyle: "solid",
-			borderWidth: 1,
+			borderWidth: 0,
 			borderColor: "rgba(0, 0, 0, 1)",
 			// font
 			color: "rgba(0,0,0,1)",

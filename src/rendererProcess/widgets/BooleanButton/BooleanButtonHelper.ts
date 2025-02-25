@@ -168,7 +168,7 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
         tdl["text"]["verticalAlign"] = "center";
         tdl["text"]["wrapWord"] = false;
         tdl["text"]["alarmBorder"] = false;
-        
+
         if (type === "Button") {
             tdl["text"]["useChannelItems"] = false;
         } else if (type === "Message Button") {
@@ -220,17 +220,30 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
                         tdl
                     );
                     // tdl["itemColors"][0] = EdlConverter.convertEdlColor(propertyValue);
-                } else if (propertyName === "onLabel" && edl["labelType"]?.replaceAll(`"`, "") === "literal" && type === "Button") {
-                    // tdl["itemLabels"][1] = propertyValue.replaceAll(`"`, "");
-                    tdl["text"]["onLabel"] = propertyValue.replaceAll(`"`, "");
-                } else if (propertyName === "offLabel" && edl["labelType"]?.replaceAll(`"`, "") === "literal" && type === "Button") {
-                    tdl["text"]["offLabel"] = propertyValue.replaceAll(`"`, "");
+                } else if (propertyName === "onLabel") {
+                    if (edl["labelType"]?.replaceAll(`"`, "") === "literal" && type === "Button") {
+                        tdl["text"]["onLabel"] = propertyValue.replaceAll(`"`, "");
+                    } else if (edl["labelType"] === undefined && type === "Button") {
+                        tdl["text"]["onLabel"] = propertyValue.replaceAll(`"`, "");
+                        tdl["text"]["useChannelItems"] = true;
+                    } else if (type === "Message Button") {
+                        tdl["text"]["onLabel"] = propertyValue.replaceAll(`"`, "");
+                    }
+                } else if (propertyName === "offLabel") {
+                    if (edl["labelType"]?.replaceAll(`"`, "") === "literal" && type === "Button") {
+                        tdl["text"]["offLabel"] = propertyValue.replaceAll(`"`, "");
+                    } else if (edl["labelType"] === undefined && type === "Button") {
+                        tdl["text"]["offLabel"] = propertyValue.replaceAll(`"`, "");
+                        tdl["text"]["useChannelItems"] = true;
+                    } else if (type === "Message Button") {
+                        tdl["text"]["offLabel"] = propertyValue.replaceAll(`"`, "");
+                    }
                 } else if (propertyName === "labelType") {
                     tdl["text"]["useChannelItems"] = edl["labelType"]?.replaceAll(`"`, "") === "literal" ? false : true;
-                } else if (propertyName === "onLabel" && type === "Message Button") {
-                    tdl["text"]["onLabel"] = propertyValue.replaceAll(`"`, "");
-                } else if (propertyName === "offLabel" && type === "Message Button") {
-                    tdl["text"]["offLabel"] = propertyValue.replaceAll(`"`, "");
+                    // } else if (propertyName === "onLabel" && type === "Message Button") {
+                    //     tdl["text"]["onLabel"] = propertyValue.replaceAll(`"`, "");
+                    // } else if (propertyName === "offLabel" && type === "Message Button") {
+                    //     tdl["text"]["offLabel"] = propertyValue.replaceAll(`"`, "");
                 } else if (propertyName === "controlPv") {
                     tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true));
                 } else if (propertyName === "font") {
@@ -279,6 +292,11 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
                 }
             }
         }
+
+        if (edl["labelType"] === undefined && type === "Button") {
+            tdl["text"]["useChannelItems"] = true;
+        }
+
         if (type === "Message Button" && tdl["text"]["mode"] === "push and reset") {
             const onValue = tdl["text"]["onValue"];
             const offValue = tdl["text"]["offValue"];

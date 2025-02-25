@@ -394,7 +394,6 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                     tdl["style"]["fontWeight"] = fontWeight;
                 } else if (propertyName === "label") {
                     tdl["text"]["text"] = propertyValue.replaceAll(`"`, "");
-                    tdl["actions"] = EdlConverter.convertEdlExitButton(propertyValue, edl["exitProgram"]) as type_actions_tdl;
                 } else if (propertyName === "invisible") {
                     tdl["text"]["invisibleInOperation"] = EdlConverter.convertEdlBoolean(propertyValue);
                 } else {
@@ -402,8 +401,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                 }
             }
         }
-        console.log("exit button", tdl)
-
+        tdl["actions"] = EdlConverter.convertEdlExitButton(edl["exitProgram"]) as type_actions_tdl;
         return tdl;
     };
 

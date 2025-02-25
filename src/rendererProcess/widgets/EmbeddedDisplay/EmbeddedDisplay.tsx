@@ -11,7 +11,7 @@ import { EmbeddedDisplayRules } from "./EmbeddedDisplayRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import * as path from "path";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_EmbeddedDisplay_tdl = {
     type: string;
@@ -68,6 +68,8 @@ export class EmbeddedDisplay extends BaseWidget {
 
     // once assigned, never change
     iframeDisplayId: string = "";
+
+    iframeBackgroundColor = 'rgba(0,0,0,0)';
 
 
     constructor(widgetTdl: type_EmbeddedDisplay_tdl) {
@@ -262,8 +264,16 @@ export class EmbeddedDisplay extends BaseWidget {
             Embedded display
         </div>
     }
-
+    
     _ElementIframeInOperating = () => {
+
+        const iframeElementRef = React.useRef<any>(null);
+        React.useEffect(() => {
+            if (iframeElementRef.current !== null) {
+                iframeElementRef.current.style["backgroundColor"] = this.iframeBackgroundColor;
+            }
+        });
+
         if (this.getItemIsWebpage()[this.getSelectedTab()] === true) {
             let tdlFileName = this.getTdlFileNames()[this.getSelectedTab()];
             const link = tdlFileName;
@@ -288,11 +298,16 @@ export class EmbeddedDisplay extends BaseWidget {
             }
             return (
                 <iframe
+                    ref={iframeElementRef}
                     src={iframeSrc}
                     name="embedded-display"
                     id="embedded-display"
                     width="100%"
                     height="100%"
+                    style={{
+                        border: "none",
+                        backgroundColor: this.iframeBackgroundColor,
+                    }}
                 ></iframe>
             );
         }
@@ -304,6 +319,10 @@ export class EmbeddedDisplay extends BaseWidget {
         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
         g_flushWidgets();
     };
+
+    setIframeBackgroundColor = (tdlBackgroundColor: string) => {
+        this.iframeBackgroundColor = tdlBackgroundColor;
+    }
 
 
     calcTabsLeft = () => {
@@ -471,7 +490,7 @@ export class EmbeddedDisplay extends BaseWidget {
             transform: "rotate(0deg)",
             color: "rgba(0,0,0,1)",
             borderStyle: "solid",
-            borderWidth: 1,
+            borderWidth: 0,
             borderColor: "rgba(180, 180, 180, 1)",
             fontFamily: GlobalVariables.defaultFontFamily,
             fontSize: GlobalVariables.defaultFontSize,

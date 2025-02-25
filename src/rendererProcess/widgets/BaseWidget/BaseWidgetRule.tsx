@@ -627,7 +627,6 @@ export abstract class BaseWidgetRule {
         const tmp: any[] = [...this.getPropertyValueArray()];
         const channelNames = this.getExpandedChannelNamesInPropertyValue();
 
-        console.log("channelNames =========================", channelNames, tmp)
         for (let index = 0; index < channelNames.length; index++) {
             const channelName = channelNames[index];
             try {

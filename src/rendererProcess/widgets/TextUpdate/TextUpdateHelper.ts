@@ -426,11 +426,15 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                     if (edl["useAlarmBorder"] !== "true") {
                         const newRules = EdlConverter.convertEdlColorAlarm(
                             EdlConverter.convertEdlPv(edl["controlPv"]),
-                            0,
+                            1,
                             "Text Color"
                         ) as type_rules_tdl;
                         tdl["rules"].push(...newRules);
-                    }
+                    } 
+                    // else {
+                    //     const newRules = EdlConverter.convertEdlColorAlarm(edl["controlPv"], 1, "Text Color") as type_rules_tdl;
+                    //     tdl["rules"].push(...newRules);
+                    // }
                 } else {
                     // const newRules = EdlConverter.convertEdlColorAlarm(edl["controlPv"], 1, "Text Color") as type_rules_tdl;
                     // tdl["rules"].push(...newRules);

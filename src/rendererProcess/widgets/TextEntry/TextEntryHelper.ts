@@ -126,7 +126,7 @@ export class TextEntryHelper extends BaseWidgetHelper {
 		// default differences
 		tdl["text"]["wrapWord"] = false;
 		tdl["text"]["alarmBorder"] = false;
-		tdl["text"]["showUnit"] = false;
+		tdl["text"]["showUnit"] = true;
 		tdl["text"]["appearance"] = "traditional";
 		tdl["text"]["highlightBackgroundColor"] = tdl["style"]["backgroundColor"];
 

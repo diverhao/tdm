@@ -306,6 +306,7 @@ export class WindowAgentsManager {
                     parentDisplayWindowAgent.sendFromMainProcess("obtained-iframe-uuid", {
                         widgetKey: widgetKey,
                         iframeDisplayId: displayWindowId,
+                        tdlBackgroundColor: tdl["Canvas"]["style"]["backgroundColor"],
                     });
                 }
                 const mainProcessMode = this.getMainProcess().getMainProcessMode()
@@ -328,6 +329,7 @@ export class WindowAgentsManager {
                 Log.debug(this.getMainProcessId(), "lifted", displayWindowAgent.getId());
 
                 // (4)
+                console.log("iframe new tdl ====================================")
                 displayWindowAgent.sendFromMainProcess("new-tdl", {
                     newTdl: tdl,
                     tdlFileName: tdlFileName,
@@ -338,6 +340,7 @@ export class WindowAgentsManager {
                     utilityType: options["utilityType"],
                     utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
                 });
+
                 // (5)
                 const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
