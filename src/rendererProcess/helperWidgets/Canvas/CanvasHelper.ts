@@ -34,9 +34,14 @@ export class CanvasHelper {
 			padding: 0,
 			overflow: "hidden",
 		},
-		macros: [],
-		replaceMacros: false,
-		windowName: "",
+        macros: [],
+        replaceMacros: false,
+        windowName: "",
+        script: "",
+        xGridSize: 1,
+        yGridSize: 1,
+        gridColor: "rgba(128,128,128,1)",
+        showGrid: true,
 	};
 
 	// not getDefaultTdl(), always generate a new key

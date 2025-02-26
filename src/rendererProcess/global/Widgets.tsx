@@ -1831,9 +1831,9 @@ export class Widgets {
             const tcaChannel = this.getTcaChannel(channelName);
             let severity = tcaChannel.getSeverity();
 
-           // in some cases, the IOC does not reply for GET request of xxx.SEVR
-           // So, the channel xxx.SEVR has undefined value and undefined severity
-           // in this case, try to get the raw channel's severity
+            // in some cases, the IOC does not reply for GET request of xxx.SEVR
+            // So, the channel xxx.SEVR has undefined value and undefined severity
+            // in this case, try to get the raw channel's severity
             if (severity === ChannelSeverity.INVALID && channelName.endsWith(".SEVR")) {
                 channelName = channelName.replaceAll(".SEVR", "");
                 severity = this.getChannelSeverity(channelName);
@@ -2536,9 +2536,16 @@ export class Widgets {
         }
     };
 
-    openChannelGraphWindow = (widgetKeys: string[] | undefined = undefined) => {
-        let channelName: string = "";
+    /**
+     * Try to get the channel name from widget. If the widget does not hold a channel, then use the provided channel name.
+     */
+    openChannelGraphWindow = (widgetKeys: string[] | undefined = undefined, channelName: string | undefined = undefined) => {
+        if (channelName === undefined) {
+            channelName = "";
+        }
+
         let options = {};
+
         if (widgetKeys?.length === 0 || widgetKeys === undefined) {
 
         } else {

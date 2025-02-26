@@ -18,7 +18,7 @@ import { Network } from "vis-network/standalone/esm/vis-network";
 import { VisData } from "vis-network/declarations/network/gephiParser";
 import { DataSet } from "vis-network/standalone/esm/vis-network";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { TcaChannel } from "../../channel/TcaChannel";
+import { ChannelSeverity, TcaChannel } from "../../channel/TcaChannel";
 import { Log } from "../../../mainProcess/log/Log";
 import { DbdFiles } from "../../channel/DbdFiles";
 
@@ -27,6 +27,7 @@ enum type_channelSource {
     dbFile,
     ioc,
 };
+
 
 
 export type type_ChannelGraph_tdl = {
@@ -47,6 +48,23 @@ enum type_nodeStatus {
     not_expanded,
     cannot_expand,
 }
+
+const borderWidth = 2;
+
+
+export enum colors {
+    NO_ALARM = "rgba(25, 218, 0, 0)",
+    MINOR = "rgba(255,128,0,1)",
+    MAJOR = "rgba(255,0,0,1)",
+    INVALID = "rgba(255,0,255,1)",
+    inlink = "rgb(0, 128, 128)",
+    outlink = "rgb(128, 0, 128)",
+    fwdlink = "rgba(0,0,255,1)",
+    background = "rgb(149, 204, 255)",
+    highlight ="rgb(215, 68, 90)",
+    dbfilenode = "rgb(177, 177, 61)",
+}
+
 
 export class ChannelGraph extends BaseWidget {
     // level-1 properties in tdl file
@@ -73,7 +91,7 @@ export class ChannelGraph extends BaseWidget {
     // private _readyToDeselect: boolean = false;
 
     // _rules: TextUpdateRules;
-    rtyp: string = "";
+    // rtyp: string = "";
     readonly rtypWaitingName: string = uuidv4();
     _dbdFiles: DbdFiles;
 
@@ -94,6 +112,8 @@ export class ChannelGraph extends BaseWidget {
     forceUpdateConfigPage: () => void = () => { };
 
     network: undefined | Network = undefined;
+
+
 
     // Define network options
     // https://rdrr.io/cran/visNetwork/man/visEdges.html
@@ -122,10 +142,12 @@ export class ChannelGraph extends BaseWidget {
             font: {
                 color: "black",
             },
-            color: {
-                background: "#79b8ff",
-                highlight: "#ff6ab9",
-            },
+            // color: {
+            //     background: colors.NO_ALARM,
+            //     highlight: {
+            //         background: colors.highlight,
+            //     },
+            // },
             labelHighlightBold: false,
             borderWidth: 0,
             borderWidthSelected: 0,
@@ -582,7 +604,7 @@ export class ChannelGraph extends BaseWidget {
             // (2)
             console.log("clicked node", clickedNode)
             const nodeLabel = clickedNode["label"];
-            const channelName = nodeLabel.split(" ")[0].split(".")[0];
+            const channelName = nodeLabel.split("\n")[0].split(".")[0];
             const channelNameType = TcaChannel.checkChannelName(channelName);
             if (channelNameType !== "ca" && channelName !== "pva") {
                 console.log("Channel", channelName, "is not a valid CA or PVA channel. Stop expanding.");
@@ -613,7 +635,7 @@ export class ChannelGraph extends BaseWidget {
             // (2)
             console.log("double clicked node", clickedNode)
             const nodeLabel = clickedNode["label"];
-            const channelName = nodeLabel.split(" ")[0];
+            const channelName = nodeLabel.split("\n")[0];
 
             if (TcaChannel.checkChannelName(channelName) === "ca" || TcaChannel.checkChannelName(channelName) === "pva") {
                 // open Probe
@@ -625,7 +647,7 @@ export class ChannelGraph extends BaseWidget {
     }
 
 
-    private _ElementChannelInput = ({channelName, setChannelName}: any) => {
+    private _ElementChannelInput = ({ channelName, setChannelName }: any) => {
         const elementRef = React.useRef<any>(null);
 
         return (
@@ -715,20 +737,34 @@ export class ChannelGraph extends BaseWidget {
         const allNodes = this.networkData["nodes"];
         for (const node of allNodes.get()) {
             const label = node["label"];
-            const nodeChannelName = label.split(" ")[0].split(".")[0]; // the node must use the base channel name
+            const nodeChannelName = label.split("\n")[0].split(".")[0]; // the node must use the base channel name
             if (channelNames.includes(nodeChannelName)) {
                 try {
                     const tcaChannel = g_widgets1.getTcaChannel(nodeChannelName);
                     const dbrData = tcaChannel.getDbrData();
                     const value = dbrData["value"];
                     const currentPosition = this.network?.getPositions(node["id"])[node["id"]];
+                    const severity = tcaChannel.getSeverity();
+                    const severityStr = ChannelSeverity[severity];
 
                     allNodes.update(
                         {
                             ...node,
-                            label: node["label"].split("\n")[0] + `\n${value}`,
+                            label: node["label"].split("\n")[0] + "\n" + node["label"].split("\n")[1] + `\n${value}`,
                             x: currentPosition?.x,
                             y: currentPosition?.y,
+                            borderWidth: borderWidth,
+                            borderWidthSelected: borderWidth,
+                            color: {
+                                // background: colors[severityStr as keyof typeof colors],
+                                background: colors.background,
+                                border: colors[severityStr as keyof typeof colors],
+                                highlight: {
+                                    background: colors.highlight,
+                                    border: colors[severityStr as keyof typeof colors],
+                                },
+
+                            },
                         }
                     )
                 } catch (e) {
@@ -748,7 +784,7 @@ export class ChannelGraph extends BaseWidget {
     expandNode = async (nodeLabel: string): Promise<boolean> => {
 
         // the base channel name, could be "pv1", "@dev3 c3 s2", or "27"
-        const channelName = nodeLabel.split(" ")[0].split(".")[0];
+        const channelName = nodeLabel.split("\n")[0].split(".")[0];
         // if the base channel name is not a valid CA or PVA channel, no need to expand, stop here
         const channelNameType = TcaChannel.checkChannelName(channelName);
         if (channelNameType !== "ca" && channelName !== "pva") {
@@ -776,48 +812,59 @@ export class ChannelGraph extends BaseWidget {
 
         for (const nodeTmp of allNodes.get()) {
             const label = nodeTmp.label;
-            const baseChannelName = label.split(" ")[0].split(".")[0];
+            const baseChannelName = label.split("\n")[0].split(".")[0];
             if (baseChannelName === channelName) {
                 mainNode = nodeTmp;
                 break;
             }
         }
 
-        const dbFileNodeColor = "#a7bdff"
-        const iocNodeColor = "#8bd6ff"
-
         console.log("vis-network node", channelName, "does not exist, create a new one");
         const source = channelData["source"];
         const rtyp = channelData["rtyp"];
+        const scan = channelData["scan"];
+        const calc = channelData["calc"];
         if (mainNode === undefined) {
             // create one
             this.currentId = this.currentId + 1;
-            if (rtyp === undefined || rtyp === "") {
+            if (rtyp === undefined || rtyp === "") { // scan or calc can be empty
                 console.log("There is no rtyp for", nodeLabel);
                 return false;
             }
+            const calcLabel = rtyp.includes("calc") ? ` (${calc})` : "";
             mainNode = {
                 id: this.currentId,
-                label: `${nodeLabel} (${rtyp})`,
+                label: `${channelName}\n(${rtyp}) (${scan})${calcLabel}`,
                 shape: "box",
                 physics: false,
                 color: {
-                    background: source === "IOC" ? iocNodeColor : dbFileNodeColor,
+                    background: source === "IOC" ? colors.background : colors.dbfilenode,
+                    highlight: colors.highlight,
                 }
             };
             allNodes.add(mainNode)
         } else {
             console.log("vis-network node", channelName, "already exists, update it");
+            const calcLabel = rtyp.includes("calc") ? ` (${calc})` : "";
 
             // update the node's label and shape
             // Assuming you have a nodes DataSet
             mainNode = {
                 id: mainNode.id,
-                label: mainNode.label + ` (${rtyp})`,
+                // label: `${channelName}\n(${rtyp}) (${scan}) (${calc})`,
+                // label: mainNode.label + `\n (${rtyp})` + ` (${scan})` + ` (${calc})`,
+                label: `${mainNode.label}\n(${rtyp}) (${scan})${calcLabel}`,
                 shape: "box",
                 physics: mainNode.physics,
+                borderWidth: borderWidth * 0,
+                borderWidthSelected: borderWidth * 0,
                 color: {
-                    background: source === "IOC" ? iocNodeColor : dbFileNodeColor,
+                    background: source === "IOC" ? colors.background : colors.dbfilenode,
+                    // border: source === "IOC" ? colors.background : colors.dbfilenode,
+                    highlight: {
+                        background: colors.highlight,
+                        // border: colors.highlight,
+                    },
                 }
             };
             allNodes.update(mainNode);
@@ -829,13 +876,16 @@ export class ChannelGraph extends BaseWidget {
         // iterate over 3 linkTypes: inLinks, outLinks, and fwdLinks
         for (const [linkType, links] of Object.entries(channelData)) { // [inLinks | outLinks | fwdLinks, {INPA:..., INPB: ...}]
             const edgeColors: Record<string, any> = {
-                inLinks: { color: "purple", highlight: "#ff6ab9", hover: "purple" },
-                outLinks: { color: "#005f79", highlight: "#ff6ab9", hover: "#005f79" },
-                fwdLinks: { color: "blue", highlight: "#ff6ab9", hover: "blue" },
+                // inLinks: { color: "purple", highlight: "#ff0000", hover: "purple" },
+                // outLinks: { color: "#005f79", highlight: "#ff0000", hover: "#005f79" },
+                // fwdLinks: { color: "blue", highlight: "#ff0000", hover: "blue" },
+                inLinks: { color: colors.inlink, highlight: colors.highlight, },
+                outLinks: { color: colors.outlink, highlight: colors.highlight, },
+                fwdLinks: { color: colors.fwdlink, highlight: colors.highlight, },
             }
 
             // make sure we are iterating inLinks, outLinks and fwdLinks
-            if (linkType === "rtyp" || linkType === "status" || linkType === "source") {
+            if (linkType === "rtyp" || linkType === "scan" || linkType === "calc" || linkType === "status" || linkType === "source") {
                 continue;
             }
             if (typeof links === "string" || typeof links !== "object") {
@@ -864,8 +914,8 @@ export class ChannelGraph extends BaseWidget {
                 let linkFieldTargetChannelNode: any = undefined;
 
                 for (const nodeTmp of allNodes.get()) {
-                    const label = nodeTmp.label; // may be like "pv1 (ai)", we only compare "pv1"
-                    if (label.split(" ")[0] === linkFieldTargetChannelBaseName) {
+                    const label = nodeTmp.label; // may be like "pv1\n(ai)", we only compare "pv1"
+                    if (label.split("\n")[0] === linkFieldTargetChannelBaseName) {
                         linkFieldTargetChannelNode = nodeTmp;
                         break;
                     }
@@ -885,8 +935,10 @@ export class ChannelGraph extends BaseWidget {
                         physics: false,
                         x: x + 100 * (Math.random() - 0.5),
                         y: y + 100 * (Math.random() - 0.5),
+                        // no border needed
                         color: {
-                            background: source === "IOC" ? iocNodeColor : dbFileNodeColor,
+                            background: source === "IOC" ? colors.background : colors.dbfilenode,
+                            highlight: colors.highlight,
                         }
                     };
                     console.log("insert satellite node", linkFieldTargetChannelBaseName)
@@ -948,6 +1000,7 @@ export class ChannelGraph extends BaseWidget {
             return false;
         }
 
+
         // new channel name must be a valid CA or PVA base name
         const newChannelNameType = TcaChannel.checkChannelName(newChannelName);
         if (newChannelNameType !== "pva" && newChannelNameType !== "ca") {
@@ -970,6 +1023,8 @@ export class ChannelGraph extends BaseWidget {
             fwdLinks: Record<string, string | undefined>,
             status: type_nodeStatus,
             rtyp: string,
+            scan: string,
+            calc: string,
             source: string,
         } = {
             inLinks: {},
@@ -977,6 +1032,8 @@ export class ChannelGraph extends BaseWidget {
             fwdLinks: {},
             status: type_nodeStatus.not_expanded,
             rtyp: "",
+            scan: "",
+            calc: "",
             source: "",
         };
         this.getLinksStaticData()[newChannelName] = linksStaticData;
@@ -999,18 +1056,41 @@ export class ChannelGraph extends BaseWidget {
 
         // (2)
         let rtyp: string | number | string[] | number[] | undefined = "";
+        let scan: string | number | string[] | number[] | undefined = "";
+        let calc: string | number | string[] | number[] | undefined = "";
         if (channelJson !== undefined) {
             rtyp = channelJson["RTYP"]; // channel is coming from db file
+            scan = channelJson["SCAN"] === undefined ? "Passive" : channelJson["SCAN"];
+            calc = channelJson["CALC"] === undefined ? "" : channelJson["CALC"];
         } else {
-            rtyp = await this.getRTYP(newChannelName); // 1 second timeout, channel is coming from IOC
+            const rtypPromise = this.getFieldValue(newChannelName, "RTYP"); // 1 second timeout, channel is coming from IOC
+            const scanPromise = this.getFieldValue(newChannelName, "SCAN"); // 1 second timeout, channel is coming from IOC
+            const calcPromise = this.getFieldValue(newChannelName, "CALC"); // 1 second timeout, channel is coming from IOC
+            const metaPromises = Promise.all([rtypPromise, scanPromise, calcPromise]);
+            const meta = await metaPromises;
+            rtyp = meta[0];
+            scan = meta[1];
+            calc = meta[2];
         }
+
 
         if (typeof rtyp !== "string") {
             console.log("RTYP of", newChannelName, "is", rtyp, "quit...")
+            delete this.getLinksStaticData()[newChannelName];
             return false;
         }
 
+        if (typeof calc !== "string") {
+            calc = "";
+        }
+
+        if (typeof scan !== "string") {
+            scan = "Passive";
+        }
+
         linksStaticData["rtyp"] = rtyp;
+        linksStaticData["scan"] = scan;
+        linksStaticData["calc"] = calc;
         linksStaticData["source"] = channelJson === undefined ? "IOC" : "dbFile";
 
         // (3)
@@ -1043,7 +1123,7 @@ export class ChannelGraph extends BaseWidget {
         for (const [dataFieldName, links] of Object.entries(linksStaticData)) { // inLink, outLink, fwdLink
 
             // make sure we are iterating inLinks, outLinks and fwdLinks
-            if (dataFieldName === "rtyp" || dataFieldName === "status" || dataFieldName === "source") {
+            if (dataFieldName === "rtyp" || dataFieldName === "calc" || dataFieldName === "scan" || dataFieldName === "status" || dataFieldName === "source") {
                 continue;
             }
             if (typeof links === "string" || typeof links !== "object") {
@@ -1134,7 +1214,7 @@ export class ChannelGraph extends BaseWidget {
     }
 
 
-    getRTYP = async (channelName: string) => {
+    getRTYP1 = async (channelName: string) => {
         console.log("getting RTYP of", channelName)
         // if (this.rtyp !== "" || this.rtyp === this.rtypWaitingName) {
         //     console.log("RTYP already obtained or waiting");
@@ -1150,7 +1230,7 @@ export class ChannelGraph extends BaseWidget {
             rtypTcaChannel = g_widgets1.createTcaChannel(rtypChannelName, this.getWidgetKey());
         }
         if (rtypTcaChannel !== undefined) {
-            this.rtyp = this.rtypWaitingName;
+            // this.rtyp = this.rtypWaitingName;
             await rtypTcaChannel.getMeta(this.getWidgetKey());
             const dbrData = await rtypTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
             rtypTcaChannel.destroy(this.getWidgetKey());
@@ -1174,6 +1254,46 @@ export class ChannelGraph extends BaseWidget {
         }
         return undefined;
     };
+
+    getFieldValue = async (channelName: string, fieldType: "RTYP" | "SCAN" | "CALC") => {
+        console.log("getting field", fieldType, "of", channelName)
+        // if (this.rtyp !== "" || this.rtyp === this.rtypWaitingName) {
+        //     console.log("RTYP already obtained or waiting");
+        //     return;
+        // }
+
+        const fieldChannelName = `${channelName}.${fieldType}`;
+        let fieldTcaChannel: TcaChannel | undefined = undefined;
+        try {
+            fieldTcaChannel = g_widgets1.getTcaChannel(fieldChannelName);
+        } catch (e) {
+            fieldTcaChannel = g_widgets1.createTcaChannel(fieldChannelName, this.getWidgetKey());
+        }
+        if (fieldTcaChannel !== undefined) {
+            // await fieldTcaChannel.getMeta(this.getWidgetKey());
+            const dbrData = await fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
+            fieldTcaChannel.destroy(this.getWidgetKey());
+            if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
+                const fieldValue = dbrData["value"];
+                console.log(fieldChannelName, "value is", fieldValue)
+                return fieldValue;
+                // if (rtyp !== undefined && this.rtyp === this.rtypWaitingName) {
+                //     this.rtyp = `${rtyp}`;
+                //     this.connectFieldChannels();
+                //     return;
+                // }
+            } else {
+                console.log("Failed to get value for", `${fieldChannelName}`);
+                // GET timeout, reconnect
+                // this.rtyp = "";
+                // this.mapDbrData();
+            }
+        } else {
+            console.log("Channel", `${fieldChannelName} does not exist`);
+        }
+        return undefined;
+    }
+
 
 
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());

@@ -1298,7 +1298,8 @@ export class IpcManagerOnMainProcess {
                             title: "open tdl file",
                             filters: [{ name: "tdl", extensions: ["tdl", "json", "bob", "edl", "db", "template"] }],
                             defaultPath: defaultPath,
-                            properties: ["openFile", "openDirectory","multiSelections"],
+                            // properties: ["openFile", "openDirectory","multiSelections"],
+                            properties: ["openFile", "multiSelections"],
                         });
                     }
 

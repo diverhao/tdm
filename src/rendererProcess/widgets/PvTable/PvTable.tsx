@@ -427,6 +427,12 @@ export class PvTable extends BaseWidget {
                             const channelNameLevel4 = BaseWidget.channelNameLevel0to4(channelNameLevel5);
                             g_widgets1.openProbeWindow([], channelNameLevel4);
                         },
+                        "Channel Graph": () => {
+                            // level 5 channel name is level 0 channel name without field
+                            const channelNameLevel5 = this.getChannelNamesLevel5()[channelNameIndex];
+                            const channelNameLevel4 = BaseWidget.channelNameLevel0to4(channelNameLevel5);
+                            g_widgets1.openChannelGraphWindow([], channelNameLevel4);
+                        },
                         "Copy data": () => {
                             // level 5 channel name is level 0 channel name without field
                             const channelNameLevel5 = this.getChannelNamesLevel5()[channelNameIndex];

@@ -60,15 +60,15 @@ export class Canvas {
         // this._replaceMacros = widgetTdl.replaceMacros;
         this._windowName = widgetTdl.windowName === undefined ? "" : widgetTdl.windowName;
 
-        this._xGridSize = widgetTdl["xGridSize"] === undefined ? 10 : widgetTdl["xGridSize"];
-        this._yGridSize = widgetTdl["yGridSize"] === undefined ? 10 : widgetTdl["yGridSize"];
+        this._xGridSize = widgetTdl["xGridSize"] === undefined ? 1 : widgetTdl["xGridSize"];
+        this._yGridSize = widgetTdl["yGridSize"] === undefined ? 1 : widgetTdl["yGridSize"];
 
         this._script = widgetTdl.script === undefined ? "" : widgetTdl.script;
 
         this._sidebar = new CanvasSidebar(this);
 
         this._gridColor = widgetTdl["gridColor"] === undefined ? "rgba(128,128,128,0.15)" : widgetTdl["gridColor"];
-        this._showGrid = widgetTdl["showGrid"] === undefined ? true : widgetTdl["showGrid"];
+        this._showGrid = widgetTdl["showGrid"] === undefined ? false : widgetTdl["showGrid"];
 
         // listen to window resize event
         this.startListeners();

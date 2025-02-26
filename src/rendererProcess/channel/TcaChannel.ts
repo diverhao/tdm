@@ -852,6 +852,7 @@ export class TcaChannel {
      *
      */
     destroy = (widgetKey: string | undefined) => {
+        console.log(this.getChannelName())
         // (1)
         let widgetKeys: string[] = [];
         if (widgetKey === undefined) {
@@ -859,6 +860,7 @@ export class TcaChannel {
         } else {
             widgetKeys = [widgetKey];
         }
+        console.log("destroying", widgetKeys)
         for (let widgetKey of widgetKeys) {
             try {
                 const widget = g_widgets1.getWidget2(widgetKey);
@@ -885,7 +887,7 @@ export class TcaChannel {
             // (3)
             delete g_widgets1.getTcaChannels()[this.getChannelName()];
             // (4)
-            this.getReadWriteIos().rejectAllIos();
+            this.getReadWriteIos().rejectAllIos(this);
             // (5)
             const windowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
             g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("tca-destroy", windowId, this.getChannelName());

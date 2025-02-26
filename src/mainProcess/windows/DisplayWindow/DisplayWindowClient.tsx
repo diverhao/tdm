@@ -231,6 +231,16 @@ export class DisplayWindowClient {
     // mid or right button down on the window
     // the left-button down event is handled in each widget in a more efficient way
     startToListenMouseEvents = () => {
+
+        const nonEmptyChannelNames = (channelNames: string[]) => {
+            for (let channelName of channelNames) {
+                if (channelName.trim() !== "") {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         window.addEventListener("contextmenu", (event: MouseEvent) => {
             // prevent all kinds of default context menus
             if (this.getMainProcessMode() === "web") {
@@ -249,17 +259,28 @@ export class DisplayWindowClient {
             // const thisWindowIsInIframe = window.frameElement !== null;
             window.focus();
 
-            // mid or right button down
+            /**
+             * In operating mode:
+             * 
+             * right button down
+             *  - penetrate over the widgets, find channel names for each widget, if the first channel
+             *    is empty, try to find the next one, if failed, try the next widget. Then show the widget's channel names
+             * 
+             * right button down:
+             *  - always show default context menu: from "Edit Display" to "Help"
+             *  - if over <input /> or <textarea /> element, show copy/paste/cut
+             *  - if over special element, e.g. "Scaled Slider", show widget-specific option, e.g. "Settings"
+             */
+
+            let widgetKeyResult = "";
+            const pointerX = getMouseEventClientX(event);
+            const pointerY = getMouseEventClientY(event);
+
+            // find the first widget that has at least one channel
             if ((event.button === 1 || event.button === 2) && g_widgets1 !== undefined && !g_widgets1.isEditing()) {
                 event.preventDefault();
-                const widgets = [...g_widgets1.getWidgets().values()];
-                // const pointerX = event.clientX;
-                // const pointerY = event.clientY;
-                const pointerX = getMouseEventClientX(event);
-                const pointerY = getMouseEventClientY(event);
 
-                let widgetKeyResult = "";
-                let encounteredWriteWidget = false;
+                const widgets = [...g_widgets1.getWidgets().values()];
                 for (let ii = widgets.length - 1; ii >= 0; ii--) {
                     const widget = widgets[ii];
                     if (widget instanceof BaseWidget) {
@@ -274,97 +295,120 @@ export class DisplayWindowClient {
                             const widgetKey = widget.getWidgetKey();
                             // read and write types widgets are treated the same by mid and right buttons
                             // so that the mid button and Probe show the same PV
-                            if (widget.getReadWriteType() === "write") {
-                                if (widget.getChannelNames().length > 0) {
-                                    // only when this widget has a channel
-                                    widgetKeyResult = widgetKey;
-                                    break;
-                                }
-                            } else if (widget.getReadWriteType() === "read" && widgetKeyResult === "") {
-                                if (widget.getChannelNames().length > 0) {
-                                    // only when this widget has a channel
-                                    widgetKeyResult = widgetKey;
-                                    break;
-                                }
+                            if (nonEmptyChannelNames(widget.getChannelNames())) {
+                                // only when this widget has a channel
+                                widgetKeyResult = widgetKey;
+                                break;
                             }
                         }
                     }
                 }
-
-                if (widgetKeyResult !== "") {
-                    // mid or right mouse down on widget
-                    if (event.button === 1) {
-                        // mid button down
-                        // prevent focusing the input box, e.g. the TextEntry widget
-                        // control key is pressed
-                        const widget = g_widgets1.getWidget2(widgetKeyResult);
-                        if ((widget instanceof BaseWidget) && !(widget instanceof PvTable)) {
-                            const channelNames = widget.getChannelNames();
-                            let channelName: string | string[] = channelNames[0];
-                            // copy all channel names for XYPlot, it does not have rule
-                            if (widget instanceof XYPlot) {
-                                channelName = channelNames;
-                            }
-
-                            // const left = event.clientX;
-                            // const top = event.clientY;
-                            const left = getMouseEventClientX(event);
-                            const top = getMouseEventClientY(event);
-                            // mid button down: channel name peek
-                            g_widgets1.createChannelNamePeekDiv(left, top, channelName);
-                        }
-                    } else {
-                        // right button down on widget
-                        if (this.getMainProcessMode() === "web") {
-                            // keep selected text
-                            event.preventDefault();
-                        }
-                        let options: Record<string, any> = {};
-                        // if the element is <input /> or <textarea />, show copy, paste, cut, redo, and undo menu in context menu
-                        if ((event.target instanceof HTMLInputElement) || (event.target instanceof HTMLTextAreaElement)) {
-                            options = {
-                                // focused: widget.getFocusStatus(),
-                                inputElementFocused: true,
-                            }
-                        } else if (widgetKeyResult.startsWith("Help") || widgetKeyResult.startsWith("PvMonitor") || widgetKeyResult.startsWith("TdlViewer") || widgetKeyResult.startsWith("LogViewer") || widgetKeyResult.startsWith("TextEditor") || widgetKeyResult.startsWith("ProfilesViewer") || widgetKeyResult.startsWith("CaSnooper") || widgetKeyResult.startsWith("Casw") || widgetKeyResult.startsWith("FileConverter")) {
-                            // non-input element
-                            // if the text is selected in Help or TdlViewer widgets, we show copy option in context menu
-                            const widget = g_widgets1.getWidget2(widgetKeyResult);
-                            const selection = window.getSelection();
-                            const textSelected = selection === null ? false : selection.toString().length > 0 ? true : false;
-                            const selectedText = selection === null ? undefined : selection.toString();
-                            if ((widget instanceof Help) || (widget instanceof TdlViewer) || (widget instanceof LogViewer) || (widget instanceof TextEditor) || (widget instanceof ProfilesViewer) || (widget instanceof CaSnooper) || (widget instanceof Casw)) {
-                                options = {
-                                    textSelected: textSelected,
-                                    selectedText: selectedText,
-                                }
-                            }
-                            // Context menu for Table area of LogViewer, PvMonitor, Casw, and CaSnooper,
-                            // Operations of copy/save data
-                            if ((widget instanceof LogViewer) || (widget instanceof PvMonitor) || (widget instanceof CaSnooper) || (widget instanceof Casw) || (widget instanceof FileConverter)) {
-                                if (widget.mouseEventInsideTable(pointerX, pointerY)) {
-                                    options = {
-                                        contextMenuTexts: Object.keys(widget.mouseRightButtonDownContextMenuActions),
-                                    }
-                                }
-                            }
-                        }
-                        this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], options);
-                    }
-                } else {
-                    // right click on Canvas
-                    if (event.button === 2) {
-                        event.preventDefault()
-                        // if the click is within Canvas region
-                        const canvas = g_widgets1.getWidget("Canvas");
-                        if (canvas instanceof Canvas) {
-                            if (pointerX <= canvas.getStyle()["width"] && pointerY <= canvas.getStyle()["height"])
-                                this.showContextMenu("Canvas", [event.clientX, event.clientY], {});
-                        }
-                    }
-                }
+            } else {
+                // left button, or in editing mode, no context menu
+                return;
             }
 
+
+            // for mid button down, we have found a widget that has non-empty channel names
+            // show the channel name peek div
+            if (event.button === 1) {
+                // mid button
+                if (widgetKeyResult !== "") {
+                    // found a widget
+                    // mid button down
+                    // prevent focusing the input box, e.g. the TextEntry widget
+                    // control key is pressed
+                    const widget = g_widgets1.getWidget2(widgetKeyResult);
+                    if ((widget instanceof BaseWidget) && !(widget instanceof PvTable)) {
+                        const channelNames = widget.getChannelNames();
+                        let channelName: string | string[] = channelNames[0];
+                        // copy all channel names for XYPlot, it does not have rule
+                        if (widget instanceof XYPlot) {
+                            channelName = channelNames;
+                        }
+
+                        // const left = event.clientX;
+                        // const top = event.clientY;
+                        const left = getMouseEventClientX(event);
+                        const top = getMouseEventClientY(event);
+                        // mid button down: channel name peek
+                        g_widgets1.createChannelNamePeekDiv(left, top, channelName);
+                    }
+                    return;
+                } else {
+                    // no widget found, no additional action
+                }
+            } else if (event.button === 2) {
+                // right button
+                let contextMenuOptions: Record<string, any> = {};
+                if (this.getMainProcessMode() === "web") {
+                    // keep selected text
+                    event.preventDefault();
+                }
+
+                // right click on input area, copy/paste/cut, no matter if a widget is found
+                //     if ((event.target instanceof HTMLInputElement) || (event.target instanceof HTMLTextAreaElement)) {
+                //         contextMenuOptions = {
+                //         inputElementFocused: true,
+                //     }
+                //     event.preventDefault();
+                //     console.log("show context menu ===================", widgetKeyResult)
+                //     this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
+                //     return;
+                // }
+
+                if (widgetKeyResult !== "") {
+                    // widget found
+
+                    // widget-specific options
+                    const widget = g_widgets1.getWidget2(widgetKeyResult);
+
+                    if ((widget instanceof Help) ||
+                        (widget instanceof TdlViewer) ||
+                        (widget instanceof LogViewer) ||
+                        (widget instanceof TextEditor) ||
+                        (widget instanceof ProfilesViewer) ||
+                        (widget instanceof CaSnooper) ||
+                        (widget instanceof Casw)
+                    ) {
+                        const selection = window.getSelection();
+                        const textSelected = selection === null ? false : selection.toString().length > 0 ? true : false;
+                        const selectedText = selection === null ? undefined : selection.toString();
+                        contextMenuOptions = {
+                            textSelected: textSelected,
+                            selectedText: selectedText,
+                        }
+                        this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
+                        return;
+                    } else if ((widget instanceof LogViewer)
+                        || (widget instanceof PvMonitor)
+                        || (widget instanceof CaSnooper)
+                        || (widget instanceof Casw)
+                        || (widget instanceof FileConverter)
+                    ) {
+                        // Context menu for Table area of LogViewer, PvMonitor, Casw, and CaSnooper,
+                        // Operations of copy/save data
+
+                        if (widget.mouseEventInsideTable(pointerX, pointerY)) {
+                            contextMenuOptions = {
+                                contextMenuTexts: Object.keys(widget.mouseRightButtonDownContextMenuActions),
+                            }
+                            this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
+                            return;
+                        }
+                    } else {
+                        // any other type of widgets, no special action
+                        this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], {});
+                        return;
+                    }
+                } else {
+                    // no widget found, no additional action
+                }
+            } 
+
+            // fallback case: Canvas
+            this.showContextMenu("Canvas", [event.clientX, event.clientY], {});
+            return;
         });
 
         window.addEventListener("mousemove", (event: MouseEvent) => {
