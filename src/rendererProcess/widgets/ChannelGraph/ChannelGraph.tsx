@@ -21,6 +21,7 @@ import { ElementRectangleButton } from "../../helperWidgets/SharedElements/Recta
 import { ChannelSeverity, TcaChannel } from "../../channel/TcaChannel";
 import { Log } from "../../../mainProcess/log/Log";
 import { DbdFiles } from "../../channel/DbdFiles";
+import { ChannelGraphSidebar } from "./ChannelGraphSidebar";
 
 
 enum type_channelSource {
@@ -61,7 +62,7 @@ export enum colors {
     outlink = "rgb(128, 0, 128)",
     fwdlink = "rgba(0,0,255,1)",
     background = "rgb(149, 204, 255)",
-    highlight ="rgb(215, 68, 90)",
+    highlight = "rgb(215, 68, 90)",
     dbfilenode = "rgb(177, 177, 61)",
 }
 
@@ -110,6 +111,7 @@ export class ChannelGraph extends BaseWidget {
     networkDoubleClickCallback: any = () => { };
 
     forceUpdateConfigPage: () => void = () => { };
+    forceUpdate: () => void = () => { };
 
     network: undefined | Network = undefined;
 
@@ -177,6 +179,7 @@ export class ChannelGraph extends BaseWidget {
     initialChannelNames: string[] = [];
 
     constructor(widgetTdl: type_ChannelGraph_tdl) {
+        console.log("channel graph widget tdl", widgetTdl)
         super(widgetTdl);
         // this.setReadWriteType("read");
 
@@ -198,7 +201,7 @@ export class ChannelGraph extends BaseWidget {
 
         // this._rules = new TextUpdateRules(this, widgetTdl);
 
-        // this._sidebar = new ChannelGraphSidebar(this);
+        this._sidebar = new ChannelGraphSidebar(this);
     }
 
     // ------------------------- event ---------------------------------
@@ -266,20 +269,8 @@ export class ChannelGraph extends BaseWidget {
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
                 <>
-                    {
-                        // skip _ElementBody in operating mode
-                        // the re-render efficiency can be improved by 10% by doing this
-                        // this technique is used on a few most re-rendered widgets, like TextUpdate and TextEntry
-                        g_widgets1.isEditing()
-                            ?
-                            <>
-                                <this._ElementBody></this._ElementBody>
-                                {this._showSidebar() ? this._sidebar?.getElement() : null}
-                            </>
-                            :
-                            <this._ElementArea></this._ElementArea>
-
-                    }
+                    <this._ElementBody></this._ElementBody>
+                    {this._showSidebar() ? this.getSidebar()?.getElement() : null}
                 </>
             </ErrorBoundary>
         );
@@ -294,7 +285,7 @@ export class ChannelGraph extends BaseWidget {
         return (
             // always update the div below no matter the TextUpdateBody is .memo or not
             // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
+            <div style={{ ...this.getElementBodyRawStyle(), overflow: "hidden" }}>
                 <this._ElementArea></this._ElementArea>
                 {this._showResizers() ? <this._ElementResizer /> : null}
             </div>
@@ -305,15 +296,17 @@ export class ChannelGraph extends BaseWidget {
     _ElementAreaRaw = ({ }: any): JSX.Element => {
         const allStyle = this.getAllStyle();
         const allText = this.getAllText();
+        const [, forceUpdate] = React.useState({});
+        this.forceUpdate = () => { forceUpdate({}) };
 
         return (
             <div
                 style={{
-                    // display: "inline-flex",
-                    // top: 0,
-                    // left: 0,
-                    // width: "100%",
-                    // height: "100%",
+                    display: "inline-flex",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
                     userSelect: "none",
                     overflow: "hidden",
                     whiteSpace: allText.wrapWord ? "normal" : "pre",
@@ -324,21 +317,41 @@ export class ChannelGraph extends BaseWidget {
                     fontStyle: allStyle.fontStyle,
                     fontWeight: allStyle.fontWeight,
                     color: allStyle["color"],
-                    ...this.getElementBodyRawStyle(),
                     outline: this._getElementAreaRawOutlineStyle(),
+                    boxSizing: "border-box",
 
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                <this._ElementChannelGraph></this._ElementChannelGraph>
+                {Object.keys(this.getDbdFiles().getRecordTypes()).length === 0 ?
+                    <this._ElementLoadingDbd></this._ElementLoadingDbd>
+                    :
+                    <this._ElementChannelGraph></this._ElementChannelGraph>
+                }
             </div>
         );
     };
 
+    _ElementLoadingDbd = () => {
+        return <div style={{
+            display: "inline-flex",
+            width: "100%",
+            height: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+        }}>
+            <div>
+                Channel Graph Loading ...
+            </div>
+        </div>
+    }
+
     _ElementChannelGraph = () => {
         const elementRef = React.useRef<any>(null);
         const [showConfigPage, setShowConfigPage] = React.useState(false);
+        // const rawChannelName = this.getChannelNames()[0];
+        // const [channelName, setChannelName] = React.useState(rawChannelName === undefined? "": rawChannelName);
         const [channelName, setChannelName] = React.useState("");
 
         React.useEffect(() => {
@@ -366,31 +379,30 @@ export class ChannelGraph extends BaseWidget {
         }, [])
 
         return (
-            <div>
-                <div style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    width: "100%",
-                    height: "100%",
-                    border: "solid 0px black",
-                    boxSizing: "border-box",
-                }}>
-                    <div
-                        ref={elementRef}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            boxSizing: "border-box",
-                        }}
-                    >
-                        {/* to be replaced by vis */}
-                    </div>
+            <div style={{
+                position: "relative",
+                display: "inline-flex",
+                boxSizing: "border-box",
+                width: "100%",
+                height: "100%",
+            }}>
+                <div
+                    ref={elementRef}
+                    style={{
+                        position: "absolute",
+                        width: "100%",
+                        height: "100%",
+                        boxSizing: "border-box",
+                    }}
+                >
+                    {/* to be replaced by vis */}
                 </div>
                 {/* title */}
                 <div style={{
                     position: "absolute",
-                    display: "flex",
+                    top: 0,
+                    left: 0,
+                    display: "inline-flex",
                     flexDirection: "column",
                     padding: 20,
                     alignItems: "flex-start",
@@ -1294,7 +1306,17 @@ export class ChannelGraph extends BaseWidget {
         return undefined;
     }
 
+    processDbd = (result: {
+        menus: Record<string, any>,
+        recordTypes: Record<string, any>,
+    }) => {
+        this._dbdFiles = new DbdFiles(result["recordTypes"], result["menus"]);
+        this.clearGraph();
+        const initialChannelName = this.initialChannelNames[0];
+        this.expandNode(initialChannelName);
+        this.forceUpdate();
 
+    }
 
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
@@ -1408,12 +1430,12 @@ export class ChannelGraph extends BaseWidget {
         style: {
             // basics
             position: "absolute",
-            display: "inline-block",
+            display: "inline-flex",
             // dimensions
             left: 0,
             top: 0,
-            width: "100%",
-            height: "100%",
+            width: 500,
+            height: 500,
             backgroundColor: "rgba(255, 255, 255, 1)",
             // angle
             transform: "rotate(0deg)",
@@ -1466,6 +1488,7 @@ export class ChannelGraph extends BaseWidget {
         // result.recordTypesMenus = JSON.parse(JSON.stringify(this._defaultTdl.recordTypesMenus));
         result.recordTypes = JSON.parse(JSON.stringify(this._defaultTdl.recordTypes));
         result.menus = JSON.parse(JSON.stringify(this._defaultTdl.menus));
+        console.log("generate default tdl", result)
         return result;
     };
 
@@ -1489,8 +1512,12 @@ export class ChannelGraph extends BaseWidget {
     // };
 
     // defined in super class
-    // getTdlCopy()
-
+    getTdlCopy(newKey: boolean = true) {
+        const result = super.getTdlCopy(newKey);
+        result.recordTypes = {};
+        result.menus = {};
+        return result;
+    }
     // --------------------- getters -------------------------
 
     // defined in super class
@@ -1524,7 +1551,23 @@ export class ChannelGraph extends BaseWidget {
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {
-            // this._sidebar = new ChannelGraphSidebar(this);
+            this._sidebar = new ChannelGraphSidebar(this);
         }
+    }
+
+    jobsAsOperatingModeBegins() {
+        super.jobsAsEditingModeBegins();
+        if (Object.keys(this.getDbdFiles().getRecordTypes()).length === 0) {
+            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+            const ipcManager = displayWindowClient.getIpcManager();
+            ipcManager.sendFromRendererProcess("request-epics-dbd", {
+                displayWindowId: displayWindowClient.getWindowId(),
+                widgetKey: this.getWidgetKey(),
+            })
+        }
+        this.clearGraph();
+        // const initialChannelName = this.initialChannelNames[0];
+        // this.expandNode(initialChannelName);
+        this.forceUpdate();
     }
 }

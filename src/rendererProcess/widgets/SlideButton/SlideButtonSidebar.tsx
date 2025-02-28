@@ -186,10 +186,10 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
                     <b>Text</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {this.getSidebarText().getElement()}
-                    {this.getSidebarWrapWord().getElement()}
-                    {this.getSidebarXAlign().getElement()}
-                    {this.getSidebarYAlign().getElement()}
+                    {/* {this.getSidebarText().getElement()} */}
+                    {/* {this.getSidebarWrapWord().getElement()} */}
+                    {/* {this.getSidebarXAlign().getElement()} */}
+                    {/* {this.getSidebarYAlign().getElement()} */}
                     {this.getSidebarTextColor().getElement()}
                     {/* {this.getSidebarXAlign().getElement()} */}
                     {/* todo: {this.getSidebarYAlign().getElement()} */}

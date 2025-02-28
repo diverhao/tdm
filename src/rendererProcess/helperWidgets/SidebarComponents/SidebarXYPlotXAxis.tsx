@@ -74,7 +74,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                     ...(this._styleForm as any),
                     backgroundColor: "rgba(200, 200, 200, 1)",
                     width: "100%",
-                    
+
                 }}
             >
                 <b>{`x Axis`}</b>
@@ -198,7 +198,14 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetLabel(event, label)}
                 style={{ ...(this._styleForm as any) }}
             >
-                <div>Label:</div>
+                <this._ElementInputLabel
+                    value={label}
+                    setValue={setLabel}
+                    readableText={"X Axis label"}
+                    updater={(newValue: string) => { this.updateWidgetLabel(undefined, newValue) }}
+                >
+                    Label:
+                </this._ElementInputLabel>
                 <input
                     style={{ ...this._styleInput }}
                     type="text"
@@ -221,7 +228,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
     };
 
     updateWidgetLabel = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+        event?.preventDefault();
 
         this.getPlotXAxis()["label"] = `${propertyValue}`;
         // ! shall we do it?

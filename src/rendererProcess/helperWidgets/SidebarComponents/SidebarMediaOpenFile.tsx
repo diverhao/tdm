@@ -82,7 +82,14 @@ export class SidebarMediaOpenFile extends SidebarComponent {
                 </this._BlockTitle>
                 <this._BlockBody>
                     <form onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, fileName)} style={this.getFormStyle()}>
-                        <div>Name:</div>
+                        <this._ElementInputLabel
+                            value={fileName}
+                            setValue={setFileName}
+                            readableText={"Media file name"}
+                            updater={(newValue: string) => { this.updateWidget(undefined, newValue) }}
+                        >
+                            Name:
+                        </this._ElementInputLabel>
                         <input
                             // the same with as dropdown menu in SidebarLineStyle, which is an <input /> element with 70% width
                             style={{
@@ -112,7 +119,7 @@ export class SidebarMediaOpenFile extends SidebarComponent {
     };
 
     updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+        event?.preventDefault();
 
         const oldVal = this.getText()["fileName"];
         if (propertyValue === oldVal) {

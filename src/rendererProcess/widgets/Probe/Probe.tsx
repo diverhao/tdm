@@ -1188,7 +1188,13 @@ export class Probe extends BaseWidget {
         return result;
     };
 
-    // getTdlCopy()
+    // defined in super class
+    getTdlCopy(newKey: boolean = true) {
+        const result = super.getTdlCopy(newKey);
+        result.recordTypes = {};
+        result.menus = {};
+        return result;
+    }
 
     // --------------------- getters -------------------------
 

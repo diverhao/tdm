@@ -9,6 +9,7 @@ import { SidebarEmbeddedDisplayItem } from "./SidebarEmbeddedDisplayItem";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
 import path from "path";
 import { ElementButton } from "../SharedElements/MacrosTable";
+import { EmbeddedDisplaySidebar } from "../../widgets/EmbeddedDisplay/EmbeddedDisplaySidebar";
 
 export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 	_members: SidebarEmbeddedDisplayItem[] = [];
@@ -28,6 +29,15 @@ export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 		this._forceUpdate = () => {
 			forceUpdate({});
 		};
+
+        this._updateFromWidget = (propertyValue: string) => {
+            const sidebar = this.getSidebar() as EmbeddedDisplaySidebar;
+            const beingUpdatedItemIndex = sidebar.beingUpdatedItemIndex;
+            const member = this.getMembers()[beingUpdatedItemIndex];
+            if (member !== undefined && member instanceof SidebarEmbeddedDisplayItem) {
+                member._updateFromWidget(propertyValue);
+            }
+        }
 
 		return (
 			<>

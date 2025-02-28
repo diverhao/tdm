@@ -61,6 +61,7 @@ export class SidebarLargeInput {
                     height: "70%",
                     backgroundColor: "rgba(20,20,20,1)",
                     color: "rgba(210,210,210,1)",
+                    borderRadius: 6,
                 }}>
                     <h2>
                         Set value for <span style={{ color: "yellow" }}>{this.readableText}</span>

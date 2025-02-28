@@ -2,6 +2,7 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidgetRule } from "../../widgets/BaseWidget/BaseWidgetRule";
 import { GlobalVariables } from "../../global/GlobalVariables";
+import { SidebarLargeInput } from "../../widgets/BaseWidget/SidebarLargeInput";
 
 
 /**
@@ -25,94 +26,121 @@ import { GlobalVariables } from "../../global/GlobalVariables";
  */
 
 export abstract class RuleComponent {
-	_rule: BaseWidgetRule;
+    _rule: BaseWidgetRule;
     _forceUpdateElement: any;
-	constructor(rule: BaseWidgetRule) {
-		this._rule = rule;
-	}
+    _sidebarLargeInput: SidebarLargeInput;
+    constructor(rule: BaseWidgetRule) {
+        this._rule = rule;
+        this._sidebarLargeInput = new SidebarLargeInput();
+    }
 
-    abstract evaluatePropertyValue: (input: string) => {style?: Record<string, any>, text?: Record<string, any>};
+    abstract evaluatePropertyValue: (input: string) => { style?: Record<string, any>, text?: Record<string, any> };
 
     // ------------------- getters ------------------
 
-	abstract getWidgetValue: () => any;
+    abstract getWidgetValue: () => any;
 
     getRuleTdl = () => {
-		return this.getRule().getRuleTdl();
-	};
+        return this.getRule().getRuleTdl();
+    };
 
-	getRule = () => {
-		return this._rule;
-	};
+    getRule = () => {
+        return this._rule;
+    };
+
+    getSidebarLargeInput = () => {
+        return this._sidebarLargeInput;
+    }
 
 
     // ------------------------ property value JSX element  -------------------
 
-	abstract ElementPropertyValue: () => JSX.Element;
+    abstract ElementPropertyValue: () => JSX.Element;
 
-	getElementPropertyValue = () => {
-		return <this.ElementPropertyValue></this.ElementPropertyValue>;
-	};
+    getElementPropertyValue = () => {
+        return <this.ElementPropertyValue></this.ElementPropertyValue>;
+    };
 
     // ------------------------ bool expression JSX element  -------------------
 
-	ElementBoolExpression = () => {
-		const [boolExpression, setBoolExpression] = React.useState(this.getRule().getBoolExpression());
+    ElementBoolExpression = () => {
+        const [boolExpression, setBoolExpression] = React.useState(this.getRule().getBoolExpression());
 
-		return (
-			<form 
+        return (
+            <form
                 style={this.getRule().getFormStyle()}
-				onSubmit={(event: any) => {
-					event.preventDefault();
-					const rule = this.getRule();
-					if (boolExpression !== rule.getBoolExpression()) {
-						rule.setBoolExpression(boolExpression);
-						if (g_widgets1 !== undefined) {
-							const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-							history.registerAction();
-						}
-					}
-				}}
-			>
-                <div>
+                onSubmit={(event: any) => {
+                    this.updateBoolExpression(event, boolExpression)
+                }}
+            >
+                <this._ElementInputLabel
+                    value={boolExpression}
+                    setValue={setBoolExpression}
+                    readableText={"Rule bool expression"}
+                    updater={(newValue: string) => { this.updateBoolExpression(undefined, newValue) }}
+                >
                     When
-                </div>
-				<input
-                style={{...this.getRule().getInputStyle()}}
-					value={boolExpression}
-					onChange={(event: any) => {
-						event.preventDefault();
-						setBoolExpression(event.target.value);
-					}}
-				></input>
-			</form>
-		);
-	};
+                </this._ElementInputLabel>
+                <input
+                    style={{ ...this.getRule().getInputStyle() }}
+                    value={boolExpression}
+                    onChange={(event: any) => {
+                        event.preventDefault();
+                        setBoolExpression(event.target.value);
+                    }}
+                ></input>
+            </form>
+        );
+    };
 
-	getElementBoolExpression = () => {
-		return <this.ElementBoolExpression></this.ElementBoolExpression>;
-	};
+    getElementBoolExpression = () => {
+        return <this.ElementBoolExpression></this.ElementBoolExpression>;
+    };
 
+    updateBoolExpression = (event: any, newExpression: string) => {
+        event?.preventDefault();
+        const rule = this.getRule();
+        if (newExpression !== rule.getBoolExpression()) {
+            rule.setBoolExpression(newExpression);
+            if (g_widgets1 !== undefined) {
+                const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+                history.registerAction();
+            }
+        }
 
-	_formStyle: Record<string, any> = {
-		display: "inline-flex",
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-		marginTop: 2,
-		marginBottom: 2,
-	};
+    }
+
+    _ElementInputLabel = ({ value, setValue, children, readableText, updater }: any) => {
+        return (
+            <div
+                onClick={() => {
+                    this.getSidebarLargeInput().createElement(value, setValue, readableText, updater);
+                }}
+            >
+                {children}
+            </div>
+        )
+    }
+
+    _formStyle: Record<string, any> = {
+        display: "inline-flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginTop: 2,
+        marginBottom: 2,
+    };
 
     getFormStyle = () => {
         return this._formStyle;
     }
 
 
-	_inputStyle: Record<string, any> = {
-		width: "70%",
-		fontFamily: GlobalVariables.defaultFontFamily,
-		fontSize: GlobalVariables.defaultFontSize,
-	};
+    _inputStyle: Record<string, any> = {
+        width: "70%",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+    };
     getInputStyle = () => {
         return this._inputStyle;
     }

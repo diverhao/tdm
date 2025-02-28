@@ -16,11 +16,13 @@ export class SidebarSlideButtonItem {
 	_index: number;
 	StyledButton = ElementButton;
 	_BlockBody: any;
+    ElementInputLabel: any;
 	constructor(items: SidebarSlideButtonItems, index: number) {
 		this._items = items;
 		this._index = index;
 		// this.StyledButton = this.getItems().StyledButton;
 		this._BlockBody = this.getItems()._BlockBody;
+        this.ElementInputLabel = this.getItems()._ElementInputLabel
 	}
 
 	getMainWidget = () => {
@@ -140,7 +142,14 @@ export class SidebarSlideButtonItem {
 						}}
 						style={{ ...this.getFormStyle() }}
 					>
-						<div>Label:</div>
+                        <this.ElementInputLabel
+                            value={itemLabel}
+                            setValue={setItemLabel}
+                            readableText={"Slide Button item label"}
+                            updater={(newValue: string) => { this.updateWidgetLabel(undefined, newValue) }}
+                        >
+                            Label:
+                        </this.ElementInputLabel>
 						<input
 							style={{ ...this.getInputStyle(), color: mainWidget.getText()["useChannelItems"] ? "rgba(175, 175, 175, 1)" : "inherit" }}
 							type="string"

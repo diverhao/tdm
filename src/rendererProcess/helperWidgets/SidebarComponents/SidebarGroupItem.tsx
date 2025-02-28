@@ -10,39 +10,41 @@ import * as GlobalMethods from "../../global/GlobalMethods";
 import { ElementButton } from "../SharedElements/MacrosTable";
 
 export class SidebarGroupItem {
-	_items: SidebarGroupItems;
-	_index: number;
-	StyledButton = ElementButton;
-	_BlockBody: any;
-	constructor(items: SidebarGroupItems, index: number) {
-		this._items = items;
-		this._index = index;
-		// this.StyledButton = this.getItems().StyledButton;
-		this._BlockBody = this.getItems()._BlockBody;
-	}
+    _items: SidebarGroupItems;
+    _index: number;
+    StyledButton = ElementButton;
+    _BlockBody: any;
+    ElementInputLabel: any;
+    constructor(items: SidebarGroupItems, index: number) {
+        this._items = items;
+        this._index = index;
+        // this.StyledButton = this.getItems().StyledButton;
+        this._BlockBody = this.getItems()._BlockBody;
+        this.ElementInputLabel = this.getItems()._ElementInputLabel
+    }
 
-	getMainWidget = () => {
-		return this.getItems().getMainWidget() as Group;
-	};
+    getMainWidget = () => {
+        return this.getItems().getMainWidget() as Group;
+    };
 
-	_Element = () => {
-		const mainWidget = this.getMainWidget();
-		const [itemName, setItemName] = React.useState(mainWidget.getItemNames()[this.getIndex()]);
+    _Element = () => {
+        const mainWidget = this.getMainWidget();
+        const [itemName, setItemName] = React.useState(mainWidget.getItemNames()[this.getIndex()]);
 
-		return (
-			<this._BlockBody>
-				<div
-					style={{
-						display: "inline-flex",
-						flexDirection: "row",
-						width: "100%",
-						justifyContent: "space-between",
-						alignItems: "center",
-					}}
-				>
-					<b>{`# ${this.getIndex()}`}</b>
-					<div>
-						{/* <this.StyledButton
+        return (
+            <this._BlockBody>
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        width: "100%",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    }}
+                >
+                    <b>{`# ${this.getIndex()}`}</b>
+                    <div>
+                        {/* <this.StyledButton
 							onClick={(event: any) => {
 								this.updateWidgetMoveUpItem(event);
 							}}
@@ -56,306 +58,314 @@ export class SidebarGroupItem {
 						>
 							&#11107;{" "}
 						</this.StyledButton> */}
-						{mainWidget.getSelectedGroup() === this.getIndex() ? (
-							<this.StyledButton
-								onClick={(event: any) => {
-									this.updateWidgetRemoveItem(event);
-								}}
-							>
-								<img
-									src={`../../../webpack/resources/webpages/delete-symbol.svg`}
-									style={{
-										width: "50%",
-										height: "50%",
-									}}
-								></img>
-							</this.StyledButton>
-						) : null}
-					</div>
-				</div>
+                        {mainWidget.getSelectedGroup() === this.getIndex() ? (
+                            <this.StyledButton
+                                onClick={(event: any) => {
+                                    this.updateWidgetRemoveItem(event);
+                                }}
+                            >
+                                <img
+                                    src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                                    style={{
+                                        width: "50%",
+                                        height: "50%",
+                                    }}
+                                ></img>
+                            </this.StyledButton>
+                        ) : null}
+                    </div>
+                </div>
 
-				<div
-					style={{
-						display: "inline-flex",
-						flexDirection: "row",
-						width: "100%",
-						justifyContent: "space-between",
-						alignItems: "center",
-					}}
-				>
-					<form
-						onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-							this.updateWidgetName(event, itemName);
-						}}
-						style={{ ...this.getFormStyle() }}
-					>
-						<div>Name:</div>
-						<input
-							style={{ ...this.getInputStyle(), color: mainWidget.getText()["useChannelItems"] ? "rgba(175, 175, 175, 1)" : "inherit" }}
-							type="string"
-							name="item-name"
-							value={itemName}
-							readOnly={mainWidget.getText()["useChannelItems"] === true ? true : false}
-							onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-								const newVal = event.target.value;
-								setItemName(newVal);
-							}}
-							// must use enter to change the value
-							onBlur={(event: any) => {
-								const orig = mainWidget.getItemNames()[this.getIndex()];
-								if (orig !== itemName) {
-									setItemName(orig);
-								}
-							}}
-						/>
-					</form>
-				</div>
-				<div
-					style={{
-						display: "inline-flex",
-						flexDirection: "row",
-						width: "100%",
-						justifyContent: "space-between",
-						alignItems: "center",
-					}}
-				>
-					<Collapsible
-						rgbColorStr={`${mainWidget.getItemBackgroundColors()[this.getIndex()]}`}
-						updateFromSidebar={(
-							event: any,
-							propertyName: string,
-							propertyValue: number | string | number[] | string[] | boolean | undefined
-						) => {
-							this.updateWidgetBackgroundColor(event, propertyValue);
-						}}
-						title={"Color"}
-						eventName={"item-color"}
-					/>
-				</div>
-			</this._BlockBody>
-		);
-	};
-	updateWidgetName = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
-		if (event) {
-			event.preventDefault();
-		}
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        width: "100%",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    }}
+                >
+                    <form
+                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+                            this.updateWidgetName(event, itemName);
+                        }}
+                        style={{ ...this.getFormStyle() }}
+                    >
+                        <this.ElementInputLabel
+                            value={itemName}
+                            setValue={setItemName}
+                            readableText={"Group name"}
+                            updater={(newValue: string) => { this.updateWidgetName(undefined, newValue) }}
+                        >
+                            Name:
+                        </this.ElementInputLabel>
 
-		const mainWidget = this.getMainWidget();
-		const oldVal = mainWidget.getItemNames()[this.getIndex()];
-		if (propertyValue === oldVal) {
-			return;
-		} else {
-			mainWidget.getItemNames()[this.getIndex()] = `${propertyValue}`;
-		}
+                        <input
+                            style={{ ...this.getInputStyle(), color: mainWidget.getText()["useChannelItems"] ? "rgba(175, 175, 175, 1)" : "inherit" }}
+                            type="string"
+                            name="item-name"
+                            value={itemName}
+                            readOnly={mainWidget.getText()["useChannelItems"] === true ? true : false}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                const newVal = event.target.value;
+                                setItemName(newVal);
+                            }}
+                            // must use enter to change the value
+                            onBlur={(event: any) => {
+                                const orig = mainWidget.getItemNames()[this.getIndex()];
+                                if (orig !== itemName) {
+                                    setItemName(orig);
+                                }
+                            }}
+                        />
+                    </form>
+                </div>
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        width: "100%",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    }}
+                >
+                    <Collapsible
+                        rgbColorStr={`${mainWidget.getItemBackgroundColors()[this.getIndex()]}`}
+                        updateFromSidebar={(
+                            event: any,
+                            propertyName: string,
+                            propertyValue: number | string | number[] | string[] | boolean | undefined
+                        ) => {
+                            this.updateWidgetBackgroundColor(event, propertyValue);
+                        }}
+                        title={"Color"}
+                        eventName={"item-color"}
+                    />
+                </div>
+            </this._BlockBody>
+        );
+    };
+    updateWidgetName = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+        if (event) {
+            event.preventDefault();
+        }
 
-		const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-		history.registerAction();
+        const mainWidget = this.getMainWidget();
+        const oldVal = mainWidget.getItemNames()[this.getIndex()];
+        if (propertyValue === oldVal) {
+            return;
+        } else {
+            mainWidget.getItemNames()[this.getIndex()] = `${propertyValue}`;
+        }
 
-		g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
-		g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
 
-		g_flushWidgets();
-	};
+        g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
 
-	updateWidgetBackgroundColor = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
-		if (event) {
-			event.preventDefault();
-		}
+        g_flushWidgets();
+    };
 
-		const mainWidget = this.getMainWidget();
-		const newVal = GlobalMethods.rgbaArrayToRgbaStr(propertyValue as number[]);
-		const oldVal = `${mainWidget.getItemBackgroundColors()[this.getIndex()]}`;
-		if (newVal === oldVal) {
-			return;
-		} else {
-			mainWidget.getItemBackgroundColors()[this.getIndex()] = newVal;
-		}
+    updateWidgetBackgroundColor = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+        if (event) {
+            event.preventDefault();
+        }
 
-		const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-		history.registerAction();
+        const mainWidget = this.getMainWidget();
+        const newVal = GlobalMethods.rgbaArrayToRgbaStr(propertyValue as number[]);
+        const oldVal = `${mainWidget.getItemBackgroundColors()[this.getIndex()]}`;
+        if (newVal === oldVal) {
+            return;
+        } else {
+            mainWidget.getItemBackgroundColors()[this.getIndex()] = newVal;
+        }
 
-		g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
-		g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
 
-		g_flushWidgets();
-	};
+        g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
 
-	// maybe enable them
+        g_flushWidgets();
+    };
 
-	// updateWidgetMoveUpItem = (event: any) => {
-	// 	if (event) {
-	// 		event.preventDefault();
-	// 	}
-	// 	const mainWidget = this.getMainWidget();
+    // maybe enable them
 
-	// 	if (this.getIndex() === 0) {
-	// 		return;
-	// 	}
+    // updateWidgetMoveUpItem = (event: any) => {
+    // 	if (event) {
+    // 		event.preventDefault();
+    // 	}
+    // 	const mainWidget = this.getMainWidget();
 
-	// 	const thisIndex = this.getIndex();
+    // 	if (this.getIndex() === 0) {
+    // 		return;
+    // 	}
 
-	// 	const itemName = mainWidget.getItemNames()[thisIndex];
-	// 	mainWidget.getItemNames().splice(thisIndex, 1);
-	// 	mainWidget.getItemNames().splice(thisIndex - 1, 0, itemName);
+    // 	const thisIndex = this.getIndex();
 
-	// 	const itemBackgroundColor = mainWidget.getItemBackgroundColors()[thisIndex];
-	// 	mainWidget.getItemBackgroundColors().splice(thisIndex, 1);
-	// 	mainWidget.getItemBackgroundColors().splice(thisIndex - 1, 0, itemBackgroundColor);
+    // 	const itemName = mainWidget.getItemNames()[thisIndex];
+    // 	mainWidget.getItemNames().splice(thisIndex, 1);
+    // 	mainWidget.getItemNames().splice(thisIndex - 1, 0, itemName);
 
-	// 	const itemWidgetKeys = mainWidget.getWidgetKeys()[thisIndex];
-	// 	mainWidget.getWidgetKeys().splice(thisIndex, 1);
-	// 	mainWidget.getWidgetKeys().splice(thisIndex - 1, 0, itemWidgetKeys);
+    // 	const itemBackgroundColor = mainWidget.getItemBackgroundColors()[thisIndex];
+    // 	mainWidget.getItemBackgroundColors().splice(thisIndex, 1);
+    // 	mainWidget.getItemBackgroundColors().splice(thisIndex - 1, 0, itemBackgroundColor);
 
-	// 	mainWidget.updateGroup(thisIndex);
-	// 	mainWidget.selectGroup(thisIndex, true);
-	// 	mainWidget.updateGroup(thisIndex - 1);
-	// 	mainWidget.selectGroup(thisIndex - 1, true);
+    // 	const itemWidgetKeys = mainWidget.getWidgetKeys()[thisIndex];
+    // 	mainWidget.getWidgetKeys().splice(thisIndex, 1);
+    // 	mainWidget.getWidgetKeys().splice(thisIndex - 1, 0, itemWidgetKeys);
 
-	// 	const member = this.getItems().getMembers()[thisIndex];
-	// 	const member2 = this.getItems().getMembers()[thisIndex - 1];
+    // 	mainWidget.updateGroup(thisIndex);
+    // 	mainWidget.selectGroup(thisIndex, true);
+    // 	mainWidget.updateGroup(thisIndex - 1);
+    // 	mainWidget.selectGroup(thisIndex - 1, true);
 
-	// 	member.setIndex(thisIndex - 1);
-	// 	member2.setIndex(thisIndex);
+    // 	const member = this.getItems().getMembers()[thisIndex];
+    // 	const member2 = this.getItems().getMembers()[thisIndex - 1];
 
-	// 	this.getItems().getMembers().splice(thisIndex, 1);
-	// 	this.getItems()
-	// 		.getMembers()
-	// 		.splice(thisIndex - 1, 0, member);
+    // 	member.setIndex(thisIndex - 1);
+    // 	member2.setIndex(thisIndex);
 
-	// 	this.getItems()._forceUpdate();
+    // 	this.getItems().getMembers().splice(thisIndex, 1);
+    // 	this.getItems()
+    // 		.getMembers()
+    // 		.splice(thisIndex - 1, 0, member);
 
-	// 	const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-	// 	history.registerAction();
+    // 	this.getItems()._forceUpdate();
 
-	// 	g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
-	// 	g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+    // 	const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+    // 	history.registerAction();
 
-	// 	g_flushWidgets();
-	// };
+    // 	g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
+    // 	g_widgets1.addToForceUpdateWidgets("GroupSelection2");
 
-	// updateWidgetMoveDownItem = (event: any) => {
-	// 	if (event) {
-	// 		event.preventDefault();
-	// 	}
-	// 	const mainWidget = this.getMainWidget();
+    // 	g_flushWidgets();
+    // };
 
-	// 	if (this.getIndex() >= mainWidget.getItemNames().length - 1) {
-	// 		return;
-	// 	}
+    // updateWidgetMoveDownItem = (event: any) => {
+    // 	if (event) {
+    // 		event.preventDefault();
+    // 	}
+    // 	const mainWidget = this.getMainWidget();
 
-	// 	const thisIndex = this.getIndex();
+    // 	if (this.getIndex() >= mainWidget.getItemNames().length - 1) {
+    // 		return;
+    // 	}
 
-	// 	const itemName = mainWidget.getItemNames()[thisIndex];
-	// 	mainWidget.getItemNames().splice(thisIndex, 1);
-	// 	mainWidget.getItemNames().splice(thisIndex + 1, 0, itemName);
+    // 	const thisIndex = this.getIndex();
 
-	// 	const itemBackgroundColor = mainWidget.getItemBackgroundColors()[thisIndex];
-	// 	mainWidget.getItemBackgroundColors().splice(thisIndex, 1);
-	// 	mainWidget.getItemBackgroundColors().splice(thisIndex + 1, 0, itemBackgroundColor);
+    // 	const itemName = mainWidget.getItemNames()[thisIndex];
+    // 	mainWidget.getItemNames().splice(thisIndex, 1);
+    // 	mainWidget.getItemNames().splice(thisIndex + 1, 0, itemName);
 
-	// 	const itemWidgetKeys = mainWidget.getWidgetKeys()[thisIndex];
-	// 	mainWidget.getWidgetKeys().splice(thisIndex, 1);
-	// 	mainWidget.getWidgetKeys().splice(thisIndex + 1, 0, itemWidgetKeys);
+    // 	const itemBackgroundColor = mainWidget.getItemBackgroundColors()[thisIndex];
+    // 	mainWidget.getItemBackgroundColors().splice(thisIndex, 1);
+    // 	mainWidget.getItemBackgroundColors().splice(thisIndex + 1, 0, itemBackgroundColor);
 
-	// 	mainWidget.updateGroup(thisIndex);
-	// 	mainWidget.selectGroup(thisIndex, true);
+    // 	const itemWidgetKeys = mainWidget.getWidgetKeys()[thisIndex];
+    // 	mainWidget.getWidgetKeys().splice(thisIndex, 1);
+    // 	mainWidget.getWidgetKeys().splice(thisIndex + 1, 0, itemWidgetKeys);
 
-	// 	mainWidget.updateGroup(thisIndex + 1);
-	// 	mainWidget.selectGroup(thisIndex + 1, true);
+    // 	mainWidget.updateGroup(thisIndex);
+    // 	mainWidget.selectGroup(thisIndex, true);
 
-	// 	const member = this.getItems().getMembers()[thisIndex];
-	// 	const member2 = this.getItems().getMembers()[thisIndex + 1];
+    // 	mainWidget.updateGroup(thisIndex + 1);
+    // 	mainWidget.selectGroup(thisIndex + 1, true);
 
-	// 	member.setIndex(thisIndex + 1);
-	// 	member2.setIndex(thisIndex);
+    // 	const member = this.getItems().getMembers()[thisIndex];
+    // 	const member2 = this.getItems().getMembers()[thisIndex + 1];
 
-	// 	this.getItems().getMembers().splice(thisIndex, 1);
-	// 	this.getItems()
-	// 		.getMembers()
-	// 		.splice(thisIndex + 1, 0, member);
+    // 	member.setIndex(thisIndex + 1);
+    // 	member2.setIndex(thisIndex);
 
-	// 	this.getItems()._forceUpdate();
+    // 	this.getItems().getMembers().splice(thisIndex, 1);
+    // 	this.getItems()
+    // 		.getMembers()
+    // 		.splice(thisIndex + 1, 0, member);
 
-	// 	const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-	// 	history.registerAction();
+    // 	this.getItems()._forceUpdate();
 
-	// 	g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
-	// 	g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+    // 	const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+    // 	history.registerAction();
 
-	// 	g_flushWidgets();
-	// };
+    // 	g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
+    // 	g_widgets1.addToForceUpdateWidgets("GroupSelection2");
 
-	updateWidgetRemoveItem = (event: any) => {
-		if (event) {
-			event.preventDefault();
-		}
-		const mainWidget = this.getMainWidget();
-		if (mainWidget.getItemNames().length <= 1 && mainWidget.getWidgetKey().includes("Group")) {
-			return;
-		}
+    // 	g_flushWidgets();
+    // };
 
-		// console.log("==++++>", mainWidget.getItemBackgroundColors(), mainWidget.getWidgetKeys(), mainWidget.getAllWidgetKeys())
-		const thisIndex = this.getIndex();
+    updateWidgetRemoveItem = (event: any) => {
+        if (event) {
+            event.preventDefault();
+        }
+        const mainWidget = this.getMainWidget();
+        if (mainWidget.getItemNames().length <= 1 && mainWidget.getWidgetKey().includes("Group")) {
+            return;
+        }
 
-		mainWidget.getItemNames().splice(thisIndex, 1);
+        // console.log("==++++>", mainWidget.getItemBackgroundColors(), mainWidget.getWidgetKeys(), mainWidget.getAllWidgetKeys())
+        const thisIndex = this.getIndex();
 
-		mainWidget.getItemBackgroundColors().splice(thisIndex, 1);
+        mainWidget.getItemNames().splice(thisIndex, 1);
 
-		// remove all widgets
-		for (let widgetKey of mainWidget.getWidgetKeys()[thisIndex]) {
-			g_widgets1.removeWidget(widgetKey, true, false);
-		}
-		g_widgets1.updateSidebar(false);
+        mainWidget.getItemBackgroundColors().splice(thisIndex, 1);
 
-		mainWidget.getWidgetKeys().splice(thisIndex, 1);
+        // remove all widgets
+        for (let widgetKey of mainWidget.getWidgetKeys()[thisIndex]) {
+            g_widgets1.removeWidget(widgetKey, true, false);
+        }
+        g_widgets1.updateSidebar(false);
 
-		this.getItems().getMembers().splice(thisIndex, 1);
-		for (let ii = thisIndex; ii < mainWidget.getItemNames().length; ii++) {
-			const item = this.getItems().getMembers()[ii];
-			item.setIndex(ii);
-		}
+        mainWidget.getWidgetKeys().splice(thisIndex, 1);
 
-		this.getItems()._forceUpdate();
+        this.getItems().getMembers().splice(thisIndex, 1);
+        for (let ii = thisIndex; ii < mainWidget.getItemNames().length; ii++) {
+            const item = this.getItems().getMembers()[ii];
+            item.setIndex(ii);
+        }
 
-		// focus to new Group tab
-		const newIndex = Math.max(thisIndex - 1, 0);
-		mainWidget.updateGroup(newIndex);
-		mainWidget.selectGroup(newIndex, true);
+        this.getItems()._forceUpdate();
 
-		const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-		history.registerAction();
+        // focus to new Group tab
+        const newIndex = Math.max(thisIndex - 1, 0);
+        mainWidget.updateGroup(newIndex);
+        mainWidget.selectGroup(newIndex, true);
 
-		g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
-		g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
 
-		g_flushWidgets();
+        g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
 
-		// console.log("===>", mainWidget.getItemBackgroundColors(), mainWidget.getWidgetKeys(), mainWidget.getAllWidgetKeys())
-	};
+        g_flushWidgets();
 
-	// --------------------------- getters -----------------------------
+        // console.log("===>", mainWidget.getItemBackgroundColors(), mainWidget.getWidgetKeys(), mainWidget.getAllWidgetKeys())
+    };
 
-	getElement = () => {
-		const mainWidget = this.getMainWidget();
-		return <this._Element key={`${mainWidget.getItemNames()[this.getIndex()]}-${this.getIndex()}`}></this._Element>;
-	};
+    // --------------------------- getters -----------------------------
 
-	getIndex = () => {
-		return this._index;
-	};
+    getElement = () => {
+        const mainWidget = this.getMainWidget();
+        return <this._Element key={`${mainWidget.getItemNames()[this.getIndex()]}-${this.getIndex()}`}></this._Element>;
+    };
 
-	getItems = () => {
-		return this._items;
-	};
+    getIndex = () => {
+        return this._index;
+    };
 
-	setIndex = (newIndex: number) => {
-		this._index = newIndex;
-	};
+    getItems = () => {
+        return this._items;
+    };
 
-	getFormStyle = () => {
-		return this.getItems().getFormStyle();
-	};
-	getInputStyle = () => {
-		return this.getItems().getInputStyle();
-	};
+    setIndex = (newIndex: number) => {
+        this._index = newIndex;
+    };
+
+    getFormStyle = () => {
+        return this.getItems().getFormStyle();
+    };
+    getInputStyle = () => {
+        return this.getItems().getInputStyle();
+    };
 }

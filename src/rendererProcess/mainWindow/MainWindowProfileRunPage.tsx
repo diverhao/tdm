@@ -76,7 +76,7 @@ export class MainWindowProfileRunPage {
         }
 
         const openChannelGraphWindow = () => {
-            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "ChannelGraph", {channelNames: []});
+            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "ChannelGraph", { channelNames: [] });
         }
 
         const openPvMonitorWindow = () => {
@@ -111,7 +111,7 @@ export class MainWindowProfileRunPage {
         const openHelpWindow = () => {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Help", {});
         }
-        const quitTdmProcess =  () => {
+        const quitTdmProcess = () => {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("quit-tdm-process");
         }
 
@@ -391,12 +391,12 @@ export class MainWindowProfileRunPage {
                 windowName?: string;
                 tdlFileName?: string;
             }
-            | null
+            | undefined
         >
     ) => {
         for (let displayWindowId of Object.keys(data)) {
             const value = data[displayWindowId];
-            if (value === null) {
+            if (value === null || value === undefined) {
                 delete this.thumbnailGallery[displayWindowId];
             } else {
                 const imageBase64 = value["image"];

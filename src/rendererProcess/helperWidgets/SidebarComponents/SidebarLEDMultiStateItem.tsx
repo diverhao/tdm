@@ -14,11 +14,13 @@ export class SidebarLEDMultiStateItem {
 	_index: number;
 	StyledButton = ElementButton;
 	_BlockBody: any;
+    ElementInputLabel: any;
 	constructor(items: SidebarLEDMultiStateItems, index: number) {
 		this._items = items;
 		this._index = index;
 		// this.StyledButton = this.getItems().StyledButton;
 		this._BlockBody = this.getItems()._BlockBody;
+        this.ElementInputLabel = this.getItems()._ElementInputLabel
 	}
 
 	getMainWidget = () => {
@@ -89,7 +91,14 @@ export class SidebarLEDMultiStateItem {
 						}}
 						style={{ ...this.getFormStyle() }}
 					>
-						<div>Name:</div>
+                        <this.ElementInputLabel
+                            value={itemName}
+                            setValue={setItemName}
+                            readableText={"Multi-state LED item name"}
+                            updater={(newValue: string) => { this.updateWidgetName(undefined, newValue) }}
+                        >
+                            Name:
+                        </this.ElementInputLabel>
 						<input
 							style={{ ...this.getInputStyle(), color: mainWidget.getText()["useChannelItems"] ? "rgba(175, 175, 175, 1)" : "inherit" }}
 							type="string"

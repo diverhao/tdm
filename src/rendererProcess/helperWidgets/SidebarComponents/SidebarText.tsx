@@ -26,7 +26,14 @@ export class SidebarText extends SidebarComponent {
 				}}
 				style={this.getFormStyle()}
 			>
-				<div>Text:</div>
+                <this._ElementInputLabel
+                    value={text}
+                    setValue={setText}
+                    readableText={"Text"}
+                    updater={(newValue: string) => { this.updateWidget(undefined, newValue) }}
+                >
+                    Text:
+                </this._ElementInputLabel>
 				<input
 					style={{ ...this.getInputStyle(), width: "65.6%"  }}
 					type="string"
@@ -49,7 +56,7 @@ export class SidebarText extends SidebarComponent {
 	};
 
 	updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-		event.preventDefault();
+		event?.preventDefault();
 
 		const oldVal = this.getText()["text"];
 

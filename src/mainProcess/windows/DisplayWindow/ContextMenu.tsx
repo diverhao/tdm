@@ -862,12 +862,12 @@ export class ContextMenu {
                         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "calculator");
                     },
                 },
-                // {
-                //     label: "Channel Graph",
-                //     click: () => {
-                //         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "channel-graph");
-                //     },
-                // },
+                {
+                    label: "Channel Graph",
+                    click: () => {
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "channel-graph");
+                    },
+                },
                 // do not explicitly create Help widget
                 // {
                 //     label: "Help",

@@ -456,6 +456,17 @@ export class EmbeddedDisplay extends BaseWidget {
         }
     };
 
+
+    handleSelectAFile = (options: Record<string, any>, fileName: string) => {
+        const itemIndex = options["itemIndex"];
+        const sidebar = this.getSidebar();
+        if (typeof itemIndex === "number" && sidebar !== undefined) {
+            (sidebar as EmbeddedDisplaySidebar).setBeingUpdatedItemIndex(itemIndex);
+            sidebar.updateFromWidget(undefined, "select-a-file", fileName);
+        }
+    };
+
+
     // ----------------------- styles -----------------------
 
     // defined in super class

@@ -29,7 +29,7 @@ export class SidebarBooleanButtonOnLabel extends SidebarComponent {
                 <this._ElementInputLabel
                     value={`${onLabel}`}
                     setValue={setOnLabel}
-                    readableText={"Off Label value"}
+                    readableText={"On Label value"}
                     updater={(newValue: string) => this.updateWidget(undefined, newValue)}
                 >
                     Label:

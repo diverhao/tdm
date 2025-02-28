@@ -90,7 +90,7 @@ export class IpcManagerOnDisplayWindow {
 
         client.onmessage = (event: any) => {
             const messageBuffer = event.data;
-            const message = JSON.parse(messageBuffer.toString(),  (key, value) =>
+            const message = JSON.parse(messageBuffer.toString(), (key, value) =>
                 value === null ? undefined : value);
             this.parseMessage(message);
         };
@@ -175,6 +175,8 @@ export class IpcManagerOnDisplayWindow {
 
         this.ipcRenderer.on("obtained-iframe-uuid", this.handleObtainedIframeUuid);
 
+        this.ipcRenderer.on("request-epics-dbd", this.handleRequestEpicsDbd);
+
         // ssh-client requested a file from ssh-server, here is the contents of the
         // file sent from ssh server
         this.ipcRenderer.on("ssh-file-contents", this.handleSshFileContents);
@@ -207,6 +209,21 @@ export class IpcManagerOnDisplayWindow {
             widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
         }
     };
+
+    handleRequestEpicsDbd = (event: any, result: {
+        widgetKey: string;
+        menus: Record<string, any>,
+        recordTypes: Record<string, any>,
+    }) => {
+        const widget = g_widgets1.getWidget(result["widgetKey"]);
+        if (widget instanceof ChannelGraph) {
+            widget.processDbd({
+                menus: result["menus"],
+                recordTypes: result["recordTypes"],
+            })
+        }
+
+    }
 
     /**
      * Drag and drop one or more tdl files to the DisplayWindow to open the files. <br>

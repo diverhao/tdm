@@ -4,7 +4,7 @@ import { Symbol } from "../../widgets/Symbol/Symbol";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { SymbolSidebar } from "../../widgets/Symbol/SymbolSidebar";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import { ElementButton } from "../SharedElements/MacrosTable";
 
 export class SidebarSymbolItem {
@@ -12,11 +12,13 @@ export class SidebarSymbolItem {
     _index: number;
     StyledButton = ElementButton;
     _BlockBody: any;
+    ElementInputLabel: any;
     constructor(items: SidebarSymbolItems, index: number) {
         this._items = items;
         this._index = index;
         // this.StyledButton = this.getItems().StyledButton;
         this._BlockBody = this.getItems()._BlockBody;
+        this.ElementInputLabel = this.getItems()._ElementInputLabel
     }
 
     getMainWidget = () => {
@@ -137,7 +139,14 @@ export class SidebarSymbolItem {
                         }}
                         style={{ ...this.getFormStyle() }}
                     >
-                        <div>Name:</div>
+                        <this.ElementInputLabel
+                            value={itemName}
+                            setValue={setItemName}
+                            readableText={"Symbol item name"}
+                            updater={(newValue: string) => { this.updateWidgetName(undefined, newValue) }}
+                        >
+                            Name:
+                        </this.ElementInputLabel>
                         <input
                             style={{
                                 ...this.getInputStyle(),

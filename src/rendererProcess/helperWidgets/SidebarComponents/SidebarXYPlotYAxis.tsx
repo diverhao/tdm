@@ -18,10 +18,12 @@ export class SidebarXYPlotYAxis {
     yIndex: number;
     yAxes: SidebarXYPlotYAxes;
     hideContents: boolean = false;
+    ElementInputLabel: any;
 
     constructor(sidebarXYPlotYAxes: SidebarXYPlotYAxes, yIndex: number) {
         this.yAxes = sidebarXYPlotYAxes;
         this.yIndex = yIndex;
+        this.ElementInputLabel = this.yAxes._ElementInputLabel
     }
 
     getMainWidget = () => {
@@ -355,7 +357,14 @@ export class SidebarXYPlotYAxis {
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetXChannelName(event, channelName)}
                 style={{ ...(this._styleForm as any) }}
             >
-                <div>X channel</div>
+                <this.ElementInputLabel
+                    value={channelName}
+                    setValue={setChannelName}
+                    readableText={"X Axis channel name"}
+                    updater={(newValue: string) => { this.updateWidgetXChannelName(undefined, newValue) }}
+                >
+                    X Channel
+                </this.ElementInputLabel>
                 <input
                     style={{ ...this._styleInput }}
                     type="text"
@@ -385,7 +394,14 @@ export class SidebarXYPlotYAxis {
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetLabel(event, label)}
                 style={{ ...(this._styleForm as any) }}
             >
-                <div>Label:</div>
+                <this.ElementInputLabel
+                    value={label}
+                    setValue={setLabel}
+                    readableText={"Y Axis label"}
+                    updater={(newValue: string) => { this.updateWidgetLabel(undefined, newValue) }}
+                >
+                    Label:
+                </this.ElementInputLabel>
                 <input
                     style={{ ...this._styleInput }}
                     type="text"
@@ -408,7 +424,7 @@ export class SidebarXYPlotYAxis {
     };
 
     updateWidgetLabel = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+        event?.preventDefault();
 
         this.getPlotYAxes()[this.yIndex]["label"] = `${propertyValue}`;
         // ! shall we do it?
@@ -432,7 +448,14 @@ export class SidebarXYPlotYAxis {
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetYChannelName(event, channelName)}
                 style={{ ...(this._styleForm as any) }}
             >
-                <div>Y channel</div>
+                <this.ElementInputLabel
+                    value={channelName}
+                    setValue={setChannelName}
+                    readableText={"Y Axis channel name"}
+                    updater={(newValue: string) => { this.updateWidgetYChannelName(undefined, newValue) }}
+                >
+                    Y Channel:
+                </this.ElementInputLabel>
                 <input
                     style={{ ...this._styleInput }}
                     type="text"
@@ -667,7 +690,7 @@ export class SidebarXYPlotYAxis {
     };
 
     updateWidgetXChannelName = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+        event?.preventDefault();
         const mainWidget = this.getMainWidget();
 
         const index = this.yIndex * 2;
@@ -686,7 +709,7 @@ export class SidebarXYPlotYAxis {
     };
 
     updateWidgetYChannelName = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+        event?.preventDefault();
         const mainWidget = this.getMainWidget();
 
         const index = this.yIndex * 2 + 1;

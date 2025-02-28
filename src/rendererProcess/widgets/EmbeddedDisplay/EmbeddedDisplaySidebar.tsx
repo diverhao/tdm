@@ -9,7 +9,7 @@ import { SidebarEmbeddedDisplayTabSelectedColor } from "../../helperWidgets/Side
 import { SidebarEmbeddedDisplayTabWidth } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabWidth";
 import { SidebarEmbeddedDisplayTabHeight } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabHeight";
 import { SidebarEmbeddedDisplayShowTab } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayShowTab";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {
@@ -22,6 +22,8 @@ export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {
     _sidebarEmbeddedDisplayTabWidth: SidebarEmbeddedDisplayTabWidth;
     _sidebarEmbeddedDisplayTabHeight: SidebarEmbeddedDisplayTabHeight;
     _sidebarEmbeddedDisplayShowTab: SidebarEmbeddedDisplayShowTab;
+
+    beingUpdatedItemIndex: number = -1;
 
     constructor(embeddedDisplay: EmbeddedDisplay) {
         super(embeddedDisplay);
@@ -66,6 +68,9 @@ export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {
                         break;
                     case "height":
                         this.getSidebarHeight().getUpdateFromWidget()(propertyValue as number);
+                        break;
+                    case "select-a-file":
+                        this.getSidebarEmbeddedDisplayItems().getUpdateFromWidget()(propertyValue as string);
                         break;
                     default:
                         Log.error("Unknown property from sidebar: ", propertyName);
@@ -190,6 +195,10 @@ export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {
     // getSidebarEmbeddedDisplayTdlFileName =() => {
     //     return this._sidebarEmbeddedDisplayTdlFileName;
     // }
+
+    setBeingUpdatedItemIndex = (newIndex: number) => {
+        this.beingUpdatedItemIndex = newIndex;
+    };
 
     getSidebarEmbeddedDisplayItems = () => {
         return this._sidebarEmbeddedDisplayItems;

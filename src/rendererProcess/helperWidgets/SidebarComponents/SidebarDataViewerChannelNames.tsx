@@ -44,10 +44,10 @@ export class SidebarDataViewerChannelNames extends SidebarComponent {
                         }}
                     >
                         <ElementButton
-                            onClick={(event: any) => {
+                            onClick={() => {
                                 (this.getSidebar() as DataViewerSidebar)._showChannelNames = true;
                                 setShowContents(true);
-                                this.updateWidgetAppendTrace(event, undefined);
+                                this.updateWidgetAppendTrace(undefined, undefined);
                             }}
                         >
                             <img
@@ -230,7 +230,14 @@ export class SidebarDataViewerChannelNames extends SidebarComponent {
                             width: "100%",
                         }}
                     >
-                        <div>Name:&nbsp;</div>
+                        <this._ElementInputLabel
+                            value={channelName}
+                            setValue={setChannelName}
+                            readableText={"Channel Name"}
+                            updater={(newValue: string) => { this.updateWidgetChannelName(undefined, index, newValue) }}
+                        >
+                            Name:
+                        </this._ElementInputLabel>
                         <form
                             onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
                                 this.updateWidgetChannelName(event, index, channelName);
@@ -338,7 +345,7 @@ export class SidebarDataViewerChannelNames extends SidebarComponent {
     updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => { };
 
     updateWidgetAppendTrace = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+        event?.preventDefault();
         const mainWidget = this.getMainWidget() as DataViewer;
         mainWidget.getPlot().insertTrace(mainWidget.getChannelNames().length, "");
 
@@ -450,7 +457,7 @@ export class SidebarDataViewerChannelNames extends SidebarComponent {
     };
 
     updateWidgetChannelName = (event: any, index: number, newName: string) => {
-        event.preventDefault();
+        event?.preventDefault();
 
         const mainWidget = this.getMainWidget() as DataViewer;
         mainWidget.getChannelNamesLevel0()[index] = newName;

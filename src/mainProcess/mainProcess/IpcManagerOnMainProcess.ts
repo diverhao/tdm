@@ -113,6 +113,7 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("processes-info", this.handleProcessesInfo);
         this.ipcMain.on("epics-stats", this.handleEpicsStats);
         this.ipcMain.on("ca-snooper-command", this.handleCaSnooperCommand);
+        this.ipcMain.on("request-epics-dbd", this.handleRequestEpicsDbd);
         this.ipcMain.on("ca-sw-command", this.handleCaswCommand);
 
         // profiles
@@ -2490,6 +2491,25 @@ export class IpcManagerOnMainProcess {
             }
         }
     }
+
+    handleRequestEpicsDbd = (event: any, options: {
+        displayWindowId: string;
+        widgetKey: string;
+    }) => {
+        const dbdFiles = this.getMainProcess().getChannelAgentsManager().getDbdFiles();
+        const menus = dbdFiles.getMenus();
+        const recordTypes = dbdFiles.getRecordTypes();
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            displayWindowAgent.sendFromMainProcess("request-epics-dbd", {
+                widgetKey: options["widgetKey"],
+                menus: menus,
+                recordTypes: recordTypes,
+            })
+        }
+    }
+
+
 
     handleCaswCommand = (event: any, options: {
         command: "start" | "stop";

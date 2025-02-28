@@ -36,7 +36,6 @@ export class IpcManagerOnMainWindow {
         let serverAddress = `ws://localhost:${this.getIpcServerPort()}`
         if (this.getMainWindowClient().getMainProcessMode() === "web") {
             const host = window.location.host.split(":")[0];
-            console.log(host)
             serverAddress = `ws://${host}:${this.getIpcServerPort()}`;
         }
 
@@ -61,9 +60,12 @@ export class IpcManagerOnMainWindow {
 
         client.onmessage = (event: any) => {
             const messageBuffer = event.data;
-            const message = JSON.parse(messageBuffer.toString(), (key, value) =>
-                value === null ? undefined : value);
-            Log.debug("received IPC message", messageBuffer.toString());
+            const message = JSON.parse(messageBuffer.toString(),
+                // (key, value) =>
+                //     value === null ? undefined : value
+            );
+
+            Log.debug("received IPC message", messageBuffer.toString(), message);
             this.handleMessage(message);
         };
 
@@ -212,6 +214,7 @@ export class IpcManagerOnMainWindow {
             }
         >
     ) => {
+        Log.debug("handle new thumbnail=========", data)
         const profileRunPage = this.getMainWindowClient().getProfileRunPage();
         if (profileRunPage !== undefined) {
             profileRunPage.updateThumbnailGallery(data);
@@ -225,7 +228,6 @@ export class IpcManagerOnMainWindow {
     private _handleAfterMainWindowGuiCreated = (event: any, profiles: Record<string, any>, profilesFileName: string, envDefault: Record<string, any>, envOs: Record<string, any>) => {
         const mainWindowClient = this.getMainWindowClient();
         // in editing page, we need the env default and env os
-        console.log("===============+++++++++++++++++++", envDefault, envOs)
         mainWindowClient.setEnvDefault(envDefault);
         mainWindowClient.setEnvOs(envOs);
         mainWindowClient.setProfiles(profiles);
