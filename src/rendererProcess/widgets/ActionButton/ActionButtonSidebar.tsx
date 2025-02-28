@@ -113,6 +113,7 @@ export class ActionButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarTextColor().getElement()}
                     {this.getSidebarWrapWord().getElement()}
                     {this.getSidebarXAlign().getElement()}
+                    {this.getSidebarYAlign().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ----------------------- actions --------------------------- */}

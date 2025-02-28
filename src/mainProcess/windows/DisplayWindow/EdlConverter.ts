@@ -1320,7 +1320,8 @@ export class EdlConverter {
 
     static convertEdlTextValue = (propertyValue: string[]) => {
         // convert SOH char to \n
-        return propertyValue.join("\n").replaceAll("\\", "").replaceAll(`"`, "").replace(/\x01/g, "\n");
+        // convert "\\" to "\"
+        return propertyValue.join("\n").replaceAll("\\\\","__double_back_slashes__").replaceAll("\\", "").replaceAll(`"`, "").replace(/\x01/g, "\n").replaceAll("__double_back_slashes__", "\\");
     };
 
     static convertEdlLineStyle = (propertyValue: string) => {
@@ -1978,6 +1979,19 @@ export class EdlConverter {
     static convertEdlVisPv = (visPv: string, visMin: string | undefined, visMax: string | undefined, visInvert: string | undefined, isStaticTextWidget: boolean = false, forGroup: boolean = false) => {
         const channelName = visPv.replaceAll(`"`, "");
         const result: Record<string, any>[] = [];
+
+        // If any of the visMin or visMax is undefined, this widget should always be invisible, no matter if the visInvert is true or false
+        if (visMax === undefined || visMin === undefined && visPv !== undefined) {
+            const rule = {
+                boolExpression: `true`,
+                propertyName: "Invisible in Operation",
+                propertyValue: "true",
+                id: uuidv4(),
+            };
+            result.push(rule);
+            return result;
+        }
+
         let min = Number.NEGATIVE_INFINITY;
         let max = Number.POSITIVE_INFINITY;
         if (visMin !== undefined) {

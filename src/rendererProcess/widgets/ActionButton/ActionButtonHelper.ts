@@ -100,7 +100,8 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         },
         text: {
             wrapWord: false,
-            horizontalAlign: "left",
+            horizontalAlign: "center",
+            verticalAlign: "center",
             // actually alarmOutline
             alarmBorder: true,
             text: "Action Button",

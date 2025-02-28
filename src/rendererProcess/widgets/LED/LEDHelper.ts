@@ -150,6 +150,7 @@ export class LEDHelper extends BaseWidgetHelper {
         tdl["text"]["alarmBorder"] = false;
         tdl["text"]["bit"] = -1;
         tdl["text"]["shape"] = "square";
+        tdl["text"]["useChannelItems"] = true;
 
         if (edl["indicatorPv"] === undefined || type !== "Button") {
             return undefined;

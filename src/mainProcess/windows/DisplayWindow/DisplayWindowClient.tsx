@@ -232,13 +232,22 @@ export class DisplayWindowClient {
     // the left-button down event is handled in each widget in a more efficient way
     startToListenMouseEvents = () => {
 
-        const nonEmptyChannelNames = (channelNames: string[]) => {
+        const hasNonEmptyChannelName = (channelNames: string[]) => {
             for (let channelName of channelNames) {
-                if (channelName.trim() !== "") {
+                if (channelName.trim() !== "" && isNaN(parseFloat(channelName))) {
                     return true;
                 }
             }
             return false;
+        }
+
+        const getFirstNonEmptyChannelName = (channelNames: string[]) => {
+            for (let channelName of channelNames) {
+                if (channelName.trim() !== "" && isNaN(parseFloat(channelName))) {
+                    return channelName;
+                }
+            }
+            return "";
         }
 
         window.addEventListener("contextmenu", (event: MouseEvent) => {
@@ -259,6 +268,18 @@ export class DisplayWindowClient {
             // const thisWindowIsInIframe = window.frameElement !== null;
             window.focus();
 
+            if (event.button !== 1 && event.button !== 2) {
+                return;
+            }
+
+            if (g_widgets1 === undefined) {
+                return;
+            }
+
+            if (g_widgets1.isEditing()) {
+                return;
+            }
+
             /**
              * In operating mode:
              * 
@@ -277,37 +298,64 @@ export class DisplayWindowClient {
             const pointerY = getMouseEventClientY(event);
 
             // find the first widget that has at least one channel
-            if ((event.button === 1 || event.button === 2) && g_widgets1 !== undefined && !g_widgets1.isEditing()) {
-                event.preventDefault();
+            event.preventDefault();
 
-                const widgets = [...g_widgets1.getWidgets().values()];
-                for (let ii = widgets.length - 1; ii >= 0; ii--) {
-                    const widget = widgets[ii];
-                    if (widget instanceof BaseWidget) {
-                        if (
-                            (pointerX >= widget.getStyle()["left"] &&
-                                pointerX <= widget.getStyle()["left"] + widget.getStyle()["width"] &&
-                                pointerY >= widget.getStyle()["top"] &&
-                                pointerY <= widget.getStyle()["top"] + widget.getStyle()["height"]) ||
-                            // utility window, there is only one widget, this widget's size is not in px, but in 100%
-                            (widget.getStyle()["width"] === "100%" && widget.getStyle()["height"] === "100%" && this.getIsUtilityWindow() === true)
-                        ) {
-                            const widgetKey = widget.getWidgetKey();
-                            // read and write types widgets are treated the same by mid and right buttons
-                            // so that the mid button and Probe show the same PV
-                            if (nonEmptyChannelNames(widget.getChannelNames())) {
-                                // only when this widget has a channel
-                                widgetKeyResult = widgetKey;
-                                break;
-                            }
+            // intercept the event if on the Prompt element
+
+
+            let eventElement = event.target;
+            const promptElement = document.getElementById(this.getPrompt().getId());
+            while (true) {
+                console.log(eventElement, promptElement)
+                if (eventElement === null) {
+                    break;
+                }
+                if (!(eventElement instanceof HTMLElement)) {
+                    break;
+                }
+                if (event.button !== 2) {
+                    break;
+                }
+                if (eventElement === promptElement) {
+                    const selection = window.getSelection();
+                    const textSelected = selection === null ? false : selection.toString().length > 0 ? true : false;
+                    const selectedText = selection === null ? undefined : selection.toString();
+                    const contextMenuOptions = {
+                        textSelected: textSelected,
+                        selectedText: selectedText,
+                    }
+                    this.showContextMenu("Canvas", [event.clientX, event.clientY], contextMenuOptions);
+                    return;
+                }
+                eventElement = eventElement.parentElement;
+            }
+
+            const widgets = [...g_widgets1.getWidgets().values()];
+            for (let ii = widgets.length - 1; ii >= 0; ii--) {
+                const widget = widgets[ii];
+                if (widget instanceof BaseWidget) {
+                    if ((widget.getStyle()["width"] === "100%" && widget.getStyle()["height"] === "100%" && this.getIsUtilityWindow() === true)) {
+                        // utility window, only one widget, always select it
+                        const widgetKey = widget.getWidgetKey();
+                        widgetKeyResult = widgetKey;
+                        break;
+                    } else if (
+                        (pointerX >= widget.getStyle()["left"] &&
+                            pointerX <= widget.getStyle()["left"] + widget.getStyle()["width"] &&
+                            pointerY >= widget.getStyle()["top"] &&
+                            pointerY <= widget.getStyle()["top"] + widget.getStyle()["height"])
+                    ) {
+                        const widgetKey = widget.getWidgetKey();
+                        // read and write types widgets are treated the same by mid and right buttons
+                        // so that the mid button and Probe show the same PV
+                        if (hasNonEmptyChannelName(widget.getChannelNames())) {
+                            // only when this widget has a channel
+                            widgetKeyResult = widgetKey;
+                            break;
                         }
                     }
                 }
-            } else {
-                // left button, or in editing mode, no context menu
-                return;
             }
-
 
             // for mid button down, we have found a widget that has non-empty channel names
             // show the channel name peek div
@@ -321,7 +369,7 @@ export class DisplayWindowClient {
                     const widget = g_widgets1.getWidget2(widgetKeyResult);
                     if ((widget instanceof BaseWidget) && !(widget instanceof PvTable)) {
                         const channelNames = widget.getChannelNames();
-                        let channelName: string | string[] = channelNames[0];
+                        let channelName: string | string[] = getFirstNonEmptyChannelName(channelNames);
                         // copy all channel names for XYPlot, it does not have rule
                         if (widget instanceof XYPlot) {
                             channelName = channelNames;
@@ -336,7 +384,8 @@ export class DisplayWindowClient {
                     }
                     return;
                 } else {
-                    // no widget found, no additional action
+                    // no widget found, do nothing
+                    return;
                 }
             } else if (event.button === 2) {
                 // right button
@@ -347,15 +396,14 @@ export class DisplayWindowClient {
                 }
 
                 // right click on input area, copy/paste/cut, no matter if a widget is found
-                //     if ((event.target instanceof HTMLInputElement) || (event.target instanceof HTMLTextAreaElement)) {
-                //         contextMenuOptions = {
-                //         inputElementFocused: true,
-                //     }
-                //     event.preventDefault();
-                //     console.log("show context menu ===================", widgetKeyResult)
-                //     this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
-                //     return;
-                // }
+                if ((event.target instanceof HTMLInputElement) || (event.target instanceof HTMLTextAreaElement)) {
+                    contextMenuOptions = {
+                        inputElementFocused: true,
+                    }
+                    event.preventDefault();
+                    this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
+                    return;
+                }
 
                 if (widgetKeyResult !== "") {
                     // widget found
@@ -404,7 +452,7 @@ export class DisplayWindowClient {
                 } else {
                     // no widget found, no additional action
                 }
-            } 
+            }
 
             // fallback case: Canvas
             this.showContextMenu("Canvas", [event.clientX, event.clientY], {});

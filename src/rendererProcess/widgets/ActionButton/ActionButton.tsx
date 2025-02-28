@@ -489,7 +489,7 @@ export class ActionButton extends BaseWidget {
                                     width: calcWidth(),
                                     height: calcHeight(),
                                     justifyContent: this.getAllText()["horizontalAlign"],
-                                    alignItems: "center",
+                                    alignItems: this.getAllText()["verticalAlign"],
                                     overflow: "hidden",
                                 }}
                                 onMouseDown={(event: React.MouseEvent) => {
@@ -672,10 +672,11 @@ export class ActionButton extends BaseWidget {
         }
     };
 
-    writePv = (index: number) => {
+    writePv = async (index: number) => {
         const tdl = this.getActions()[index] as type_action_writepv_tdl;
         const channelName = tdl["channelName"];
         const channelValue = tdl["channelValue"];
+        console.log("write PV =================", channelName, channelValue)
         try {
             const channel = g_widgets1.getTcaChannel(channelName);
             const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
@@ -684,8 +685,10 @@ export class ActionButton extends BaseWidget {
             const channel = g_widgets1.createTcaChannel(channelName, this.getWidgetKey());
             if (channel !== undefined) {
                 const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+                await channel.getMeta(this.getWidgetKey(), 1);
                 channel.put(displayWindowId, { value: channelValue }, 1);
-                channel.destroy(this.getWidgetKey());
+                // no need to manually destroy the channel, the client will check on it
+                // channel.destroy(this.getWidgetKey());
             }
         }
     };
@@ -821,7 +824,8 @@ export class ActionButton extends BaseWidget {
         },
         text: {
             wrapWord: false,
-            horizontalAlign: "left",
+            horizontalAlign: "center",
+            verticalAlign: "center",
             // actually alarmOutline
             alarmBorder: true,
             text: "Action Button",

@@ -1533,7 +1533,7 @@ export class ContextMenuDesktop {
                 },
                 { type: "separator" as type_type },
             ]);
-        } else if (widgetKey.includes("Help") || widgetKey.startsWith("TdlViewer") || widgetKey.startsWith("TextEditor") || widgetKey.startsWith("ProfilesViewer") || widgetKey.startsWith("LogViewer") || widgetKey.startsWith("CaSnooper") || widgetKey.startsWith("Casw")) {
+        } else if (widgetKey.includes("Help") || widgetKey.startsWith("TdlViewer") || widgetKey.startsWith("TextEditor") || widgetKey.startsWith("ProfilesViewer") || widgetKey.startsWith("LogViewer") || widgetKey.startsWith("CaSnooper") || widgetKey.startsWith("Casw") || widgetKey.startsWith("Canvas")) {
             // non-input area of widgets, we want to copy the selected text
             // it does not conflict with the above Table data if (...), these two if are on different area in the widget
             // show only when there is text selected

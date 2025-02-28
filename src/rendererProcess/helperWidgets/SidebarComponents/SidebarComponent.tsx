@@ -2,98 +2,110 @@ import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
 import * as React from "react";
 
 export abstract class SidebarComponent {
-	_sidebar: BaseWidgetSidebar;
+    _sidebar: BaseWidgetSidebar;
 
-	constructor(sidebar: BaseWidgetSidebar) {
-		this._sidebar = sidebar;
-	}
+    constructor(sidebar: BaseWidgetSidebar) {
+        this._sidebar = sidebar;
+    }
 
     // --------------------------- JSX ---------------------
 
     // when the widget is changed, e.g. by mouse move, the sidebar values should be updated
     // must be overloaded inside _Element
-	_updateFromWidget = (propertyValue: any) => {};
-	getUpdateFromWidget = () => {
-		return this._updateFromWidget;
-	};
+    _updateFromWidget = (propertyValue: any) => { };
+    getUpdateFromWidget = () => {
+        return this._updateFromWidget;
+    };
 
-	abstract _Element: ({hideText}: any) => JSX.Element;
+    abstract _Element: ({ hideText }: any) => JSX.Element;
 
     // update widget's apperance from sidebar
-	abstract updateWidget: (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => void;
+    abstract updateWidget: (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => void;
 
-	// --------------------- getters ---------------------
+    // --------------------- getters ---------------------
 
-	getElement = (hideText: boolean = false) => {
-		return <this._Element hideText={hideText}></this._Element>;
-	};
+    _ElementInputLabel = ({ value, setValue, children, readableText, updater }: any) => {
+        return (
+            <div
+                onClick={() => {
+                    this.getSidebar().getSidebarLargeInput().createElement(value, setValue, readableText, updater);
+                }}
+            >
+                {children}
+            </div>
+        )
+    }
 
-	getSidebar = () => {
-		return this._sidebar;
-	};
+    getElement = (hideText: boolean = false) => {
+        return <this._Element hideText={hideText}></this._Element>;
+    };
 
-	getMainWidget = () => {
-		return this.getSidebar().getMainWidget();
-	};
+    getSidebar = () => {
+        return this._sidebar;
+    };
 
-	getStyle = () => {
-		return this.getMainWidget().getStyle();
-	};
+    getMainWidget = () => {
+        return this.getSidebar().getMainWidget();
+    };
 
-	getText = () => {
-		return this.getMainWidget().getText();
-	};
+    getStyle = () => {
+        return this.getMainWidget().getStyle();
+    };
 
-	getFormStyle = () => {
-		return this.getSidebar().getFormStyle();
-	};
+    getText = () => {
+        return this.getMainWidget().getText();
+    };
 
-	getInputStyle = () => {
-		return this.getSidebar().getInputStyle();
-	};
+    getFormStyle = () => {
+        return this.getSidebar().getFormStyle();
+    };
 
-	getWidgetKey = () => {
-		return this.getMainWidget().getWidgetKey();
-	};
+    getInputStyle = () => {
+        return this.getSidebar().getInputStyle();
+    };
 
-
-	_BlockTitle = ({ children }: any) => {
-		return (
-			<div
-				style={{
-					marginTop: 2,
-					marginBottom: 2,
-					width: "100%",
-					display: "inline-flex",
-					justifyContent: "space-between",
-					alignItems: "center",
-				}}
-			>
-				{children}
-			</div>
-		);
-	};
+    getWidgetKey = () => {
+        return this.getMainWidget().getWidgetKey();
+    };
 
 
-	_HorizontalLine = () => {
-		return <div>&nbsp;</div>;
-	};
+    _BlockTitle = ({ children }: any) => {
+        return (
+            <div
+                style={{
+                    marginTop: 2,
+                    marginBottom: 2,
+                    width: "100%",
+                    display: "inline-flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                }}
+            >
+                {children}
+            </div>
+        );
+    };
 
-	_BlockBody = ({ children }: any) => {
-		return (
-			<div
-				style={{
-					display: "inline-flex",
-					flexDirection: "column",
-					justifyContent: "center",
-					marginTop: 2,
-					marginBottom: 2,
-					width: "100%",
-				}}
-			>
-				{" "}
-				{children}
-			</div>
-		);
-	};
+
+    _HorizontalLine = () => {
+        return <div>&nbsp;</div>;
+    };
+
+    _BlockBody = ({ children }: any) => {
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    marginTop: 2,
+                    marginBottom: 2,
+                    width: "100%",
+                }}
+            >
+                {" "}
+                {children}
+            </div>
+        );
+    };
 }

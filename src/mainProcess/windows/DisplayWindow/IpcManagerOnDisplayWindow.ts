@@ -90,7 +90,8 @@ export class IpcManagerOnDisplayWindow {
 
         client.onmessage = (event: any) => {
             const messageBuffer = event.data;
-            const message = JSON.parse(messageBuffer.toString());
+            const message = JSON.parse(messageBuffer.toString(),  (key, value) =>
+                value === null ? undefined : value);
             this.parseMessage(message);
         };
     };

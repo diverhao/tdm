@@ -403,9 +403,9 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                 } else if (propertyName === "fgAlarm") {
                     alarmPropertyNames.push(propertyName);
                 } else if (propertyName === "useAlarmBorder") {
-                    // in "Text Monitor", the useAlarmBorder seems not honored
+                    // in "Text Control", the useAlarmBorder changes the border, not outline
                     if (type === "Text Control") {
-                        tdl["text"]["alarmBorder"] = true;
+                        // tdl["text"]["alarmBorder"] = true;
                     }
                 } else if (propertyName === "bgAlarm") {
                     alarmPropertyNames.push(propertyName);

@@ -59,7 +59,8 @@ export class IpcManagerOnMainProcesses {
             Log.info('-1', `WebSocket IPC Server got a connection from ${request.socket.remoteAddress}:${request.socket.remotePort}`);
 
             wsClient.on("message", (messageBuffer: RawData) => {
-                const message = JSON.parse(messageBuffer.toString());
+                const message = JSON.parse(messageBuffer.toString(), (key, value) =>
+                    value === null ? undefined : value);
                 Log.debug("-1", "IPC websocket server received message", message);
                 this.parseMessage(wsClient, message);
             });

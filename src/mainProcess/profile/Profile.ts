@@ -175,11 +175,153 @@ export class Profile {
             "About": {
                 "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Description of this profile.",
             },
-            // "EPICS Environment": {
-            //     "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Basic EPIC Environment",
-            //     "EPICS_CA_ADDR_LIST": { value: ["localhost"], DESCRIPTION: "Hosts where the EPICS data come from. Format: hostName, hostName:port, ipAddress, or ipAddress:port " },
-            //     "EPICS_CA_AUTO_ADDR_LIST": { value: "Yes", DESCRIPTION: "Whether to search PV name in local network.", choices: ["Yes", "No"] },
-            // },
+            "EPICS CA Settings": {
+                "DESCRIPTION_5f17d09e-fc05-43f2-88a2-d8f989b00c60": "EPICS Channel Access Settings. If you want to ignore a property defined by user, set its value to \"DO NOT SET\" (quotes not included).",
+                "EPICS_CA_ADDR_LIST": {
+                    "DESCRIPTION": "Computers that the TDM searches for the EPICS channels. If you want to ignore the setting, set one entry to \"DO NOT SET\" (quotes not included).",
+                    "value": [
+                        "160.91.228.17"
+                    ]
+                },
+                "EPICS_CA_AUTO_ADDR_LIST": {
+                    "DESCRIPTION": "Whether to search EPICS channels in local network using broadcast address.",
+                    "value": "YES",
+                    "choices": [
+                        "YES",
+                        "NO",
+                        "DO NOT SET"
+                    ]
+                },
+                "EPICS_CA_NAME_SERVERS": {
+                    "DESCRIPTION": "This variable is not used in epics-tca.",
+                    "value": [
+                        "DO NOT SET"
+                    ]
+                },
+                "EPICS_CA_CONN_TMO": {
+                    "DESCRIPTION": "If the client has not seen a beacon from EPICS IOC for EPICS_CA_CONN_TMO seconds, send an echo message.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_BEACON_PERIOD": {
+                    "DESCRIPTION": "The maximum period for beacons sent from EPICS IOC. This property is not used by epics-tca.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_REPEATER_PORT": {
+                    "DESCRIPTION": "The Channel Access repeater port used by epics-tca. If there is another CA repeater running, this setting is ignored.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_SERVER_PORT": {
+                    "DESCRIPTION": "The port that the EPICS IOC uses for data transmission. This port also serves as the UDP channel search port. This setting is not used by epics-tca.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_MAX_ARRAY_BYTES": {
+                    "DESCRIPTION": "The maximum size of the array for EPICS data. This property is not used by epics-tca.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_MAX_SEARCH_PERIOD": {
+                    "DESCRIPTION": "The maximum search period (in unit of second) of the EPICS channel search.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_TS_MIN_WEST": {
+                    "DESCRIPTION": "Number of positive minutes west of GMT. This setting is not used by epics-tca.",
+                    "value": "DO NOT SET"
+                }
+            },
+            "EPICS PVA Settings": {
+                "DESCRIPTION_099a9c8f-23ec-4b21-ae76-5dfb78e6ea6f": "EPICS PV Access Settings. If you want to ignore a property defined by user, set its value to \"DO NOT SET\" (quotes not included).  ",
+                "EPICS_PVA_ADDR_LIST": {
+                    "DESCRIPTION": "The computers that the epics-tca searches for the channels.",
+                    "value": [
+                        "DO NOT SET"
+                    ]
+                },
+                "EPICS_PVA_AUTO_ADDR_LIST": {
+                    "DESCRIPTION": "Whether to search the PVA channel in local network through broadcast address.",
+                    "value": "DO NOT SET",
+                    "choices": [
+                        "YES",
+                        "NO",
+                        "DO NOT SET"
+                    ]
+                },
+                "EPICS_PVA_SERVER_PORT": {
+                    "DESCRIPTION": "The port that EPICS IOC uses for data transmission. epics-tca does not this setting.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_PVA_BROADCAST_PORT": {
+                    "DESCRIPTION": "The epics-tca listens to this port for beacons from IOC. This port also serves as the UDP channel search port.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_PVA_CONN_TMO": {
+                    "DESCRIPTION": "If the epics-tca has not received beacon for this time, send an echo message.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_PVA_NAME_SERVERS": {
+                    "DESCRIPTION": "Name servers for channel search. epics-tca does not use this setting.",
+                    "value": [
+                        "DO NOT SET"
+                    ]
+                },
+                "EPICS_PVA_BEACON_PERIOD": {
+                    "DESCRIPTION": "The maximum period for beacons sent from IOC.",
+                    "value": "DO NOT SET"
+                }
+            },
+            "epics-tca Settings": {
+                "DESCRIPTION_2df940c1-e4e6-45f2-a243-c696e5aae3e7": "Settings for the epics-tca library. This library is the backend of the Channel Access and PV Access.",
+                "EPICS_CA_MIN_SEARCH_PERIOD": {
+                    "DESCRIPTION": "The minimum search period (in unit of second) for a channel. Making it larger will relieve the network traffic.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_GET_TIMEOUT_DEFAULT": {
+                    "DESCRIPTION": "The default GET channel value time out. Unit is second. It is not currently used.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_SCHEDULING_PRIORITY_DEFAULT": {
+                    "DESCRIPTION": "Default priority of CA channel scheduling. It is always 1.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_TCP_RE_SEARCH_CHAN_TIMESPAN": {
+                    "DESCRIPTION": "This setting is not used in epics-tca. Unit is second.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_TCP_RE_SEARCH_CHAN_TIMEOUT": {
+                    "DESCRIPTION": "This setting is currently not used in epics-tca. Unit is second.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_REPEATER_REGISTER_TIMEOUT": {
+                    "DESCRIPTION": "Try to register this epics-tca client to CA repeater at this rate. Once the registration succeeds, it is ignored. Unit is second.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_TCP_INACTIVE_TIMEOUT": {
+                    "DESCRIPTION": "If the TCP connection has no data after this time interval, send an echo. It is similar to EPICS_CA_CONN_TMO. But the later one relies on beacon. Unit is second.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_BEACON_TIMEOUT": {
+                    "DESCRIPTION": "If the epics-tca has not received the beacon within this time interval, clear the resource for this beacon in epics-tca. It is just for saving resources, it does not affect the connection.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_MAX_UDP_BUFFER": {
+                    "DESCRIPTION": "The maximum size of the UDP channel search packet. Unit is byte.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_CA_REPEATER_CLIENT_CHECK_TIME": {
+                    "DESCRIPTION": "Used by CA repeater to periodically check if the registered clients are still alive. If not, release the resource. Unit is second.",
+                    "value": "DO NO TUSE"
+                },
+                "EPICS_CA_REPEATER_THREAD_CHECK_TIME": {
+                    "DESCRIPTION": "Periodically check if the CA repeater is still alive. If not, (re)start the CA repeater. Unit is second.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_PVA_MIN_SEARCH_PERIOD": {
+                    "DESCRIPTION": "The minimum PVA channel search period. Unit is second.",
+                    "value": "DO NOT SET"
+                },
+                "EPICS_PVA_MAX_SEARCH_PERIOD": {
+                    "DESCRIPTION": "the maximum PVA channel search period.",
+                    "value": "DO NOT SET"
+                }
+            },
             "EPICS Custom Environment": {
                 "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Custom EPICS environment.",
                 "Default TDL Files": { value: [], DESCRIPTION: "Open these tdl files when this profile starts to run. It could be an absolute path, relative path, or a web path." },

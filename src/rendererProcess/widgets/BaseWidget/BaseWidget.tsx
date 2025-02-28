@@ -31,7 +31,8 @@ export enum AlarmOutlineStyle {
     "none",
     "solid 1.5px red",
     "double red medium",
-    "dotted 1.5px red",
+    "dashed 1.5px rgba(255,0,255,1)",
+    "dotted 1.5px rgba(255,0,255,1)",
 }
 
 export enum AlarmBackgroundStyle {
@@ -39,6 +40,7 @@ export enum AlarmBackgroundStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
+    "rgba(255,0,254,1)",
 }
 
 export enum AlarmTextStyle {
@@ -46,6 +48,7 @@ export enum AlarmTextStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
+    "rgba(255,0,254,1)",
 }
 
 export enum AlarmShapeStyle {
@@ -53,6 +56,7 @@ export enum AlarmShapeStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
+    "rgba(255,0,254,1)",
 }
 
 export enum AlarmFillStyle {
@@ -60,6 +64,7 @@ export enum AlarmFillStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
+    "rgba(255,0,254,1)",
 }
 
 export enum AlarmPointerStyle {
@@ -67,6 +72,7 @@ export enum AlarmPointerStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
+    "rgba(255,0,254,1)",
 }
 
 export enum AlarmDialStyle {
@@ -74,6 +80,7 @@ export enum AlarmDialStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
+    "rgba(255,0,254,1)",
 }
 
 export enum AlarmContainerStyle {
@@ -81,6 +88,7 @@ export enum AlarmContainerStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
+    "rgba(255,0,254,1)",
 }
 
 export enum AlarmSelectedBackgroundStyle {
@@ -88,6 +96,7 @@ export enum AlarmSelectedBackgroundStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
+    "rgba(255,0,254,1)",
 }
 
 /**
@@ -1337,6 +1346,7 @@ export abstract class BaseWidget {
         // ------------ level 1 --------------
         // (1) formula channel name or regular channel name
         let resultLevel1: string[] = [];
+        let isCalcChanenl = false;
         // obtain regular channel name from formula channel
         if (this.getChannelNamesLevel0()[0] !== undefined
             && this.getChannelNamesLevel0()[0].includes("[")
@@ -1347,6 +1357,7 @@ export abstract class BaseWidget {
             // && TcaChannel.checkChannelName(this.getChannelNamesLevel0()[0]) !== "loc://" 
             // && TcaChannel.checkChannelName(this.getChannelNamesLevel0()[0]) !== "glb://"
         ) {
+            // isCalcChanenl = true;
             // this is a formula-based PV, like "[val0] + 5", "=[val0] / 2"
             // only the first one is used
             let eqChannelStr = this.getChannelNamesLevel0()[0];
@@ -1376,10 +1387,11 @@ export abstract class BaseWidget {
             }
         }
 
-        if (removeDuplicated) {
+        if (removeDuplicated && !isCalcChanenl) {
             const resultSet = new Set(resultLevel1);
             this._channelNamesLevel1 = [...resultSet];
         } else {
+            // do not remove duplicated channels if the main channel name is calc type
             this._channelNamesLevel1 = resultLevel1;
         }
 
@@ -1496,7 +1508,7 @@ export abstract class BaseWidget {
         const tmp: any[] = [...this.getEqChannelArray()];
         const channelNames = this.getChannelNamesLevel4();
 
-        Log.debug("evaluating eq channel ================================")
+        Log.info("evaluating eq channel ================================", channelNames, this.getEqChannelNameIndices(), this.getEqChannelArray())
         for (let index = 0; index < channelNames.length; index++) {
             const channelName = channelNames[index];
             // in some cases channelName is just a number
@@ -1519,6 +1531,7 @@ export abstract class BaseWidget {
                 return undefined;
             }
         }
+        console.log("tmp ===============", tmp)
         try {
             const result = mathjs.evaluate(tmp.join(""));
             if (typeof result === "boolean") {

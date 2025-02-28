@@ -198,7 +198,7 @@ export class SidebarEmbeddedDisplayItem {
 									</this.StyledButton>
 								</ElementMacroTd>
 							</ElementMacroTr>
-							{macrosRaw.map((item: [string, string], index: number) => {
+							{macrosRaw?.map((item: [string, string], index: number) => {
 								return <this._ElementMacro macroIndex={index} key={`${item}-${index}`}></this._ElementMacro>;
 							})}
 						</tbody>

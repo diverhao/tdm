@@ -63,6 +63,7 @@ export class GlobalVariables {
     static defaultFontFamily: string = "TDM Default";
     static defaultFontStyle: string = "normal";
     static defaultFontWeight: string = "normal";
+    static defaultMonoFontFamily: string = "Courier Prime";
 
     static presetColors: Record<string, [number, number, number, number]> = {};
     static widgetMinHeight: number = 10;

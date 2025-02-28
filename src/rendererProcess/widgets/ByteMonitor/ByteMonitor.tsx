@@ -205,7 +205,8 @@ export class ByteMonitor extends BaseWidget {
 		const result: number[] = [];
 		if (typeof channelValue === "number") {
 			for (let ii = this.getAllText()["bitStart"]; ii < this.getAllText()["bitStart"] + this.getAllText()["bitLength"]; ii++) {
-				const value = (Math.floor(Math.abs(channelValue)) >> ii) & 0x1;
+				// const value = (Math.floor(Math.abs(channelValue)) >> ii) & 0x1;
+				const value = (Math.floor(channelValue) >> ii) & 0x1;
 				result.push(value);
 			}
 		} else {

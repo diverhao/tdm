@@ -11,11 +11,13 @@ export class SidebarActionWritePvItem {
 	_index: number;
 	StyledButton = ElementButton;
 	_BlockBody: any;
+    ElementInputLabel: any;
 	constructor(items: SidebarActionItems, index: number) {
 		this._items = items;
 		this._index = index;
 		// this.StyledButton = this.getItems().StyledButton;
 		this._BlockBody = this.getItems()._BlockBody;
+        this.ElementInputLabel = this.getItems()._ElementInputLabel
 	}
 
 	getMainWidget = () => {
@@ -92,7 +94,14 @@ export class SidebarActionWritePvItem {
 						}}
 						style={{ ...this.getFormStyle(), width: "100%" }}
 					>
-						<div>Label:</div>
+                        <this.ElementInputLabel
+                            value={label}
+                            setValue={setLabel}
+                            readableText={"Write PV label"}
+                            updater={(newValue: string) => this.updateWidgetLabel(undefined, newValue)}
+                        >
+                            Label:
+                        </this.ElementInputLabel>
 						<input
 							style={{ ...this.getInputStyle() }}
 							type="string"
@@ -127,7 +136,14 @@ export class SidebarActionWritePvItem {
 						}}
 						style={{ ...this.getFormStyle(), width: "100%" }}
 					>
-						<div>Name:</div>
+                        <this.ElementInputLabel
+                            value={channelName}
+                            setValue={setChannelName}
+                            readableText={"Write PV channel name"}
+                            updater={(newValue: string) => this.updateWidgetChannelName(undefined, newValue)}
+                        >
+                            Name:
+                        </this.ElementInputLabel>
 						<input
 							style={{ ...this.getInputStyle() }}
 							type="string"
@@ -162,7 +178,14 @@ export class SidebarActionWritePvItem {
 						}}
 						style={{ ...this.getFormStyle(), width: "100%" }}
 					>
-						<div>Value:</div>
+                        <this.ElementInputLabel
+                            value={`${channelValue}`}
+                            setValue={setChannelValue}
+                            readableText={"Write PV channel value"}
+                            updater={(newValue: string) => this.updateWidgetChannelValue(undefined, newValue)}
+                        >
+                            Value:
+                        </this.ElementInputLabel>
 						<input
 							style={{ ...this.getInputStyle() }}
 							type="string"

@@ -16,11 +16,13 @@ import { GlobalVariables } from "../../global/GlobalVariables";
 export class SidebarCanvasScript {
     _sidebar: CanvasSidebar;
     _updateFromWidget = (propertyValue: any) => { };
+    _ElementInputLabel: any;
     getUpdateFromWidget = () => {
         return this._updateFromWidget;
     };
     constructor(sidebar: CanvasSidebar) {
         this._sidebar = sidebar;
+        this._ElementInputLabel = this._sidebar._ElementInputLabel;
     }
 
     getElement = () => {
@@ -139,7 +141,14 @@ export class SidebarCanvasScript {
                 </this._BlockTitle>
                 <this._BlockBody>
                     <form onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, script)} style={this._formStyle}>
-                        <div>Path:</div>
+                        <this._ElementInputLabel
+                            value={`${script}`}
+                            setValue={setScript}
+                            readableText={"Script name"}
+                            updater={(newValue: string) => this.updateWidget(undefined, newValue)}
+                        >
+                            Script:
+                        </this._ElementInputLabel>
                         <input
                             // the same with as dropdown menu in SidebarLineStyle, which is an <input /> element with 70% width
                             style={{
@@ -169,7 +178,7 @@ export class SidebarCanvasScript {
     };
 
     updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+        event?.preventDefault();
 
         const oldVal = this.getMainWidget().getScript();
         if (propertyValue === oldVal) {

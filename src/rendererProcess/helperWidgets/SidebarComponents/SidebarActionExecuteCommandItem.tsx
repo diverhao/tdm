@@ -7,223 +7,240 @@ import { type_action_executecommand_tdl } from "../../widgets/ActionButton/Actio
 import { ElementButton } from "../SharedElements/MacrosTable";
 
 export class SidebarActionExecuteCommandItem {
-	_items: SidebarActionItems;
-	_index: number;
-	StyledButton = ElementButton;
-	_BlockBody: any;
-	constructor(items: SidebarActionItems, index: number) {
-		this._items = items;
-		this._index = index;
-		// this.StyledButton = this.getItems().StyledButton;
-		this._BlockBody = this.getItems()._BlockBody;
-	}
+    _items: SidebarActionItems;
+    _index: number;
+    StyledButton = ElementButton;
+    _BlockBody: any;
+    ElementInputLabel: any;
+    constructor(items: SidebarActionItems, index: number) {
+        this._items = items;
+        this._index = index;
+        // this.StyledButton = this.getItems().StyledButton;
+        this._BlockBody = this.getItems()._BlockBody;
+        this.ElementInputLabel = this.getItems()._ElementInputLabel
+    }
 
-	getMainWidget = () => {
-		return this.getItems().getMainWidget() as ActionButton;
-	};
+    getMainWidget = () => {
+        return this.getItems().getMainWidget() as ActionButton;
+    };
 
-	getTdl = () => {
-		const mainWidget = this.getMainWidget();
-		return mainWidget.getActions()[this.getIndex()] as type_action_executecommand_tdl;
-	};
+    getTdl = () => {
+        const mainWidget = this.getMainWidget();
+        return mainWidget.getActions()[this.getIndex()] as type_action_executecommand_tdl;
+    };
 
-	_Element = () => {
-		// const mainWidget = this.getMainWidget();
-		const [label, setLabel] = React.useState(this.getTdl()["label"]);
-		const [command, setCommand] = React.useState(this.getTdl()["command"]);
+    _Element = () => {
+        // const mainWidget = this.getMainWidget();
+        const [label, setLabel] = React.useState(this.getTdl()["label"]);
+        const [command, setCommand] = React.useState(this.getTdl()["command"]);
 
-		return (
-			<this._BlockBody>
-				<div
-					style={{
-						display: "inline-flex",
-						flexDirection: "row",
-						width: "100%",
-						justifyContent: "space-between",
-						alignItems: "center",
+        return (
+            <this._BlockBody>
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        width: "100%",
+                        justifyContent: "space-between",
+                        alignItems: "center",
                         backgroundColor: "rgba(240,240,240,1)",
-					}}
-				>
-					<b>{`#${this.getIndex()} Execute Cmd`}</b>
-					<div>
-						<this.StyledButton
-							onClick={(event: any) => {
-								this.getItems().updateWidgetMoveUpAction(event, this.getIndex());
-							}}
-						>
-							&#8593;
-						</this.StyledButton>
-						<this.StyledButton
-							onClick={(event: any) => {
-								this.getItems().updateWidgetMoveDownAction(event, this.getIndex());
-							}}
-						>
-							&#8595;
-						</this.StyledButton>
-						<this.StyledButton
-							onClick={(event: any) => {
-								this.getItems().updateWidgetRemoveAction(event, this.getIndex());
-							}}
-						>
-							<img
-								src={`../../../webpack/resources/webpages/delete-symbol.svg`}
-								style={{
-									width: "50%",
-									height: "50%",
-								}}
-							></img>
-						</this.StyledButton>
-					</div>
-				</div>
+                    }}
+                >
+                    <b>{`#${this.getIndex()} Execute Cmd`}</b>
+                    <div>
+                        <this.StyledButton
+                            onClick={(event: any) => {
+                                this.getItems().updateWidgetMoveUpAction(event, this.getIndex());
+                            }}
+                        >
+                            &#8593;
+                        </this.StyledButton>
+                        <this.StyledButton
+                            onClick={(event: any) => {
+                                this.getItems().updateWidgetMoveDownAction(event, this.getIndex());
+                            }}
+                        >
+                            &#8595;
+                        </this.StyledButton>
+                        <this.StyledButton
+                            onClick={(event: any) => {
+                                this.getItems().updateWidgetRemoveAction(event, this.getIndex());
+                            }}
+                        >
+                            <img
+                                src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                                style={{
+                                    width: "50%",
+                                    height: "50%",
+                                }}
+                            ></img>
+                        </this.StyledButton>
+                    </div>
+                </div>
 
-				<div
-					style={{
-						display: "inline-flex",
-						flexDirection: "row",
-						width: "100%",
-						justifyContent: "space-between",
-						alignItems: "center",
-					}}
-				>
-					<form
-						onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-							this.updateWidgetLabel(event, label);
-						}}
-						style={{ ...this.getFormStyle(), width: "100%" }}
-					>
-						<div>Label:</div>
-						<input
-							style={{ ...this.getInputStyle() }}
-							type="string"
-							name="item-label"
-							value={label}
-							onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-								const newVal = event.target.value;
-								setLabel(newVal);
-							}}
-							// must use enter to change the value
-							onBlur={(event: any) => {
-								const orig = this.getTdl()["label"];
-								if (orig !== label) {
-									setLabel(orig);
-								}
-							}}
-						/>
-					</form>
-				</div>
-				<div
-					style={{
-						display: "inline-flex",
-						flexDirection: "row",
-						width: "100%",
-						justifyContent: "space-between",
-						alignItems: "center",
-					}}
-				>
-					<form
-						onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-							this.updateWidgetCommand(event, command);
-						}}
-						style={{ ...this.getFormStyle(), width: "100%" }}
-					>
-						<div>Cmd:</div>
-						<input
-							style={{ ...this.getInputStyle() }}
-							type="string"
-							name="item-command"
-							value={command}
-							onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-								const newVal = event.target.value;
-								setCommand(newVal);
-							}}
-							// must use enter to change the value
-							onBlur={(event: any) => {
-								const orig = this.getTdl()["command"];
-								if (orig !== command) {
-									setCommand(orig);
-								}
-							}}
-						/>
-					</form>
-				</div>
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        width: "100%",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    }}
+                >
+                    <form
+                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+                            this.updateWidgetLabel(event, label);
+                        }}
+                        style={{ ...this.getFormStyle(), width: "100%" }}
+                    >
+
+                        <this.ElementInputLabel
+                            value={label}
+                            setValue={setLabel}
+                            readableText={"Execute Command label"}
+                            updater={(newValue: string) => {this.updateWidgetLabel(undefined, newValue)}}
+                        >
+                            Label:
+                        </this.ElementInputLabel>
+                        <input
+                            style={{ ...this.getInputStyle() }}
+                            type="string"
+                            name="item-label"
+                            value={label}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                const newVal = event.target.value;
+                                setLabel(newVal);
+                            }}
+                            // must use enter to change the value
+                            onBlur={(event: any) => {
+                                const orig = this.getTdl()["label"];
+                                if (orig !== label) {
+                                    setLabel(orig);
+                                }
+                            }}
+                        />
+                    </form>
+                </div>
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        width: "100%",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    }}
+                >
+                    <form
+                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+                            this.updateWidgetCommand(event, command);
+                        }}
+                        style={{ ...this.getFormStyle(), width: "100%" }}
+                    >
+                        <this.ElementInputLabel
+                            value={command}
+                            setValue={setCommand}
+                            readableText={"Execute Command command"}
+                            updater={(newValue: string) => {this.updateWidgetCommand(undefined, newValue)}}
+                        >
+                            Cmd:
+                        </this.ElementInputLabel>
+                        <input
+                            style={{ ...this.getInputStyle() }}
+                            type="string"
+                            name="item-command"
+                            value={command}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                const newVal = event.target.value;
+                                setCommand(newVal);
+                            }}
+                            // must use enter to change the value
+                            onBlur={(event: any) => {
+                                const orig = this.getTdl()["command"];
+                                if (orig !== command) {
+                                    setCommand(orig);
+                                }
+                            }}
+                        />
+                    </form>
+                </div>
                 <this._HorizontalLine></this._HorizontalLine>
-			</this._BlockBody>
-		);
-	};
+            </this._BlockBody>
+        );
+    };
 
-	updateWidgetLabel = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
-		if (event) {
-			event.preventDefault();
-		}
+    updateWidgetLabel = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+        if (event) {
+            event.preventDefault();
+        }
 
-		const mainWidget = this.getMainWidget();
-		const oldVal = this.getTdl()["label"];
-		if (propertyValue === oldVal) {
-			return;
-		} else {
-			this.getTdl()["label"] = `${propertyValue}`;
-		}
+        const mainWidget = this.getMainWidget();
+        const oldVal = this.getTdl()["label"];
+        if (propertyValue === oldVal) {
+            return;
+        } else {
+            this.getTdl()["label"] = `${propertyValue}`;
+        }
 
-		const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-		history.registerAction();
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
 
-		g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
-		g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+        g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
 
-		g_flushWidgets();
-	};
+        g_flushWidgets();
+    };
 
-	updateWidgetCommand = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
-		if (event) {
-			event.preventDefault();
-		}
+    updateWidgetCommand = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+        if (event) {
+            event.preventDefault();
+        }
 
-		const mainWidget = this.getMainWidget();
-		const oldVal = this.getTdl()["command"];
-		if (propertyValue === oldVal) {
-			return;
-		} else {
-			this.getTdl()["command"] = `${propertyValue}`;
-		}
+        const mainWidget = this.getMainWidget();
+        const oldVal = this.getTdl()["command"];
+        if (propertyValue === oldVal) {
+            return;
+        } else {
+            this.getTdl()["command"] = `${propertyValue}`;
+        }
 
-		const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-		history.registerAction();
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
 
-		g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
-		g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+        g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
 
-		g_flushWidgets();
-	};
+        g_flushWidgets();
+    };
 
-	// --------------------------- getters -----------------------------
+    // --------------------------- getters -----------------------------
 
-	getElement = () => {
-		const mainWidget = this.getMainWidget();
-		return <this._Element key={`${this.getTdl()["label"]}-${this.getIndex()}`}></this._Element>;
-	};
+    getElement = () => {
+        const mainWidget = this.getMainWidget();
+        return <this._Element key={`${this.getTdl()["label"]}-${this.getIndex()}`}></this._Element>;
+    };
 
-	getIndex = () => {
-		return this._index;
-	};
+    getIndex = () => {
+        return this._index;
+    };
 
-	getItems = () => {
-		return this._items;
-	};
+    getItems = () => {
+        return this._items;
+    };
 
-	setIndex = (newIndex: number) => {
-		this._index = newIndex;
-	};
+    setIndex = (newIndex: number) => {
+        this._index = newIndex;
+    };
 
-	getFormStyle = () => {
-		return this.getItems().getFormStyle();
-	};
-	getInputStyle = () => {
-		return this.getItems().getInputStyle();
-	};
+    getFormStyle = () => {
+        return this.getItems().getFormStyle();
+    };
+    getInputStyle = () => {
+        return this.getItems().getInputStyle();
+    };
 
-	// -------------------------- styled components ----------------------------
+    // -------------------------- styled components ----------------------------
 
-	_HorizontalLine = () => {
-		return <div>&nbsp;</div>;
-	};
+    _HorizontalLine = () => {
+        return <div>&nbsp;</div>;
+    };
 }

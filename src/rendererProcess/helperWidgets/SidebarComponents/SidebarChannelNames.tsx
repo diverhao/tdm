@@ -14,72 +14,79 @@ import { PvTable } from "../../widgets/PvTable/PvTable";
  * update this sidebar component from widget.
  */
 export class SidebarChannelNames extends SidebarComponent {
-	constructor(sidebar: BaseWidgetSidebar) {
-		super(sidebar);
-	}
+    constructor(sidebar: BaseWidgetSidebar) {
+        super(sidebar);
+    }
 
-	_Element = () => {
-		const mainWidget = this.getMainWidget();
-		const [channelNamesStr, setChannelNamesStr] = React.useState<string>(
-			// `${mainWidget instanceof PvTable ? mainWidget.getChannelNamesRefined() : ""}`
-			`${(mainWidget as PvTable).getChannelNamesLevel0()}`
-		);
+    _Element = () => {
+        const mainWidget = this.getMainWidget();
+        const [channelNamesStr, setChannelNamesStr] = React.useState<string>(
+            // `${mainWidget instanceof PvTable ? mainWidget.getChannelNamesRefined() : ""}`
+            `${(mainWidget as PvTable).getChannelNamesLevel0()}`
+        );
 
-		return (
-			<form
-				spellCheck={false}
-				onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, channelNamesStr)}
-				style={this.getFormStyle()}
-			>
-				<div>Name:</div>
-				<input
-					style={{ ...this.getInputStyle() }}
-					type="text"
-					name="channelName"
-					value={channelNamesStr}
-					onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-						const newVal = event.target.value;
-						setChannelNamesStr(newVal);
-					}}
-					// must use enter to change the value
-					onBlur={(event: any) => {
-						const mainWidget = this.getMainWidget();
-						// if (mainWidget instanceof PvTable) {
-						const orig = `${(mainWidget as PvTable).getChannelNamesLevel0()}`;
-						if (orig !== channelNamesStr) {
-							setChannelNamesStr(orig);
-						}
-						// }
-					}}
-				/>
-			</form>
-		);
-	};
+        return (
+            <form
+                spellCheck={false}
+                onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, channelNamesStr)}
+                style={this.getFormStyle()}
+            >
+                <this._ElementInputLabel
+                    value={`${channelNamesStr}`}
+                    setValue={setChannelNamesStr}
+                    readableText={"Channel Names"}
+                    updater={(newValue: string) => this.updateWidget(undefined, newValue)}
+                >
+                    Name:
+                </this._ElementInputLabel>
+                <input
+                    style={{ ...this.getInputStyle() }}
+                    type="text"
+                    name="channelName"
+                    value={channelNamesStr}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                        const newVal = event.target.value;
+                        setChannelNamesStr(newVal);
+                    }}
+                    // must use enter to change the value
+                    onBlur={(event: any) => {
+                        const mainWidget = this.getMainWidget();
+                        // if (mainWidget instanceof PvTable) {
+                        const orig = `${(mainWidget as PvTable).getChannelNamesLevel0()}`;
+                        if (orig !== channelNamesStr) {
+                            setChannelNamesStr(orig);
+                        }
+                        // }
+                    }}
+                />
+            </form>
+        );
+    };
 
-	updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-		event.preventDefault();
-		const mainWidget = this.getMainWidget() as PvTable;
+    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event.preventDefault();
+        const mainWidget = this.getMainWidget() as PvTable;
 
-		const newVal = propertyValue as string;
-		const newVals = newVal.split(",");
-		const newChannelNames: string[] = [];
-		for (let channelName of newVals) {
-			if (channelName.trim() !== "" && !channelName.includes(".")) {
-				newChannelNames.push(channelName.trim());
-			}
-		}
-		mainWidget.setChannelNamesLevel0(newChannelNames);
+        const newVal = propertyValue as string;
+        const newVals = newVal.split(",");
+        const newChannelNames: string[] = [];
+        for (let channelName of newVals) {
+            if (channelName.trim() !== "" && !channelName.includes(".")) {
+                newChannelNames.push(channelName.trim());
+            }
+        }
+        mainWidget.setChannelNamesLevel0(newChannelNames);
         mainWidget.processChannelNames();
-		// mainWidget.setUnprocessedChannelNames(newChannelNames);
+        // mainWidget.setUnprocessedChannelNames(newChannelNames);
         // mainWidget.setExpanedBaseChannelNames();
         // mainWidget.expandAndExtractChannelNames();
 
-		const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-		history.registerAction();
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
 
-		g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-		g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
 
-		g_flushWidgets();
-	};
+        g_flushWidgets();
+    };
 }

@@ -3,16 +3,19 @@ import { calcSidebarWidth, GlobalVariables } from "../../global/GlobalVariables"
 import { Collapsible } from "../ColorPicker/Collapsible";
 import { Canvas } from "./Canvas";
 import { SidebarCanvasScript } from "../SidebarComponents/SidebarCanvasScript";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import * as GlobalMethods from "../../global/GlobalMethods";
 import { g_flushWidgets } from "../Root/Root";
 import { ElementMacroInput, ElementMacroTr, ElementButton, ElementMacroTd } from "../SharedElements/MacrosTable";
+import { SidebarLargeInput } from "../../widgets/BaseWidget/SidebarLargeInput";
+import { zIndex } from "html2canvas/dist/types/css/property-descriptors/z-index";
 
 export class CanvasSidebar {
     private _widgetKey: string;
     private _mainWidget: Canvas;
     private _sidebarCanvasScript: SidebarCanvasScript;
+    private _sidebarLargeInput: SidebarLargeInput;
 
     // mock up definiton to silence TypeScript
     updateFromWidget = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => { };
@@ -21,6 +24,7 @@ export class CanvasSidebar {
         this._mainWidget = canvas;
         this._widgetKey = this._mainWidget.getWidgetKey() + "_sidbar";
         this._sidebarCanvasScript = new SidebarCanvasScript(this);
+        this._sidebarLargeInput = new SidebarLargeInput();
     }
 
     getSidebarCanvasScript = () => {
@@ -119,7 +123,14 @@ export class CanvasSidebar {
                         onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.getUpdateFromSidebar()(event, "windowName", windowName)}
                         style={this._formStyle}
                     >
-                        <div>Title:</div>
+                        <this._ElementInputLabel
+                            value={`${windowName}`}
+                            setValue={setWindowName}
+                            readableText={"Window Title"}
+                            updater={(newValue: string) => this.getUpdateFromSidebar()(undefined, "windowName", newValue)}
+                        >
+                            Title:
+                        </this._ElementInputLabel>
                         <input
                             style={this._inputStyle}
                             type="text"
@@ -450,6 +461,18 @@ export class CanvasSidebar {
         return <this._Element key={this._widgetKey}></this._Element>;
     };
 
+    _ElementInputLabel = ({ value, setValue, children, readableText, updater }: any) => {
+        return (
+            <div
+                onClick={() => {
+                    this.getSidebarLargeInput().createElement(value, setValue, readableText, updater);
+                }}
+            >
+                {children}
+            </div>
+        )
+    }
+
     private _Macros = () => {
         const [macros1, setMacros1] = React.useState<[string, string][]>(JSON.parse(JSON.stringify(this._mainWidget.getMacros())));
         const [showContents, setShowContents] = React.useState<boolean>(true);
@@ -714,6 +737,9 @@ export class CanvasSidebar {
         return g_widgets1.getSidebarWidgetsList();
     }
 
+    getSidebarLargeInput = () => {
+        return this._sidebarLargeInput;
+    }
     // ---------------------- style ---------------------------
 
     private _style: Record<string, any> = {
@@ -726,7 +752,8 @@ export class CanvasSidebar {
         position: "fixed",
         // it is not a good practice to manaully assign a z-index to an element
         // but seems there is no other choices
-        zIndex: GlobalVariables.CanvasSidebarZIndex,
+        // zIndex: GlobalVariables.CanvasSidebarZIndex,
+        zIndex: 0,
         // box model
         top: 0,
         right: 0,

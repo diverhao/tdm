@@ -57,6 +57,7 @@ import { SidebarAlarmDial } from "../../helperWidgets/SidebarComponents/SidebarA
 import { SidebarAlarmPointer } from "../../helperWidgets/SidebarComponents/SidebarAlarmPointer";
 import { SidebarTankAlarmContainer } from "../../helperWidgets/SidebarComponents/SidebarTankAlarmContainer";
 import { SidebarTankContainerColor } from "../../helperWidgets/SidebarComponents/SidebarTankContainerColor";
+import { SidebarLargeInput } from "./SidebarLargeInput";
 
 export abstract class BaseWidgetSidebar {
     private _sidebarX: SidebarX;
@@ -115,6 +116,8 @@ export abstract class BaseWidgetSidebar {
     private _sidebarTankAlarmContainer: SidebarTankAlarmContainer;
     private _sidebarTankContainerColor: SidebarTankContainerColor
 
+
+    private _sidebarLargeInput: SidebarLargeInput;
 
     _widgetKey: string;
     _mainWidget: BaseWidget;
@@ -180,7 +183,9 @@ export abstract class BaseWidgetSidebar {
         this._sidebarAlarmDial = new SidebarAlarmDial(this);
         this._sidebarTankAlarmContainer = new SidebarTankAlarmContainer(this);
         this._sidebarTankContainerColor = new SidebarTankContainerColor(this);
-        }
+
+        this._sidebarLargeInput = new SidebarLargeInput();
+    }
 
     // ------------------------------------- elements --------------------------------------
 
@@ -494,7 +499,11 @@ export abstract class BaseWidgetSidebar {
     getSidebarTankContainerColor = () => {
         return this._sidebarTankContainerColor;
     }
-    
+
+    getSidebarLargeInput = () => {
+        return this._sidebarLargeInput;
+    }
+
     // ------------------------- style -------------------------
     _style: Record<string, any> = {
         // inline-flex

@@ -1847,15 +1847,14 @@ export class IpcManagerOnMainProcess {
     /**
      * Get the meta data, it is assumed
      */
-    handleTcaGetMeta = async (event: any, channelName: string, displayWindowId: string, widgetKey: string | undefined, ioId: number) => {
+    handleTcaGetMeta = async (event: any, channelName: string, displayWindowId: string, widgetKey: string | undefined, ioId: number, timeout: number | undefined) => {
         // (1)
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId) as DisplayWindowAgent;
         if (displayWindowAgent === undefined) {
             return;
         }
-
-        let data = await displayWindowAgent.tcaGetMeta(channelName);
+        let data = await displayWindowAgent.tcaGetMeta(channelName, timeout);
         // ! attention
         // send twice: use periodic and the "tca-get-result" to ensure all the widgets in newly created window are updated
         // in the first place. Otherwise the race condition may happen, the widget key is removed from the forceUpdateWidgets list
@@ -2227,7 +2226,17 @@ export class IpcManagerOnMainProcess {
     }) => {
         try {
             const command = data["command"];
-            const commandArray = command.split(" ");
+            let commandArray = command.split(" ");
+
+            if (command.startsWith(`"`)) {
+                // find the second \"
+                const tmp = command.split(`"`);
+                const commandHead = tmp[1];
+                tmp.shift();
+                tmp.shift();
+                commandArray = [commandHead, ...tmp.join(`"`).split(" ")];
+            }
+
             if (commandArray.length >= 1) {
                 const commandHead = commandArray[0];
                 commandArray.shift();

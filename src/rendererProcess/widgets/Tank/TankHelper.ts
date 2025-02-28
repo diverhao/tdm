@@ -189,6 +189,7 @@ export class TankHelper extends BaseWidgetHelper {
                     alarmPropertyNames.push(propertyName);
                 } else if (propertyName === "fgColor") {
                     tdl["style"]["color"] = EdlConverter.convertEdlColor(propertyValue);
+                    tdl["style"]["borderColor"] = EdlConverter.convertEdlColor(propertyValue);
                 } else if (propertyName === "fgAlarm") {
                     alarmPropertyNames.push(propertyName);
                 } else if (propertyName === "bgColor") {

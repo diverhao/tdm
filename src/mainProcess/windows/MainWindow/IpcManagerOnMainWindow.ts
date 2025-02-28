@@ -61,7 +61,8 @@ export class IpcManagerOnMainWindow {
 
         client.onmessage = (event: any) => {
             const messageBuffer = event.data;
-            const message = JSON.parse(messageBuffer.toString());
+            const message = JSON.parse(messageBuffer.toString(), (key, value) =>
+                value === null ? undefined : value);
             Log.debug("received IPC message", messageBuffer.toString());
             this.handleMessage(message);
         };

@@ -26,7 +26,14 @@ export class SidebarBooleanButtonOnLabel extends SidebarComponent {
 				}}
 				style={this.getFormStyle()}
 			>
-				<div>Label:</div>
+                <this._ElementInputLabel
+                    value={`${onLabel}`}
+                    setValue={setOnLabel}
+                    readableText={"Off Label value"}
+                    updater={(newValue: string) => this.updateWidget(undefined, newValue)}
+                >
+                    Label:
+                </this._ElementInputLabel>
 				<input
 					style={{ ...this.getInputStyle(), width: "60%"  }}
 					type="string"

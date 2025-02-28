@@ -422,7 +422,7 @@ export class DisplayWindowAgent {
     };
 
     /**
-     * Get the meta data from CA/PVA/Local channel, no timeout, no dbr data type specified <br>
+     * Get the meta data from CA/PVA/Local channel, if timeout = undefined, no timeout, no dbr data type specified <br>
      *
      * (1) if the channel agent does not exist, and/or the CA/PVA/Local channel is not connected, create/connect it.<br>
      *     For CA/PVA channel, connecting to the channel does not time out.  <br>
@@ -438,7 +438,7 @@ export class DisplayWindowAgent {
      * (4) Check if there is any active operations for this channel. If not, destry it.
      */
 
-    tcaGetMeta = async (channelName: string): Promise<type_dbrData | type_LocalChannel_data | { value: undefined }> => {
+    tcaGetMeta = async (channelName: string, ioTimeout: number | undefined): Promise<type_dbrData | type_LocalChannel_data | { value: undefined }> => {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
@@ -446,8 +446,18 @@ export class DisplayWindowAgent {
         let result: type_LocalChannel_data | type_dbrData = { value: undefined };
 
         if (channelType === "ca" || channelType === "pva") {
+            const t0 = Date.now();
+
             let connectSuccess = false;
-            connectSuccess = await this.addAndConnectChannel(channelName, undefined);
+            connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
+
+            const t1 = Date.now();
+            // timeout
+            if (ioTimeout !== undefined) {
+                if (t1 - t0 > ioTimeout * 1000) {
+                    return { value: undefined };
+                }
+            }
 
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
 
@@ -465,14 +475,16 @@ export class DisplayWindowAgent {
                         Log.debug(this.getMainProcessId(), `Channel ${channelName} does not have a GR type data.`);
                         return { value: undefined };
                     }
-                    result = await channelAgent.get(this.getId(), dbrTypeNum_GR, undefined);
+                    // only GET once, the get() method may destroy the channel if there is no user
+                    result = await channelAgent.get(this.getId(), dbrTypeNum_GR, ioTimeout);
 
-                    const dbrTypeNum_TIME = channelAgent.getDbrTypeNum_TIME();
-                    if (dbrTypeNum_TIME === undefined) {
-                        Log.debug(this.getMainProcessId(), `Channel ${channelName} does not have a TIME type data.`);
-                    } else {
-                        result = { ...result, ...(await channelAgent.get(this.getId(), dbrTypeNum_TIME, undefined)) };
-                    }
+                    // const dbrTypeNum_TIME = channelAgent.getDbrTypeNum_TIME();
+                    // if (dbrTypeNum_TIME === undefined) {
+                        // Log.debug(this.getMainProcessId(), `Channel ${channelName} does not have a TIME type data.`);
+                    // } else {
+                        // const dbrDataTime = await channelAgent.get(this.getId(), dbrTypeNum_GR, ioTimeout);
+                        // result = { ...result, ...dbrDataTime };
+                    // }
 
                     if (result.value !== undefined) {
                         result.DBR_TYPE = dbrTypeNum_GR;
@@ -885,7 +897,6 @@ export class DisplayWindowAgent {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
-
         // (1)
         let channelAgent = channelAgentsManager.getChannelAgent(channelName);
         if (channelAgent === undefined) {

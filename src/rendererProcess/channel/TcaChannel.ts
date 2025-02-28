@@ -13,6 +13,7 @@ export enum ChannelSeverity {
     MINOR,
     MAJOR,
     INVALID,
+    NOT_CONNECTED,
 }
 
 
@@ -38,7 +39,7 @@ export enum pvaValueDisplayType {
 export class TcaChannel {
     _channelName: string = "";
     _widgetKeys: Set<string> = new Set();
-    _dbrData: type_dbrData | type_LocalChannel_data = { value: undefined, severity: ChannelSeverity.INVALID };
+    _dbrData: type_dbrData | type_LocalChannel_data = { value: undefined, severity: ChannelSeverity.NOT_CONNECTED };
     autoUpdateInterval: any;
     _pvaValueDisplayType: pvaValueDisplayType = pvaValueDisplayType.NOT_DEFINED;
     _pvaType: any = undefined;
@@ -412,13 +413,13 @@ export class TcaChannel {
      *
      * @returns {Promise<type_dbrData>}
      */
-    getMeta = async (widgetKey: string | undefined): Promise<type_dbrData | type_LocalChannel_data> => {
+    getMeta = async (widgetKey: string | undefined, timeout: number | undefined = undefined): Promise<type_dbrData | type_LocalChannel_data> => {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const ipcManager = displayWindowClient.getIpcManager();
         const windowId = displayWindowClient.getWindowId();
         // never timeout
-        const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["READ"], undefined, undefined);
-        ipcManager.sendFromRendererProcess("tca-get-meta", this.getChannelName(), windowId, widgetKey, ioId);
+        const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["READ"], timeout, undefined);
+        ipcManager.sendFromRendererProcess("tca-get-meta", this.getChannelName(), windowId, widgetKey, ioId, timeout);
         try {
             let message: type_dbrData | type_LocalChannel_data = await this.getIoPromise(ioId);
             this.appendToDbrData(message);
@@ -446,6 +447,7 @@ export class TcaChannel {
         const value = this.parseInput(dbrData);
         if (value === undefined) {
             // parse failed
+            Log.error("Failed to parse value in", dbrData, "for PUT operation of", this.getChannelName());
             return;
         }
 
@@ -744,6 +746,8 @@ export class TcaChannel {
 
         } else {
             const dbrTypeNum = this.getDbrData().DBR_TYPE;
+            console.log("dbr data", this.getDbrData())
+
             if (dbrTypeNum === undefined) {
                 // we did not obtain the DBR_TYPE of this channel, do not even try to put it
                 return undefined;
@@ -1040,7 +1044,7 @@ export class TcaChannel {
 
             const value = this.getDbrData()["value"];
             if (value === undefined) {
-                return ChannelSeverity.INVALID;
+                return ChannelSeverity.NOT_CONNECTED;
             }
 
             const severityNum = this.getDbrData()["severity"];
@@ -1072,10 +1076,10 @@ export class TcaChannel {
                 }
             } else {
                 // return ChannelSeverity.INVALID;
-                return ChannelSeverity.NO_ALARM;
+                return ChannelSeverity.NOT_CONNECTED;
             }
         }
-        return ChannelSeverity.INVALID;
+        return ChannelSeverity.NOT_CONNECTED;
     };
 
     getSeverityStr = () => {

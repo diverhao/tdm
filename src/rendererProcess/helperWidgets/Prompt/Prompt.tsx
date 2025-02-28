@@ -56,7 +56,7 @@ export abstract class Prompt {
 
     startEventListeners = () => {
         // // escape key to remove this element
-        // window.addEventListener("keydown", this.removeElementOnEscKey)
+        window.addEventListener("keydown", this.removeElementOnEscKey)
 
         // // when we use the wrapper element's mousedown event, we cannot
         // // stop propagation this event in prompt box
@@ -486,6 +486,10 @@ export abstract class Prompt {
 
     getNameElementMap = () => {
         return this._nameElementMap;
+    }
+
+    getId = () => {
+        return this._id;
     }
 
     // abstract getWindowClient(): DisplayWindowClient | MainWindowClient;
