@@ -3,7 +3,7 @@ import * as React from "react";
 import { EmbeddedDisplay } from "../../widgets/EmbeddedDisplay/EmbeddedDisplay";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
-import { ElementButton } from "../SharedElements/MacrosTable";
+import { ElementButton, ElementMacrosTable } from "../SharedElements/MacrosTable";
 import { ElementMacroInput, ElementMacroTd, ElementMacroTr } from "../SharedElements/MacrosTable";
 
 export class SidebarEmbeddedDisplayItem {
@@ -207,179 +207,23 @@ export class SidebarEmbeddedDisplayItem {
     };
 
     private _ElementMacros = () => {
-        const macrosRaw = this.getMainWidget().getItemMacros()[this.getIndex()];
-
-        //todo: empty key, empty value is allowed
         return (
             <>
                 <div style={this._macroLineStyle}>
                     <div>Macros</div>
                 </div>
                 <div>
-                    <table
-                        style={{
-                            margin: 0,
-                            padding: 0,
-                            borderSpacing: 0,
-                        }}
+                    <ElementMacrosTable
+                        headlineName1={"Name"}
+                        headlineName2={"Value"}
+                        macrosData={this.getMainWidget().getItemMacros()[this.getIndex()]}
                     >
-                        <tbody>
-                            <ElementMacroTr>
-                                <ElementMacroTd style={{ width: "40%" }}>Name</ElementMacroTd>
-                                <ElementMacroTd
-                                    style={{
-                                        borderLeft: "1px solid #dddddd",
-                                        paddingLeft: 3,
-                                        width: "50%",
-                                    }}
-                                >
-                                    Value
-                                </ElementMacroTd>
-                                <ElementMacroTd
-                                    style={{
-                                        width: "10%",
-                                    }}
-                                >
-                                    <this.StyledButton
-                                        onClick={() => {
-                                            const newMacroIndex = macrosRaw.length;
-                                            macrosRaw.push([`name-${newMacroIndex}`, "newValue"]);
-                                            g_widgets1.updateSidebar(true);
-                                        }}
-                                    >
-                                        <img
-                                            src={`../../../resources/webpages/add-symbol.svg`}
-                                            style={{
-                                                width: "60%",
-                                                height: "60%",
-                                            }}
-                                        ></img>
-                                    </this.StyledButton>
-                                </ElementMacroTd>
-                            </ElementMacroTr>
-                            {macrosRaw?.map((item: [string, string], index: number) => {
-                                return <this._ElementMacro macroIndex={index} key={`${item}-${index}`}></this._ElementMacro>;
-                            })}
-                        </tbody>
-                    </table>
+                    </ElementMacrosTable>
                 </div>
             </>
         );
     };
 
-    _ElementMacro = ({ macroIndex }: any) => {
-        const macroRaw = this.getMainWidget().getItemMacros()[this.getIndex()][macroIndex];
-
-        const [name, setName] = React.useState(macroRaw[0]);
-        const [value, setValue] = React.useState(macroRaw[1]);
-
-        return (
-            <ElementMacroTr key={`macro-${macroIndex}`}>
-                <ElementMacroTd
-                    style={{
-                        width: "40%",
-                    }}
-                >
-                    <form
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            event.preventDefault();
-                            macroRaw[0] = name;
-
-                            const mainWidget = this.getMainWidget();
-                            // mainWidget.updateEmbeddedDisplayTdlFileName(this.getIndex());
-
-                            const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-                            history.registerAction();
-
-                            g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                            g_flushWidgets();
-                        }}
-                        style={this._macroFormStyle}
-                    >
-                        <ElementMacroInput
-                            type="text"
-                            value={name}
-                            placeholder={"name"}
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                event.preventDefault();
-                                setName(event.target.value);
-                            }}
-                            onBlur={(event: any) => {
-                                event.preventDefault();
-                                if (macroRaw[0] !== name) {
-                                    setName(macroRaw[0]);
-                                }
-                            }}
-                        />
-                    </form>
-                </ElementMacroTd>
-                <ElementMacroTd
-                    style={{
-                        borderLeft: "1px solid #dddddd",
-                        width: "50%",
-                    }}
-                >
-                    <form
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            event.preventDefault();
-                            macroRaw[1] = value;
-
-                            const mainWidget = this.getMainWidget();
-                            // mainWidget.updateEmbeddedDisplayTdlFileName(this.getIndex());
-
-                            const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-                            history.registerAction();
-
-                            g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                            g_flushWidgets();
-                        }}
-                        style={{ ...this._macroFormStyle, paddingLeft: 3 }}
-                    >
-                        <ElementMacroInput
-                            type="text"
-                            value={value}
-                            placeholder={"value"}
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                event.preventDefault();
-                                setValue(event.target.value);
-                            }}
-                            onBlur={(event: any) => {
-                                event.preventDefault();
-                                if (macroRaw[1] !== value) {
-                                    setValue(macroRaw[1]);
-                                }
-                            }}
-                        />
-                    </form>
-                </ElementMacroTd>
-                <ElementMacroTd
-                    style={{
-                        width: "10%",
-                    }}
-                >
-                    <this.StyledButton
-                        onClick={() => {
-                            const macrosRaw = this.getMainWidget().getItemMacros()[this.getIndex()];
-                            macrosRaw.splice(macroIndex, 1);
-                            g_widgets1.updateSidebar(true);
-                        }}
-                    >
-                        <img
-                            src={`../../../resources/webpages/delete-symbol.svg`}
-                            style={{
-                                width: "50%",
-                                height: "50%",
-                            }}
-                        ></img>
-                    </this.StyledButton>
-                </ElementMacroTd>
-            </ElementMacroTr>
-        );
-    };
 
     _ElementUseParentMacros = () => {
         const [useParentMacros, setUseParentMacros] = React.useState(this.getMainWidget().getText()["useParentMacros"]);
@@ -424,16 +268,7 @@ export class SidebarEmbeddedDisplayItem {
             </form>
         );
     };
-    private _macroFormStyle: Record<string, any> = {
-        display: "inline-flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginTop: 2,
-        marginBottom: 2,
-        width: "95%",
-    };
-
+    
     private _macroLineStyle: Record<string, any> = {
         display: "inline-flex",
         position: "relative",

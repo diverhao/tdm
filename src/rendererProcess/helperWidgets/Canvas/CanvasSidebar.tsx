@@ -7,7 +7,7 @@ import { Log } from "../../../mainProcess/log/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import * as GlobalMethods from "../../global/GlobalMethods";
 import { g_flushWidgets } from "../Root/Root";
-import { ElementMacroInput, ElementMacroTr, ElementButton, ElementMacroTd } from "../SharedElements/MacrosTable";
+import { ElementMacroInput, ElementMacroTr, ElementButton, ElementMacroTd, ElementMacrosTable } from "../SharedElements/MacrosTable";
 import { SidebarLargeInput } from "../../widgets/BaseWidget/SidebarLargeInput";
 import { zIndex } from "html2canvas/dist/types/css/property-descriptors/z-index";
 
@@ -220,7 +220,7 @@ export class CanvasSidebar {
                         marginBottom: 2,
                     }}
                 >
-                    <b>Channel</b>
+                    <b>Macros</b>
                 </div>
                 {/* macros */}
                 <this._Macros />
@@ -474,223 +474,16 @@ export class CanvasSidebar {
     }
 
     private _Macros = () => {
-        const [macros1, setMacros1] = React.useState<[string, string][]>(JSON.parse(JSON.stringify(this._mainWidget.getMacros())));
-        const [showContents, setShowContents] = React.useState<boolean>(true);
-        const refAddMacro = React.useRef<any>(null);
-
-        const updateValue = (event: any, property: "name" | "value", index: number) => {
-            event.preventDefault();
-
-            if (property === "name") {
-                setMacros1((prevVal: [string, string][]) => {
-                    const newVal: [string, string][] = JSON.parse(JSON.stringify(prevVal));
-                    newVal[index] = [event.target.value, newVal[index][1]];
-                    return newVal;
-                });
-            } else {
-                setMacros1((prevVal: [string, string][]) => {
-                    const newVal: [string, string][] = JSON.parse(JSON.stringify(prevVal));
-                    newVal[index] = [newVal[index][0], event.target.value];
-                    return newVal;
-                });
-            }
-        };
-
-        //todo: empty key, empty value is allowed
         return (
-            <>
-                <div style={this._macroLineStyle}>
-                    <div>Macros</div>
-                    <div
-                        style={{
-                            fontSize: 18,
-                            display: "inline-flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            color: "black",
-                            cursor: "pointer",
-                        }}
-                        onClick={() => {
-                            setShowContents((prevVal: boolean) => {
-                                return !prevVal;
-                            });
-                        }}
-                    >
-                        {showContents ? <>&#9663;</> : <>&#9657;</>}
-                    </div>
-                </div>
-                <div
-                    style={{
-                        display: showContents ? "inline-block" : "none",
-                        width: "100%",
-                    }}
-                >
-                    <table
-                        style={{
-                            margin: 0,
-                            padding: 0,
-                            borderSpacing: 0,
-                            width: "100%",
-                        }}
-                    >
-                        <tbody>
-                            <ElementMacroTr index={0}>
-                                <ElementMacroTd style={{ width: "40%" }}>
-                                    <b>Name</b>
-                                </ElementMacroTd>
-                                <ElementMacroTd
-                                    style={{
-                                        borderLeft: "1px solid #dddddd",
-                                        paddingLeft: 3,
-                                        width: "50%",
-                                    }}
-                                >
-                                    <b>Value</b>
-                                </ElementMacroTd>
-                                <ElementMacroTd
-                                    style={{
-                                        width: "10%",
-                                    }}
-                                >
-                                    <ElementButton
-                                        onClick={() => {
-                                            setMacros1((prevVal: [string, string][]) => {
-                                                let newName = "";
-                                                const newVal = JSON.parse(JSON.stringify(prevVal));
-                                                newVal.push([newName, ""]);
-                                                this.getUpdateFromSidebar()(undefined, "macros", newVal);
-                                                return newVal;
-                                            });
-                                        }}
-                                    >
-                                        <img
-                                            src={`../../../webpack/resources/webpages/add-symbol.svg`}
-                                            style={{
-                                                width: "60%",
-                                                height: "60%",
-                                            }}
-                                        ></img>
+            <ElementMacrosTable
+                headlineName1={"Name"}
+                headlineName2={"Value"}
+                macrosData={this._mainWidget.getMacros()}
+            >
 
-                                        {/* &#65291; */}
-                                    </ElementButton>
-                                </ElementMacroTd>
-                            </ElementMacroTr>
-                            {macros1.map((item: [string, string], index: number) => {
-                                const name = item[0];
-                                const value = item[1];
-                                return (
-                                    <ElementMacroTr key={`${this.getWidgetKey()}-macros-${index}`} index={index + 1}>
-                                        <ElementMacroTd style={{ width: "40%" }}>
-                                            <form
-                                                onSubmit={(event: React.FormEvent<HTMLFormElement>) =>
-                                                    this.getUpdateFromSidebar()(event, "macros", macros1)
-                                                }
-                                                style={this._macroFormStyle}
-                                            >
-                                                <ElementMacroInput
-                                                    type="text"
-                                                    value={name}
-                                                    placeholder={"name"}
-                                                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateValue(event, "name", index)}
-                                                    onBlur={(event: any) => {
-                                                        if (this._mainWidget.getMacros()[index][0] !== name) {
-                                                            setMacros1(JSON.parse(JSON.stringify(this._mainWidget.getMacros())));
-                                                        }
-                                                    }}
-                                                />
-                                            </form>
-                                        </ElementMacroTd>
-                                        <ElementMacroTd
-                                            style={{
-                                                borderLeft: "1px solid #dddddd",
-                                                width: "50%",
-                                            }}
-                                        >
-                                            <form
-                                                onSubmit={(event: React.FormEvent<HTMLFormElement>) =>
-                                                    this.getUpdateFromSidebar()(event, "macros", macros1)
-                                                }
-                                                style={{ ...this._macroFormStyle, paddingLeft: 3 }}
-                                            >
-                                                <ElementMacroInput
-                                                    type="text"
-                                                    value={value}
-                                                    placeholder={"value"}
-                                                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateValue(event, "value", index)}
-                                                    onBlur={(event: any) => {
-                                                        if (this._mainWidget.getMacros()[index][1] !== value) {
-                                                            setMacros1(JSON.parse(JSON.stringify(this._mainWidget.getMacros())));
-                                                        }
-                                                    }}
-                                                />
-                                            </form>
-                                        </ElementMacroTd>
-                                        <ElementMacroTd style={{ width: "10%" }}>
-                                            <ElementButton
-                                                onClick={() => {
-                                                    setMacros1((prevVal: [string, string][]) => {
-                                                        const newVal = JSON.parse(JSON.stringify(prevVal));
-                                                        newVal.splice(index, 1);
-                                                        this.getUpdateFromSidebar()(undefined, "macros", newVal);
-                                                        return newVal;
-                                                    });
-                                                }}
-                                            >
-                                                <img
-                                                    src={`../../../webpack/resources/webpages/delete-symbol.svg`}
-                                                    style={{
-                                                        width: "50%",
-                                                        height: "50%",
-                                                    }}
-                                                ></img>
-
-                                            </ElementButton>
-                                        </ElementMacroTd>
-                                    </ElementMacroTr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                    <div style={this._macroLineStyle}>
-                        <div
-                            ref={refAddMacro}
-                            style={{
-                                display: "inline-flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                color: "rgba(100,100,100,1)",
-                                cursor: "pointer",
-                            }}
-                            onClick={() => {
-                                setMacros1((prevVal: [string, string][]) => {
-                                    let newName = "";
-                                    const newVal = JSON.parse(JSON.stringify(prevVal));
-                                    newVal.push([newName, ""]);
-                                    this.getUpdateFromSidebar()(undefined, "macros", newVal);
-                                    return newVal;
-                                });
-                            }}
-                            onMouseEnter={() => {
-                                if (refAddMacro.current !== null) {
-                                    refAddMacro.current.style["color"] = "rgba(0,0,0,1)";
-                                }
-                            }}
-                            onMouseLeave={() => {
-                                if (refAddMacro.current !== null) {
-                                    refAddMacro.current.style["color"] = "rgba(100,100,100,1)";
-                                }
-                            }}
-                        >
-
-
-                            &#65291;
-                        </div>
-                        <div>&nbsp;</div>
-                    </div>
-                </div>
-            </>
-        );
-    };
+            </ElementMacrosTable>
+        )
+    }
 
     private _HorizontalLine = () => {
         return <div>&nbsp;</div>;

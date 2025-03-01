@@ -3,6 +3,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { PvTable } from "./PvTable";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
+import { ElementMacrosTable } from "../../helperWidgets/SharedElements/MacrosTable";
 
 export class PvTableSettings {
     _mainWidget: PvTable;
@@ -30,7 +31,7 @@ export class PvTableSettings {
                 <div
                     style={{
                         width: "90%",
-                        height: "90%",
+                        // height: "90%",
                         left: "5%",
                         display: "inline-flex",
                         flexDirection: "column",
@@ -39,7 +40,26 @@ export class PvTableSettings {
                         position: "relative",
                     }}
                 >
-                    <this._ElementMacros></this._ElementMacros>
+                    <div
+                        style={{
+                            position: "relative",
+                            width: "80%",
+                            display: "inline-flex",
+                            flexDirection: "column",
+                            justifyContent: "flex-start",
+                            alignItems: "center",
+                        }}
+                    >
+                        <div style={{ width: "100%" }}>
+                            <h2>Macros</h2>
+                        </div>
+                        <ElementMacrosTable
+                            headlineName1={"Name"}
+                            headlineName2={"Value"}
+                            macrosData={this.getMainWidget().getMacros()} // [string, string][]
+
+                        ></ElementMacrosTable>
+                    </div>
                     <this._ElementFieldNames></this._ElementFieldNames>
                     <this._ElementMultipleChannels></this._ElementMultipleChannels>
                     <ElementRectangleButton
@@ -66,6 +86,9 @@ export class PvTableSettings {
                     >
                         OK
                     </ElementRectangleButton>
+                    <div>
+                        &nbsp;
+                    </div>
                 </div>
             </div>
         );
@@ -207,281 +230,5 @@ export class PvTableSettings {
         );
     };
 
-    _ElementMacros = () => {
-        const macrosRaw = this.getMainWidget().getMacros();
 
-        const [, forceUpdate] = React.useState({});
-
-        const elementAddRef = React.useRef<any>(null);
-
-        return (
-            <div
-                style={{
-                    position: "relative",
-                    width: "80%",
-                    display: "inline-flex",
-                    flexDirection: "column",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                }}
-            >
-                <div style={{ width: "100%" }}>
-                    <h2>Macros</h2>
-                </div>
-                <table
-                    style={{
-                        marginTop: 20,
-                        padding: 0,
-                        borderSpacing: 0,
-                        width: "100%",
-                        height: "80%",
-                    }}
-                >
-                    <tbody>
-                        <tr
-                            style={{
-                                backgroundColor: "rgba(230,230,230,1)",
-                                height: 20,
-                            }}
-                        >
-                            <td style={{ width: "40%" }}>Name</td>
-                            <td
-                                style={{
-                                    borderLeft: "1px solid #dddddd",
-                                    width: "50%",
-                                    fontWeight: "bold",
-                                }}
-                            >
-                                <b>Value</b>
-                            </td>
-                            <td
-                                style={{
-                                    width: "10%",
-                                }}
-                            >
-                                <div
-                                    onClick={() => {
-                                        const newMacroIndex = macrosRaw.length;
-                                        macrosRaw.push([`name-${newMacroIndex}`, "newValue"]);
-                                        // g_widgets1.updateSidebar(true);
-                                        forceUpdate({});
-                                    }}
-                                >
-                                    <img
-                                        ref={elementAddRef}
-                                        src={`../../../webpack/resources/webpages/add-symbol.svg`}
-                                        style={{
-                                            width: this.getMainWidget().getStyle()["fontSize"],
-                                            opacity: 0.25,
-                                        }}
-                                        onMouseOver={() => {
-                                            if (elementAddRef.current !== null) {
-                                                elementAddRef.current.style["cursor"] = "pointer";
-                                                elementAddRef.current.style["opacity"] = 1;
-                                            }
-                                        }}
-                                        onMouseLeave={() => {
-                                            if (elementAddRef.current !== null) {
-                                                elementAddRef.current.style["opacity"] = 0.25;
-                                            }
-                                        }}
-                                    ></img>
-                                </div>
-                            </td>
-                        </tr>
-                        {macrosRaw.map((item: [string, string], index: number) => {
-                            return <this._ElementMacro macroIndex={index} key={`${item}-${index}`}></this._ElementMacro>;
-                        })}
-                    </tbody>
-                </table>
-            </div>
-        );
-    };
-
-    _ElementMacro = ({ macroIndex }: any) => {
-        const macroRaw = this.getMainWidget().getMacros()[macroIndex];
-
-        const [name, setName] = React.useState(macroRaw[0]);
-        const [value, setValue] = React.useState(macroRaw[1]);
-
-        const elementNameRef = React.useRef<any>(null);
-        const elementValueRef = React.useRef<any>(null);
-        const elementDeleteRef = React.useRef<any>(null);
-
-        return (
-            <tr
-                style={{
-                    backgroundColor: macroIndex % 2 === 0 ? "white" : "rgba(230,230,230,1)",
-                    height: 20,
-                }}
-            >
-                <td
-                    style={{
-                        width: "40%",
-                    }}
-                >
-                    <form
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            event.preventDefault();
-                            macroRaw[0] = name;
-
-                            // const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-                            // history.registerAction();
-
-                            // g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                            // g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                            // g_flushWidgets();
-                        }}
-                    // style={{ ...this._macroFormStyle }}
-                    >
-                        <input
-                            ref={elementNameRef}
-                            style={{
-                                backgroundColor: "rgba(0,0,0,0)",
-                                padding: 0,
-                                border: "none",
-                                outline: "none",
-                                fontSize: this.getMainWidget().getStyle()["fontSize"],
-                            }}
-                            type="text"
-                            value={name}
-                            placeholder={"name"}
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                event.preventDefault();
-                                setName(event.target.value);
-                            }}
-                            onBlur={(event: any) => {
-                                event.preventDefault();
-                                if (elementNameRef.current !== null) {
-                                    elementNameRef.current.style["color"] = "black";
-                                }
-
-                                if (macroRaw[0] !== name) {
-                                    setName(macroRaw[0]);
-                                }
-                            }}
-                            onMouseOver={(event: any) => {
-                                event.preventDefault();
-                                if (elementNameRef.current !== null) {
-                                    elementNameRef.current.style["cursor"] = "pointer";
-                                    elementNameRef.current.style["color"] = "red";
-                                }
-                            }}
-                            onMouseLeave={(event: any) => {
-                                event.preventDefault();
-                                if (elementNameRef.current !== null) {
-                                    const isFocused = document.activeElement === elementNameRef.current;
-                                    if (isFocused === false) {
-                                        elementNameRef.current.style["cursor"] = "default";
-                                        elementNameRef.current.style["color"] = "black";
-                                    }
-                                }
-                            }}
-                        />
-                    </form>
-                </td>
-                <td
-                    style={{
-                        borderLeft: "1px solid #dddddd",
-                        width: "50%",
-                    }}
-                >
-                    <form
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            event.preventDefault();
-                            macroRaw[1] = value;
-
-                            // const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-                            // history.registerAction();
-
-                            // g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                            // g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                            // g_flushWidgets();
-                        }}
-                    // style={{ ...this._macroFormStyle, paddingLeft: 3 }}
-                    >
-                        <input
-                            ref={elementValueRef}
-                            style={{
-                                backgroundColor: "rgba(0,0,0,0)",
-                                padding: 0,
-                                border: "none",
-                                outline: "none",
-                                fontSize: this.getMainWidget().getStyle()["fontSize"],
-                            }}
-                            type="text"
-                            value={value}
-                            placeholder={"value"}
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                event.preventDefault();
-                                setValue(event.target.value);
-                            }}
-                            onBlur={(event: any) => {
-                                event.preventDefault();
-                                if (elementValueRef.current !== null) {
-                                    elementValueRef.current.style["color"] = "black";
-                                }
-                                if (macroRaw[1] !== value) {
-                                    setValue(macroRaw[1]);
-                                }
-                            }}
-                            onMouseOver={(event: any) => {
-                                event.preventDefault();
-                                if (elementValueRef.current !== null) {
-                                    elementValueRef.current.style["cursor"] = "pointer";
-                                    elementValueRef.current.style["color"] = "red";
-                                }
-                            }}
-                            onMouseLeave={(event: any) => {
-                                event.preventDefault();
-                                if (elementValueRef.current !== null) {
-                                    const isFocused = document.activeElement === elementValueRef.current;
-                                    if (isFocused === false) {
-                                        elementValueRef.current.style["cursor"] = "default";
-                                        elementValueRef.current.style["color"] = "black";
-                                    }
-                                }
-                            }}
-                        />
-                    </form>
-                </td>
-                <td
-                    style={{
-                        width: "10%",
-                    }}
-                >
-                    <div
-                        onClick={() => {
-                            // const macrosRaw = this.getTdl()["externalMacros"];
-                            const macrosRaw = this.getMainWidget().getMacros();
-                            macrosRaw.splice(macroIndex, 1);
-                            g_widgets1.updateSidebar(true);
-                        }}
-                    >
-                        <img
-                            ref={elementDeleteRef}
-                            src={`../../../webpack/resources/webpages/delete-symbol.svg`}
-                            style={{
-                                width: this.getMainWidget().getStyle()["fontSize"],
-                                opacity: 0.25,
-                            }}
-                            onMouseOver={() => {
-                                if (elementDeleteRef.current !== null) {
-                                    elementDeleteRef.current.style["cursor"] = "pointer";
-                                    elementDeleteRef.current.style["opacity"] = 1;
-                                }
-                            }}
-                            onMouseLeave={() => {
-                                if (elementDeleteRef.current !== null) {
-                                    elementDeleteRef.current.style["opacity"] = 0.25;
-                                }
-                            }}
-                        ></img>
-                    </div>
-                </td>
-            </tr>
-        );
-    };
 }

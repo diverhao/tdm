@@ -60,7 +60,7 @@ export class PvMonitorSidebar extends BaseWidgetSidebar {
             <div style={{ ...this.getStyle() }}
                 onMouseDown={this.handleMouseDown}
             >
-                <h3>Text Update</h3>
+                <h3>PV Monitor</h3>
                 {/* ---------------- positions -------------------------- */}
                 <this._BlockTitle>
                     <b>Position</b>
@@ -79,11 +79,11 @@ export class PvMonitorSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarChannelName().getElement()}
-                    {this.getSidebarShowUnit().getElement()}
+                    {/* {this.getSidebarShowUnit().getElement()} */}
                     {this.getSidebarAlarmBorder().getElement()}
-                    {this.getSidebarNumberScale().getElement()}
-                    {this.getSidebarNumberFormat().getElement()}
-                    {this.getSidebarPvMonitorMaxLineNum().getElement()}
+                    {/* {this.getSidebarNumberScale().getElement()} */}
+                    {/* {this.getSidebarNumberFormat().getElement()} */}
+                    {/* {this.getSidebarPvMonitorMaxLineNum().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
@@ -102,9 +102,9 @@ export class PvMonitorSidebar extends BaseWidgetSidebar {
                 <this._BlockBody>
                     {/* color */}
                     {this.getSidebarTextColor().getElement()}
-                    {this.getSidebarXAlign().getElement()}
-                    {this.getSidebarYAlign().getElement()}
-                    {this.getSidebarWrapWord().getElement()}
+                    {/* {this.getSidebarXAlign().getElement()} */}
+                    {/* {this.getSidebarYAlign().getElement()} */}
+                    {/* {this.getSidebarWrapWord().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ----------------------- font --------------------------- */}
@@ -128,7 +128,7 @@ export class PvMonitorSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
                 {/* ------------------------- rules ---------------------------- */}
-                {this.getMainWidget().getRules()?.getElement()}
+                {/* {this.getMainWidget().getRules()?.getElement()} */}
                 <this._HorizontalLine />
                 {/* ------------------------- widgets list ---------------------------- */}
                 {this.getSidebarWidgetsList().getElement()}

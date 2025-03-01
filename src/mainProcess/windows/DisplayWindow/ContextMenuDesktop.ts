@@ -426,6 +426,12 @@ export class ContextMenuDesktop {
                     },
                 },
                 {
+                    label: "PV Monitor",
+                    click: () => {
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "pv-monitor");
+                    },
+                },
+                {
                     label: "Terminal",
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "terminal");
