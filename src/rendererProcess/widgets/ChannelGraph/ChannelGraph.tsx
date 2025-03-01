@@ -176,7 +176,7 @@ export class ChannelGraph extends BaseWidget {
         }
     };
 
-    initialChannelNames: string[] = [];
+    // initialChannelNames: string[] = [];
 
     constructor(widgetTdl: type_ChannelGraph_tdl) {
         console.log("channel graph widget tdl", widgetTdl)
@@ -188,7 +188,7 @@ export class ChannelGraph extends BaseWidget {
 
         this._dbdFiles = new DbdFiles(JSON.parse(JSON.stringify(widgetTdl.recordTypes)), JSON.parse(JSON.stringify(widgetTdl.menus)));
 
-        this.initialChannelNames = widgetTdl["channelNames"];
+        // this.initialChannelNames = widgetTdl["channelNames"];
         console.log("---------------------------", this._dbdFiles)
         // const css = document.createElement('link');
         // css.rel = 'stylesheet';
@@ -285,7 +285,7 @@ export class ChannelGraph extends BaseWidget {
         return (
             // always update the div below no matter the TextUpdateBody is .memo or not
             // TextUpdateResizer does not update if it is .memo
-            <div style={{ ...this.getElementBodyRawStyle(), overflow: "hidden" }}>
+            <div style={{ ...this.getElementBodyRawStyle() }}>
                 <this._ElementArea></this._ElementArea>
                 {this._showResizers() ? <this._ElementResizer /> : null}
             </div>
@@ -324,14 +324,23 @@ export class ChannelGraph extends BaseWidget {
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                {Object.keys(this.getDbdFiles().getRecordTypes()).length === 0 ?
-                    <this._ElementLoadingDbd></this._ElementLoadingDbd>
-                    :
-                    <this._ElementChannelGraph></this._ElementChannelGraph>
-                }
+                <this._ElementChannelGraph></this._ElementChannelGraph>
             </div>
         );
     };
+
+    _ElementMask = () => {
+        return <div style={{
+            position: "absolute",
+            display: "inline-flex",
+            width: "100%",
+            height: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0)",
+        }}>
+        </div>
+    }
 
     _ElementLoadingDbd = () => {
         return <div style={{
@@ -355,28 +364,33 @@ export class ChannelGraph extends BaseWidget {
         const [channelName, setChannelName] = React.useState("");
 
         React.useEffect(() => {
+            if (g_widgets1.isEditing()) {
+                return;
+            }
             setTimeout(() => {
-                if (elementRef.current !== null) {
+                if (g_widgets1.isEditing()) {
+                    this.network?.destroy()
+                } else {
+                    if (elementRef.current !== null) {
 
-                    this.network = new Network(elementRef.current, this.networkData, this.networkOptions);
-                    this.networkClickCallback = (params: any) => {
-                        this.handleClickNode(params);
-                    };
-                    this.networkDoubleClickCallback = (params: any) => {
-                        this.handleDoubleClickNode(params);
-                    };
-                    // this.network will not be changed in future
-                    this.network.on('click', this.networkClickCallback);
-                    this.network.on("doubleClick", this.networkDoubleClickCallback);
-                    if (this.initialChannelNames.length > 0) {
-                        const initialChannelName = this.initialChannelNames[0];
-                        this.expandNode(initialChannelName);
-                        setChannelName(initialChannelName);
+                        this.network = new Network(elementRef.current, this.networkData, this.networkOptions);
+                        this.networkClickCallback = (params: any) => {
+                            this.handleClickNode(params);
+                        };
+                        this.networkDoubleClickCallback = (params: any) => {
+                            this.handleDoubleClickNode(params);
+                        };
+                        // this.network will not be changed in future
+                        this.network.on('click', this.networkClickCallback);
+                        this.network.on("doubleClick", this.networkDoubleClickCallback);
+                        if (this.getChannelNames().length > 0 && this.getChannelNames()[0].trim() !== "") {
+                            this.expandNode(this.getChannelNames()[0]);
+                            setChannelName(this.getChannelNames()[0]);
+                        }
                     }
-
                 }
             }, 0)
-        }, [])
+        }, [g_widgets1.isEditing()])
 
         return (
             <div style={{
@@ -449,6 +463,9 @@ export class ChannelGraph extends BaseWidget {
                     <this._ElementConfigPage setShowConfigPage={setShowConfigPage}></this._ElementConfigPage>
                     : null
                 }
+                {g_widgets1.isEditing() ? <this._ElementMask></this._ElementMask> : null}
+
+
             </div>
         );
     };
@@ -723,25 +740,51 @@ export class ChannelGraph extends BaseWidget {
         )
     }
 
+    /**
+     * (1) clear all nodes
+     * 
+     * (2) reset view port
+     * 
+     * (3) clear the internal data
+     * 
+     * (4) destroy all channels in this widget
+     * 
+     * (5) clear channel names, leaving the first channel, because other field channels were 
+     *     added to channel names list
+     * 
+     * (6) process channel names
+     */
     clearGraph = () => {
-        // clear all nodes
+        // (1)
         const allNodes = this.networkData["nodes"];
         const allEdges = this.networkData["edges"];
         allNodes.clear();
         allEdges.clear();
-        // reset view port
+        // (2)
         this.network?.moveTo({
             position: { x: 0, y: 0 }, // Default center position
             scale: 1,                 // Default zoom level
             animation: false
         });
-        // clear the data
+        // (3)
         const linksStaticData = this.getLinksStaticData();
         Object.keys(linksStaticData).forEach(key => delete linksStaticData[key]);
-        // destroy the live channels
-        g_widgets1.destroyAllTcaChannels();
-        // clear channel names
-        this.getChannelNamesLevel0().length = 0;
+
+        // (4)
+        for (let channelName of this.getChannelNames()) {
+            try {
+                const tcaChannel = g_widgets1.getTcaChannel(channelName);
+                tcaChannel.destroy(this.getWidgetKey());
+            } catch (e) {
+            }
+        }
+
+        // (5)
+        if (this.getChannelNamesLevel0().length > 0) {
+            this.getChannelNamesLevel0().splice(1);
+        }
+
+        // (6)
         this.processChannelNames();
     }
 
@@ -1311,11 +1354,15 @@ export class ChannelGraph extends BaseWidget {
         recordTypes: Record<string, any>,
     }) => {
         this._dbdFiles = new DbdFiles(result["recordTypes"], result["menus"]);
-        this.clearGraph();
-        const initialChannelName = this.initialChannelNames[0];
-        this.expandNode(initialChannelName);
-        this.forceUpdate();
 
+        if (g_widgets1.isEditing()) {
+            return;
+        } else {
+            if (this.getChannelNames().length > 0 && this.getChannelNames()[0].trim() !== "") {
+                this.expandNode(this.getChannelNames()[0]);
+                this.forceUpdate();
+            }
+        }
     }
 
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
@@ -1514,6 +1561,12 @@ export class ChannelGraph extends BaseWidget {
     // defined in super class
     getTdlCopy(newKey: boolean = true) {
         const result = super.getTdlCopy(newKey);
+        if (this.getChannelNamesLevel0().length > 0) {
+            result.channelNames = [this.getChannelNamesLevel0()[0]];
+        } else {
+            result.channelNames = [];
+        }
+
         result.recordTypes = {};
         result.menus = {};
         return result;
@@ -1555,19 +1608,36 @@ export class ChannelGraph extends BaseWidget {
         }
     }
 
+    jobsAsEditingModeBegins(): void {
+        super.jobsAsEditingModeBegins();
+        this.clearGraph();
+    }
+
     jobsAsOperatingModeBegins() {
         super.jobsAsEditingModeBegins();
-        if (Object.keys(this.getDbdFiles().getRecordTypes()).length === 0) {
-            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-            const ipcManager = displayWindowClient.getIpcManager();
-            ipcManager.sendFromRendererProcess("request-epics-dbd", {
-                displayWindowId: displayWindowClient.getWindowId(),
-                widgetKey: this.getWidgetKey(),
-            })
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const dbdAssigned = Object.keys(this.getDbdFiles().getRecordTypes()).length > 0;
+        const isUtilityWindow = displayWindowClient.getIsUtilityWindow();
+
+
+        if (isUtilityWindow) {
+        } else {
+            if (dbdAssigned) {
+                // switch from editing mode to operating mode, with the DBD files already loaded
+                // only need to expand node
+                if (this.getChannelNames().length > 0 && this.getChannelNames()[0].trim() !== "") {
+                    this.expandNode(this.getChannelNames()[0]).then(() => {
+                        this.forceUpdate();
+                    })
+                }
+            } else {
+                const ipcManager = displayWindowClient.getIpcManager();
+                // the reply will be handled by this.processDbd()
+                ipcManager.sendFromRendererProcess("request-epics-dbd", {
+                    displayWindowId: displayWindowClient.getWindowId(),
+                    widgetKey: this.getWidgetKey(),
+                })
+            }
         }
-        this.clearGraph();
-        // const initialChannelName = this.initialChannelNames[0];
-        // this.expandNode(initialChannelName);
-        this.forceUpdate();
     }
 }

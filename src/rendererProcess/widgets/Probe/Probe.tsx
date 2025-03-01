@@ -13,7 +13,7 @@ import { GlobalVariables } from "../../global/GlobalVariables";
 import { TcaChannel } from "../../channel/TcaChannel";
 import { v4 as uuidv4 } from "uuid";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor, ElementRectangleButtonDefaultTextColor } from "../../helperWidgets/SharedElements/RectangleButton";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_Probe_tdl = {
     type: string;
@@ -348,7 +348,7 @@ export class Probe extends BaseWidget {
 
     _ElementBodyRaw = (): JSX.Element => {
         return (
-            <div style={{ ...this.getElementBodyRawStyle(), overflowX: "hidden" }}>
+            <div style={{ ...this.getElementBodyRawStyle()}}>
                 <this._ElementArea></this._ElementArea>
                 {this._showResizers() ? <this._ElementResizer /> : null}
             </div>
@@ -370,6 +370,7 @@ export class Probe extends BaseWidget {
             setChannelName(`${this.getChannelNames()[0]}`);
         }, [this.getChannelNames()[0]]);
 
+
         return (
             <div
                 style={{
@@ -389,7 +390,9 @@ export class Probe extends BaseWidget {
                     fontSize: this.getText().fontSize,
                     fontStyle: this.getText().fontStyle,
                     // outline: this._getElementAreaRawOutlineStyle(),
-                    paddingBottom: 20,
+                    paddingBottom: 0,
+                    overflowX: "hidden",
+                    overflowY: "scroll",
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
@@ -622,6 +625,16 @@ export class Probe extends BaseWidget {
                         Copy All
                     </ElementRectangleButton>
                 </div>
+                {g_widgets1.isEditing() ?
+                    <div style={{
+                        position: "absolute",
+                        width: "100%",
+                        height: "100%",
+                        backgroundColor: "rgba(255,0,0,0)",
+                    }}>
+                    </div>
+                    : null
+                }
             </div>
         );
     };
@@ -1235,6 +1248,50 @@ export class Probe extends BaseWidget {
     createSidebar = () => {
         if (this._sidebar === undefined) {
             this._sidebar = new ProbeSidebar(this);
+        }
+    }
+
+    jobsAsEditingModeBegins(): void {
+        super.jobsAsEditingModeBegins();
+    }
+
+
+    processDbd = (result: {
+        menus: Record<string, any>,
+        recordTypes: Record<string, any>,
+    }) => {
+        this._dbdFiles = new DbdFiles(result["recordTypes"], result["menus"]);
+
+        if (g_widgets1.isEditing()) {
+            return;
+        } else {
+            if (this.getChannelNames().length > 0 && this.getChannelNames()[0].trim() !== "") {
+                this.newProbe(this.getChannelNames()[0]);
+            }
+        }
+    }
+
+    jobsAsOperatingModeBegins() {
+        super.jobsAsEditingModeBegins();
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const dbdAssigned = Object.keys(this.getDbdFiles().getRecordTypes()).length > 0;
+        const isUtilityWindow = displayWindowClient.getIsUtilityWindow();
+
+
+        if (isUtilityWindow) {
+        } else {
+            if (dbdAssigned) {
+                if (this.getChannelNames().length > 0 && this.getChannelNames()[0].trim() !== "") {
+                    this.newProbe(this.getChannelNames()[0]);
+                }
+            } else {
+                const ipcManager = displayWindowClient.getIpcManager();
+                // the reply will be handled by this.processDbd()
+                ipcManager.sendFromRendererProcess("request-epics-dbd", {
+                    displayWindowId: displayWindowClient.getWindowId(),
+                    widgetKey: this.getWidgetKey(),
+                })
+            }
         }
     }
 }

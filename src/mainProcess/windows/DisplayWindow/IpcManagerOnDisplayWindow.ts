@@ -28,6 +28,7 @@ import { type_DialogInputBox, type_DialogMessageBox } from "../../../rendererPro
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
 import { TcaChannel } from "../../../rendererProcess/channel/TcaChannel";
 import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/ChannelGraph";
+import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
 
 // var recorder;
 // var blobs = [];
@@ -216,7 +217,7 @@ export class IpcManagerOnDisplayWindow {
         recordTypes: Record<string, any>,
     }) => {
         const widget = g_widgets1.getWidget(result["widgetKey"]);
-        if (widget instanceof ChannelGraph) {
+        if (widget instanceof ChannelGraph || widget instanceof Probe) {
             widget.processDbd({
                 menus: result["menus"],
                 recordTypes: result["recordTypes"],
