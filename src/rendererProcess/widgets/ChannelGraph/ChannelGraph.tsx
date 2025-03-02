@@ -112,6 +112,7 @@ export class ChannelGraph extends BaseWidget {
 
     forceUpdateConfigPage: () => void = () => { };
     forceUpdate: () => void = () => { };
+    setShowConfigPage: any = () => {};
 
     network: undefined | Network = undefined;
 
@@ -359,6 +360,7 @@ export class ChannelGraph extends BaseWidget {
     _ElementChannelGraph = () => {
         const elementRef = React.useRef<any>(null);
         const [showConfigPage, setShowConfigPage] = React.useState(false);
+        this.setShowConfigPage = setShowConfigPage;
         // const rawChannelName = this.getChannelNames()[0];
         // const [channelName, setChannelName] = React.useState(rawChannelName === undefined? "": rawChannelName);
         const [channelName, setChannelName] = React.useState("");
@@ -437,26 +439,6 @@ export class ChannelGraph extends BaseWidget {
                             Channel Graph for&nbsp;
                         </div>
                         <this._ElementChannelInput channelName={channelName} setChannelName={setChannelName}></this._ElementChannelInput>
-                    </div>
-                    <div style={{
-                        display: "inline-flex",
-                        flexDirection: "row",
-                    }}>
-                        <ElementRectangleButton
-                            marginRight={10}
-                            handleClick={async () => {
-                                this.clearGraph();
-                            }}
-                        >
-                            Clear
-                        </ElementRectangleButton>
-                        <ElementRectangleButton
-                            handleClick={() => {
-                                setShowConfigPage(true);
-                            }}
-                        >
-                            Configure
-                        </ElementRectangleButton>
                     </div>
                 </div>
                 {showConfigPage === true ?

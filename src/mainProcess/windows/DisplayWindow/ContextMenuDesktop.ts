@@ -1509,7 +1509,7 @@ export class ContextMenuDesktop {
                 },
                 { type: "separator" as type_type },
             ]);
-        } else if (widgetKey.includes("LogViewer") || widgetKey.includes("PvMonitor") || widgetKey.includes("CaSnooper") || widgetKey.includes("Casw")|| widgetKey.includes("FileConverter")) {
+        } else if (widgetKey.includes("LogViewer") || widgetKey.includes("PvMonitor") || widgetKey.includes("CaSnooper") || widgetKey.includes("Casw") || widgetKey.includes("FileConverter")) {
             // Table: save data, copy data, ...
             if (options["contextMenuTexts"] !== undefined) {
                 const contextMenuTexts = options["contextMenuTexts"];
@@ -1557,6 +1557,26 @@ export class ContextMenuDesktop {
                     { type: "separator" as type_type },
                 ]);
             }
+        } else if (widgetKey.includes("ChannelGraph")) {
+            const showChannelGraphOptions = options["showChannelGraphOptions"];
+            if (showChannelGraphOptions !== undefined && showChannelGraphOptions === true) {
+                result.push(...[
+                    {
+                        label: "Clear graph",
+                        click: () => {
+                            this._displayWindowAgent.sendFromMainProcess("widget-specific-action", widgetKey, "clear-graph");
+                        },
+                    },
+                    {
+                        label: "Graph settings",
+                        click: () => {
+                            this._displayWindowAgent.sendFromMainProcess("widget-specific-action", widgetKey, "show-settings");
+                        },
+                    },
+                    { type: "separator" as type_type },
+                ]);
+            }
+
         }
 
         return result;

@@ -306,7 +306,6 @@ export class DisplayWindowClient {
             let eventElement = event.target;
             const promptElement = document.getElementById(this.getPrompt().getId());
             while (true) {
-                console.log(eventElement, promptElement)
                 if (eventElement === null) {
                     break;
                 }
@@ -348,7 +347,11 @@ export class DisplayWindowClient {
                         const widgetKey = widget.getWidgetKey();
                         // read and write types widgets are treated the same by mid and right buttons
                         // so that the mid button and Probe show the same PV
-                        if (hasNonEmptyChannelName(widget.getChannelNames())) {
+                        if (hasNonEmptyChannelName(widget.getChannelNames())
+                            || widget instanceof ChannelGraph
+                            || widget instanceof PvMonitor
+                            || widget instanceof Probe
+                        ) {
                             // only when this widget has a channel
                             widgetKeyResult = widgetKey;
                             break;
@@ -444,6 +447,12 @@ export class DisplayWindowClient {
                             this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
                             return;
                         }
+                    } else if (widget instanceof ChannelGraph) {
+                        contextMenuOptions = {
+                            showChannelGraphOptions: true,
+                        }
+                        this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
+                        return;
                     } else {
                         // any other type of widgets, no special action
                         this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], {});

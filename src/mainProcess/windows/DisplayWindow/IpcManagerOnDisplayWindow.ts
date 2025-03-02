@@ -778,6 +778,18 @@ export class IpcManagerOnDisplayWindow {
                 Log.error(e);
             }
         }
+        if (widgetKey.includes("ChannelGraph")) {
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey) as ChannelGraph;
+                if (actionName === "show-settings") {
+                    widget.setShowConfigPage(true);
+                } else if (actionName === "clear-graph") {
+                    widget.clearGraph();
+                }
+            } catch (e) {
+                Log.error(e);
+            }
+        }
         if (widgetKey.includes("LogViewer") || widgetKey.includes("PvMonitor") || widgetKey.includes("CaSnooper") || widgetKey.includes("Casw") || widgetKey.includes("FileConverter")) {
             try {
                 const widget = g_widgets1.getWidget2(widgetKey);

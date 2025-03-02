@@ -251,9 +251,11 @@ export class Polyline extends BaseWidget {
     _ElementLine = () => {
         const length = this.getAllText()["arrowLength"];
         const width = this.getAllText()["arrowWidth"];
-        if (this.isSelected() === false || g_widgets1.isEditing() === true) {
+        console.log("======================", this.selectedPointIndex, this.isSelected(), g_widgets1.isEditing());
+        if (this.isSelected() === false && g_widgets1.isEditing() === true) {
             this.selectedPointIndex = -1;
         }
+        console.log("====================== AA", this.selectedPointIndex);
 
         return (
             <svg
@@ -348,10 +350,11 @@ export class Polyline extends BaseWidget {
                     null :
                     this.isSelected() === false ?
                         null :
-                        <circle r={this.getAllText()["lineWidth"] + 3}
+                        <circle
+                            r={this.getAllText()["lineWidth"] + 3}
                             cx={this.generatePolylinePoint(this.selectedPointIndex).split(",")[0]}
                             cy={this.generatePolylinePoint(this.selectedPointIndex).split(",")[1]}
-                            fill="red" />
+                            fill={"red"} />
                 }
 
             </svg>

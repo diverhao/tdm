@@ -275,9 +275,23 @@ export class PvMonitor extends BaseWidget {
             >
                 <this._ElementPvMonitor></this._ElementPvMonitor>
                 {this.showSettings ? <this._ElementSettings></this._ElementSettings> : null}
+                {g_widgets1.isEditing() === true? <this._ElementMask></this._ElementMask> : null}
             </div>
         );
     };
+
+    _ElementMask = () => {
+        return (
+            <div style={{
+                width: "100%",
+                height: "100%",
+                position: "absolute",
+                backgroundColor: "rgba(255,0,0,0)",
+            }}>
+
+            </div>
+        )
+    }
 
     calcLazyRendering = (tableRef: any) => {
 

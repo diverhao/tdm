@@ -548,6 +548,26 @@ export class ContextMenu {
                     { type: "separator" },
                 ]);
             }
+        } else if (widgetKey.includes("ChannelGraph")) {
+            const showChannelGraphOptions = options["showChannelGraphOptions"];
+            if (showChannelGraphOptions !== undefined && showChannelGraphOptions === true) {
+                result.push(...[
+                    {
+                        label: "Clear graph",
+                        click: () => {
+                            this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, widgetKey, "clear-graph");
+                        },
+                    },
+                    {
+                        label: "Graph settings",
+                        click: () => {
+                            this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, widgetKey, "show-settings");
+                        },
+                    },
+                    { type: "separator" },
+                ]);
+            }
+
         }
 
         return result;
@@ -1349,12 +1369,12 @@ export class ContextMenu {
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "calculator", undefined);
             },
         },
-        // {
-        //     label: "Channel Graph",
-        //     click: () => {
-        //         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "channel-graph");
-        //     },
-        // },
+        {
+            label: "Channel Graph",
+            click: () => {
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "channel-graph", undefined);
+            },
+        },
         { type: "separator" },
         {
             label: "Toggle Title",
