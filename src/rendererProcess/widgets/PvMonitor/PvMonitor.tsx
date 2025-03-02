@@ -727,10 +727,10 @@ export class PvMonitor extends BaseWidget {
                     const data = this.getData()[index];
                     result.push(data)
                 }
-                navigator.clipboard.writeText(JSON.stringify(result));
+                navigator.clipboard.writeText(JSON.stringify(result, null, 4));
             },
             "Copy all data": () => {
-                navigator.clipboard.writeText(JSON.stringify(this.getData()));
+                navigator.clipboard.writeText(JSON.stringify(this.getData(), null, 4));
             },
             "Save selected data": () => {
                 const result: type_data[] = [];
@@ -746,7 +746,7 @@ export class PvMonitor extends BaseWidget {
                 const displayWindowId = displayWindowClient.getWindowId();
                 const mainProcessMode = displayWindowClient.getMainProcessMode();
                 if (mainProcessMode === "web") {
-                    const blob = new Blob([JSON.stringify(result)], { type: 'text/json' });
+                    const blob = new Blob([JSON.stringify(result, null, 4)], { type: 'text/json' });
                     const dateNowStr = GlobalMethods.convertEpochTimeToString(Date.now());
                     const suggestedName = `PvMonitor-data-${dateNowStr}.json`;
                     const description = 'PV Monitor data';
@@ -770,7 +770,7 @@ export class PvMonitor extends BaseWidget {
                 const displayWindowId = displayWindowClient.getWindowId();
                 const mainProcessMode = displayWindowClient.getMainProcessMode();
                 if (mainProcessMode === "web") {
-                    const blob = new Blob([JSON.stringify(this.getData())], { type: 'text/json' });
+                    const blob = new Blob([JSON.stringify(this.getData(), null, 4)], { type: 'text/json' });
                     const dateNowStr = GlobalMethods.convertEpochTimeToString(Date.now());
                     const suggestedName = `PvMonitor-data-${dateNowStr}.json`;
                     const description = 'PV Monitor data';

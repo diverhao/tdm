@@ -1423,7 +1423,7 @@ export class XYPlotPlot {
                                         result[channelName] = undefined;
                                     }
                                 }
-                                navigator.clipboard.writeText(JSON.stringify(result));
+                                navigator.clipboard.writeText(JSON.stringify(result, null ,4));
                             }
                         }}
                     >

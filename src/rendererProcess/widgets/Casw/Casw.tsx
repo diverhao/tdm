@@ -665,11 +665,11 @@ export class Casw extends BaseWidget {
                     const data = this.getCaProtoRsrvIsUpData()[index];
                     result.push(data)
                 }
-                navigator.clipboard.writeText(JSON.stringify(result));
+                navigator.clipboard.writeText(JSON.stringify(result, null, 4));
 
             },
             "Copy all data": () => {
-                navigator.clipboard.writeText(JSON.stringify(this.getCaProtoRsrvIsUpData()));
+                navigator.clipboard.writeText(JSON.stringify(this.getCaProtoRsrvIsUpData(), null, 4));
 
             },
             "Save selected data": () => {

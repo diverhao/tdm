@@ -619,7 +619,7 @@ export class Probe extends BaseWidget {
                                 result[fieldName] = value;
                             }
 
-                            navigator.clipboard.writeText(JSON.stringify(result));
+                            navigator.clipboard.writeText(JSON.stringify(result, null, 4));
                         }}
                     >
                         Copy All
@@ -1043,7 +1043,7 @@ export class Probe extends BaseWidget {
                             // const value = Object.values(this.getDbrData())[index];
                             // const channelName = `${this._channelNames[0]}.${fieldName}`;
                             const value = g_widgets1.getChannelValue(channelName);
-                            navigator.clipboard.writeText(JSON.stringify(value));
+                            navigator.clipboard.writeText(JSON.stringify(value, null, 4));
                         }}
                     >
                         Copy

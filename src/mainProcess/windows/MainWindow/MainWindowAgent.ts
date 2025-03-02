@@ -200,8 +200,8 @@ export class MainWindowAgent {
 
                 const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager().getPort();
                 const hostname = this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" ?
-                "localhost"
-                : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
+                    "localhost"
+                    : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
 
 
                 this.loadURLPromise = window.loadURL(
@@ -273,10 +273,11 @@ export class MainWindowAgent {
 
         // check if there is any other BrowserWindow,
         const hasPreloadedBrowserWindow = this.getWindowAgentsManager().preloadedDisplayWindowAgent === undefined ? 0 : 1;
-        const hasPreloadedBrowserView = this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === undefined ? 0 : 1;
+        // const hasPreloadedBrowserView = this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === undefined ? 0 : 1;
         const numBrowserWindows = Object.keys(this.getWindowAgentsManager().getAgents()).length;
 
-        if (numBrowserWindows - hasPreloadedBrowserView - hasPreloadedBrowserWindow <= 0) {
+        // if (numBrowserWindows - hasPreloadedBrowserView - hasPreloadedBrowserWindow <= 0) {
+        if (numBrowserWindows - hasPreloadedBrowserWindow <= 0) {
             if (this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" || this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "ssh-client") {
                 // quit on desktop mode
                 this.getWindowAgentsManager().getMainProcess().quit();
@@ -297,7 +298,7 @@ export class MainWindowAgent {
         } else if (mainProcessMode === "ssh-client") {
             // tell the ssh-server to clean up the main window stuff
             if (this.readyToClose) {
-                return;                
+                return;
             }
             event.preventDefault();
             this.readyToClose = true;

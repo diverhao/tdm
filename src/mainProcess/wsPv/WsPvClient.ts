@@ -76,7 +76,7 @@ export class WsPvClient {
             // console.log(data)
             const command = data["command"];
             this.log("debug", "--------------- message --------------")
-            this.log("debug", JSON.stringify(data))
+            this.log("debug", JSON.stringify(data, null, 4))
             this.log("debug", "--------------------------------------")
 
 

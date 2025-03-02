@@ -214,7 +214,7 @@ export class TdlViewer extends BaseWidget {
                         handleClick={() => {
                             const tdl = this.getText()["tdl"];
                             if (tdl !== undefined) {
-                                navigator.clipboard.writeText(JSON.stringify(tdl));
+                                navigator.clipboard.writeText(JSON.stringify(tdl, null, 4));
                             }
                         }}
                     >

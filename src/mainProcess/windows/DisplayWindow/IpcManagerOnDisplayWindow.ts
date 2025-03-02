@@ -567,7 +567,7 @@ export class IpcManagerOnDisplayWindow {
      */
     handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_LocalChannel_data | undefined>) => {
 
-        Log.debug("received data", JSON.stringify(newDbrData));
+        Log.debug("received data", JSON.stringify(newDbrData, null, 4));
 
         let channelNames = Object.keys(newDbrData);
 

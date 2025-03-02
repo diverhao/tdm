@@ -2822,7 +2822,7 @@ export class Widgets {
             }
         }
         try {
-            await navigator.clipboard.writeText(JSON.stringify(result));
+            await navigator.clipboard.writeText(JSON.stringify(result, null, 4));
         } catch (e) {
             console.log(e);
         }
@@ -2941,7 +2941,7 @@ export class Widgets {
     copyDisplayContents = async () => {
         const result = this.getRoot().getDisplayWindowClient().generateTdl();
         try {
-            await navigator.clipboard.writeText(JSON.stringify(result));
+            await navigator.clipboard.writeText(JSON.stringify(result, null, 4));
         } catch (e) {
             console.log(e);
         }
@@ -2957,7 +2957,7 @@ export class Widgets {
         if (widget instanceof BaseWidget) {
             const channelNames = widget.getChannelNames();
             try {
-                await navigator.clipboard.writeText(JSON.stringify(channelNames));
+                await navigator.clipboard.writeText(JSON.stringify(channelNames, null, 4));
             } catch (e) {
                 console.log(e);
             }
@@ -2982,7 +2982,7 @@ export class Widgets {
                 }
             }
             try {
-                await navigator.clipboard.writeText(JSON.stringify(result));
+                await navigator.clipboard.writeText(JSON.stringify(result, null, 4));
             } catch (e) {
                 console.log(e);
             }
@@ -3000,7 +3000,7 @@ export class Widgets {
             }
         }
         try {
-            await navigator.clipboard.writeText(JSON.stringify(result));
+            await navigator.clipboard.writeText(JSON.stringify(result, null, 4));
         } catch (e) {
             console.log(e);
         }
@@ -3008,7 +3008,7 @@ export class Widgets {
 
     copyAllChannelNames = async () => {
         try {
-            await navigator.clipboard.writeText(JSON.stringify(Object.keys(this.getTcaChannels())));
+            await navigator.clipboard.writeText(JSON.stringify(Object.keys(this.getTcaChannels()), null, 4));
         } catch (e) {
             console.log(e);
         }

@@ -711,9 +711,10 @@ export class IpcManagerOnMainProcess {
                 // real display window need to be saved
                 (browserWindow instanceof BrowserWindow &&
                     // preloaded displays don't need to be saved
-                    windowAgentsManager.preloadedDisplayWindowAgent !== displayWindowAgent &&
+                    windowAgentsManager.preloadedDisplayWindowAgent !== displayWindowAgent 
                     // embedded displays don't need to be saved
-                    windowAgentsManager.preloadedEmbeddedDisplayAgent !== displayWindowAgent)
+                    // && windowAgentsManager.preloadedEmbeddedDisplayAgent !== displayWindowAgent
+                )
             ) {
                 // desktop mode and ssh-client mode 
                 // 
@@ -779,7 +780,7 @@ export class IpcManagerOnMainProcess {
                             }
                             if (tdlFileName !== undefined) {
                                 // save file
-                                fs.writeFile(tdlFileName, JSON.stringify(data["tdl"]), (err) => {
+                                fs.writeFile(tdlFileName, JSON.stringify(data["tdl"], null, 4), (err) => {
                                     if (err) {
                                         // error when saving file, do not close the window
                                         Log.error(this.getMainProcessId(), err);
@@ -1599,7 +1600,7 @@ export class IpcManagerOnMainProcess {
                 return;
             }
 
-            fs.writeFile(tdlFileName, JSON.stringify(tdl), (err) => {
+            fs.writeFile(tdlFileName, JSON.stringify(tdl, null, 4), (err) => {
                 if (err) {
                     Log.error(this.getMainProcessId(), err);
                     displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
@@ -1682,7 +1683,7 @@ export class IpcManagerOnMainProcess {
                 return;
             }
 
-            fs.writeFile(fileName, JSON.stringify(data), (err) => {
+            fs.writeFile(fileName, JSON.stringify(data, null, 4), (err) => {
                 if (err) {
                     Log.error(this.getMainProcessId(), err);
                     displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
@@ -2344,7 +2345,7 @@ export class IpcManagerOnMainProcess {
                     }
                 }
                 try {
-                    fs.writeFileSync(fileName, JSON.stringify(data));
+                    fs.writeFileSync(fileName, JSON.stringify(data, null, 4));
                     Log.debug(this.getMainProcessId(), "Successfully saved DataViewer data to", fileName);
                 } catch (e) {
                     Log.error(this.getMainProcessId(), `Cannot save DataViewer data to file ${fileName}`);

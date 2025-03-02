@@ -1,4 +1,4 @@
-import { nativeImage, BrowserWindow, BrowserView, MenuItem, Menu, dialog, clipboard, desktopCapturer, webFrame, webContents, Tray, app } from "electron";
+import { nativeImage, BrowserWindow, MenuItem, Menu, dialog, clipboard, desktopCapturer, webFrame, webContents, Tray, app } from "electron";
 import * as path from "path";
 import * as url from "url";
 import { type_options_createDisplayWindow, WindowAgentsManager } from "../../windows/WindowAgentsManager";
@@ -237,8 +237,8 @@ export class DisplayWindowAgent {
         }
 
         if (
-            this.getWindowAgentsManager().preloadedDisplayWindowAgent === this ||
-            this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === this
+            this.getWindowAgentsManager().preloadedDisplayWindowAgent === this
+            // || this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === this
         ) {
             Log.debug(this.getMainProcessId(), "This is a preloaded display window, skip creating websocket client thread");
             return;
@@ -316,33 +316,6 @@ export class DisplayWindowAgent {
 
     // -----------------------------------------------
 
-    setBounds = (newBounds: { x: number; y: number; width: number; height: number }) => {
-        const browserView = this.getBrowserWindow();
-        if (browserView instanceof BrowserView || browserView instanceof BrowserWindow) {
-            browserView.setBounds(newBounds);
-        } else {
-            Log.error(this.getMainProcessId(), "Cannot set bounds, it is not an embedded display.");
-        }
-    };
-
-    setEmbeddedDisplayBackgroundColor = (newColor: string) => {
-        const browserView = this.getBrowserWindow();
-        if (browserView instanceof BrowserView) {
-            browserView.setBackgroundColor(newColor);
-        } else {
-            Log.error(this.getMainProcessId(), "Cannot set background color, it is not an embedded display.");
-        }
-    };
-
-    getBounds = () => {
-        const browserView = this.getBrowserWindow();
-        if (browserView instanceof BrowserView || browserView instanceof BrowserWindow) {
-            return browserView.getBounds();
-        } else {
-            Log.error(this.getMainProcessId(), "Cannot get bounds, it is not an embedded display.");
-            return undefined;
-        }
-    };
 
     // -------------------- channels -----------------------
     // General behaviros for the GET/GET_META/PUT/PUT_META/MONITR operations
@@ -480,10 +453,10 @@ export class DisplayWindowAgent {
 
                     // const dbrTypeNum_TIME = channelAgent.getDbrTypeNum_TIME();
                     // if (dbrTypeNum_TIME === undefined) {
-                        // Log.debug(this.getMainProcessId(), `Channel ${channelName} does not have a TIME type data.`);
+                    // Log.debug(this.getMainProcessId(), `Channel ${channelName} does not have a TIME type data.`);
                     // } else {
-                        // const dbrDataTime = await channelAgent.get(this.getId(), dbrTypeNum_GR, ioTimeout);
-                        // result = { ...result, ...dbrDataTime };
+                    // const dbrDataTime = await channelAgent.get(this.getId(), dbrTypeNum_GR, ioTimeout);
+                    // result = { ...result, ...dbrDataTime };
                     // }
 
                     if (result.value !== undefined) {
@@ -752,11 +725,12 @@ export class DisplayWindowAgent {
 
         // check if there is any other BrowserWindow,
         const hasPreloadedBrowserWindow = this.getWindowAgentsManager().preloadedDisplayWindowAgent === undefined ? 0 : 1;
-        const hasPreloadedBrowserView = this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === undefined ? 0 : 1;
+        // const hasPreloadedBrowserView = this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === undefined ? 0 : 1;
         const numBrowserWindows = Object.keys(this.getWindowAgentsManager().getAgents()).length;
 
 
-        if (numBrowserWindows - hasPreloadedBrowserView - hasPreloadedBrowserWindow <= 0) {
+        // if (numBrowserWindows - hasPreloadedBrowserView - hasPreloadedBrowserWindow <= 0) {
+        if (numBrowserWindows - hasPreloadedBrowserWindow <= 0) {
             if (this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" || this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "ssh-client") {
                 // quit on desktop mode
                 this.getWindowAgentsManager().getMainProcess().quit();
@@ -1653,8 +1627,8 @@ export class DisplayWindowAgent {
      */
     handleWindowClose = () => {
         if (
-            this.getWindowAgentsManager().preloadedDisplayWindowAgent === this ||
-            this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === this
+            this.getWindowAgentsManager().preloadedDisplayWindowAgent === this
+            // || this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === this
         ) {
             this.getBrowserWindow()?.webContents.close();
             Log.error(this.getMainProcessId(), `You are trying to close a preloaded display window or preloaded embedded display`);
@@ -1786,24 +1760,6 @@ export class DisplayWindowAgent {
     };
 
     // ------------------ embedded window (BrowserView) ------------------
-
-    updateUrl = (newUrl: string) => {
-        const browserView = this.getBrowserWindow();
-        if (browserView instanceof BrowserView) {
-            const webContents = browserView.webContents;
-            webContents.loadURL(newUrl);
-        }
-    };
-
-    hide = () => {
-        const browserWindow = this.getBrowserWindow();
-        if (browserWindow instanceof BrowserWindow) {
-            this.hiddenWindow = true;
-            browserWindow.hide();
-        } else {
-            Log.error(this.getMainProcessId(), `Error: cannot hide window ${this.getId()}`);
-        }
-    };
 
     /**
      * Bring up to front
@@ -1994,7 +1950,9 @@ export class DisplayWindowAgent {
 
     // ---------------------- process info ---------------------------
     getProcessInfo = async (withThumbnail: boolean) => {
-        const visible = (this.getWindowAgentsManager().preloadedDisplayWindowAgent === this || this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === this) ? "No" : "Yes";
+        const visible = (this.getWindowAgentsManager().preloadedDisplayWindowAgent === this
+            // || this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === this
+        ) ? "No" : "Yes";
 
         const webContents = this.getWebContents();
         let pid = -1;

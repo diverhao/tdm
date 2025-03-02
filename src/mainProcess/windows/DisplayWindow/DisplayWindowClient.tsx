@@ -938,7 +938,7 @@ export class DisplayWindowClient {
         if (this.getMainProcessMode() === "web") {
             const tdl = this.generateTdl();
             // this.downloadTdl();
-            const blob = new Blob([JSON.stringify(tdl)], { type: 'text/json' });
+            const blob = new Blob([JSON.stringify(tdl, null, 4)], { type: 'text/json' });
             this.downloadData(blob, tdlFileName);
             return;
         } else {

@@ -892,10 +892,10 @@ export class FileConverter extends BaseWidget {
                     const data = this.getData()[index];
                     result.push(data)
                 }
-                navigator.clipboard.writeText(JSON.stringify(result));
+                navigator.clipboard.writeText(JSON.stringify(result, null, 4));
             },
             "Copy all data": () => {
-                navigator.clipboard.writeText(JSON.stringify(this.getData()));
+                navigator.clipboard.writeText(JSON.stringify(this.getData(), null, 4));
             },
             "Save selected data": () => {
                 const result: type_FileConverterData[] = [];

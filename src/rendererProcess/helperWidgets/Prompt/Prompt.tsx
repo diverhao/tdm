@@ -234,7 +234,7 @@ export abstract class Prompt {
                     handleClick={async (event: React.MouseEvent) => {
                         event.preventDefault();
                         try {
-                            await navigator.clipboard.writeText(JSON.stringify(info));
+                            await navigator.clipboard.writeText(JSON.stringify(info, null, 4));
                         } catch (e) {
                             console.log(e);
                         }

@@ -870,12 +870,12 @@ export class ContextMenu {
                         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "pv-table");
                     },
                 },
-                // {
-                //     label: "Terminal",
-                //     click: () => {
-                //         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "terminal");
-                //     },
-                // },
+                {
+                    label: "PV Monitor",
+                    click: () => {
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "pv-monitor");
+                    },
+                },
                 {
                     label: "Calculator",
                     click: () => {

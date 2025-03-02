@@ -264,10 +264,12 @@ export class EmbeddedDisplay extends BaseWidget {
             Embedded display
         </div>
     }
-    
+
     _ElementIframeInOperating = () => {
 
         const iframeElementRef = React.useRef<any>(null);
+        const webviewElementRef = React.useRef<any>(null);
+
         React.useEffect(() => {
             if (iframeElementRef.current !== null) {
                 iframeElementRef.current.style["backgroundColor"] = this.iframeBackgroundColor;
@@ -278,14 +280,17 @@ export class EmbeddedDisplay extends BaseWidget {
             let tdlFileName = this.getTdlFileNames()[this.getSelectedTab()];
             const link = tdlFileName;
             return (
-                <webview
+                <iframe
+                    ref={webviewElementRef}
                     src={link}
                     id="embedded-display"
+                    width="100%"
+                    height="100%"
                     style={{
-                        width: "100%",
-                        height: "100%",
+                        border: "none",
+                        backgroundColor: this.iframeBackgroundColor,
                     }}
-                ></webview>
+                ></iframe>
             )
         } else {
             const ipcServerPort = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().getIpcServerPort();
@@ -308,7 +313,8 @@ export class EmbeddedDisplay extends BaseWidget {
                         border: "none",
                         backgroundColor: this.iframeBackgroundColor,
                     }}
-                ></iframe>
+                >
+                </iframe>
             );
         }
     };
@@ -628,6 +634,7 @@ export class EmbeddedDisplay extends BaseWidget {
             return;
         }
 
+
         const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
 
 
@@ -679,32 +686,10 @@ export class EmbeddedDisplay extends BaseWidget {
                 iframeDisplayId: this.iframeDisplayId,
             });
         }
+        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+        g_flushWidgets();
+
     };
-
-    // ----------------------- mode --------------------------
-    // setMode(newMode: rendererWindowStatus, oldMode: rendererWindowStatus) {
-    //     this.setEmbeddedDisplayMode(newMode);
-    // }
-
-    // setEmbeddedDisplayMode = (newMode: rendererWindowStatus) => {
-    //     const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-    //     let newModeStr = "operating";
-    //     if (newMode !== rendererWindowStatus.operating) {
-    //         newModeStr = "editing";
-    //     }
-
-    //     ipcManager.sendFromRendererProcess("update-embedded-display", "mode", {
-    //         parentDisplayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-    //         parentWidgetKey: this.getWidgetKey(),
-    //         x: this.getStyle()["left"],
-    //         y: this.getStyle()["top"],
-    //         width: this.getStyle()["width"],
-    //         height: this.getStyle()["height"],
-    //         newModeStr: newModeStr,
-    //     });
-    // };
-
-    // -------------------------- events from embedded display (via main process) --------------------------
 
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {

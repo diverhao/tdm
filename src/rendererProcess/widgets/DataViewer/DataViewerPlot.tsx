@@ -2463,7 +2463,7 @@ export class DataViewerPlot {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const mainProcessMode = displayWindowClient.getMainProcessMode();
         if (mainProcessMode === "web") {
-            const blob = new Blob([JSON.stringify(result)], { type: 'text/json' });
+            const blob = new Blob([JSON.stringify(result, null, 4)], { type: 'text/json' });
             const dateNowStr = GlobalMethods.convertEpochTimeToString(Date.now());
             const suggestedName = `DataViewer-data-${dateNowStr}.json`;
             const description = 'Data Viewer data';

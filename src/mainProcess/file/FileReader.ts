@@ -429,7 +429,7 @@ export class FileReader {
             }
             fs.writeFileSync(
                 newFullTdlFileName,
-                JSON.stringify(tdl)
+                JSON.stringify(tdl, null, 4)
                 // , function (err) {
                 // 	if (err) {
                 // 		console.log("tdl file", newFullTdlFileName, "save failed.");
@@ -581,7 +581,7 @@ export class FileReader {
     };
 
     static writeJSON = (fileName: string, data: Record<string, any>) => {
-        fs.writeFile(fileName, JSON.stringify(data), function (err) {
+        fs.writeFile(fileName, JSON.stringify(data, null, 4), function (err) {
             // if (err) {
             // 	console.log(err);
             // 	event.sender.send("error-message", err.toString());

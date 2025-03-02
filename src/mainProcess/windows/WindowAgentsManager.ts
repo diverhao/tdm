@@ -1,6 +1,6 @@
 import { MainWindowAgent } from "./MainWindow/MainWindowAgent";
 import { DisplayWindowAgent } from "./DisplayWindow/DisplayWindowAgent";
-import { dialog, app, BrowserWindow, BrowserView } from "electron";
+import { dialog, app, BrowserWindow } from "electron";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { v4 as uuid } from "uuid";
 import { UtilityWindow } from "./UtilityWindow/UtilityWindow";
@@ -35,7 +35,7 @@ export class WindowAgentsManager {
      * the preloadedDisplayWindowAgent is available. If not, it will create a new window.
      */
     preloadedDisplayWindowAgent: DisplayWindowAgent | undefined = undefined;
-    preloadedEmbeddedDisplayAgent: DisplayWindowAgent | undefined = undefined;
+    // preloadedEmbeddedDisplayAgent: DisplayWindowAgent | undefined = undefined;
     creatingPreloadedDisplayWindow: boolean = false;
     /**
      * Embedded display

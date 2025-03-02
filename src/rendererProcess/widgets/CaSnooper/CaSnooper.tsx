@@ -712,10 +712,10 @@ export class CaSnooper extends BaseWidget {
                     const data = this.getCaProtoSearchData()[index];
                     result.push(data)
                 }
-                navigator.clipboard.writeText(JSON.stringify(result));
+                navigator.clipboard.writeText(JSON.stringify(result, null, 4));
             },
             "Copy all data": () => {
-                navigator.clipboard.writeText(JSON.stringify(this.getCaProtoSearchData()));
+                navigator.clipboard.writeText(JSON.stringify(this.getCaProtoSearchData(), null, 4));
             },
             "Save selected data": () => {
                 const result: type_CaProtoSearchData[] = [];

@@ -441,7 +441,7 @@ export class PvTable extends BaseWidget {
                                 const tcaChannel = g_widgets1.getTcaChannel(channelNameLevel4);
                                 const dbrData = tcaChannel.getDbrData();
                                 dbrData["channelName"] = channelNameLevel4;
-                                navigator.clipboard.writeText(JSON.stringify(dbrData));
+                                navigator.clipboard.writeText(JSON.stringify(dbrData, null, 4));
                             } catch (e) {
                                 Log.error(e);
                             }
@@ -819,7 +819,7 @@ export class PvTable extends BaseWidget {
                                 }
                             }
                         }
-                        navigator.clipboard.writeText(JSON.stringify(result));
+                        navigator.clipboard.writeText(JSON.stringify(result, null, 4));
                     }}
                 >
                     Copy all data
