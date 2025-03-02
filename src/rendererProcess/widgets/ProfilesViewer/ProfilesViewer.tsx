@@ -285,9 +285,13 @@ export class ProfilesViewer extends BaseWidget {
                 <col style={{ width: "30%" }}></col>
                 {Object.keys(this.epicsStats["tcp"]).map((hostName: string, index: number) => {
                     const hostInfo = this.epicsStats["tcp"][hostName];
+
                     return <>
                         <tr>
-                            <td><b>{`${hostName.split(":")[0]}:${hostName.split(":")[1]}`}</b></td>
+                            <td><b>{`${hostName === "unresolved_channel_names" ?
+                                "Unresolved channels"
+                                :
+                                hostName.split(":")[0] + ":" + hostName.split(":")[1]}`}</b></td>
                             <td></td>
                         </tr>
                         {Object.keys(hostInfo).map((name: string, index: number) => {
@@ -295,14 +299,26 @@ export class ProfilesViewer extends BaseWidget {
                             if (name.toLowerCase().includes("time")) {
                                 return null
                             }
-                            return <tr key={`${name}-${index}`}
-                                style={{
-                                    backgroundColor: index % 2 === 0 ? "rgba(230, 230, 230, 1)" : ""
-                                }}
-                            >
-                                <td>{name.replace(/([A-Z])/g, ' $1').toLowerCase()}</td>
-                                <td>{value}</td>
-                            </tr>
+                            if (name === "channels") {
+                                return (
+                                    <this._ElementEpicsStatsChannelNames
+                                        channels={value}
+                                        startIndex={index}
+                                    >
+                                    </this._ElementEpicsStatsChannelNames>
+                                )
+                            } else {
+                                return (
+                                    <tr key={`${name}-${index}`}
+                                        style={{
+                                            backgroundColor: index % 2 === 0 ? "rgba(230, 230, 230, 1)" : ""
+                                        }}
+                                    >
+                                        <td>{name.replace(/([A-Z])/g, ' $1').toLowerCase()}</td>
+                                        <td>{value}</td>
+                                    </tr>
+                                )
+                            }
                         })}
                         <tr>
                             <td>&nbsp;</td>
@@ -312,6 +328,59 @@ export class ProfilesViewer extends BaseWidget {
                 })}
             </table>
         </div>
+    }
+
+    _ElementEpicsStatsChannelNames = ({ channels, startIndex }: any) => {
+        return (
+            <>
+                {channels.map((channelName: string, index: number) => {
+                    return (
+                        <tr key={`${channelName}-${index}`}
+                            style={{
+                                backgroundColor: (index + startIndex) % 2 === 0 ? "rgba(230, 230, 230, 1)" : ""
+                            }}
+                        >
+                            <td>{index === 0 ? "channels" : ""}</td>
+                            <td
+                            >
+                                <this._ElementEpicsStatsChannelName
+                                    channelName={channelName}
+                                ></this._ElementEpicsStatsChannelName>
+                            </td>
+                        </tr>
+                    )
+                })
+                }
+            </>
+        )
+    }
+
+    _ElementEpicsStatsChannelName = ({ channelName }: any) => {
+        const elementRef = React.useRef<any>(null);
+        return (
+            <div
+                ref={elementRef}
+                style={{
+                    cursor: "pointer",
+                }}
+                onMouseEnter={() => {
+                    if (elementRef.current !== null) {
+                        elementRef.current.style["outline"] = "3px solid rgba(180, 180, 180, 1)";
+                    }
+                }}
+                onMouseLeave={() => {
+                    if (elementRef.current !== null) {
+                        elementRef.current.style["outline"] = "none";
+                    }
+                }}
+                onClick={() => {
+                    g_widgets1.openProbeWindow([], channelName);
+                }}
+
+            >
+                {channelName}
+            </div>
+        )
     }
 
     _ElementSelectionButton = ({ text, selectionText, selection, onMouseDown }: any) => {
@@ -453,14 +522,14 @@ export class ProfilesViewer extends BaseWidget {
                 <p style={{ margin: 0, marginBottom: 4, color: "rgba(100, 100, 100, 1)" }}>
                     The table shows the environment variables used by TDM. The are all for EPICS.
                 </p>
-                <p style={{ margin: 0, marginBottom: 4, color: "rgba(100, 100, 100, 1)"  }}>
+                <p style={{ margin: 0, marginBottom: 4, color: "rgba(100, 100, 100, 1)" }}>
                     There are 3 sources
                     that the environment come from: default, operating system, and user. TDM tries to use the user-defined
                     value first. If it does not exist or not valid (shown as NOT SET in the table below),
                     TDM will try the operating system defined value, then
                     the default value. The values being used by TDM are in red color.
                 </p>
-                <p style={{ margin: 0, marginBottom: 0, color: "rgba(100, 100, 100, 1)"  }}>
+                <p style={{ margin: 0, marginBottom: 0, color: "rgba(100, 100, 100, 1)" }}>
                     The user-defined values can be set in profile editor.
                 </p>
                 <div>

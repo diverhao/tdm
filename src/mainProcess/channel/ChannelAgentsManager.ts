@@ -92,6 +92,33 @@ export class ChannelAgentsManager {
     };
 
     /**
+     * @returns {address: array of channel names}
+     */
+    generateEpicsStats = (): Record<string, any> => {
+        const context = this.getContext();
+        let result: Record<string, any> = {};
+        if (context === undefined) {
+            return result;
+        } else {
+            const networkStats = context.getNetworkStats();
+            result = JSON.parse(JSON.stringify(networkStats))
+
+            const tcpTransports = context.getTcpTransports();
+            for (let [address, tcpTransport] of Object.entries(tcpTransports.getTcpTransports())) {
+                const channelNames = Object.keys(tcpTransport.getChannels());
+                if (result["tcp"][address] !== undefined) {
+                    result["tcp"][address]["channels"] = channelNames;
+                }
+            }
+
+            const unconnectedChannelNames = Object.keys(context.getUnresolvedChannelsByName());
+            result["tcp"]["unresolved channel names"] = {};
+            result["tcp"]["unresolved_channel_names"]["channels"] = unconnectedChannelNames;
+            return result;
+        }
+    }
+
+    /**
      * Both loc:// and glb:// are considered as local type in main process
      */
     static determineChannelType = (channelName: string): "ca" | "local" | "pva" | undefined => {

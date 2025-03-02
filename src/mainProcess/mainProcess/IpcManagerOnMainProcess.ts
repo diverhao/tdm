@@ -2460,10 +2460,7 @@ export class IpcManagerOnMainProcess {
         const channelAgentsManager = this.getMainProcess().getChannelAgentsManager();
         const epicsContext = channelAgentsManager.getContext();
         if (epicsContext !== undefined) {
-            const epicsStats: {
-                udp: type_network_stats,
-                tcp: Record<string, type_network_stats>
-            } = epicsContext.getNetworkStats();
+            const epicsStats = channelAgentsManager.generateEpicsStats();
 
             const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
             if (displayWindowAgent instanceof DisplayWindowAgent) {
