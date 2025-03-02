@@ -213,6 +213,16 @@ export class Polyline extends BaseWidget {
         }
     };
 
+    generatePolylinePoint = (ii: number): string => {
+        let result = "";
+        const width = this.getAllStyle()["width"];
+        const height = this.getAllStyle()["height"];
+        const coordinate = `${width * this.getPointsRelativeX()[ii]},${height * this.getPointsRelativeY()[ii]}`;
+        result = `${coordinate}`;
+        return result;
+    };
+
+
     // reading the overall style, use getAllStyle()
     generatePolylinePoints = (): string => {
         let result = "";
@@ -241,6 +251,9 @@ export class Polyline extends BaseWidget {
     _ElementLine = () => {
         const length = this.getAllText()["arrowLength"];
         const width = this.getAllText()["arrowWidth"];
+        if (this.isSelected() === false || g_widgets1.isEditing() === true) {
+            this.selectedPointIndex = -1;
+        }
 
         return (
             <svg
@@ -331,9 +344,21 @@ export class Polyline extends BaseWidget {
                         fill={this.getAllText()["fill"] ? this._getElementAreaRawFillStyle() : "none"}
                     ></polyline>
                 )}
+                {this.selectedPointIndex === -1 ?
+                    null :
+                    this.isSelected() === false ?
+                        null :
+                        <circle r={this.getAllText()["lineWidth"] + 3}
+                            cx={this.generatePolylinePoint(this.selectedPointIndex).split(",")[0]}
+                            cy={this.generatePolylinePoint(this.selectedPointIndex).split(",")[1]}
+                            fill="red" />
+                }
+
             </svg>
         );
     };
+
+    selectedPointIndex: number = -1;
 
     // change 2 things for each direction: this.getStyle()["width"], this.getPointsRelativeX()
     // flush widget

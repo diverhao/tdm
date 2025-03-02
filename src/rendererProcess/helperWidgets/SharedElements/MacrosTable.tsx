@@ -10,6 +10,9 @@ export const ElementMacrosTable = (
         headlineName1,
         headlineName2,
         macrosData, // [string, string][]
+        addRowCallback, // () => void
+        deleteRowCallback, // (index: number) => void
+        modifyCellCallback, // (rowIndex: number, columnIndex: number, value: string) => void
     }: any
 ) => {
     const [, forceUpdate] = React.useState({});
@@ -48,6 +51,9 @@ export const ElementMacrosTable = (
                         <ElementButton
                             onClick={() => {
                                 macrosData.push(["", ""]);
+                                if (addRowCallback !== undefined) {
+                                    addRowCallback()
+                                }
                                 // add to history
                                 const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
                                 history.registerAction();
@@ -79,6 +85,7 @@ export const ElementMacrosTable = (
                                     rowIndex={index}
                                     columnIndex={0}
                                     macrosData={macrosData}
+                                    modifyCellCallback={modifyCellCallback}
                                 ></ElementMacroInput>
                             </ElementMacroTd>
                             {/* column 2, value */}
@@ -92,6 +99,7 @@ export const ElementMacrosTable = (
                                     rowIndex={index}
                                     columnIndex={1}
                                     macrosData={macrosData}
+                                    modifyCellCallback={modifyCellCallback}
                                 ></ElementMacroInput>
 
                             </ElementMacroTd>
@@ -100,6 +108,9 @@ export const ElementMacrosTable = (
                                 <ElementButton
                                     onClick={() => {
                                         macrosData.splice(index, 1);
+                                        if (deleteRowCallback !== undefined) {
+                                            deleteRowCallback(index)
+                                        }
                                         // add to history
                                         const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
                                         history.registerAction();
@@ -245,7 +256,7 @@ export const ElementMacrosTableSingleColumnData = (
 }
 
 
-export const ElementMacroInput = ({ rowIndex, columnIndex, macrosData }: any) => {
+export const ElementMacroInput = ({ rowIndex, columnIndex, macrosData, modifyCellCallback }: any) => {
     const refElement = React.useRef<any>(null);
     const [value, setValue] = React.useState(macrosData[rowIndex][columnIndex]);
     return (
@@ -255,6 +266,9 @@ export const ElementMacroInput = ({ rowIndex, columnIndex, macrosData }: any) =>
                 const origValue = macrosData[rowIndex][columnIndex];
                 if (origValue !== value) {
                     macrosData[rowIndex][columnIndex] = value;
+                    if (modifyCellCallback !== undefined) {
+                        modifyCellCallback(rowIndex, columnIndex, value);
+                    }
                     // add to history
                     const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
                     history.registerAction();
