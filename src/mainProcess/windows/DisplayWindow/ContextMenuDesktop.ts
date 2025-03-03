@@ -256,12 +256,6 @@ export class ContextMenuDesktop {
                     },
                 },
                 {
-                    label: "PV Monitor",
-                    click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "pv-monitor");
-                    },
-                },
-                {
                     label: "Meter",
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "meter");
@@ -411,6 +405,12 @@ export class ContextMenuDesktop {
                     label: "Data Viewer",
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "data-viewer");
+                    },
+                },
+                {
+                    label: "PV Monitor",
+                    click: () => {
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "pv-monitor");
                     },
                 },
                 {

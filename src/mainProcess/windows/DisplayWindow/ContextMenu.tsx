@@ -701,12 +701,6 @@ export class ContextMenu {
                     },
                 },
                 {
-                    label: "PV Monitor",
-                    click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "pv-monitor");
-                    },
-                },
-                {
                     label: "Meter",
                     click: () => {
                         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "meter");
@@ -850,6 +844,12 @@ export class ContextMenu {
                     label: "Probe",
                     click: () => {
                         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "probe");
+                    },
+                },
+                {
+                    label: "PV Monitor",
+                    click: () => {
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "pv-monitor");
                     },
                 },
                 {

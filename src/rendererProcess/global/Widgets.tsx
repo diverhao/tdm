@@ -2348,36 +2348,40 @@ export class Widgets {
     // (2) obtain the channel names in this widget
     // (3) tell main process to create a Probe browser window
     // (4) if the widgetKeys is empty, the returned channelNames is empty
-    openPvTableWindow = (widgetKeys: string[] | null | undefined) => {
+    openPvTableWindow = (widgetKeys: string[] | null | undefined, inputChannelNames: string[] | undefined = undefined) => {
 
         let channelNames: string[] = [];
-        if (widgetKeys === null || widgetKeys === undefined) {
-            for (let channelName of Object.keys(this.getTcaChannels())) {
-                channelNames.push(channelName);
-            }
-        } else {
-            try {
-                // (1)
-                const widgetKey = widgetKeys[0];
-                if (widgetKey === undefined) {
-                    const errMsg = `Input variable should be a string array`;
-                    throw new Error(errMsg);
-                }
-                // (2)
-                const widget = this.getWidget2(widgetKey);
-                if (!(widget instanceof BaseWidget)) {
-                    const errMsg = `We are probing a non-BaseWidget`;
-                    throw new Error(errMsg);
-                }
-                channelNames = widget.getChannelNames();
-                const channelName = channelNames[0];
-                if (channelName !== undefined) {
-                    // (3)
+        if (inputChannelNames === undefined) {
+            if (widgetKeys === null || widgetKeys === undefined) {
+                for (let channelName of Object.keys(this.getTcaChannels())) {
                     channelNames.push(channelName);
                 }
-            } catch (e) {
-                Log.error(e);
+            } else {
+                try {
+                    // (1)
+                    const widgetKey = widgetKeys[0];
+                    if (widgetKey === undefined) {
+                        const errMsg = `Input variable should be a string array`;
+                        throw new Error(errMsg);
+                    }
+                    // (2)
+                    const widget = this.getWidget2(widgetKey);
+                    if (!(widget instanceof BaseWidget)) {
+                        const errMsg = `We are probing a non-BaseWidget`;
+                        throw new Error(errMsg);
+                    }
+                    channelNames = widget.getChannelNames();
+                    const channelName = channelNames[0];
+                    if (channelName !== undefined) {
+                        // (3)
+                        channelNames.push(channelName);
+                    }
+                } catch (e) {
+                    Log.error(e);
+                }
             }
+        } else {
+            channelNames = inputChannelNames;
         }
 
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {

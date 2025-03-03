@@ -241,6 +241,8 @@ export class ProfilesViewer extends BaseWidget {
     };
 
     _ElementEpicsStats = ({ show }: any) => {
+        const [channelFilterText, setChannelFilterText] = React.useState("");
+        const [tcpFilterText, setTcpFilterText] = React.useState("");
 
         return <div style={
             {
@@ -255,6 +257,13 @@ export class ProfilesViewer extends BaseWidget {
                     The EPICS network traffic for Channel Access. The byte rate only counts the payload in TCP or UDP packets.
                 </p>
             </div>
+            <this._ElementEpicsStatsFilter
+                channelFilterText={channelFilterText}
+                setChannelFilterText={setChannelFilterText}
+                tcpFilterText={tcpFilterText}
+                setTcpFilterText={setTcpFilterText}
+            >
+            </this._ElementEpicsStatsFilter>
             <h3>
                 UDP
             </h3>
@@ -285,6 +294,7 @@ export class ProfilesViewer extends BaseWidget {
                 <col style={{ width: "30%" }}></col>
                 {Object.keys(this.epicsStats["tcp"]).map((hostName: string, index: number) => {
                     const hostInfo = this.epicsStats["tcp"][hostName];
+                    const showTcp = this.showChannelOrTcp(hostName, tcpFilterText);
 
                     return <>
                         <tr>
@@ -294,32 +304,38 @@ export class ProfilesViewer extends BaseWidget {
                                 hostName.split(":")[0] + ":" + hostName.split(":")[1]}`}</b></td>
                             <td></td>
                         </tr>
-                        {Object.keys(hostInfo).map((name: string, index: number) => {
-                            const value = this.epicsStats["tcp"][hostName][name];
-                            if (name.toLowerCase().includes("time")) {
-                                return null
-                            }
-                            if (name === "channels") {
-                                return (
-                                    <this._ElementEpicsStatsChannelNames
-                                        channels={value}
-                                        startIndex={index}
-                                    >
-                                    </this._ElementEpicsStatsChannelNames>
-                                )
-                            } else {
-                                return (
-                                    <tr key={`${name}-${index}`}
-                                        style={{
-                                            backgroundColor: index % 2 === 0 ? "rgba(230, 230, 230, 1)" : ""
-                                        }}
-                                    >
-                                        <td>{name.replace(/([A-Z])/g, ' $1').toLowerCase()}</td>
-                                        <td>{value}</td>
-                                    </tr>
-                                )
-                            }
-                        })}
+
+                        {
+                            showTcp === true ?
+                                Object.keys(hostInfo).map((name: string, index: number) => {
+                                    const value = this.epicsStats["tcp"][hostName][name];
+                                    if (name.toLowerCase().includes("time")) {
+                                        return null
+                                    }
+                                    if (name === "channels") {
+                                        return (
+                                            <this._ElementEpicsStatsChannelNames
+                                                channels={value}
+                                                startIndex={index}
+                                                filterText={channelFilterText}
+                                            >
+                                            </this._ElementEpicsStatsChannelNames>
+                                        )
+                                    } else {
+                                        return (
+                                            <tr key={`${name}-${index}`}
+                                                style={{
+                                                    backgroundColor: index % 2 === 0 ? "rgba(230, 230, 230, 1)" : ""
+                                                }}
+                                            >
+                                                <td>{name.replace(/([A-Z])/g, ' $1').toLowerCase()}</td>
+                                                <td>{value}</td>
+                                            </tr>
+                                        )
+                                    }
+                                })
+                                : null}
+
                         <tr>
                             <td>&nbsp;</td>
                             <td></td>
@@ -330,29 +346,154 @@ export class ProfilesViewer extends BaseWidget {
         </div>
     }
 
-    _ElementEpicsStatsChannelNames = ({ channels, startIndex }: any) => {
+    _ElementEpicsStatsChannelNames = ({ channels, startIndex, filterText }: any) => {
+        const [showAll, setShowAll] = React.useState(true);
         return (
-            <>
-                {channels.map((channelName: string, index: number) => {
-                    return (
-                        <tr key={`${channelName}-${index}`}
+            showAll === true ?
+                <>
+                    {channels.map((channelName: string, index: number) => {
+                        // filter out the channel
+                        const showChannel = this.showChannelOrTcp(channelName, filterText);
+                        if (showChannel === true || index === 0) {
+                            return (
+                                <tr key={`${channelName}-${index}`}
+                                    style={{
+                                        backgroundColor: (index + startIndex) % 2 === 0 ? "rgba(230, 230, 230, 1)" : ""
+                                    }}
+                                >
+                                    <td
+                                        style={{
+                                            display: "inline-flex",
+                                            flexDirection: "row",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                        }}
+                                    >{
+                                            index === 0 ?
+                                                <>
+                                                    <this._ElementChannelsText
+                                                        channelNames={channels}
+                                                    ></this._ElementChannelsText>
+                                                    &nbsp;
+                                                    ({channels.length})
+                                                    &nbsp;
+                                                    <img
+                                                        style={{
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            setShowAll(!showAll);
+                                                        }}
+                                                        src={"../../../mainProcess/resources/webpages/arrowDown-thin.svg"}
+                                                        width="10px"
+                                                        height="10px">
+
+                                                    </img>
+                                                </> : ""}</td>
+                                    <td
+                                    >
+                                        {showChannel === true ?
+                                            <this._ElementEpicsStatsChannelName
+                                                channelName={channelName}
+                                            ></this._ElementEpicsStatsChannelName>
+                                            :
+                                            null
+                                        }
+                                    </td>
+                                </tr>
+                            )
+                        } else {
+                            return null;
+                        }
+                    })
+                    }
+                </>
+                :
+                <tr
+                    style={{
+                        backgroundColor: (startIndex) % 2 === 0 ? "rgba(230, 230, 230, 1)" : ""
+                    }}
+                >
+                    <td
+                        style={{
+                            display: "inline-flex",
+                            flexDirection: "row",
+                            justifyContent: "center",
+                            alignItems: "center",
+                        }}
+
+                    >
+                        <this._ElementChannelsText
+                            channelNames={channels}
+                        ></this._ElementChannelsText>
+                        &nbsp;
+                        ({channels.length})
+                        &nbsp;
+                        <img
                             style={{
-                                backgroundColor: (index + startIndex) % 2 === 0 ? "rgba(230, 230, 230, 1)" : ""
+                                cursor: "pointer",
+
                             }}
-                        >
-                            <td>{index === 0 ? "channels" : ""}</td>
-                            <td
-                            >
-                                <this._ElementEpicsStatsChannelName
-                                    channelName={channelName}
-                                ></this._ElementEpicsStatsChannelName>
-                            </td>
-                        </tr>
-                    )
-                })
-                }
-            </>
+                            onClick={() => {
+                                setShowAll(!showAll);
+                            }}
+                            src={"../../../mainProcess/resources/webpages/arrowUp-thin.svg"}
+                            width="10px"
+                            height="10px">
+                        </img>
+
+                    </td>
+                    <td
+                    >
+                    </td>
+                </tr>
+
         )
+    }
+
+    _ElementChannelsText = ({ channelNames }: any) => {
+        const elementRef = React.useRef<any>(null);
+        return (
+            <div
+                ref={elementRef}
+                style={{
+                    cursor: "pointer",
+                }}
+                onMouseEnter={(event: any) => {
+                    event.preventDefault();
+                    if (elementRef.current !== null) {
+                        elementRef.current.style["outline"] = "solid 3px rgba(150, 150, 150, 1)";
+                    }
+                }}
+                onMouseLeave={(event: any) => {
+                    event.preventDefault();
+                    if (elementRef.current !== null) {
+                        elementRef.current.style["outline"] = "none";
+                    }
+                }}
+                onClick={() => {
+                    g_widgets1.openPvTableWindow(undefined, channelNames);
+                }}
+            >
+                channels
+            </div>
+        )
+    }
+
+    showChannelOrTcp = (channelNameOrTcp: string, filterText: string) => {
+        if (filterText.trim() === "" || filterText === undefined) {
+            return true;
+        }
+        const filterTextArray = filterText.split(" ");
+        for (let element of filterTextArray) {
+            if (element.trim() === "") {
+                continue;
+            }
+            if (channelNameOrTcp.toLowerCase().includes(element.toLowerCase().trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     _ElementEpicsStatsChannelName = ({ channelName }: any) => {
@@ -379,6 +520,80 @@ export class ProfilesViewer extends BaseWidget {
 
             >
                 {channelName}
+            </div>
+        )
+    }
+
+    _ElementEpicsStatsFilter = ({ channelFilterText, tcpFilterText, setChannelFilterText, setTcpFilterText }: any) => {
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-start",
+                    alignItems: "flex-start",
+                }}
+            >
+                <form
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        width: "100%",
+                        marginBottom: 5,
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                    }}
+                    onSubmit={(event: any) => {
+                        event.preventDefault();
+                    }}
+                >
+                    <div style={{ width: "30%" }}>
+                        Filter TCP hosts:&nbsp;
+                    </div>
+
+                    <input
+                        style={{
+                            width: "40%",
+                            border: "solid 1px black",
+                            outline: "none",
+                        }}
+                        value={tcpFilterText}
+                        onChange={(event: any) => {
+                            event.preventDefault();
+                            setTcpFilterText(event.target.value);
+                        }}
+                    >
+                    </input>
+                </form>
+                <form
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        width: "100%",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                    }}
+                    onSubmit={(event: any) => {
+                        event.preventDefault();
+                    }}
+                >
+                    <div style={{ width: "30%" }}>
+                        Filter channel names:&nbsp;
+                    </div>
+                    <input
+                        style={{
+                            width: "40%",
+                            border: "solid 1px black",
+                            outline: "none",
+                        }}
+                        value={channelFilterText}
+                        onChange={(event: any) => {
+                            event.preventDefault();
+                            setChannelFilterText(event.target.value);
+                        }}
+                    >
+                    </input>
+                </form>
             </div>
         )
     }
