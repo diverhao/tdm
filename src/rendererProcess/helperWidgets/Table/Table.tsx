@@ -94,7 +94,7 @@ export class Table {
                         return;
                     }
                     event.preventDefault();
-                    if (event.button !== 0 || g_widgets1.isEditing()) {
+                    if ((event.button !== 0 && event.button !== 2) || g_widgets1.isEditing()) {
                         return;
                     }
                     // first line should not be selected

@@ -416,11 +416,8 @@ export class DisplayWindowClient {
 
                     if ((widget instanceof Help) ||
                         (widget instanceof TdlViewer) ||
-                        (widget instanceof LogViewer) ||
                         (widget instanceof TextEditor) ||
-                        (widget instanceof ProfilesViewer) ||
-                        (widget instanceof CaSnooper) ||
-                        (widget instanceof Casw)
+                        (widget instanceof ProfilesViewer)
                     ) {
                         const selection = window.getSelection();
                         const textSelected = selection === null ? false : selection.toString().length > 0 ? true : false;
@@ -431,10 +428,8 @@ export class DisplayWindowClient {
                         }
                         this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
                         return;
-                    } else if ((widget instanceof LogViewer)
-                        || (widget instanceof PvMonitor)
-                        || (widget instanceof CaSnooper)
-                        || (widget instanceof Casw)
+                    } else if (
+                        (widget instanceof PvMonitor)
                         || (widget instanceof FileConverter)
                     ) {
                         // Context menu for Table area of LogViewer, PvMonitor, Casw, and CaSnooper,
@@ -447,7 +442,31 @@ export class DisplayWindowClient {
                             this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
                             return;
                         }
-                    } else if (widget instanceof ChannelGraph) {
+                    } else if ((widget instanceof LogViewer)
+                        || (widget instanceof CaSnooper)
+                        || (widget instanceof Casw)
+
+                    ) {
+                        // Context menu for Table area of LogViewer, PvMonitor, Casw, and CaSnooper,
+                        // Operations of copy/save data
+                        const selection = window.getSelection();
+                        const textSelected = selection === null ? false : selection.toString().length > 0 ? true : false;
+                        const selectedText = selection === null ? undefined : selection.toString();
+                        contextMenuOptions = {
+                            textSelected: textSelected,
+                            selectedText: selectedText,
+                        }
+
+                        if (widget.mouseEventInsideTable(pointerX, pointerY)) {
+                            contextMenuOptions = {
+                                contextMenuTexts: Object.keys(widget.mouseRightButtonDownContextMenuActions),
+                            }
+                        }
+                        this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
+                        return;
+                    }
+
+                    else if (widget instanceof ChannelGraph) {
                         contextMenuOptions = {
                             showChannelGraphOptions: true,
                         }

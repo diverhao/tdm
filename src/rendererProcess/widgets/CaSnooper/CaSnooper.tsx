@@ -10,7 +10,7 @@ import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { XYPlot } from "../XYPlot/XYPlot";
 import { convertDateObjToString } from "../../global/GlobalMethods";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_CaProtoSearchData = {
     msSinceEpoch: number,
@@ -52,6 +52,9 @@ export class CaSnooper extends BaseWidget {
     clearCaProtoSearchData = () => {
         this.getCaProtoSearchData().length = 0;
     }
+
+    bufferSize: number = 10000;
+    readonly maxBufferSize: number = 100000;
 
     memoId: string = "";
 
@@ -121,6 +124,11 @@ export class CaSnooper extends BaseWidget {
 
     handleNewData = (newData: any) => {
         this.getCaProtoSearchData().push(...newData);
+        // buffer size
+        if (this.getCaProtoSearchData().length > this.bufferSize) {
+            this.getCaProtoSearchData().splice(0, this.getCaProtoSearchData().length - this.bufferSize);
+        }
+
         this.filterData(newData);
         this.forceUpdateTable();
         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
@@ -397,14 +405,65 @@ export class CaSnooper extends BaseWidget {
         const [filteredChannelName, setFilteredChannelName] = React.useState(this.filteredChannelName);
         const [filteredIp, setFilteredIp] = React.useState(this.filteredIp);
         const [filteredPort, setFilteredPort] = React.useState(this.filteredPort);
+        const [bufferSize, setBufferSize] = React.useState(`${this.bufferSize}`);
         return (
             <div style={{
                 display: "inline-flex",
                 flexDirection: "column",
                 width: "100%",
                 boxSizing: "border-box",
-                paddingBottom: 20,
+                paddingBottom: 10,
             }}>
+                <div style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    width: "100%",
+                    paddingBottom: 8,
+                    paddingTop: 5,
+                }}>
+                    <b>Setting:</b>
+                </div>
+
+                <div style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    width: "100%",
+                    paddingBottom: 5,
+                }}>
+                    <div style={{
+                        display: "inline-flex",
+                        width: GlobalVariables.defaultFontSize * 10,
+                    }}>
+                        Number of entries:
+                    </div>
+                    <form onSubmit={(event: any) => {
+                        event.preventDefault();
+                        const bufferSizeInt = parseInt(bufferSize);
+                        if (!isNaN(bufferSizeInt) && bufferSizeInt > 10 && bufferSizeInt < this.maxBufferSize) {
+                            this.bufferSize = bufferSizeInt;
+                            setBufferSize(`${parseInt(bufferSize)}`);
+                        } else {
+                            setBufferSize(`${this.bufferSize}`);
+                        }
+                    }}>
+                        <input
+                            value={`${bufferSize}`}
+                            onChange={(event: any) => {
+                                event.preventDefault();
+                                const value = event.target.value;
+                                setBufferSize(value);
+                            }}
+                            style={{
+                                borderRadius: 0,
+                                border: "solid 1px rgba(80, 80, 80, 1)",
+                                outline: "none",
+                            }}
+                        >
+                        </input>
+                    </form>
+                    <div style={{color: "rgba(100, 100, 100, 1)"}}>&nbsp;(Maximum 100,000)</div>
+                </div>
+
                 <div style={{
                     display: "inline-flex",
                     flexDirection: "row",

@@ -65,13 +65,49 @@ export class CaswServer {
     constructor(mainProcess: MainProcess, displayWindowId: string) {
         this._mainProcess = mainProcess;
         const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
+        // if (selectedProfile !== undefined) {
+        //     const epicsCaRepeaterPort = selectedProfile.getEntry("EPICS CA Settings", "EPICS_CA_REPEATER_PORT");
+        //     if (epicsCaRepeaterPort !== undefined) {
+        //         this.epicsCaRepeaterPort = epicsCaRepeaterPort;
+        //     }
+        // }
+        // this.addDisplayWindowId(displayWindowId);
+
+        let errMsg = "";
         if (selectedProfile !== undefined) {
-            const epicsCaRepeaterPort = selectedProfile.getEntry("EPICS CA Settings", "EPICS_CA_REPEATER_PORT");
-            if (epicsCaRepeaterPort !== undefined) {
-                this.epicsCaRepeaterPort = epicsCaRepeaterPort;
+            const context = this.getMainProcess().getChannelAgentsManager().getContext();
+            if (context !== undefined) {
+                const port = context.getEnv("EPICS_CA_REPEATER_PORT");
+                if (typeof port === "number" ) {
+                    this.epicsCaRepeaterPort = port;
+                    this.addDisplayWindowId(displayWindowId);
+                    return;
+                } else {
+                    errMsg = "EPICS_CA_REPEATER_PORT " + `${port}` + " cannot be used.";
+                }
+
+            } else {
+                errMsg = "EPICS Context not created."
             }
+        } else {
+            errMsg = "Profile not selected."
         }
-        this.addDisplayWindowId(displayWindowId);
+        // failed to start the CA snooper server
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+
+            displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                // command?: string | undefined,
+                messageType: "error", // | "warning" | "info", // symbol
+                humanReadableMessages: [`Failed to start CA snooper service`], // each string has a new line
+                rawMessages: [errMsg], // computer generated messages
+                // buttons?: type_DialogMessageBoxButton[] | undefined,
+                // attachment?: any,
+
+            })
+        }
+
 
     }
 
@@ -152,8 +188,8 @@ export class CaswServer {
         })
 
         this.udpServer.on('message', (msg: Buffer, rinfo: dgram.RemoteInfo) => {
-            console.log(`Server received: ${msg} from ${rinfo.address}:${rinfo.port}`);
-            console.log("raw message", msg, rinfo)
+            Log.debug(-1, `Server received: ${msg} from ${rinfo.address}:${rinfo.port}`);
+            Log.debug(-1, "raw message", msg, rinfo)
             const data = this.decodeCaUdpMessage(msg, rinfo);
             for (let displayWindowId of this.getDisplayWindowIds()) {
                 const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);

@@ -184,6 +184,10 @@ export class Label extends BaseWidget {
             <div
                 style={{
                     opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
+                    // display: "inline-flex",
+                    // flexDirection: "column",
+                    textAlign: this.getAllText().horizontalAlign === "flex-start" ? "left" : this.getAllText().horizontalAlign === "flex-end" ? "right" : "center",
+                    // textAlign: this.getAllText().horizontalAlign,
                 }}
             >
                 {this.getTextText()}
@@ -209,7 +213,24 @@ export class Label extends BaseWidget {
                 // the "GroupSelection2" may have not been created yet
                 const macros = (g_widgets1.getWidget2("Canvas") as Canvas).getAllMacros();
                 // "\\n" is "\n"
-                return BaseWidget.expandChannelName(rawText, macros, true).replaceAll("\\n", "\n");
+                // expand with channel name
+                const expandedText = BaseWidget.expandChannelName(rawText, macros, true).replaceAll("\\n", "\n");
+                // convert "\n" to <br>
+                const textArray = expandedText.split("\n");
+                if (textArray.length <= 1) {
+                    return expandedText;
+                } else {
+                    return (
+                        <>
+                            {textArray.map((text: string, index: number) => {
+                                return <>
+                                    {index === 0 ? null : <br />}
+                                    {text}
+                                </>
+                            })}
+                        </>
+                    )
+                }
             } catch (e) {
                 Log.error(e);
                 return ""

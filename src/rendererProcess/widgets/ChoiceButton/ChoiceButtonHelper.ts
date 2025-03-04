@@ -114,7 +114,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
             "topShadowColor", // not in tdm
             "botShadowColor", // not in tdm
             "controlPv",
-            "indicatorPv", // ! not in tdm, "Reacback PV"
+            "indicatorPv", // ! not in tdm, "Reacback PV", if controlPv does not exist, use it
             "font",
             "visPv",
             "visMin",
@@ -148,6 +148,10 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
                 } else if (propertyName === "controlPv") {
                     // it is a control-type widget, only use real channel name, i.e. "val0" or "loc://abc"
                     tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue));
+                } else if (propertyName === "indicatorPv") {
+                    if (edl["controlPv"] === undefined || edl["controlPv"].trim() === "") {
+                        tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue));
+                    }
                 } else if (propertyName === "fgColor") {
                     tdl["style"]["color"] = EdlConverter.convertEdlColor(
                         propertyValue
