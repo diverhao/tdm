@@ -120,8 +120,9 @@ export class CaSnooper extends BaseWidget {
                 // counts during last N seconds
                 const data = this.getCaProtoSearchData()[ii];
                 const time = data["msSinceEpoch"];
+                const filtered = this.getFilteredProtoSearchData()[ii];
 
-                if (timeNow - time < this.statsNsec * 1000) {
+                if (timeNow - time < this.statsNsec * 1000 && filtered) {
                     const channelName = data["channelName"];
                     const srcIp = data["ip"];
                     const udpClient = data["ip"] + ":" + `${data["port"]}`;
@@ -143,7 +144,6 @@ export class CaSnooper extends BaseWidget {
                 }
 
                 // histogram
-                const filtered = this.getFilteredProtoSearchData()[ii];
                 if (!filtered) {
                     continue;
                 } else {
@@ -554,6 +554,11 @@ export class CaSnooper extends BaseWidget {
                     <div style={{ color: "rgba(100, 100, 100, 1)" }}>&nbsp;seconds</div>
                 </div>
 
+                {/* filters for table */}
+                <this._ElementFilters></this._ElementFilters>
+
+
+
                 <div style={{
                     display: "inline-flex",
                     flexDirection: "row",
@@ -645,7 +650,7 @@ export class CaSnooper extends BaseWidget {
                 width: "100%",
                 boxSizing: "border-box",
                 paddingBottom: 10,
-                paddingLeft: 5,
+                paddingLeft: 0,
             }}>
                 <div style={{
                     display: "inline-flex",
@@ -675,7 +680,10 @@ export class CaSnooper extends BaseWidget {
                         this.resetFilteredProtoSearchData();
                         this.processData();
                         this.memoId = uuidv4();
-                        this.forceUpdateTable()
+                        // this.forceUpdateTable();
+                        this.processData();
+                        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                        g_flushWidgets();
                     }}>
                         <input
                             value={filteredChannelName}
@@ -711,7 +719,10 @@ export class CaSnooper extends BaseWidget {
                         this.resetFilteredProtoSearchData();
                         this.processData();
                         this.memoId = uuidv4();
-                        this.forceUpdateTable()
+                        // this.forceUpdateTable();
+                        this.processData();
+                        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                        g_flushWidgets();
                     }}>
                         <input
                             value={filteredIp}
@@ -748,7 +759,10 @@ export class CaSnooper extends BaseWidget {
                         // apply the new filter
                         this.resetFilteredProtoSearchData();
                         this.memoId = uuidv4();
-                        this.forceUpdateTable()
+                        // this.forceUpdateTable();
+                        this.processData();
+                        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                        g_flushWidgets();
                     }}>
                         <input
                             value={filteredPort}
@@ -939,8 +953,6 @@ export class CaSnooper extends BaseWidget {
                 overflowY: "hidden",
 
             }}>
-            {/* filters for table */}
-            <this._ElementFilters></this._ElementFilters>
             <div
                 style={{
                     width: "100%",

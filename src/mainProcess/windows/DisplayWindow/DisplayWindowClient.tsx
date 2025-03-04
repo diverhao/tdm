@@ -458,7 +458,9 @@ export class DisplayWindowClient {
                         }
 
                         if (widget.mouseEventInsideTable(pointerX, pointerY)) {
-                            if (widget instanceof CaSnooper && widget.bottomView !== "raw-data") {
+                            if ((widget instanceof CaSnooper && widget.bottomView !== "raw-data")
+                                || widget instanceof Casw && widget.bottomView !== "raw-data"
+                            ) {
                                 // do not copy
                             } else {
                                 contextMenuOptions = {

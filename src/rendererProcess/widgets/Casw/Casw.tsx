@@ -39,6 +39,16 @@ export class Casw extends BaseWidget {
 
     bufferSize: number = 10000;
     readonly maxBufferSize: number = 100000;
+    statsNsec: number = 10; // counts in last N seconds
+    statsInLastNSeconds: {
+        srcIps: Record<string, number>,
+        tcpClients: Record<string, number>,
+    } = {
+            srcIps: {},
+            tcpClients: {},
+        };
+
+    bottomView: "raw-data" | "stats" | "counts-src-ip" | "counts-tcp-client" = "raw-data";
 
     setMacros = (newMacros: [string, string][]) => {
         this._macros = newMacros;
@@ -79,7 +89,66 @@ export class Casw extends BaseWidget {
     histogramDataX: number[] = [];
     histogramDataY: number[] = [];
 
+
     processData = () => {
+
+        const timeNow = Date.now();
+        let currentIndex = 0;
+
+        this.statsInLastNSeconds = {
+            srcIps: {},
+            tcpClients: {},
+        };
+
+        if (this.getCaProtoRsrvIsUpData().length > 0) {
+            // histogram data for plot
+            const timeOldest = this.getCaProtoRsrvIsUpData()[0]["msSinceEpoch"];
+            const oldexIndex = Math.ceil((timeOldest - timeNow) / 1000);
+
+            const resultX = [];
+            const resultY = [];
+            for (let ii = oldexIndex; ii <= 0; ii++) {
+                resultX.push(ii);
+                resultY.push(0);
+            }
+
+            for (let ii = 0; ii < this.getCaProtoRsrvIsUpData().length; ii++) {
+
+                // counts during last N seconds
+                const data = this.getCaProtoRsrvIsUpData()[ii];
+                const time = data["msSinceEpoch"];
+                const filtered = this.getFilteredProtoSearchData()[ii];
+
+                if (timeNow - time < this.statsNsec * 1000 && filtered) {
+                    const srcIp = data["ip"];
+                    const tcpClient = data["ip"] + ":" + `${data["port"]}`;
+                    if (this.statsInLastNSeconds["srcIps"][srcIp] === undefined) {
+                        this.statsInLastNSeconds["srcIps"][srcIp] = 1;
+                    } else {
+                        this.statsInLastNSeconds["srcIps"][srcIp] = this.statsInLastNSeconds["srcIps"][srcIp] + 1;
+                    }
+                    if (this.statsInLastNSeconds["tcpClients"][tcpClient] === undefined) {
+                        this.statsInLastNSeconds["tcpClients"][tcpClient] = 1;
+                    } else {
+                        this.statsInLastNSeconds["tcpClients"][tcpClient] = this.statsInLastNSeconds["tcpClients"][tcpClient] + 1;
+                    }
+                }
+
+                // histogram
+                if (!filtered) {
+                    continue;
+                } else {
+                    currentIndex = resultY.length + Math.ceil((time - timeNow) / 1000) - 1;
+                    resultY[currentIndex] = resultY[currentIndex] + 1;
+                }
+            }
+
+            this.histogramDataX = resultX;
+            this.histogramDataY = resultY;
+        }
+    }
+
+    processData1 = () => {
 
         const timeNow = Date.now();
         let currentIndex = 0;
@@ -353,10 +422,23 @@ export class Casw extends BaseWidget {
                 flexDirection: "column",
                 userSelect: "none",
             }}>
-            <this._ElementHeader></this._ElementHeader>
+            {/* <this._ElementHeader></this._ElementHeader>
             <this._ElementFilters></this._ElementFilters>
             <this._ElementDataTable></this._ElementDataTable>
+            <this._ElementXYPlotWrapper></this._ElementXYPlotWrapper> */}
+
+            <this._ElementHeader></this._ElementHeader>
+            <this._ElementSettings></this._ElementSettings>
+            {
+                this.bottomView === "counts-src-ip" ?
+                    <this._ElementCounts data={this.statsInLastNSeconds["srcIps"]}></this._ElementCounts>
+                    : this.bottomView === "counts-tcp-client" ?
+                        <this._ElementCounts data={this.statsInLastNSeconds["tcpClients"]}></this._ElementCounts>
+                        : null
+            }
+            <this._ElementDataTable></this._ElementDataTable>
             <this._ElementXYPlotWrapper></this._ElementXYPlotWrapper>
+
         </div>
     }
 
@@ -367,7 +449,7 @@ export class Casw extends BaseWidget {
                 position: "relative",
                 width: "100%",
                 height: "100%",
-                display: this.bottomView === "raw-data" ? "none" : "inline-flex",
+                display: this.bottomView === "stats" ? "inline-flex" : "none",
             }}
         >
 
@@ -388,39 +470,40 @@ export class Casw extends BaseWidget {
                     color: "rgba(100, 100, 100, 1)",
                     boxSizing: "border-box",
                     paddingTop: 20,
-                    paddingBottom: 20,
+                    paddingBottom: 2,
                 }}>
-                    The CASW is listening to UDP port {this.getAllText()["EPICS_CA_REPEATER_PORT"]} for any package that has a 0x000D header (CA_PROTO_RSRV_IS_UP).
+                    The CASW is listening to UDP port {this.getAllText()["EPICS_CA_REPEATER_PORT"]} for any package that has a 0x000D header (CA_PROTO_RSRV_IS_UP), aka beacon.
                     See <a href={"https://docs.epics-controls.org/en/latest/internal/ca_protocol.html"} target="_blank">Channel Access Protocol Specification </a>
                     for the details.
+                </div>
+                <div style={{
+                    color: "rgba(255, 0, 0, 1)",
+                    boxSizing: "border-box",
+                    paddingTop: 2,
+                    paddingBottom: 20,
+                }}>
+                    Note: This tool captures and shows all EPICS server beacons sent to port {this.getAllText()["EPICS_CA_REPEATER_PORT"]} on this computer.
+                    It is different from the casw tool that comes with the EPICS base, which only shows the beacon anomalies.
                 </div>
             </div>
         )
     }
 
-    bottomView: "raw-data" | "stats" = "raw-data";
 
-    _ElementFilters = () => {
-        const [filteredIp, setFilteredIp] = React.useState(this.filteredIp);
-        const [filteredPort, setFilteredPort] = React.useState(this.filteredPort);
+    _ElementSettings = () => {
         const [bufferSize, setBufferSize] = React.useState(`${this.bufferSize}`);
+        const [statsNsec, setStatsNsec] = React.useState(`${this.statsNsec}`);
+
+
         return (
             <div style={{
                 display: "inline-flex",
                 flexDirection: "column",
                 width: "100%",
                 boxSizing: "border-box",
-                paddingBottom: 10,
+                paddingBottom: 0,
+                paddingTop: 5,
             }}>
-                <div style={{
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    width: "100%",
-                    paddingBottom: 8,
-                    paddingTop: 5,
-                }}>
-                    <b>Setting:</b>
-                </div>
 
                 <div style={{
                     display: "inline-flex",
@@ -462,6 +545,199 @@ export class Casw extends BaseWidget {
                     <div style={{ color: "rgba(100, 100, 100, 1)" }}>&nbsp;(Maximum 100,000)</div>
                 </div>
 
+
+                <div style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    width: "100%",
+                    paddingBottom: 5,
+                }}>
+                    <div style={{
+                        display: "inline-flex",
+                        width: GlobalVariables.defaultFontSize * 10,
+                    }}>
+                        Count last N seconds:
+                    </div>
+                    <form onSubmit={(event: any) => {
+                        event.preventDefault();
+                        const statsNsecInt = parseInt(statsNsec);
+                        if (!isNaN(statsNsecInt) && statsNsecInt > 1) {
+                            this.statsNsec = statsNsecInt;
+                            setStatsNsec(`${statsNsecInt}`);
+                        } else {
+                            setStatsNsec(`${this.statsNsec}`);
+                        }
+                        this.processData();
+                        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                        g_flushWidgets();
+
+                    }}>
+                        <input
+                            value={`${statsNsec}`}
+                            onChange={(event: any) => {
+                                event.preventDefault();
+                                const value = event.target.value;
+                                setStatsNsec(value);
+                            }}
+                            style={{
+                                borderRadius: 0,
+                                border: "solid 1px rgba(80, 80, 80, 1)",
+                                outline: "none",
+                            }}
+                        >
+                        </input>
+                    </form>
+                    <div style={{ color: "rgba(100, 100, 100, 1)" }}>&nbsp;seconds</div>
+                </div>
+
+                {/* filters for table */}
+                <this._ElementFilters></this._ElementFilters>
+
+
+
+                <div style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    marginTop: 10,
+                    marginBottom: 10,
+                }}
+                >
+                    {/* show data table */}
+                    <ElementRectangleButton
+                        defaultBackgroundColor={this.bottomView === "raw-data" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
+                        marginLeft={0}
+                        handleMouseDown={() => {
+                            this.bottomView = "raw-data";
+                            this.resizeXYPlot()
+                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                            g_flushWidgets();
+
+                        }}
+                    >
+                        Data
+                    </ElementRectangleButton>
+                    {/* show plot */}
+                    <ElementRectangleButton
+                        defaultBackgroundColor={this.bottomView === "stats" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
+                        marginLeft={10}
+                        handleMouseDown={() => {
+                            this.bottomView = "stats";
+                            this.resizeXYPlot()
+                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                            g_flushWidgets();
+
+                        }}
+                    >
+                        Plot
+                    </ElementRectangleButton>
+                    {/* show counts */}
+                    <ElementRectangleButton
+                        defaultBackgroundColor={this.bottomView === "counts-src-ip" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
+                        marginLeft={10}
+                        handleMouseDown={() => {
+                            this.bottomView = "counts-src-ip";
+                            this.resizeXYPlot()
+                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                            g_flushWidgets();
+
+                        }}
+                    >
+                        Source IP counts
+                    </ElementRectangleButton>
+                    <ElementRectangleButton
+                        defaultBackgroundColor={this.bottomView === "counts-tcp-client" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
+                        marginLeft={10}
+                        handleMouseDown={() => {
+                            this.bottomView = "counts-tcp-client";
+                            this.resizeXYPlot()
+                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                            g_flushWidgets();
+
+                        }}
+                    >
+                        TCP client counts
+                    </ElementRectangleButton>
+                </div>
+            </div >
+        )
+    }
+
+
+
+    _ElementCounts = ({ data }: { data: Record<string, any> }) => {
+
+        const elementRef = React.useRef<any>(null);
+        // this.countsRef = elementRef;
+
+        const style = {
+            width: "100%",
+            userSelect: "text",
+            overflowX: "hidden",
+            overflowY: "scroll",
+        } as React.CSSProperties;
+
+        return (<div
+            ref={elementRef}
+            style={
+                style
+            }
+        >
+            <table
+                style={{
+                    width: "100%",
+                }}
+            >
+                <col style={{ width: "50%" }}></col>
+                <col style={{ width: "50%" }}></col>
+                <tr
+                    style={{
+                        backgroundColor: "rgba(230, 230, 230, 1)",
+                    }}
+                >
+                    <th style={{ textAlign: "left" }}>
+                        {this.bottomView === "counts-src-ip" ? "Source IP" : "Source IP and TCP port"}
+                    </th>
+                    <th style={{ textAlign: "left" }}>
+                        Count
+                    </th>
+                </tr>
+                {Object.entries(data).map(([prop, count]: [string, number], index: number) => {
+                    return (
+                        <tr
+                            key={prop + "-" + `${index}`}
+                            style={{
+                                backgroundColor: index % 2 === 0 ? "rgba(255,255,255,1)" : "rgba(230, 230, 230, 1)",
+                            }}
+                        >
+                            {
+                                <td>
+                                    {prop}
+                                </td>
+                            }
+                            <td>
+                                {count}
+                            </td>
+                        </tr>
+                    )
+                })}
+            </table>
+        </div>)
+    }
+
+
+    _ElementFilters = () => {
+        const [filteredIp, setFilteredIp] = React.useState(this.filteredIp);
+        const [filteredPort, setFilteredPort] = React.useState(this.filteredPort);
+        const [bufferSize, setBufferSize] = React.useState(`${this.bufferSize}`);
+        return (
+            <div style={{
+                display: "inline-flex",
+                flexDirection: "column",
+                width: "100%",
+                boxSizing: "border-box",
+                paddingBottom: 10,
+            }}>
+
                 <div style={{
                     display: "inline-flex",
                     flexDirection: "row",
@@ -490,7 +766,10 @@ export class Casw extends BaseWidget {
                         this.resetFilteredProtoSearchData();
                         this.processData();
                         this.memoId = uuidv4();
-                        this.forceUpdateTable()
+                        // this.forceUpdateTable();
+                        this.processData();
+                        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                        g_flushWidgets();
                     }}>
                         <input
                             value={filteredIp}
@@ -527,7 +806,10 @@ export class Casw extends BaseWidget {
                         // apply the new filter
                         this.resetFilteredProtoSearchData();
                         this.memoId = uuidv4();
-                        this.forceUpdateTable()
+                        // this.forceUpdateTable();
+                        this.processData();
+                        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                        g_flushWidgets();
                     }}>
                         <input
                             value={filteredPort}
@@ -544,44 +826,45 @@ export class Casw extends BaseWidget {
                         </input>
                     </form>
                 </div>
-                <div style={{
-                    display: "inline-flex",
-                    flexDirection: "row-reverse",
-                }}
-                >
-                    {/* show plot */}
-                    <ElementRectangleButton
-                        defaultBackgroundColor={this.bottomView === "stats" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
-                        marginLeft={10}
-                        handleMouseDown={() => {
-                            this.bottomView = "stats";
-                            this.resizeXYPlot()
-                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-                            g_flushWidgets();
-                        }}
-                    >
-                        Statistics
-                    </ElementRectangleButton>
-                    <ElementRectangleButton
-                        defaultBackgroundColor={this.bottomView === "raw-data" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
-                        marginLeft={10}
-                        handleMouseDown={() => {
-                            this.bottomView = "raw-data";
-                            this.resizeXYPlot()
-                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-                            g_flushWidgets();
-                        }}
-                    >
-                        Data
-                    </ElementRectangleButton>
-                </div>
+                
             </div >
         )
     }
 
     tableRef: React.MutableRefObject<any> | undefined = undefined;
 
+
     resizeXYPlot = () => {
+        // get Table size
+        let width = 0;
+        let height = 0;
+        if (this.tableRef !== undefined && this.tableRef.current !== null) {
+            width = this.tableRef.current.offsetWidth;
+            height = this.tableRef.current.offsetHeight;
+        }
+
+        if (width === 0 || height === 0) {
+            const ElementXYPlotWrapper = document.getElementById("XYPlotWrapper");
+            if (ElementXYPlotWrapper !== null) {
+                width = ElementXYPlotWrapper.offsetWidth;
+                height = ElementXYPlotWrapper.offsetHeight;
+            }
+        }
+        if (width !== 0 && height !== 0) {
+            for (let widget of g_widgets1.getWidgets2().values()) {
+                if (widget instanceof XYPlot) {
+                    const widgetKey = widget.getWidgetKey();
+                    widget.getStyle()["width"] = width;
+                    widget.getStyle()["height"] = height;
+                    g_widgets1.addToForceUpdateWidgets(widgetKey);
+                    g_flushWidgets()
+                }
+            }
+        }
+    }
+
+
+    resizeXYPlot1 = () => {
         // get Table size
         if (this.tableRef !== undefined && this.tableRef.current !== null) {
             let width = this.tableRef.current.offsetWidth;
