@@ -8,7 +8,7 @@ import { Table } from "../../helperWidgets/Table/Table";
 import { v4 as uuidv4 } from "uuid";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { XYPlot } from "../XYPlot/XYPlot";
-import { convertDateObjToString } from "../../global/GlobalMethods";
+import { convertDateObjToString, countDuplicates } from "../../global/GlobalMethods";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../mainProcess/log/Log";
 
@@ -56,6 +56,19 @@ export class CaSnooper extends BaseWidget {
     bufferSize: number = 10000;
     readonly maxBufferSize: number = 100000;
 
+    statsNsec: number = 10; // counts in last N seconds
+    statsInLastNSeconds: {
+        channelNames: Record<string, number>,
+        srcIps: Record<string, number>,
+        udpClients: Record<string, number>,
+    } = {
+            channelNames: {},
+            srcIps: {},
+            udpClients: {},
+        };
+
+    bottomView: "raw-data" | "stats" | "counts-channel-name" | "counts-src-ip" | "counts-udp-client" = "raw-data";
+
     memoId: string = "";
 
     forceUpdateTable: any = undefined;
@@ -83,7 +96,15 @@ export class CaSnooper extends BaseWidget {
 
         const timeNow = Date.now();
         let currentIndex = 0;
+
+        this.statsInLastNSeconds = {
+            channelNames: {},
+            srcIps: {},
+            udpClients: {},
+        };
+
         if (this.getCaProtoSearchData().length > 0) {
+            // histogram data for plot
             const timeOldest = this.getCaProtoSearchData()[0]["msSinceEpoch"];
             const oldexIndex = Math.ceil((timeOldest - timeNow) / 1000);
 
@@ -95,12 +116,37 @@ export class CaSnooper extends BaseWidget {
             }
 
             for (let ii = 0; ii < this.getCaProtoSearchData().length; ii++) {
+
+                // counts during last N seconds
+                const data = this.getCaProtoSearchData()[ii];
+                const time = data["msSinceEpoch"];
+
+                if (timeNow - time < this.statsNsec * 1000) {
+                    const channelName = data["channelName"];
+                    const srcIp = data["ip"];
+                    const udpClient = data["ip"] + ":" + `${data["port"]}`;
+                    if (this.statsInLastNSeconds["channelNames"][channelName] === undefined) {
+                        this.statsInLastNSeconds["channelNames"][channelName] = 1;
+                    } else {
+                        this.statsInLastNSeconds["channelNames"][channelName] = this.statsInLastNSeconds["channelNames"][channelName] + 1;
+                    }
+                    if (this.statsInLastNSeconds["srcIps"][srcIp] === undefined) {
+                        this.statsInLastNSeconds["srcIps"][srcIp] = 1;
+                    } else {
+                        this.statsInLastNSeconds["srcIps"][srcIp] = this.statsInLastNSeconds["srcIps"][srcIp] + 1;
+                    }
+                    if (this.statsInLastNSeconds["udpClients"][udpClient] === undefined) {
+                        this.statsInLastNSeconds["udpClients"][udpClient] = 1;
+                    } else {
+                        this.statsInLastNSeconds["udpClients"][udpClient] = this.statsInLastNSeconds["udpClients"][udpClient] + 1;
+                    }
+                }
+
+                // histogram
                 const filtered = this.getFilteredProtoSearchData()[ii];
                 if (!filtered) {
                     continue;
                 } else {
-                    const data = this.getCaProtoSearchData()[ii];
-                    const time = data["msSinceEpoch"];
                     currentIndex = resultY.length + Math.ceil((time - timeNow) / 1000) - 1;
                     resultY[currentIndex] = resultY[currentIndex] + 1;
                 }
@@ -109,8 +155,9 @@ export class CaSnooper extends BaseWidget {
             this.histogramDataX = resultX;
             this.histogramDataY = resultY;
         }
-
     }
+
+
 
     stopCaSnooperServer = () => {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
@@ -155,6 +202,7 @@ export class CaSnooper extends BaseWidget {
         // this._sidebar = new PvTableSidebar(this);
 
         setInterval(() => {
+            // only for histogram
             this.processData();
             try {
                 const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
@@ -287,8 +335,6 @@ export class CaSnooper extends BaseWidget {
         return (
             <div style={{ ...this.getElementBodyRawStyle() }}>
                 <this._ElementArea></this._ElementArea>
-                {/* <this._BulkAddChannelsPage></this._BulkAddChannelsPage> */}
-                {/* <this._ElementSettings></this._ElementSettings> */}
                 {this._showResizers() ? <this._ElementResizer /> : null}
             </div>
         );
@@ -355,9 +401,19 @@ export class CaSnooper extends BaseWidget {
                 userSelect: "none",
             }}>
             <this._ElementHeader></this._ElementHeader>
-            <this._ElementFilters></this._ElementFilters>
+            <this._ElementSettings></this._ElementSettings>
+            {
+                this.bottomView === "counts-channel-name" ?
+                    <this._ElementCounts data={this.statsInLastNSeconds["channelNames"]}></this._ElementCounts>
+                    : this.bottomView === "counts-src-ip" ?
+                        <this._ElementCounts data={this.statsInLastNSeconds["srcIps"]}></this._ElementCounts>
+                        : this.bottomView === "counts-udp-client" ?
+                            <this._ElementCounts data={this.statsInLastNSeconds["udpClients"]}></this._ElementCounts>
+                            : null
+            }
             <this._ElementDataTable></this._ElementDataTable>
             <this._ElementXYPlotWrapper></this._ElementXYPlotWrapper>
+
         </div>
     }
 
@@ -368,7 +424,7 @@ export class CaSnooper extends BaseWidget {
                 position: "relative",
                 width: "100%",
                 height: "100%",
-                display: this.bottomView === "raw-data" ? "none" : "inline-flex",
+                display: this.bottomView === "stats" ? "inline-flex" : "none",
             }}
         >
 
@@ -399,30 +455,19 @@ export class CaSnooper extends BaseWidget {
         )
     }
 
-    bottomView: "raw-data" | "stats" = "raw-data";
-
-    _ElementFilters = () => {
-        const [filteredChannelName, setFilteredChannelName] = React.useState(this.filteredChannelName);
-        const [filteredIp, setFilteredIp] = React.useState(this.filteredIp);
-        const [filteredPort, setFilteredPort] = React.useState(this.filteredPort);
+    _ElementSettings = () => {
         const [bufferSize, setBufferSize] = React.useState(`${this.bufferSize}`);
+        const [statsNsec, setStatsNsec] = React.useState(`${this.statsNsec}`);
+
         return (
             <div style={{
                 display: "inline-flex",
                 flexDirection: "column",
                 width: "100%",
                 boxSizing: "border-box",
-                paddingBottom: 10,
+                paddingBottom: 0,
+                paddingTop: 5,
             }}>
-                <div style={{
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    width: "100%",
-                    paddingBottom: 8,
-                    paddingTop: 5,
-                }}>
-                    <b>Setting:</b>
-                </div>
 
                 <div style={{
                     display: "inline-flex",
@@ -461,9 +506,147 @@ export class CaSnooper extends BaseWidget {
                         >
                         </input>
                     </form>
-                    <div style={{color: "rgba(100, 100, 100, 1)"}}>&nbsp;(Maximum 100,000)</div>
+                    <div style={{ color: "rgba(100, 100, 100, 1)" }}>&nbsp;(Maximum 100,000)</div>
                 </div>
 
+
+                <div style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    width: "100%",
+                    paddingBottom: 5,
+                }}>
+                    <div style={{
+                        display: "inline-flex",
+                        width: GlobalVariables.defaultFontSize * 10,
+                    }}>
+                        Count last N seconds:
+                    </div>
+                    <form onSubmit={(event: any) => {
+                        event.preventDefault();
+                        const statsNsecInt = parseInt(statsNsec);
+                        if (!isNaN(statsNsecInt) && statsNsecInt > 1) {
+                            this.statsNsec = statsNsecInt;
+                            setStatsNsec(`${statsNsecInt}`);
+                        } else {
+                            setStatsNsec(`${this.statsNsec}`);
+                        }
+                        this.processData();
+                        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                        g_flushWidgets();
+
+                    }}>
+                        <input
+                            value={`${statsNsec}`}
+                            onChange={(event: any) => {
+                                event.preventDefault();
+                                const value = event.target.value;
+                                setStatsNsec(value);
+                            }}
+                            style={{
+                                borderRadius: 0,
+                                border: "solid 1px rgba(80, 80, 80, 1)",
+                                outline: "none",
+                            }}
+                        >
+                        </input>
+                    </form>
+                    <div style={{ color: "rgba(100, 100, 100, 1)" }}>&nbsp;seconds</div>
+                </div>
+
+                <div style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    marginTop: 10,
+                    marginBottom: 10,
+                }}
+                >
+                    {/* show data table */}
+                    <ElementRectangleButton
+                        defaultBackgroundColor={this.bottomView === "raw-data" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
+                        marginLeft={0}
+                        handleMouseDown={() => {
+                            this.bottomView = "raw-data";
+                            this.resizeXYPlot()
+                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                            g_flushWidgets();
+
+                        }}
+                    >
+                        Data
+                    </ElementRectangleButton>
+                    {/* show plot */}
+                    <ElementRectangleButton
+                        defaultBackgroundColor={this.bottomView === "stats" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
+                        marginLeft={10}
+                        handleMouseDown={() => {
+                            this.bottomView = "stats";
+                            this.resizeXYPlot()
+                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                            g_flushWidgets();
+
+                        }}
+                    >
+                        Plot
+                    </ElementRectangleButton>
+                    {/* show counts */}
+                    <ElementRectangleButton
+                        defaultBackgroundColor={this.bottomView === "counts-channel-name" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
+                        marginLeft={10}
+                        handleMouseDown={() => {
+                            this.bottomView = "counts-channel-name";
+                            this.resizeXYPlot()
+                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                            g_flushWidgets();
+
+                        }}
+                    >
+                        Channel name counts
+                    </ElementRectangleButton>
+                    <ElementRectangleButton
+                        defaultBackgroundColor={this.bottomView === "counts-src-ip" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
+                        marginLeft={10}
+                        handleMouseDown={() => {
+                            this.bottomView = "counts-src-ip";
+                            this.resizeXYPlot()
+                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                            g_flushWidgets();
+
+                        }}
+                    >
+                        Source IP counts
+                    </ElementRectangleButton>
+                    <ElementRectangleButton
+                        defaultBackgroundColor={this.bottomView === "counts-udp-client" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
+                        marginLeft={10}
+                        handleMouseDown={() => {
+                            this.bottomView = "counts-udp-client";
+                            this.resizeXYPlot()
+                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                            g_flushWidgets();
+
+                        }}
+                    >
+                        UDP client counts
+                    </ElementRectangleButton>
+                </div>
+            </div >
+        )
+    }
+
+    _ElementFilters = () => {
+        const [filteredChannelName, setFilteredChannelName] = React.useState(this.filteredChannelName);
+        const [filteredIp, setFilteredIp] = React.useState(this.filteredIp);
+        const [filteredPort, setFilteredPort] = React.useState(this.filteredPort);
+        return (
+            <div style={{
+                display: "inline-flex",
+                flexDirection: "column",
+                width: "100%",
+                boxSizing: "border-box",
+                paddingBottom: 10,
+                paddingLeft: 5,
+            }}>
                 <div style={{
                     display: "inline-flex",
                     flexDirection: "row",
@@ -582,70 +765,133 @@ export class CaSnooper extends BaseWidget {
                         </input>
                     </form>
                 </div>
-                <div style={{
-                    display: "inline-flex",
-                    flexDirection: "row-reverse",
-                }}
-                >
-                    {/* show plot */}
-                    <ElementRectangleButton
-                        defaultBackgroundColor={this.bottomView === "stats" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
-                        marginLeft={10}
-                        handleMouseDown={() => {
-                            this.bottomView = "stats";
-                            this.resizeXYPlot()
-                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-                            g_flushWidgets();
-
-                        }}
-                    >
-                        Statistics
-                    </ElementRectangleButton>
-                    <ElementRectangleButton
-                        defaultBackgroundColor={this.bottomView === "raw-data" ? ElementRectangleButtonDefaultBackgroundColor : "grey"}
-                        marginLeft={10}
-                        handleMouseDown={() => {
-                            this.bottomView = "raw-data";
-                            this.resizeXYPlot()
-                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-                            g_flushWidgets();
-
-                        }}
-                    >
-                        Data
-                    </ElementRectangleButton>
-                </div>
             </div >
         )
     }
 
+    _ElementCounts = ({ data }: { data: Record<string, any> }) => {
+
+        const elementRef = React.useRef<any>(null);
+        this.countsRef = elementRef;
+
+        const style = {
+            width: "100%",
+            userSelect: "text",
+            overflowX: "hidden",
+            overflowY: "scroll",
+        } as React.CSSProperties;
+
+        return (<div
+            ref={elementRef}
+            style={
+                style
+            }
+        >
+            <table
+                style={{
+                    width: "100%",
+                }}
+            >
+                <col style={{ width: "50%" }}></col>
+                <col style={{ width: "50%" }}></col>
+                <tr
+                    style={{
+                        backgroundColor: "rgba(230, 230, 230, 1)",
+                    }}
+                >
+                    <th style={{ textAlign: "left" }}>
+                        {this.bottomView === "counts-channel-name" ? "Channel Name" : this.bottomView === "counts-src-ip" ? "Source IP" : "Source UDP IP and port"}
+                    </th>
+                    <th style={{ textAlign: "left" }}>
+                        Count
+                    </th>
+                </tr>
+                {Object.entries(data).map(([prop, count]: [string, number], index: number) => {
+                    return (
+                        <tr
+                            key={prop + "-" + `${index}`}
+                            style={{
+                                backgroundColor: index % 2 === 0 ? "rgba(255,255,255,1)" : "rgba(230, 230, 230, 1)",
+                            }}
+                        >
+                            {this.bottomView === "counts-channel-name" ?
+                                <this._ElementChannelNameTd channelName={prop}></this._ElementChannelNameTd>
+                                :
+                                <td>
+                                    {prop}
+                                </td>
+                            }
+                            <td>
+                                {count}
+                            </td>
+                        </tr>
+                    )
+                })}
+            </table>
+        </div>)
+    }
+
+    _ElementChannelNameTd = ({ channelName }: any) => {
+        const elementRef = React.useRef<any>(null);
+        return (
+            <td>
+                <div
+                    ref={elementRef}
+                    style={{
+                        cursor: "pointer",
+                        display: "inline-flex",
+                    }}
+                    onMouseEnter={() => {
+                        if (elementRef.current !== null) {
+                            elementRef.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
+                        }
+                    }}
+                    onMouseLeave={() => {
+                        if (elementRef.current !== null) {
+                            elementRef.current.style["outline"] = "none";
+                        }
+                    }}
+                    onClick={() => {
+                        g_widgets1.openProbeWindow([], channelName.split(".")[0])
+                    }}
+                >
+                    {channelName}
+                </div>
+            </td>
+        )
+    }
+
     tableRef: React.MutableRefObject<any> | undefined = undefined;
+    countsRef: React.MutableRefObject<any> | undefined = undefined;
 
     resizeXYPlot = () => {
         // get Table size
+        let width = 0;
+        let height = 0;
         if (this.tableRef !== undefined && this.tableRef.current !== null) {
-            let width = this.tableRef.current.offsetWidth;
-            let height = this.tableRef.current.offsetHeight;
-            if (width === 0 || height === 0) {
-                const ElementXYPlotWrapper = document.getElementById("XYPlotWrapper");
-                if (ElementXYPlotWrapper !== null) {
-                    width = ElementXYPlotWrapper.offsetWidth;
-                    height = ElementXYPlotWrapper.offsetHeight;
-                }
-            }
+            width = this.tableRef.current.offsetWidth;
+            height = this.tableRef.current.offsetHeight;
+        }
 
-            if (width !== 0 && height !== 0) {
-                for (let widget of g_widgets1.getWidgets2().values()) {
-                    if (widget instanceof XYPlot) {
-                        const widgetKey = widget.getWidgetKey();
-                        widget.getStyle()["width"] = width;
-                        widget.getStyle()["height"] = height;
-                        g_widgets1.addToForceUpdateWidgets(widgetKey);
-                        g_flushWidgets()
-                    }
+        if (width === 0 || height === 0) {
+            const ElementXYPlotWrapper = document.getElementById("XYPlotWrapper");
+            if (ElementXYPlotWrapper !== null) {
+                width = ElementXYPlotWrapper.offsetWidth;
+                height = ElementXYPlotWrapper.offsetHeight;
+            }
+        }
+        if (width !== 0 && height !== 0) {
+            for (let widget of g_widgets1.getWidgets2().values()) {
+                if (widget instanceof XYPlot) {
+                    const widgetKey = widget.getWidgetKey();
+                    widget.getStyle()["width"] = width;
+                    widget.getStyle()["height"] = height;
+                    g_widgets1.addToForceUpdateWidgets(widgetKey);
+                    g_flushWidgets()
                 }
             }
         }
+
     }
 
 
@@ -689,65 +935,77 @@ export class CaSnooper extends BaseWidget {
                 flexWrap: "nowrap",
                 justifyContent: "flex-start",
                 alignItems: 'center',
-                overflowY: "scroll",
                 border: "solid 1px rgba(0,0,0,1)",
+                overflowY: "hidden",
+
             }}>
-            {/* header */}
-            <this._ElementTableLine key={`table-header`}>
-                <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
-                    Index
-                    {/* resizer */}
-                    <this._ElementTableHeaderResizer columnIndex={0}></this._ElementTableHeaderResizer>
-                </this._ElementTableCell>
-                <this._ElementTableCell columnIndex={1} additionalStyle={{ justifyContent: "space-between" }}>
-                    Receive Time
-                    {/* resizer */}
-                    <this._ElementTableHeaderResizer columnIndex={1}></this._ElementTableHeaderResizer>
-                </this._ElementTableCell>
-                <this._ElementTableCell columnIndex={2} additionalStyle={{ justifyContent: "space-between" }}>
-                    Channel Name
-                    {/* resizer */}
-                    <this._ElementTableHeaderResizer columnIndex={2}></this._ElementTableHeaderResizer>
-                </this._ElementTableCell>
-                <this._ElementTableCell columnIndex={3} additionalStyle={{ justifyContent: "space-between" }}>
-                    Source IP Address
-                    {/* resizer */}
-                    <this._ElementTableHeaderResizer columnIndex={3}></this._ElementTableHeaderResizer>
-                </this._ElementTableCell>
-                <this._ElementTableCell columnIndex={4} additionalStyle={{ justifyContent: "space-between" }}>
-                    Source Port
-                    {/* resizer */}
-                    <this._ElementTableHeaderResizer columnIndex={4}></this._ElementTableHeaderResizer>
-                </this._ElementTableCell>
-            </this._ElementTableLine>
+            {/* filters for table */}
+            <this._ElementFilters></this._ElementFilters>
+            <div
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    overflowY: "scroll",
+                    overflowX: "hidden",
+                }}
+            >
+                {/* header */}
+                <this._ElementTableLine key={`table-header`}>
+                    <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
+                        Index
+                        {/* resizer */}
+                        <this._ElementTableHeaderResizer columnIndex={0}></this._ElementTableHeaderResizer>
+                    </this._ElementTableCell>
+                    <this._ElementTableCell columnIndex={1} additionalStyle={{ justifyContent: "space-between" }}>
+                        Receive Time
+                        {/* resizer */}
+                        <this._ElementTableHeaderResizer columnIndex={1}></this._ElementTableHeaderResizer>
+                    </this._ElementTableCell>
+                    <this._ElementTableCell columnIndex={2} additionalStyle={{ justifyContent: "space-between" }}>
+                        Channel Name
+                        {/* resizer */}
+                        <this._ElementTableHeaderResizer columnIndex={2}></this._ElementTableHeaderResizer>
+                    </this._ElementTableCell>
+                    <this._ElementTableCell columnIndex={3} additionalStyle={{ justifyContent: "space-between" }}>
+                        Source IP Address
+                        {/* resizer */}
+                        <this._ElementTableHeaderResizer columnIndex={3}></this._ElementTableHeaderResizer>
+                    </this._ElementTableCell>
+                    <this._ElementTableCell columnIndex={4} additionalStyle={{ justifyContent: "space-between" }}>
+                        Source Port
+                        {/* resizer */}
+                        <this._ElementTableHeaderResizer columnIndex={4}></this._ElementTableHeaderResizer>
+                    </this._ElementTableCell>
+                </this._ElementTableLine>
 
-            {/* data lines */}
-            {this.getCaProtoSearchData().map((data: type_CaProtoSearchData, index: number) => {
-                if (this.getFilteredProtoSearchData()[index] === false) {
-                    return null
-                } else {
-                    return (
-                        <this._ElementTableLine key={`${data["msSinceEpoch"]}-${data["channelName"]}-${this.memoId}-${index}`} lineIndex={index}>
-                            <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
-                                {index}
-                            </this._ElementTableCell>
-                            <this._ElementTableCell columnIndex={1} additionalStyle={{ justifyContent: "space-between" }}>
-                                {convertDateObjToString(new Date(data["msSinceEpoch"]))}
-                            </this._ElementTableCell>
-                            <this._ElementTableCell columnIndex={2} additionalStyle={{ justifyContent: "space-between" }}>
-                                {data["channelName"]}
-                            </this._ElementTableCell>
-                            <this._ElementTableCell columnIndex={3} additionalStyle={{ justifyContent: "space-between" }}>
-                                {data["ip"]}
-                            </this._ElementTableCell>
-                            <this._ElementTableCell columnIndex={4} additionalStyle={{ justifyContent: "space-between" }}>
-                                {data["port"]}
-                            </this._ElementTableCell>
-                        </this._ElementTableLine>
+                {/* data lines */}
+                {this.getCaProtoSearchData().map((data: type_CaProtoSearchData, index: number) => {
+                    if (this.getFilteredProtoSearchData()[index] === false) {
+                        return null
+                    } else {
+                        return (
+                            <this._ElementTableLine key={`${data["msSinceEpoch"]}-${data["channelName"]}-${this.memoId}-${index}`} lineIndex={index}>
+                                <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
+                                    {index}
+                                </this._ElementTableCell>
+                                <this._ElementTableCell columnIndex={1} additionalStyle={{ justifyContent: "space-between" }}>
+                                    {convertDateObjToString(new Date(data["msSinceEpoch"]))}
+                                </this._ElementTableCell>
+                                <this._ElementTableCell columnIndex={2} additionalStyle={{ justifyContent: "space-between" }}>
+                                    {data["channelName"]}
+                                </this._ElementTableCell>
+                                <this._ElementTableCell columnIndex={3} additionalStyle={{ justifyContent: "space-between" }}>
+                                    {data["ip"]}
+                                </this._ElementTableCell>
+                                <this._ElementTableCell columnIndex={4} additionalStyle={{ justifyContent: "space-between" }}>
+                                    {data["port"]}
+                                </this._ElementTableCell>
+                            </this._ElementTableLine>
 
-                    )
-                }
-            })}
+                        )
+                    }
+                })}
+            </div>
         </div>
         )
     }

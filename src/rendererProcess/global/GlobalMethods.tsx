@@ -321,3 +321,11 @@ export const refineTicks = (rawTicks: number[], unitLength: number, elementRef: 
     return result1;
 };
 
+
+export const countDuplicates = (arr: any[]) => {
+    return arr.reduce((acc: any, val: any) => {
+        acc[val] = (acc[val] || 0) + 1;
+        return acc;
+    }, {});
+}
+

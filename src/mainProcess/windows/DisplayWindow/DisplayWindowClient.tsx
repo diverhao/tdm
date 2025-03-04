@@ -458,8 +458,12 @@ export class DisplayWindowClient {
                         }
 
                         if (widget.mouseEventInsideTable(pointerX, pointerY)) {
-                            contextMenuOptions = {
-                                contextMenuTexts: Object.keys(widget.mouseRightButtonDownContextMenuActions),
+                            if (widget instanceof CaSnooper && widget.bottomView !== "raw-data") {
+                                // do not copy
+                            } else {
+                                contextMenuOptions = {
+                                    contextMenuTexts: Object.keys(widget.mouseRightButtonDownContextMenuActions),
+                                }
                             }
                         }
                         this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);

@@ -348,7 +348,7 @@ export class Probe extends BaseWidget {
 
     _ElementBodyRaw = (): JSX.Element => {
         return (
-            <div style={{ ...this.getElementBodyRawStyle()}}>
+            <div style={{ ...this.getElementBodyRawStyle() }}>
                 <this._ElementArea></this._ElementArea>
                 {this._showResizers() ? <this._ElementResizer /> : null}
             </div>
@@ -365,6 +365,7 @@ export class Probe extends BaseWidget {
         const channelNameInputRef: React.RefObject<null | HTMLInputElement> = React.useRef(null);
         const filterElementRef = React.useRef<any>(null);
         const [filterValue, setFilterValue] = React.useState("");
+        const elementProcessRef = React.useRef<any>(null);
 
         React.useEffect(() => {
             setChannelName(`${this.getChannelNames()[0]}`);
@@ -501,6 +502,44 @@ export class Probe extends BaseWidget {
                             }
                         })}
                         {this.rtyp === "" || this.rtyp === this.rtypWaitingName ? null : <this.TableLine index={-1} property={"RTYP"} value={this.rtyp}></this.TableLine>}
+                        <this.TableLine index={-1} property={"Process"} value={
+                            <div
+                                style={{
+                                    display: "inline-flex",
+                                }}
+                            >
+                                Click<span ref={elementProcessRef}
+                                    style={{
+                                        cursor: "pointer",
+                                    }}
+                                    onClick={() => {
+                                        try {
+                                            const channelName = this.getChannelNames()[0].split(".")[0]; // base channel name
+                                            const tcaChannel = g_widgets1.getTcaChannel(channelName + ".PROC"); // .PROC
+                                            // if user includes the unit, the put() should be able to parseInt() or praseFloat()
+                                            // the text before unit
+                                            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+                                            tcaChannel.put(displayWindowId, { value: 1 }, 1);
+                                        } catch (e) {
+                                            const errMsg = `Channel ${this.getChannelNames()} cannot be found`;
+                                            Log.error(errMsg);
+                                            Log.error(e);
+                                        }
+                                    }}
+                                    onMouseEnter={() => {
+                                        if (elementProcessRef.current !== null) {
+                                            elementProcessRef.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        if (elementProcessRef.current !== null) {
+                                            elementProcessRef.current.style["outline"] = "none";
+                                        }
+                                    }}
+
+                                >&nbsp;here&nbsp;</span>to process this channel
+                            </div>
+                        }></this.TableLine>
                     </tbody>
                 </table>
                 <div>
