@@ -6,7 +6,7 @@ import { BooleanButtonSidebar } from "./BooleanButtonSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { BooleanButtonRules } from "./BooleanButtonRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_BooleanButton_tdl = {
     type: string;
@@ -79,8 +79,8 @@ export class BooleanButton extends BaseWidget {
             this.setRulesStyle(rulesValues["style"]);
             this.setRulesText(rulesValues["text"]);
         }
-        this.setAllStyle({...this.getStyle(), ...this.getRulesStyle()});
-        this.setAllText({...this.getText(), ...this.getRulesText()});
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
@@ -599,18 +599,7 @@ export class BooleanButton extends BaseWidget {
             }
         }
 
-        try {
-            const channelName = this.getChannelNames()[0];
-            const channel = g_widgets1.getTcaChannel(channelName);
-            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-
-            const dbrData = {
-                value: newChannelValue,
-            };
-            channel.put(displayWindowId, dbrData, 1);
-        } catch (e) {
-            Log.error(e);
-        }
+        this.putChannelValue(this.getChannelNames()[0], newChannelValue);
     };
 
     handleMouseUpOnButton = (event: any) => {
@@ -664,13 +653,98 @@ export class BooleanButton extends BaseWidget {
 
         try {
             const channelName = this.getChannelNames()[0];
-            const channel = g_widgets1.getTcaChannel(channelName);
+            const tcaChannel = g_widgets1.getTcaChannel(channelName);
             const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+
+            // intercepted by confirm write
+            const value = newChannelValue;
+            if (this.getAllText()["confirmOnWrite"] === true) {
+                const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
+                const humanReadableMessage1 = "You are about to change " + this.getChannelNames()[0] + " to " + `${value}`;
+                // requires password
+                if (this.getAllText()["confirmOnWriteUsePassword"] === true) {
+                    const humanReadableMessage2 = "A password is required."
+                    const password = this.getAllText()["confirmOnWritePassword"];
+                    ipcManager.handleDialogShowInputBox(undefined,
+                        {
+                            command: "write-pv-confirmation-with-password",
+                            humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
+                            buttons: [
+                                {
+                                    text: "OK",
+                                    handleClick: (dialogInputText?: string) => {
+                                        if (dialogInputText !== password) {
+                                            // password does not match
+                                            ipcManager.handleDialogShowMessageBox(undefined,
+                                                {
+                                                    command: "write-pv-confirmation-wit-password-failed",
+                                                    humanReadableMessages: ["Wrong password."],
+                                                    buttons: [
+                                                        {
+                                                            text: "OK",
+                                                            handleClick: () => {
+                                                            },
+                                                        },
+                                                    ],
+                                                    messageType: "error",
+                                                    rawMessages: [],
+                                                    attachment: undefined,
+                                                }
+                                            )
+
+                                            return;
+                                        }
+                                        try {
+                                            tcaChannel.put(displayWindowId, { value: value }, 1);
+                                        } catch (e) {
+                                            Log.error(e);
+                                        }
+                                    },
+                                }
+                            ],
+                            defaultInputText: "",
+                            attachment: undefined,
+                        }
+                    )
+                } else {
+                    // password not required
+                    const humanReadableMessage2 = "Are you sure to continue?"
+                    ipcManager.handleDialogShowMessageBox(undefined,
+                        {
+                            command: "write-pv-confirmation-without-password",
+                            humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
+                            buttons: [
+                                {
+                                    text: "Yes",
+                                    handleClick: () => {
+                                        try {
+                                            tcaChannel.put(displayWindowId, { value: value }, 1);
+                                        } catch (e) {
+                                            Log.error(e);
+                                        }
+                                    },
+                                },
+                                {
+                                    text: "No",
+                                    handleClick: () => {
+                                    },
+                                }
+                            ],
+                            messageType: "info",
+                            rawMessages: [],
+                            attachment: undefined,
+                        }
+                    )
+
+                }
+                return;
+            }
+
 
             const dbrData = {
                 value: newChannelValue,
             };
-            channel.put(displayWindowId, dbrData, 1);
+            tcaChannel.put(displayWindowId, dbrData, 1);
         } catch (e) {
             Log.error(e);
         }
@@ -810,6 +884,9 @@ export class BooleanButton extends BaseWidget {
             offPicture: "",
             // "contemporary" | "traditional"
             appearance: "traditional",
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
         },
         channelNames: [],
         groupNames: [],

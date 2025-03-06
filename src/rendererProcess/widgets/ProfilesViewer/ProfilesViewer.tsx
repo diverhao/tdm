@@ -999,6 +999,7 @@ export class ProfilesViewer extends BaseWidget {
         udp: Record<string, any>,
         tcp: Record<string, Record<string, any>>,
     }) => {
+        console.log("new epics stats ====================", epicsStats)
         this.epicsStats = epicsStats;
         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
         g_flushWidgets();

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { TextEntry } from "./TextEntry";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class TextEntrySidebar extends BaseWidgetSidebar {
@@ -128,13 +128,16 @@ export class TextEntrySidebar extends BaseWidgetSidebar {
                     {this.getSidebarBorderColor().getElement()}
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
+                {/* ---------------- confirm on write -------------------- */}
+                {this.getSidebarWriteConfirmation().getElement()}
+                <this._HorizontalLine />
                 {/* ------------------------- rules ---------------------------- */}
                 {this.getMainWidget().getRules()?.getElement()}
                 <this._HorizontalLine />
                 {/* ------------------------- widgets list ---------------------------- */}
                 {this.getSidebarWidgetsList().getElement()}
                 <this._HorizontalLine />
-            </div>
+            </div >
         );
     };
 

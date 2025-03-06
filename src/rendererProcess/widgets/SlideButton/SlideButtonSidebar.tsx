@@ -225,6 +225,9 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
                 {/* {this.getSidebarChoiceButtonItems().getElement()} */}
                 {/* {this.getSidebarChoiceButtonUseChannelItems().getElement()} */}
                 <this._HorizontalLine />
+                {/* ---------------- confirm on write -------------------- */}
+                {this.getSidebarWriteConfirmation().getElement()}
+                <this._HorizontalLine />
                 {/* ------------------------- rules ---------------------------- */}
                 {this.getMainWidget().getRules()?.getElement()}
                 <this._HorizontalLine />

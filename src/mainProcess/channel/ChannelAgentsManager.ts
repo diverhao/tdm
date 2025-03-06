@@ -102,7 +102,7 @@ export class ChannelAgentsManager {
         } else {
             const networkStats = context.getNetworkStats();
             result = JSON.parse(JSON.stringify(networkStats))
-
+            console.log("net work stats ======================", networkStats)
             const tcpTransports = context.getTcpTransports();
             for (let [address, tcpTransport] of Object.entries(tcpTransports.getTcpTransports())) {
                 const channelNames = Object.keys(tcpTransport.getChannels());

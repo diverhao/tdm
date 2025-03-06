@@ -274,170 +274,71 @@ export class ComboBox extends BaseWidget {
                         onChange={(event: any) => {
                             this.handleChange(event);
                         }}
-                    >
-                        {/* {itemNames.map((name: string, index: number) => {
-							const value = tmpValues[index] as number;
-							const selected = this.calcOptionSelected(value);
-							if (selected) {
-								thereIsOneOptionSelected = true;
-							}
-							return (
-								<option key={`${label}-${index}`} value={`${value}`} selected={selected}>
-									{label}
-								</option>
-							);
-						})} */}
-
-                        {(itemNames as string[]).map((name: string, index: number) => {
-                            let isSelected = false;
+                        value={(() => {
                             if (!g_widgets1.isEditing()) {
                                 try {
                                     const channel = g_widgets1.getTcaChannel(channelName);
                                     if (channel.getProtocol() === "pva") {
                                         const dbrData = channel.getDbrData() as any;
-                                        if (dbrData["value"]["index"] === index) {
-                                            isSelected = true;
-                                        }
+                                        return dbrData["value"]["index"]
                                     } else {
-                                        if (channel.getDbrData()["value"] === itemValues[index]) {
-                                            isSelected = true;
+                                        const index = itemValues.indexOf(channel.getDbrData()["value"]);
+                                        if (index !== -1) {
+                                            return index;
+                                        } else {
+                                            // do not use undefined, it does not change the empty option
+                                            return this.getWidgetKey();
                                         }
 
                                     }
                                 } catch (e) {
                                     Log.error(e);
+                                    return this.getWidgetKey();
                                 }
+                            } else {
+                                return this.getWidgetKey();
                             }
+                        })()}
+                    >
+                        <option key={`empty-value`}
+                            value={this.getWidgetKey()}
+                        >
+                            {""}
+                        </option>
+
+                        {(itemNames as string[]).map((name: string, index: number) => {
+                            // let isSelected = false;
+                            // if (!g_widgets1.isEditing()) {
+                            //     try {
+                            //         const channel = g_widgets1.getTcaChannel(channelName);
+                            //         if (channel.getProtocol() === "pva") {
+                            //             const dbrData = channel.getDbrData() as any;
+                            //             if (dbrData["value"]["index"] === index) {
+                            //                 isSelected = true;
+                            //             }
+                            //         } else {
+                            //             if (channel.getDbrData()["value"] === itemValues[index]) {
+                            //                 isSelected = true;
+                            //             }
+
+                            //         }
+                            //     } catch (e) {
+                            //         Log.error(e);
+                            //     }
+                            // }
 
                             return (
                                 <option key={`${name}-${index}`}
                                     value={index}
-                                    selected={isSelected}>
+                                // selected={isSelected}
+                                >
                                     {name}
                                 </option>
                             );
                         })}
-
-                        {/* {thereIsOneOptionSelected === false ? (
-                            <option value={`N/A`} selected={true} disabled={true}>
-                                {g_widgets1.isEditing() ? "Combo Box" : "?"}
-                            </option>
-                        ) : null} */}
-
-
                     </select>
                 </form>
-            </div>
-        );
-    };
-
-    _ElementComboBox1 = () => {
-        const elementRef = React.useRef<any>(null);
-
-
-        this.updateItemsFromChannel1();
-
-        let tmpLabels = this.getItemLabels();
-        let tmpValues = this.getItemValues();
-        if (this.getAllText()["useChannelItems"] && this._itemLabelsFromChannel.length > 0) {
-            tmpLabels = this._itemLabelsFromChannel;
-            tmpValues = this._itemValuesFromChannel;
-        }
-
-        let thereIsOneOptionSelected = false;
-
-        return (
-            <div
-                ref={elementRef}
-                style={{
-                    display: "inline-flex",
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: "rgba(0,0,0,0)",
-                }}
-                onMouseEnter={(event: any) => {
-                    event.preventDefault();
-                    if (!g_widgets1.isEditing() && elementRef.current !== null) {
-                        elementRef.current.style["outlineStyle"] = "solid";
-                        elementRef.current.style["outlineWidth"] = "3px";
-                        elementRef.current.style["outlineColor"] = "rgba(105,105,105,1)";
-                        // the cursor won't become "pointer"
-                        if (this._getChannelAccessRight() < 1.5) {
-                            elementRef.current.style["cursor"] = "not-allowed";
-                        } else {
-                            elementRef.current.style["cursor"] = "pointer";
-                        }
-                    }
-                }}
-                // do not use onMouseOut
-                onMouseLeave={(event: any) => {
-                    event.preventDefault();
-                    if (!g_widgets1.isEditing() && elementRef.current !== null) {
-                        elementRef.current.style["outlineStyle"] = this.getAllStyle()["outlineStyle"];
-                        elementRef.current.style["outlineWidth"] = this.getAllStyle()["outlineWidth"];
-                        elementRef.current.style["outlineColor"] = this.getAllStyle()["outlineColor"];
-                        elementRef.current.style["cursor"] = "default";
-                    }
-                }}
-            >
-                <form
-                    style={{
-                        display: "inline-flex",
-                        flexDirection: "column",
-                        justifyContent: "flex-start",
-                        alignItems: "flex-start",
-                        width: "100%",
-                        height: "100%",
-                        opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                        // make the dropdown selection transparent to mouse event (in particular mosue down)
-                        // so that we won't control it if it is not writable
-                        pointerEvents: this._getChannelAccessRight() < 1.5 ? "none" : "auto",
-                    }}
-                >
-                    <select
-                        style={{
-                            color: this.getAllStyle()["color"],
-                            width: "100%",
-                            height: "100%",
-                            fontSize: this.getAllStyle()["fontSize"],
-                            fontFamily: this.getAllStyle()["fontFamily"],
-                            fontStyle: this.getAllStyle()["fontStyle"],
-                            fontWeight: this.getAllStyle()["fontWeight"],
-                            // backgroundColor: this.getAllText()["backgroundColor"],
-                            backgroundColor: "rgba(0,0,0,0)",
-                            outline: "none",
-                            textAlignLast:
-                                this.getAllText()["horizontalAlign"] === "flex-start"
-                                    ? "left"
-                                    : this.getAllText()["horizontalAlign"] === "flex-end"
-                                        ? "right"
-                                        : "center",
-                            // textAlign: "right",
-                        }}
-                        onChange={(event: any) => {
-                            this.handleChange(event);
-                        }}
-                    >
-                        {tmpLabels.map((label: string, index: number) => {
-                            const value = tmpValues[index] as number;
-                            const selected = this.calcOptionSelected(value);
-                            if (selected) {
-                                thereIsOneOptionSelected = true;
-                            }
-                            return (
-                                <option key={`${label}-${index}`} value={`${value}`} selected={selected}>
-                                    {label}
-                                </option>
-                            );
-                        })}
-                        {thereIsOneOptionSelected === false ? (
-                            <option value={`N/A`} selected={true} disabled={true}>
-                                {g_widgets1.isEditing() ? "Combo Box" : "?"}
-                            </option>
-                        ) : null}
-                    </select>
-                </form>
-            </div>
+            </div >
         );
     };
 
@@ -546,121 +447,16 @@ export class ComboBox extends BaseWidget {
             if (this._getChannelAccessRight() < 1.5) {
                 return;
             }
-            // write value
-            try {
-                const index = event.target.value;
-
-                const channel = g_widgets1.getTcaChannel(channelName);
-                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                let value = this.getItemValues()[index];
-                if (this.getAllText()["useChannelItems"] === true) {
-                    value = this._itemValuesFromChannel[index];
-                }
-                const dbrData = {
-                    value: value,
-                };
-                // 1 second expire
-                console.log("putting", this.getItemValues(), index, dbrData)
-                channel.put(displayWindowId, dbrData, 1);
-            } catch (e) {
-                Log.error(e);
+            const index = event.target.value;
+            let value = this.getItemValues()[index];
+            if (this.getAllText()["useChannelItems"] === true) {
+                value = this._itemValuesFromChannel[index];
             }
+            // write value
+            this.putChannelValue(channelName, value);
         }
     };
 
-    handleChange1 = (event: any) => {
-        // do not preventDefault()
-        event.preventDefault();
-
-        const newChannelValue = event.target.value;
-
-        if (g_widgets1.isEditing()) {
-            return;
-        }
-
-        if (this._getChannelAccessRight() < 1.5) {
-            return;
-        }
-
-        const oldChannelValue = Math.floor(this._getChannelValue(true) as number);
-        if (newChannelValue === oldChannelValue) {
-            return;
-        }
-
-        try {
-            const channelName = this.getChannelNames()[0];
-            const channel = g_widgets1.getTcaChannel(channelName);
-            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-
-            const dbrData = {
-                value: newChannelValue,
-            };
-
-            channel.put(displayWindowId, dbrData, 1);
-        } catch (e) {
-            Log.error(e);
-        }
-    };
-
-    // getBitValue = () => {
-    // 	const bit = this.getText()["bit"];
-    // 	try {
-    // 		const channelName = this.getChannelNames()[0];
-    // 		const channel = g_widgets1.getTcaChannel(channelName);
-    // 		const value = channel.getValue(true);
-
-    // 		if (typeof value === "number") {
-    // 			// use whole value
-    // 			if (bit < 0) {
-    // 				if (value === 0) {
-    // 					return false;
-    // 				} else if (value === 1) {
-    // 					return true;
-    // 				} else {
-    // 					return false;
-    // 				}
-    // 			}
-
-    // 			if (((value >> bit) & 0x1) === 1) {
-    // 				return true;
-    // 			} else {
-    // 				return false;
-    // 			}
-    // 		}
-    // 	} catch (e) {
-    // 		console.log(e);
-    // 	}
-    // 	return false;
-    // };
-
-    // calcThing = (_itemThings: string[], itemValues: number[], fallbackThing: string) => {
-    // 	if (_itemThings.length > 0) {
-    // 		if (g_widgets1.isEditing()) {
-    // 			return _itemThings[0];
-    // 		} else {
-    // 			const bitValue = this.getBitValue() === true ? 1 : 0;
-    // 			let index = itemValues.indexOf(bitValue);
-    // 			if (index > -1) {
-    // 				if (_itemThings[index]) {
-    // 					return _itemThings[index];
-    // 				}
-    // 			}
-    // 		}
-    // 	}
-    // 	return fallbackThing;
-    // };
-
-    // calcLabel = (): string => {
-    // 	if (this.getText()["useChannelItems"]) {
-    // 		if (this._itemLabelsFromChannel.length === 0) {
-    // 			return this.calcThing(this.getItemLabels(), this.getItemValues() as number[], "item-N...");
-    // 		} else {
-    // 			return this.calcThing(this._itemLabelsFromChannel, this._itemValuesFromChannel, "item-N...");
-    // 		}
-    // 	} else {
-    // 		return this.calcThing(this.getItemLabels(), this.getItemValues() as number[], "item-N...");
-    // 	}
-    // };
 
     // concretize abstract method
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
@@ -762,6 +558,9 @@ export class ComboBox extends BaseWidget {
             alarmText: false,
             alarmBackground: false,
             alarmLevel: "MINOR",
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
         },
         channelNames: [],
         groupNames: [],

@@ -207,15 +207,7 @@ export class TextEntry extends BaseWidget {
                 return;
             }
 
-            try {
-                const tcaChannel = g_widgets1.getTcaChannel(this.getChannelNames()[0]);
-                // if user includes the unit, the put() should be able to parseInt() or praseFloat()
-                // the text before unit
-                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                tcaChannel.put(displayWindowId, { value: value }, 1);
-            } catch (e) {
-                Log.error(e);
-            }
+            this.putChannelValue(this.getChannelNames()[0], value);
         };
 
         const calcInputSize = () => {
@@ -540,6 +532,9 @@ export class TextEntry extends BaseWidget {
             alarmText: false,
             alarmBackground: false,
             alarmLevel: "MINOR",
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
         },
         channelNames: [],
         groupNames: [],

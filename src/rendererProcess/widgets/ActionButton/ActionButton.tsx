@@ -27,6 +27,9 @@ export type type_action_writepv_tdl = {
     label: string;
     channelName: string;
     channelValue: string;
+    confirmOnWrite: boolean;
+    confirmOnWriteUsePassword: boolean;
+    confirmOnWritePassword: string,
 };
 
 export type type_action_executescript_tdl = {
@@ -39,6 +42,9 @@ export type type_action_executecommand_tdl = {
     type: "ExecuteCommand";
     label: string;
     command: string;
+    confirmOnWrite: boolean;
+    confirmOnWriteUsePassword: boolean;
+    confirmOnWritePassword: string,
 };
 
 export type type_action_openwebpage_tdl = {
@@ -676,17 +682,20 @@ export class ActionButton extends BaseWidget {
         const tdl = this.getActions()[index] as type_action_writepv_tdl;
         const channelName = tdl["channelName"];
         const channelValue = tdl["channelValue"];
-        console.log("write PV =================", channelName, channelValue)
+
         try {
+            // we need this line
             const channel = g_widgets1.getTcaChannel(channelName);
             const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-            channel.put(displayWindowId, { value: channelValue }, 1);
+            // channel.put(displayWindowId, { value: channelValue }, 1);
+            this.putChannelValue(channelName, channelValue, this.getActions()[index]);
         } catch (e) {
             const channel = g_widgets1.createTcaChannel(channelName, this.getWidgetKey());
             if (channel !== undefined) {
                 const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
                 await channel.getMeta(this.getWidgetKey(), 1);
-                channel.put(displayWindowId, { value: channelValue }, 1);
+                // channel.put(displayWindowId, { value: channelValue }, 1);
+                this.putChannelValue(channelName, channelValue, this.getActions()[index]);
                 // no need to manually destroy the channel, the client will check on it
                 // channel.destroy(this.getWidgetKey());
             }
@@ -701,8 +710,8 @@ export class ActionButton extends BaseWidget {
     };
 
     executeCommand = (index: number) => {
-        const tdl = this.getActions()[index] as type_action_executecommand_tdl;
-        const command = tdl["command"];
+        const text = this.getActions()[index] as type_action_executecommand_tdl;
+        const command = text["command"];
         if (command === undefined || command === null || command.trim() === "") {
             Log.error("Cannot execute command", command);
             return;
@@ -710,6 +719,99 @@ export class ActionButton extends BaseWidget {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const ipcManager = displayWindowClient.getIpcManager();
         const displayWindowId = displayWindowClient.getWindowId();
+
+
+
+        // intercepted by confirm write
+        if (text["confirmOnWrite"] === true) {
+            const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
+            const humanReadableMessage1 = "You are about to execute command " + command;
+            // requires password
+            if (text["confirmOnWriteUsePassword"] === true) {
+                const humanReadableMessage2 = "A password is required."
+                const password = text["confirmOnWritePassword"];
+                ipcManager.handleDialogShowInputBox(undefined,
+                    {
+                        command: "write-pv-confirmation-with-password",
+                        humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
+                        buttons: [
+                            {
+                                text: "OK",
+                                handleClick: (dialogInputText?: string) => {
+                                    console.log("pass word is ", dialogInputText, "...")
+                                    if (dialogInputText !== password) {
+                                        // password does not match
+                                        console.log("pass word does notmatch")
+                                        ipcManager.handleDialogShowMessageBox(undefined,
+                                            {
+                                                command: "write-pv-confirmation-wit-password-failed",
+                                                humanReadableMessages: ["Wrong password."],
+                                                buttons: [
+                                                    {
+                                                        text: "OK",
+                                                        handleClick: () => {
+                                                        },
+                                                    },
+                                                ],
+                                                messageType: "error",
+                                                rawMessages: [],
+                                                attachment: undefined,
+                                            }
+                                        )
+
+                                        return;
+                                    }
+                                    // password is correct, execute the command
+                                    ipcManager.sendFromRendererProcess("execute-command", {
+                                        displayWindowId: displayWindowId,
+                                        command: command,
+                                    })
+                                },
+                            }
+                        ],
+                        defaultInputText: "",
+                        attachment: undefined,
+                    }
+                )
+            } else {
+                // password not required, but need confirm
+                const humanReadableMessage2 = "Are you sure to continue?"
+                ipcManager.handleDialogShowMessageBox(undefined,
+                    {
+                        command: "write-pv-confirmation-without-password",
+                        humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
+                        buttons: [
+                            {
+                                text: "Yes",
+                                handleClick: () => {
+
+                                    ipcManager.sendFromRendererProcess("execute-command", {
+                                        displayWindowId: displayWindowId,
+                                        command: command,
+                                    })
+                                },
+                            },
+                            {
+                                text: "No",
+                                handleClick: () => {
+                                },
+                            }
+                        ],
+                        messageType: "info",
+                        rawMessages: [],
+                        attachment: undefined,
+                    }
+                )
+
+            }
+            return;
+        }
+
+
+
+
+
+
         ipcManager.sendFromRendererProcess("execute-command", {
             displayWindowId: displayWindowId,
             command: command,

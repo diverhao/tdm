@@ -57,6 +57,7 @@ import { SidebarAlarmDial } from "../../helperWidgets/SidebarComponents/SidebarA
 import { SidebarAlarmPointer } from "../../helperWidgets/SidebarComponents/SidebarAlarmPointer";
 import { SidebarTankAlarmContainer } from "../../helperWidgets/SidebarComponents/SidebarTankAlarmContainer";
 import { SidebarTankContainerColor } from "../../helperWidgets/SidebarComponents/SidebarTankContainerColor";
+import { SidebarWriteConfirmation } from "../../helperWidgets/SidebarComponents/SidebarWriteConfirmation";
 import { SidebarLargeInput } from "./SidebarLargeInput";
 
 export abstract class BaseWidgetSidebar {
@@ -115,6 +116,7 @@ export abstract class BaseWidgetSidebar {
     private _sidebarAlarmDial: SidebarAlarmDial;
     private _sidebarTankAlarmContainer: SidebarTankAlarmContainer;
     private _sidebarTankContainerColor: SidebarTankContainerColor
+    private _sidebarWriteConfirmation: SidebarWriteConfirmation;
 
 
     private _sidebarLargeInput: SidebarLargeInput;
@@ -183,6 +185,7 @@ export abstract class BaseWidgetSidebar {
         this._sidebarAlarmDial = new SidebarAlarmDial(this);
         this._sidebarTankAlarmContainer = new SidebarTankAlarmContainer(this);
         this._sidebarTankContainerColor = new SidebarTankContainerColor(this);
+        this._sidebarWriteConfirmation = new SidebarWriteConfirmation(this);
 
         this._sidebarLargeInput = new SidebarLargeInput();
     }
@@ -498,6 +501,10 @@ export abstract class BaseWidgetSidebar {
 
     getSidebarTankContainerColor = () => {
         return this._sidebarTankContainerColor;
+    }
+
+    getSidebarWriteConfirmation = () => {
+        return this._sidebarWriteConfirmation;
     }
 
     getSidebarLargeInput = () => {

@@ -1645,7 +1645,7 @@ export abstract class BaseWidget {
         }
     }
 
-    // -----------------------------------------------------------------
+    // ------------------------- getters ----------------------------------------
 
     _getElementAreaRawOutlineStyle = (): string => {
         // console.log("======================", this.getAllText()["invisibleInOperation"])
@@ -1869,6 +1869,131 @@ export abstract class BaseWidget {
         const channelName = this.getChannelNames()[0];
         return g_widgets1.getChannelAccessRight(channelName);
     };
+
+    // -------------------- putters ----------------------------------
+
+    /**
+     * Put channel value
+     */
+    putChannelValue = (channelName: string, value: string | number | string[] | number[] | undefined, text? : Record<string, any>) => {
+        if (g_widgets1.isEditing()) {
+            return;
+        }
+
+        if (value === undefined) {
+            return;
+        }
+
+        if (typeof channelName !== "string") {
+            return;
+        }
+
+        if (value === undefined) {
+            return;
+        }
+
+        if (text === undefined) {
+            text = this.getAllText();
+        }
+        
+
+        try {
+            const tcaChannel = g_widgets1.getTcaChannel(channelName);
+            // if user includes the unit, the put() should be able to parseInt() or praseFloat()
+            // the text before unit
+            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+
+
+            // intercepted by confirm write
+            if (text["confirmOnWrite"] === true) {
+                const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
+                const humanReadableMessage1 = "You are about to change " + channelName + " to " + `${value}`;
+                // requires password
+                if (text["confirmOnWriteUsePassword"] === true) {
+                    const humanReadableMessage2 = "A password is required."
+                    const password = text["confirmOnWritePassword"];
+                    ipcManager.handleDialogShowInputBox(undefined,
+                        {
+                            command: "write-pv-confirmation-with-password",
+                            humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
+                            buttons: [
+                                {
+                                    text: "OK",
+                                    handleClick: (dialogInputText?: string) => {
+                                        console.log("pass word is ", dialogInputText, "...")
+                                        if (dialogInputText !== password) {
+                                            // password does not match
+                                            console.log("pass word does notmatch")
+                                            ipcManager.handleDialogShowMessageBox(undefined,
+                                                {
+                                                    command: "write-pv-confirmation-wit-password-failed",
+                                                    humanReadableMessages: ["Wrong password."],
+                                                    buttons: [
+                                                        {
+                                                            text: "OK",
+                                                            handleClick: () => {
+                                                            },
+                                                        },
+                                                    ],
+                                                    messageType: "error",
+                                                    rawMessages: [],
+                                                    attachment: undefined,
+                                                }
+                                            )
+
+                                            return;
+                                        }
+                                        try {
+                                            tcaChannel.put(displayWindowId, { value: value }, 1);
+                                        } catch (e) {
+                                            Log.error(e);
+                                        }
+                                    },
+                                }
+                            ],
+                            defaultInputText: "",
+                            attachment: undefined,
+                        }
+                    )
+                } else {
+                    // password not required
+                    const humanReadableMessage2 = "Are you sure to continue?"
+                    ipcManager.handleDialogShowMessageBox(undefined,
+                        {
+                            command: "write-pv-confirmation-without-password",
+                            humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
+                            buttons: [
+                                {
+                                    text: "Yes",
+                                    handleClick: () => {
+                                        try {
+                                            tcaChannel.put(displayWindowId, { value: value }, 1);
+                                        } catch (e) {
+                                            Log.error(e);
+                                        }
+                                    },
+                                },
+                                {
+                                    text: "No",
+                                    handleClick: () => {
+                                    },
+                                }
+                            ],
+                            messageType: "info",
+                            rawMessages: [],
+                            attachment: undefined,
+                        }
+                    )
+
+                }
+                return;
+            }
+
+            tcaChannel.put(displayWindowId, { value: value }, 1);
+        } catch (e) {
+            Log.error(e);
+        }
+    }
 
     // ------------------------ z direction --------------------------
 

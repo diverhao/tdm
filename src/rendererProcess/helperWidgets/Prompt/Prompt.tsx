@@ -2,10 +2,10 @@ import ReactDOM from "react-dom/client";
 import * as React from "react";
 import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 
-type type_DialogMessageBoxButton = { text: string, handleClick?: (() => void) | undefined };
+type type_DialogMessageBoxButton = { text: string, handleClick?: undefined | ((dialogInputText?: string) => void) };
 type type_DialogInputBoxButton = type_DialogMessageBoxButton;
 
 export type type_DialogMessageBox = {
@@ -457,8 +457,10 @@ export abstract class Prompt {
                             event.preventDefault();
                             this.removeElement();
                             if (handleClick !== undefined) {
-                                handleClick();
+                                handleClick(this.getDialogInputBoxText());
                             }
+                            // clear the input text
+                            this.setDialogInputBoxText("");
                         }}
                     >
                         {text}

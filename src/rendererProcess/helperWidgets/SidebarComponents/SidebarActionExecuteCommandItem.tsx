@@ -163,10 +163,156 @@ export class SidebarActionExecuteCommandItem {
                         />
                     </form>
                 </div>
+                <this._ElementConfirmOnWrite></this._ElementConfirmOnWrite>
                 <this._HorizontalLine></this._HorizontalLine>
             </this._BlockBody>
         );
     };
+
+
+    _ElementConfirmOnWrite = () => {
+        const [confirmOnWrite, setConfirmOnWrite] = React.useState<boolean>(this.getTdl()["confirmOnWrite"]);
+        // const [confirmOnWriteMessage, setConfirmOnWriteMessage] = React.useState<boolean>(this.getTdl()["confirmOnWriteMessage"]);
+        const [confirmOnWriteUsePassword, setConfirmOnWriteUsePassword] = React.useState<boolean>(this.getTdl()["confirmOnWriteUsePassword"]);
+        const [confirmOnWritePassword, setConfirmOnWritePassword] = React.useState<string>(this.getTdl()["confirmOnWritePassword"]);
+
+        return (
+            <>
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "column",
+                        position: "relative",
+                    }}
+                >
+                    <form style={{ ...this.getFormStyle(), transition: "all .1s ease-in" }}>
+                        <div>Confirm execute:</div>
+                        <input
+                            type="checkbox"
+                            checked={confirmOnWrite}
+                            onChange={(event: any) => {
+                                this.updateWidget(event, !confirmOnWrite);
+                                setConfirmOnWrite((prevVal: boolean) => {
+                                    return !prevVal;
+                                });
+                            }}
+                        />
+                    </form>
+
+                    <form style={{
+                        ...this.getFormStyle(), transition: "all .1s ease-in",
+
+                        display: confirmOnWrite === true ? "inline-flex" : "none",
+                    }}>
+                        <div>Use password:</div>
+                        <input
+                            type="checkbox"
+                            checked={confirmOnWriteUsePassword}
+                            onChange={(event: any) => {
+                                this.updateWidgetUsePassword(event, !confirmOnWriteUsePassword);
+                                setConfirmOnWriteUsePassword((prevVal: boolean) => {
+                                    return !prevVal;
+                                });
+                            }}
+                        />
+                    </form>
+
+
+                    <form
+                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetPassword(event, confirmOnWritePassword)}
+                        style={{
+                            ...this.getFormStyle(),
+                            display: confirmOnWrite === true && confirmOnWriteUsePassword === true ? "inline-flex" : "none",
+                        }}
+                    >
+                        <div>Pasword:</div>
+                        <input
+                            style={this.getInputStyle()}
+                            type="text"
+                            name="password"
+                            value={confirmOnWritePassword}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                const newVal = event.target.value;
+                                setConfirmOnWritePassword(newVal);
+                            }}
+                            // must use enter to change the value
+                            onBlur={(event: any) => {
+                                if (this.getTdl()["confirmOnWritePassword"] !== confirmOnWritePassword) {
+                                    setConfirmOnWritePassword(this.getTdl()["confirmOnWritePassword"]);
+                                }
+                            }}
+                        />
+                    </form>
+                </div>
+            </>
+        );
+    };
+
+    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        // do not prevent default
+        // event?.preventDefault();
+
+        const oldVal = this.getTdl()["confirmOnWrite"];
+        if (propertyValue === oldVal) {
+            return;
+        }
+        else {
+            this.getTdl()["confirmOnWrite"] = propertyValue as boolean;
+        }
+
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
+
+        const mainWidget = this.getMainWidget();
+        g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+
+        g_flushWidgets();
+    };
+
+    updateWidgetUsePassword = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        // do not prevent default for checkbox
+        // event.preventDefault();
+
+        const oldVal = this.getTdl()["confirmOnWriteUsePassword"];
+        if (propertyValue === oldVal) {
+            return;
+        }
+        else {
+            this.getTdl()["confirmOnWriteUsePassword"] = propertyValue as boolean;
+        }
+
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
+
+        const mainWidget = this.getMainWidget();
+        g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+
+        g_flushWidgets();
+    };
+
+    updateWidgetPassword = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event.preventDefault();
+
+        const oldVal = this.getTdl()["confirmOnWritePassword"];
+        if (propertyValue === oldVal) {
+            return;
+        }
+        else {
+            this.getTdl()["confirmOnWritePassword"] = propertyValue as string;
+        }
+
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
+
+        const mainWidget = this.getMainWidget();
+        g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+
+        g_flushWidgets();
+    };
+
 
     updateWidgetLabel = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {

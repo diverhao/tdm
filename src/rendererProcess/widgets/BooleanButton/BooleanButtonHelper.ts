@@ -87,6 +87,9 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
             offPicture: "",
             // "contemporary" | "traditional"
             appearance: "traditional",
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
         },
         channelNames: [],
         groupNames: [],

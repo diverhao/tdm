@@ -20,6 +20,9 @@ export type type_action_writepv_tdl = {
     label: string;
     channelName: string;
     channelValue: string;
+    confirmOnWrite: boolean;
+    confirmOnWriteUsePassword: boolean;
+    confirmOnWritePassword: string;
 };
 
 export type type_action_executescript_tdl = {
@@ -32,6 +35,9 @@ export type type_action_executecommand_tdl = {
     type: "ExecuteCommand";
     label: string;
     command: string;
+    confirmOnWrite: boolean;
+    confirmOnWriteUsePassword: boolean;
+    confirmOnWritePassword: string;
 };
 
 export type type_action_closedisplaywindow = {

@@ -382,18 +382,7 @@ export class SlideButton extends BaseWidget {
             }
         }
 
-        try {
-            const channelName = this.getChannelNames()[0];
-            const channel = g_widgets1.getTcaChannel(channelName);
-            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-
-            const dbrData = {
-                value: newChannelValue,
-            };
-            channel.put(displayWindowId, dbrData, 1);
-        } catch (e) {
-            Log.error(e);
-        }
+        this.putChannelValue(this.getChannelNames()[0], newChannelValue);
     };
 
     /**
@@ -430,38 +419,6 @@ export class SlideButton extends BaseWidget {
         return undefined;
     };
 
-    onCheckBoxClick = (event: any) => {
-        // do not preventDefault()
-        const bit = this.getAllText()["bit"];
-        const newBitValue = event.target.checked === true ? 1 : 0;
-        const channelValue = this._getChannelValue(true);
-        let newChannelValue = 0;
-
-        if (typeof channelValue === "number") {
-            if (newBitValue === 1) {
-                newChannelValue = Math.floor(channelValue) | (1 << bit);
-            } else {
-                newChannelValue = Math.floor(channelValue) & ~(1 << bit);
-            }
-        }
-
-        try {
-            const channelName = this.getChannelNames()[0];
-            const channel = g_widgets1.getTcaChannel(channelName);
-            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-
-            if (this.getAllText()["bit"] < 0) {
-                newChannelValue = newBitValue;
-            }
-
-            const dbrData = {
-                value: newChannelValue,
-            };
-            channel.put(displayWindowId, dbrData, 1);
-        } catch (e) {
-            Log.error(e);
-        }
-    };
 
     // concretize abstract method
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
@@ -566,6 +523,9 @@ export class SlideButton extends BaseWidget {
             text: "Label",
             fallbackColor: "rgba(255,0,255,1)",
             invisibleInOperation: false,
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
         },
         channelNames: [],
         groupNames: [],

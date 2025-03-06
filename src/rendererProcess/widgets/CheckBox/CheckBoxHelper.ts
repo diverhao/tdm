@@ -66,6 +66,9 @@ export class CheckBoxHelper extends BaseWidgetHelper {
 			offLabel: "Off",
 			onValue: 1,
 			offValue: 0,
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
 
 		},
 		channelNames: [],

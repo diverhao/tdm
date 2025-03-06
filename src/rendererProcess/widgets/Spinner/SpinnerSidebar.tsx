@@ -126,6 +126,9 @@ export class SpinnerSidebar extends BaseWidgetSidebar {
                     {this.getSidebarBorderColor().getElement()}
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
+                {/* ---------------- confirm on write -------------------- */}
+                {this.getSidebarWriteConfirmation().getElement()}
+                <this._HorizontalLine />
                 {/* ------------------------- rules ---------------------------- */}
                 {this.getMainWidget().getRules()?.getElement()}
                 <this._HorizontalLine />

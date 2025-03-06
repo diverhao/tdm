@@ -226,6 +226,9 @@ export class CheckBoxSidebar extends BaseWidgetSidebar {
                 <this._HorizontalLine />
                 {this.getSidebarChoiceButtonUseChannelItems().getElement()}
                 <this._HorizontalLine />
+                {/* ---------------- confirm on write -------------------- */}
+                {this.getSidebarWriteConfirmation().getElement()}
+                <this._HorizontalLine />
                 {/* ------------------------- rules ---------------------------- */}
                 {this.getMainWidget().getRules()?.getElement()}
                 <this._HorizontalLine />

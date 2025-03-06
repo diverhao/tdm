@@ -7,7 +7,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { SpinnerRules } from "./SpinnerRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { GlobalVariables } from "../../global/GlobalVariables";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 
 export type type_Spinner_tdl = {
@@ -84,8 +84,8 @@ export class Spinner extends BaseWidget {
             this.setRulesStyle(rulesValues["style"]);
             this.setRulesText(rulesValues["text"]);
         }
-        this.setAllStyle({...this.getStyle(), ...this.getRulesStyle()});
-        this.setAllText({...this.getText(), ...this.getRulesText()});
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
@@ -344,15 +344,7 @@ export class Spinner extends BaseWidget {
             if (this._getChannelAccessRight() < 1.5) {
                 return;
             }
-            try {
-                const tcaChannel = g_widgets1.getTcaChannel(this.getChannelNames()[0]);
-                // if user includes the unit, the put() should be able to parseInt() or praseFloat()
-                // the text before unit
-                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                tcaChannel.put(displayWindowId, { value: value }, 1);
-            } catch (e) {
-                Log.error(e);
-            }
+            this.putChannelValue(this.getChannelNames()[0], value);
         };
 
         // press escape key to blur input box
@@ -395,7 +387,7 @@ export class Spinner extends BaseWidget {
                         fontSize: this.getAllStyle()["fontSize"],
                         fontStyle: this.getAllStyle()["fontStyle"],
                         fontWeight: this.getAllStyle()["fontWeight"],
-                        
+
                     }}
                     onMouseOver={(event: any) => {
                         event.preventDefault();
@@ -462,6 +454,7 @@ export class Spinner extends BaseWidget {
                 const dbrData = {
                     value: newChannelValue,
                 };
+                // password is not honored
                 channel.put(displayWindowId, dbrData, 1);
             }
         } catch (e) {
@@ -753,6 +746,9 @@ export class Spinner extends BaseWidget {
             alarmText: false,
             alarmBackground: false,
             alarmLevel: "MINOR",
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
         },
         channelNames: [],
         groupNames: [],

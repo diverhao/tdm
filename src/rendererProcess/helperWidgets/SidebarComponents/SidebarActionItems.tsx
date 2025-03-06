@@ -174,6 +174,9 @@ export class SidebarActionItems extends SidebarComponent {
                 label: "Write PV",
                 channelName: "val5",
                 channelValue: "37",
+                confirmOnWrite: false,
+                confirmOnWriteUsePassword: false,
+                confirmOnWritePassword: "",
             };
 
             mainWidget.getActions().push(newActionTdl);
@@ -194,6 +197,9 @@ export class SidebarActionItems extends SidebarComponent {
                 type: "ExecuteCommand",
                 label: "Execute Command",
                 command: "pwd",
+                confirmOnWrite: false,
+                confirmOnWriteUsePassword: false,
+                confirmOnWritePassword: "",
             };
 
             mainWidget.getActions().push(newActionTdl);

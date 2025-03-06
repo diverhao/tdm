@@ -1161,6 +1161,7 @@ export class IpcManagerOnDisplayWindow {
                 };
             }
         }
+        
         this.getDisplayWindowClient().getPrompt().createElement("dialog-input-box", info);
     };
 

@@ -325,7 +325,8 @@ export class DataViewerPlot {
 
     mapXYToPoint = (index: number, [valX, valY]: [number, number]): [number, number] => {
         let useLog10Scale = false;
-        if (this.yAxes[index] !== undefined) {
+        const yAxis =  this.yAxes[index];
+        if (yAxis !== undefined) {
             useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
         }
 
@@ -337,9 +338,9 @@ export class DataViewerPlot {
             valYmin = Math.log10(valYmin);
             valYmax = Math.log10(valYmax);
         }
-        if (this.yAxes[index] !== undefined) {
-            valYmin = this.yAxes[index].valMin;
-            valYmax = this.yAxes[index].valMax;
+        if (yAxis !== undefined) {
+            valYmin = yAxis.valMin;
+            valYmax = yAxis.valMax;
             if (useLog10Scale) {
                 valYmin = Math.log10(valYmin);
                 valYmax = Math.log10(valYmax);
@@ -662,16 +663,6 @@ export class DataViewerPlot {
         );
     };
 
-    // _Element = React.memo(this._ElementRaw, () => {
-    //     if (this.updatePlotLines) {
-    //         return false;
-    //     } else {
-    //         return true;
-    //     }
-    // });
-
-
-
     // ---------------------------------- thumbnail ------------------------------
 
     _ElementThumbnailRaw = () => {
@@ -800,8 +791,6 @@ export class DataViewerPlot {
             >
             </div>)
     }
-
-
 
     _ElementThumbnailViewBox = () => {
         const viewBoxRef = React.useRef<any>(null);
@@ -960,6 +949,7 @@ export class DataViewerPlot {
 
         this.updatePlot()
     }
+
     handleMouseUpOnThumnailViewBox = () => {
         window.removeEventListener("mousemove", this.handleMouseMoveOnThumnailViewBox);
         window.removeEventListener("mouseup", this.handleMouseUpOnThumnailViewBox);
@@ -979,9 +969,6 @@ export class DataViewerPlot {
         const valX = valXmin + ((pointX - pointXmin) * (valXmax - valXmin)) / (pointXmax - pointXmin);
         return valX;
     };
-
-
-
 
     calcThumbnailViewBoxX = (valX: number): number => {
         let valXmin = this.xAxis.valMin;
@@ -1109,10 +1096,6 @@ export class DataViewerPlot {
         return `${pointsXYOnPlot}`
     };
 
-
-
-
-
     mapXYToPointThumbnail = (index: number, [valX, valY]: [number, number]): [number, number] => {
         let useLog10Scale = false;
         if (this.yAxes[index] !== undefined) {
@@ -1169,7 +1152,6 @@ export class DataViewerPlot {
         return [pointX, pointY];
     };
 
-
     // ----------------------------- elements components -----------------------
 
     _ElementXYTickLines = () => {
@@ -1198,6 +1180,7 @@ export class DataViewerPlot {
     generateFallbackYTicks = () => {
         return [0, 2, 4, 6, 8, 10];
     }
+
     generateFallbackYTicksText = () => {
         return ["0", "2", "4", "6", "8", "10"];
     }
@@ -1290,6 +1273,7 @@ export class DataViewerPlot {
             </svg>
         );
     };
+    
     _ElementXTicks = () => {
         return (
             <div
@@ -2112,7 +2096,6 @@ export class DataViewerPlot {
             return;
         }
     }
-
 
     handleMouseMoveOnPlotX = (event: MouseEvent) => {
 

@@ -70,6 +70,9 @@ export class TextEntryHelper extends BaseWidgetHelper {
             alarmText: false,
             alarmBackground: false,
             alarmLevel: "MINOR",
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
 
 		},
 		channelNames: [],

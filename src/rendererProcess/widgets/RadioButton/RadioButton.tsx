@@ -340,22 +340,11 @@ export class RadioButton extends BaseWidget {
                 return;
             }
             // write value
-            try {
-                const channel = g_widgets1.getTcaChannel(channelName);
-                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                let value = this.getItemValues()[index];
-                if (this.getAllText()["useChannelItems"] === true) {
-                    value = this._itemValuesFromChannel[index];
-                }
-                const dbrData = {
-                    value: value,
-                };
-                // 1 second expire
-                console.log("putting", this.getItemValues(), index, dbrData)
-                channel.put(displayWindowId, dbrData, 1);
-            } catch (e) {
-                Log.error(e);
+            let value = this.getItemValues()[index];
+            if (this.getAllText()["useChannelItems"] === true) {
+                value = this._itemValuesFromChannel[index];
             }
+            this.putChannelValue(channelName, value);
         }
     };
 
@@ -455,6 +444,9 @@ export class RadioButton extends BaseWidget {
             alarmText: false,
             alarmBackground: false,
             alarmLevel: "MINOR",
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
         },
         channelNames: [],
         groupNames: [],
