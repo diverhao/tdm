@@ -56,7 +56,7 @@ export class ChannelAgentsManager {
     createAndInitContext = async () => {
         if (this._context === undefined) {
             Log.info(this.getMainProcessId(), "Creating EPICS CA context");
-            let epicsLogLevel: type_log_levels = type_log_levels.error;
+            let epicsLogLevel: type_log_levels = type_log_levels.debug;
             const epicsLogLevelEntry = this.getProfile().getEpicsLogLevel();
             if (epicsLogLevelEntry !== undefined && epicsLogLevelEntry["value"] !== undefined) {
                 epicsLogLevel = type_log_levels[epicsLogLevelEntry["value"] as keyof typeof type_log_levels];
@@ -102,7 +102,7 @@ export class ChannelAgentsManager {
         } else {
             const networkStats = context.getNetworkStats();
             result = JSON.parse(JSON.stringify(networkStats))
-            console.log("net work stats ======================", networkStats)
+
             const tcpTransports = context.getTcpTransports();
             for (let [address, tcpTransport] of Object.entries(tcpTransports.getTcpTransports())) {
                 const channelNames = Object.keys(tcpTransport.getChannels());

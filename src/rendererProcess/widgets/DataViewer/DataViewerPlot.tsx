@@ -2,9 +2,11 @@ import { DataViewer } from "./DataViewer";
 import * as React from "react";
 import { ElementProfileBlockNameInput } from "../../mainWindow/MainWindowStyledComponents";
 import * as GlobalMethods from "../../global/GlobalMethods";
-import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
+import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, g_widgets1, type_dbrData } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Log } from "../../../mainProcess/log/Log";
+import { type_LocalChannel_data } from "../../../mainProcess/channel/LocalChannelAgent";
+// import { type_xAxis } from "../XYPlot/XYPlotPlot";
 
 type type_yAxis = {
     label: string;
@@ -19,6 +21,15 @@ type type_yAxis = {
     bufferSize: number;
     displayScale: "Linear" | "Log10";
 };
+
+type type_xAxis = {
+    label: string;
+    valMin: number;
+    valMax: number;
+    ticks: number[];
+    ticksText: string[]
+};
+
 
 export class DataViewerPlot {
     // ----------------- constants ------------------
@@ -64,6 +75,9 @@ export class DataViewerPlot {
         [5 * this.oneDay, -5, "day"],
         [10 * this.oneDay, -10, "day"],
         [30 * this.oneDay, -30, "day"],
+        [100 * this.oneDay, -100, "day"],
+        [300 * this.oneDay, -300, "day"],
+        [1000 * this.oneDay, -1000, "day"],
     ];
 
     // layout
@@ -84,7 +98,7 @@ export class DataViewerPlot {
     updatePlotLines: boolean = true;
 
     pointsXYOnPlots: [number, number][][] = [];
-    valsXYOnPlots: [number, number][][] = [];
+    // valsXYOnPlots: [number, number][][] = [];
 
     pointsXYOnThumbnail: [number, number][][] = [];
     valsXYOnThumbnail: [number, number][][] = [];
@@ -100,14 +114,13 @@ export class DataViewerPlot {
     _mainWidget: DataViewer;
 
     // update cursor values without updating everything
-    setCursorValue: any;
+    setCursorValue: React.Dispatch<React.SetStateAction<string>> | ((input: string) => void) = () => { };
 
     // trace
     selectedTraceIndex: number = 1;
     tracingIsMoving: boolean = true;
-    tracesInitialized: boolean = false;
 
-    wasEditing: boolean = true;
+    // wasEditing: boolean = true;
 
     // plot
     plotWidth: number;
@@ -118,8 +131,8 @@ export class DataViewerPlot {
     x: number[][] = [];
     y: number[][] = [];
 
-    // only one x axis
-    xAxis: { label: string; valMin: number; valMax: number; ticks: number[]; ticksText: string[] } = {
+    // only one x axis, ticks and ticksText are the same for each data set
+    xAxis: type_xAxis = {
         label: "x label",
         // time since epoch, ms
         valMin: -10 * 60 * 1000,
@@ -190,148 +203,84 @@ export class DataViewerPlot {
         const xData0 = this.x[index];
         const yData0 = this.y[index];
 
+        // y data exists
         if (yData0 === undefined) {
             return "";
         }
 
-        if (xData0[xData0.length - 1] < this.xAxis.valMin) {
-            return "";
-        }
-        if (xData0[0] > this.xAxis.valMax) {
-            return "";
-        }
-
-        let xMinIndex = xData0.findIndex((element: number) => element >= this.xAxis.valMin);
-        if (xMinIndex > 1) {
-            xMinIndex = xMinIndex - 1;
-        }
-        let xMaxIndex = xData0.findIndex((element: number) => element >= this.xAxis.valMax);
-
-        if (xMaxIndex === -1) {
-            xMaxIndex = xData0.length;
-        }
-        if (xMaxIndex < xData0.length) {
-            xMaxIndex = xMaxIndex + 1;
-        }
-
-        if (xMinIndex === -1 || xMaxIndex === -1) {
-            return "";
+        // xMaxIndex is inclusive
+        let [xMinIndex, xMaxIndex] = GlobalMethods.binarySearchRange(xData0, this.xAxis.valMin, this.xAxis.valMax);
+        if (xMinIndex === -100 || xMaxIndex === -100) {
+            // binary search did not find, corner case, try linear search
+            [xMinIndex, xMaxIndex] = this.linearSearchRange(xData0, this.xAxis.valMin, this.xAxis.valMax);
+            if (xMinIndex === -100 || xMaxIndex === -100) {
+                // no data within the plot range
+                return "";
+            }
         }
 
         let xData = xData0;
         let yData = yData0;
-
-        // only calculate the data in visible region
-        if (this.getMainWidget().getReCalcPlot() === true) {
-            xData = xData0.slice(xMinIndex, xMaxIndex);
-            yData = yData0.slice(xMinIndex, xMaxIndex);
+        if (xMinIndex === 0 && xMaxIndex === xData0.length - 1) {
+        } else {
+            xData = xData.slice(Math.max(xMinIndex - 1, 0), xMaxIndex + 2);
+            yData = yData.slice(Math.max(xMinIndex - 1, 0), xMaxIndex + 2);
         }
 
-        const newValsXY: [number, number][] = [];
+        // down sample the data
+        const maxPoints = this.plotWidth * 2;
+        [xData, yData] = GlobalMethods.downSampleXyData(xData, yData, maxPoints);
 
-        let valsXYOnPlot: [number, number][] = this.valsXYOnPlots[index];
-        if (valsXYOnPlot === undefined) {
-            valsXYOnPlot = [];
-            this.valsXYOnPlots[index] = valsXYOnPlot;
-        }
-
-        let pointsXYOnPlot: [number, number][] = this.pointsXYOnPlots[index];
-        if (pointsXYOnPlot === undefined) {
-            pointsXYOnPlot = [];
-            this.pointsXYOnPlots[index] = pointsXYOnPlot;
-        }
-
-        // if re-calcualte, return here
-        if (this.getMainWidget().getReCalcPlot() === true) {
-            // empty pointsXYOnPlot
-            pointsXYOnPlot.length = 0;
-            valsXYOnPlot.length = 0;
-            for (let ii = 0; ii < xData.length; ii++) {
-                if (xData[ii] !== undefined && yData[ii] !== undefined) {
-                    const pointXY = this.mapXYToPoint(index, [xData[ii], yData[ii]]);
-                    pointsXYOnPlot.push(pointXY);
-                    valsXYOnPlot.push([xData[ii], yData[ii]]);
-                }
-            }
-            return `${pointsXYOnPlot}`
-        }
-
-        const lastValXYOnOldPlot = valsXYOnPlot.pop();
-        pointsXYOnPlot.pop();
-        // append new data to vals and points
-
-        for (let ii = xData.length - 1; ii >= 0; ii--) {
-            const valX = xData[ii];
-            const valY = yData[ii];
-            if (valsXYOnPlot[valsXYOnPlot.length - 1] !== undefined) {
-                if (valX === valsXYOnPlot[valsXYOnPlot.length - 1][0]) {
-                    break;
-                }
-            }
-            if (valY !== undefined && valX !== undefined) {
-                newValsXY.splice(0, 0, [valX, valY])
-            }
-        }
-        // prepend archive data
-        const newValsXYPrepend: [number, number][] = [];
+        const pointsXYOnPlot: [number, number][] = [];
         for (let ii = 0; ii < xData.length; ii++) {
-            const valX = xData[ii];
-            const valY = yData[ii];
-            if (valsXYOnPlot[0] !== undefined) {
-                if (valX >= valsXYOnPlot[0][0]) {
-                    break;
-                }
-            }
-            if (valY !== undefined && valX !== undefined) {
-                newValsXYPrepend.push([valX, valY]);
+            if (xData[ii] !== undefined && yData[ii] !== undefined) {
+                const pointXY = this.mapXYToPoint(index, [xData[ii], yData[ii]], this.plotHeight);
+                // out of range SVG polyline point
+                pointXY[0] = Math.round(Math.min(Math.max(pointXY[0], -100), 100000));
+                pointXY[1] = Math.round(Math.min(Math.max(pointXY[1], -100), 100000));
+                pointsXYOnPlot.push(pointXY);
             }
         }
-
-
-        // offset the points X
-        let pointXDiff = 0;
-        if (lastValXYOnOldPlot !== undefined && newValsXY.length >= 1 && newValsXY[newValsXY.length - 1][0] !== undefined) {
-            const lastValXYOnNewPlot = newValsXY[newValsXY.length - 1];
-            const pointXYDiffA = this.mapXYToPoint(index, [lastValXYOnNewPlot[0] - lastValXYOnOldPlot[0], 0]);
-            const pointXYDiffB = this.mapXYToPoint(index, [0, 0]);
-            pointXDiff = pointXYDiffA[0] - pointXYDiffB[0];
-        }
-
-        // move old data backward only when the trace is moving
-        if (this.tracingIsMoving === true) {
-            for (let ii = 0; ii < pointsXYOnPlot.length; ii++) {
-                pointsXYOnPlot[ii][0] = pointsXYOnPlot[ii][0] - pointXDiff;
-            }
-        }
-
-        // push new values and points 
-        valsXYOnPlot.push(...newValsXY);
-        for (let ii = 0; ii < newValsXY.length; ii++) {
-            const newPoint = this.mapXYToPoint(index, newValsXY[ii]);
-            pointsXYOnPlot.push(newPoint);
-        }
-        // prepend archive data
-        for (let ii = newValsXYPrepend.length - 1; ii >= 0; ii--) {
-            const newPoint = this.mapXYToPoint(index, newValsXYPrepend[ii]);
-            pointsXYOnPlot.splice(0, 0, newPoint);
-        }
-        // it costs a lot CPU time! 
-        // Converting 15,000 points costs about 11 ms. All other operations in this function cost about 3 ms.
-        // However, it seems there is no better way of doing this
-        // The rendering of SVG is slow, but it only costs GPU time.
-        return `${pointsXYOnPlot}`;
+        return `${pointsXYOnPlot}`
     };
 
+    linearSearchRange = (data: number[], valMin: number, valMax: number) => {
+        let minIndex = -100;
+        let maxIndex = -100;
 
-    mapXYToPoint = (index: number, [valX, valY]: [number, number]): [number, number] => {
+        // window is on the left of data 
+        if (data[0] > valMax) {
+            return [minIndex, maxIndex];
+        }
+
+        // window is on the right of data
+        if (data[data.length - 1] < valMin) {
+            return [data.length - 1, data.length - 1];
+        }
+
+        // window is in between 2 points
+        for (let ii = 0; ii < data.length; ii++) {
+            if (data[ii] < valMin) {
+                minIndex = ii;
+            }
+            if (data[ii] > valMax && maxIndex === -100) {
+                maxIndex = ii;
+            }
+        }
+
+        return [minIndex, maxIndex];
+    }
+
+
+    mapXYToPoint = (index: number, [valX, valY]: [number, number], plotHeight: number, isThumbnail: boolean = false): [number, number] => {
         let useLog10Scale = false;
-        const yAxis =  this.yAxes[index];
+        const yAxis = this.yAxes[index];
         if (yAxis !== undefined) {
             useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
         }
 
-        const valXmin = this.xAxis.valMin;
-        const valXmax = this.xAxis.valMax;
+        let valXmin = this.xAxis.valMin;
+        let valXmax = this.xAxis.valMax;
         let valYmin = Math.min(...this.generateFallbackYTicks());
         let valYmax = Math.max(...this.generateFallbackYTicks());
         if (useLog10Scale) {
@@ -361,10 +310,20 @@ export class DataViewerPlot {
             }
         }
 
+        // thumbnail always use max range
+        if (isThumbnail) {
+            for (let xData0 of this.x) {
+                if (xData0.length > 1) {
+                    valXmin = Math.min(valXmin, xData0[0]);
+                    valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
+                }
+            }
+        }
+
         const pointXmin = 0;
         const pointXmax = this.plotWidth;
         const pointYmin = 0;
-        let pointYmax = this.plotHeight;
+        let pointYmax = plotHeight;
         const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
         let pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
         return [pointX, pointY];
@@ -413,99 +372,95 @@ export class DataViewerPlot {
         }
     };
 
-    getCursorValue = (event: any) => {
+    /**
+     * Set the React state value setter for cursor text on the plot. It causes the cursor text to update.
+     * 
+     * @param {event: any} Input could be an mouse event, or a [number, number] array
+     */
+    updateCursorElement = (event: any) => {
+
+        if (this.getSelectedTraceIndex() < 0 || this.getSelectedTraceIndex() > this.getChannelNames().length - 1) {
+            return;
+        }
 
         let pointX0 = -100000;
         let pointY0 = -100000;
+
         if (event.clientX !== undefined) {
-            // this.lastCursorPointXY = [event.clientX, event.clientY];
-            // pointX0 = event.clientX;
-            // pointY0 = event.clientY;
+            // event callback
             this.lastCursorPointXY = [getMouseEventClientX(event), getMouseEventClientY(event)];
             pointX0 = getMouseEventClientX(event);
             pointY0 = getMouseEventClientY(event);
         } else {
+            // current cursor position on web page
             pointX0 = event[0];
             pointY0 = event[1];
         }
 
+        // special case: the mouse is not on the plot region
         if (pointX0 === -100000) {
-            if (this.setCursorValue !== undefined) {
-                this.setCursorValue(``);
-            }
+            // this.setCursorValue(``);
             return;
         }
 
         const pointX = pointX0 - this.yAxisLabelWidth - this.yAxisTickWidth - this.getStyle().left;
         const pointY = pointY0 - this.titleHeight - this.getStyle().top;
-        if (this.setCursorValue !== undefined) {
-            const [valX, valY] = this.mapPointToXY(this.selectedTraceIndex, [pointX, pointY]);
-            const timeStr = GlobalMethods.convertEpochTimeToString(valX);
-            const valYStr = valY.toPrecision(4).toString();
-            this.setCursorValue(`(${timeStr}, ${valYStr})`);
-        }
+        const [valX, valY] = this.mapPointToXY(this.getSelectedTraceIndex(), [pointX, pointY]);
+        const timeStr = GlobalMethods.convertEpochTimeToString(valX);
+        const valYStr = valY.toPrecision(4).toString();
+        this.setCursorValue(`(${timeStr}, ${valYStr})`);
     };
 
+
+    /**
+     * Update 
+     * 
+     * (1) this.yAxes[index].ticks, 
+     *   
+     * (2) this.xAxes[index].ticksText, and 
+     * 
+     * (3) this.xAxes[index].label
+     * 
+     * according to this.xAxes[index].valMin and this.xAxes[index].valMax
+     * 
+     */
     calcYTicksAndLabel = (index: number) => {
         const yAxis = this.yAxes[index];
         if (yAxis === undefined) {
             return;
         }
-        const channelName = this.getMainWidget().getChannelNames()[index];
 
-        try {
-            const tcaChannel = g_widgets1.getTcaChannel(channelName);
-            // if (tcaChannel.getTimeStamp() === undefined || tcaChannel.getValue() === undefined) {
-            if (tcaChannel.getTimeStamp() === undefined || g_widgets1.getChannelValue(channelName, true) === undefined) {
-                return;
-            }
-            //todo: test above code, and remove below code
-            // const tcaChannel = g_widgets1.getTcaChannel(channelName);
-            // if (tcaChannel === undefined) {
-            // 	return;
-            // }
-            // if (tcaChannel.getDbrData().secondsSinceEpoch === undefined || tcaChannel.getDbrData().value === undefined) {
-            // 	return;
-            // }
-
-            if (yAxis.valMax === 10 && yAxis.valMin === 0) {
-                const lower_display_limit = tcaChannel.getDbrData().lower_display_limit;
-                const upper_display_limit = tcaChannel.getDbrData().upper_display_limit;
-                if (lower_display_limit !== undefined && upper_display_limit !== undefined) {
-                    yAxis.valMin = lower_display_limit;
-                    yAxis.valMax = upper_display_limit;
-                }
-            }
-
-            yAxis.label = `${channelName} [${g_widgets1.getChannelUnit(channelName).trim()}]`;
-
-            const yAxisInterval0 = (yAxis.valMax - yAxis.valMin) / 5;
-            const yAxisInterval = parseFloat(yAxisInterval0.toExponential(0));
-            yAxis.ticks.length = 0;
-            yAxis.ticksText.length = 0;
-            for (let val = Math.ceil(yAxis.valMin / yAxisInterval); val < Math.ceil(yAxis.valMax / yAxisInterval); val = val + 1) {
-                yAxis.ticks.push(val * yAxisInterval);
-                yAxis.ticksText.push(val * yAxisInterval);
-            }
-        } catch (e) {
-            Log.error(e);
-            return;
+        const yAxisInterval0 = (yAxis.valMax - yAxis.valMin) / 5;
+        const yAxisInterval = parseFloat(yAxisInterval0.toExponential(0));
+        yAxis.ticks.length = 0;
+        yAxis.ticksText.length = 0;
+        for (let val = Math.ceil(yAxis.valMin / yAxisInterval); val < Math.ceil(yAxis.valMax / yAxisInterval); val = val + 1) {
+            // (1)
+            yAxis.ticks.push(val * yAxisInterval);
+            // (2)
+            yAxis.ticksText.push(val * yAxisInterval);
         }
+
+        // (3)
+        const channelName = this.getMainWidget().getChannelNames()[index];
+        const unitRaw = g_widgets1.getChannelUnit(channelName).trim();
+        yAxis.label = `${channelName} ${unitRaw === "" ? "" : "[" + unitRaw + "]"}`;
     };
 
-    calcXTicksAndLabel = (useNewestTime: boolean) => {
-        // update this.xAxis.valMax if trace is moving and the trace is updated by interval
-        // this is the **only place** modifying this.xAxis.valMax and this.xAxis.valMin
-        // if trace is not moving (paused), do not use current time on the plot
-        // if the update is not triggered by interval (triggered by mouse click, ...), do not use current time on the plot
-        // if (this.tracingIsMoving && this.updatingByInterval) {
-        if (this.tracingIsMoving && useNewestTime) {
-            const dt = this.xAxis.valMax - this.xAxis.valMin;
-            this.xAxis.valMax = Date.now();
-            this.xAxis.valMin = this.xAxis.valMax - dt;
-        }
+    /**
+     * Update 
+     * 
+     * (1) this.xAxis.ticks, 
+     *   
+     * (2) this.xAxis.ticksText, and 
+     * 
+     * (3) this.xAxis.label 
+     * 
+     * according to this.xAxis.valMin and this.xAxis.valMax
+     * 
+     */
+    calcXTicksAndLabel = () => {
 
-        // -------------- ticks -----------------
         this.xAxis.ticks.length = 0;
         this.xAxis.ticksText.length = 0;
 
@@ -527,12 +482,14 @@ export class DataViewerPlot {
             if (this.xAxis.valMax - jj * deltaT < this.xAxis.valMin) {
                 break;
             }
+            // (1)
             this.xAxis.ticks.push(this.xAxis.valMax - jj * deltaT);
+            // (2)
             this.xAxis.ticksText.push(`${deltaTnum * jj}`);
             jj++;
         }
 
-        // label
+        // (3)
         this.xAxis.label = `Time [${this.deltaTs[index][2]}] since ${GlobalMethods.convertEpochTimeToString(this.xAxis.valMax)}`;
     };
 
@@ -542,11 +499,11 @@ export class DataViewerPlot {
         this.plotWidth = this.getStyle().width - this.yAxisLabelWidth - this.yAxisTickWidth - this.legendWidth;
         this.plotHeight = this.getStyle().height - this.titleHeight - this.xAxisLabelHeight - this.xAxisTickHeight - this.toolbarHeight - this.thumbnailHeight;
 
-        React.useEffect(() => {
-            return (() => {
-                this.getMainWidget().setReCalcPlot(true);
-            })
-        })
+        // React.useEffect(() => {
+        //     return (() => {
+        //         this.getMainWidget().setReCalcPlot(true);
+        //     })
+        // })
 
         return (
             <div
@@ -1023,140 +980,26 @@ export class DataViewerPlot {
             return "";
         }
 
-        if (xData0[xData0.length - 1] < this.xAxis.valMin) {
-            return "";
-        }
-        if (xData0[0] > this.xAxis.valMax) {
-            return "";
-        }
+        // down sample the data
+        let [xData, yData] = GlobalMethods.downSampleXyData(xData0, yData0, this.plotWidth);
 
-        let xMinIndex = xData0.findIndex((element: number) => element >= this.xAxis.valMin);
-        if (xMinIndex > 1) {
-            xMinIndex = xMinIndex - 1;
-        }
-        let xMaxIndex = xData0.findIndex((element: number) => element >= this.xAxis.valMax);
-
-        if (xMaxIndex === -1) {
-            xMaxIndex = xData0.length;
-        }
-        if (xMaxIndex < xData0.length) {
-            xMaxIndex = xMaxIndex + 1;
-        }
-
-        if (xMinIndex === -1 || xMaxIndex === -1) {
-            return "";
-        }
-
-        let xData = xData0;
-        let yData = yData0;
-
-        // only calculate the data in visible region
-        // if (this.getMainWidget().getReCalcPlot() === true) {
-        //     xData = xData0.slice(xMinIndex, xMaxIndex);
-        //     yData = yData0.slice(xMinIndex, xMaxIndex);
-        // }
-
-        const newValsXY: [number, number][] = [];
-
-        let valsXYOnPlot: [number, number][] = this.valsXYOnThumbnail[index];
-        if (valsXYOnPlot === undefined) {
-            valsXYOnPlot = [];
-            this.valsXYOnThumbnail[index] = valsXYOnPlot;
-        }
-
-        let pointsXYOnPlot: [number, number][] = this.pointsXYOnThumbnail[index];
-        if (pointsXYOnPlot === undefined) {
-            pointsXYOnPlot = [];
-            this.pointsXYOnThumbnail[index] = pointsXYOnPlot;
-        }
-
-        // if re-calcualte, return here
-        // if (this.getMainWidget().getReCalcPlot() === true) {
-        // empty pointsXYOnPlot
-        pointsXYOnPlot.length = 0;
-        valsXYOnPlot.length = 0;
-        let iiStep = Math.ceil((xData.length + 0.5) / 1000);
-        for (let ii = 0; ii < xData.length; ii = ii + 2 * iiStep) {
+        let pointsXYOnPlot: [number, number][] = [];
+        for (let ii = 0; ii < xData.length; ii++) {
             if (xData[ii] !== undefined && yData[ii] !== undefined) {
-                const pointXY = this.mapXYToPointThumbnail(index, [xData[ii], yData[ii]]);
-                if (!isNaN(pointXY[0])) {
-                    pointsXYOnPlot.push(pointXY);
-                    valsXYOnPlot.push([xData[ii], yData[ii]]);
-                }
+                const pointXY = this.mapXYToPoint(index, [xData[ii], yData[ii]], this.thumbnailHeight, true);
+                pointsXYOnPlot.push(pointXY);
             }
 
-            if (xData[ii + 1] !== undefined && yData[ii + 1] !== undefined) {
-                const pointXY = this.mapXYToPointThumbnail(index, [xData[ii + 1], yData[ii + 1]]);
-                if (!isNaN(pointXY[0])) {
-                    pointsXYOnPlot.push(pointXY);
-                    valsXYOnPlot.push([xData[ii + 1], yData[ii + 1]]);
-                }
-            }
         }
         return `${pointsXYOnPlot}`
     };
 
-    mapXYToPointThumbnail = (index: number, [valX, valY]: [number, number]): [number, number] => {
-        let useLog10Scale = false;
-        if (this.yAxes[index] !== undefined) {
-            useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
-        }
-
-
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-        let valYmin = Math.min(...this.generateFallbackYTicks());
-        let valYmax = Math.max(...this.generateFallbackYTicks());
-        if (useLog10Scale) {
-            valYmin = Math.log10(valYmin);
-            valYmax = Math.log10(valYmax);
-        }
-
-        if (this.yAxes[index] !== undefined) {
-            valYmin = this.yAxes[index].valMin;
-            valYmax = this.yAxes[index].valMax;
-            if (useLog10Scale) {
-                valYmin = Math.log10(valYmin);
-                valYmax = Math.log10(valYmax);
-            }
-        }
-
-        if (useLog10Scale) {
-            valY = Math.log10(valY);
-        }
-        if (useLog10Scale) {
-            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
-                valY = 0
-            }
-            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
-                valYmin = 0
-            }
-            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
-                valYmax = 0
-            }
-        }
-
-        for (let xData0 of this.x) {
-            if (xData0.length > 1) {
-                valXmin = Math.min(valXmin, xData0[0]);
-                valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
-            }
-        }
-
-        const pointXmin = 0;
-        const pointXmax = this.plotWidth;
-        const pointYmin = 0;
-        let pointYmax = this.thumbnailHeight;
-        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
-        const pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
-        return [pointX, pointY];
-    };
 
     // ----------------------------- elements components -----------------------
 
     _ElementXYTickLines = () => {
 
-        const yTicks = this.yAxes[this.selectedTraceIndex] === undefined ? this.generateFallbackYTicks() : this.yAxes[this.selectedTraceIndex].ticks;
+        const yTicks = this.yAxes[this.getSelectedTraceIndex()] === undefined ? this.generateFallbackYTicks() : this.yAxes[this.getSelectedTraceIndex()].ticks;
         return (
             <svg
                 width={`${this.plotWidth}`}
@@ -1168,10 +1011,10 @@ export class DataViewerPlot {
                 }}
             >
                 {this.xAxis.ticks.map((tickValue: number, index: number) => {
-                    return <this._ElementXtickLine lineIndex={this.selectedTraceIndex} tickIndex={index}></this._ElementXtickLine>;
+                    return <this._ElementXtickLine lineIndex={this.getSelectedTraceIndex()} tickIndex={index}></this._ElementXtickLine>;
                 })}
                 {yTicks.map((tickValue: number, index: number) => {
-                    return <this._ElementYtickLine lineIndex={this.selectedTraceIndex} tickIndex={index}></this._ElementYtickLine>;
+                    return <this._ElementYtickLine lineIndex={this.getSelectedTraceIndex()} tickIndex={index}></this._ElementYtickLine>;
                 })}
             </svg>
         );
@@ -1193,8 +1036,8 @@ export class DataViewerPlot {
             valMax = this.yAxes[lineIndex].valMax;
         }
 
-        const XYPoint1 = this.mapXYToPoint(lineIndex, [this.xAxis.ticks[tickIndex], valMin]);
-        const XYPoint2 = this.mapXYToPoint(lineIndex, [this.xAxis.ticks[tickIndex], valMax]);
+        const XYPoint1 = this.mapXYToPoint(lineIndex, [this.xAxis.ticks[tickIndex], valMin], this.plotHeight);
+        const XYPoint2 = this.mapXYToPoint(lineIndex, [this.xAxis.ticks[tickIndex], valMax], this.plotHeight);
         const XYPoint3 = [XYPoint1[0], XYPoint1[1] - 10];
         const XYPoint4 = [XYPoint2[0], XYPoint2[1] + 10];
         return (
@@ -1226,8 +1069,8 @@ export class DataViewerPlot {
             valMax = this.xAxis.valMax;
         }
 
-        const XYPoint1 = this.mapXYToPoint(lineIndex, [valMin, yTicks[tickIndex]]);
-        const XYPoint2 = this.mapXYToPoint(lineIndex, [valMax, yTicks[tickIndex]]);
+        const XYPoint1 = this.mapXYToPoint(lineIndex, [valMin, yTicks[tickIndex]], this.plotHeight);
+        const XYPoint2 = this.mapXYToPoint(lineIndex, [valMax, yTicks[tickIndex]], this.plotHeight);
         const XYPoint3 = [XYPoint1[0] + 10, XYPoint1[1]];
         const XYPoint4 = [XYPoint2[0] - 10, XYPoint2[1]];
 
@@ -1273,7 +1116,7 @@ export class DataViewerPlot {
             </svg>
         );
     };
-    
+
     _ElementXTicks = () => {
         return (
             <div
@@ -1292,7 +1135,7 @@ export class DataViewerPlot {
                 }}
             >
                 {this.xAxis.ticks.map((value: number, tickIndex: number) => {
-                    const [pointX, pointY] = this.mapXYToPoint(0, [value, 1]);
+                    const [pointX, pointY] = this.mapXYToPoint(0, [value, 1], this.plotHeight);
                     return (
                         <div
                             style={{
@@ -1335,8 +1178,8 @@ export class DataViewerPlot {
 
     _ElementYTicks = () => {
         // if no trace is selected (there is no trace), the y axis range is set as from 0 to 10 in this.mapXYToPlot()
-        const yTicks = this.yAxes[this.selectedTraceIndex] === undefined ? this.generateFallbackYTicks() : this.yAxes[this.selectedTraceIndex].ticks;
-        const yTicksText = this.yAxes[this.selectedTraceIndex] === undefined ? this.generateFallbackYTicksText() : this.yAxes[this.selectedTraceIndex].ticksText;
+        const yTicks = this.yAxes[this.getSelectedTraceIndex()] === undefined ? this.generateFallbackYTicks() : this.yAxes[this.getSelectedTraceIndex()].ticks;
+        const yTicksText = this.yAxes[this.getSelectedTraceIndex()] === undefined ? this.generateFallbackYTicksText() : this.yAxes[this.getSelectedTraceIndex()].ticksText;
         return (
             <div
                 style={{
@@ -1353,7 +1196,7 @@ export class DataViewerPlot {
                 }}
             >
                 {yTicks.map((value: number, tickIndex: number) => {
-                    const [pointX, pointY] = this.mapXYToPoint(this.selectedTraceIndex, [1, value]);
+                    const [pointX, pointY] = this.mapXYToPoint(this.getSelectedTraceIndex(), [1, value], this.plotHeight);
                     return (
                         <div
                             style={{
@@ -1389,7 +1232,7 @@ export class DataViewerPlot {
                     padding: "0px",
                     // backgroundColor: "magenta",
                     backgroundColor: "rgba(255, 0, 255, 0)",
-                    color: this.yAxes[this.selectedTraceIndex] === undefined ? "black" : this.yAxes[this.selectedTraceIndex].lineColor,
+                    color: this.yAxes[this.getSelectedTraceIndex()] === undefined ? "black" : this.yAxes[this.getSelectedTraceIndex()].lineColor,
                 }}
             >
                 <div
@@ -1399,13 +1242,14 @@ export class DataViewerPlot {
                         whiteSpace: "nowrap",
                     }}
                 >
-                    {`${this.yAxes[this.selectedTraceIndex] === undefined ? "" : this.yAxes[this.selectedTraceIndex].label}`}
+                    {`${this.yAxes[this.getSelectedTraceIndex()] === undefined ? "" : this.yAxes[this.getSelectedTraceIndex()].label}`}
                 </div>
             </div>
         );
     };
 
     _ElementBlankArea = () => {
+
         return (
             <div
                 style={{
@@ -1423,6 +1267,7 @@ export class DataViewerPlot {
     };
 
     _ElementLegend = () => {
+        const elementAddTraceRef = React.useRef<any>(null);
         return (
             <div
                 style={{
@@ -1436,10 +1281,7 @@ export class DataViewerPlot {
                     backgroundColor: "rgba(0, 100, 100, 0)",
                 }}
             >
-                {this.yAxes.map((yAxis: Record<string, any>, index: number) => {
-                    if (yAxis.show === false) {
-                        return null;
-                    }
+                {this.yAxes.map((yAxis: type_yAxis, index: number) => {
                     const xData = this.x[index];
                     const yData = this.y[index];
                     let timeStr = "0000-00-00 00:00:00.000";
@@ -1458,25 +1300,88 @@ export class DataViewerPlot {
                                 alignItems: "flex-start",
                                 width: "100%",
                                 height: "fit-content",
-                                color: yAxis.lineColor,
+                                color: yAxis.show ? yAxis.lineColor : "rgba(0,0,0,0.5)",
                                 margin: "3px",
+                                backgroundColor: this.getSelectedTraceIndex() === index ? "rgba(210, 210, 210, 1)" : "rgba(0,0,0,0)",
+                            }}
+                            onMouseEnter={(event: any) => {
+                                this.setCursorValue("Click to selected the trace, double-click to configure the trace.")
+                            }}
+                            onMouseLeave={(event: any) => {
+                                this.setCursorValue("")
                             }}
                             onMouseDown={(event: any) => {
                                 if (event.button !== 0) {
                                     return;
                                 }
 
-                                this.selectedTraceIndex = index;
+                                this.setSelectedTraceIndex(index);
+                                this.updatePlot();
+                            }}
+
+                            onDoubleClick={(event: any) => {
+                                if (event.button !== 0) {
+                                    return;
+                                }
+
+                                this.getMainWidget().setShowSettingsPage(index);
                                 this.updatePlot();
                             }}
                         >
-                            <div>{yAxis.label}</div>
+                            <div>{yAxis.show === true?"": "(hidden) "} {yAxis.label}&nbsp;</div>
                             <div>{timeStr}</div>
-                            {/* <div>{`[${yAxis.valMin}, ${yAxis.valMax}] ${valueStr}`}</div> */}
                             <div>{`${valueStr}`}</div>
                         </div>
                     );
                 })}
+                <div
+                    ref={elementAddTraceRef}
+                    style={{
+                        display: "inline-flex",
+                        flexFlow: "column",
+                        justifyContent: "flex-start",
+                        alignItems: "flex-start",
+                        width: "100%",
+                        // backgroundColor: "red",
+                        height: "fit-content",
+                        // color: yAxis.lineColor,
+                        paddingTop: 5,
+                        paddingBottom: 5,
+                        paddingLeft: 5,
+                        boxSizing: "border-box",
+                        margin: "3px",
+                        opacity: 0.3,
+                        // cursor: "pointer",
+                        // backgroundColor: this.selectedTraceIndex === index ? "rgba(210, 210, 210, 1)" : "rgba(0,0,0,0)",
+                    }}
+                    onMouseDown={(event: any) => {
+                        if (event.button !== 0) {
+                            return;
+                        }
+                        this.appendTrace("");
+                        const newIndex = this.getChannelNames().length - 1;
+                        this.setSelectedTraceIndex(newIndex);
+                        this.getMainWidget().setShowSettingsPage(newIndex);
+                        this.updatePlot();
+                    }}
+                    onMouseEnter={() => {
+                        if (elementAddTraceRef.current !== null) {
+                            // elementAddTraceRef.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
+                            elementAddTraceRef.current.style["opacity"] = 1;
+                        }
+                        this.setCursorValue("Add trace")
+                    }}
+                    onMouseLeave={() => {
+                        if (elementAddTraceRef.current !== null) {
+                            // elementAddTraceRef.current.style["outline"] = "none";
+                            elementAddTraceRef.current.style["opacity"] = 0.3;
+                        }
+                        this.setCursorValue("")
+                    }}
+                >
+                    <div style={{ fontSize: 20 }}>+</div>
+                </div>
+
             </div>
         );
     };
@@ -1525,7 +1430,7 @@ export class DataViewerPlot {
                     flexFlow: "row",
                     justifyContent: "flex-start",
                     alignItems: "center",
-                    backgroundColor: "rgba(0, 255, 0, 0)",
+                    backgroundColor: "rgba(0, 0, 0, 0)",
                 }}
             >
                 <div
@@ -1541,6 +1446,7 @@ export class DataViewerPlot {
                 >
                     {/* re-scale vertically to plot limits */}
                     <this._StyledFigButton
+                        hintText={"Auto scale Y axis range"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1548,13 +1454,26 @@ export class DataViewerPlot {
 
                             for (let ii = 0; ii < this.yAxes.length; ii++) {
                                 const yValMinMax = this.findVisibleYValueRange(ii);
+                                const yAxis = this.yAxes[ii];
                                 if (yValMinMax !== undefined) {
-                                    const yAxis = this.yAxes[ii];
                                     if (yAxis !== undefined) {
                                         yAxis.valMin = yValMinMax[0];
                                         yAxis.valMax = yValMinMax[1];
                                     }
                                 }
+                                if (yAxis.valMin === yAxis.valMax) {
+                                    if (yAxis.valMax === 0) {
+                                        yAxis.valMin = -1;
+                                        yAxis.valMax = 1;
+                                    } else if (yAxis.valMax > 0) {
+                                        yAxis.valMin = yAxis.valMin * 0.9;
+                                        yAxis.valMax = yAxis.valMax * 1.1;
+                                    } else if (yAxis.valMax < 0) {
+                                        yAxis.valMin = yAxis.valMin * 1.1;
+                                        yAxis.valMax = yAxis.valMax * 0.9;
+                                    }
+                                }
+
                             }
                             this.updatePlot();
                         }}
@@ -1569,12 +1488,13 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* setting page */}
                     <this._StyledFigButton
+                        hintText={"Settings"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
                             }
 
-                            this.getMainWidget().showSettingsPage = true;
+                            this.getMainWidget().setShowSettingsPage(-1);
                             this.updatePlot();
                         }}
                     >
@@ -1588,6 +1508,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* pause/play */}
                     <this._StyledFigButton
+                        hintText={"Toggle data live update"}
                         style={{
                             fontSize: "18px",
                         }}
@@ -1595,15 +1516,16 @@ export class DataViewerPlot {
                             if (event.button !== 0) {
                                 return;
                             }
-
                             this.tracingIsMoving = !this.tracingIsMoving;
-                            // if (this.tracingIsMoving === true) {
-                            // 	this.updatingByInterval = true;
-                            // }
-                            this.updatePlot(true);
-                            // if (this.tracingIsMoving === true) {
-                            // 	this.updatingByInterval = false;
-                            // }
+
+                            if (this.tracingIsMoving) {
+                                // update this.getPlot().xAxis.valMin and valMax
+                                const DT = this.xAxis.valMax - this.xAxis.valMin;
+                                this.xAxis.valMax = Date.now();
+                                this.xAxis.valMin = Date.now() - DT;
+                            }
+
+                            this.updatePlot();
                         }}
                     >
                         {this.tracingIsMoving ? (
@@ -1626,6 +1548,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>{" "}
                     {/* horizontal zoom in */}
                     <this._StyledFigButton
+                        hintText={"Zoom in horizontally (mouse wheel scroll up)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1637,6 +1560,9 @@ export class DataViewerPlot {
                             }
                             const dt = xAxis.valMax - xAxis.valMin;
                             xAxis.valMin = xAxis.valMax - dt / 1.25;
+                            if (this.tracingIsMoving) {
+                                xAxis.valMax = Date.now();
+                            }
                             this.updatePlot();
                         }}
                     >
@@ -1650,6 +1576,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>{" "}
                     {/* horizontal zoom out */}
                     <this._StyledFigButton
+                        hintText={"Zoom out horizontally (mouse wheel scroll down)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1661,8 +1588,9 @@ export class DataViewerPlot {
                             }
                             const dt = xAxis.valMax - xAxis.valMin;
                             xAxis.valMin = xAxis.valMax - dt * 1.25;
-                            // this.tracingIsMoving = false;
-                            // this.calcXTicksAndLabel();
+                            if (this.tracingIsMoving) {
+                                xAxis.valMax = Date.now();
+                            }
                             this.updatePlot();
                         }}
                     >
@@ -1676,6 +1604,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* horizontal pan left */}
                     <this._StyledFigButton
+                        hintText={"Pan trace to left (mouse drag to left)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1704,6 +1633,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* horizontal pan right */}
                     <this._StyledFigButton
+                        hintText={"Pan trace to right (mouse drag to right)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1731,6 +1661,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* vertical zoom in*/}
                     <this._StyledFigButton
+                        hintText={"Zoom in vertically (shift + mouse wheel scroll up)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1751,7 +1682,11 @@ export class DataViewerPlot {
                                 const yMaxNew = yMid + dy / 1.1;
                                 yAxis.valMin = yMinNew;
                                 yAxis.valMax = yMaxNew;
-                                this.calcYTicksAndLabel(ii);
+                            }
+
+                            const xAxis = this.xAxis;
+                            if (this.tracingIsMoving) {
+                                xAxis.valMax = Date.now();
                             }
 
                             this.updatePlot();
@@ -1767,6 +1702,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* vertical zoom out*/}
                     <this._StyledFigButton
+                        hintText={"Zoom out vertically (shift + mouse wheel scroll down)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1785,8 +1721,12 @@ export class DataViewerPlot {
                                 const yMaxNew = yMid + dy * 1.1;
                                 yAxis.valMin = yMinNew;
                                 yAxis.valMax = yMaxNew;
-                                this.calcYTicksAndLabel(ii);
                             }
+                            const xAxis = this.xAxis;
+                            if (this.tracingIsMoving) {
+                                xAxis.valMax = Date.now();
+                            }
+
                             this.updatePlot();
                         }}
                     >
@@ -1800,6 +1740,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* vertical pan down*/}
                     <this._StyledFigButton
+                        hintText={"Pan trace down (shift + mouse drag down)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1817,8 +1758,12 @@ export class DataViewerPlot {
                                 const yMaxNew = yMax + dy;
                                 yAxis.valMin = yMinNew;
                                 yAxis.valMax = yMaxNew;
-                                this.calcYTicksAndLabel(ii);
                             }
+                            const xAxis = this.xAxis;
+                            if (this.tracingIsMoving) {
+                                xAxis.valMax = Date.now();
+                            }
+
                             this.updatePlot();
                         }}
                     >
@@ -1832,6 +1777,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>{" "}
                     {/* vertical pan up*/}
                     <this._StyledFigButton
+                        hintText={"Pan trace up (shift + mouse drag up)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1849,8 +1795,12 @@ export class DataViewerPlot {
                                 const yMaxNew = yMax - dy;
                                 yAxis.valMin = yMinNew;
                                 yAxis.valMax = yMaxNew;
-                                this.calcYTicksAndLabel(ii);
                             }
+                            const xAxis = this.xAxis;
+                            if (this.tracingIsMoving) {
+                                xAxis.valMax = Date.now();
+                            }
+
                             this.updatePlot();
                         }}
                     >
@@ -1864,6 +1814,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>{" "}
                     {/* export data */}
                     <this._StyledFigButton
+                        hintText={"Export data"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1886,7 +1837,7 @@ export class DataViewerPlot {
         );
     };
 
-    _StyledFigButton = ({ children, onMouseDown }: any) => {
+    _StyledFigButton = ({ children, onMouseDown, hintText }: any) => {
         const elementRef = React.useRef<any>(null);
         return (
             <div
@@ -1897,7 +1848,7 @@ export class DataViewerPlot {
                     alignItems: "center",
                     height: "100%",
                     aspectRatio: "1/1",
-                    backgroundColor: "rgba(0, 0, 0, 0)",
+                    backgroundColor: "rgba(255, 0, 0, 0)",
                     opacity: 0.4,
                     borderRadius: 3,
                     padding: 1,
@@ -1907,6 +1858,9 @@ export class DataViewerPlot {
                     if (elementRef.current !== null) {
                         if (!g_widgets1.isEditing()) {
                             elementRef.current.style["opacity"] = 1;
+                            if (typeof hintText === "string" && this.setCursorValue !== undefined) {
+                                this.setCursorValue(hintText)
+                            }
                         }
                     }
                 }}
@@ -1914,6 +1868,9 @@ export class DataViewerPlot {
                     if (elementRef.current !== null) {
                         if (!g_widgets1.isEditing()) {
                             elementRef.current.style["opacity"] = 0.4;
+                            if (typeof hintText === "string" && this.setCursorValue !== undefined) {
+                                this.setCursorValue("")
+                            }
                         }
                     }
                 }}
@@ -1965,13 +1922,13 @@ export class DataViewerPlot {
                 }}
                 onMouseEnter={() => {
                     if (!g_widgets1.isEditing()) {
-                        window.addEventListener("mousemove", this.getCursorValue);
+                        window.addEventListener("mousemove", this.updateCursorElement);
                     }
                 }}
                 onMouseLeave={() => {
                     this.lastCursorPointXY = [-100000, -100000];
-                    this.getCursorValue(this.lastCursorPointXY);
-                    window.removeEventListener("mousemove", this.getCursorValue);
+                    this.setCursorValue("");
+                    window.removeEventListener("mousemove", this.updateCursorElement);
                 }}
                 onMouseDown={(event: any) => {
                     if (event.button !== 0) {
@@ -2017,14 +1974,14 @@ export class DataViewerPlot {
      * rotate mouse wheel to zoom x-direction
      */
     handleWheelOnPlotX = (event: React.WheelEvent) => {
-        if (this.yAxes[this.selectedTraceIndex] === undefined) {
+        if (this.yAxes[this.getSelectedTraceIndex()] === undefined) {
             return;
         }
         const direction = event.deltaY < 0 ? "zoom-in" : "zoom-out";
 
         const bounding = (event.target as Element).getBoundingClientRect();
         const pointXMid = event.clientX - bounding["x"]
-        const valXMid = this.mapPointToXY(this.selectedTraceIndex, [pointXMid, 0]);
+        const valXMid = this.mapPointToXY(this.getSelectedTraceIndex(), [pointXMid, 0]);
         const xAxis = this.xAxis;
 
         if (xAxis === undefined) {
@@ -2033,10 +1990,12 @@ export class DataViewerPlot {
 
         if (direction === "zoom-in") {
             xAxis.valMin = xAxis.valMin + (valXMid[0] - xAxis.valMin) * 0.1;
-            xAxis.valMax = this.tracingIsMoving === true ? xAxis.valMax : xAxis.valMax - (xAxis.valMax - valXMid[0]) * 0.1;
+            // xAxis.valMax = this.tracingIsMoving === true ? xAxis.valMax : xAxis.valMax - (xAxis.valMax - valXMid[0]) * 0.1;
+            xAxis.valMax = this.tracingIsMoving === true ? Date.now() : xAxis.valMax - (xAxis.valMax - valXMid[0]) * 0.1;
         } else {
             xAxis.valMin = xAxis.valMin - (valXMid[0] - xAxis.valMin) * 0.1;
-            xAxis.valMax = this.tracingIsMoving === true ? xAxis.valMax : xAxis.valMax + (xAxis.valMax - valXMid[0]) * 0.1;
+            // xAxis.valMax = this.tracingIsMoving === true ? xAxis.valMax : xAxis.valMax + (xAxis.valMax - valXMid[0]) * 0.1;
+            xAxis.valMax = this.tracingIsMoving === true ? Date.now() : xAxis.valMax + (xAxis.valMax - valXMid[0]) * 0.1;
         }
 
         this.updatePlot();
@@ -2056,7 +2015,7 @@ export class DataViewerPlot {
         // with shift key pressed, deltaX is the vertical wheel rotation
         const direction = event.deltaX < 0 ? "zoom-in" : "zoom-out";
 
-        let ii = this.selectedTraceIndex;
+        let ii = this.getSelectedTraceIndex();
 
         const yAxis = this.yAxes[ii];
         if (yAxis === undefined) {
@@ -2082,7 +2041,11 @@ export class DataViewerPlot {
             yAxis.valMin = yMinNew;
             yAxis.valMax = yMaxNew;
         }
-        this.calcYTicksAndLabel(ii);
+
+        const xAxis = this.xAxis;
+        if (this.tracingIsMoving) {
+            xAxis.valMax = Date.now();
+        }
 
         this.updatePlot();
     }
@@ -2105,7 +2068,7 @@ export class DataViewerPlot {
 
         this.mouseMoveEndX = event.clientX;
 
-        const ii = this.selectedTraceIndex;
+        const ii = this.getSelectedTraceIndex();
         if (this.yAxes[ii] === undefined) {
             return;
         }
@@ -2127,7 +2090,7 @@ export class DataViewerPlot {
         event.preventDefault();
         const pointDy = event.movementY;
 
-        const ii = this.selectedTraceIndex;
+        const ii = this.getSelectedTraceIndex();
         const yAxis = this.yAxes[ii];
         if (yAxis === undefined) {
             return;
@@ -2142,7 +2105,13 @@ export class DataViewerPlot {
         const yMaxNew = yMax + dy;
         yAxis.valMin = yMinNew;
         yAxis.valMax = yMaxNew;
-        this.calcYTicksAndLabel(ii);
+
+
+        const xAxis = this.xAxis;
+        if (this.tracingIsMoving) {
+            xAxis.valMax = Date.now();
+        }
+
         this.updatePlot();
     }
 
@@ -2157,7 +2126,7 @@ export class DataViewerPlot {
             const dPointX = event.clientX - this.mouseMoveEndX;
             this.mouseMoveEndX = -100000;
 
-            const ii = this.selectedTraceIndex;
+            const ii = this.getSelectedTraceIndex();
             if (this.yAxes[ii] === undefined) {
                 return;
             }
@@ -2185,15 +2154,16 @@ export class DataViewerPlot {
                     display: "inline-flex",
                     justifyContent: "center",
                     alignItems: "center",
+                    color: cursorValue.startsWith("(") ? "rgba(0,0,0,1)" : "rgba(150, 150, 150, 1)",
                 }}
             >
                 {(() => {
                     if (g_widgets1.isEditing()) {
                         return ""
-                    } else if (this.yAxes[this.selectedTraceIndex] === undefined) {
-                        return ""
+                    } else if (this.yAxes[this.getSelectedTraceIndex()] === undefined) {
+                        return " " + cursorValue
                     } else {
-                        return cursorValue
+                        return " " + cursorValue
                     }
                 })()}
             </div>
@@ -2201,52 +2171,33 @@ export class DataViewerPlot {
     };
     // ----------------------------- data and plot -------------------------------------
 
-    mapDbrDataWithoutNewData = (useNewestTime: boolean) => {
-        if (!useNewestTime) {
-            return;
-        }
+    /**
+     * Patch a point to the end of the data so that there is no blank in the end of trace
+     * 
+     * (1) remove the old patch point Z'
+     * 
+     * (2) add new patch point Z, with current time stamp, and last value
+     */
+    patchData = () => {
         if (g_widgets1.isEditing()) {
-            this.wasEditing = true;
             return;
         }
-        if (this.wasEditing || this.tracesInitialized === false) {
-            this.selectedTraceIndex = 0;
-            this.initTraces();
-        }
-        this.wasEditing = false;
-
         for (let ii = 0; ii < this.getChannelNames().length; ii++) {
-            const channelName = this.getChannelNames()[ii];
-
             const xData = this.x[ii];
             const yData = this.y[ii];
+            if (xData.length > 1) {
+                // (1)
+                xData.pop();
+                const oldY = yData.pop();
 
-            // the channel and data in the channel must all be valid
-            try {
-                const tcaChannel = g_widgets1.getTcaChannel(channelName);
-                if (tcaChannel.getTimeStamp() === undefined || g_widgets1.getChannelValue(channelName, true) === undefined) {
-                    Log.error(`There is no timestamp for ${channelName}`);
-                    continue;
+                // (2)
+                if (oldY !== undefined) {
+                    xData.push(Date.now());
+                    yData.push(oldY);
                 }
-            } catch (e) {
-                Log.error(e);
-                continue;
             }
-
-            // (3)
-            const value = g_widgets1.getChannelValue(channelName);
-            if (typeof value !== "number") {
-                continue;
-            }
-
-            // remove patch data
-            xData.pop();
-            yData.pop();
-            // append patch data
-            xData.push(Date.now());
-            yData.push(value);
         }
-    };
+    }
 
     fetchArchiveData = () => {
         for (let ii = 0; ii < this.getChannelNames().length; ii++) {
@@ -2280,16 +2231,8 @@ export class DataViewerPlot {
         archiveData: any
     }) => {
         if (g_widgets1.isEditing()) {
-            this.wasEditing = true;
             return;
         }
-
-        if (this.wasEditing || this.tracesInitialized === false) {
-            this.selectedTraceIndex = 0;
-            this.initTraces();
-        }
-
-        this.wasEditing = false;
 
         if (this.getChannelNames().includes(data["channelName"])) {
             const ii = this.getChannelNames().indexOf(data["channelName"]);
@@ -2318,105 +2261,96 @@ export class DataViewerPlot {
         }
     }
 
-    mapDbrDataWitNewData = (newChannelNames: string[]) => {
+    /**
+     * Invoked whenever there are new data received by the display window client. Usually comes every 0.1 second, or
+     * whenever the GET result arrives.
+     * 
+     * This funciton does not update plot.
+     * 
+     */
+    mapDbrDataWitNewData = (newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
         if (g_widgets1.isEditing()) {
-            this.wasEditing = true;
             return;
         }
 
-        if (this.wasEditing || this.tracesInitialized === false) {
-            this.selectedTraceIndex = 0;
-            this.initTraces();
-        }
-
-        this.wasEditing = false;
-
-        // used for determining plot x axis range
-
-        // For each channelName:
-        // (1) determine if its yaxis should be shown
-        // (2) decide whether to proceed for this trace: TcaChannel exists/connected
-        //     if not ok, continue the loop,
-        // (3) obtain the most recent dbrData's time stamp and value, the value must be "number" type
-        // (3) append data if updateTraceData bit is true, this only happens when this function is
-        //     invoked in periodic sampling setInterval()
-        //     there are 3 types curves which requrie different data appending technique
-        // (4) todo: update y axis range
-        // (5) update yaxis label and legend
         for (let ii = 0; ii < this.getChannelNames().length; ii++) {
             const channelName = this.getChannelNames()[ii];
+            const data = newDbrData[channelName];
 
-            // after this step, this channel must have a new data!
-            if (!newChannelNames.includes(channelName)) {
-                continue;
+            if (Array.isArray(data)) {
+                for (let dataElement of data) {
+                    this.addOneDbrData(dataElement, ii);
+                }
+            } else {
+                this.addOneDbrData(data, ii);
             }
-
+            // remove data if exceeds buffer size
+            const yAxis = this.yAxes[ii];
+            const bufferSize = yAxis["bufferSize"];
             const xData = this.x[ii];
             const yData = this.y[ii];
-
-            // the channel and data in the channel must all be valid
-            try {
-                const tcaChannel = g_widgets1.getTcaChannel(channelName);
-                if (tcaChannel.getTimeStamp() === undefined || g_widgets1.getChannelValue(channelName, true) === undefined) {
-                    // if (tcaChannel.getValue() === undefined) {
-                    continue;
-                }
-                //todo: test above code, and remove below code
-                // const tcaChannel = g_widgets1.getTcaChannel(channelName);
-                // if (tcaChannel === undefined) {
-                // 	continue;
-                // }
-                // if (tcaChannel.getDbrData().secondsSinceEpoch === undefined || tcaChannel.getDbrData().value === undefined) {
-                // 	continue;
-                // }
-
-                // (3)
-                const value = tcaChannel.getDbrData().value;
-                if (typeof value !== "number") {
-                    continue;
-                }
-                const newTimeStamp = GlobalMethods.converEpicsTimeStampToEpochTime(
-                    tcaChannel.getDbrData().secondsSinceEpoch * 1000 + tcaChannel.getDbrData().nanoSeconds * 1e-6
-                );
-
-                // const oldTimeStamp = xData[xData.length - 2];
-                const oldValue = yData[yData.length - 1];
-
-                // remove patch data
-                xData.pop();
-                yData.pop();
-
-                // push new data only when the time stamp is changed and new data arrival
-                // if (newTimeStamp !== oldTimeStamp && this.updatingByInterval === false) {
-                // CSS Area style
-                // old value, new time, for ladder-like plot
-                xData.push(newTimeStamp);
-                yData.push(oldValue);
-                // new value, new time
-                xData.push(newTimeStamp);
-                yData.push(value);
-
-                // CSS Area (Direct) style
-                // xData.push(newTimeStamp);
-                // yData.push(value);
-
-                const yAxis = this.yAxes[ii];
-                const bufferSize = yAxis.bufferSize;
-
-                if (xData.length > bufferSize * 2) {
-                    xData.splice(0, xData.length - bufferSize * 2);
-                    yData.splice(0, yData.length - bufferSize * 2);
-                }
-
-                // append patch data
-                xData.push(Date.now());
-                yData.push(value);
-            } catch (e) {
-                Log.error(e);
-                continue;
+            const overSize = xData.length - bufferSize * 2;
+            if (overSize > 0) {
+                xData.splice(0, overSize);
+                yData.splice(0, overSize);
             }
         }
+
+
     };
+
+    /**
+     * Add one dbr data to the x and y data.
+     * 
+     * (1) remove patch point Z
+     * 
+     * (2) add point A, this point as new time stamp, but with old value
+     * 
+     * (3) add point B, this point has new time stamp, and new value
+     * 
+     * (4) add new patch point Z', this point has current time stamp, and new value
+     */
+    addOneDbrData = (data: type_dbrData | type_LocalChannel_data | undefined, index: number) => {
+        // data cannot be "undefined", value must be a number
+        if (data === undefined || typeof data["value"] !== "number") {
+            Log.debug("data is not valid", data);
+            return;
+        }
+
+        // data must contain time stamp
+        if (data["secondsSinceEpoch"] === undefined || data["nanoSeconds"] === undefined) {
+            Log.debug("new data does not have time stamp")
+            return;
+        }
+
+        const value = data.value;
+        if (typeof value !== "number") {
+            return;
+        }
+        const timeStamp = GlobalMethods.converEpicsTimeStampToEpochTime(
+            data.secondsSinceEpoch * 1000 + data.nanoSeconds * 1e-6
+        );
+
+        const xData = this.x[index];
+        const yData = this.y[index];
+
+        // (1)
+        xData.pop();
+        yData.pop();
+
+        // (2)
+        xData.push(timeStamp);
+        yData.push(yData[yData.length - 1]);
+
+        // (3)
+        xData.push(timeStamp);
+        yData.push(value);
+
+        // (4)
+        xData.push(Date.now());
+        yData.push(value);
+
+    }
 
     exportData = () => {
         const result: Record<string, Record<string, number[] | string[]>> = {};
@@ -2458,11 +2392,40 @@ export class DataViewerPlot {
         }
     };
 
-    // when we update the plot, two factors are considered:
-    //  - the layout in the figure should be updated, e.g. x/y axis range, line color, tick label text, etc
-    //    the "layout update" is controlled by updateLayout bit in this.updatePlot()'s input argument
-    //    we directly modify the this.data[ii].XXX and this.plotLayout.XXX
-    //  - the data trace in the figure should be updated, the this.data[ii].x and this.data[ii].y are changed
+    /**
+     * Invoked when the plot should be changed, i.e. 
+     * 
+     * (1) scheduled periodic plot update (every second), or
+     * 
+     * (2) user operations: zoom in/out, pan left/right/up/down, change plot x/y plot range, add/remove trace, start/stop play
+     * 
+     * Note: the trace is a polyline, it is calculated during rendering. The data reduction is also done during trace rendering.
+     * 
+     * It does:
+     * 
+     * (1) patch the data to prevent , this is a low-cost operation, do it anyway
+     * 
+     * (2) calculate X ticks, ticks text, and labels
+     * 
+     * (3) calcualte each Y ticks, ticks text, and labels
+     * 
+     * (4) calculate cursor value
+     * 
+     * (5) update the widget
+     * 
+     * when we update the plot, two factors are considered:
+     * 
+     * (1) the layout in the figure should be updated, e.g. x/y axis range, line color, tick label text, etc
+     *     we directly modify the this.data[ii].XXX and this.plotLayout.XXX
+     *     the "layout update" is controlled by updateLayout bit in this.updatePlot()'s input argument
+     * 
+     * (2) the data trace in the figure should be updated, the this.data[ii].x and this.data[ii].y are changed
+     */
+    // 
+    //  - 
+    //    
+    //    
+    //  - 
     //    The data change always caused the layout change, e.g. x range change, so "data trace update" always
     //    comes with "layout update".
     //    the data modification and the consequent layout parameter changes are done in this.mapDbrData(),
@@ -2471,112 +2434,27 @@ export class DataViewerPlot {
     // update
     // The below method is a kickoff to update the figure after this.data and this.plotLayout are modified
     // It is invoked periodically and by user
-    updatePlot = (useNewestTime: boolean = false, doFlush: boolean = true, dynamicUpdate: boolean = false) => {
+    updatePlot = (doFlush: boolean = true) => {
         if (g_widgets1 === undefined) {
             return;
         }
-        this.mapDbrDataWithoutNewData(useNewestTime);
 
-        this.calcXTicksAndLabel(useNewestTime);
+        // (1)
+        this.patchData();
+
+        // (2)
+        this.calcXTicksAndLabel();
+
+        // (3)
         for (let ii = 0; ii < this.yAxes.length; ii++) {
             this.calcYTicksAndLabel(ii);
         }
-        this.getCursorValue(this.lastCursorPointXY);
 
+        // (4)
+        this.updateCursorElement(this.lastCursorPointXY);
+
+        // (5)
         g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-
-        // determine if the thumbnail should be updated
-        // limit the update rate (number of points updated each second)
-        // this done by (1) slowing down the refresh rate, and (2) sampling the data
-        // the refresh rate should be between 1 Hz (1 s) and 0.2 Hz (5 s or )
-        // the sampling rate should be between 1 and 5
-
-        // Assume the thumbnail width is P pixels. There are N points for all traces, and there are
-        // n traces. So, there are N/n points for each trace. Then, there are (N/n)/P points at 
-        // each pixel. 
-        // We know each second there are f0 points added to the data.
-        // Then, in each second the pixel increases f0/((N/n)/P) pixels. 
-        // We know the refresh is f Hz.
-        // Then in each refresh, the pixel increases f0/((N/n)/P)/f pixels. 
-        // We want to make sure in each refresh the pixel moves about 1 pixel: f0/((N/n)/P)/f ~ 1
-        // Then: f * N ~ f0 * P * n
-        //
-        // For example: 
-        //  - each second 10 points are added to each trace: f0 = 10
-        //  - widget width is 2000 pixels: P = 2000
-        //  - there are 20 traces: n = 10
-        //  - then f * N ~ 200,000
-        //  If f = 1 Hz, then N ~ 200,000. If N > 200,000, f should become 0.5 Hz.
-
-        // CPU usage:
-        // we use # of refreshed points per second to measure the performance: it is f * N
-        // benchmark: 
-        //  - 360,000 ~ 47% GPU, 31% renderer
-        //  - 540,000 ~ 68% GPU, 48% renderer
-
-        // plot should take less than 75% CPU, which limits f * N to 600,000
-
-        // thumbnail should take less than 25% CPU, which limits f * N to 250,000
-        // 
-
-        // thumbnail dynamic update
-        let totalPoints = 0;
-        const updateRate = 1 / this.getMainWidget().getAllText()["updatePeriod"];
-
-        for (let xData of this.x) {
-            totalPoints = totalPoints + xData.length / 2;
-        }
-        let factor = Math.ceil(totalPoints * updateRate / GlobalVariables.DATAVIEWER_MAX_THUMBNAIL_DATA_RATE);
-        if (this.thumbnailUpdateCount < factor) {
-            this.thumbnailUpdateCount++;
-            this.updateThumbnail = false;
-        } else {
-            this.thumbnailUpdateCount = 1;
-            this.updateThumbnail = true;
-        }
-
-        // plot dynamic update
-        totalPoints = 0;
-        for (let index = 0; index < this.x.length; index++) {
-            const xData0 = this.x[index];
-
-            let xMinIndex = xData0.findIndex((element: number) => element >= this.xAxis.valMin);
-            if (xMinIndex > 1) {
-                xMinIndex = xMinIndex - 1;
-            }
-
-            let xMaxIndex = xData0.findIndex((element: number) => element >= this.xAxis.valMax);
-            if (xMaxIndex === -1) {
-                xMaxIndex = xData0.length;
-            }
-            if (xMaxIndex < xData0.length) {
-                xMaxIndex = xMaxIndex + 1;
-            }
-            totalPoints = totalPoints + (xMaxIndex - xMinIndex) / 2;
-        }
-        factor = Math.ceil(totalPoints * updateRate / GlobalVariables.DATAVIEWER_MAX_PLOT_DATA_RATE);
-        if (this.plotUpdateCount < factor) {
-            this.plotUpdateCount++;
-            this.updatePlotLines = false;
-        } else {
-            this.plotUpdateCount = 1;
-            this.updatePlotLines = true;
-        }
-
-        // if the thumbnail need to be updated, the plot lines must also be updated
-        // because the thumbnail is inside the plot lines element
-        // if (this.updateThumbnail === true) {
-        //     this.updatePlotLines = true;
-        // }
-
-        // force to update plot lines and thumbnail
-        if (dynamicUpdate === false) {
-            this.updatePlotLines = true;
-            this.updateThumbnail = true;
-        }
-
-        g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-
         if (doFlush) {
             g_flushWidgets();
         }
@@ -2585,79 +2463,122 @@ export class DataViewerPlot {
 
     // ------------------------------- traces ------------------------------------
 
-    selectTrace = (index: number) => {
-        this.selectedTraceIndex = index;
-        this.updatePlot();
-    };
-
-    // (1) insert an empty channel name "" to this.getRawChannelNames() and expand the channel name
-    // (2) init trace: create PlotlyTrace object, initialize and insert it to property
-    //     places in this.data and this.plotLayout, then update all related properties
-    //     in this.data and this.plotLayout
-    // (3) connect and monitor channel
-    // (4) select trace
-    // (5) update plot
-    insertTrace = (index: number, newTraceName: string, doFlush: boolean = true) => {
+    /**
+     * Append a trace to the end.
+     * 
+     * (1) insert an empty channel name "" to this.getRawChannelNames() and expand the channel name
+     *     without checking the channel name duplication
+     * 
+     * (2) add a new trace data to the data structure: this.x, this.y and this.yAxes
+     * 
+     * (3) select this trace
+     * 
+     * (4) update the plot if necessary
+     * 
+     * (5) connect and monitor this channel
+     */
+    appendTrace = async (newTraceName: string, doFlush: boolean = true) => {
         // (1)
         const mainWidget = this.getMainWidget();
-        mainWidget.getChannelNamesLevel0().splice(index, 0, newTraceName);
-        mainWidget.processChannelNames();
-        // this.getMainWidget().expandAndExtractChannelNames();
+        mainWidget.getChannelNamesLevel0().push(newTraceName);
+        mainWidget.processChannelNames([], false);
+
         // (2)
-        this.initTrace(newTraceName, index, true);
+        this.addNewTraceData(newTraceName);
+
         // (3)
+        this.setSelectedTraceIndex(mainWidget.getChannelNamesLevel0().length - 1);
+
+        // (4)
+        if (doFlush) {
+            this.updatePlot();
+        }
+
+        // (5)
         const newTcaChannel = g_widgets1.createTcaChannel(newTraceName, this.getMainWidget().getWidgetKey());
         if (newTcaChannel !== undefined) {
-            newTcaChannel.getMeta(undefined);
+            await newTcaChannel.getMeta(undefined);
             newTcaChannel.monitor();
         }
-        try {
-            // (4)
-            this.selectTrace(0);
-            // (5)
-            if (doFlush) {
-                this.updatePlot();
-            }
-        } catch (e) {
-            Log.error(e);
+    };
+
+    /**
+     * Change the trace name
+     */
+    updateTrace = async (index: number, newTraceName: string, doFlush: boolean = true) => {
+
+        const oldTraceName = this.getChannelNames()[index];
+        if (newTraceName === oldTraceName) {
+            // no change
+            return;
+        }
+
+        // (1)
+        const mainWidget = this.getMainWidget();
+        mainWidget.getChannelNamesLevel0()[index] = newTraceName;
+        mainWidget.processChannelNames([], false);
+
+        // (2)
+        this.updateTraceData(index, newTraceName);
+
+        // (3)
+        this.setSelectedTraceIndex(index);
+
+        // (4)
+        if (doFlush) {
+            this.updatePlot();
+        }
+
+        // (5)
+        const newTcaChannel = g_widgets1.createTcaChannel(newTraceName, this.getMainWidget().getWidgetKey());
+        if (newTcaChannel !== undefined) {
+            await newTcaChannel.getMeta(undefined);
+            newTcaChannel.monitor();
         }
     };
 
-    // invoked when the display is changed from editing to operating mode
-    // does not change plot, only manipulate data structure, the plot will be
-    // updated by itself
-    // no need to connect all channels, the g_widgets1.setMode() will dot it
-    initTraces = () => {
+    /**
+     * Initialize data for all traces. Invoked when the display window operating status is changed.
+     * 
+     * Each channel name correponds to a trace.
+     * 
+     * (1) clear all x and y data
+     * 
+     * (2) clear all yaxis data 
+     * 
+     * (3) add new trace data for each trace
+     */
+    initTracesData = () => {
+
+        // (1)
         this.x.length = 0;
         this.y.length = 0;
-        // this.yAxes.length = 0;
+
+        // (2)
+        this.yAxes.length = 0;
+
+        // (3)
         for (let ii = 0; ii < this.getChannelNames().length; ii++) {
             const channelName = this.getChannelNames()[ii];
-            this.initTrace(channelName, ii);
+            this.addNewTraceData(channelName);
         }
-        // remove all excessive elements
-        for (let ii = this.getChannelNames().length; ii < this.x.length; ii++) {
-            this.x.pop();
-        }
-        for (let ii = this.getChannelNames().length; ii < this.y.length; ii++) {
-            this.y.pop();
-        }
-        for (let ii = this.getChannelNames().length; ii < this.yAxes.length; ii++) {
-            this.yAxes.pop();
-        }
-        this.tracesInitialized = true;
     };
 
-    // only initialize data structure, does not connect channel or change plot
-    // (1) insert empty array to this.x and this.y
-    // (2)
-    initTrace = (channelName: string, index: number, insertYAxis: boolean = false) => {
+
+    /**
+     * Add a new trace data to the end of data set
+     * 
+     * (1) add empty x and y data 
+     * 
+     * (2) add a new y axis data that contains the trace line properties: plot range, trace color, buffer size, ...
+     */
+    addNewTraceData = (channelName: string) => {
         // (1)
-        this.x.splice(index, 0, []);
-        this.y.splice(index, 0, []);
+        this.x.push([]);
+        this.y.push([]);
         // (2)
         // default yAxis
-        let yAxis: type_yAxis = {
+        let newYAxis: type_yAxis = {
             label: channelName, // updated every time
             valMin: 0, // updated every time
             valMax: 10, // updated every time
@@ -2669,165 +2590,126 @@ export class DataViewerPlot {
             bufferSize: 50000,
             displayScale: "Linear",
         };
-
-        if (this.yAxes[index] !== undefined) {
-            yAxis = { ...yAxis, ...this.yAxes[index] };
-        }
-
-        if (insertYAxis === true) {
-            this.yAxes.splice(index, 0, yAxis);
-        } else {
-            // override yAxis
-            const existingYAxis = this.yAxes[index];
-            if (existingYAxis !== undefined) {
-                if (existingYAxis["lineWidth"] !== undefined) {
-                    yAxis["lineWidth"] = existingYAxis["lineWidth"];
-                }
-                if (existingYAxis["lineColor"] !== undefined) {
-                    yAxis["lineColor"] = existingYAxis["lineColor"];
-                }
-                if (existingYAxis["show"] !== undefined) {
-                    yAxis["show"] = existingYAxis["show"];
-                }
-            }
-            this.yAxes.splice(index, 1, yAxis);
-        }
+        this.yAxes.push(newYAxis);
     };
 
-    // (1) remove channel name from this.getRawChannelNames(), and expand channel names
-    // (2) remove the PlotlyTrace object in this.plotlyTraces
-    // (3) remove element in this.data
-    // (4) remove the corresponding yaxis property, i.e. "yaxis3" in this.plotLayout
-    // (5) re-assign yaxis property, i.e. yaxis: "y3", in in element of this.data
-    // (6) re-assign yaxis property names, i.e. yaxis3: {...}, in this.plotLayout,
-    //     update overlaying property, there will be a leftover "yaxisN" property, delete it
-    // (7) disconnect channel
-    // (8) select the first trace
-    // (9) update plot
-    removeTrace = (index: number, doFlush: boolean = true) => {
+    /**
+     * Update the trace data for an existing trace, it is similar to addNewTraceData
+     * 
+     * (1) clear the trace value data in this.x and this.y
+     * 
+     * (2) update the yaxis data, with the new channel name, keep all other properties
+     */
+    updateTraceData = (index: number, channelName: string) => {
+        // (1)
+        this.x[index] = [];
+        this.y[index] = [];
+        // (2)
+        // default yAxis
+        const yAxis = this.yAxes[index];
+        yAxis["label"] = channelName;
+    };
+
+    /**
+     * Remove a trace
+     * 
+     * (1) remove channel name from this.getRawChannelNames(), and expand channel names
+     * 
+     * (2) remove this channel's x, y and yAxis data
+     * 
+     * (3) remove this channel
+     * 
+     * (4) select the previous trace
+     * 
+     * (5) hide the trace setting page
+     * 
+     * (5) update plot
+     */
+    removeTrace = (index: number) => {
         const traceName = this.getMainWidget().getChannelNames()[index];
+        if (traceName === undefined) {
+            return;
+        }
+
         // (1)
         this.getMainWidget().getChannelNamesLevel0().splice(index, 1);
-        this.getMainWidget().processChannelNames();
-        // this.getMainWidget().getRawChannelNames().splice(index, 1);
-        // this.getMainWidget().expandAndExtractChannelNames();
+        this.getMainWidget().processChannelNames([], false);
+
         // (2)
         this.x.splice(index, 1);
         this.y.splice(index, 1);
         this.yAxes.splice(index, 1);
 
-        // (7)
-        // const tcaChannel = g_widgets1.getTcaChannel(traceName);
-        // By design, tcaChannel.destroy() simply destroy this channel and remove the channel name
-        // from the widget's channel names list, no matter if the widget's channel names list
-        // still has this channel
-        // if (tcaChannel !== undefined && !this.getChannelNames().includes(traceName)) {
-        // tcaChannel.destroy(this.getWidgetKey());
-        // }
+        // (3)
         if (!this.getMainWidget().getChannelNames().includes(traceName)) {
             g_widgets1.removeTcaChannel(traceName, this.getMainWidget().getWidgetKey());
         }
-        // (8)
-        if (this.x.length > 0) {
-            this.selectTrace(0);
-        }
-        // (9)
-        if (doFlush) {
-            this.updatePlot();
-        }
-    };
+        // (4)
+        const newSelectedTrace = index - 1 > -1 ? index - 1 : index + 1 > this.getChannelNames().length - 1 ? -1 : index + 1;
+        this.setSelectedTraceIndex(newSelectedTrace);
 
-    moveUpTrace = (index: number, doFlush: boolean = true) => {
-        if (index === 0) {
-            return;
-        }
+        // (5)
+        this.getMainWidget().setShowSettingsPage(-100);
 
-        const traceName = this.getChannelNames()[index];
-        // (1)
-        // remove it
-        const mainWidget = this.getMainWidget();
-        mainWidget.getChannelNamesLevel0().splice(index, 1);
-        // then insert it
-        mainWidget.getChannelNamesLevel0().splice(index - 1, 0, traceName);
-        mainWidget.processChannelNames();
-        // this.getMainWidget().expandAndExtractChannelNames();
-        // (2)
-        // remove it
-        const x = this.x[index];
-        const y = this.y[index];
-        const yAxes = this.yAxes[index];
-        this.x.splice(index, 1);
-        this.y.splice(index, 1);
-        this.yAxes.splice(index, 1);
-        // insert it
-        this.x.splice(index - 1, 0, x);
-        this.y.splice(index - 1, 0, y);
-        this.yAxes.splice(index - 1, 0, yAxes);
-
-        // (9)
-        if (doFlush) {
-            this.updatePlot();
-        }
-    };
-
-    moveDownTrace = (index: number, doFlush: boolean = true) => {
-        if (index >= this.getChannelNames().length - 1) {
-            return;
-        }
-
-        const traceName = this.getChannelNames()[index];
-        // (1)
-        // remove it
-        const mainWidget = this.getMainWidget();
-        mainWidget.getChannelNamesLevel0().splice(index, 1);
-        // then insert it
-        mainWidget.getChannelNamesLevel0().splice(index + 1, 0, traceName);
-        mainWidget.processChannelNames();
-        // this.getMainWidget().expandAndExtractChannelNames();
-        // (2)
-        // remove it
-        const x = this.x[index];
-        const y = this.y[index];
-        const yAxes = this.yAxes[index];
-        this.x.splice(index, 1);
-        this.y.splice(index, 1);
-        this.yAxes.splice(index, 1);
-        // insert it
-        this.x.splice(index + 1, 0, x);
-        this.y.splice(index + 1, 0, y);
-        this.yAxes.splice(index + 1, 0, yAxes);
-
-        // (9)
-        if (doFlush) {
-            this.updatePlot();
-        }
+        // (6)
+        this.updatePlot();
     };
 
     getNewColor = (): [number, number, number, number] => {
-        const usedColors: [number, number, number, number][] = [];
-        for (let yAxis of this.yAxes) {
-            const colorStr = yAxis.lineColor;
-            const colorStrArray = colorStr.replace("rgba", "").replaceAll(",", " ").replace("(", "").replace(")", "").split(" ");
-            const color: number[] = [];
-            for (let colorStri of colorStrArray) {
-                color.push(parseInt(colorStri));
-            }
-            usedColors.push(color as [number, number, number, number]);
-        }
-        for (let color of this.traceColors) {
-            let colorIsUsed = false;
-            for (let usedColor of usedColors) {
-                if (usedColor[0] === color[0] && usedColor[1] === color[1] && usedColor[2] === color[2] && usedColor[3] === color[3]) {
-                    colorIsUsed = true;
-                }
-            }
-            if (!colorIsUsed) {
-                return color;
-            }
-        }
-        // random color
-        return [Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), 1];
+        const numTraces = this.yAxes.length;
+        const newColorIndex = (numTraces) % this.traceColors.length;
+        return this.traceColors[newColorIndex];
     };
+
+    upateTraceLineWidth = (index: number, newWidth: number) => {
+        const yAxis = this.yAxes[index];
+        if (yAxis !== undefined) {
+            yAxis["lineWidth"] = newWidth;
+        }
+        this.updatePlot();
+    }
+
+    updateTraceShowOrHide = (index: number, showTrace: boolean) => {
+        const yAxis = this.yAxes[index];
+        if (yAxis !== undefined) {
+            yAxis["show"] = showTrace;
+        }
+        this.updatePlot();
+    }
+
+
+    updateTraceLineColor = (index: number, newColor: string) => {
+        const yAxis = this.yAxes[index];
+        if (yAxis !== undefined) {
+            yAxis["lineColor"] = newColor;
+        }
+        this.updatePlot();
+    }
+
+    updateTraceLineWidth = (index: number, newWidth: number) => {
+        const yAxis = this.yAxes[index];
+        if (yAxis !== undefined) {
+            yAxis["lineWidth"] = newWidth;
+        }
+        this.updatePlot();
+    }
+
+    updateTraceBufferSize = (index: number, newSize: number) => {
+        const yAxis = this.yAxes[index];
+        if (yAxis !== undefined) {
+            yAxis["bufferSize"] = newSize;
+        }
+        this.updatePlot();
+    }
+
+    updateTraceScale = (index: number, newScale: "Linear" | "Log10") => {
+        const yAxis = this.yAxes[index];
+        if (yAxis === undefined) {
+            return;
+        }
+        yAxis["displayScale"] = newScale;
+        this.updatePlot();
+    }
 
     // ---------------------- getters and setters -------------------------------
     getMainWidget = () => {
@@ -2857,4 +2739,13 @@ export class DataViewerPlot {
         // deep copy
         this.yAxes = JSON.parse(JSON.stringify(yAxes));
     };
+
+    setSelectedTraceIndex = (newIndex: number) => {
+        this.selectedTraceIndex = newIndex;
+    }
+
+    getSelectedTraceIndex = () => {
+        return this.selectedTraceIndex;
+    }
+
 }

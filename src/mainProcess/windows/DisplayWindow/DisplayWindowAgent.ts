@@ -79,7 +79,8 @@ export class DisplayWindowAgent {
     /**
      * New channel data on this display window. Updated in ChannelAgentsManager.
      */
-    private _newChannelData: Record<string, type_dbrData | { value: undefined }> = {};
+    // private _newChannelData: Record<string, type_dbrData | { value: undefined }> = {};
+    private _newChannelData: Record<string, type_dbrData | type_dbrData[] | { value: undefined }> = {};
 
     /**
      * The context menu is initiated on display window in renderer process, but it is configured and realized in main process.
@@ -138,6 +139,7 @@ export class DisplayWindowAgent {
     readyToClose: boolean = false;
 
     _macros: [string, string][];
+    _isUtilityWindow: boolean;
 
     private _editable: boolean;
     // if this display window is reloadable, if not, the "Reload" in context menu is gone
@@ -156,6 +158,8 @@ export class DisplayWindowAgent {
     constructor(windowAgentsManager: WindowAgentsManager, options: type_options_createDisplayWindow, id: string) {
         this._windowAgentsManager = windowAgentsManager;
         this._tdl = JSON.parse(JSON.stringify(options))["tdl"];
+        this._isUtilityWindow = this._tdl["Canvas"]["isUtilityWindow"] === undefined ? false : this._tdl["Canvas"]["isUtilityWindow"];
+
         this._tdlFileName = JSON.parse(JSON.stringify(options))["tdlFileName"];
         this._macros = JSON.parse(JSON.stringify(options["macros"]));
         this.updateHash();
@@ -994,6 +998,9 @@ export class DisplayWindowAgent {
     /**
      * Add new data to update interval. The new data will be pushed to display window
      * periodically. <br>
+     * 
+     * If there is already a data in this._newChannelData, change the data type to Array and
+     * push the new data to the end of the array.
      *
      * It is invoked in the monitor listener and the channel state check routine (`this.checkChannelsState()`).
      *
@@ -1003,7 +1010,11 @@ export class DisplayWindowAgent {
      */
     addNewChannelData = (channelName: string, newData: type_dbrData | type_LocalChannel_data) => {
         if (this._newChannelData[channelName] !== undefined && newData !== undefined) {
-            this._newChannelData[channelName] = { ...this._newChannelData[channelName], ...newData };
+            if (Array.isArray(this._newChannelData[channelName])) {
+                this._newChannelData[channelName] = [...this._newChannelData[channelName], newData]
+            } else {
+                this._newChannelData[channelName] = [this._newChannelData[channelName], newData]
+            };
         } else {
             this._newChannelData[channelName] = newData;
         }
@@ -1946,6 +1957,14 @@ export class DisplayWindowAgent {
 
     setModified = (newStatus: boolean) => {
         this._modified = newStatus;
+    }
+
+    isUtilityWindow = () => {
+        return this._isUtilityWindow;
+    }
+
+    setIsUtilityWindow = (newValue: boolean) => {
+        this._isUtilityWindow = newValue;
     }
 
     // ---------------------- process info ---------------------------

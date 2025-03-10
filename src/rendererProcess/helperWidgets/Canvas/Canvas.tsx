@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import {
     getMouseEventClientX,
     getMouseEventClientY,
@@ -27,6 +27,7 @@ export type type_Canvas_tdl = Record<string, any> & {
     yGridSize: number;
     gridColor: string;
     showGrid: boolean;
+    isUtilityWindow: boolean;
 };
 
 export class Canvas {
@@ -50,6 +51,7 @@ export class Canvas {
 
     private _gridColor: string;
     private _showGrid: boolean;
+    private _isUtilityWindow: boolean;
 
     constructor(widgetTdl: Record<string, any>) {
         this._type = widgetTdl.type;
@@ -69,6 +71,7 @@ export class Canvas {
 
         this._gridColor = widgetTdl["gridColor"] === undefined ? "rgba(128,128,128,0.15)" : widgetTdl["gridColor"];
         this._showGrid = widgetTdl["showGrid"] === undefined ? false : widgetTdl["showGrid"];
+        this._isUtilityWindow = widgetTdl["isUtilityWindow"] === undefined ? false : widgetTdl["isUtilityWindow"];
 
         // listen to window resize event
         this.startListeners();
@@ -289,6 +292,7 @@ export class Canvas {
         yGridSize: 1,
         gridColor: "rgba(128,128,128,1)",
         showGrid: true,
+        isUtilityWindow: false,
     };
 
     // not getDefaultTdl(), always generate a new key
@@ -311,6 +315,7 @@ export class Canvas {
             yGridSize: this.getYGridSize(),
             gridColor: this.getGridColor(),
             showGrid: this.getShowGrid(),
+            isUtilityWindow: this.isUtilityWindow(),
         };
         return result;
     };
@@ -340,6 +345,11 @@ export class Canvas {
     getMacros = (): [string, string][] => {
         return this._macros;
     };
+
+    isUtilityWindow = () => {
+        return this._isUtilityWindow;
+    }
+
 
     // -------------------- helper methods ---------------------------
 

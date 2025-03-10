@@ -565,9 +565,9 @@ export class IpcManagerOnDisplayWindow {
      * 
      * (4) flush widgets
      */
-    handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_LocalChannel_data | undefined>) => {
+    handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
 
-        Log.debug("received data", JSON.stringify(newDbrData, null, 4));
+        Log.info("received data", JSON.stringify(newDbrData, null, 4));
 
         let channelNames = Object.keys(newDbrData);
 
@@ -618,6 +618,7 @@ export class IpcManagerOnDisplayWindow {
                         const widget = g_widgets1.getWidget2(widgetKey);
                         if (!dbrDataMappedWidgetKeys.includes(widgetKey)) {
                             if (widget instanceof DataViewer) {
+                                // do not force update this widget upon new DBR data arrival, use its own mechanism to trigger the update
                                 g_widgets1.removeFromForceUpdateWidgets(widgetKey);
                             }
                             if (widget instanceof DataViewer || widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph) {
@@ -633,8 +634,10 @@ export class IpcManagerOnDisplayWindow {
         }
 
         for (const widget of dbrDataMappedWidgets) {
-            if (widget instanceof DataViewer || widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph) {
+            if (widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph) {
                 widget.mapDbrDataWitNewData(Object.keys(newDbrData));
+            } else if (widget instanceof DataViewer) {
+                widget.mapDbrDataWitNewData(newDbrData);
             }
         }
 
@@ -658,8 +661,7 @@ export class IpcManagerOnDisplayWindow {
         if (g_widgets1.isEditing()) {
             return;
         }
-        widget.setReCalcPlot(false);
-        widget.updatePlot(true, true, true);
+        widget.updatePlot(true);
     }
 
     // (1) resolve IO, letting TcaChannel.get() to continue, writing the data to TcaChannel

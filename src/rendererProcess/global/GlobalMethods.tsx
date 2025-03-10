@@ -139,8 +139,10 @@ export const convertDateObjToString = (date: Date) => {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
 }
 
-// input: 1048260866.330080000 seconds since 1990-01-01 UTC
-// output: "2023-03-25 12:34:56.789" local
+/**
+ * input: 1048260866.330080000 seconds since 1990-01-01 UTC
+ * output: "2023-03-25 12:34:56.789" local
+ */
 export const converEpicsTimeStampToEpochTime = (msSince1990UTC: number): number => {
     const ms1990UTC = Date.UTC(90, 0, 1, 0, 0, 0, 0);
     return msSince1990UTC + ms1990UTC;
@@ -327,5 +329,93 @@ export const countDuplicates = (arr: any[]) => {
         acc[val] = (acc[val] || 0) + 1;
         return acc;
     }, {});
+}
+
+/**
+ * Reduce the data using largestTriangleThreeBuckets
+ */
+export const downSampleXyData = (xData: number[], yData: number[], threshold: number) => {
+    if (threshold >= xData.length || threshold === 0) {
+        return [xData, yData]; // No need to downsample
+    }
+
+    const xResult: number[] = [];
+    const yResult: number[] = [];
+
+    const bucketSize = (xData.length - 2) / (threshold - 2);
+    let a = 0; // First point is always included
+
+    xResult.push(xData[a]); // Add first point
+    yResult.push(yData[a]); // Add first point
+
+    for (let i = 0; i < threshold - 2; i++) {
+        const rangeStart = Math.floor((i + 1) * bucketSize) + 1;
+        const rangeEnd = Math.floor((i + 2) * bucketSize) + 1;
+        const xRangeData = xData.slice(rangeStart, rangeEnd);
+        const yRangeData = yData.slice(rangeStart, rangeEnd);
+
+        let maxArea = -1;
+        let chosenIndex = rangeStart;
+
+        // Reference point
+        const pointAx = xData[a];
+        const pointAy = yData[a];
+
+        // Find the point that forms the largest triangle
+        for (let j = 0; j < xRangeData.length; j++) {
+            const pointBx = xRangeData[j];
+            const pointBy = yRangeData[j];
+
+            const area = Math.abs((pointAx - xData[rangeEnd]) * (pointBy - pointAy) - (pointAx - pointBx) * (yData[rangeEnd] - pointAy));
+
+            if (area > maxArea) {
+                maxArea = area;
+                chosenIndex = rangeStart + j;
+            }
+        }
+
+        xResult.push(xData[chosenIndex]);
+        yResult.push(yData[chosenIndex]);
+        a = chosenIndex; // Move to the chosen point
+    }
+
+    xResult.push(xData[xData.length - 1]); // Add last point
+    yResult.push(yData[xData.length - 1]); // Add last point
+
+    return [xResult, yResult];
+}
+
+
+export const binarySearchRange = (data: number[], low: number, high: number): [number, number] => {
+    // Find the left boundary (first index where arr[i] >= low)
+    let left = binarySearch(data, low, true);
+
+    // Find the right boundary (first index where arr[i] > high)
+    // index is inclusive
+    let right = Math.min(binarySearch(data, high, false) - 1, data.length);
+
+    // If no valid range exists
+    if (left > right) return [-100, -100];
+
+    return ([left, right]);
+
+}
+
+// Standard binary search, mode = true finds first >= target, mode = false finds first > target
+const binarySearch = (data: number[], target: number, mode: boolean) => {
+    let left = 0;
+    let right = data.length;
+
+    while (left < right) {
+        let mid = Math.floor((left + right) / 2);
+
+        if (data[mid] < target || (!mode && data[mid] === target)) {
+            left = mid + 1;
+        } else {
+            right = mid;
+        }
+    }
+
+    return left;
 }
 

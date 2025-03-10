@@ -1438,6 +1438,32 @@ export class ContextMenuDesktop {
         type type_role = ('undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'pasteAndMatchStyle' | 'delete' | 'selectAll' | 'reload' | 'forceReload' | 'toggleDevTools' | 'resetZoom' | 'zoomIn' | 'zoomOut' | 'toggleSpellChecker' | 'togglefullscreen' | 'window' | 'minimize' | 'close' | 'help' | 'about' | 'services' | 'hide' | 'hideOthers' | 'unhide' | 'quit' | 'startSpeaking' | 'stopSpeaking' | 'zoom' | 'front' | 'appMenu' | 'fileMenu' | 'editMenu' | 'viewMenu' | 'shareMenu' | 'recentDocuments' | 'toggleTabBar' | 'selectNextTab' | 'selectPreviousTab' | 'showAllTabs' | 'mergeAllWindows' | 'clearRecentDocuments' | 'moveTabToNewWindow' | 'windowMenu');
         type type_type = ('normal' | 'separator' | 'submenu' | 'checkbox' | 'radio');
 
+        // add "Save Display", remove "Edit Display" for certain Utility Windows
+        if (this.getDisplayWindowAgent().isUtilityWindow() &&
+            (widgetKey.includes("DataViewer") || widgetKey.includes("Probe") || widgetKey.includes("ChannelGraph") || widgetKey.includes("PvTable") || widgetKey.includes("PvMonitor"))
+        ) {
+            this.removeItems(["Edit Display"]);
+            // add Save even in operating mode
+            let alreadyHasSaveDisplay = false;
+            for (const entry of this._template_operating_Widget) {
+                if (entry.label === "Save Display") {
+                    alreadyHasSaveDisplay = true;
+                    break;
+                }
+            }
+            if (alreadyHasSaveDisplay === false) {
+                this._template_operating_Widget.unshift(
+                    {
+                        label: "Save Display",
+                        accelerator: "CmdOrCtrl+s",
+                        click: () => {
+                            this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "save-display");
+                        },
+                    },
+                );
+            }
+        }
+
         // remove items for utility window widgets
         if (widgetKey.includes("LogViewer")
             || widgetKey.includes("CaSnooper")
@@ -1578,7 +1604,6 @@ export class ContextMenuDesktop {
             }
 
         }
-
         return result;
     };
 

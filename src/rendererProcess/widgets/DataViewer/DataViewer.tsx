@@ -1,11 +1,12 @@
 import * as React from "react";
-import { GlobalVariables, calcSidebarWidth, g_widgets1, getWindowHorizontalScrollBarWidth } from "../../global/GlobalVariables";
+import { GlobalVariables, calcSidebarWidth, g_widgets1, getWindowHorizontalScrollBarWidth, type_dbrData } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { DataViewerSidebar } from "./DataViewerSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { DataViewerPlot } from "./DataViewerPlot";
 import { DataViewerSettings } from "./DataViewerSettings";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
+import { type_LocalChannel_data } from "../../../mainProcess/channel/LocalChannelAgent";
 
 export type type_DataViewer_tdl = {
     type: string;
@@ -23,26 +24,17 @@ export class DataViewer extends BaseWidget {
     // todo: more pre-defined color,
     // when the predefined colors are used up, getNewColor() will generate random colors
 
-    showSettingsPage: boolean = false;
+    showSettingsPage: number = -100;
 
     _plot: DataViewerPlot;
     _settings: DataViewerSettings;
 
     updateInterval: any = undefined;
 
+
     getPlot = () => {
         return this._plot;
     };
-
-    reCalcPlot: boolean = false;
-
-    getReCalcPlot = () => {
-        return this.reCalcPlot;
-    }
-
-    setReCalcPlot = (newValue: boolean) => {
-        this.reCalcPlot = newValue;
-    }
 
     // updatingByInterval: boolean = true;
     constructor(widgetTdl: type_DataViewer_tdl) {
@@ -74,13 +66,21 @@ export class DataViewer extends BaseWidget {
         //     })
         // }, 10000)
 
+        // update plot every "updatePeriod" time
         this.updateInterval = setInterval(() => {
-            // update plot every "updatePeriod" time
             if (g_widgets1.isEditing()) {
                 return;
             }
-            this.setReCalcPlot(false);
-            this.updatePlot(true, true, true);
+
+            if (this.getPlot().tracingIsMoving === true) {
+                // update this.getPlot().xAxis.valMin and valMax
+                const DT = this.getPlot().xAxis.valMax - this.getPlot().xAxis.valMin;
+                this.getPlot().xAxis.valMax = Date.now();
+                this.getPlot().xAxis.valMin = Date.now() - DT;
+            }
+
+            this.updatePlot(true);
+
             // fetch archive data if needed
             // this.getPlot().fetchArchiveData();
         }, this.getText()["updatePeriod"] * 1000);
@@ -105,6 +105,7 @@ export class DataViewer extends BaseWidget {
                 this.getStyle().width = window.innerWidth;
                 this.getStyle().height = window.innerHeight;
             }
+
             this.updatePlot();
         });
 
@@ -119,13 +120,32 @@ export class DataViewer extends BaseWidget {
             if (g_widgets1.isEditing()) {
                 return;
             }
-            this.setReCalcPlot(false);
-            this.updatePlot(true, true, true);
-        }, this.getAllText()["updatePeriod"] * 1000);
+
+            if (this.getPlot().tracingIsMoving === true) {
+                // update this.getPlot().xAxis.valMin and valMax
+                const DT = this.getPlot().xAxis.valMax - this.getPlot().xAxis.valMin;
+                this.getPlot().xAxis.valMax = Date.now();
+                this.getPlot().xAxis.valMin = Date.now() - DT;
+            }
+            this.updatePlot(true);
+        }, this.getText()["updatePeriod"] * 1000);
+
+        if (g_widgets1.isEditing()) {
+            return;
+        }
+
+        if (this.getPlot().tracingIsMoving === true) {
+            // update this.getPlot().xAxis.valMin and valMax
+            const DT = this.getPlot().xAxis.valMax - this.getPlot().xAxis.valMin;
+            this.getPlot().xAxis.valMax = Date.now();
+            this.getPlot().xAxis.valMin = Date.now() - DT;
+        }
+        this.updatePlot(true);
+
     }
 
-    mapDbrDataWitNewData = (newChannelNames: string[]) => {
-        this.getPlot().mapDbrDataWitNewData(newChannelNames);
+    mapDbrDataWitNewData = (newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
+        this.getPlot().mapDbrDataWitNewData(newDbrData);
     };
 
     mapDbrDataWitNewArchiveData = (data: {
@@ -139,8 +159,8 @@ export class DataViewer extends BaseWidget {
         this.getPlot().mapDbrDataWitNewArchiveData(data);
     };
 
-    updatePlot = (useNewestTime: boolean = false, doFlush: boolean = true, dynamicUpdate: boolean = false) => {
-        this.getPlot().updatePlot(useNewestTime, doFlush, dynamicUpdate);
+    updatePlot = (doFlush: boolean = true) => {
+        this.getPlot().updatePlot(doFlush);
     };
 
     getSettings = () => {
@@ -189,12 +209,6 @@ export class DataViewer extends BaseWidget {
 
     // concretize abstract method
     _ElementRaw = () => {
-        // must do it for every widget
-        React.useEffect(() => {
-            //! this widget is always rendered each time to avoid trace discontinunity 
-            //! when the plot is moved horizontally
-            // g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        });
 
         this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
         this.setAllText({ ...this.getText(), ...this.getRulesText() });
@@ -207,7 +221,7 @@ export class DataViewer extends BaseWidget {
                 // Dispatch the event to the window object
                 window.dispatchEvent(resizeEvent);
             }
-        })
+        }, [])
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -228,29 +242,14 @@ export class DataViewer extends BaseWidget {
             >
                 <this._ElementArea></this._ElementArea>
                 {this._showResizers() ? <this._ElementResizer /> : null}
-                {this.showSettingsPage && (!g_widgets1.isEditing()) ? this.getSettings().getElement() : null}
+                {this.getShowSettingsPage() === -1 && (!g_widgets1.isEditing()) ? this.getSettings().getElement() : null}
+                {this.getSettings().getElementTraceSetting(this.getShowSettingsPage())}
             </div>
         );
     };
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): JSX.Element => {
-        if (g_widgets1.isEditing() === true) {
-            this.getPlot().wasEditing = true;
-        }
-
-        if ((g_widgets1.isEditing() === false && this.getPlot().wasEditing === true) || this.getPlot().tracesInitialized === false) {
-            // changed from editing to operating mode
-            this.getPlot().initTraces();
-            // in case the update period is too long, update 0.5 second later
-            setTimeout(() => {
-                // move the time to Date.now()
-                // this.updatingByInterval = true;
-                this.updatePlot(true);
-                // this.updatingByInterval = false;
-            }, 500);
-        }
-
         return (
             <div
                 style={{
@@ -276,11 +275,20 @@ export class DataViewer extends BaseWidget {
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                {/* <this.PlotWrapper></this.PlotWrapper> */}
-                {this.getPlot().getElement()}
+                {g_widgets1.isEditing()? <this._ElementMask></this._ElementMask> : this.getPlot().getElement()}
             </div>
         );
     };
+
+    _ElementMask = () => {
+        return (<div style={{
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(255,0,0,0)"
+        }}>
+
+        </div>)
+    }
 
     // concretize abstract method
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
@@ -315,6 +323,14 @@ export class DataViewer extends BaseWidget {
     _getChannelUnit = () => {
         return this._getFirstChannelUnit();
     };
+
+    setShowSettingsPage = (index: number) => {
+        this.showSettingsPage = index;
+    }
+
+    getShowSettingsPage = () => {
+        return this.showSettingsPage;
+    }
 
     // ----------------------- styles -----------------------
 
@@ -450,5 +466,18 @@ export class DataViewer extends BaseWidget {
         if (this._sidebar === undefined) {
             this._sidebar = new DataViewerSidebar(this);
         }
+    }
+
+    jobsAsEditingModeBegins() {
+        super.jobsAsEditingModeBegins();
+        // clear traces data
+        this.getPlot().initTracesData();
+    }
+
+
+    jobsAsOperatingModeBegins() {
+        super.jobsAsOperatingModeBegins();
+        // clear traces data
+        this.getPlot().initTracesData();
     }
 }

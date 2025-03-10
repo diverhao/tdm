@@ -281,7 +281,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
             "w",
             "h",
             "controlPv",
-            "format", // ! not in tdm
+            "format",
             "font",
             "fgColor",
             "fgAlarm", // Boolean
@@ -402,6 +402,8 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                     tdl["text"]["horizontalAlign"] = EdlConverter.convertEdlFontAlign(propertyValue);
                 } else if (propertyName === "fgAlarm") {
                     alarmPropertyNames.push(propertyName);
+                } else if (propertyName === "format") {
+                    tdl["text"]["format"] = EdlConverter.convertEdlDisplayMode(propertyValue);
                 } else if (propertyName === "useAlarmBorder") {
                     // in "Text Control", the useAlarmBorder changes the border, not outline
                     if (type === "Text Control") {

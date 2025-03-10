@@ -563,6 +563,7 @@ export class FileReader {
                 yGridSize: 1,
                 gridColor: "rgba(128,128,128,1)",
                 showGrid: true,
+                isUtilityWindow: false,
             },
         };
 

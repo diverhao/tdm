@@ -1321,7 +1321,7 @@ export class EdlConverter {
     static convertEdlTextValue = (propertyValue: string[]) => {
         // convert SOH char to \n
         // convert "\\" to "\"
-        return propertyValue.join("\n").replaceAll("\\\\","__double_back_slashes__").replaceAll("\\", "").replaceAll(`"`, "").replace(/\x01/g, "\n").replaceAll("__double_back_slashes__", "\\");
+        return propertyValue.join("\n").replaceAll("\\\\", "__double_back_slashes__").replaceAll("\\", "").replaceAll(`"`, "").replace(/\x01/g, "\n").replaceAll("__double_back_slashes__", "\\");
     };
 
     static convertEdlLineStyle = (propertyValue: string) => {
@@ -1588,7 +1588,7 @@ export class EdlConverter {
             id: uuidv4(),
         };
         const rule_INVALID: Record<string, any> = {
-            boolExpression: `${sevrExpression} > 2.5 and ${sevrExpression} < 3.5`,
+            boolExpression: `${sevrExpression} > 2.5 and ${sevrExpression} < 4.5`,
             propertyName: rulePropertyName,
             propertyValue: "rgba(255, 255, 255, 1)",
             id: uuidv4(),
@@ -1657,7 +1657,7 @@ export class EdlConverter {
             id: uuidv4(),
         };
         const rule_INVALID: Record<string, any> = {
-            boolExpression: `${sevrExpresson} > 2.5 and ${sevrExpresson} < 3.5`,
+            boolExpression: `${sevrExpresson} > 2.5 and ${sevrExpresson} < 4.5`,
             propertyName: "Text Color",
             propertyValue: "rgba(255, 255, 255, 1)",
             id: uuidv4(),
@@ -1726,7 +1726,7 @@ export class EdlConverter {
             id: uuidv4(),
         };
         const rule_INVALID: Record<string, any> = {
-            boolExpression: `${sevrExpresson} > 2.5 and ${sevrExpresson} < 3.5`,
+            boolExpression: `${sevrExpresson} > 2.5 and ${sevrExpresson} < 4.5`,
             propertyName: "Line Color",
             propertyValue: "rgba(255, 255, 255, 1)",
             id: uuidv4(),
@@ -1794,7 +1794,7 @@ export class EdlConverter {
             id: uuidv4(),
         };
         const rule_INVALID: Record<string, any> = {
-            boolExpression: `${sevrExpression} > 2.5 and ${sevrExpression} < 3.5`,
+            boolExpression: `${sevrExpression} > 2.5 and ${sevrExpression} < 4.5`,
             propertyName: "Fill Color",
             propertyValue: "rgba(255, 255, 255, 1)",
             id: uuidv4(),
@@ -1863,7 +1863,7 @@ export class EdlConverter {
             id: uuidv4(),
         };
         const rule_INVALID: Record<string, any> = {
-            boolExpression: `${sevrExpression} > 2.5 and ${sevrExpression} < 3.5`,
+            boolExpression: `${sevrExpression} > 2.5 and ${sevrExpression} < 4.5`,
             propertyName: "Background Color",
             propertyValue: "rgba(255, 255, 255, 1)",
             id: uuidv4(),
@@ -1932,7 +1932,7 @@ export class EdlConverter {
             id: uuidv4(),
         };
         const rule_INVALID: Record<string, any> = {
-            boolExpression: `${sevrExpresson} > 2.5 and ${sevrExpresson} < 3.5`,
+            boolExpression: `${sevrExpresson} > 2.5 and ${sevrExpresson} < 4.5`,
             propertyName: "Border Color",
             propertyValue: "rgba(255, 255, 255, 1)",
             id: uuidv4(),
@@ -1995,10 +1995,18 @@ export class EdlConverter {
         let min = Number.NEGATIVE_INFINITY;
         let max = Number.POSITIVE_INFINITY;
         if (visMin !== undefined) {
-            min = parseFloat(visMin.replaceAll(`"`, ""));
+            if (visMin === "-inf") {
+                // -infinity
+            } else {
+                min = parseFloat(visMin.replaceAll(`"`, ""));
+            }
         }
         if (visMax !== undefined) {
-            max = parseFloat(visMax.replaceAll(`"`, ""));
+            if (visMax === "inf") {
+                // infinity
+            } else {
+                max = parseFloat(visMax.replaceAll(`"`, ""));
+            }
         }
         if (typeof visInvert === "string" && visInvert.replaceAll('"', "") === "true") {
             // default is showing the widget
@@ -2108,6 +2116,8 @@ export class EdlConverter {
         } else if (propertyValue.includes("engineer")) {
             return "default";
         } else if (propertyValue.includes("exp")) {
+            return "exponential";
+        } else if (propertyValue.includes("exponential")) {
             return "exponential";
         } else if (propertyValue.includes("string")) {
             return "string";

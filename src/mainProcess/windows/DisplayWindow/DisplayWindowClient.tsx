@@ -72,7 +72,6 @@ export class DisplayWindowClient {
     private _actionHistory: ActionHistory;
     private _videoRecorder: VideoRecorder;
 
-    private _isUtilityWindow = false;
 
     private _processId: string = "";
 
@@ -333,7 +332,7 @@ export class DisplayWindowClient {
             for (let ii = widgets.length - 1; ii >= 0; ii--) {
                 const widget = widgets[ii];
                 if (widget instanceof BaseWidget) {
-                    if ((widget.getStyle()["width"] === "100%" && widget.getStyle()["height"] === "100%" && this.getIsUtilityWindow() === true)) {
+                    if ((this.getIsUtilityWindow() === true)) {
                         // utility window, only one widget, always select it
                         const widgetKey = widget.getWidgetKey();
                         widgetKeyResult = widgetKey;
@@ -470,14 +469,19 @@ export class DisplayWindowClient {
                         }
                         this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
                         return;
-                    }
-
-                    else if (widget instanceof ChannelGraph) {
+                    } else if (widget instanceof ChannelGraph) {
                         contextMenuOptions = {
                             showChannelGraphOptions: true,
                         }
                         this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
                         return;
+                    } else if (widget instanceof DataViewer && this.getIsUtilityWindow() === true) {
+                        contextMenuOptions = {
+                            isUtilityWindow: true,
+                        }
+                        this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
+                        return;
+
                     } else {
                         // any other type of widgets, no special action
                         this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], {});
@@ -577,6 +581,7 @@ export class DisplayWindowClient {
         utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | undefined,
         utilityOptions: Record<string, any>
     ) => {
+        Log.info("new tdl ", newTdl)
         this.setTdlFileName(tdlFileName);
         // (1)
         let initialMode: rendererWindowStatus.editing | rendererWindowStatus.operating = rendererWindowStatus.editing;
@@ -603,7 +608,6 @@ export class DisplayWindowClient {
             utilityType === "FileConverter" ||
             utilityType === "Help"
         ) {
-            this.setIsUtilityWindow(true);
             this._appendUtilityWidgetTdl(newTdl, utilityType, utilityOptions);
             initialMode = rendererWindowStatus.operating;
         }
@@ -971,8 +975,13 @@ export class DisplayWindowClient {
                 Log.debug("We are going to save TDL", tdlFileName)
                 this.getIpcManager().sendFromRendererProcess("save-tdl-file", this.getWindowId(), this.generateTdl(), tdlFileName);
             } else {
+                if (this.getIsUtilityWindow() === true) {
+                    // always save utility window (in editing mode)
+                    this.getIpcManager().sendFromRendererProcess("save-tdl-file", this.getWindowId(), this.generateTdl(), tdlFileName);
+                    return;
+                }
                 if (tdlFileName === "") {
-                    Log.debug("We are going to save this new TDL");
+                    Log.info("We are going to save this new TDL");
                     this.getIpcManager().sendFromRendererProcess("save-tdl-file", this.getWindowId(), this.generateTdl(), tdlFileName);
                 } else {
                     Log.debug("TDL file", tdlFileName, "is not changed, no need to save");
@@ -1422,14 +1431,6 @@ export class DisplayWindowClient {
         return this._videoRecorder;
     };
 
-    setIsUtilityWindow = (isUtilityWindow: boolean) => {
-        this._isUtilityWindow = isUtilityWindow;
-    };
-
-    getIsUtilityWindow = () => {
-        return this._isUtilityWindow;
-    };
-
     getProcessId = () => {
         return this._processId;
     };
@@ -1458,6 +1459,16 @@ export class DisplayWindowClient {
         return this._hostname;
     }
 
+    getIsUtilityWindow = () => {
+        if (g_widgets1 === undefined) {
+            return false;
+        }
+        const canvas = g_widgets1.getWidget("Canvas");
+        if (!(canvas instanceof Canvas)) {
+            return false;
+        }
+        return canvas.isUtilityWindow();
+    }
 
     getPrompt = () => {
         return this._prompt;

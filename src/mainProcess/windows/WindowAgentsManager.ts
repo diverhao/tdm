@@ -329,7 +329,7 @@ export class WindowAgentsManager {
                 Log.debug(this.getMainProcessId(), "lifted", displayWindowAgent.getId());
 
                 // (4)
-                console.log("iframe new tdl ====================================")
+
                 displayWindowAgent.sendFromMainProcess("new-tdl", {
                     newTdl: tdl,
                     tdlFileName: tdlFileName,
@@ -401,7 +401,14 @@ export class WindowAgentsManager {
         if (options["utilityType"] !== undefined) {
             displayWindowAgent.setReloadable(false);
         }
+        const isUtilityWindow = tdl["Canvas"]["isUtilityWindow"];
+        displayWindowAgent.setIsUtilityWindow(isUtilityWindow);
+        if (isUtilityWindow === true) {
+            displayWindowAgent.setEditable(editable);
+        }
+
         // (4)
+
         displayWindowAgent.sendFromMainProcess("new-tdl", {
             newTdl: tdl,
             tdlFileName: tdlFileName,
@@ -596,6 +603,7 @@ export class WindowAgentsManager {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: false,
                 },
             };
 

@@ -35,6 +35,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             };
         } else if (utilityType === "PvTable") {
@@ -66,6 +67,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             };
         } else if (utilityType === "DataViewer") {
@@ -97,6 +99,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             };
         } else if (utilityType === "ProfilesViewer") {
@@ -130,6 +133,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             };
         } else if (utilityType === "LogViewer") {
@@ -163,6 +167,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             };
         } else if (utilityType === "Terminal") {
@@ -196,6 +201,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             };
         } else if (utilityType === "ChannelGraph") {
@@ -227,6 +233,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             };
 
@@ -261,6 +268,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             };
         } else if (utilityType === "TdlViewer") {
@@ -295,6 +303,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             };
         } else if (utilityType === "TextEditor") {
@@ -329,6 +338,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             };
         } else if (utilityType === "Help") {
@@ -362,6 +372,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             };
         } else if (utilityType === "CaSnooper") {
@@ -395,6 +406,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             }
         } else if (utilityType === "Casw") {
@@ -428,6 +440,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             }
         } else if (utilityType === "FileConverter") {
@@ -461,6 +474,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             }            
         } else if (utilityType === "PvMonitor") {
@@ -494,6 +508,7 @@ export class UtilityWindow {
                     yGridSize: 1,
                     gridColor: "rgba(128,128,128,1)",
                     showGrid: true,
+                    isUtilityWindow: true,
                 } as type_Canvas_tdl,
             };
         } else {

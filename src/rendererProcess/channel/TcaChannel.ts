@@ -414,6 +414,7 @@ export class TcaChannel {
      * @returns {Promise<type_dbrData>}
      */
     getMeta = async (widgetKey: string | undefined, timeout: number | undefined = undefined): Promise<type_dbrData | type_LocalChannel_data> => {
+        console.log("get meta for ", this.getChannelName(), "from", widgetKey)
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const ipcManager = displayWindowClient.getIpcManager();
         const windowId = displayWindowClient.getWindowId();
@@ -1123,7 +1124,12 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return "";
         }
-        return this.getDbrData()["units"];
+        const units = this.getDbrData()["units"];
+        if (units === undefined)  {
+            return "";
+        } else {
+            return units;
+        }
     };
 
     /**
@@ -1268,6 +1274,8 @@ export class TcaChannel {
         return new Date(GlobalMethods.converEpicsTimeStampToEpochTime(msSince1990UTC));
     };
 
+    
+
     /**
      * Get status of this channel.
      *
@@ -1384,9 +1392,16 @@ export class TcaChannel {
     getDbrData = (): type_dbrData | type_LocalChannel_data => {
         return this._dbrData;
     };
-    appendToDbrData = (newDbrData: type_dbrData | type_LocalChannel_data | { value: undefined }) => {
-        this._dbrData = { ...this._dbrData, ...newDbrData };
+    appendToDbrData = (newDbrData: type_dbrData | type_dbrData[] | type_LocalChannel_data | { value: undefined }) => {
+        if (Array.isArray(newDbrData) ) {
+            for (const dbrData of newDbrData) {
+                this._dbrData = { ...this._dbrData, ...dbrData };
+            }
+        } else {
+            this._dbrData = { ...this._dbrData, ...newDbrData };
+        }
     };
+
     setDbrData = (newDbrData: type_dbrData | type_LocalChannel_data) => {
         this._dbrData = newDbrData;
     };

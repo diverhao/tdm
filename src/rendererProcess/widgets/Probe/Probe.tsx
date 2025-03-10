@@ -108,6 +108,7 @@ export class Probe extends BaseWidget {
      * (4) flush widgets
      */
     newProbe = (newChannelName: string) => {
+        console.log("creating new probe", newChannelName)
         // (1)
         // we are still trying to connect the channel
         if (this.rtyp === this.rtypWaitingName) {
