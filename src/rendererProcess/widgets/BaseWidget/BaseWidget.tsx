@@ -1632,7 +1632,7 @@ export abstract class BaseWidget {
                     }
                 });
                 count++;
-                if (count > 100) {
+                if (count > 10) {
                     Log.info("Reached loop limit, quit");
                     break;
                 }

@@ -630,6 +630,7 @@ export class DisplayWindowClient {
         // the tdl is read from hard drive, the modified bit must be false (as the runtime TDL is the same as the saved TDL file)
         this.getActionHistory().setModified(false);
         this.getActionHistory().registerAction(true);
+        Log.info("Data structure for new tdl created.")
     };
 
     undo = () => {

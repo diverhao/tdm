@@ -219,7 +219,7 @@ export class SidebarActionOpenDisplayItem {
                             value={fileName}
                             setValue={setFileName}
                             readableText={"Open Display file"}
-                            updater={(newValue: string) => { this.updateWidgetLabel(undefined, newValue) }}
+                            updater={(newValue: string) => { this.updateWidgetFileName(undefined, newValue) }}
                         >
                             File:
                         </this.ElementInputLabel>

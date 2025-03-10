@@ -891,9 +891,10 @@ export class Widgets {
     };
 
     getGroupSelection2 = (): GroupSelection2 => {
+        console.log("get group selection 2", this._widgets.size)
         if (this._widgets.get("GroupSelection2") === undefined) {
             // it always exists
-            throw new Error("GruopSelection2 does not exist.");
+            throw new Error("GroupSelection2 does not exist.");
         }
         return this._widgets.get("GroupSelection2") as any as GroupSelection2;
     };
@@ -1808,7 +1809,7 @@ export class Widgets {
             }
             return value;
         } catch (e) {
-            Log.error(e);
+            // Log.error(e);
             return undefined;
         }
     };
@@ -1842,7 +1843,7 @@ export class Widgets {
 
             return severity;
         } catch (e) {
-            Log.error(e);
+            // Log.error(e);
             return ChannelSeverity.INVALID;
         }
     };
@@ -1902,7 +1903,7 @@ export class Widgets {
             const tcaChannel = this.getTcaChannel(channelName);
             return tcaChannel.getUnit();
         } catch (e) {
-            Log.error(e);
+            // Log.error(e);
             return "";
         }
     };
