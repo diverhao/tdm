@@ -2678,7 +2678,6 @@ export class IpcManagerOnMainProcess {
         startTime: number, // ms since epoch // string, // "2024-01-01 01:23:45", no ms
         endTime: number, // string,
     }) => {
-        console.log("try to get archive data", options)
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
         if (displayWindowAgent === undefined) {
             return;

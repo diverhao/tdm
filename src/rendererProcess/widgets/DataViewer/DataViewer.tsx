@@ -250,6 +250,19 @@ export class DataViewer extends BaseWidget {
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): JSX.Element => {
+
+        React.useEffect(() => {
+            const plot = this.getPlot();
+            let ii = 0;
+            for (const yAxis of Object.values(plot.yAxes)) {
+                const channelName = yAxis["label"];
+                plot.updateTrace(ii, channelName, false, true);
+                ii++;
+            }
+            plot.updatePlot(true);
+            
+        }, [])
+
         return (
             <div
                 style={{

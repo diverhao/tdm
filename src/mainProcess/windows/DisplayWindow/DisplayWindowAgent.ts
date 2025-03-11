@@ -375,7 +375,7 @@ export class DisplayWindowAgent {
             }
             // (2)
             const channelProtocol = channelAgent.getProtocol();
-            if (channelProtocol === "ca" && (typeof dbrType === "object" || dbrType === undefined)) {
+            if (channelProtocol === "ca" && (typeof dbrType === "number" || dbrType === undefined)) {
                 result = await channelAgent.get(this.getId(), dbrType, ioTimeout);
             } else if (channelProtocol === "pva" && typeof dbrType === "string") {
                 result = await channelAgent.getPva(this.getId(), ioTimeout);
@@ -391,6 +391,7 @@ export class DisplayWindowAgent {
             // (2)
             result = channelAgent.getDbrData();
         }
+
         // (3)
         if (this.checkChannelOperations(channelName) === false) {
             this.removeChannel(channelName);

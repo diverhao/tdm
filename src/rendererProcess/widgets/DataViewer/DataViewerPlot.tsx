@@ -2,7 +2,7 @@ import { DataViewer } from "./DataViewer";
 import * as React from "react";
 import { ElementProfileBlockNameInput } from "../../mainWindow/MainWindowStyledComponents";
 import * as GlobalMethods from "../../global/GlobalMethods";
-import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, g_widgets1, type_dbrData } from "../../global/GlobalVariables";
+import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, g_widgets1, type_dbrData, Channel_DBR_TYPES } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Log } from "../../../mainProcess/log/Log";
 import { type_LocalChannel_data } from "../../../mainProcess/channel/LocalChannelAgent";
@@ -1494,8 +1494,9 @@ export class DataViewerPlot {
                                         yAxis.valMax = yValMinMax[1];
                                     }
                                 }
-                                if (yAxis.valMin === yAxis.valMax) {
-                                    if (yAxis.valMax === 0) {
+
+                                if (Math.abs(yAxis.valMin - yAxis.valMax) < 1e-20) {
+                                    if (Math.abs(yAxis.valMax) < 1e-20) {
                                         yAxis.valMin = -1;
                                         yAxis.valMax = 1;
                                     } else if (yAxis.valMax > 0) {
@@ -2038,7 +2039,7 @@ export class DataViewerPlot {
      * rotate mouse wheel to zoom y-direction, shift key must be pressed
      */
     handleWheelOnPlotY = (event: React.WheelEvent) => {
-        event.preventDefault()
+        // event.preventDefault()
 
         let pointYMid: undefined | number = undefined;
         const bounding = (event.target as Element).getBoundingClientRect();
@@ -2243,7 +2244,6 @@ export class DataViewerPlot {
             // the archive data must be earlier than the live data
             const startTime = timeMinOnPlot;
             const endTime = Math.min(timeMaxOnPlot, timeMinInData);
-            console.log(startTime, endTime, new Date(startTime), new Date(endTime))
             if (endTime > startTime) {
                 // const startTime = GlobalMethods.convertEpochTimeToString(timeMinOnPlot).split(".")[0];
                 // const endTime = GlobalMethods.convertEpochTimeToString(timeMinInData).split(".")[0];
@@ -2277,13 +2277,12 @@ export class DataViewerPlot {
             const xDataNew = data["archiveData"][0];
             const yDataNew = data["archiveData"][1];
 
-            console.log(xDataNew, yDataNew)
 
             const minNewDataTime = xDataNew[0];
             const maxNewDataTime = xDataNew[xDataNew.length - 1];
 
             let [leftIndex, rightIndex] = GlobalMethods.binarySearchRange(xData, minNewDataTime, maxNewDataTime);
-            console.log("left idnex,", leftIndex, rightIndex)
+
             if (leftIndex === -100 || rightIndex === -100) {
                 leftIndex = 0;
                 rightIndex = 0;
@@ -2303,19 +2302,6 @@ export class DataViewerPlot {
             }   
             xData.splice(leftIndex, 0, ...x1);
             yData.splice(leftIndex, 0, ...y1);
-
-            // // stich data together
-            // for (let index = archiveDataArray.length - 1; index >= 0; index--) {
-            //     // each item has format [ 123456, 856514.5333504636],
-            //     const item = archiveDataArray[index];
-            //     const msSinceEpoch = item[0];
-            //     const value = item[1];
-            //     yData[0] = value;
-            //     xData.splice(0, 0, msSinceEpoch);
-            //     yData.splice(0, 0, value);
-            //     xData.splice(0, 0, msSinceEpoch);
-            //     yData.splice(0, 0, value);
-            // }
         }
     }
 
@@ -2565,6 +2551,7 @@ export class DataViewerPlot {
         const newTcaChannel = g_widgets1.createTcaChannel(newTraceName, this.getMainWidget().getWidgetKey());
         if (newTcaChannel !== undefined) {
             await newTcaChannel.getMeta(undefined);
+            await newTcaChannel.get(undefined, 1, Channel_DBR_TYPES.DBR_TIME_DOUBLE, true, undefined);
             newTcaChannel.monitor();
         }
     };
@@ -2572,10 +2559,10 @@ export class DataViewerPlot {
     /**
      * Change the trace name
      */
-    updateTrace = async (index: number, newTraceName: string, doFlush: boolean = true) => {
+    updateTrace = async (index: number, newTraceName: string, doFlush: boolean = true, forceUpdate: boolean = false) => {
 
         const oldTraceName = this.getChannelNames()[index];
-        if (newTraceName === oldTraceName) {
+        if ((newTraceName === oldTraceName) && forceUpdate === false) {
             // no change
             return;
         }
@@ -2600,6 +2587,7 @@ export class DataViewerPlot {
         const newTcaChannel = g_widgets1.createTcaChannel(newTraceName, this.getMainWidget().getWidgetKey());
         if (newTcaChannel !== undefined) {
             await newTcaChannel.getMeta(undefined);
+            await newTcaChannel.get(undefined, 1, Channel_DBR_TYPES.DBR_TIME_DOUBLE, true, undefined);
             newTcaChannel.monitor();
         }
     };
