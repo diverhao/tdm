@@ -868,7 +868,8 @@ export class Widgets {
         // (2)
         const widgetKeys = this.getWidgets().keys();
         for (let widgetKey of widgetKeys) {
-            this.addToForceUpdateWidgets(widgetKey);
+            // do not add
+            // this.addToForceUpdateWidgets(widgetKey);
         }
         // (3)
         this.getWidgets().clear();

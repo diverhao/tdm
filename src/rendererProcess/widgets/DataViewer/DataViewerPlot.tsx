@@ -51,6 +51,7 @@ export class DataViewerPlot {
     ];
 
     // time
+    minLiveDataTime: number = Number.MAX_VALUE;
     readonly oneSecond = 1 * 1000;
     readonly oneMinute = 60 * 1000;
     readonly oneHour = 60 * 60 * 1000;
@@ -93,6 +94,7 @@ export class DataViewerPlot {
     // ---------------------- efficiency ---------------------------
     thumbnailUpdateCount = 1;
     updateThumbnail: boolean = true;
+
 
     plotUpdateCount = 1;
     updatePlotLines: boolean = true;
@@ -1328,7 +1330,7 @@ export class DataViewerPlot {
                                 this.updatePlot();
                             }}
                         >
-                            <div>{yAxis.show === true?"": "(hidden) "} {yAxis.label}&nbsp;</div>
+                            <div>{yAxis.show === true ? "" : "(hidden) "} {yAxis.label}&nbsp;</div>
                             <div>{timeStr}</div>
                             <div>{`${valueStr}`}</div>
                         </div>
@@ -1382,7 +1384,38 @@ export class DataViewerPlot {
                     <div style={{ fontSize: 20 }}>+</div>
                 </div>
 
-            </div>
+                <div
+                    ref={elementAddTraceRef}
+                    style={{
+                        display: "inline-flex",
+                        flexFlow: "column",
+                        justifyContent: "flex-start",
+                        alignItems: "flex-start",
+                        width: "100%",
+                        // backgroundColor: "red",
+                        height: "fit-content",
+                        // color: yAxis.lineColor,
+                        paddingTop: 5,
+                        paddingBottom: 5,
+                        paddingLeft: 5,
+                        boxSizing: "border-box",
+                        margin: "3px",
+                        opacity: 0.3,
+                        // cursor: "pointer",
+                        // backgroundColor: this.selectedTraceIndex === index ? "rgba(210, 210, 210, 1)" : "rgba(0,0,0,0)",
+                    }}
+                    onMouseDown={(event: any) => {
+                        if (event.button !== 0) {
+                            return;
+                        }
+
+                        this.fetchArchiveData();
+                    }}
+                >
+                    request arvhive data
+                </div>
+
+            </div >
         );
     };
 
@@ -1895,21 +1928,21 @@ export class DataViewerPlot {
 
         // did mount.
         // to use {passive: false} option, we must explicitly use addEventListener method
-        React.useEffect(() => {
-            if (plotRef.current !== null) {
-                plotRef.current.addEventListener("wheel", this.handleWheelOnPlot, { passive: false })
-            }
-        }, [])
+        // React.useEffect(() => {
+        //     if (plotRef.current !== null) {
+        //         plotRef.current.addEventListener("wheel", this.handleWheelOnPlot, { passive: false })
+        //     }
+        // }, [])
 
-        // did unmount
-        // we return a function that removes the wheel event listener
-        React.useEffect(() => {
-            return () => {
-                if (plotRef.current !== null) {
-                    plotRef.current.removeEventListener("wheel", this.handleWheelOnPlot, { passive: false })
-                }
-            }
-        }, [])
+        // // did unmount
+        // // we return a function that removes the wheel event listener
+        // React.useEffect(() => {
+        //     return () => {
+        //         if (plotRef.current !== null) {
+        //             plotRef.current.removeEventListener("wheel", this.handleWheelOnPlot, { passive: false })
+        //         }
+        //     }
+        // }, [])
 
         return (
             <div
@@ -1937,8 +1970,8 @@ export class DataViewerPlot {
 
                     window.addEventListener("mousemove", this.handleMouseMoveOnPlot);
                     window.addEventListener("mouseup", this.handleMouseUpOnPlot);
-
                 }}
+                onWheel={this.handleWheelOnPlot}
             >
                 {/* tick lines first */}
                 <this._ElementXYTickLines></this._ElementXYTickLines>
@@ -1959,7 +1992,7 @@ export class DataViewerPlot {
     })
 
     handleWheelOnPlot = (event: React.WheelEvent) => {
-        event.preventDefault();
+        // event.preventDefault();
         event.stopPropagation();
         if (event.shiftKey) {
             this.handleWheelOnPlotY(event);
@@ -2204,12 +2237,16 @@ export class DataViewerPlot {
             const channelName = this.getChannelNames()[ii];
             const timeMinOnPlot = this.xAxis["valMin"];
             const timeMaxOnPlot = this.xAxis["valMax"];
-            const timeMinInData = this.x[ii][0];
+            // const timeMinInData = this.x[ii][0];
+            const timeMinInData = this.minLiveDataTime;
             const timeMaxInData = this.x[ii][this.x[ii].length - 1];
             // the archive data must be earlier than the live data
-            if (timeMinOnPlot < timeMinInData) {
-                const startTime = GlobalMethods.convertEpochTimeToString(timeMinOnPlot).split(".")[0];
-                const endTime = GlobalMethods.convertEpochTimeToString(timeMinInData).split(".")[0];
+            const startTime = timeMinOnPlot;
+            const endTime = Math.min(timeMaxOnPlot, timeMinInData);
+            console.log(startTime, endTime, new Date(startTime), new Date(endTime))
+            if (endTime > startTime) {
+                // const startTime = GlobalMethods.convertEpochTimeToString(timeMinOnPlot).split(".")[0];
+                // const endTime = GlobalMethods.convertEpochTimeToString(timeMinInData).split(".")[0];
                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                 displayWindowClient.getIpcManager().sendFromRendererProcess("request-archive-data", {
                     displayWindowId: displayWindowClient.getWindowId(),
@@ -2226,38 +2263,59 @@ export class DataViewerPlot {
         displayWindowId: string,
         widgetKey: string,
         channelName: string,
-        startTime: string, // "2024-01-01 01:23:45", no ms
-        endTime: string,
-        archiveData: any
+        startTime: number, // ms since epoch // "2024-01-01 01:23:45", no ms
+        endTime: number,
+        archiveData: [number[], number[]],
     }) => {
         if (g_widgets1.isEditing()) {
             return;
         }
-
         if (this.getChannelNames().includes(data["channelName"])) {
             const ii = this.getChannelNames().indexOf(data["channelName"]);
             const xData = this.x[ii];
             const yData = this.y[ii];
-            const oldestXData = xData[0];
-            const archiveDataArray = data["archiveData"]["rows"];
-            // stich data together
-            for (let index = archiveDataArray.length - 1; index >= 0; index--) {
+            const xDataNew = data["archiveData"][0];
+            const yDataNew = data["archiveData"][1];
 
-                // each item has format [ 2013-05-21T04:00:00.184Z, 856514.5333504636, 'OK', 'OK' ],
-                const item = archiveDataArray[index];
-                const iso8601Time = item[0];
-                const msSinceEpoch = GlobalMethods.convertIso8601TimeToEpochTime(iso8601Time);
-                // if the archive data is newer than the oldest existing data
-                if (msSinceEpoch > oldestXData) {
-                    continue;
-                }
-                const value = item[1];
-                yData[0] = value;
-                xData.splice(0, 0, msSinceEpoch);
-                yData.splice(0, 0, value);
-                xData.splice(0, 0, msSinceEpoch);
-                yData.splice(0, 0, value);
+            console.log(xDataNew, yDataNew)
+
+            const minNewDataTime = xDataNew[0];
+            const maxNewDataTime = xDataNew[xDataNew.length - 1];
+
+            let [leftIndex, rightIndex] = GlobalMethods.binarySearchRange(xData, minNewDataTime, maxNewDataTime);
+            console.log("left idnex,", leftIndex, rightIndex)
+            if (leftIndex === -100 || rightIndex === -100) {
+                leftIndex = 0;
+                rightIndex = 0;
             }
+            xData.splice(leftIndex, rightIndex - leftIndex);
+            yData.splice(leftIndex, rightIndex - leftIndex);
+
+
+            // todo: better stiching
+            const x1: number[] = [];
+            const y1: number[] = [];
+            for (let ii = 0; ii < xDataNew.length - 1; ii++) {
+                x1.push(xDataNew[ii]);
+                y1.push(yDataNew[ii]);
+                x1.push(xDataNew[ii + 1]);
+                y1.push(yDataNew[ii]);
+            }   
+            xData.splice(leftIndex, 0, ...x1);
+            yData.splice(leftIndex, 0, ...y1);
+
+            // // stich data together
+            // for (let index = archiveDataArray.length - 1; index >= 0; index--) {
+            //     // each item has format [ 123456, 856514.5333504636],
+            //     const item = archiveDataArray[index];
+            //     const msSinceEpoch = item[0];
+            //     const value = item[1];
+            //     yData[0] = value;
+            //     xData.splice(0, 0, msSinceEpoch);
+            //     yData.splice(0, 0, value);
+            //     xData.splice(0, 0, msSinceEpoch);
+            //     yData.splice(0, 0, value);
+            // }
         }
     }
 
@@ -2295,9 +2353,8 @@ export class DataViewerPlot {
                 yData.splice(0, overSize);
             }
         }
-
-
     };
+
 
     /**
      * Add one dbr data to the x and y data.
@@ -2319,17 +2376,27 @@ export class DataViewerPlot {
 
         // data must contain time stamp
         if (data["secondsSinceEpoch"] === undefined || data["nanoSeconds"] === undefined) {
-            Log.debug("new data does not have time stamp")
+            Log.info("new data does not have time stamp")
             return;
         }
+
 
         const value = data.value;
         if (typeof value !== "number") {
             return;
         }
-        const timeStamp = GlobalMethods.converEpicsTimeStampToEpochTime(
+
+        let timeStamp = GlobalMethods.converEpicsTimeStampToEpochTime(
             data.secondsSinceEpoch * 1000 + data.nanoSeconds * 1e-6
         );
+        // sometimes the channel was never processed
+        if (data["secondsSinceEpoch"] === 0) {
+            timeStamp = Date.now();
+        }
+
+        if (timeStamp < this.minLiveDataTime) {
+            this.minLiveDataTime = timeStamp;
+        }
 
         const xData = this.x[index];
         const yData = this.y[index];

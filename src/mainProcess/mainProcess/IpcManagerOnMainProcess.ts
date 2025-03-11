@@ -711,7 +711,7 @@ export class IpcManagerOnMainProcess {
                 // real display window need to be saved
                 (browserWindow instanceof BrowserWindow &&
                     // preloaded displays don't need to be saved
-                    windowAgentsManager.preloadedDisplayWindowAgent !== displayWindowAgent 
+                    windowAgentsManager.preloadedDisplayWindowAgent !== displayWindowAgent
                     // embedded displays don't need to be saved
                     // && windowAgentsManager.preloadedEmbeddedDisplayAgent !== displayWindowAgent
                 )
@@ -2675,19 +2675,24 @@ export class IpcManagerOnMainProcess {
         displayWindowId: string,
         widgetKey: string,
         channelName: string,
-        startTime: string, // "2024-01-01 01:23:45", no ms
-        endTime: string,
+        startTime: number, // ms since epoch // string, // "2024-01-01 01:23:45", no ms
+        endTime: number, // string,
     }) => {
+        console.log("try to get archive data", options)
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
         if (displayWindowAgent === undefined) {
             return;
         }
-        let result = undefined;
+        let result: [number[], number[]] | undefined = undefined;
         const sql = this.getMainProcess().getSql();
         if (sql !== undefined) {
-            if (sql.getState() === SqlState.CONNECTED) {
-                result = await sql.getChannelData(options["channelName"], options["startTime"], options["endTime"]);
-            }
+            try {
+                // result = await sql.getChannelData(options["channelName"], options["startTime"], options["endTime"]);
+                result = await sql.getChannelDataForDataViewer(options["channelName"], options["startTime"], options["endTime"]);
+            } catch (e) {
+                Log.error(-1, "FAiled to request archive data", e);
+                return;
+             }
         }
         if (result !== undefined) {
             // do not process data in main process, the resouce is more precious in the main process

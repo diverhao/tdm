@@ -1,4 +1,4 @@
-import oracledb from 'oracledb';
+import oracledb, { ResultSet } from 'oracledb';
 import { Log } from '../log/Log';
 
 export enum SqlState {
@@ -14,6 +14,7 @@ export class Sql {
     private _dialect: "oracle" | "mysql" | "elasticsearch" = "oracle";
     private readonly _userName: string = '';
     private readonly _password: string = "";
+
     // SNS connection
     // connectionString = `
     //     (DESCRIPTION=
@@ -27,7 +28,7 @@ export class Sql {
     connectionString = "";
 
     constructor(input: {
-        userName: string, 
+        userName: string,
         password: string,
         connectionString: string,
     }) {
@@ -40,9 +41,17 @@ export class Sql {
         }, 2000)
     }
 
-    periodicTaskFunc = () => {
-        if (this.getState() === SqlState.CONNECTED || this.getState() === SqlState.CONNECTING) {
-            Log.info("-1", "We are either connected to SQL db or connecting to SQL db.");
+    periodicTaskFunc = async () => {
+
+        if (this.getState() === SqlState.CONNECTING) {
+            Log.info("-1", "We are connecting to SQL db.");
+            return;
+        }
+
+        await this.checkConnectionStatus();
+
+        if (this.getState() === SqlState.CONNECTED) {
+            Log.info("-1", "We are connected to SQL db.");
             return;
         } else {
             Log.error("-1", "Seems like the SQL db connection is broken, re-connect.")
@@ -106,6 +115,114 @@ export class Sql {
         return this.executeQuery(queryString);
     }
 
+    getChannelDataForDataViewer = async (channelName: string, startTime: number, endTime: number): Promise<[number[], number[]] | undefined> => {
+        const connection = this.getConnection();
+        if (connection === undefined) {
+            return undefined;
+        }
+
+        if (this.getState() !== SqlState.CONNECTED) {
+            return undefined;
+        }
+
+        // get channel ID
+        const channelIdData = await this.getChannelIdFromChannelName(channelName);
+        if (channelIdData === undefined) {
+            return undefined;
+        }
+        const channelIdRows = channelIdData["rows"] as number[][];
+        const channelId = channelIdRows[0][0];
+        if (typeof channelId !== "number") {
+            return undefined;
+        }
+
+        // PL/SQL query
+        const sql = `
+        BEGIN
+          :out_param := chan_arch.archive_reader_pkg.get_browser_data(:channel_id, :start_time, :end_time, :count);
+        END;
+      `;
+
+        // get the cursor
+        const execResult = await connection.execute(
+            sql,
+            {
+                out_param: { dir: oracledb.BIND_OUT, type: oracledb.CURSOR }, // OUT parameter for result set (cursor)
+                channel_id: channelId,
+                start_time: new Date(startTime),
+                end_time: new Date(endTime),
+                count: 6000, // total number of data we want to fetch
+            },
+            {
+                fetchArraySize: 1000,
+                resultSet: true,
+            }
+        );
+
+        const outBinds = execResult.outBinds as any;
+        if (outBinds === undefined) {
+            return undefined;
+        }
+
+        let cursor = outBinds.out_param as ResultSet<any>;
+        if (cursor === undefined) {
+            return undefined;
+        }
+
+        const numRows = 1000;
+        const numColumns = cursor.metaData.length;
+        let rows = await cursor.getRows(numRows); // each transmission send 1000 rows of data
+
+        // const result: [number, number][] = [];
+        const x: number[] = [];
+        const y: number[] = [];
+        while (rows.length > 0) {
+            for (const row of rows) {
+                if (numColumns === 9) {
+                    // down sampled data
+                    // [
+                    //     2,                        // index, invalide data has index of -1
+                    //     2025-03-01T09:00:04.937Z, // time stamp, string
+                    //     null,                     // severity
+                    //     null,                     // alarm
+                    //     1711419.2919311523,       // min value
+                    //     1712502.6889038086,       // max value
+                    //     1712129.4284871418,       // average value
+                    //     null,                     //
+                    //     3                         // # of data in this time span
+                    // ]
+                    const timeStampe = row[1];
+                    const valMin = row[4];
+                    const valMax = row[5];
+                    const valAvg = row[6];
+                    if (timeStampe instanceof Date && typeof valMin === "number" && typeof valMax === "number" && typeof valAvg === "number") {
+                        x.push(timeStampe.getTime());
+                        x.push(timeStampe.getTime());
+                        x.push(timeStampe.getTime());
+
+                        y.push(valMin);
+                        y.push(valMax);
+                        y.push(valAvg);
+                    }
+                } else {
+                    // full data, each row corresponds to one data
+                    // [ 2025-03-01T08:59:59.937Z, 8, 35, null, 1709252.630493164, null ]
+                    const timeStampe = row[0];
+                    const val = row[4];
+                    if (timeStampe instanceof Date && typeof val === "number") {
+                        x.push(timeStampe.getTime());
+                        y.push(val);
+                    }
+                }
+            }
+            rows = await cursor.getRows(numRows); // fetch multiple rows each time
+        }
+
+        await cursor.close();
+        return [x, y];
+    }
+
+
     getChannelIdFromChannelName = async (channelName: string) => {
         const queryString = `
             SELECT channel_id 
@@ -140,6 +257,23 @@ export class Sql {
             return undefined;
         }
     }
+
+
+    checkConnectionStatus = async () => {
+        const connection = this.getConnection();
+        if (connection === undefined) {
+            return SqlState.DISCONNECTED;
+        }
+        try {
+            await connection.ping();
+            console.log("Connection is active.");
+            return SqlState.CONNECTED;
+        } catch (err) {
+            console.error("Connection lost:", err);
+            return SqlState.DISCONNECTED;
+        }
+    }
+
 
     getState = () => {
         return this._state;
@@ -181,124 +315,5 @@ export class Sql {
     getPassword = () => {
         return this._password;
     }
-
-    // runApp = async () => {
-    //     let connection;
-    //     const JdbcConnectionString = `
-    //   (DESCRIPTION=
-    //     (LOAD_BALANCE=OFF)
-    //     (FAILOVER=ON)
-    //     (ADDRESS=(PROTOCOL=TCP)(HOST=snsappa.sns.ornl.gov)(PORT=1610))
-    //     (ADDRESS=(PROTOCOL=TCP)(HOST=snsappb.sns.ornl.gov)(PORT=1610))
-    //     (CONNECT_DATA=(SERVICE_NAME=prod_controls))
-    //   )`;
-
-
-    //     try {
-    //         connection = await oracledb.getConnection(
-    //             {
-    //                 user: "sns_reports",
-    //                 password: "sns",
-    //                 connectionString: JdbcConnectionString
-    //             }
-    //         );
-    //         console.log("Successfully connected to Oracle Database");
-
-    //         // Execute the SQL query
-    //         // const result = await connection.execute(`
-    //         //     SELECT 'SCL_Diag:BLM_Dev_Mov02:Fast60PulsesTotalLoss',  GRP_ID, CHANNEL_ID
-    //         //     FROM CHAN_ARCH.CHANNEL
-    //         //     WHERE ROWNUM <= 20
-    //         // `);
-
-    //         // const result1 = await connection.execute(`
-    //         // SELECT channel_id 
-    //         // FROM chan_arch.channel 
-    //         // WHERE NAME='RTBT_Diag:BCM25I:Power60'
-    //         // `)
-
-    //         // const result2 = await connection.execute(
-    //         //     `
-    //         // SELECT * 
-    //         // FROM chan_arch.sample
-    //         // WHERE channel_id=79588
-    //         // AND smpl_time BETWEEN TIMESTAMP'2013-05-21 00:00:00' AND TIMESTAMP'2013-05-21 01:00:00'
-    //         // `);
-
-    //         // const result3 = await connection.execute(
-    //         //     `
-    //         //     SELECT smpl_time 
-    //         //     FROM chan_arch.sample 
-    //         //     WHERE channel_id=79588
-    //         //     AND smpl_time <= TO_DATE('2013-05-21 01:00:00', 'YYYY-MM-DD HH24:MI:SS')
-    //         //     ORDER BY smpl_time DESC
-    //         //     FETCH FIRST 100 ROWS ONLY
-    //         //     `
-    //         // );
-
-    //         // const result4 = await connection.execute(
-    //         //     `
-    //         //    SELECT * 
-    //         //    FROM chan_arch.sample
-    //         //    WHERE channel_id=79588
-    //         //    AND smpl_time BETWEEN TO_DATE('2013-05-21 00:00:00', 'YYYY-MM-DD HH24:MI:SS') AND TO_DATE('2013-05-21 01:00:00', 'YYYY-MM-DD HH24:MI:SS')
-    //         //    `
-    //         // )
-
-    //         console.log(performance.now())
-    //         // takes about 1.2 s
-    //         // const result5 = await connection.execute(
-    //         //     `
-    //         //     SELECT *
-    //         //     FROM chan_arch.sample
-    //         //     WHERE channel_id = (
-    //         //       SELECT channel_id 
-    //         //       FROM chan_arch.channel 
-    //         //       WHERE NAME = 'RTBT_Diag:BCM25I:Power60'
-    //         //     )
-    //         //     AND smpl_time BETWEEN TO_DATE('2013-05-21 00:00:00', 'YYYY-MM-DD HH24:MI:SS') AND TO_DATE('2013-05-21 01:00:00', 'YYYY-MM-DD HH24:MI:SS')
-    //         //     FETCH FIRST 100 ROWS ONLY
-    //         //     `
-    //         // );
-
-    //         // about 1.3 s
-    //         const result6 = await connection.execute(
-    //             `
-    //         SELECT s.smpl_time AS Time, s.float_val AS Value, e.name AS Severity, m.name as Status
-    //         FROM chan_arch.sample s
-    //         JOIN chan_arch.channel c  ON c.channel_id = s.channel_id
-    //         JOIN chan_arch.severity e ON e.severity_id = s.severity_id
-    //         JOIN chan_arch.status m   ON m.status_id = s.status_id
-    //         WHERE c.name='RTBT_Diag:BCM25I:Power60'
-    //         AND s.smpl_time BETWEEN TO_DATE('2013-05-21 00:00:00', 'YYYY-MM-DD HH24:MI:SS') AND TO_DATE('2013-05-21 01:00:00', 'YYYY-MM-DD HH24:MI:SS')
-    //         ORDER BY smpl_time ASC
-    //         `
-    //         )
-
-    //         console.log(performance.now())
-
-    //         // const result3 = await connection.execute(
-    //         //     `
-    //         //     SELECT channel_id 
-    //         //     FROM chan_arch.channel 
-    //         //     WHERE name='RTBT_Diag:BCM25I:Power60'
-    //         //     `
-    //         // )
-
-    //         console.log(result6);
-
-    //     } catch (err) {
-    //         console.error(err);
-    //     } finally {
-    //         if (connection) {
-    //             try {
-    //                 await connection.close();
-    //             } catch (err) {
-    //                 console.error(err);
-    //             }
-    //         }
-    //     }
-    // }
-
 
 }

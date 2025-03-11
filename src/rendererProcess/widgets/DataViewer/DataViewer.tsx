@@ -152,9 +152,9 @@ export class DataViewer extends BaseWidget {
         displayWindowId: string,
         widgetKey: string,
         channelName: string,
-        startTime: string, // "2024-01-01 01:23:45", no ms
-        endTime: string,
-        archiveData: any
+        startTime: number, // ms since epoch // "2024-01-01 01:23:45", no ms
+        endTime: number,
+        archiveData: [number[], number[]],
     }) => {
         this.getPlot().mapDbrDataWitNewArchiveData(data);
     };

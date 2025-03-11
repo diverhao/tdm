@@ -650,18 +650,20 @@ export class IpcManagerOnDisplayWindow {
         displayWindowId: string,
         widgetKey: string,
         channelName: string,
-        startTime: string, // "2024-01-01 01:23:45", no ms
-        endTime: string,
-        archiveData: any
+        startTime: number, // ms since epoch // "2024-01-01 01:23:45", no ms
+        endTime: number,
+        archiveData: [number[], number[]],
     }) => {
-        g_widgets1.removeFromForceUpdateWidgets(data["widgetKey"]);
-        const widget = g_widgets1.getWidget2(data["widgetKey"]) as DataViewer;
-        widget.mapDbrDataWitNewArchiveData(data);
-        // immediately update the plot
         if (g_widgets1.isEditing()) {
             return;
         }
-        widget.updatePlot(true);
+        g_widgets1.removeFromForceUpdateWidgets(data["widgetKey"]);
+        const widget = g_widgets1.getWidget2(data["widgetKey"]);
+        if (widget instanceof DataViewer) {
+            widget.mapDbrDataWitNewArchiveData(data);
+            // immediately update the plot
+            widget.updatePlot(true);
+        }
     }
 
     // (1) resolve IO, letting TcaChannel.get() to continue, writing the data to TcaChannel
@@ -1163,7 +1165,7 @@ export class IpcManagerOnDisplayWindow {
                 };
             }
         }
-        
+
         this.getDisplayWindowClient().getPrompt().createElement("dialog-input-box", info);
     };
 
