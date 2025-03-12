@@ -259,7 +259,7 @@ export class IpcManagerOnMainProcess {
                     // we need to undo the above operation
                     // no need to disconnec the websocket connection, the client 
                     // will close the connection when the web page closes
-                    Log.error("-1", "There is no display window agent for this window ID on server side, stop.");
+                    Log.error("-1", "There is no display window agent for this window ID", data["windowId"], "on server side, stop.");
                     delete ipcManager.getClients()[windowId];
                 }
             } else {
@@ -2691,7 +2691,7 @@ export class IpcManagerOnMainProcess {
             } catch (e) {
                 Log.error(-1, "FAiled to request archive data", e);
                 return;
-             }
+            }
         }
         if (result !== undefined) {
             // do not process data in main process, the resouce is more precious in the main process
@@ -2718,7 +2718,10 @@ export class IpcManagerOnMainProcess {
         manualOpen: boolean, // use dialog to open, valid only when fileName is empty (""), if true, open the dialog to choose file, if false, open whatever we have
         openNewWindow: boolean, // open in new TextEditor window, without using the dialog
         largeFileConfirmOpen?: "Yes" | "No", // if the file is large, confirm to open it
+        fileContents?: string, // if undefined, open the above file, if a string, show the string
     }) => {
+
+
         // todo: control access to file in web mode
 
         let manualOpen = false;
@@ -2731,6 +2734,23 @@ export class IpcManagerOnMainProcess {
         }
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
         let fileName = options["fileName"];
+
+
+        if (options["fileName"] === "" && options["fileContents"] !== undefined) {
+            if (displayWindowAgent instanceof DisplayWindowAgent) {
+
+                displayWindowAgent.sendFromMainProcess("text-file-contents", {
+                    ...options,
+                    fileName: fileName,
+                    fileContents: options["fileContents"],
+                    readable: true,
+                    writable: true,
+                }
+                )
+            }
+            return;
+        }
+
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             // open a new window, fall back to `createUtilityDisplayWindow()`
             // do this before tthe "fileName" and manualOpen""

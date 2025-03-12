@@ -669,7 +669,8 @@ export class ActionButton extends BaseWidget {
                     // const href = `${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`;
                     const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
                     // open in new tab
-                    window.open(href)
+                    // ! important: avoid shared sessionStorage
+                    window.open(href, "_blank", "noopener, noreferrer")
                     // open in current tab
                     // window.location.href = href;
                 })

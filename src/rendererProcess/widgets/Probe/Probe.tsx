@@ -367,6 +367,7 @@ export class Probe extends BaseWidget {
         const filterElementRef = React.useRef<any>(null);
         const [filterValue, setFilterValue] = React.useState("");
         const elementProcessRef = React.useRef<any>(null);
+        const elementGenerateRecord = React.useRef<any>(null);
 
         React.useEffect(() => {
             setChannelName(`${this.getChannelNames()[0]}`);
@@ -502,45 +503,98 @@ export class Probe extends BaseWidget {
                                 return null;
                             }
                         })}
-                        {this.rtyp === "" || this.rtyp === this.rtypWaitingName ? null : <this.TableLine index={-1} property={"RTYP"} value={this.rtyp}></this.TableLine>}
-                        <this.TableLine index={-1} property={"Process"} value={
-                            <div
-                                style={{
-                                    display: "inline-flex",
-                                }}
-                            >
-                                Click<span ref={elementProcessRef}
-                                    style={{
-                                        cursor: "pointer",
-                                    }}
-                                    onClick={() => {
-                                        try {
-                                            const channelName = this.getChannelNames()[0].split(".")[0]; // base channel name
-                                            const tcaChannel = g_widgets1.getTcaChannel(channelName + ".PROC"); // .PROC
-                                            // if user includes the unit, the put() should be able to parseInt() or praseFloat()
-                                            // the text before unit
-                                            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                                            tcaChannel.put(displayWindowId, { value: 1 }, 1);
-                                        } catch (e) {
-                                            const errMsg = `Channel ${this.getChannelNames()} cannot be found`;
-                                            Log.error(errMsg);
-                                            Log.error(e);
-                                        }
-                                    }}
-                                    onMouseEnter={() => {
-                                        if (elementProcessRef.current !== null) {
-                                            elementProcessRef.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
-                                        }
-                                    }}
-                                    onMouseLeave={() => {
-                                        if (elementProcessRef.current !== null) {
-                                            elementProcessRef.current.style["outline"] = "none";
-                                        }
-                                    }}
+                        {this.rtyp === "" || this.rtyp === this.rtypWaitingName ? null :
+                            <>
+                                <this.TableLine index={-1} property={"RTYP"} value={this.rtyp}></this.TableLine>
+                                <this.TableLine index={-1} property={"Process"} value={
+                                    <div
+                                        style={{
+                                            display: "inline-flex",
+                                        }}
+                                    >
+                                        Click<span ref={elementProcessRef}
+                                            style={{
+                                                cursor: "pointer",
+                                            }}
+                                            onClick={() => {
+                                                try {
+                                                    const channelName = this.getChannelNames()[0].split(".")[0]; // base channel name
+                                                    const tcaChannel = g_widgets1.getTcaChannel(channelName + ".PROC"); // .PROC
+                                                    // if user includes the unit, the put() should be able to parseInt() or praseFloat()
+                                                    // the text before unit
+                                                    const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+                                                    tcaChannel.put(displayWindowId, { value: 1 }, 1);
+                                                } catch (e) {
+                                                    const errMsg = `Channel ${this.getChannelNames()} cannot be found`;
+                                                    Log.error(errMsg);
+                                                    Log.error(e);
+                                                }
+                                            }}
+                                            onMouseEnter={() => {
+                                                if (elementProcessRef.current !== null) {
+                                                    elementProcessRef.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
+                                                }
+                                            }}
+                                            onMouseLeave={() => {
+                                                if (elementProcessRef.current !== null) {
+                                                    elementProcessRef.current.style["outline"] = "none";
+                                                }
+                                            }}
 
-                                >&nbsp;here&nbsp;</span>to process this channel
-                            </div>
-                        }></this.TableLine>
+                                        >&nbsp;here&nbsp;</span>to process this channel
+                                    </div>
+                                }></this.TableLine>
+                                <this.TableLine index={-1} property={"Record definition"} value={
+                                    <div
+                                        style={{
+                                            display: "inline-flex",
+                                        }}
+                                    >
+                                        Click<span ref={elementGenerateRecord}
+                                            style={{
+                                                cursor: "pointer",
+                                            }}
+                                            onClick={() => {
+                                                const record = this.generateRecord();
+                                                if (record.startsWith("# failed to")) {
+                                                    const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
+                                                    ipcManager.handleDialogShowMessageBox(undefined, {
+                                                        // command?: string | undefined,
+                                                        messageType: "error", // | "warning" | "info", // symbol
+                                                        humanReadableMessages: [`Failed to generate record for channel ${this.getChannelNames()[0]}`], // each string has a new line
+                                                        rawMessages: ["Did not find the record type"], // computer generated messages
+                                                        // buttons?: type_DialogMessageBoxButton[] | undefined,
+                                                        // attachment?: any,
+
+                                                    })
+                                                    return;
+                                                }
+                                                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+                                                g_widgets1.openTextEditorWindow({
+                                                    displayWindowId: displayWindowId,
+                                                    widgetKey: this.getWidgetKey(),
+                                                    fileName: "",
+                                                    manualOpen: false,
+                                                    openNewWindow: true,
+                                                    fileContents: record,
+                                                })
+                                            }}
+                                            onMouseEnter={() => {
+                                                if (elementGenerateRecord.current !== null) {
+                                                    elementGenerateRecord.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
+                                                }
+                                            }}
+                                            onMouseLeave={() => {
+                                                if (elementGenerateRecord.current !== null) {
+                                                    elementGenerateRecord.current.style["outline"] = "none";
+                                                }
+                                            }}
+
+                                        >&nbsp;here&nbsp;</span>to show the full record
+                                    </div>
+                                }></this.TableLine>
+                            </>
+                        }
                     </tbody>
                 </table>
                 <div>
@@ -678,6 +732,57 @@ export class Probe extends BaseWidget {
             </div>
         );
     };
+
+    generateRecord = () => {
+        if (this.rtyp === "" || (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i).test(this.rtyp)) {
+            const channelName = `${this.getChannelNamesLevel4()[0]}`;
+
+            return (
+                `# failed to generate record for ${channelName}. Reason: it does not have a record type.`
+            );
+        } else {
+            const baseChannelName = this.getChannelNamesLevel4()[0];
+            const result: string[] = [
+                `# Generated by TDM Probe using live data at ${new Date(Date.now()).toLocaleString()}`,
+                `# It includes all fields of channel type "${this.rtyp}"`,
+                `# The field line is commented if this field's value equals to its default`,
+                `record(${this.rtyp}, "${baseChannelName}") {`];
+
+
+            this.fieldNames.map((fieldName: string, index: number) => {
+                if (fieldName === "NAME") {
+                    return;
+                }
+                const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
+                const fieldDefaultValue = this.fieldDefaultValues[index];
+                const value = g_widgets1.getChannelValue(channelName);
+                if (value !== undefined) {
+
+                    if (value === fieldDefaultValue) {
+                        let line = `    # field(${fieldName}, "${value}")`;
+                        result.push(line);
+
+                    } else {
+                        let line = `    field(${fieldName}, "${value}")`;
+                        const numSpaces = Math.max(line.length, 40) - line.length + 1;
+                        for (let ii = 0; ii < numSpaces; ii++) {
+                            line = line + " ";
+                        }
+                        line = line + `# default ` + `"${fieldDefaultValue}"`
+
+                        result.push(line);
+
+                    }
+
+                }
+            })
+            result.push("}");
+            return result.join("\n");
+        }
+
+
+
+    }
 
     // concretize abstract method
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());

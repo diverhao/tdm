@@ -31,6 +31,7 @@ export class TextEditor extends BaseWidget {
     // when the text is larger than this number, disable the <textarea>
     private fileLimit: number = 2.5 * 1024 * 1024;
     updateHighlightArea: any;
+    initialFileContents: string | undefined = undefined;
     constructor(widgetTdl: type_TextEditor_tdl) {
         super(widgetTdl);
 
@@ -132,6 +133,9 @@ export class TextEditor extends BaseWidget {
     _ElementAreaRaw = ({ }: any): JSX.Element => {
         // run once when the display window is first created
         React.useEffect(() => {
+            if (this.getFileName() === "" && this.getText()["initialFileContents"] !== undefined) {
+                return;
+            }
             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
             displayWindowClient.getIpcManager().sendFromRendererProcess("open-text-file-in-text-editor", {
                 displayWindowId: displayWindowClient.getWindowId(),
@@ -159,7 +163,7 @@ export class TextEditor extends BaseWidget {
             }
         })
 
-        const [fileContents, setFileContents] = React.useState("");
+        const [fileContents, setFileContents] = React.useState(this.getText()["fileName"] !== "" ? "" : this.getText()["initialFileContents"] === undefined ? "" : this.getText()["initialFileContents"]);
         const [fileName, setFileName] = React.useState(this.getFileName());
         const [reducedFileContents, setReducedFileContents] = React.useState("");
         const elementCodeRef = React.useRef<any>(null);
@@ -655,6 +659,9 @@ export class TextEditor extends BaseWidget {
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_TextEditor_tdl => {
         const result = this.generateDefaultTdl("TextEditor");
         result.text["fileName"] = utilityOptions["fileName"];
+        if (utilityOptions["fileContents"] !== undefined) {
+            result.text["initialFileContents"] = utilityOptions["fileContents"];
+        }
         return result;
     };
 

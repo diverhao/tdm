@@ -99,14 +99,24 @@ module.exports = {
 	devServer: {
 		// open: true,
 		// hot update bundle file
-		hot: true,
+		// hot: true,
 		devMiddleware: {
 			writeToDisk: true,
-		},
+		},        
+        hot: false,  // Disable Hot Module Replacement
+        liveReload: false,  // Disable Live Reloading
+      webSocketServer: false,
+    
         // catch errors produced by vis-network lib in ChannelGraph, 
         // this error is more like a warning
 		client: {
-			overlay: {
+            webSocketURL: {
+                protocol: 'ws',  // Must specify a valid WebSocket protocol
+                hostname: 'localhost',  // Required field
+                port: '0',  // Setting port to '0' prevents connections
+                pathname: '/'  // Default WebSocket path
+              },
+                      overlay: {
 				runtimeErrors: (error) => {
 					if (error.message.includes("ResizeObserver loop completed with undelivered notifications")) {
 						return false;

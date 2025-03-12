@@ -111,6 +111,34 @@ export class DisplayWindowClient {
         }
 
         this._ipcManager = new IpcManagerOnDisplayWindow(this, ipcServerPort);
+
+        // web mode refresh
+        if (this.getMainProcessMode() === "web") {
+            // we use displayWindowId to identify the web mode sessionStorage
+            // because iframe shares the same sessionStorage, after the parent page is loaded
+            // the iframe page uses the parent's session storage to initialize, which may
+            // cause infinite loop. We use this trick that whenever the sessionStorage.displayWindowId is 
+            // not matched with this window's display ID, we consider it as a freshly opened window
+            // in this way, the iframe can be correctly loaded
+            // However, the window cannot be properly refreshed. See EmbeddedDisplay.tsx for details
+            if (sessionStorage.getItem("displayWindowId") !== this.getWindowId()) {
+                sessionStorage.clear();
+                sessionStorage.setItem("counter", `0`);
+                sessionStorage.setItem("displayWindowId", `${this.getWindowId()}`);
+            } else {
+                sessionStorage.setItem("counter", `${parseInt(sessionStorage.getItem("counter") as string) + 1}`);
+            }
+            if (parseInt(sessionStorage.getItem("counter") as string) % 2 === 0) {
+                this._ipcManager.connectIpcServer();
+            }
+            if (parseInt(sessionStorage.getItem("counter") as string) % 2 === 1) {
+                this.handlePageRefresh();
+            }
+        } else {
+            this._ipcManager.connectIpcServer();
+        }
+
+
         this._root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
         this._windowTitleType = "window-name";
         this._keyboard = new Keyboard(this);
@@ -132,38 +160,13 @@ export class DisplayWindowClient {
             this._hostname = hostname;
         }
 
-        // for refresh webpage in web browser
-        window.addEventListener("beforeunload", (event: any) => {
-            if (this.getMainProcessMode() === "web") {
-                this.savePageData();
-            }
-        })
-
-        // for refresh webpage in web browser
-        // this event is emitted after the IPC websocket is connected, 
-        // i.e. the websocket-ipc-connected is sent back to the IPC websocket server
-        // the server will not continue because this page's old window ID not longer 
-        // has DisplayWindowAgent on server side. Meanwhile, the server keeps the websocket
-        // connection. We use this connection to request a open-tdl-file. In this way,
-        // the server allocates the resources for this tdl file (e.g. creating DisplayWindowAgent)
-        // then we can GET this tdl file by using a new display window ID
-        window.addEventListener("load", () => {
-            if (this.getMainProcessMode() === "web") {
-                this.handlePageRefresh();
-            }
-        })
-
         Log.debug("Finished creating DisplayWindowClient object");
     }
 
 
     savePageData = () => {
-        // this "if" block is for GET the DisplayWindow.html in the last step of handleRefreshWebPage()
-        // at this stage, there is nothing to save for this page, all it has is a 
-        // websocket connection with server. "AAAA" is a special value to indicate the
-        // webpage at current stage has nothing to save, and we should reset it to empty string "" 
-        if (sessionStorage.getItem("pageData") === "AAAA") {
-            sessionStorage.setItem("pageData", "");
+        // save page data only once
+        if (sessionStorage.getItem("pageData") !== null) {
             return;
         }
 
@@ -192,37 +195,26 @@ export class DisplayWindowClient {
     }
 
     /**
-     * After the window refreshed
+     * After the window refreshed and the websocket is connected
      */
-    handlePageRefresh = () => {
+    handlePageRefresh = async () => {
         const pageDataStr = sessionStorage.getItem("pageData");
-        if (pageDataStr === "" || pageDataStr === null) {
-            Log.info("No previous page data");
-            return;
-        }
-        if (this.getMainProcessMode() === "web") {
+
+        if (this.getMainProcessMode() === "web" && pageDataStr !== null) {
             Log.info("Refresh web page.")
             const currentSite = `https://${window.location.host}/`;
             const pageData = JSON.parse(pageDataStr);
 
-            this.getIpcManager().sendPostRequestCommand(
-                "open-tdl-file", pageData,
-            ).then((response: any) => {
-                // decode string
-                return response.json()
-            }).then(data => {
-                const ipcServerPort = data["ipcServerPort"];
-                const displayWindowId = data["displayWindowId"];
-                Log.info("Try to reload the webpage with new window ID", displayWindowId)
-                // when we load the below DisplayWindow.html, the savePageData() is invoked because
-                // it is the callback for window's "unload" event. However, the webpage does not have
-                // anything to save. In this case, we would like to let the savePageData() do nothing.
-                sessionStorage.setItem("pageData", "AAAA");
-                // const href = `${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`;
-                const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
-                // window.open() is for opening the page in new tab
-                window.location.href = href;
-            })
+            const response = await this.getIpcManager().sendPostRequestCommand(
+                "open-tdl-file", { ...pageData, count: sessionStorage.getItem("counter") }
+            )
+
+            const data = await response.json() as any;
+            const ipcServerPort = data["ipcServerPort"];
+            // it may come back a new display window ID
+            const displayWindowId = data["displayWindowId"];
+            const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
+            window.location.href = href;
         }
     }
 

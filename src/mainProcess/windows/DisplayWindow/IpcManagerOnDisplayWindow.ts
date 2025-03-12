@@ -52,10 +52,12 @@ export class IpcManagerOnDisplayWindow {
     constructor(displayWindowClient: DisplayWindowClient, ipcServerPort: number) {
         this._displayWindowClient = displayWindowClient;
         this.setIpcServerPort(ipcServerPort);
-        this.connectIpcServer();
+
+       
     }
 
     connectIpcServer = () => {
+
         Log.info("Trying to connect to ipc server", this.getDisplayWindowClient().getWindowId(), this.ipcServerPort);
         if (this.getIpcServerPort() === -1) {
             return;
@@ -83,6 +85,7 @@ export class IpcManagerOnDisplayWindow {
                     }],
                 })
             );
+
         };
 
         client.onerror = (err: any) => {
@@ -124,6 +127,7 @@ export class IpcManagerOnDisplayWindow {
     };
 
     sendFromRendererProcess = (channelName: string, ...args: any[]) => {
+
         const processId = this.getDisplayWindowClient().getProcessId();
         if (processId !== "") {
             if (this.wsClient !== undefined) {
@@ -567,7 +571,7 @@ export class IpcManagerOnDisplayWindow {
      */
     handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
 
-        Log.info("received data", JSON.stringify(newDbrData, null, 4));
+        Log.debug("received data", JSON.stringify(newDbrData, null, 4));
 
         let channelNames = Object.keys(newDbrData);
 

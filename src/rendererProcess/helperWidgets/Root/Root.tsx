@@ -116,6 +116,11 @@ export class Root {
                 const mode = g_widgets1.isEditing() ? "editing" : "operating";
                 ipcManager.sendFromRendererProcess("new-tdl-rendered", displayWindowId, windowName, tdlFileName, mode);
                 Log.info("New tdl", this.getDisplayWindowClient().getTdlFileName(), "rendered")
+                if (this.getDisplayWindowClient().getMainProcessMode() === "web") {
+                    this.getDisplayWindowClient().savePageData();
+                    Log.info("Saved page data for refresh");
+                }
+                
             }
             // todo: history
             // g_widgets1.getEditorHistory().setIsValidHistory(true);

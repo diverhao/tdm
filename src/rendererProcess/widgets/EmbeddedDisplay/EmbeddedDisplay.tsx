@@ -309,6 +309,12 @@ export class EmbeddedDisplay extends BaseWidget {
                     id="embedded-display"
                     width="100%"
                     height="100%"
+                    
+                    referrerPolicy="no-referrer"
+                    // ! iframe and its parent share the same sessionStorage, which causes an issue 
+                    // ! that we cannot refresh the web page
+                    sandbox="allow-scripts allow-same-origin"
+                    // sandbox="allow-scripts"
                     style={{
                         border: "none",
                         backgroundColor: this.iframeBackgroundColor,

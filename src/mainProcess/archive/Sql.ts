@@ -37,7 +37,7 @@ export class Sql {
         this.connectionString = input["connectionString"].replaceAll("\\n", "\n");
         this.connectDb();
         this._periodicTask = setInterval(() => {
-            this.periodicTaskFunc();
+            // this.periodicTaskFunc();
         }, 2000)
     }
 

@@ -1,5 +1,6 @@
 import express, { Express } from "express";
 import https from "https";
+// import cors from "cors";
 
 import passport from "passport";
 import LdapStrategy from "passport-ldapauth";
@@ -33,7 +34,7 @@ export class HttpServer {
         }
     }
 
-    setLdapOptions = (newOptions: {url: string, bindDN: string, searchBase: string, searchFilter: string, searchScope: string, key: Buffer, cert: Buffer}) => {
+    setLdapOptions = (newOptions: { url: string, bindDN: string, searchBase: string, searchFilter: string, searchScope: string, key: Buffer, cert: Buffer }) => {
         this.LDAP_OPTIONS = {
             server: {
                 ...this.LDAP_OPTIONS.server,
@@ -75,6 +76,17 @@ export class HttpServer {
         this._server.use(passport.initialize());
         this._server.use(passport.session());
 
+        // CORS
+        // Allow all origins (or specify a specific origin)
+        // this._server.use(cors(
+        //     {
+        //         origin: "*",
+        //         methods: ['GET', 'POST'],
+        //         allowedHeaders: ['Content-Type', 'Authorization'],
+              
+        //     }
+        // ));
+        
 
         // Skip authentication for specific routes (like "/" and "/login")
         this._server.use((req: any, res: any, next: any) => {

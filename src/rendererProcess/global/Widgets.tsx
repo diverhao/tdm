@@ -2485,6 +2485,7 @@ export class Widgets {
         fileName: string, // practically the only info that we need, because we are going to open it in a new window
         manualOpen: boolean,  // do not show dialog
         openNewWindow: boolean, // open in new TextEditor window
+        fileContents?: string,
     }) => {
         // in web mode, it reads the file on server, not the local computer
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "web") {

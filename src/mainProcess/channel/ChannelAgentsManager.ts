@@ -56,7 +56,7 @@ export class ChannelAgentsManager {
     createAndInitContext = async () => {
         if (this._context === undefined) {
             Log.info(this.getMainProcessId(), "Creating EPICS CA context");
-            let epicsLogLevel: type_log_levels = type_log_levels.debug;
+            let epicsLogLevel: type_log_levels = type_log_levels.error;
             const epicsLogLevelEntry = this.getProfile().getEpicsLogLevel();
             if (epicsLogLevelEntry !== undefined && epicsLogLevelEntry["value"] !== undefined) {
                 epicsLogLevel = type_log_levels[epicsLogLevelEntry["value"] as keyof typeof type_log_levels];
