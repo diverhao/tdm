@@ -892,7 +892,6 @@ export class Widgets {
     };
 
     getGroupSelection2 = (): GroupSelection2 => {
-        console.log("get group selection 2", this._widgets.size)
         if (this._widgets.get("GroupSelection2") === undefined) {
             // it always exists
             throw new Error("GroupSelection2 does not exist.");

@@ -641,6 +641,8 @@ export class IpcManagerOnDisplayWindow {
             if (widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph) {
                 widget.mapDbrDataWitNewData(Object.keys(newDbrData));
             } else if (widget instanceof DataViewer) {
+                // remove force update, use the internal interval to update
+                g_widgets1.removeFromForceUpdateWidgets(widget.getWidgetKey());
                 widget.mapDbrDataWitNewData(newDbrData);
             }
         }

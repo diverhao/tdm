@@ -6,6 +6,7 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import path from "path";
+import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 
 // fix up everytime the <code> is re-rendered, the .js file is compressed, it is modified to export Prism
 // we add module.exports = Prism; to the end of the file
@@ -134,6 +135,8 @@ export class TextEditor extends BaseWidget {
         // run once when the display window is first created
         React.useEffect(() => {
             if (this.getFileName() === "" && this.getText()["initialFileContents"] !== undefined) {
+                // show a string
+                forceUpdate({});
                 return;
             }
             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
@@ -171,6 +174,7 @@ export class TextEditor extends BaseWidget {
         const elementCodeWrapperRef = React.useRef<any>(null);
         this.setFileContentsState = setFileContents;
         this.setFileNameState = setFileName;
+        const [, forceUpdate] = React.useState({});
         this.getFileContents = () => {
             return fileContents;
         }

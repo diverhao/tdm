@@ -398,6 +398,7 @@ export class DataViewer extends BaseWidget {
             singleWidget: false,
             title: "Title",
             updatePeriod: 1, // second
+            axisZoomFactor: 1.25,
         },
         channelNames: [],
         groupNames: [],

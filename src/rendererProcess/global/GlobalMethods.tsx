@@ -385,7 +385,11 @@ export const downSampleXyData = (xData: number[], yData: number[], threshold: nu
     return [xResult, yResult];
 }
 
-
+/**
+ * Find low and high bound indices for the range that the values are >= low and <= high
+ * 
+ * @param data must be a sorted ascending array
+ */
 export const binarySearchRange = (data: number[], low: number, high: number): [number, number] => {
     // Find the left boundary (first index where arr[i] >= low)
     let left = binarySearch(data, low, true);

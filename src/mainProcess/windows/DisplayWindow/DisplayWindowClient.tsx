@@ -296,11 +296,12 @@ export class DisplayWindowClient {
 
             let eventElement = event.target;
             const promptElement = document.getElementById(this.getPrompt().getId());
+
             while (true) {
                 if (eventElement === null) {
                     break;
                 }
-                if (!(eventElement instanceof HTMLElement)) {
+                if (!(eventElement instanceof HTMLElement || eventElement instanceof SVGElement)) {
                     break;
                 }
                 if (event.button !== 2) {
@@ -315,6 +316,10 @@ export class DisplayWindowClient {
                         selectedText: selectedText,
                     }
                     this.showContextMenu("Canvas", [event.clientX, event.clientY], contextMenuOptions);
+                    return;
+                } else if (eventElement.id.startsWith("DataViewerPlot-")) {
+                    // right button down on DataViewer Plot region is blocked
+                    // it is handled in the widget for pan plot up/down
                     return;
                 }
                 eventElement = eventElement.parentElement;
@@ -531,6 +536,27 @@ export class DisplayWindowClient {
         window.addEventListener("wheel", (event: WheelEvent) => {
             // scroll up is negative, zoom in; scroll down is positive, zoom out
             Log.debug("scrolling", event.deltaX, event.deltaY);
+            let eventElement = event.target;
+
+            // prevent the zoom in/out for DataViewer Plot region
+            // ctrl + wheel is for vertical zoom in/out for the plot
+            while (true) {
+                if (eventElement === null) {
+                    break;
+                }
+                if (event.ctrlKey === false) {
+                    // if ctrl key is not down, skip check
+                    break;
+                }
+                if (!(eventElement instanceof HTMLElement || eventElement instanceof SVGElement)) {
+                    break;
+                }
+                if (eventElement.id.startsWith("DataViewerPlot-")) {
+                    console.log("caught in data viewer plot")
+                    return;
+                }
+                eventElement = eventElement.parentElement;
+            }
 
             if (event.ctrlKey && this.getWindowId() !== "") {
                 if (event.deltaY > 0) {

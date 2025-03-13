@@ -7,6 +7,7 @@ import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Log } from "../../../mainProcess/log/Log";
 import { type_LocalChannel_data } from "../../../mainProcess/channel/LocalChannelAgent";
 // import { type_xAxis } from "../XYPlot/XYPlotPlot";
+import uuid from "uuid";
 
 type type_yAxis = {
     label: string;
@@ -110,6 +111,7 @@ export class DataViewerPlot {
     // then the plot min and max are recalculated based on this number
     // In addition, this widget is always rendered each time
     mouseMoveEndX: number = 0;
+    rightButtonClicked: boolean = false;
 
     // ---------------------- variables ----------------------------
 
@@ -150,7 +152,24 @@ export class DataViewerPlot {
         this._mainWidget = mainWidget;
         this.plotWidth = this.getStyle().width - this.yAxisLabelWidth - this.yAxisTickWidth - this.legendWidth;
         this.plotHeight = this.getStyle().height - this.titleHeight - this.xAxisLabelHeight - this.xAxisTickHeight - this.toolbarHeight - this.thumbnailHeight;
+
+        window.addEventListener("keydown", (event: KeyboardEvent) => {
+            if (event.code === "Space") {
+                this.tracingIsMoving = !this.tracingIsMoving;
+                if (this.tracingIsMoving) {
+                    // update this.getPlot().xAxis.valMin and valMax
+                    const DT = this.xAxis.valMax - this.xAxis.valMin;
+                    this.xAxis.valMax = Date.now();
+                    this.xAxis.valMin = Date.now() - DT;
+                }
+
+                this.updatePlot();
+
+            }
+        })
     }
+
+
 
     // --------------------------- plot calculation ---------------------------
 
@@ -501,12 +520,6 @@ export class DataViewerPlot {
         this.plotWidth = this.getStyle().width - this.yAxisLabelWidth - this.yAxisTickWidth - this.legendWidth;
         this.plotHeight = this.getStyle().height - this.titleHeight - this.xAxisLabelHeight - this.xAxisTickHeight - this.toolbarHeight - this.thumbnailHeight;
 
-        // React.useEffect(() => {
-        //     return (() => {
-        //         this.getMainWidget().setReCalcPlot(true);
-        //     })
-        // })
-
         return (
             <div
                 style={{
@@ -671,7 +684,7 @@ export class DataViewerPlot {
             >
                 {/* data */}
                 {this.x.map((xData: number[], index: number) => {
-                    return <this._ElementThumbnailLine index={index}></this._ElementThumbnailLine>;
+                    return <this._ElementThumbnailLine key={this.yAxes[index].label + `-${index}`} index={index}></this._ElementThumbnailLine>;
                 })}
                 <this._ElementThumbnailViewBoxLeft></this._ElementThumbnailViewBoxLeft>
                 <this._ElementThumbnailViewBoxRight></this._ElementThumbnailViewBoxRight>
@@ -1013,10 +1026,10 @@ export class DataViewerPlot {
                 }}
             >
                 {this.xAxis.ticks.map((tickValue: number, index: number) => {
-                    return <this._ElementXtickLine lineIndex={this.getSelectedTraceIndex()} tickIndex={index}></this._ElementXtickLine>;
+                    return <this._ElementXtickLine key={`${tickValue}`} lineIndex={this.getSelectedTraceIndex()} tickIndex={index}></this._ElementXtickLine>;
                 })}
                 {yTicks.map((tickValue: number, index: number) => {
-                    return <this._ElementYtickLine lineIndex={this.getSelectedTraceIndex()} tickIndex={index}></this._ElementYtickLine>;
+                    return <this._ElementYtickLine key={`${tickValue}`} lineIndex={this.getSelectedTraceIndex()} tickIndex={index}></this._ElementYtickLine>;
                 })}
             </svg>
         );
@@ -1099,6 +1112,8 @@ export class DataViewerPlot {
             return null;
         }
 
+        const points = this.mapXYsToPoints(index).split(",");
+
         return (
             <svg
                 width={`${this.plotWidth}`}
@@ -1115,6 +1130,22 @@ export class DataViewerPlot {
                     stroke={this.yAxes[index].lineColor}
                     fill="none"
                 ></polyline>
+                {points.map((pointXorY: string, ii: number) => {
+                    if (ii % 2 === 0) {
+                        return (
+                            <circle
+                                key={pointXorY + `${ii}`}
+                                cx={parseInt(points[ii])}
+                                cy={parseInt(points[ii + 1])}
+                                r={3}
+                            >
+                            </circle>
+                        )
+                    } else {
+                        return null
+                    }
+
+                })}
             </svg>
         );
     };
@@ -1140,6 +1171,7 @@ export class DataViewerPlot {
                     const [pointX, pointY] = this.mapXYToPoint(0, [value, 1], this.plotHeight);
                     return (
                         <div
+                            key={`${value}`}
                             style={{
                                 position: "absolute",
                                 left: `${pointX}px`,
@@ -1201,6 +1233,7 @@ export class DataViewerPlot {
                     const [pointX, pointY] = this.mapXYToPoint(this.getSelectedTraceIndex(), [1, value], this.plotHeight);
                     return (
                         <div
+                            key={`${value}`}
                             style={{
                                 position: "absolute",
                                 right: "2px",
@@ -1270,6 +1303,7 @@ export class DataViewerPlot {
 
     _ElementLegend = () => {
         const elementAddTraceRef = React.useRef<any>(null);
+
         return (
             <div
                 style={{
@@ -1295,6 +1329,7 @@ export class DataViewerPlot {
                     }
                     return (
                         <div
+                            key={this.yAxes[index].label + `-${index}`}
                             style={{
                                 display: "inline-flex",
                                 flexFlow: "column",
@@ -1384,36 +1419,6 @@ export class DataViewerPlot {
                     <div style={{ fontSize: 20 }}>+</div>
                 </div>
 
-                <div
-                    ref={elementAddTraceRef}
-                    style={{
-                        display: "inline-flex",
-                        flexFlow: "column",
-                        justifyContent: "flex-start",
-                        alignItems: "flex-start",
-                        width: "100%",
-                        // backgroundColor: "red",
-                        height: "fit-content",
-                        // color: yAxis.lineColor,
-                        paddingTop: 5,
-                        paddingBottom: 5,
-                        paddingLeft: 5,
-                        boxSizing: "border-box",
-                        margin: "3px",
-                        opacity: 0.3,
-                        // cursor: "pointer",
-                        // backgroundColor: this.selectedTraceIndex === index ? "rgba(210, 210, 210, 1)" : "rgba(0,0,0,0)",
-                    }}
-                    onMouseDown={(event: any) => {
-                        if (event.button !== 0) {
-                            return;
-                        }
-
-                        this.fetchArchiveData();
-                    }}
-                >
-                    request arvhive data
-                </div>
 
             </div >
         );
@@ -1454,16 +1459,21 @@ export class DataViewerPlot {
     };
 
     _ElementControls = () => {
+
         return (
             <div
                 style={{
-                    width: `100%`,
+                    // width: `100%`,
+                    width: window.innerWidth,
                     height: `${this.toolbarHeight}`,
                     display: "inline-flex",
                     flexFlow: "row",
-                    justifyContent: "flex-start",
+                    justifyContent: "space-between",
                     alignItems: "center",
-                    backgroundColor: "rgba(0, 0, 0, 0)",
+                    backgroundColor: "rgba(255, 0, 0, 0)",
+                    paddingLeft: 10,
+                    paddingRight: 10,
+                    boxSizing: "border-box",
                 }}
             >
                 <div
@@ -1471,15 +1481,15 @@ export class DataViewerPlot {
                         display: "inline-flex",
                         flexDirection: "row",
                         alignItems: "center",
-                        height: "20px",
+                        height: "100%",
                         padding: "0px",
                         margin: "0px",
-                        marginTop: "10px",
+                        marginTop: "0px",
                     }}
                 >
                     {/* re-scale vertically to plot limits */}
                     <this._StyledFigButton
-                        hintText={"Auto scale Y axis range"}
+                        hintText={"Auto scale all Y axes"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1490,8 +1500,9 @@ export class DataViewerPlot {
                                 const yAxis = this.yAxes[ii];
                                 if (yValMinMax !== undefined) {
                                     if (yAxis !== undefined) {
-                                        yAxis.valMin = yValMinMax[0];
-                                        yAxis.valMax = yValMinMax[1];
+                                        const Dy = yValMinMax[1] - yValMinMax[0];
+                                        yAxis.valMin = yValMinMax[0] - Dy * 0.1;
+                                        yAxis.valMax = yValMinMax[1] + Dy * 0.1;
                                     }
                                 }
 
@@ -1509,6 +1520,52 @@ export class DataViewerPlot {
                                 }
 
                             }
+                            this.updatePlot();
+                        }}
+                    >
+                        <img
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                            }}
+                            src={`../../resources/webpages/scale-2y.svg`}
+                        ></img>
+                    </this._StyledFigButton>
+                    {/* re-scale the currently selected trace to vertical plot limits */}
+                    <this._StyledFigButton
+                        hintText={"Auto scale current Y axis (right double click)"}
+                        onMouseDown={(event: any) => {
+                            if (event.button !== 0) {
+                                return;
+                            }
+
+                            const yAxis = this.yAxes[this.selectedTraceIndex];
+                            if (yAxis === undefined) {
+                                return;
+                            }
+                            const yValMinMax = this.findVisibleYValueRange(this.selectedTraceIndex);
+
+                            if (yValMinMax !== undefined) {
+                                if (yAxis !== undefined) {
+                                    const Dy = yValMinMax[1] - yValMinMax[0];
+                                    yAxis.valMin = yValMinMax[0] - Dy * 0.1;
+                                    yAxis.valMax = yValMinMax[1] + Dy * 0.1;
+                                }
+                            }
+
+                            if (Math.abs(yAxis.valMin - yAxis.valMax) < 1e-20) {
+                                if (Math.abs(yAxis.valMax) < 1e-20) {
+                                    yAxis.valMin = -1;
+                                    yAxis.valMax = 1;
+                                } else if (yAxis.valMax > 0) {
+                                    yAxis.valMin = yAxis.valMin * 0.9;
+                                    yAxis.valMax = yAxis.valMax * 1.1;
+                                } else if (yAxis.valMax < 0) {
+                                    yAxis.valMin = yAxis.valMin * 1.1;
+                                    yAxis.valMax = yAxis.valMax * 0.9;
+                                }
+                            }
+
                             this.updatePlot();
                         }}
                     >
@@ -1542,7 +1599,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* pause/play */}
                     <this._StyledFigButton
-                        hintText={"Toggle data live update"}
+                        hintText={"Toggle data live update (Space key)"}
                         style={{
                             fontSize: "18px",
                         }}
@@ -1582,7 +1639,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>{" "}
                     {/* horizontal zoom in */}
                     <this._StyledFigButton
-                        hintText={"Zoom in horizontally (mouse wheel scroll up)"}
+                        hintText={"Zoom in horizontally (wheel scroll up)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1593,7 +1650,7 @@ export class DataViewerPlot {
                                 return;
                             }
                             const dt = xAxis.valMax - xAxis.valMin;
-                            xAxis.valMin = xAxis.valMax - dt / 1.25;
+                            xAxis.valMin = xAxis.valMax - dt / this.getText()["axisZoomFactor"];
                             if (this.tracingIsMoving) {
                                 xAxis.valMax = Date.now();
                             }
@@ -1610,7 +1667,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>{" "}
                     {/* horizontal zoom out */}
                     <this._StyledFigButton
-                        hintText={"Zoom out horizontally (mouse wheel scroll down)"}
+                        hintText={"Zoom out horizontally (wheel scroll down)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1621,7 +1678,7 @@ export class DataViewerPlot {
                                 return;
                             }
                             const dt = xAxis.valMax - xAxis.valMin;
-                            xAxis.valMin = xAxis.valMax - dt * 1.25;
+                            xAxis.valMin = xAxis.valMax - dt * this.getText()["axisZoomFactor"];
                             if (this.tracingIsMoving) {
                                 xAxis.valMax = Date.now();
                             }
@@ -1638,7 +1695,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* horizontal pan left */}
                     <this._StyledFigButton
-                        hintText={"Pan trace to left (mouse drag to left)"}
+                        hintText={"Pan trace to left (drag to left)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1667,7 +1724,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* horizontal pan right */}
                     <this._StyledFigButton
-                        hintText={"Pan trace to right (mouse drag to right)"}
+                        hintText={"Pan trace to right (drag to right)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1695,7 +1752,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* vertical zoom in*/}
                     <this._StyledFigButton
-                        hintText={"Zoom in vertically (shift + mouse wheel scroll up)"}
+                        hintText={"Zoom in vertically (Ctrl + wheel scroll up)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1711,9 +1768,9 @@ export class DataViewerPlot {
                                 const yMax = yAxis.valMax;
                                 const yMid = (yMin + yMax) / 2;
                                 const dy = (yMax - yMin) / 2;
-                                // zoom factor is 90%
-                                const yMinNew = yMid - dy / 1.1;
-                                const yMaxNew = yMid + dy / 1.1;
+                                // zoom
+                                const yMinNew = yMid - dy / this.getText()["axisZoomFactor"];
+                                const yMaxNew = yMid + dy / this.getText()["axisZoomFactor"];
                                 yAxis.valMin = yMinNew;
                                 yAxis.valMax = yMaxNew;
                             }
@@ -1736,7 +1793,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* vertical zoom out*/}
                     <this._StyledFigButton
-                        hintText={"Zoom out vertically (shift + mouse wheel scroll down)"}
+                        hintText={"Zoom out vertically (Ctrl + wheel scroll down)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1751,8 +1808,8 @@ export class DataViewerPlot {
                                 const yMax = yAxis.valMax;
                                 const yMid = (yMin + yMax) / 2;
                                 const dy = (yMax - yMin) / 2;
-                                const yMinNew = yMid - dy * 1.1;
-                                const yMaxNew = yMid + dy * 1.1;
+                                const yMinNew = yMid - dy * this.getText()["axisZoomFactor"];
+                                const yMaxNew = yMid + dy * this.getText()["axisZoomFactor"];
                                 yAxis.valMin = yMinNew;
                                 yAxis.valMax = yMaxNew;
                             }
@@ -1774,7 +1831,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>
                     {/* vertical pan down*/}
                     <this._StyledFigButton
-                        hintText={"Pan trace down (shift + mouse drag down)"}
+                        hintText={"Pan trace down (right button drag down)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1811,7 +1868,7 @@ export class DataViewerPlot {
                     </this._StyledFigButton>{" "}
                     {/* vertical pan up*/}
                     <this._StyledFigButton
-                        hintText={"Pan trace up (shift + mouse drag up)"}
+                        hintText={"Pan trace up (right button drag up)"}
                         onMouseDown={(event: any) => {
                             if (event.button !== 0) {
                                 return;
@@ -1867,6 +1924,25 @@ export class DataViewerPlot {
                     </this._StyledFigButton>{" "}
                     <this._ElementCursorPosition></this._ElementCursorPosition>
                 </div>
+
+                <this._StyledFigButton
+                    hintText={"Fetch archive data (double click)"}
+                    onMouseDown={(event: any) => {
+                        if (event.button !== 0) {
+                            return;
+                        }
+                        this.fetchArchiveData();
+
+                    }}
+                >
+                    <img
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                        }}
+                        src={`../../resources/webpages/download-from-cloud-symbol.svg`}
+                    ></img>
+                </this._StyledFigButton>{" "}
             </div>
         );
     };
@@ -1880,7 +1956,8 @@ export class DataViewerPlot {
                     display: "inline-flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    height: "100%",
+                    // height: "100%",
+                    height: this.toolbarHeight,
                     aspectRatio: "1/1",
                     backgroundColor: "rgba(255, 0, 0, 0)",
                     opacity: 0.4,
@@ -1927,26 +2004,10 @@ export class DataViewerPlot {
     _ElementPlotRaw = () => {
         const plotRef = React.useRef<any>(null);
 
-        // did mount.
-        // to use {passive: false} option, we must explicitly use addEventListener method
-        // React.useEffect(() => {
-        //     if (plotRef.current !== null) {
-        //         plotRef.current.addEventListener("wheel", this.handleWheelOnPlot, { passive: false })
-        //     }
-        // }, [])
-
-        // // did unmount
-        // // we return a function that removes the wheel event listener
-        // React.useEffect(() => {
-        //     return () => {
-        //         if (plotRef.current !== null) {
-        //             plotRef.current.removeEventListener("wheel", this.handleWheelOnPlot, { passive: false })
-        //         }
-        //     }
-        // }, [])
 
         return (
             <div
+                id={"DataViewerPlot-" + Math.random().toString()}
                 ref={plotRef}
                 style={{
                     width: `${this.plotWidth}px`,
@@ -1965,24 +2026,82 @@ export class DataViewerPlot {
                     window.removeEventListener("mousemove", this.updateCursorElement);
                 }}
                 onMouseDown={(event: any) => {
-                    if (event.button !== 0) {
-                        return;
-                    }
 
-                    window.addEventListener("mousemove", this.handleMouseMoveOnPlot);
+                    if (event.button === 0) {
+                        window.addEventListener("mousemove", this.handleMouseMoveOnPlotX);
+                    } else if (event.button === 2) {
+                        window.addEventListener("mousemove", this.handleMouseMoveOnPlotY);
+                    }
                     window.addEventListener("mouseup", this.handleMouseUpOnPlot);
                 }}
-                onWheel={this.handleWheelOnPlot}
+
+                onWheel={(event: React.WheelEvent) => {
+                    if (event.ctrlKey === true) {
+                        this.handleWheelOnPlotY(event);
+
+                    } else {
+                        this.handleWheelOnPlotX(event);
+                    }
+                }}
+                onDoubleClick={(event: any) => {
+                    this.fetchArchiveData();
+                }}
+
+                // double click to auto scale current Y axis
+                onContextMenu={(event: React.MouseEvent) => {
+                    // right click
+                    if (event.button !== 2) {
+                        return;
+                    }
+                    if (this.rightButtonClicked === true) {
+                        this.rightButtonClicked = false;
+
+                        const yAxis = this.yAxes[this.selectedTraceIndex];
+                        if (yAxis === undefined) {
+                            return;
+                        }
+                        const yValMinMax = this.findVisibleYValueRange(this.selectedTraceIndex);
+
+                        if (yValMinMax !== undefined) {
+                            if (yAxis !== undefined) {
+                                const Dy = yValMinMax[1] - yValMinMax[0];
+                                yAxis.valMin = yValMinMax[0] - Dy * 0.1;
+                                yAxis.valMax = yValMinMax[1] + Dy * 0.1;
+                            }
+                        }
+
+                        if (Math.abs(yAxis.valMin - yAxis.valMax) < 1e-20) {
+                            if (Math.abs(yAxis.valMax) < 1e-20) {
+                                yAxis.valMin = -1;
+                                yAxis.valMax = 1;
+                            } else if (yAxis.valMax > 0) {
+                                yAxis.valMin = yAxis.valMin * 0.9;
+                                yAxis.valMax = yAxis.valMax * 1.1;
+                            } else if (yAxis.valMax < 0) {
+                                yAxis.valMin = yAxis.valMin * 1.1;
+                                yAxis.valMax = yAxis.valMax * 0.9;
+                            }
+                        }
+
+                        this.updatePlot();
+                    } else {
+                        this.rightButtonClicked = true;
+                        setTimeout(() => {
+                            this.rightButtonClicked = false;
+                        }, 300)
+                    }
+                }}
             >
                 {/* tick lines first */}
                 <this._ElementXYTickLines></this._ElementXYTickLines>
                 {/* data */}
                 {this.x.map((xData: number[], index: number) => {
-                    return <this._ElementLine index={index}></this._ElementLine>;
+                    return <this._ElementLine key={this.yAxes[index].label + `-${index}`} index={index}></this._ElementLine>;
                 })}
             </div>
         );
     };
+
 
     _ElementPlot = React.memo(this._ElementPlotRaw, () => {
         if (this.updatePlotLines) {
@@ -1991,18 +2110,6 @@ export class DataViewerPlot {
             return true;
         }
     })
-
-    handleWheelOnPlot = (event: React.WheelEvent) => {
-        // event.preventDefault();
-        event.stopPropagation();
-        if (event.shiftKey) {
-            this.handleWheelOnPlotY(event);
-            return;
-        } else {
-            this.handleWheelOnPlotX(event);
-            return;
-        }
-    }
 
     /**
      * rotate mouse wheel to zoom x-direction
@@ -2021,22 +2128,21 @@ export class DataViewerPlot {
         if (xAxis === undefined) {
             return;
         }
+        const zoomFactor = this.getText()["axisZoomFactor"];
 
         if (direction === "zoom-in") {
-            xAxis.valMin = xAxis.valMin + (valXMid[0] - xAxis.valMin) * 0.1;
-            // xAxis.valMax = this.tracingIsMoving === true ? xAxis.valMax : xAxis.valMax - (xAxis.valMax - valXMid[0]) * 0.1;
-            xAxis.valMax = this.tracingIsMoving === true ? Date.now() : xAxis.valMax - (xAxis.valMax - valXMid[0]) * 0.1;
+            xAxis.valMin = valXMid[0] - (valXMid[0] - xAxis.valMin) / zoomFactor;
+            xAxis.valMax = this.tracingIsMoving === true ? Date.now() : valXMid[0] + (xAxis.valMax - valXMid[0]) / zoomFactor;
         } else {
-            xAxis.valMin = xAxis.valMin - (valXMid[0] - xAxis.valMin) * 0.1;
-            // xAxis.valMax = this.tracingIsMoving === true ? xAxis.valMax : xAxis.valMax + (xAxis.valMax - valXMid[0]) * 0.1;
-            xAxis.valMax = this.tracingIsMoving === true ? Date.now() : xAxis.valMax + (xAxis.valMax - valXMid[0]) * 0.1;
+            xAxis.valMin = valXMid[0] - (valXMid[0] - xAxis.valMin) * zoomFactor;
+            xAxis.valMax = this.tracingIsMoving === true ? Date.now() : valXMid[0] + (xAxis.valMax - valXMid[0]) * zoomFactor;
         }
 
         this.updatePlot();
     }
 
     /**
-     * rotate mouse wheel to zoom y-direction, shift key must be pressed
+     * rotate mouse wheel to zoom y-direction, ctrl key must be pressed
      */
     handleWheelOnPlotY = (event: React.WheelEvent) => {
         // event.preventDefault()
@@ -2046,8 +2152,8 @@ export class DataViewerPlot {
         if (bounding !== undefined && bounding["y"] !== undefined) {
             pointYMid = event.clientY - bounding["y"];
         }
-        // with shift key pressed, deltaX is the vertical wheel rotation
-        const direction = event.deltaX < 0 ? "zoom-in" : "zoom-out";
+
+        const direction = event.deltaY < 0 ? "zoom-in" : "zoom-out";
 
         let ii = this.getSelectedTraceIndex();
 
@@ -2065,13 +2171,13 @@ export class DataViewerPlot {
         const dyUpper = yMax - yMid;
         const dyLower = yMid - yMin;
         if (direction === "zoom-in") {
-            const yMinNew = yMid - dyLower / 1.1;
-            const yMaxNew = yMid + dyUpper / 1.1;
+            const yMinNew = yMid - dyLower / this.getText()["axisZoomFactor"];
+            const yMaxNew = yMid + dyUpper / this.getText()["axisZoomFactor"];
             yAxis.valMin = yMinNew;
             yAxis.valMax = yMaxNew;
         } else {
-            const yMinNew = yMid - dyLower * 1.1;
-            const yMaxNew = yMid + dyUpper * 1.1;
+            const yMinNew = yMid - dyLower * this.getText()["axisZoomFactor"];
+            const yMaxNew = yMid + dyUpper * this.getText()["axisZoomFactor"];
             yAxis.valMin = yMinNew;
             yAxis.valMax = yMaxNew;
         }
@@ -2084,15 +2190,6 @@ export class DataViewerPlot {
         this.updatePlot();
     }
 
-    handleMouseMoveOnPlot = (event: MouseEvent) => {
-        if (event.shiftKey) {
-            this.handleMouseMoveOnPlotY(event);
-            return;
-        } else {
-            this.handleMouseMoveOnPlotX(event);
-            return;
-        }
-    }
 
     handleMouseMoveOnPlotX = (event: MouseEvent) => {
 
@@ -2151,32 +2248,33 @@ export class DataViewerPlot {
 
     handleMouseUpOnPlot = (event: MouseEvent) => {
         event.preventDefault();
-        // this.mouseMovingOnPlot = false;
 
-        window.removeEventListener("mousemove", this.handleMouseMoveOnPlot);
+        window.removeEventListener("mousemove", this.handleMouseMoveOnPlotX);
+        window.removeEventListener("mousemove", this.handleMouseMoveOnPlotY);
         window.removeEventListener("mouseup", this.handleMouseUpOnPlot);
 
-        if (this.mouseMoveEndX !== -100000) {
-            const dPointX = event.clientX - this.mouseMoveEndX;
-            this.mouseMoveEndX = -100000;
 
-            const ii = this.getSelectedTraceIndex();
-            if (this.yAxes[ii] === undefined) {
-                return;
-            }
-            const valXY0 = this.mapPointToXY(ii, [0, 0]);
-            const valXY1 = this.mapPointToXY(ii, [dPointX, 0]);
-            const dt = valXY1[0] - valXY0[0];
+        // if (this.mouseMoveEndX !== -100000) {
+        //     const dPointX = event.clientX - this.mouseMoveEndX;
+        //     this.mouseMoveEndX = -100000;
 
-            const xAxis = this.xAxis;
-            if (xAxis === undefined) {
-                return;
-            }
+        //     const ii = this.getSelectedTraceIndex();
+        //     if (this.yAxes[ii] === undefined) {
+        //         return;
+        //     }
+        //     const valXY0 = this.mapPointToXY(ii, [0, 0]);
+        //     const valXY1 = this.mapPointToXY(ii, [dPointX, 0]);
+        //     const dt = valXY1[0] - valXY0[0];
 
-            xAxis.valMin = xAxis.valMin - dt;
-            xAxis.valMax = xAxis.valMax - dt;
-            this.updatePlot();
-        }
+        //     const xAxis = this.xAxis;
+        //     if (xAxis === undefined) {
+        //         return;
+        //     }
+
+        //     xAxis.valMin = xAxis.valMin - dt;
+        //     xAxis.valMax = xAxis.valMax - dt;
+        //     this.updatePlot();
+        // }
     }
 
     _ElementCursorPosition = () => {
@@ -2244,6 +2342,7 @@ export class DataViewerPlot {
             // the archive data must be earlier than the live data
             const startTime = timeMinOnPlot;
             const endTime = Math.min(timeMaxOnPlot, timeMinInData);
+            Log.info("requesting archive data from", new Date(startTime).toLocaleTimeString(), "to", new Date(endTime).toLocaleString())
             if (endTime > startTime) {
                 // const startTime = GlobalMethods.convertEpochTimeToString(timeMinOnPlot).split(".")[0];
                 // const endTime = GlobalMethods.convertEpochTimeToString(timeMinInData).split(".")[0];
@@ -2282,26 +2381,64 @@ export class DataViewerPlot {
             const maxNewDataTime = xDataNew[xDataNew.length - 1];
 
             let [leftIndex, rightIndex] = GlobalMethods.binarySearchRange(xData, minNewDataTime, maxNewDataTime);
-
+            Log.info("Obtained archive data, replace data from index", leftIndex, "to index", rightIndex);
+            // archive data is not within the range of existing data
             if (leftIndex === -100 || rightIndex === -100) {
-                leftIndex = 0;
-                rightIndex = 0;
+                leftIndex = -2;
+                rightIndex = -1;
             }
-            xData.splice(leftIndex, rightIndex - leftIndex);
-            yData.splice(leftIndex, rightIndex - leftIndex);
 
+            const originalStartX = xData[leftIndex - 1];
+            const originalStartY = yData[leftIndex - 1];
+            const originalEndX = xData[rightIndex + 1];
+            const originalEndY = yData[rightIndex + 1];
 
-            // todo: better stiching
+            // archive data
             const x1: number[] = [];
             const y1: number[] = [];
+
+            // patch first point: (new time, old value)
+            if (originalStartY !== undefined) {
+                x1.push(xDataNew[0]); // new time
+                y1.push(originalStartY); // old value
+            } else {
+                // archive data is earlier than any existing data
+                // there is not old data to patch
+                x1.push(xDataNew[0]); // new time
+                y1.push(yDataNew[0]); // new value
+            }
+
             for (let ii = 0; ii < xDataNew.length - 1; ii++) {
+                // (new time, new value)
                 x1.push(xDataNew[ii]);
                 y1.push(yDataNew[ii]);
+                // (next new time, new value)
                 x1.push(xDataNew[ii + 1]);
                 y1.push(yDataNew[ii]);
-            }   
-            xData.splice(leftIndex, 0, ...x1);
-            yData.splice(leftIndex, 0, ...y1);
+            }
+
+            // patch last point
+            if (originalEndY !== undefined) {
+                x1.push(xDataNew[xDataNew.length - 1]); // last time stamp in archive data
+                y1.push(yDataNew[yDataNew.length - 1]); //  last value in archive data
+                // the first point in the original data should be modified (patched)
+                yData[rightIndex + 1] = yDataNew[yDataNew.length - 1];
+            } else {
+                // exisiting data is empty
+                x1.push(xDataNew[xDataNew.length - 1]); // last time stamp in archive data
+                y1.push(yDataNew[yDataNew.length - 1]); //  last value in archive data
+                // the first point in the original data should be modified (patched)
+                yData[rightIndex + 1] = yDataNew[yDataNew.length - 1];
+
+            }
+
+            // remove the data that will be overriden by archive data
+            xData.splice(leftIndex, rightIndex - leftIndex + 1);
+            yData.splice(leftIndex, rightIndex - leftIndex + 1);
+
+
+            xData.splice(Math.max(leftIndex, 0), 0, ...x1);
+            yData.splice(Math.max(leftIndex, 0), 0, ...y1);
         }
     }
 
@@ -2366,7 +2503,6 @@ export class DataViewerPlot {
             return;
         }
 
-
         const value = data.value;
         if (typeof value !== "number") {
             return;
@@ -2375,12 +2511,14 @@ export class DataViewerPlot {
         let timeStamp = GlobalMethods.converEpicsTimeStampToEpochTime(
             data.secondsSinceEpoch * 1000 + data.nanoSeconds * 1e-6
         );
+
         // sometimes the channel was never processed
         if (data["secondsSinceEpoch"] === 0) {
+            Log.info("new data has 0 value time stamp", data)
             timeStamp = Date.now();
         }
 
-        if (timeStamp < this.minLiveDataTime) {
+        if (timeStamp < this.minLiveDataTime && this.minLiveDataTime === Number.MAX_VALUE) {
             this.minLiveDataTime = timeStamp;
         }
 
@@ -2393,7 +2531,7 @@ export class DataViewerPlot {
 
         // (2)
         xData.push(timeStamp);
-        yData.push(yData[yData.length - 1]);
+        yData.push(yData[yData.length - 1] === undefined ? value : yData[yData.length - 1]); // if the data is empty
 
         // (3)
         xData.push(timeStamp);
@@ -2466,27 +2604,7 @@ export class DataViewerPlot {
      * 
      * (5) update the widget
      * 
-     * when we update the plot, two factors are considered:
-     * 
-     * (1) the layout in the figure should be updated, e.g. x/y axis range, line color, tick label text, etc
-     *     we directly modify the this.data[ii].XXX and this.plotLayout.XXX
-     *     the "layout update" is controlled by updateLayout bit in this.updatePlot()'s input argument
-     * 
-     * (2) the data trace in the figure should be updated, the this.data[ii].x and this.data[ii].y are changed
      */
-    // 
-    //  - 
-    //    
-    //    
-    //  - 
-    //    The data change always caused the layout change, e.g. x range change, so "data trace update" always
-    //    comes with "layout update".
-    //    the data modification and the consequent layout parameter changes are done in this.mapDbrData(),
-    //    in which this.data[ii].x/y, this.data[ii].XXX, and this.plotLayout.XXX are all modified
-    // Usually most of the updates are "layout update", the ony "data trace update" is the periodicaly interval
-    // update
-    // The below method is a kickoff to update the figure after this.data and this.plotLayout are modified
-    // It is invoked periodically and by user
     updatePlot = (doFlush: boolean = true) => {
         if (g_widgets1 === undefined) {
             return;
@@ -2513,7 +2631,6 @@ export class DataViewerPlot {
         }
     };
 
-
     // ------------------------------- traces ------------------------------------
 
     /**
@@ -2537,7 +2654,7 @@ export class DataViewerPlot {
         mainWidget.processChannelNames([], false);
 
         // (2)
-        this.addNewTraceData(newTraceName);
+        this.addNewTraceData(newTraceName, undefined);
 
         // (3)
         this.setSelectedTraceIndex(mainWidget.getChannelNamesLevel0().length - 1);
@@ -2597,11 +2714,11 @@ export class DataViewerPlot {
      * 
      * Each channel name correponds to a trace.
      * 
+     * If there is no y axis data for this channel, 
+     * 
      * (1) clear all x and y data
      * 
-     * (2) clear all yaxis data 
-     * 
-     * (3) add new trace data for each trace
+     * (2) add new trace data for each trace
      */
     initTracesData = () => {
 
@@ -2610,12 +2727,9 @@ export class DataViewerPlot {
         this.y.length = 0;
 
         // (2)
-        this.yAxes.length = 0;
-
-        // (3)
         for (let ii = 0; ii < this.getChannelNames().length; ii++) {
             const channelName = this.getChannelNames()[ii];
-            this.addNewTraceData(channelName);
+            this.addNewTraceData(channelName, this.yAxes[ii]);
         }
     };
 
@@ -2626,26 +2740,36 @@ export class DataViewerPlot {
      * (1) add empty x and y data 
      * 
      * (2) add a new y axis data that contains the trace line properties: plot range, trace color, buffer size, ...
+     *     if there is already one, change its label to channel name
+     * 
+     * (3) remove excessive y axis if there are
      */
-    addNewTraceData = (channelName: string) => {
+    addNewTraceData = (channelName: string, yAxis: type_yAxis | undefined) => {
         // (1)
         this.x.push([]);
         this.y.push([]);
         // (2)
         // default yAxis
-        let newYAxis: type_yAxis = {
-            label: channelName, // updated every time
-            valMin: 0, // updated every time
-            valMax: 10, // updated every time
-            lineWidth: 2,
-            lineColor: `rgba(${this.getNewColor()})`,
-            ticks: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // updated every time
-            ticksText: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // updated every time
-            show: true,
-            bufferSize: 50000,
-            displayScale: "Linear",
-        };
-        this.yAxes.push(newYAxis);
+        if (yAxis === undefined) {
+            let newYAxis: type_yAxis = {
+                label: channelName, // updated every time
+                valMin: 0, // updated every time
+                valMax: 10, // updated every time
+                lineWidth: 2,
+                lineColor: `rgba(${this.getNewColor()})`,
+                ticks: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // updated every time
+                ticksText: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // updated every time
+                show: true,
+                bufferSize: 50000,
+                displayScale: "Linear",
+            };
+            this.yAxes.push(newYAxis);
+        } else {
+            yAxis["label"] = channelName;
+        }
+
+        // (3)
+        this.yAxes.splice(this.getChannelNames().length)
     };
 
     /**

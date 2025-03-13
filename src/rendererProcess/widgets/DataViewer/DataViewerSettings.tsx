@@ -261,6 +261,43 @@ export class DataViewerSettings {
             </this._ElementSettingLine>
         )
     }
+    _ElementZoomFactor = () => {
+        const [zoomFactor, setZoomFactor] = React.useState(`${this.getMainWidget().getText()["axisZoomFactor"]}`);
+        const rawFactors = ["1.1", "1.25", "1.5", "1.75", "2"];
+        const factors = React.useRef<string[]>(rawFactors.includes(zoomFactor) ? rawFactors : [zoomFactor, ...rawFactors]);
+
+        return (
+            <this._ElementSettingLine>
+                <this._ElementSettingCell width={"30%"}>
+                    Zoom in/out factor:
+                </this._ElementSettingCell>
+                <this._ElementSettingCell width={"70%"}>
+                    <form
+                        onSubmit={(event: any) => {
+                            event.preventDefault();
+                        }}
+                    >
+                        <select
+                            value={zoomFactor}
+                            onChange={(event: any) => {
+                                const newFactor = event.target.value;
+                                setZoomFactor(newFactor);
+                                this.getMainWidget().getText()["axisZoomFactor"] = parseFloat(newFactor);
+                            }}
+                        >
+                            {factors.current.map((factor: string, index: number) => {
+                                return (
+                                    <option value={factor}>
+                                        {factor}
+                                    </option>
+                                )
+                            })}
+                        </select>
+                    </form>
+                </this._ElementSettingCell>
+            </this._ElementSettingLine>
+        )
+    }
 
     _ElementFontFamily = () => {
         return (
@@ -788,6 +825,7 @@ export class DataViewerSettings {
                 <this._ElementBackgroundColor></this._ElementBackgroundColor>
 
                 <this._ElementPeriod></this._ElementPeriod>
+                <this._ElementZoomFactor></this._ElementZoomFactor>
                 <this._ElementFontFamily></this._ElementFontFamily>
                 <this._ElementFontSize></this._ElementFontSize>
                 <this._ElementFontStyle></this._ElementFontStyle>
