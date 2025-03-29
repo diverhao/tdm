@@ -12,7 +12,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Table } from "../../helperWidgets/Table/Table";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 
 export type type_PvMonitor_tdl = {
@@ -275,7 +275,7 @@ export class PvMonitor extends BaseWidget {
             >
                 <this._ElementPvMonitor></this._ElementPvMonitor>
                 {this.showSettings ? <this._ElementSettings></this._ElementSettings> : null}
-                {g_widgets1.isEditing() === true? <this._ElementMask></this._ElementMask> : null}
+                {g_widgets1.isEditing() === true ? <this._ElementMask></this._ElementMask> : null}
             </div>
         );
     };
@@ -437,98 +437,95 @@ export class PvMonitor extends BaseWidget {
                 fontSize: this.getAllStyle()["fontSize"] * 2,
                 display: "inline-flex",
                 flexDirection: "row",
-                justifyContent: "space-between",
+                justifyContent: "flex-start",
                 alignItems: "center",
                 paddingBottom: 5,
                 paddingTop: 10,
             }}>
-                <div style={{
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                    paddingLeft: 5,
-                }}>
-                    <div>PV Monitor for </div>
-                    <form
-                        spellCheck={false}
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            event.preventDefault();
-                            // disconnect the old channel softly and clean up data
-                            const oldChannelName = this.getChannelNamesLevel0()[0];
-                            try {
-                                const oldTcaChannel = g_widgets1.getTcaChannel(oldChannelName);
-                                oldTcaChannel.destroy(this.getWidgetKey());
-                            } catch (e) {
+                <div>PV Monitor for </div>
+                <form
+                    spellCheck={false}
+                    style={{
+                        width: "100%",
+                        flexGrow: 1,
+                    }}
+                    onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+                        event.preventDefault();
+                        // disconnect the old channel softly and clean up data
+                        const oldChannelName = this.getChannelNamesLevel0()[0];
+                        try {
+                            const oldTcaChannel = g_widgets1.getTcaChannel(oldChannelName);
+                            oldTcaChannel.destroy(this.getWidgetKey());
+                        } catch (e) {
 
-                            }
-                            this.clearData();
+                        }
+                        this.clearData();
 
-                            // update channel name
-                            this.getChannelNamesLevel0().length = 0;
-                            this.getChannelNamesLevel0().push(channelName);
-                            this.processChannelNames();
+                        // update channel name
+                        this.getChannelNamesLevel0().length = 0;
+                        this.getChannelNamesLevel0().push(channelName);
+                        this.processChannelNames();
 
-                            // connect new channel 
-                            const newTcaChannel = g_widgets1.createTcaChannel(channelName, this.getWidgetKey());
-                            if (newTcaChannel !== undefined) {
-                                newTcaChannel.getMeta(undefined);
-                                newTcaChannel.monitor();
-                            }
-                            // blur the input box
-                            if (inputRef.current !== null) {
-                                inputRef.current.blur();
-                            }
-                            // re-render
-                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-                            g_flushWidgets();
+                        // connect new channel 
+                        const newTcaChannel = g_widgets1.createTcaChannel(channelName, this.getWidgetKey());
+                        if (newTcaChannel !== undefined) {
+                            newTcaChannel.getMeta(undefined);
+                            newTcaChannel.monitor();
+                        }
+                        // blur the input box
+                        if (inputRef.current !== null) {
+                            inputRef.current.blur();
+                        }
+                        // re-render
+                        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                        g_flushWidgets();
+                    }}
+                >
+                    <input
+                        ref={inputRef}
+                        style={{
+                            fontSize: this.getAllStyle()["fontSize"] * 2,
+                            backgroundColor: "rgba(0,0,0,0)",
+                            border: "none",
+                            outline: "none",
+                            width: "100%",
                         }}
-                    >
-                        <input
-                            ref={inputRef}
-                            style={{
-                                fontSize: this.getAllStyle()["fontSize"] * 2,
-                                backgroundColor: "rgba(0,0,0,0)",
-                                border: "none",
-                                outline: "none",
-                            }}
-                            type="text"
-                            name="channelName"
-                            value={channelName}
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                const newVal = event.target.value;
-                                setChannelName(newVal);
-                            }}
-                            onMouseEnter={(event: any) => {
-                                if (inputRef.current !== null) {
-                                    inputRef.current.style["color"] = "rgba(255, 0, 0, 1)";
-                                }
-                            }}
-                            onMouseLeave={(event: any) => {
-                                if (inputRef.current !== null && document.activeElement !== inputRef.current) {
-                                    inputRef.current.style["color"] = "rgba(0, 0, 0, 1)";
-                                }
-                            }}
-                            // must use enter to change the value
-                            onBlur={(event: any) => {
-                                event.preventDefault();
-                                if (inputRef.current !== null) {
-                                    inputRef.current.style["color"] = "rgba(0, 0, 0, 1)";
-                                }
-                                const orig = `${this.getChannelNamesLevel0()[0]}`;
-                                if (orig !== channelName) {
-                                    setChannelName(orig);
-                                }
-                            }}
-                            onFocus={(event: any) => {
-                                event.preventDefault();
-                                if (inputRef.current !== null) {
-                                    inputRef.current.style["color"] = "rgba(255, 0, 0, 1)";
-                                }
-                            }}
-                        />
-                    </form>
-                </div>
+                        type="text"
+                        name="channelName"
+                        value={channelName}
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                            const newVal = event.target.value;
+                            setChannelName(newVal);
+                        }}
+                        onMouseEnter={(event: any) => {
+                            if (inputRef.current !== null) {
+                                inputRef.current.style["color"] = "rgba(255, 0, 0, 1)";
+                            }
+                        }}
+                        onMouseLeave={(event: any) => {
+                            if (inputRef.current !== null && document.activeElement !== inputRef.current) {
+                                inputRef.current.style["color"] = "rgba(0, 0, 0, 1)";
+                            }
+                        }}
+                        // must use enter to change the value
+                        onBlur={(event: any) => {
+                            event.preventDefault();
+                            if (inputRef.current !== null) {
+                                inputRef.current.style["color"] = "rgba(0, 0, 0, 1)";
+                            }
+                            const orig = `${this.getChannelNamesLevel0()[0]}`;
+                            if (orig !== channelName) {
+                                setChannelName(orig);
+                            }
+                        }}
+                        onFocus={(event: any) => {
+                            event.preventDefault();
+                            if (inputRef.current !== null) {
+                                inputRef.current.style["color"] = "rgba(255, 0, 0, 1)";
+                            }
+                        }}
+                    />
+                </form>
             </div>
         )
     }

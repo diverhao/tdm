@@ -1132,15 +1132,16 @@ export class DataViewerPlot {
                 ></polyline>
                 {points.map((pointXorY: string, ii: number) => {
                     if (ii % 2 === 0) {
-                        return (
-                            <circle
-                                key={pointXorY + `${ii}`}
-                                cx={parseInt(points[ii])}
-                                cy={parseInt(points[ii + 1])}
-                                r={3}
-                            >
-                            </circle>
-                        )
+                        return null
+                        // (
+                        //     <circle
+                        //         key={pointXorY + `${ii}`}
+                        //         cx={parseInt(points[ii])}
+                        //         cy={parseInt(points[ii + 1])}
+                        //         r={3}
+                        //     >
+                        //     </circle>
+                        // )
                     } else {
                         return null
                     }
@@ -2239,8 +2240,10 @@ export class DataViewerPlot {
 
 
         const xAxis = this.xAxis;
+        const dx = xAxis.valMax - xAxis.valMin;
         if (this.tracingIsMoving) {
             xAxis.valMax = Date.now();
+            xAxis.valMin = Date.now() - dx;
         }
 
         this.updatePlot();
