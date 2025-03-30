@@ -44,10 +44,12 @@ TDM [options]
 
 Options:
   --help                                  Show this help
-  --attach 9528                           Open the TDL files in an exisiting TDM process 9527
+  --attach 9527                           Open the TDL files in an exisiting TDM process 9527
                                           The TDM process number is uniqe across the operating system
                                           It can be found on the TDM main window
                                           If this option is absent, it will open a new TDM instance
+  --attach                                Open the TDL files in the first opened TDM instance. If there is no 
+                                          TDL instance running, create a new one.
   --settings /home/ringop/custom.json     Configuration file for profiles
                                           If this option is absent, it will load $HOME/.tdm/profiles.json
   --profile "Control Room"                The profile that will be selected
@@ -91,7 +93,7 @@ Options:
                     ii++;
                     result["macros"] = this.parseMacros(argv[ii]);
                 } else if (arg === dashdashHelp) {
-                    this.printHelp();
+                    // this.printHelp();
                     // exit the application, 
                     // do not use app.quit(), that will continue the electron for a while
                     app.exit();
@@ -107,8 +109,16 @@ Options:
                 } else if (arg === dashdashLogStackTrace) {
                     this.parseLogStackTrace();
                 } else if (arg === dashdashAttach) {
-                    ii++;
-                    result["attach"] = this.parseAttach(argv[ii]);
+                    const port = this.parseAttach(argv[ii + 1]);
+                    if (port === -2) {
+                        // try to attach to the existing instance
+                    } else if (port === -1) {
+                        // do not attach, open this is instance
+                    } else {
+                        // attach to a specific instance
+                        ii++;
+                    }
+                    result["attach"] = port;
                 } else if (arg === dashdashAlsoOpenDefaults) {
                     result["alsoOpenDefaults"] = true;
                 } else if (arg === dashdashHttpServerPort) {
@@ -210,13 +220,20 @@ Options:
     };
 
     static parseAttach = (portRawStr: string) => {
-        if (portRawStr.startsWith("-")) {
-            throw new Error("Error at --attach");
+
+        if (portRawStr.trim().startsWith("--") || portRawStr.trim().endsWith(".tdl") || portRawStr.trim().endsWith(".edl") || portRawStr.trim().endsWith(".bob")) {
+            // throw new Error("Error at --attach");
+            // try to attach to an existing TDM instance
+            // "--xxx --attach --xxx --xxx
+            return -2;
         }
         const port = parseInt(portRawStr);
         if (!isNaN(port)) {
+            // "--attach 9527"
             return port;
         } else {
+            // wrong format
+            // "--attach abcd"
             return -1;
         }
     };

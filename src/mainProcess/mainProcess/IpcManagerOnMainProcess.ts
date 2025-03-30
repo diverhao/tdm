@@ -1738,7 +1738,9 @@ export class IpcManagerOnMainProcess {
                 }, 3000);
                 // send local font names to display window
                 displayWindowAgent.sendFromMainProcess("local-font-names", this.getMainProcess().getMainProcesses().getLocalFontNames());
+
             }
+            this.getMainProcess().getWindowAgentsManager().setDockMenu();
         }
 
     };

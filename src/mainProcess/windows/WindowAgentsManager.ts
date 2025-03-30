@@ -1,6 +1,6 @@
 import { MainWindowAgent } from "./MainWindow/MainWindowAgent";
 import { DisplayWindowAgent } from "./DisplayWindow/DisplayWindowAgent";
-import { dialog, app, BrowserWindow } from "electron";
+import { dialog, app, BrowserWindow, Menu, MenuItem } from "electron";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { v4 as uuid } from "uuid";
 import { UtilityWindow } from "./UtilityWindow/UtilityWindow";
@@ -9,6 +9,7 @@ import { FileReader } from "../file/FileReader";
 import { Log } from "../log/Log";
 import { write, writeFileSync } from "fs";
 import { Environment } from "epics-tca";
+import { spawn } from "child_process";
 
 export type type_options_createDisplayWindow = {
     tdl: type_tdl;
@@ -393,6 +394,9 @@ export class WindowAgentsManager {
             return undefined;
         }
         this.preloadedDisplayWindowAgent = undefined;
+
+
+
         // (3)
         displayWindowAgent.setTdlFileName(tdlFileName);
         displayWindowAgent.setMacros(macros);
@@ -692,6 +696,7 @@ export class WindowAgentsManager {
                         envDefault,
                         envOs,
                     );
+
                     // if (cmdLineSelectedProfile !== "") {
                     // 	mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", cmdLineSelectedProfile);
                     // }
@@ -756,5 +761,61 @@ export class WindowAgentsManager {
             }
         }
         return result;
+    }
+
+    /**
+     * Set dock menu for MacOS
+     * 
+     * This method is invoked after
+     * 
+     * (1) new-tdl-rendered event arrives
+     * 
+     * (2) main window is created, the main window does not emit new-tdl-rendered event
+     * 
+     * (3) a BrowserWindow is closed
+     */
+    setDockMenu = () => {
+        if (process.platform === "darwin") {
+            const menuItems: (Electron.MenuItem | Electron.MenuItemConstructorOptions)[] = [];
+
+            for (let windowAgent of Object.values(this._agents)) {
+                if (windowAgent !== this.preloadedDisplayWindowAgent) {
+                    let name = ""; // windowAgent.getWindowName().trim();
+                    if (name === "" || name === undefined) {
+                        name = windowAgent.getTdlFileName();
+                    }
+                    if (name === "") {
+                        name = "File not saved " + "[" + windowAgent.getId() + "]";
+                    }
+                    menuItems.push(
+                        {
+                            label: name,
+                            click: () => { windowAgent.focus() }
+                        }
+                    )
+                } else {
+                }
+            }
+
+            menuItems.push({
+                type: "separator",
+            })
+
+            menuItems.push({
+                label: "New TDM",
+                click: () => {
+                    const appPath = process.execPath;
+                    Log.info("Open a new TDM instance from MacOS dock", appPath);
+                    if (appPath !== "" && typeof appPath === "string") {
+                        spawn(appPath, [], {
+                            detached: true,
+                            stdio: "ignore"
+                        }).unref();
+                    }
+                }
+            })
+
+            app.dock.setMenu(Menu.buildFromTemplate(menuItems));
+        }
     }
 }

@@ -25,6 +25,7 @@ export class WsPvServer {
     createServer = () => {
         Log.info(this.getMainProcessId(), `Creating WebSocket PV server on port ${this.getPort()}`);
         this.server = new WebSocket.Server({
+            host: "127.0.0.1",
             port: this.getPort(),
         });
 

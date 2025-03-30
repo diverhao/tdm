@@ -37,6 +37,7 @@ export class IpcManagerOnMainProcesses {
         // if the main process mode is desktop, ssh-server, or ssh-client, websocket uses a unique port
         if (httpsServer === undefined) {
             this.server = new WebSocketServer({
+                host: "127.0.0.1",
                 port: this.getPort(),
             });
         } else {

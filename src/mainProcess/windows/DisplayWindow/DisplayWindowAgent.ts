@@ -707,6 +707,8 @@ export class DisplayWindowAgent {
      * (6) terminate the websocket IPC connection, and remove the WebSocket client object from server
      * 
      * (8) remove casnooper registration for this window. Shut down ca snooper server if there is no window registered.
+     * 
+     * (9) update macos dock
      */
     handleWindowClosed = () => {
         Log.info(this.getMainProcessId(), "close display window", this.getId())
@@ -757,6 +759,10 @@ export class DisplayWindowAgent {
         if (caswServer !== undefined) {
             caswServer.stopCaswServer(this.getId());
         }
+
+        // (9)
+        this.getWindowAgentsManager().setDockMenu();
+
     };
 
     // remove all channels, destroy them if necessary
@@ -1465,6 +1471,7 @@ export class DisplayWindowAgent {
                     minWidth: 100,
                     minHeight: 100,
                     show: !this.hiddenWindow, // hide preloaded window
+                    icon: path.join(__dirname, '../../../webpack/resources/webpages/tdm-logo.png'),
                     webPreferences: {
                         nodeIntegration: true, // use node.js
                         contextIsolation: false,
@@ -1486,6 +1493,7 @@ export class DisplayWindowAgent {
                         Log.debug(this.getMainProcessId(), `open new window ${url}`);
                         return { action: "allow" };
                     });
+
                     // events
                     // ! in ssh-client mode, once the window is asked to close, close it immeidately
                     // ! otherwise the window-will-be-closed message from main process may never arrive at
@@ -1790,6 +1798,9 @@ export class DisplayWindowAgent {
     focus = () => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow instanceof BrowserWindow) {
+            if (browserWindow.isMinimizable()) {
+                browserWindow.restore();
+            }
             browserWindow.focus();
         } else {
             Log.error(this.getMainProcessId(), `Error: cannot focus window ${this.getId()}`);

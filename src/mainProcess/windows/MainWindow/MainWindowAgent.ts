@@ -93,6 +93,7 @@ export class MainWindowAgent {
                     minWidth: 200,
                     minHeight: 100,
                     show: true,
+                    icon: path.join(__dirname, '../../../webpack/resources/webpages/tdm-logo.png'),
                     webPreferences: {
                         // use node.js
                         nodeIntegration: true,
@@ -172,6 +173,8 @@ export class MainWindowAgent {
 
                 this._browserWindow = window;
                 window.setMenu(null);
+
+                this.getWindowAgentsManager().setDockMenu();
 
                 // clear cache
                 // const session = window.webContents.session;
@@ -288,6 +291,9 @@ export class MainWindowAgent {
         const mainProcesses = this.getWindowAgentsManager().getMainProcess().getMainProcesses();
         const webSocketIpcManager = mainProcesses.getIpcManager();
         webSocketIpcManager.removeClient(this.getId());
+
+        this.getWindowAgentsManager().setDockMenu();
+
     };
 
     handleWindowClose = (event: any) => {
@@ -464,6 +470,14 @@ export class MainWindowAgent {
         } else {
             return "";
         }
+    }
+
+    getWindowName = () => {
+        return "Main Window";
+    }
+
+    getTdlFileName = () => {
+        return this.getWindowName();
     }
 
     // ---------------------- thumbnail -----------------------------

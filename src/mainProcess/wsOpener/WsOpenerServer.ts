@@ -31,6 +31,7 @@ export class WsOpenerServer {
 		Log.info("-1", `Creating WebSocket opener server on port ${this.getPort()}`);
 
         this.server = new WebSocket.Server({
+            host: "127.0.0.1",
 			port: this.getPort(),
 		});
 

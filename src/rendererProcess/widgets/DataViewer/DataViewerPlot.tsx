@@ -1130,23 +1130,25 @@ export class DataViewerPlot {
                     stroke={this.yAxes[index].lineColor}
                     fill="none"
                 ></polyline>
-                {points.map((pointXorY: string, ii: number) => {
-                    if (ii % 2 === 0) {
-                        return null
-                        // (
-                        //     <circle
-                        //         key={pointXorY + `${ii}`}
-                        //         cx={parseInt(points[ii])}
-                        //         cy={parseInt(points[ii + 1])}
-                        //         r={3}
-                        //     >
-                        //     </circle>
-                        // )
-                    } else {
-                        return null
-                    }
+                {
+                    // points.map((pointXorY: string, ii: number) => {
+                    //     if (ii % 2 === 0) {
+                    //         return null
+                    //         // (
+                    //         //     <circle
+                    //         //         key={pointXorY + `${ii}`}
+                    //         //         cx={parseInt(points[ii])}
+                    //         //         cy={parseInt(points[ii + 1])}
+                    //         //         r={3}
+                    //         //     >
+                    //         //     </circle>
+                    //         // )
+                    //     } else {
+                    //         return null
+                    //     }
 
-                })}
+                    // })
+                }
             </svg>
         );
     };
