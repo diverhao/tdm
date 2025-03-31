@@ -2,6 +2,8 @@
 import sys
 import os
 import numpy as np
+# import schedule
+# import time
 # replace the path with
 sys.path.append(os.path.abspath("/Users/1h7/projects/tdm/src/mainProcess/wsPv"))
 import WsPvClient
@@ -12,7 +14,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display, clear_output
 import numpy as np
 # ------------- Example 1: plot ------------------
-
+print("==================== python ================")
 # Function is invoked every time when channel has a new value.
 # Input argument "data" is a dictionary, with a key named "value".
 # It is the new value of the channel. It could be a number,
@@ -20,6 +22,7 @@ import numpy as np
 def updatePlot(data):
     # the new value of channel
     value = data["value"]
+    wsPvClient.put("loc://val17a", value + 99)
     # plot, but do not show
     clear_output(wait=True)
     plt.figure()
@@ -32,11 +35,14 @@ def updatePlot(data):
     # write image to the local channel, which is shown in a Binary Image
     # on the TDM display window
     wsPvClient.put("loc://img1", html_img)
+    wsPvClient.put("val1", value)
 
 # Monitor the channel "val7". Whenever the value of "val7" is updated,
 # function "updatePlot" is invoked. A dictionary that contains the new value
 # of this channel is the input argument of "updatePlot"
 wsPvClient.monitor("val17", updatePlot)
+
+
 
 # -------------- Example 2: process the data ------------------
 # We monitor channel "val0", add a constant offset to its value.

@@ -195,7 +195,7 @@ export class BinaryImage extends BaseWidget {
                     objectFit: this.getAllText()["stretchToFit"] ? "fill" : "contain",
                     opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : this.getAllText()["opacity"],
                 }}
-                src={`data:image/png;base64,${this._getChannelValue()}`}
+                src={g_widgets1.isEditing() === true? "../../resources/webpages/trend.svg" :`data:image/png;base64,${this._getChannelValue()}`}
             ></img>
         );
     };

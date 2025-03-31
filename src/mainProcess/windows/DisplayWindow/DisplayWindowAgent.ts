@@ -252,7 +252,7 @@ export class DisplayWindowAgent {
         // instead, it talks to the main process via WebSocket
         try {
             if (script.endsWith(".py")) {
-                Log.debug(this.getMainProcessId(), `Create new Python thread on display window ${this.getId()}`);
+                Log.info(this.getMainProcessId(), `Create new Python thread for display window ${this.getId()}`);
                 const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
                 if (selectedProfile !== undefined) {
                     const pythonCommand = selectedProfile.getEntry("EPICS Custom Environment", "Python Command");
@@ -317,6 +317,12 @@ export class DisplayWindowAgent {
             Log.debug(this.getMainProcessId(), "There was no worker thread for WebSocket client");
         }
     };
+
+    removeWebSocketMonitorChannels = () => {
+        for (const channelName of this.getWebSocketMonitorChannelNames()) {
+            this.removeChannel(channelName);
+        }
+    }
 
     // -----------------------------------------------
 

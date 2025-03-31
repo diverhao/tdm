@@ -1767,6 +1767,7 @@ export class IpcManagerOnMainProcess {
             if (data["action"] === "terminate") {
                 Log.debug(this.getMainProcessId(), "Terminate script", data["script"], "for window", data["displayWindowId"]);
                 displayWindowAgent.terminateWebSocketClientThread();
+                displayWindowAgent.removeWebSocketMonitorChannels();
             } else if (data["action"] === "run") {
                 // operating
                 Log.debug(this.getMainProcessId(), "Run script", data["script"], "for window", data["displayWindowId"]);

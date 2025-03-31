@@ -5,6 +5,7 @@ import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent"
 import { CaChannelAgent } from "../channel/CaChannelAgent";
 import { LocalChannelAgent } from "../channel/LocalChannelAgent";
 import { Log } from "../log/Log";
+import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 
 export class WsPvServer {
     server: WebSocketServer | undefined;
@@ -41,7 +42,6 @@ export class WsPvServer {
         this.server.on("connection", (wsClient: WebSocket, request: IncomingMessage) => {
             wsClient.on("message", async (messageBuffer: RawData) => {
                 const message = JSON.parse(messageBuffer.toString());
-
                 if (message["command"] === "LOG") {
                     const type = message["type"];
                     const args = message["args"];
@@ -59,7 +59,6 @@ export class WsPvServer {
                         Log.trace(this.getMainProcessId(), args);
                     } else {
                         Log.error(this.getMainProcessId(), "Received the following WS PV log message, but it is in wrong format");
-                        console.log(args);
                     }
                     return;
                 }
@@ -71,63 +70,34 @@ export class WsPvServer {
                     Log.debug(this.getMainProcessId(), "Message does not have channelName, command, or displayWindowId");
                     return;
                 }
-                const channelAgentsManager = this.getMainProcess().getChannelAgentsManager();
-                const channelAgent = channelAgentsManager.getChannelAgent(channelName);
+
                 const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
                 const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
-                if (displayWindowAgent === undefined) {
+                if (displayWindowAgent === undefined || displayWindowAgent instanceof MainWindowAgent) {
                     Log.debug(this.getMainProcessId(), `Cannot find display window ${displayWindowId}`);
                     // the incoming request looks suspacious, do not reply
                     return;
                 }
 
-                if (channelAgent === undefined) {
-                    Log.debug(this.getMainProcessId(), `Cannot find channel ${channelName}`);
-                    // bounce back the message with an undefined value
-                    wsClient.send(JSON.stringify({ ...message, value: undefined }));
-                    return;
-                }
 
                 if (command === "GET") {
                     Log.debug(this.getMainProcessId(), `WebSocket PV server, GET ${message}`);
-                    // send data
-                    let dbrData: Record<string, any> = {};
-                    // may be undefined
-                    const timeout = message["timeout"];
-                    if (channelAgent instanceof CaChannelAgent) {
-                        dbrData = await channelAgent.get(displayWindowId, undefined, timeout);
-                    } else if (channelAgent instanceof LocalChannelAgent) {
-                        dbrData = await channelAgent.getDbrData();
-                    } else {
-                        Log.debug(this.getMainProcessId(), `Cannot find channel ${channelName}`);
-                    }
+                    const dbrData = this.getIpcManager().handleTcaGet(undefined, channelName, displayWindowId, undefined, -1, 1, undefined, false);
                     wsClient.send(JSON.stringify({ ...dbrData, ...message, channelName: channelName }));
                 } else if (command === "MONITOR") {
-                    const channelNames = message["channelName"];
+                    const channelName = message["channelName"];
                     // register this websocket client
                     if (displayWindowAgent instanceof DisplayWindowAgent) {
                         displayWindowAgent.setWebSocketMonitorClient(wsClient);
-                        if (channelNames !== undefined) {
-                            displayWindowAgent.addWebSocketMonitorChannelName(channelNames);
+                        if (channelName !== undefined) {
+                            displayWindowAgent.addWebSocketMonitorChannelName(channelName);
                         }
                     }
+                    // if the channel does not exist, create and monitor it
+                    this.getIpcManager().handleTcaMonitor(undefined, displayWindowId, channelName);
                 } else if (command === "PUT") {
                     const value = message["value"];
-                    if (value === undefined) {
-                        Log.debug(this.getMainProcessId(), "PUT command does not have value");
-                        return;
-                    }
-                    if (channelAgent instanceof CaChannelAgent) {
-                        channelAgent.put(displayWindowId, {
-                            value: value,
-                        });
-                    } else if (channelAgent instanceof LocalChannelAgent) {
-                        channelAgent.put(displayWindowId, {
-                            value: value,
-                        });
-                    } else {
-                        Log.debug(this.getMainProcessId(), `Cannot find channel ${channelName}`);
-                    }
+                    this.getIpcManager().handleTcaPut(undefined, channelName, displayWindowId, {value: value}, 1, "");
                 } else {
                     Log.debug(this.getMainProcessId(), `Unknow command ${command}`);
                 }
