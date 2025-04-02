@@ -1,9 +1,7 @@
 import ReactDOM from "react-dom/client";
 import * as React from "react";
-import { BaseWidgetSidebar } from "./BaseWidgetSidebar";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { SidebarComponent } from "../../helperWidgets/SidebarComponents/SidebarComponent";
-import { g_widgets1, GlobalVariables } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../global/GlobalVariables";
 
 export class SidebarLargeInput {
     value: string = "";
@@ -15,7 +13,7 @@ export class SidebarLargeInput {
     constructor() {
     }
 
-    createElement = (value: string, setValue: any, readableText: string, updater: any) => {
+    createElement = (value: string, setValue: any, readableText: string, updater: any, withOkButton: boolean = false) => {
         this.removeElement();
         this.setValue = setValue;
         this.value = value;
@@ -35,11 +33,11 @@ export class SidebarLargeInput {
         newElement.style.alignItems = "flex-start";
         newElement.style.justifyContent = "center";
 
-        ReactDOM.createRoot(newElement).render(<this._Element></this._Element>);
+        ReactDOM.createRoot(newElement).render(<this._Element withOkButton={withOkButton}></this._Element>);
         document.body.appendChild(newElement);
     }
 
-    _Element = () => {
+    _Element = ({ withOkButton }: { withOkButton: boolean }) => {
         const [localValue, setLocalValue] = React.useState(this.getValue());
         return (
             <div style={{
@@ -81,9 +79,14 @@ export class SidebarLargeInput {
                         }}
                         onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
                             event.preventDefault();
-                            this.value = localValue;
-                            this.setValue(localValue);
-                            this.updater(localValue);
+                            if (withOkButton === true) {
+                                // do nothing on submit
+                                // do the change when click the OK button
+                            } else {
+                                this.value = localValue;
+                                this.setValue(localValue);
+                                this.updater(localValue);
+                            }
                         }}
                     >
 
@@ -120,10 +123,15 @@ export class SidebarLargeInput {
                     </form>
                     <ElementRectangleButton
                         handleClick={() => {
+                            if (withOkButton === true) {
+                                this.value = localValue;
+                                this.setValue(localValue);
+                                this.updater(localValue);
+                            }
                             this.removeElement();
                         }}
                     >
-                        Close
+                        {withOkButton === true ? "OK" : "Close"}
                     </ElementRectangleButton>
                 </div>
             </div>

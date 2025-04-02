@@ -590,7 +590,7 @@ export class DisplayWindowAgent {
      *
      * (1) If the channel does not exist, create and connect it. If failed, return `undefined`. <br>
      *
-     * (2) Put <br>
+     * (2) Put if the profile allows <br>
      *
      * (3) Reduce the number of clients on `CaChannelAgent`, and check the lifecycle of the `CaChannelAgent`.
      *
@@ -617,15 +617,26 @@ export class DisplayWindowAgent {
                 return false;
             }
             // (2)
-            if (channelType === "ca") {
-                await channelAgent.put(this.getId(), dbrData, ioTimeout);
-            } else {
-                await channelAgent.putPva(this.getId(), dbrData, ioTimeout, pvaValueField);
+            const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+            if (selectedProfile === undefined) {
+                Log.error(-1, "No profile selected, quit PUT operation.")
+                return false;
             }
-            // (3)
-            // channelAgent.reduceClientsNum();
-            if (this.checkChannelOperations(channelName) === false) {
-                this.removeChannel(channelName);
+            const disablePut = selectedProfile.getDisablePut();
+            if (`${disablePut}`.toLowerCase() === "yes") {
+                Log.warn(-1, "This profile does allow PUT operation for", channelName);
+                return false;
+            } else {
+                if (channelType === "ca") {
+                    await channelAgent.put(this.getId(), dbrData, ioTimeout);
+                } else {
+                    await channelAgent.putPva(this.getId(), dbrData, ioTimeout, pvaValueField);
+                }
+                // (3)
+                // channelAgent.reduceClientsNum();
+                if (this.checkChannelOperations(channelName) === false) {
+                    this.removeChannel(channelName);
+                }
             }
         } else {
             // local channel

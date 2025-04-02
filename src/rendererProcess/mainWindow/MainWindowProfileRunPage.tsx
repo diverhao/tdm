@@ -3,12 +3,14 @@ import { GlobalVariables } from "./GlobalVariables";
 
 import { MainWindowClient } from "../../mainProcess/windows/MainWindow/MainWindowClient";
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
+import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
 
 export class MainWindowProfileRunPage {
     private _profiles: Record<string, any>;
     private readonly _selectedProfile: Record<string, any>;
     private readonly _selectedProfileName: string = "";
     private _mainWindowClient: MainWindowClient;
+    private _largeInput: SidebarLargeInput;
 
     constructor(mainWindowClient: MainWindowClient) {
         this._mainWindowClient = mainWindowClient;
@@ -16,6 +18,7 @@ export class MainWindowProfileRunPage {
         // make local copies
         this._profiles = JSON.parse(JSON.stringify(mainWindowClient.getProfiles()));
         this._selectedProfile = JSON.parse(JSON.stringify(mainWindowClient.getSelectedProfile()));
+        this._largeInput = new SidebarLargeInput();
     }
 
     updateProfiles = (newProfiles: Record<string, any>) => {
@@ -45,6 +48,20 @@ export class MainWindowProfileRunPage {
                 // currentTdlFolder?: string;
                 windowId: this.getMainWindowClient().getWindowId(),
             });
+        };
+        const openRemoteFile = (event: any) => {
+            // open the large input
+            this._largeInput.createElement("", (newValue: "string") => {}, "Remote TDL File Path", (newValue: string) => {
+                this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file", {
+                    tdlFileNames: [newValue],
+                    mode: "operating",
+                    editable: false,
+                    macros: [],
+                    replaceMacros: false,
+                    // currentTdlFolder?: string;
+                    windowId: this.getMainWindowClient().getWindowId(),
+                });
+            }, true)
         };
         const [, forceUpdate] = React.useState({});
 
@@ -118,6 +135,7 @@ export class MainWindowProfileRunPage {
 
         const buttonFunctions: Record<string, any> = {
             "Open file": openFile,
+            "Open file from remote": openRemoteFile,
             "Create new display": this.createNewDisplay,
             "Open default windows": openDefaultDisplayWindows,
             "Data Viewer": openDataViewerWindow,

@@ -304,6 +304,7 @@ export class CaChannelAgent {
      * @param {number} ioTimeout Time out [s] of the operation. Default 1 second.
      */
     put = async (displayWindowId: string, dbrData: type_dbrData, ioTimeout: number = 1): Promise<void> => {
+
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.PUT);
         try {
             const channel = this.getChannel();

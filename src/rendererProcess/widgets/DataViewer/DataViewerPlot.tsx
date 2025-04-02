@@ -2039,9 +2039,9 @@ export class DataViewerPlot {
                 }}
 
                 onWheel={(event: React.WheelEvent) => {
+                    event.preventDefault()
                     if (event.ctrlKey === true) {
                         this.handleWheelOnPlotY(event);
-
                     } else {
                         this.handleWheelOnPlotX(event);
                     }

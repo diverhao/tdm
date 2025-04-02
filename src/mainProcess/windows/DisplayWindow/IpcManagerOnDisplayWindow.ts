@@ -163,7 +163,7 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("new-channel-data", this.handleNewChannelData);
         this.ipcRenderer.on("new-archive-data", this.handleNewArchiveData);
         this.ipcRenderer.on("new-tdl", this.handleNewTdl);
-        this.ipcRenderer.on("preset-colors", this.handlePresetColors);
+        this.ipcRenderer.on("selected-profile-contents", this.handleSelectedProfileContents);
         this.ipcRenderer.on("tca-get-result", this.handleTcaGetResult);
         this.ipcRenderer.on("tca-get-pva-type-result", this.handleTcaGetPvaTypeResult);
         this.ipcRenderer.on("dialog-show-message-box", this.handleDialogShowMessageBox);
@@ -529,11 +529,12 @@ export class IpcManagerOnDisplayWindow {
     };
 
 
-    handlePresetColors = (event: any, presetColors: undefined | Record<string, any>) => {
-        if (presetColors === undefined) {
-            return;
-        }
+    handleSelectedProfileContents = (event: any, contents: Record<string, any>) => {
+        this.getDisplayWindowClient().setProfileContents(contents);
+
+
         try {
+            const presetColors = this.getDisplayWindowClient().getProfileCategory("Preset Colors");
             for (let colorName of Object.keys(presetColors)) {
                 const colorObject = presetColors[colorName];
                 const rgb = colorObject["value"];
@@ -557,6 +558,9 @@ export class IpcManagerOnDisplayWindow {
             Log.error("Error reading preset colors", e);
         }
     };
+
+
+
 
     /**
      * New channel data arrives.

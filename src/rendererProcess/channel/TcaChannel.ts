@@ -1171,7 +1171,13 @@ export class TcaChannel {
         const accessRightStr = `${this.getDbrData()["accessRight"]}`;
         const accessRight = Channel_ACCESS_RIGHTS[accessRightStr as keyof typeof Channel_ACCESS_RIGHTS];
         if (accessRight !== undefined) {
-            return accessRight;
+            const allowPutByProfile = g_widgets1.getRoot().getDisplayWindowClient().allowPut();
+            console.log("allow put by profile ?????", allowPutByProfile)
+            if (allowPutByProfile === true) {
+                return accessRight;
+            } else {
+                return Channel_ACCESS_RIGHTS.READ_ONLY;
+            }
         } else {
             return Channel_ACCESS_RIGHTS.NOT_AVAILABLE;
         }

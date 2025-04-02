@@ -78,9 +78,18 @@ if (args["attach"] === -2) {
         // there is already at least one TDM instances running, open files in the first instance
         // quit this instance
         Log.info("TDL files are goning to be opened in another instance. We will terminate this instance.")
+        const cwd = args["cwd"];
+        const fileNames: string[] = [];
+        for (let fileName of args["fileNames"]) {
+            if (path.isAbsolute(fileName) === false) {
+                fileNames.push(path.join(cwd, fileName));
+            } else {
+                fileNames.push(fileName);
+            }
+        }
         app.requestSingleInstanceLock({
             attach: -2,
-            fileNames: args["fileNames"],
+            fileNames: fileNames,
         });
         app.exit()
     }
@@ -158,101 +167,7 @@ if (args["attach"] === -1) {
             }
             )
         }
-        /**
-         * open-file is fired when double click to open the file on MacOS
-         * 
-         * windows or Linux never triggers this event. They simply create a new TDM instance when we click the binary or TDL file
-         * 
-         * On MacOS, double click the application binary on MacOS won't trigger this event, it does nothing
-         * But on macOS you can open another TDM instance via running ./TDM inside .app file
-         * 
-         * this listener must be very early, just after the MainProcesses is create, otherwise the path may not be passed
-         * 
-         * if the TDM is not started, start the TDM and open the first profile
-         * 
-         * if one TDM instance is already running, and the one or more TDM processes are already running, then open the display
-         * in most recently opened TDM process. If there is no profile selected in this TDM process, select the first
-         * profile.
-         * 
-         * if multiple TDM instances are already running, this open-file event will be 
-         * triggered in the first-opened TDM instance
-         * 
-         */
-        /**
-         * Emitted when 
-         */
-        // The below was for opening the TDL file in an existing TDM instance in Linux and Windows. However it may cause
-        // issue if there are multiple TDM instances running from different logins of the same user. 
-        // It may open the TDL file in another login, the similar issue that Firefox has.
-        // Simply in Linux or Windows, clicking the TDL file will open a new TDM instance for this file.
-        // You can still use --attach option to open the file in an existing TDM instance
-        // ------------------------------------------------------
-        // On macOS, if there is no TDM instance running,
-        // then it opens a new TDM instance, that's all;
-        // if there is already an instance running, it trigger
-        // this already-running instance's second-instance event,
-        // and it opens another TDM instance, 
-        //
-        // On macOS, if there is no TDM instance
-        // running, it opens a new instance and fire this instance's
-        // open-file event; if there is
-        // already a TDM instance running, it causes the running 
-        // instance to fire the open-file event, and it won't
-        // open a new instance.
-        // 
-        // On Windows or Linux, if there is one TDM instance already running,
-        // either clicking the TDL file or open the TDM
-        // binary will trigger the second-instance event of the already-running
-        // TDM instance. A new TDM instance is opened.
-        // They never trigger the open-file event.
-        // By default, they will open a new TDM instance.
-        //
-        // An unrelated variable is the app.requestSingleInstanceLock()
-        // we can use this value to do something, e.g. quit() the second instance 
-        // immediately
-
-        // if (process.platform === "win32") {
-
-        //     if (!app.requestSingleInstanceLock()) {
-        //         // only the non-first instances run this
-        //         // writeFileSync(path.join(os.homedir(), "tdm.log"), `----> ${JSON.stringify(process.argv)}\n`, { flag: 'a' });
-        //         // if there is a file in process.argv, it means we double click
-        //         // the file to open it. Then we open this file in the
-        //         // already-running TDM instance, quit the second TDM instance
-        //         //  
-        //         // if the later instances come with 
-        //         for (let ii = 1; ii < process.argv.length; ii++) {
-        //             const arg = process.argv[ii];
-        //             if (!arg.startsWith("--")) {
-        //                 app.exit();
-        //                 break;
-        //             }
-        //         }
-        //         // if there is no TDL file in process.argv, it means we are
-        //         // double-clicking the TDM binary. In this case we open a 
-        //         // new TDM instance
-        //     } else {
-        //         // only the first TDM instance has this listener
-        //         app.on('second-instance', (event, argv, workingDirectory) => {
-        //             // If you are running your application with a single instance lock, you should be able to pass the argv file path like this:
-        //             // writeFileSync(path.join(os.homedir(), "tdm.log"), `second instance ${JSON.stringify(argv)}\n`, { flag: 'a' });
-        //             const tdlFileNames: string[] = [];
-        //             for (let ii = 1; ii < argv.length; ii++) {
-        //                 const arg = argv[ii];
-        //                 if (!arg.startsWith("--")) {
-        //                     tdlFileNames.push(arg);
-        //                 }
-        //             }
-        //             if (tdlFileNames.length === 0) {
-        //                 return;
-        //             }
-        //             const filePath = tdlFileNames[0];
-        //             // do the job after the app is ready
-        //             handleOpenFile(filePath);
-
-        //         });
-        //     }
-        // } else if (process.platform === "darwin" || process.platform === "linux") {
+        
         /**
          * For MacOS only
          * 
@@ -389,9 +304,8 @@ function getParentProcessName() {
     if (process.platform === "win32") {
         try {
             const pid = process.ppid; // Get Parent Process ID
-            const cmd = `wmic process where ProcessId=${pid} get Name /value`;
-            const output = execSync(cmd).toString().trim();
-            return output.split('=')[1]; // Extract the parent process name
+            const output = execSync(`powershell -Command "(Get-CimInstance Win32_Process | Where-Object { $_.ProcessId -eq ${pid} }).CommandLine"`).toString().trim();
+            return output; // Extract the parent process name
         } catch (err) {
             return null;
         }
@@ -410,9 +324,8 @@ function getParentProcessName() {
 function isStartedFromShell() {
     // bash, zsh, caja, ...
     const parentProcess = getParentProcessName();
-
     if (process.platform === "win32") {
-        if (parentProcess === "explorer.exe") {
+        if (parentProcess?.toLowerCase().includes("explorer.exe")) {
             return false;
         } else {
             return true;
@@ -421,17 +334,17 @@ function isStartedFromShell() {
 
         const hasTerm = !!process.env.TERM;
         const isTTY = process.stdin.isTTY;
-        try {
-            writeFileSync("/home/haohao/tdmlog.log", JSON.stringify({
-                parentProcess: parentProcess,
-                hasTerm: hasTerm,
-                isTTY: isTTY,
-            }, null, 4), {
+        // try {
+        //     writeFileSync("/home/haohao/tdmlog.log", JSON.stringify({
+        //         parentProcess: parentProcess,
+        //         hasTerm: hasTerm,
+        //         isTTY: isTTY,
+        //     }, null, 4), {
 
-            })
-        } catch (e) {
+        //     })
+        // } catch (e) {
 
-        }
+        // }
 
         if (parentProcess !== null) {
             if (/bash|zsh|fish|sh|dash|tcsh|csh/.test(parentProcess) || hasTerm || isTTY) {

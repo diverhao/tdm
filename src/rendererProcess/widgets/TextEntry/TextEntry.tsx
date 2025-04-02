@@ -276,6 +276,7 @@ export class TextEntry extends BaseWidget {
                     }}
                     onMouseOver={(event: any) => {
                         event.preventDefault();
+                        console.log("====================== ", this._getChannelAccessRight())
                         if (!g_widgets1.isEditing()) {
                             if (this._getChannelAccessRight() > 1.5) {
                                 event.target.style["cursor"] = "text";

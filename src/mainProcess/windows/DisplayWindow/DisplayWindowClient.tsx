@@ -72,6 +72,8 @@ export class DisplayWindowClient {
     private _actionHistory: ActionHistory;
     private _videoRecorder: VideoRecorder;
 
+    private _profileContents: Record<string, any> = {};
+
 
     private _processId: string = "";
 
@@ -1499,6 +1501,39 @@ export class DisplayWindowClient {
 
     setTextEditorModified = (newState: boolean) => {
         this._textEditorModified = newState;
+    }
+
+    getProfileContents = () => {
+        return this._profileContents
+    }
+
+    setProfileContents = (newContents: Record<string, any>) => {
+        this._profileContents = newContents;
+    }
+
+
+    getProfileCategory = (categoryName: string) => {
+        return this._profileContents[categoryName];
+    };
+
+    getProfileEntry = (categoryName: string, entryName: string) => {
+        const category = this.getProfileCategory(categoryName);
+        if (category !== undefined) {
+            const entry = category[entryName];
+            if (entry !== undefined) {
+                return entry["value"];
+            }
+        }
+        return undefined;
+    };
+
+    allowPut = () => {
+        const disablePut = this.getProfileEntry("EPICS Custom Environment", "Disable PUT");
+        if (`${disablePut}`.toLowerCase() === "yes") {
+            return false;
+        } else {
+            return true;
+        }
     }
 }
 

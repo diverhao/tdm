@@ -132,10 +132,11 @@ export class WindowAgentsManager {
      * (2) create electron.js browser window in "blocking" mode <br>
      *
      * (3) after the display window is created, send this window's uuid and the main process ID to the display window. <br>
+     * 
+     * (4) send the current profile contents, the renderer process may use it
      *
-     * (4) send the tdl, macros, mode, tdl file name, and other info to display window, so that it can displays the TDL <br>
+     * (5) send the tdl, macros, mode, tdl file name, and other info to display window, so that it can displays the TDL <br>
      *
-     * (5) send preset colors to display window
      */
     createDisplayWindow = async (options: type_options_createDisplayWindow, httpResponse: any = undefined) => {
         // writeFileSync("/Users/haohao/tdm.log", `createDisplayWindow ===================== ${JSON.stringify(options)}\n`, {flag: "a"});
@@ -219,7 +220,16 @@ export class WindowAgentsManager {
                 // for ssh-server, resolved when websocket-ipc-connected is received in IpcManagerOnMainProcess
                 // it means the ssh-client's display window has connected to its own websocket IPC
                 await displayWindowAgent.creationPromise;
+
                 // (4)
+                const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+                if (selectedProfile === undefined) {
+                    Log.error(this.getMainProcessId(), "Profile not selected!");
+                    return undefined;
+                }
+                displayWindowAgent.sendFromMainProcess("selected-profile-contents", selectedProfile.getContents());
+
+                // (5)
                 displayWindowAgent.sendFromMainProcess("new-tdl", {
                     newTdl: tdl,
                     tdlFileName: tdlFileName,
@@ -230,13 +240,9 @@ export class WindowAgentsManager {
                     utilityType: options["utilityType"],
                     utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
                 });
-                // (5)
-                const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-                if (selectedProfile === undefined) {
-                    Log.error(this.getMainProcessId(), "Profile not selected!");
-                    return undefined;
-                }
-                displayWindowAgent.sendFromMainProcess("preset-colors", selectedProfile.getCategory("Preset Colors"));
+
+                // displayWindowAgent.sendFromMainProcess("preset-colors", selectedProfile.getCategory("Preset Colors"));
+
                 Log.debug(
                     this.getMainProcessId(),
                     `Created display window ${displayWindowAgent.getId()} for ${tdlFileName === "" ? "<blank string>" : tdlFileName}`
@@ -330,7 +336,15 @@ export class WindowAgentsManager {
                 Log.debug(this.getMainProcessId(), "lifted", displayWindowAgent.getId());
 
                 // (4)
+                const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+                if (selectedProfile === undefined) {
+                    Log.error(this.getMainProcessId(), "Profile not selected!");
+                    return undefined;
+                }
+                displayWindowAgent.sendFromMainProcess("selected-profile-contents", selectedProfile.getContents());
 
+
+                // (5)
                 displayWindowAgent.sendFromMainProcess("new-tdl", {
                     newTdl: tdl,
                     tdlFileName: tdlFileName,
@@ -342,13 +356,6 @@ export class WindowAgentsManager {
                     utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
                 });
 
-                // (5)
-                const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-                if (selectedProfile === undefined) {
-                    Log.error(this.getMainProcessId(), "Profile not selected!");
-                    return undefined;
-                }
-                displayWindowAgent.sendFromMainProcess("preset-colors", selectedProfile.getCategory("Preset Colors"));
                 Log.debug(
                     this.getMainProcessId(),
                     `Created display window ${displayWindowAgent.getId()} for ${tdlFileName === "" ? "<blank string>" : tdlFileName}`
@@ -379,7 +386,8 @@ export class WindowAgentsManager {
      *
      * (3) update meta data in display window agent, i.e. tdl file name <br>
      *
-     * (4) update TDL of the display window. <br>
+     * (4) update TDL of the display window. No need to send profile, we already sent when the preloaded window was created <br>
+     * 
      */
     private replacePreloadedDisplayWindow = (options: type_options_createDisplayWindow): DisplayWindowAgent | undefined => {
         // return undefined if we do not want to replace the preloaded display window
@@ -412,7 +420,6 @@ export class WindowAgentsManager {
         }
 
         // (4)
-
         displayWindowAgent.sendFromMainProcess("new-tdl", {
             newTdl: tdl,
             tdlFileName: tdlFileName,

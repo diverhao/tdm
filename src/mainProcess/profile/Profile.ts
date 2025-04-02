@@ -164,6 +164,10 @@ export class Profile {
         return this.getEntry("EPICS Custom Environment", "EPICS Log Level");
     }
 
+    getDisablePut = () => {
+        return this.getEntry("EPICS Custom Environment", "Disable PUT");
+    }
+
     isSshConfig = () => {
         return this._isSshConfig;
     }
@@ -334,6 +338,14 @@ export class Profile {
                 "Manually Opened TDL Editable": { value: "Yes", DESCRIPTION: "Whether the manually opened TDL files and the TDL opened from them are editable.", choices: ["Yes", "No"] },
                 // manually opened displays and newly created blank displays are always editable
                 "Manually Opened TDL Mode": { value: "operating", DESCRIPTION: "The mode for manually opened TDL files.", choices: ["operating", "editing"] },
+                "Disable PUT": {
+                    "DESCRIPTION": "Whether to disable the PUT (like caput/pvput ...) operation for CA/PVA channels.",
+                    "value": "NO",
+                    "choices": [
+                        "NO",
+                        "YES",
+                    ]
+                },
                 // speical type for "Macros"
                 Macros: { value: [], DESCRIPTION: "Macros for default tdl files. Left column is the macro name, right column is the macro value.", type: "[string,string][]" },
                 "EPICS Log Level": { value: "error", DESCRIPTION: "The log level for EPICS library (epics-tca).", choices: ["trace", "debug", "info", "warn", "error", "fatal"] },
@@ -438,4 +450,5 @@ export class Profile {
             },
         }
     }
+
 }
