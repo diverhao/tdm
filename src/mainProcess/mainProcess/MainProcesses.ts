@@ -25,6 +25,9 @@ export class MainProcesses {
     _localFontNames: string[] = [];
     _sshServerSelfDestructionCountDown: NodeJS.Timeout | undefined = undefined;
 
+    writingToLog: string = "";
+    logStream: undefined | fs.WriteStream = undefined;
+
     constructor(args: type_args) {
 
         this._profilesFileName = args["settings"];
@@ -364,8 +367,8 @@ export class MainProcesses {
                 oldLogStream.close();
             }
 
-            // create a stream writing to file
-            const logStream = fs.createWriteStream(logFile, { flags: 'a' });
+            // create a stream writing to file, remove excessive spaces
+            const logStream = fs.createWriteStream(logFile.trim(), { flags: 'a' });
             
             logStream.on("error", (err: any) => {
                 Log.error(err);
@@ -388,9 +391,6 @@ export class MainProcesses {
             return;
         }
     }
-
-    writingToLog: string = "";
-    logStream: undefined | fs.WriteStream = undefined;
 
 }
 

@@ -31,7 +31,7 @@ export const generateAboutInfo = () => {
 /**
  * Year-Month-Day:Hour:Minute:Second.Millisecond
  */
-export const getCurrentDateTimeStr = () => {
+export const getCurrentDateTimeStr = (useAsFileName: boolean = false) => {
     const now = new Date();
   
     const year = now.getFullYear();
@@ -42,8 +42,11 @@ export const getCurrentDateTimeStr = () => {
     const seconds = String(now.getSeconds()).padStart(2, '0');
     const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
   
-    const formattedDateTime = `${year}-${month}-${day}-${hours}:${minutes}:${seconds}.${milliseconds}`;
-  
-    return formattedDateTime;
+    // note: : is not allowed as a file name
+    if (useAsFileName === true) {
+        return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}_${milliseconds}`;
+    } else {
+        return `${year}-${month}-${day}-${hours}:${minutes}:${seconds}.${milliseconds}`;
+    }
   }
   

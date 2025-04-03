@@ -102,6 +102,7 @@ export class TcaChannel {
             // channel name is in wrong format, e.g. loc://val1<string>
             // this situation is handled by Widgets.createTcaChannel(), which does nothing but return undefined
         }
+
     }
 
 
@@ -414,7 +415,6 @@ export class TcaChannel {
      * @returns {Promise<type_dbrData>}
      */
     getMeta = async (widgetKey: string | undefined, timeout: number | undefined = undefined): Promise<type_dbrData | type_LocalChannel_data> => {
-        console.log("get meta for ", this.getChannelName(), "from", widgetKey)
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const ipcManager = displayWindowClient.getIpcManager();
         const windowId = displayWindowClient.getWindowId();
@@ -747,7 +747,6 @@ export class TcaChannel {
 
         } else {
             const dbrTypeNum = this.getDbrData().DBR_TYPE;
-            console.log("dbr data", this.getDbrData())
 
             if (dbrTypeNum === undefined) {
                 // we did not obtain the DBR_TYPE of this channel, do not even try to put it
@@ -857,7 +856,6 @@ export class TcaChannel {
      *
      */
     destroy = (widgetKey: string | undefined) => {
-        console.log(this.getChannelName())
         // (1)
         let widgetKeys: string[] = [];
         if (widgetKey === undefined) {
@@ -865,7 +863,6 @@ export class TcaChannel {
         } else {
             widgetKeys = [widgetKey];
         }
-        console.log("destroying", widgetKeys)
         for (let widgetKey of widgetKeys) {
             try {
                 const widget = g_widgets1.getWidget2(widgetKey);
@@ -1172,7 +1169,6 @@ export class TcaChannel {
         const accessRight = Channel_ACCESS_RIGHTS[accessRightStr as keyof typeof Channel_ACCESS_RIGHTS];
         if (accessRight !== undefined) {
             const allowPutByProfile = g_widgets1.getRoot().getDisplayWindowClient().allowPut();
-            console.log("allow put by profile ?????", allowPutByProfile)
             if (allowPutByProfile === true) {
                 return accessRight;
             } else {

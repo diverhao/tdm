@@ -352,7 +352,7 @@ export class MainWindowStartupPage {
                         logFileOkToUse === true ?
                             `TDM is writing log to ${this.getLogFileFromProfiles()}.`
                             :
-                            this.getLogFileFromProfiles() === "" ?
+                            this.getLogFileFromProfiles().trim() === "" ?
                                 `Log file is not set in setting file.`
                                 :
                                 `Log file is set as ${this.getLogFileFromProfiles()}, but it is not accessible. Please provide an absolute file name path that is writable.`

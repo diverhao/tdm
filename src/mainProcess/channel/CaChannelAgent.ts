@@ -406,7 +406,22 @@ export class CaChannelAgent {
             // only one monitor allowed for a CA channel
             if (Object.keys(channel.monitors).length !== 0) {
                 alreadyHasMonitor = true;
+
+                // send Display Window the time data
+                // if there is already a monitor for a channle, we won't try to create another one
+                // if there is another monitor request coming from Display Window, this Window won't
+                // get the DBR_TIME data until the channel updates
+                // So we need to send a DBR_TIME data to this Window
+                const channelAgentsManager = this.getChannelAgentsManager();
+                const mainProcess = channelAgentsManager.getMainProcess();
+                const windowAgentsManager = mainProcess.getWindowAgentsManager();
+                const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
+                if (displayWindowAgent instanceof DisplayWindowAgent) {
+                    const dbrData_time = await this.get(displayWindowId, channel.getDbrType_TIME(), 1);
+                    displayWindowAgent.addNewChannelData(this.getChannelName(), dbrData_time);
+                }
             }
+
         } else if (protocol === "pva") {
             // in here, the pv request string is the unique identifier of a monitor for a PVA channel
             // if 2 pv requests (with or without ".value") are the same, they are considered as a same monitor
@@ -503,7 +518,7 @@ export class CaChannelAgent {
                     if (channel instanceof Channel) {
                         channel.destroyHard();
                     } else {
-                        console.log("Error: cannot find EPICS channel for", this.getChannelName());
+                        Log.debug("Cannot find EPICS channel for", this.getChannelName());
                     }
                 } else {
                     // console.log("Error: cannot find EPICS context");

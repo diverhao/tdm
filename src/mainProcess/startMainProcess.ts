@@ -334,10 +334,11 @@ function isStartedFromShell() {
         }
     } else if (process.platform === "linux") {
 
-        const hasTerm = !!process.env.TERM;
+        // const hasTerm = !!process.env.TERM;
         const isTTY = process.stdin.isTTY;
+        // console.log("Linux", parentProcess, hasTerm, isTTY)
         // try {
-        //     writeFileSync("/home/haohao/tdmlog.log", JSON.stringify({
+        //     writeFileSync("/home/1h7/tdmlog.log", JSON.stringify({
         //         parentProcess: parentProcess,
         //         hasTerm: hasTerm,
         //         isTTY: isTTY,
@@ -349,7 +350,7 @@ function isStartedFromShell() {
         // }
 
         if (parentProcess !== null) {
-            if (/bash|zsh|fish|sh|dash|tcsh|csh/.test(parentProcess) || hasTerm || isTTY) {
+            if (/bash|zsh|fish|sh|dash|tcsh|csh/.test(parentProcess) || isTTY) {
                 return true;
             } else {
                 return false;

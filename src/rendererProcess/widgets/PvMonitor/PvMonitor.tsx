@@ -321,7 +321,7 @@ export class PvMonitor extends BaseWidget {
             forceUpdate({});
         });
         this.updateDataUponRender();
-        console.log("this.columnWidths === ", this.getTable().columnWidths)
+
         React.useEffect(() => {
             if (tableRef.current !== null) {
                 const scrollHeight = tableRef.current.scrollHeight;
@@ -335,6 +335,7 @@ export class PvMonitor extends BaseWidget {
                 }
             }
         })
+
         this.calcLazyRendering(tableRef);
         return (
             <div

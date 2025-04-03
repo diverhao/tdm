@@ -53,7 +53,7 @@ export class IpcManagerOnDisplayWindow {
         this._displayWindowClient = displayWindowClient;
         this.setIpcServerPort(ipcServerPort);
 
-       
+
     }
 
     connectIpcServer = () => {
@@ -576,7 +576,7 @@ export class IpcManagerOnDisplayWindow {
     handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
 
         Log.debug("received data", JSON.stringify(newDbrData, null, 4));
-
+                
         let channelNames = Object.keys(newDbrData);
 
         // special widgets that has new dbr data mapping, this mapping should only occurs once
@@ -670,9 +670,12 @@ export class IpcManagerOnDisplayWindow {
         g_widgets1.removeFromForceUpdateWidgets(data["widgetKey"]);
         const widget = g_widgets1.getWidget2(data["widgetKey"]);
         if (widget instanceof DataViewer) {
-            widget.mapDbrDataWitNewArchiveData(data);
-            // immediately update the plot
-            widget.updatePlot(true);
+            // we may get empty data
+            if (data["archiveData"][0].length > 0 && data["archiveData"][1].length > 0) {
+                widget.mapDbrDataWitNewArchiveData(data);
+                // immediately update the plot
+                widget.updatePlot(true);
+            }
         }
     }
 

@@ -1737,6 +1737,7 @@ export class MainWindowProfileEditPage {
                     return (
                         <this._ElementMapPropertyValueItem
                             key={`${propertyName}-${element}-${index}`}
+                            propertyName={propertyName}
                             // string array
                             propertyValue={category[propertyName]["value"]}
                             // type of element, fixed as "[string,string][]"
@@ -1795,11 +1796,10 @@ export class MainWindowProfileEditPage {
     }
 
     // propertyValue is a string array
-    private _ElementArrayPropertyValueItem = ({ propertyName, propertyValue, index, propertyType }: any) => {
+    private _ElementArrayPropertyValueItem = ({ propertyName, propertyValue, index }: any) => {
         const [localItemValue, setLocalItemValue] = React.useState(propertyValue[index]);
         
         const [isEditing, setIsEditing] = React.useState(false);
-        const [focus, setFocus] = React.useState(false);
         const refSubElement = React.useRef<any>(null);
 
         React.useEffect(() => {
@@ -1871,19 +1871,19 @@ export class MainWindowProfileEditPage {
         }
     };
 
-    getNewArrayPropertyItemAddress = () => {
-        return this.newArrayPropertyItemAddress;
-    }
-    setNewArrayPropertyItemAddress = (newAddress: string[]) => {
-        this.newArrayPropertyItemAddress = newAddress;
-    }
-
     // propertyValue is an array with elements in form of 2-element string array ["ABC", "DEF"].
-    private _ElementMapPropertyValueItem = ({ propertyValue, index }: any) => {
+    private _ElementMapPropertyValueItem = ({ propertyValue, index, propertyName }: any) => {
         const [localItemValue, setLocalItemValue] = React.useState(propertyValue[index]);
 
         const [isEditing, setIsEditing] = React.useState(false);
         const refSubElement = React.useRef<any>(null);
+
+        React.useEffect(() => {
+            if (propertyName === this.getNewArrayPropertyItemAddress()[1] && index === this.getNewArrayPropertyItemAddress()[2]) {
+                setIsEditing(true);
+                this.setNewArrayPropertyItemAddress([]);
+            }
+        }, [])
 
         return (
             <ElementArrayPropertyItem refSubElement={refSubElement}>
@@ -2175,4 +2175,11 @@ export class MainWindowProfileEditPage {
             }
         }
     };
+
+    getNewArrayPropertyItemAddress = () => {
+        return this.newArrayPropertyItemAddress;
+    }
+    setNewArrayPropertyItemAddress = (newAddress: string[]) => {
+        this.newArrayPropertyItemAddress = newAddress;
+    }
 }

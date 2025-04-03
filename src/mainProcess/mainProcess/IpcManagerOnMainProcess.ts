@@ -160,6 +160,9 @@ export class IpcManagerOnMainProcess {
 
         // --------------- file converter ------------------------
         this.ipcMain.on("file-converter-command", this.handleFileConverterCommand)
+
+        // ----------------- video file --------------------------
+        this.ipcMain.on("save-video-file", this.handleSaveVideoFile)
     };
 
     // ---------------- TDM process ----------------------------
@@ -3036,6 +3039,40 @@ export class IpcManagerOnMainProcess {
             this.getMainProcess().startEdlFileConverterThread(options);
         } else if (options["command"] === "stop") {
             this.getMainProcess().stopEdlFileConverterThread();
+        }
+    }
+
+    handleSaveVideoFile = (event: any, data: {
+        displayWindowId: string,
+        fileName: string,
+        fileContents: string, // base64 data
+    }) => {
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+
+            // Convert Base64 to Buffer
+            const base64Data = data["fileContents"];
+            const buffer = Buffer.from(base64Data, "base64");
+
+            fs.writeFile(data["fileName"], buffer, (err) => {
+                if (err) {
+                    displayWindowAgent.sendFromMainProcess("dialog-show-message-box",
+                        {
+                            messageType: "error",
+                            humanReadableMessages: [`Failed to save video to ${data["fileName"]}`],
+                            rawMessages: [err.toString()]
+                        }
+                    )
+                } else {
+                    displayWindowAgent.sendFromMainProcess("dialog-show-message-box",
+                        {
+                            messageType: "info",
+                            humanReadableMessages: [`Video file saved to ${data["fileName"]}`],
+                            rawMessages: []
+                        }
+                    )
+                }
+            });
         }
     }
 }

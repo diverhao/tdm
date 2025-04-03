@@ -2123,9 +2123,11 @@ export class DataViewerPlot {
         }
         const direction = event.deltaY < 0 ? "zoom-in" : "zoom-out";
 
-        const bounding = (event.target as Element).getBoundingClientRect();
-        const pointXMid = event.clientX - bounding["x"]
-        const valXMid = this.mapPointToXY(this.getSelectedTraceIndex(), [pointXMid, 0]);
+        const pointX0 = event.clientX;
+        const pointY0 = 0;
+        const pointX = pointX0 - this.yAxisLabelWidth - this.yAxisTickWidth - this.getStyle().left;
+        const pointY = pointY0 - this.titleHeight - this.getStyle().top;
+        const valXMid = this.mapPointToXY(this.getSelectedTraceIndex(), [pointX, pointY]);
         const xAxis = this.xAxis;
 
         if (xAxis === undefined) {
@@ -2133,28 +2135,41 @@ export class DataViewerPlot {
         }
         const zoomFactor = this.getText()["axisZoomFactor"];
 
-        if (direction === "zoom-in") {
-            xAxis.valMin = valXMid[0] - (valXMid[0] - xAxis.valMin) / zoomFactor;
-            xAxis.valMax = this.tracingIsMoving === true ? Date.now() : valXMid[0] + (xAxis.valMax - valXMid[0]) / zoomFactor;
+        if (this.tracingIsMoving) {
+            if (direction === "zoom-in") {
+                xAxis.valMax = Date.now();
+                xAxis.valMin = xAxis.valMax - (xAxis.valMax - xAxis.valMin) / zoomFactor;
+            } else {
+                xAxis.valMax = Date.now();
+                xAxis.valMin = xAxis.valMax - (xAxis.valMax - xAxis.valMin) * zoomFactor;
+            }
         } else {
-            xAxis.valMin = valXMid[0] - (valXMid[0] - xAxis.valMin) * zoomFactor;
-            xAxis.valMax = this.tracingIsMoving === true ? Date.now() : valXMid[0] + (xAxis.valMax - valXMid[0]) * zoomFactor;
+            if (direction === "zoom-in") {
+                xAxis.valMin = valXMid[0] - (valXMid[0] - xAxis.valMin) / zoomFactor;
+                xAxis.valMax = valXMid[0] + (xAxis.valMax - valXMid[0]) / zoomFactor;
+            } else {
+                xAxis.valMin = valXMid[0] - (valXMid[0] - xAxis.valMin) * zoomFactor;
+                xAxis.valMax = valXMid[0] + (xAxis.valMax - valXMid[0]) * zoomFactor;
+            }
+
+
         }
 
         this.updatePlot();
+
     }
 
     /**
      * rotate mouse wheel to zoom y-direction, ctrl key must be pressed
      */
     handleWheelOnPlotY = (event: React.WheelEvent) => {
-        // event.preventDefault()
 
-        let pointYMid: undefined | number = undefined;
-        const bounding = (event.target as Element).getBoundingClientRect();
-        if (bounding !== undefined && bounding["y"] !== undefined) {
-            pointYMid = event.clientY - bounding["y"];
-        }
+        const pointX0 = 0;
+        const pointY0 = event.clientY;
+        const pointX = pointX0 - this.yAxisLabelWidth - this.yAxisTickWidth - this.getStyle().left;
+        const pointY = pointY0 - this.titleHeight - this.getStyle().top;
+        const valYMid = this.mapPointToXY(this.getSelectedTraceIndex(), [pointX, pointY]);
+
 
         const direction = event.deltaY < 0 ? "zoom-in" : "zoom-out";
 
@@ -2166,11 +2181,8 @@ export class DataViewerPlot {
         }
         const yMin = yAxis.valMin;
         const yMax = yAxis.valMax;
-        let yMid = (yMin + yMax) / 2;
-        if (pointYMid !== undefined) {
-            const xyMid = this.mapPointToXY(ii, [0, pointYMid]);
-            yMid = xyMid[1];
-        }
+        const yMid = valYMid[1];
+
         const dyUpper = yMax - yMid;
         const dyLower = yMid - yMin;
         if (direction === "zoom-in") {
@@ -2384,6 +2396,11 @@ export class DataViewerPlot {
 
             const minNewDataTime = xDataNew[0];
             const maxNewDataTime = xDataNew[xDataNew.length - 1];
+
+            // empty data
+            if (typeof minNewDataTime !== "number" || typeof maxNewDataTime !== "number") {
+                return;
+            }
 
             let [leftIndex, rightIndex] = GlobalMethods.binarySearchRange(xData, minNewDataTime, maxNewDataTime);
             Log.info("Obtained archive data, replace data from index", leftIndex, "to index", rightIndex);

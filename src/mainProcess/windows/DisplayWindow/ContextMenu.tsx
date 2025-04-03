@@ -677,18 +677,6 @@ export class ContextMenu {
                         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "media");
                     },
                 },
-                {
-                    label: "Symbol",
-                    click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "symbol");
-                    },
-                },
-                {
-                    label: "Text Symbol",
-                    click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "text-symbol");
-                    },
-                },
             ],
         },
         {
@@ -738,6 +726,19 @@ export class ContextMenu {
                         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "byte-monitor");
                     },
                 },
+                { type: "separator" },
+                {
+                    label: "Symbol",
+                    click: () => {
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "symbol");
+                    },
+                },
+                {
+                    label: "Text Symbol",
+                    click: () => {
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "text-symbol");
+                    },
+                },
             ],
         },
         {
@@ -761,12 +762,12 @@ export class ContextMenu {
                         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "spinner");
                     },
                 },
-                {
-                    label: "ThumbWheel",
-                    click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "thumb-wheel");
-                    },
-                },
+                // {
+                //     label: "ThumbWheel",
+                //     click: () => {
+                //         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "thumb-wheel");
+                //     },
+                // },
 
                 { type: "separator" },
 

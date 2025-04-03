@@ -232,18 +232,6 @@ export class ContextMenuDesktop {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "media");
                     },
                 },
-                {
-                    label: "Symbol",
-                    click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "symbol");
-                    },
-                },
-                {
-                    label: "Text Symbol",
-                    click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "text-symbol");
-                    },
-                },
             ],
         },
         {
@@ -293,6 +281,19 @@ export class ContextMenuDesktop {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "byte-monitor");
                     },
                 },
+                { type: "separator" },
+                {
+                    label: "Symbol",
+                    click: () => {
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "symbol");
+                    },
+                },
+                {
+                    label: "Text Symbol",
+                    click: () => {
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "text-symbol");
+                    },
+                },
             ],
         },
         {
@@ -316,12 +317,12 @@ export class ContextMenuDesktop {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "spinner");
                     },
                 },
-                {
-                    label: "ThumbWheel",
-                    click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "thumb-wheel");
-                    },
-                },
+                // {
+                //     label: "ThumbWheel",
+                //     click: () => {
+                //         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "thumb-wheel");
+                //     },
+                // },
 
                 { type: "separator" },
 

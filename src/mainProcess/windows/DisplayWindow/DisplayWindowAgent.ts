@@ -632,7 +632,7 @@ export class DisplayWindowAgent {
                 } else {
                     await channelAgent.putPva(this.getId(), dbrData, ioTimeout, pvaValueField);
                 }
-                
+
                 // log PUT operation: PV name, host name, new value
                 Log.info("TCA PUT: ", channelName, os.hostname(), JSON.stringify(dbrData).substring(0, 30))
 
@@ -672,6 +672,7 @@ export class DisplayWindowAgent {
      * @returns {Promise<boolean>} `true` if sucess, `false` if failed
      */
     tcaMonitor = async (channelName: string): Promise<boolean> => {
+
 
         const promiseObj = this.promises.getPromise("tca-get-meta");
         await promiseObj;
@@ -1204,43 +1205,46 @@ export class DisplayWindowAgent {
             Log.error(this.getMainProcessId(), "Browser window does not exist");
             return;
         }
-        let folder = os.homedir();
+        let saveFolder = homedir();
         const webContents = browserWindow.webContents;
         webContents.capturePage().then((image: Electron.NativeImage) => {
 
-            const profile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
-            if (profile !== undefined) {
-                const entryValue = profile.getEntry("EPICS Custom Environment", "Image Saving Folder");
-                if (entryValue !== undefined) {
-                    folder = entryValue.replace("$HOME", os.homedir());
+            const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+            if (selectedProfile !== undefined) {
+                try {
+                    const saveFolderTmp = selectedProfile.getEntry("EPICS Custom Environment", "Video Saving Folder");
+                    if (saveFolderTmp === undefined) {
+                        throw new Error("Cannot find Video Saving Folder setting");
+                    }
+                    if (fs.existsSync(saveFolderTmp)) {
+                        fs.accessSync(saveFolderTmp, fs.constants.W_OK);
+                        saveFolder = saveFolderTmp;
+                    }
+                } catch (e) {
+                    Log.error(this.getMainProcessId(), e);
                 }
             }
-            const imageFileName = path.join(folder, "TDM-screenshot-" + getCurrentDateTimeStr() + ".png");
+
+            const imageFileName = path.join(saveFolder, "TDM-screenshot-" + getCurrentDateTimeStr(true) + ".png");
             fs.writeFile(imageFileName, image.toPNG(), (err) => {
                 if (err) {
                     this.sendFromMainProcess("dialog-show-message-box",
                         {
                             messageType: "error",
-                            humanReadableMessages: [`Failed saving screenshot to folder ${folder}`],
+                            humanReadableMessages: [`Failed saving screenshot to folder ${saveFolder}`],
                             rawMessages: [err.toString()]
                         }
                     )
+                } else {
+                    Log.info("Save screenshot to", imageFileName);
                 }
-                // do not show any info on display window, the next image taking command may capture the message banner
-                // this.sendFromMainProcess("dialog-show-message-box",
-                // {
-                //     messageType: "info",
-                //     humanReadableMessages: [`Screenshot successfully saved to folder ${imageFileName}`],
-                //     rawMessages: []
-                // }
-                // )
             });
         }).catch((err) => {
             Log.error(this.getMainProcessId(), err)
             this.sendFromMainProcess("dialog-show-message-box",
                 {
                     messageType: "error",
-                    humanReadableMessages: [`Failed saving screenshot to folder ${folder}`],
+                    humanReadableMessages: [`Failed saving screenshot to folder ${saveFolder}`],
                     rawMessages: [err.toString()]
                 }
             )

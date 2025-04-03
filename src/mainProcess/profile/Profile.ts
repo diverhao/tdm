@@ -367,8 +367,8 @@ export class Profile {
                 // speical type for "Macros"
                 Macros: { value: [], DESCRIPTION: "Macros for default tdl files. Left column is the macro name, right column is the macro value.", type: "[string,string][]" },
                 "EPICS Log Level": { value: "error", DESCRIPTION: "The log level for EPICS library (epics-tca).", choices: ["trace", "debug", "info", "warn", "error", "fatal"] },
-                "Video Saving Folder": { value: " ", DESCRIPTION: "Save video files to this folder. Default is HOME folder." },
-                "Image Saving Folder": { value: " ", DESCRIPTION: "Automatically save image files to this folder. Default is HOME folder." },
+                "Video Saving Folder": { value: " ", DESCRIPTION: "Automatically save video files to this folder. Fallback is HOME folder." },
+                "Image Saving Folder": { value: " ", DESCRIPTION: "Automatically save image files to this folder. Fallback is HOME folder." },
                 "Python Command": { value: "python3", DESCRIPTION: "The python command for running script attached to the display windows. You can add options to it." }
             },
             "Preset Colors": {

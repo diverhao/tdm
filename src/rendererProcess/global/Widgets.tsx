@@ -1642,6 +1642,7 @@ export class Widgets {
             }
             tcaChannel.getMeta(undefined);
             // (3)
+            console.log("start to monitor XXX ========================")
             tcaChannel.monitor();
         }
     };
