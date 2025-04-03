@@ -632,6 +632,10 @@ export class DisplayWindowAgent {
                 } else {
                     await channelAgent.putPva(this.getId(), dbrData, ioTimeout, pvaValueField);
                 }
+                
+                // log PUT operation: PV name, host name, new value
+                Log.info("TCA PUT: ", channelName, os.hostname(), JSON.stringify(dbrData).substring(0, 30))
+
                 // (3)
                 // channelAgent.reduceClientsNum();
                 if (this.checkChannelOperations(channelName) === false) {

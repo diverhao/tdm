@@ -3,14 +3,16 @@ import * as GlobalMethods from "../global/GlobalMethods";
 import { Profile } from "../../mainProcess/profile/Profile";
 import { GlobalVariables } from "./GlobalVariables";
 import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMenu";
-import {Log} from "../../mainProcess/log/Log";
+import { Log } from "../../mainProcess/log/Log";
+import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
 
 import { MainWindowClient, mainWindowState } from "../../mainProcess/windows/MainWindow/MainWindowClient";
 
 
 export class MainWindowStartupPage {
     private _mainWindowClient: MainWindowClient;
-    private forceUpdate: any = () => { }
+    forceUpdate: any = () => { }
+    private _largeInput: SidebarLargeInput = new SidebarLargeInput();
 
     constructor(mainWindowClient: MainWindowClient) {
         this._mainWindowClient = mainWindowClient;
@@ -189,13 +191,17 @@ export class MainWindowStartupPage {
                 {/* profiles buttons */}
                 {
                     profilesNames.map((profileName, index) => {
-                        return (
-                            <this._ElementProfile
-                                key={`${profileName}-${index}`}
-                                profileName={profileName}
-                                index={index}
-                            />
-                        );
+                        if (profileName === "For All Profiles") {
+                            return null;
+                        } else {
+                            return (
+                                <this._ElementProfile
+                                    key={`${profileName}-${index}`}
+                                    profileName={profileName}
+                                    index={index}
+                                />
+                            );
+                        }
                     })
                 }
                 {/* add-new-profile button */}
@@ -312,6 +318,7 @@ export class MainWindowStartupPage {
      * Brief introduction to TDM and the concept of profile
      */
     private _ElementIntroduction = () => {
+        const logFileOkToUse = this.getLogFileFromProfiles() === this.getMainWindowClient().getLogFileName() && this.getMainWindowClient().getLogFileName().trim() !== "";
         const style = {
             marginLeft: "25%",
             marginRight: "25%",
@@ -320,6 +327,7 @@ export class MainWindowStartupPage {
             justifyContent: "center",
             flexDirection: "column",
             fontSize: 15,
+            marginBottom: 15,
         } as React.CSSProperties;
 
         return (
@@ -339,9 +347,65 @@ export class MainWindowStartupPage {
                     new one. Below are the profiles stored in
                 </div>
                 <this._ElementProfilesFileName />
+                <div>
+                    {
+                        logFileOkToUse === true ?
+                            `TDM is writing log to ${this.getLogFileFromProfiles()}.`
+                            :
+                            this.getLogFileFromProfiles() === "" ?
+                                `Log file is not set in setting file.`
+                                :
+                                `Log file is set as ${this.getLogFileFromProfiles()}, but it is not accessible. Please provide an absolute file name path that is writable.`
+                    }
+                    {" "}
+                    Click {" "}
+                    <span
+                        style={{
+                            cursor: "pointer",
+                            textDecoration: "underline dotted",
+                        }}
+                        onMouseDown={() => {
+                            this._largeInput.createElement(this.getLogFileFromProfiles(), (newValue: "string") => { }, "Log File Name", (newValue: string) => {
+                                this.setLogFileToProfile(newValue);
+                                this.getMainWindowClient().saveProfiles();
+                                this.forceUpdate();
+                            })
+                        }}
+                    >
+                    here
+                    </span> {" "}
+                    to change it.
+                </div>
             </div>
         );
     };
+
+    getLogFileFromProfiles = () => {
+        try {
+            const profiles = this.getMainWindowClient().getProfiles();
+            const logFileName = profiles["For All Profiles"]["Log"]["General Log File"]["value"];
+            if (typeof logFileName === "string") {
+                return logFileName;
+            } else {
+                return "";
+            }
+        } catch (e) {
+            return "";
+        }
+    }
+
+    setLogFileToProfile = (newName: string) => {
+        try {
+            const profiles = this.getMainWindowClient().getProfiles();
+            profiles["For All Profiles"]["Log"]["General Log File"]["value"] = newName;
+            console.log("==========XXX OKOKIK")
+            return true;
+        } catch (e) {
+            console.log("==========XXX")
+            return false;
+        }
+
+    }
 
     /**
      * Dropdown menu for actions applicable to the profile.

@@ -138,6 +138,7 @@ export class IpcManagerOnMainWindow {
         this.ipcRenderer.on("dialog-show-message-box", this.handleDialogShowMessageBox);
         this.ipcRenderer.on("dialog-show-input-box", this.handleDialogShowInputBox);
         this.ipcRenderer.on("window-will-be-closed", this.handleWindowWillBeClosed);
+        this.ipcRenderer.on("log-file-name", this.handleLogFileName);
     };
 
 
@@ -225,7 +226,7 @@ export class IpcManagerOnMainWindow {
      * After the main window GUI is created, the profiles and its file name are sent from main process. This function
      * is also invoked when the Profiles is changed. <br>
      */
-    private _handleAfterMainWindowGuiCreated = (event: any, profiles: Record<string, any>, profilesFileName: string, envDefault: Record<string, any>, envOs: Record<string, any>) => {
+    private _handleAfterMainWindowGuiCreated = (event: any, profiles: Record<string, any>, profilesFileName: string, envDefault: Record<string, any>, envOs: Record<string, any>, logFileName: string) => {
         const mainWindowClient = this.getMainWindowClient();
         // in editing page, we need the env default and env os
         mainWindowClient.setEnvDefault(envDefault);
@@ -234,6 +235,7 @@ export class IpcManagerOnMainWindow {
         mainWindowClient.setProfilesFileName(profilesFileName);
         mainWindowClient.setProfileEditPage(new MainWindowProfileEditPage(mainWindowClient));
         mainWindowClient.setStartupPage(new MainWindowStartupPage(mainWindowClient));
+        mainWindowClient.setLogFileName(logFileName);
         const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
         root.render(mainWindowClient.getElement());
 
@@ -385,4 +387,18 @@ export class IpcManagerOnMainWindow {
             close: true,
         });
     };
+
+    /**
+     * The log file that is being actively used, it is determined by the 
+     * log file property in profiles (not profile) and the accessibility of this file
+     * 
+     * If the log file defined in profiles is not writable, then the logFileName is ""
+     */
+    handleLogFileName = (event: any, logFileName: string) => {
+        this.getMainWindowClient().setLogFileName(logFileName);
+        // force update startup page, it contains the log file name
+        if (this.getMainWindowClient().getState() === mainWindowState.start) {
+            this.getMainWindowClient().getStartupPage()?.forceUpdate();
+        }
+    }
 }

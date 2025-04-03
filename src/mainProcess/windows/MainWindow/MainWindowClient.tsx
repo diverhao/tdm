@@ -43,6 +43,8 @@ export class MainWindowClient {
     private _startupPage: MainWindowStartupPage | undefined = undefined;
     private _profileRunPage: MainWindowProfileRunPage | undefined = undefined;
 
+    private _logFileName: string = "";
+
     private readonly _ipcManager: IpcManagerOnMainWindow;
     private _processId: string = "";
     private _windowId: string = "";
@@ -278,6 +280,15 @@ export class MainWindowClient {
     setEnvOs = (newEnv: Record<string, any>) => {
         this._envOs = newEnv;
     }
+
+    getLogFileName = () => {
+        return this._logFileName;
+    }
+
+    setLogFileName = (newName: string) => {
+        this._logFileName = newName;
+    }
+
 
 }
 

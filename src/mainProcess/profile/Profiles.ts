@@ -249,6 +249,20 @@ export class Profiles {
         return Object.keys(this._profiles);
     };
 
+    getLogFile = () => {
+        try {
+            const profile = this.getProfile("For All Profiles");
+            const logfile = profile?.getEntry("Log", "General Log File");
+            if (logfile !== undefined) {
+                return logfile
+            } else {
+                return "";
+            }
+        } catch (e) {
+            return "";
+        }
+    }
+
     /**
      * Serialize the profiles. <br>
      * 
@@ -258,27 +272,42 @@ export class Profiles {
         const profilesObj: Record<string, Record<string, any>> = {};
         const defaultGeneralProfile = Profile.generateDefaultProfile();
 
+
+        // if the input JSON object does not have "For All Profiles" profile, add one in the beginning
+        if (Object.keys(this._profiles).includes("For All Profiles") === false) {
+            const forAllProfilesProfileObj = Profile.generateForAllProfilesProfile();
+            profilesObj["For All Profiles"] = forAllProfilesProfileObj;
+        }
+
+
         for (const profileName in this._profiles) {
             const profile = this._profiles[profileName];
             let profileObj = JSON.parse(JSON.stringify(profile.getContents()));
 
-            let defaultProfile = JSON.parse(JSON.stringify(defaultGeneralProfile));
+            // special case: "For All Profiles" profile
+            if (profileName === "For All Profiles") {
+                // do not merge with default profile, it is not a real profile
+            } else {
 
-            // special one: only keep "About" and "SSH Configuration" categories
-            for (let categoryName of Object.keys(defaultProfile)) {
-                const defaultCategoryContents = defaultProfile[categoryName];
-                if (profileObj[categoryName] !== undefined) {
-                    profileObj[categoryName] = { ...defaultCategoryContents, ...profileObj[categoryName] };
-                } else {
-                    if (categoryName === "About") {
-                        profileObj = { "About": defaultCategoryContents, ...profileObj };
+                let defaultProfile = JSON.parse(JSON.stringify(defaultGeneralProfile));
+
+                // special one: only keep "About" and "SSH Configuration" categories
+                for (let categoryName of Object.keys(defaultProfile)) {
+                    const defaultCategoryContents = defaultProfile[categoryName];
+                    if (profileObj[categoryName] !== undefined) {
+                        profileObj[categoryName] = { ...defaultCategoryContents, ...profileObj[categoryName] };
                     } else {
-                        profileObj[categoryName] = { ...defaultCategoryContents };
+                        if (categoryName === "About") {
+                            profileObj = { "About": defaultCategoryContents, ...profileObj };
+                        } else {
+                            profileObj[categoryName] = { ...defaultCategoryContents };
+                        }
                     }
                 }
             }
             profilesObj[profileName] = profileObj;
         }
+
 
         // make a hard copy
         return JSON.parse(JSON.stringify(profilesObj));

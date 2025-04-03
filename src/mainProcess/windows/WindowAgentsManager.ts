@@ -686,6 +686,7 @@ export class WindowAgentsManager {
                 this.getMainProcess().getProfilesFileName(),
                 envDefault,
                 envOs,
+                this.getMainProcess().getMainProcesses().writingToLog,
             );
 
             // "Emitted when the application is activated"
@@ -702,6 +703,7 @@ export class WindowAgentsManager {
                         this._mainProcess.getProfilesFileName(),
                         envDefault,
                         envOs,
+                        this.getMainProcess().getMainProcesses().writingToLog,
                     );
 
                     // if (cmdLineSelectedProfile !== "") {

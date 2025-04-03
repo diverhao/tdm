@@ -13,6 +13,7 @@ import { LocalFontsReader } from "../file/LocalFontsReader";
 import * as fs from "fs";
 import { Profiles } from "../profile/Profiles";
 import { FileReader } from "../file/FileReader";
+import path from "path";
 
 export class MainProcesses {
     _processes: MainProcess[] = [];
@@ -88,10 +89,10 @@ export class MainProcesses {
             const ldapDistinguishedName = ldapDistinguishedNameProperty["value"];
             const ldapSearchBase = ldapSearchBaseProperty["value"];
             const ldapSearchFilter = ldapSearchFilterProperty["value"];
-            const ldapSearchScope =  ldapSearchScopeProperty["value"];
-    
+            const ldapSearchScope = ldapSearchScopeProperty["value"];
 
-            const httpsOptions: {url: string, bindDN: string, searchBase: string, searchFilter: string, searchScope: string, key: Buffer, cert: Buffer} = {
+
+            const httpsOptions: { url: string, bindDN: string, searchBase: string, searchFilter: string, searchScope: string, key: Buffer, cert: Buffer } = {
                 url: ldapUri,
                 bindDN: ldapDistinguishedName,
                 // bindCredentials: ldapBindCredentials,
@@ -283,6 +284,113 @@ export class MainProcesses {
             throw new Error("Profiles file does not exist.");
         }
     };
+
+    // ------------------------- log ----------------------------
+
+    readLogFileName = (): string => {
+
+        // try to read TDM setting first, and make sure it is a legitimate file name
+        try {
+            const profilesFileContents = this.readProfilesJsonFromFileSync();
+
+            const logFileNameInTdm = profilesFileContents["For All Profiles"]["Log"]["General Log File"]["value"];
+            if (this.logFileOkToUse(`${logFileNameInTdm}`)) {
+                return logFileNameInTdm;
+            }
+        } catch (e) {
+            // do nothing
+        }
+
+        // // try to read system settings
+        // try {
+        //     const logFileNameInOs = process.env["TDM_LOG"];
+        //     if (this.logFileOkToUse(`${logFileNameInOs}`)) {
+        //         return `${logFileNameInOs}`;
+        //     }
+        // } catch(e) {
+        //     // do nothing
+        // }
+
+        return "";
+
+    }
+
+    private logFileOkToUse = (logFile: string): boolean => {
+
+        let ok = path.isAbsolute(logFile) && fs.existsSync(path.dirname(logFile));
+        if (ok === false) {
+            return false;
+        }
+        try {
+            fs.accessSync(path.dirname(logFile), fs.constants.W_OK)
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+
+    /**
+     * The log is written to TDM_LOG system environment by default. If the "Log file" is defined
+     * in the profile, it will write to this file after the profile is started.
+     * 
+     * Write log to the log file if it is accessible.
+     * 
+     * This should be done as early as possible.
+     */
+    enableLogToFile = () => {
+        const logFile = this.readLogFileName();
+
+        // no change
+        if (logFile === this.writingToLog && this.writingToLog !== "")  {
+            return;
+        }
+
+        if (logFile !== "") {
+            // continue
+        } else {
+            Log.info("Log file is not accessible. Log will only be shown in standard output.");
+            this.writingToLog = "";
+            return;
+        }
+
+        const oldLogStream = this.logStream;
+
+        const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+        try {
+            
+            if (oldLogStream instanceof fs.WriteStream) {
+                Log.info("Log file changed, close old log stream");
+                oldLogStream.close();
+            }
+
+            // create a stream writing to file
+            const logStream = fs.createWriteStream(logFile, { flags: 'a' });
+            
+            logStream.on("error", (err: any) => {
+                Log.error(err);
+                // do nothing
+            })
+            this.logStream = logStream;
+
+            // overriding `process.stdout.write`, so that we can both printout and write to log file
+            process.stdout.write = ((chunk: string | Uint8Array, encoding: BufferEncoding, callback: (err: Error | null | undefined) => void): boolean => {
+                logStream.write(chunk, encoding, callback); // Write to file
+                return originalStdoutWrite(chunk, encoding, callback); // Return boolean
+            }) as typeof process.stdout.write;
+            this.writingToLog = logFile;
+            Log.info("Log is being written to file", logFile);
+            return;
+        } catch (e) {
+            Log.error("Error logging to log file", logFile);
+            Log.error(e);
+            this.writingToLog = "";
+            return;
+        }
+    }
+
+    writingToLog: string = "";
+    logStream: undefined | fs.WriteStream = undefined;
 
 }
 

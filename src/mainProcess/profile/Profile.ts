@@ -168,10 +168,28 @@ export class Profile {
         return this.getEntry("EPICS Custom Environment", "Disable PUT");
     }
 
+
     isSshConfig = () => {
         return this._isSshConfig;
     }
 
+    static generateForAllProfilesProfile = (): Record<string, any> => {
+        return (
+            {
+                "About": {
+                    "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "This is not a profile. It contains the information that is independent from any profile."
+                },
+                "Log": {
+                    "DESCRIPTION_5f17d09e-fc05-43f2-88a2-d8f989b00c6b": "For log",
+                    "General Log File": {
+                        "value": " ",
+                        "DESCRIPTION": "Logs of this profile are written to this file. If empty, the logs are output to default output device."
+                    }
+                }
+
+            }
+        )
+    };
 
     // all atomic data must be string type, e.g. "localhost", "42"
     static generateDefaultProfile = (): Record<string, any> => {
@@ -184,7 +202,7 @@ export class Profile {
                 "EPICS_CA_ADDR_LIST": {
                     "DESCRIPTION": "Computers that the TDM searches for the EPICS channels. If you want to ignore the setting, set one entry to \"DO NOT SET\" (quotes not included).",
                     "value": [
-                        "160.91.228.17"
+                        "DO NOT SET"
                     ]
                 },
                 "EPICS_CA_AUTO_ADDR_LIST": {
@@ -349,7 +367,6 @@ export class Profile {
                 // speical type for "Macros"
                 Macros: { value: [], DESCRIPTION: "Macros for default tdl files. Left column is the macro name, right column is the macro value.", type: "[string,string][]" },
                 "EPICS Log Level": { value: "error", DESCRIPTION: "The log level for EPICS library (epics-tca).", choices: ["trace", "debug", "info", "warn", "error", "fatal"] },
-                "Log file": { value: " ", DESCRIPTION: "Logs of this profile are written to this file. If empty, the logs are output to default output device." },
                 "Video Saving Folder": { value: " ", DESCRIPTION: "Save video files to this folder. Default is HOME folder." },
                 "Image Saving Folder": { value: " ", DESCRIPTION: "Automatically save image files to this folder. Default is HOME folder." },
                 "Python Command": { value: "python3", DESCRIPTION: "The python command for running script attached to the display windows. You can add options to it." }

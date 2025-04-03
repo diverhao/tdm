@@ -632,22 +632,52 @@ export class ProfilesViewer extends BaseWidget {
     }
 
     _ElementProfiles = ({ show }: any) => {
+
+        const logFileOkToUse = (this.getText()["log-file-name-in-profiles"].trim() === this.getText()["log-file-name"].trim()) && (this.getText()["log-file-name"].trim() !== "");
+
         return (
             <div style={{
                 display: show ? "inline-flex" : "none",
                 flexDirection: 'column',
             }}>
+                <div>
+                    <hr></hr>
+                </div>
                 <div style={{
                     color: "rgba(100, 100, 100, 1)",
                     marginTop: 10,
                     marginBottom: 10,
                 }}>
-                    You are currently using profile <code>{this.getText()["selected-profile-name"]["Selected profile"]}</code>.
+                This TDM instance is using profiles from {`${this.getText()["profilesFileName"]}`}
                 </div>
                 <div>
                     <hr></hr>
                 </div>
-                {`${this.getText()["profilesFileName"]}`}
+                <div style={{
+                    color: "rgba(100, 100, 100, 1)",
+                    marginTop: 10,
+                    marginBottom: 10,
+                }}>
+                    You are currently using profile {this.getText()["selected-profile-name"]["Selected profile"]}.
+                </div>
+                <div>
+                    <hr></hr>
+                </div>
+                <div style={{
+                    color: "rgba(100, 100, 100, 1)",
+                    marginTop: 10,
+                    marginBottom: 10,
+                }}>
+                    {
+                        logFileOkToUse === true ?
+                            `TDM is writing log to ${this.getText()["log-file-name"]}`
+                            :
+                            this.getText()["log-file-name-in-profiles"].trim() === "" ?
+                                `Log file is not set in setting file.`
+                                :
+                                `Log file is set as ${this.getText()["log-file-name-in-profiles"]}, but it is not accessible. Please provide an absolute file name path that is writable.`
+                    }
+                </div>
                 <div>
                     <hr></hr>
                 </div>

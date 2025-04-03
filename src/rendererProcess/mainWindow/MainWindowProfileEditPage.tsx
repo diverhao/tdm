@@ -48,6 +48,8 @@ export class MainWindowProfileEditPage {
 
     private _forceUpdatePage: any = () => { };
 
+    private newArrayPropertyItemAddress: string[] = [];
+
     constructor(mainWindowClient: MainWindowClient) {
         this._mainWindowClient = mainWindowClient;
     }
@@ -1682,6 +1684,7 @@ export class MainWindowProfileEditPage {
         }
     };
 
+
     private _ElementArrayPropertyValue = ({ propertyName, category }: any) => {
         const style = {
             display: "flex",
@@ -1699,6 +1702,7 @@ export class MainWindowProfileEditPage {
                     return (
                         <this._ElementArrayPropertyValueItem
                             key={`${propertyName}-${element}-${index}`}
+                            propertyName={propertyName}
                             // string array
                             propertyValue={category[propertyName]["value"]}
                             // type of element, e.g. "string" or "[string, string]", if it is undefined, its type is "string"
@@ -1780,6 +1784,8 @@ export class MainWindowProfileEditPage {
                     paddingRight={5}
                     handleClick={(event: any) => {
                         addItem();
+                        const stringArray = category[propertyName]["value"];
+                        this.setNewArrayPropertyItemAddress([this.getSelectedCategoryName(), propertyName, stringArray.length - 1]);
                     }}
                 >
                     Add item
@@ -1789,10 +1795,19 @@ export class MainWindowProfileEditPage {
     }
 
     // propertyValue is a string array
-    private _ElementArrayPropertyValueItem = ({ propertyValue, index, propertyType }: any) => {
+    private _ElementArrayPropertyValueItem = ({ propertyName, propertyValue, index, propertyType }: any) => {
         const [localItemValue, setLocalItemValue] = React.useState(propertyValue[index]);
+        
         const [isEditing, setIsEditing] = React.useState(false);
+        const [focus, setFocus] = React.useState(false);
         const refSubElement = React.useRef<any>(null);
+
+        React.useEffect(() => {
+            if (propertyName === this.getNewArrayPropertyItemAddress()[1] && index === this.getNewArrayPropertyItemAddress()[2]) {
+                setIsEditing(true);
+                this.setNewArrayPropertyItemAddress([]);
+            }
+        }, [])
 
         return (
             <ElementArrayPropertyItem refSubElement={refSubElement}>
@@ -1816,6 +1831,10 @@ export class MainWindowProfileEditPage {
 
     private _ElementArrayPropertyValueItemContent = ({ isEditing, localItemValue, setLocalItemValue }: any) => {
 
+        console.log("render me", focus, isEditing, localItemValue, this.getNewArrayPropertyItemAddress())
+
+        const inputRef = React.useRef<any>(null);
+
         const style = {
             backgroundColor: "rgba(0,0,0,0)",
             width: "70%",
@@ -1829,6 +1848,7 @@ export class MainWindowProfileEditPage {
         if (isEditing) {
             return (
                 <input
+                    ref={inputRef}
                     style={style}
                     value={localItemValue}
                     onChange={(event: any) => {
@@ -1851,9 +1871,17 @@ export class MainWindowProfileEditPage {
         }
     };
 
+    getNewArrayPropertyItemAddress = () => {
+        return this.newArrayPropertyItemAddress;
+    }
+    setNewArrayPropertyItemAddress = (newAddress: string[]) => {
+        this.newArrayPropertyItemAddress = newAddress;
+    }
+
     // propertyValue is an array with elements in form of 2-element string array ["ABC", "DEF"].
     private _ElementMapPropertyValueItem = ({ propertyValue, index }: any) => {
         const [localItemValue, setLocalItemValue] = React.useState(propertyValue[index]);
+
         const [isEditing, setIsEditing] = React.useState(false);
         const refSubElement = React.useRef<any>(null);
 
@@ -1983,9 +2011,9 @@ export class MainWindowProfileEditPage {
         return (
             isEditing ?
                 <div
-                    ref={refSubElement}
+                    // ref={refSubElement}
                     style={{
-                        display: "none",
+                        display: "inline-flex",
                     }}
                 >
                     <ElementRectangleButton

@@ -339,6 +339,9 @@ export class IpcManagerOnMainProcess {
             // read file
             const newProfiles = await this.getMainProcess().createProfilesFromFile(profilesFileName);
 
+            // we are manually loading a profiles file, so we need to update the log file
+            this.getMainProcess().getMainProcesses().enableLogToFile();
+
             // read default and OS-defined EPICS environment variables
             // in main window editing page, we need env default and env os
             const env = Environment.getTempInstance();
@@ -346,7 +349,7 @@ export class IpcManagerOnMainProcess {
             const envOs = env.getEnvOs();
 
             // tell main window to update
-            mainWindowAgent.sendFromMainProcess("after-main-window-gui-created", newProfiles.serialize(), profilesFileName, envDefault, envOs);
+            mainWindowAgent.sendFromMainProcess("after-main-window-gui-created", newProfiles.serialize(), profilesFileName, envDefault, envOs, this.getMainProcess().getMainProcesses().writingToLog);
         } catch (e) {
             mainWindowAgent.sendFromMainProcess("dialog-show-message-box",
                 {
@@ -425,6 +428,11 @@ export class IpcManagerOnMainProcess {
             // save first
             newProfiles.save();
             this.getMainProcess().setProfiles(newProfiles);
+
+            // update log
+            this.getMainProcess().getMainProcesses().enableLogToFile();
+            // always tell main window the log file name, if the log file is not accessible, it is ""
+            mainWindowAgent.sendFromMainProcess("log-file-name", this.getMainProcess().getMainProcesses().readLogFileName());
         } catch (e) {
             Log.error(this.getMainProcessId(), e);
             mainWindowAgent.sendFromMainProcess("dialog-show-message-box",
@@ -488,6 +496,11 @@ export class IpcManagerOnMainProcess {
         }
         const newProfiles = new Profiles(modifiedProfiles);
         newProfiles.setFilePath(filePath);
+
+        // update log
+        this.getMainProcess().getMainProcesses().enableLogToFile();
+        // always tell main window the log file name, if the log file is not accessible, it is ""
+        mainWindowAgent.sendFromMainProcess("log-file-name", this.getMainProcess().getMainProcesses().readLogFileName());
 
         try {
             // save first
@@ -1968,6 +1981,8 @@ export class IpcManagerOnMainProcess {
                 }
             }
             utilityOptions["selected-profile-name"] = { "Selected profile": this.getMainProcess().getProfiles().getSelectedProfileName() };
+            utilityOptions["log-file-name"] = this.getMainProcess().getMainProcesses().writingToLog;
+            utilityOptions["log-file-name-in-profiles"] = this.getMainProcess().getProfiles().getLogFile();
         } else if (utilityType === "TdlViewer") {
             // read script
             // options:

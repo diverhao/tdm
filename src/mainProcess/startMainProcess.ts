@@ -99,6 +99,8 @@ if (args["attach"] === -2) {
 if (args["attach"] === -1) {
     Log.info('-1', "Creating TDM main processes.");
     const mainProcesses = new MainProcesses(args);
+
+    mainProcesses.enableLogToFile();
     /**
      * In ssh-server mode, the createProcess() is invoked after we receive the process Id from ssh client
      */
