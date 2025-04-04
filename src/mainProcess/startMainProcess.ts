@@ -126,7 +126,14 @@ if (args["attach"] === -1) {
 
                 if (selectedProfile === undefined) {
                     // if there is no profile selected, use the first available profile
-                    const firstProfileName = profiles.getProfileNames()[0];
+                    let firstProfileName = ""
+                    for (const profileName of profiles.getProfileNames()) {
+                        if (profileName !== "For All Profiles") {
+                            firstProfileName = profileName;
+                            break;
+                        }
+                    }
+
 
                     if (firstProfileName === undefined) {
                         // there is no profile defined, do
@@ -169,7 +176,7 @@ if (args["attach"] === -1) {
             }
             )
         }
-        
+
         /**
          * For MacOS only
          * 
@@ -232,7 +239,14 @@ if (args["attach"] === -1) {
             // ensure that the command line selected profile is in the profiles
             if (cmdLineSelectedProfile === "" && cmdLineOpenFileNames.length > 0) {
                 if (profileNames.length > 0) {
-                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", profileNames[0], args);
+                    let firstProfileName = ""
+                    for (const profileName of profileNames) {
+                        if (profileName !== "For All Profiles") {
+                            firstProfileName = profileName;
+                            break;
+                        }
+                    }
+                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", firstProfileName, args);
                 } else {
                     // do nothing
                     Log.info('-1', "User did not provided a profile, show main window.");
@@ -361,4 +375,5 @@ function isStartedFromShell() {
     } else {
         return false;
     }
+
 }

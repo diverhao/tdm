@@ -13,6 +13,7 @@ export type type_action_opendisplay_tdl = {
     fileName: string;
     externalMacros: [string, string][];
     useParentMacros: boolean;
+    openInSameWindow: boolean;
 };
 
 export type type_action_writepv_tdl = {
@@ -136,7 +137,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         return result;
     };
 
-    static convertEdlToTdl_ShellCommand = (edl: Record<string, any>): type_ActionButton_tdl => {
+    static convertEdlToTdl_ShellCommand = (edl: Record<string, any>, convertEdlSuffix: boolean = false): type_ActionButton_tdl => {
         console.log("\n------------", `Parsing "Shell Command"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ActionButton") as type_ActionButton_tdl;
         // all properties for this widget
@@ -209,7 +210,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                 } else if (propertyName === "invisible") {
                     tdl["text"]["invisibleInOperation"] = EdlConverter.convertEdlBoolean(propertyValue);
                 } else if (propertyName === "commandLabel") {
-                    tdl["actions"] = EdlConverter.convertEdlShellCommands(propertyValue, edl["command"]) as type_actions_tdl;
+                    tdl["actions"] = EdlConverter.convertEdlShellCommands(propertyValue, edl["command"], convertEdlSuffix) as type_actions_tdl;
                 } else if (propertyName === "swapButtons") {
                     tdl["text"]["swapButtons"] = true;
                 } else {

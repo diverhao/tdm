@@ -1823,7 +1823,7 @@ export class DisplayWindowAgent {
     focus = () => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow instanceof BrowserWindow) {
-            if (browserWindow.isMinimizable()) {
+            if (browserWindow.isMinimized()) {
                 browserWindow.restore();
             }
             browserWindow.focus();

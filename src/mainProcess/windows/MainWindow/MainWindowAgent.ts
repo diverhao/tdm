@@ -323,12 +323,16 @@ export class MainWindowAgent {
             browserWindow.show();
         }
     };
+
     focus = () => {
         const browserWindow = this.getBrowserWindow();
-        if (browserWindow === undefined) {
-            Log.error(this.getMainProcessId(), "Main window does not exist, nothing to pop up");
-        } else {
+        if (browserWindow instanceof BrowserWindow) {
+            if (browserWindow.isMinimized()) {
+                browserWindow.restore();
+            }
             browserWindow.focus();
+        } else {
+            Log.error(this.getMainProcessId(), `Main window does not exist, nothing to pop up`);
         }
     };
 

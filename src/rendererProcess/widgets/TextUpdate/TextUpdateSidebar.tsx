@@ -88,6 +88,7 @@ export class TextUpdateSidebar extends BaseWidgetSidebar {
                 <this._BlockBody>
                     {/* color */}
                     {this.getSidebarBackgroundColor().getElement()}
+                    {this.getSidebarInvisibleInOperation().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- text -------------------------- */}

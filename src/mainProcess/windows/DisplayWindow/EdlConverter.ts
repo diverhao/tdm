@@ -22,6 +22,7 @@ import { ScaledSliderHelper } from "../../../rendererProcess/widgets/ScaledSlide
 import { XYPlotHelper } from "../../../rendererProcess/widgets/XYPlot/XYPlotHelper";
 import { Log } from "../../log/Log";
 import { LEDHelper } from "../../../rendererProcess/widgets/LED/LEDHelper";
+import path from "path";
 
 export class EdlConverter {
 
@@ -79,7 +80,7 @@ export class EdlConverter {
                     tdl[widgetKey] = widgetJson;
                 }
             } else if (widgetKey.includes("Shell Command")) {
-                tdl[widgetKey] = ActionButtonHelper.convertEdlToTdl_ShellCommand(edlJSON[widgetKey]);
+                tdl[widgetKey] = ActionButtonHelper.convertEdlToTdl_ShellCommand(edlJSON[widgetKey], convertEdlSufffix);
             } else if (widgetKey.includes("Exit Button")) {
                 tdl[widgetKey] = ActionButtonHelper.convertEdlToTdl_ExitButton(edlJSON[widgetKey]);
             } else if (widgetKey.includes("Related Display")) {
@@ -1373,21 +1374,46 @@ export class EdlConverter {
         return [column1, column2];
     };
 
-    static convertEdlShellCommands = (labelsRaw: string[], commandsRaw: string[]) => {
+    static convertEdlShellCommands = (labelsRaw: string[], commandsRaw: string[], convertEdlSuffix: boolean = true) => {
         const actions: Record<string, any>[] = [];
         for (let ii = 0; ii < labelsRaw.length; ii++) {
-            const action: Record<string, any> = { type: "ExecuteCommand" };
             const labelRaw = labelsRaw[ii];
             const commandRaw = commandsRaw[ii];
-            const labelArray = labelRaw.split(" ");
-            labelArray.splice(0, 1);
-            const label = labelArray.join(" ").replaceAll(`"`, "");
             const commandArray = commandRaw.split(" ");
-            commandArray.splice(0, 1);
-            const command = commandArray.join(" ").replaceAll(`"`, "");
-            action["label"] = label;
-            action["command"] = command;
-            actions.push(action);
+
+            if (commandRaw.includes("StripTool ") && commandRaw.includes(".stp")) {
+                // command to run StripTool to open a .stp file
+                // should be converted to "open display"
+                const action: Record<string, any> = { type: "OpenDisplay", externalMacros: [], useParentMacros: false, openInSameWindow: false };
+                const labelArray = labelRaw.split(" ");
+                labelArray.splice(0, 1);
+                const label = labelArray.join(" ").replaceAll(`"`, "");
+                action["label"] = label;
+                // obtain .stp file name
+                for (let item of commandArray) {
+                    if (item.trim().replaceAll(`"`, "").endsWith(".stp")) {
+                        if (convertEdlSuffix === true) {
+                            action["fileName"] = item.trim().replaceAll(`"`,"").replace(".stp", ".tdl");
+                        } else {
+                            action["fileName"] = item.trim().replaceAll(`"`,"");
+                        }
+                        
+                        break;
+                    }
+                }
+                actions.push(action);
+            } else {
+                // regular command
+                const action: Record<string, any> = { type: "ExecuteCommand" };
+                const labelArray = labelRaw.split(" ");
+                labelArray.splice(0, 1);
+                const label = labelArray.join(" ").replaceAll(`"`, "");
+                commandArray.splice(0, 1);
+                const command = commandArray.join(" ").replaceAll(`"`, "");
+                action["label"] = label;
+                action["command"] = command;
+                actions.push(action);
+            }
         }
         return actions;
     };
@@ -1981,16 +2007,19 @@ export class EdlConverter {
         const result: Record<string, any>[] = [];
 
         // If any of the visMin or visMax is undefined, this widget should always be invisible, no matter if the visInvert is true or false
-        if (visMax === undefined || visMin === undefined && visPv !== undefined) {
-            const rule = {
-                boolExpression: `true`,
-                propertyName: "Invisible in Operation",
-                propertyValue: "true",
-                id: uuidv4(),
-            };
-            result.push(rule);
-            return result;
-        }
+        // if (visMax === undefined || visMin === undefined && visPv !== undefined) {
+        //     const rule = {
+        //         boolExpression: `true`,
+        //         propertyName: "Invisible in Operation",
+        //         propertyValue: "true",
+        //         id: uuidv4(),
+        //     };
+        //     result.push(rule);
+        //     return result;
+        // }
+
+        // if visMin or visMax is undefined, the corresponding condition is ignored, 
+        // which is equivalent to they are -infinity or +infinity
 
         let min = Number.NEGATIVE_INFINITY;
         let max = Number.POSITIVE_INFINITY;
@@ -2001,6 +2030,7 @@ export class EdlConverter {
                 min = parseFloat(visMin.replaceAll(`"`, ""));
             }
         }
+
         if (visMax !== undefined) {
             if (visMax === "inf") {
                 // infinity

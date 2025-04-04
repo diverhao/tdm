@@ -383,7 +383,7 @@ export class FileConverter extends BaseWidget {
                     paddingTop: 20,
                     paddingBottom: 20,
                 }}>
-                    This tool converts the EDM file (.edl) to TDM (.tdl) file. You can select one file or a folder to convert.
+                    This tool converts the StripTool (.stp) and EDM file (.edl) to TDM (.tdl) file. You can select one file or a folder to convert.
                 </div>
             </div>
         )

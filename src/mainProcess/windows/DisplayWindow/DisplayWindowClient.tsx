@@ -601,7 +601,7 @@ export class DisplayWindowClient {
         utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | undefined,
         utilityOptions: Record<string, any>
     ) => {
-        Log.info("new tdl ", newTdl)
+        Log.info("new tdl ", newTdl, utilityType)
         this.setTdlFileName(tdlFileName);
         // (1)
         let initialMode: rendererWindowStatus.editing | rendererWindowStatus.operating = rendererWindowStatus.editing;
@@ -703,6 +703,7 @@ export class DisplayWindowClient {
         utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter",
         utilityOptions: Record<string, any>
     ) => {
+        console.log("tdl", utilityType)
         if (utilityType === "Probe") {
             // todo: this window should not be editable, in editing mode, it is a mess
             const widgetTdl = Probe.generateWidgetTdl(utilityOptions);

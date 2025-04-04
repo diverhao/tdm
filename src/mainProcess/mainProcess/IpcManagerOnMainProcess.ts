@@ -1046,7 +1046,7 @@ export class IpcManagerOnMainProcess {
 
             for (let tdlFileName of tdlFileNames) {
                 // .tdl, .edl, or .bob
-                if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl") {
+                if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl"|| path.extname(tdlFileName) === ".stp") {
                     if (path.extname(tdlFileName) !== ".tdl") {
                         // we are able to edit ".edl" files, however, when we save them, the saving dialog is shown to "save as"
                         // editable = false;
@@ -1132,7 +1132,7 @@ export class IpcManagerOnMainProcess {
 
         for (let tdlFileName of tdlFileNames) {
             // .tdl, .edl, or .bob
-            if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl") {
+            if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl"|| path.extname(tdlFileName) === ".stp") {
                 if (path.extname(tdlFileName) !== ".tdl") {
                     // we are able to edit ".edl" files, however, when we save them, the saving dialog is shown to "save as"
                     // editable = false;
@@ -1239,7 +1239,7 @@ export class IpcManagerOnMainProcess {
             const tdlStr = options["tdlStr"];
             // let editable = selectedProfile.getManuallyOpenedTdlEditable();
 
-            if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl") {
+            if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp") {
                 if (path.extname(tdlFileName) !== ".tdl") {
                     // we are able to edit ".edl" files, however, when we save them, the saving dialog is shown to "save as"
                     // editable = false;
@@ -1314,7 +1314,7 @@ export class IpcManagerOnMainProcess {
                     if (this.getMainProcess().getMainProcessMode() === "desktop") {
                         tdlFileNames = dialog.showOpenDialogSync({
                             title: "open tdl file",
-                            filters: [{ name: "tdl", extensions: ["tdl", "json", "bob", "edl", "db", "template"] }],
+                            filters: [{ name: "tdl", extensions: ["tdl", "json", "bob", "edl", "stp", "db", "template"] }],
                             defaultPath: defaultPath,
                             // properties: ["openFile", "openDirectory","multiSelections"],
                             properties: ["openFile", "multiSelections"],
@@ -1373,7 +1373,7 @@ export class IpcManagerOnMainProcess {
                 }
                 for (let tdlFileName of tdlFileNames) {
                     // .tdl, .edl, or .bob
-                    if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl") {
+                    if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl"|| path.extname(tdlFileName) === ".stp") {
                         if (path.extname(tdlFileName) !== ".tdl") {
                             // we are able to edit ".edl" files, however, when we save them, the saving dialog is shown to "save as"
                             // editable = false;
@@ -1442,7 +1442,7 @@ export class IpcManagerOnMainProcess {
                             windowAgent.sendFromMainProcess("dialog-show-message-box", {
                                 // command?: string | undefined;
                                 messageType: "error", // | "warning" | "info";
-                                humanReadableMessages: [`${tdlFileName} is not a .tdl, .edl .db, or .template file`],
+                                humanReadableMessages: [`${tdlFileName} is not a .tdl, .edl .stp .db, or .template file`],
                                 rawMessages: [],
                                 // buttons?: type_DialogMessageBoxButton[] | undefined;
                                 // attachment?: any;
@@ -1582,7 +1582,7 @@ export class IpcManagerOnMainProcess {
         Log.debug(this.getMainProcessId(), "We are going to save TDL", tdlFileName1);
         try {
             // save as if the tdl is an in-memory display, or edl, or bob file
-            if (tdlFileName === "" || tdlFileName.endsWith(".edl") || tdlFileName.endsWith(".bob")) {
+            if (tdlFileName === "" || tdlFileName.endsWith(".edl")|| tdlFileName.endsWith(".stp") || tdlFileName.endsWith(".bob")) {
                 if (this.getMainProcess().getMainProcessMode() === "desktop") {
 
                     tdlFileName = dialog.showSaveDialogSync({ title: "Save tdl file", filters: [{ name: "tdl", extensions: ["tdl", "json"] }] });
@@ -2096,7 +2096,7 @@ export class IpcManagerOnMainProcess {
         } else if (fileName1 === "") {
             if (this.getMainProcess().getMainProcessMode() === "desktop") {
                 const fileFilters = options["filterType"] === "tdl"
-                    ? [{ name: "tdl", extensions: ["tdl", "edl", "bob", "db", "template"] }]
+                    ? [{ name: "tdl", extensions: ["tdl", "edl", "stp", "bob", "db", "template"] }]
                     : options["filterType"] === "media"
                         ? [{ name: "media", extensions: ["jpg", "jpeg", "png", "gif", "svg", "bmp", "pdf", "mp4", "ogg", "webm", "mp3", "mov"] }]
                         : options["filterType"] === "script"
