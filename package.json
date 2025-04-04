@@ -1,6 +1,6 @@
 {
     "name": "tdm",
-    "version": "2504",
+    "version": "25.04.04",
     "description": "A display manager for EPICS",
     "main": "./dist/mainProcess/startMainProcess.js",
     "repository": "https://github.com/MyApp/my-app",

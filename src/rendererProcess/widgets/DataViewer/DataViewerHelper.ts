@@ -352,12 +352,24 @@ export class DataViewerHelper extends BaseWidgetHelper {
                 }
             }
         }
-
-        for (const yAxis of tdl["yAxes"]) {
+        
+        for (let ii = 0; ii < tdl["yAxes"].length; ii++) {
+            if (tdl["yAxes"][ii] === undefined) {
+                tdl["yAxes"][ii] = this.generateDefaultYAxis();
+            }
+            const yAxis = tdl["yAxes"][ii];
             yAxis["lineWidth"] = lineWidth;
             yAxis["bufferSize"] = bufferSize;
         }
-        console.log("===", tdl)
+        for (let ii = 0; ii < tdl["channelNames"].length; ii++) {
+            if (tdl["channelNames"][ii] === undefined) {
+                tdl["channelNames"][ii] = "";
+            }
+        }
+
+        // console.log("===", tdl)
         return tdl;
     };
+
+
 }

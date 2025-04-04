@@ -354,7 +354,7 @@ function isStartedFromShell() {
         // try {
         //     writeFileSync("/home/1h7/tdmlog.log", JSON.stringify({
         //         parentProcess: parentProcess,
-        //         hasTerm: hasTerm,
+        //         // hasTerm: hasTerm,
         //         isTTY: isTTY,
         //     }, null, 4), {
 
