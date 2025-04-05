@@ -49,7 +49,10 @@ export class MainProcesses {
             // this is done before creating the Profiles object
             // then create the HttpServer object
             const profilesJson = this.readProfilesJsonFromFileSync();
-            const firstProfileJson = Object.values(profilesJson)[0];
+            let firstProfileJson = Object.values(profilesJson)[0];
+            if (Object.keys(profilesJson)[0] === "For All Profiles") {
+                firstProfileJson = Object.values(profilesJson)[1];
+            }
             if (firstProfileJson === undefined) {
                 throw new Error("Web mode: no profile. Quit");
             }

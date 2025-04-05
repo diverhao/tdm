@@ -1046,7 +1046,7 @@ export class IpcManagerOnMainProcess {
 
             for (let tdlFileName of tdlFileNames) {
                 // .tdl, .edl, or .bob
-                if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl"|| path.extname(tdlFileName) === ".stp") {
+                if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp") {
                     if (path.extname(tdlFileName) !== ".tdl") {
                         // we are able to edit ".edl" files, however, when we save them, the saving dialog is shown to "save as"
                         // editable = false;
@@ -1132,7 +1132,7 @@ export class IpcManagerOnMainProcess {
 
         for (let tdlFileName of tdlFileNames) {
             // .tdl, .edl, or .bob
-            if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl"|| path.extname(tdlFileName) === ".stp") {
+            if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp") {
                 if (path.extname(tdlFileName) !== ".tdl") {
                     // we are able to edit ".edl" files, however, when we save them, the saving dialog is shown to "save as"
                     // editable = false;
@@ -1350,30 +1350,34 @@ export class IpcManagerOnMainProcess {
                     if (tdlFileNames === undefined) {
                         return;
                     }
-                }
-                // this file's editable is determined by the profile setting
-                const editableForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Editable"];
-                if (editableForManuallyOpenedFiles !== undefined) {
-                    if (editableForManuallyOpenedFiles["value"] === "Yes") {
-                        editable = true;
-                    } else {
-                        editable = false;
-                    }
-                }
 
-                const modeForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Mode"];
-                if (modeForManuallyOpenedFiles !== undefined) {
-                    if (modeForManuallyOpenedFiles["value"] === "operating") {
-                        mode = "operating";
-                    } else {
-                        mode = "editing";
-                        // "editing" mode overrides "editable"
-                        editable = true;
+                    // the manually opened TDL file's editing permission and its mode are determined by Profile
+
+                    // this file's editable is determined by the profile setting
+                    const editableForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Editable"];
+                    if (editableForManuallyOpenedFiles !== undefined) {
+                        if (editableForManuallyOpenedFiles["value"] === "Yes") {
+                            editable = true;
+                        } else {
+                            editable = false;
+                        }
+                    }
+
+                    const modeForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Mode"];
+                    if (modeForManuallyOpenedFiles !== undefined) {
+                        if (modeForManuallyOpenedFiles["value"] === "operating") {
+                            mode = "operating";
+                        } else {
+                            mode = "editing";
+                            // "editing" mode overrides "editable"
+                            editable = true;
+                        }
                     }
                 }
+                
                 for (let tdlFileName of tdlFileNames) {
                     // .tdl, .edl, or .bob
-                    if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl"|| path.extname(tdlFileName) === ".stp") {
+                    if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp") {
                         if (path.extname(tdlFileName) !== ".tdl") {
                             // we are able to edit ".edl" files, however, when we save them, the saving dialog is shown to "save as"
                             // editable = false;
@@ -1582,7 +1586,7 @@ export class IpcManagerOnMainProcess {
         Log.debug(this.getMainProcessId(), "We are going to save TDL", tdlFileName1);
         try {
             // save as if the tdl is an in-memory display, or edl, or bob file
-            if (tdlFileName === "" || tdlFileName.endsWith(".edl")|| tdlFileName.endsWith(".stp") || tdlFileName.endsWith(".bob")) {
+            if (tdlFileName === "" || tdlFileName.endsWith(".edl") || tdlFileName.endsWith(".stp") || tdlFileName.endsWith(".bob")) {
                 if (this.getMainProcess().getMainProcessMode() === "desktop") {
 
                     tdlFileName = dialog.showSaveDialogSync({ title: "Save tdl file", filters: [{ name: "tdl", extensions: ["tdl", "json"] }] });

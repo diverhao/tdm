@@ -245,7 +245,6 @@ export class Arc extends BaseWidget {
                     ? "z"
                     : "";
 
-        console.log("shape color: ========================", this._getElementAreaRawShapeStyle())
         return (
             <svg
                 width="100%"

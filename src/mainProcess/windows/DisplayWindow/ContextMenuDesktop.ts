@@ -1439,10 +1439,13 @@ export class ContextMenuDesktop {
         type type_role = ('undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'pasteAndMatchStyle' | 'delete' | 'selectAll' | 'reload' | 'forceReload' | 'toggleDevTools' | 'resetZoom' | 'zoomIn' | 'zoomOut' | 'toggleSpellChecker' | 'togglefullscreen' | 'window' | 'minimize' | 'close' | 'help' | 'about' | 'services' | 'hide' | 'hideOthers' | 'unhide' | 'quit' | 'startSpeaking' | 'stopSpeaking' | 'zoom' | 'front' | 'appMenu' | 'fileMenu' | 'editMenu' | 'viewMenu' | 'shareMenu' | 'recentDocuments' | 'toggleTabBar' | 'selectNextTab' | 'selectPreviousTab' | 'showAllTabs' | 'mergeAllWindows' | 'clearRecentDocuments' | 'moveTabToNewWindow' | 'windowMenu');
         type type_type = ('normal' | 'separator' | 'submenu' | 'checkbox' | 'radio');
 
-        // add "Save Display", remove "Edit Display" for certain Utility Windows
+        // these utility windows should never be edited
+        // if their editable bit in DisplayWindowAgent is true, then they should be able to "Save" in operating mode
+        // The purpose of this "Save" is updating the settings 
         if (this.getDisplayWindowAgent().isUtilityWindow() &&
             (widgetKey.includes("DataViewer") || widgetKey.includes("Probe") || widgetKey.includes("ChannelGraph") || widgetKey.includes("PvTable") || widgetKey.includes("PvMonitor"))
         ) {
+            // these utility windows should never be editable
             this.removeItems(["Edit Display"]);
             // add Save even in operating mode
             let alreadyHasSaveDisplay = false;
@@ -1452,7 +1455,8 @@ export class ContextMenuDesktop {
                     break;
                 }
             }
-            if (alreadyHasSaveDisplay === false) {
+
+            if (alreadyHasSaveDisplay === false && this.getDisplayWindowAgent().isEditable()) {
                 this._template_operating_Widget.unshift(
                     {
                         label: "Save Display",

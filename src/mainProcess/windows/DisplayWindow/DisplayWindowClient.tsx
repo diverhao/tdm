@@ -601,7 +601,7 @@ export class DisplayWindowClient {
         utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | undefined,
         utilityOptions: Record<string, any>
     ) => {
-        Log.info("new tdl ", newTdl, utilityType)
+        Log.info("new tdl ", newTdl, utilityType, editable)
         this.setTdlFileName(tdlFileName);
         // (1)
         let initialMode: rendererWindowStatus.editing | rendererWindowStatus.operating = rendererWindowStatus.editing;

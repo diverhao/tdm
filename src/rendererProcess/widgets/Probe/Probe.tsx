@@ -108,7 +108,6 @@ export class Probe extends BaseWidget {
      * (4) flush widgets
      */
     newProbe = (newChannelName: string) => {
-        console.log("creating new probe", newChannelName)
         // (1)
         // we are still trying to connect the channel
         if (this.rtyp === this.rtypWaitingName) {
@@ -916,52 +915,6 @@ export class Probe extends BaseWidget {
         )
     };
 
-    _StyledInputInLine = ({ additionalStyle, value, isEditing, textAlign, type, name, onFocus, onChange, onBlue }: any) => {
-        const refElement = React.useRef<any>(null);
-        return (
-            <input
-                ref={refElement}
-                spellCheck={false}
-                style={{
-                    backgroundColor: "rgba(0, 0, 0, 0)",
-                    border: "none",
-                    width: "100%",
-                    height: "100%",
-                    padding: 0,
-                    margin: 0,
-                    fontSize: 14,
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                    whiteSpace: "nowrap",
-                }}
-                value={value}
-                onFocus={(event: any) => {
-                    event.preventDefault();
-                    if (refElement.current !== null) {
-                        refElement.current.style["color"] = "red";
-                    }
-                }}
-                onBlur={(event: any) => {
-                    event.preventDefault();
-                    if (refElement.current !== null) {
-                        refElement.current.style["color"] = "rgba(0,0,0,1)";
-                    }
-                }}
-                onMouseEnter={() => {
-                    if (refElement.current !== null) {
-                        refElement.current.style["color"] = "rgba(255, 0, 0, 1)";
-                    }
-                }}
-                onMouseLeave={() => {
-                    if (refElement.current !== null) {
-                        refElement.current.style["color"] = "rgba(0, 0, 0, 1)";
-                    }
-                }}
-                onChange={onChange}
-            >
-            </input>
-        )
-    };
 
     private TableLineWithInput = ({ index, property, value }: any) => {
         return (
@@ -985,7 +938,8 @@ export class Probe extends BaseWidget {
                         paddingLeft: "10px",
                     }}
                 >
-                    <this._ValueInputForm valueRaw={`${this.getDbrData().Value}`}></this._ValueInputForm>
+                    {/* <this._ValueInputForm valueRaw={`${this.getDbrData().Value}`}></this._ValueInputForm> */}
+                    <this._ValueInputForm></this._ValueInputForm>
                 </td>
                 <td></td>
             </tr>
@@ -1054,16 +1008,17 @@ export class Probe extends BaseWidget {
             setInputValue(`${value}`);
         }, [value]);
 
-        let accessRight = Channel_ACCESS_RIGHTS.READ_WRITE;
-        try {
-            // const tcaChannel = g_widgets1.getTcaChannel(channelName);
-            if (g_widgets1.getChannelAccessRight(channelName) !== Channel_ACCESS_RIGHTS.READ_WRITE) {
-                accessRight = Channel_ACCESS_RIGHTS.NO_ACCESS;
-            }
-        } catch (e) {
-            Log.error(e);
-            accessRight = Channel_ACCESS_RIGHTS.NO_ACCESS;
-        }
+        // let accessRight = Channel_ACCESS_RIGHTS.READ_WRITE;
+        // try {
+        //     // const tcaChannel = g_widgets1.getTcaChannel(channelName);
+        //     if (g_widgets1.getChannelAccessRight(channelName) !== Channel_ACCESS_RIGHTS.READ_WRITE) {
+        //         accessRight = Channel_ACCESS_RIGHTS.NO_ACCESS;
+        //     }
+        // } catch (e) {
+        //     Log.error(e);
+        //     accessRight = Channel_ACCESS_RIGHTS.NO_ACCESS;
+        // }
+        const accessRight = this._getChannelAccessRight();
 
         return (
             <tr key={`table-${index}`}
@@ -1165,6 +1120,7 @@ export class Probe extends BaseWidget {
                                         fontSize: this.getAllStyle()["fontSize"],
                                         width: "90%",
                                         color: value === defaultValue ? "black" : "red",
+                                        cursor: accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? "default" : "not-allowed",
                                     }}
                                     type="text"
                                     onChange={(event: any) => {
@@ -1191,7 +1147,9 @@ export class Probe extends BaseWidget {
                                     WebkitAppearance: "none",
                                     MozAppearance: "none",
                                     appearance: "none",
+                                    cursor: accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? "default" : "not-allowed",
                                 }}
+                                disabled = {accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? false : true}
                                 onChange={(event: any) => {
                                     // do not change the selection until the new data arrives
                                     event.preventDefault();
@@ -1243,38 +1201,92 @@ export class Probe extends BaseWidget {
         );
     };
 
-    private _ValueInputForm = ({ valueRaw }: { valueRaw: string | number | string[] | number[] }) => {
-        const [value, setValue] = React.useState(`${valueRaw}`);
-        // const isFocused = React.useRef<boolean>(false);
-        const keyRef: React.RefObject<null | HTMLInputElement> = React.useRef(null);
-        const [frozenValue, setFrozenValue] = React.useState("");
+    // ---------------------------- change value -------------------------
 
-        // React.useEffect(() => {
-        //     setValue((oldValue: string) => {
-        //         if (isFocused.current) {
-        //             return oldValue;
-        //         } else {
-        //             return `${valueRaw}`;
-        //         }
-        //     });
-        // }, [valueRaw]);
+    // copied from TextEntry
+    parseValue = () => {
+        const value = this._getChannelValue();
+        let unit = ` ${this._getChannelUnit()}`;
+        if (this._getChannelUnit() === undefined) {
+            unit = "";
+        }
+        if (g_widgets1.isEditing()) {
+            if (this.getChannelNames()[0] === undefined) {
+                return "";
+            } else {
+                return this.getChannelNames()[0];
+            }
+        }
+        if (value === undefined) {
+            if (this.getChannelNames()[0] === undefined) {
+                return "";
+            } else {
+                return this.getChannelNames()[0];
+            }
+        } else {
+            if (this.getAllText()["showUnit"] === true) {
+                return `${value}${unit}`;
+            } else {
+                return `${value}`;
+            }
+        }
+    };
+
+
+    _getChannelAccessRight = () => {
+        return this._getFirstChannelAccessRight();
+    };
+
+    // setFocusStatus = (newStatus: boolean) => {
+    //     this._focusStatus = newStatus;
+    // }
+
+    // private _focusStatus = false;
+
+
+    // _ValueInputForm = ({ valueRaw }: { valueRaw: string | number | string[] | number[] }) => {
+    _ValueInputForm = () => {
+        // const [value, setValue] = React.useState(`${valueRaw}`);
+        const valueRaw = this.parseValue();
+
+        const shadowWidth = 2;
+
+        const [value, setValue] = React.useState(`${valueRaw}`);
+        const isFocused = React.useRef<boolean>(false);
+        const keyRef = React.useRef<HTMLInputElement>(null);
+        const keyRefForm = React.useRef<HTMLFormElement>(null);
+
+        React.useEffect(() => {
+            setValue((oldValue: string) => {
+                if (isFocused.current) {
+                    return oldValue;
+                } else {
+                    return `${valueRaw}`;
+                }
+            });
+        }, [valueRaw]);
 
         const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
             event.preventDefault();
 
             (event.currentTarget.elements[0] as HTMLInputElement).blur();
-            try {
-                const tcaChannel = g_widgets1.getTcaChannel(this.getChannelNames()[0]);
-                // if user includes the unit, the put() should be able to parseInt() or praseFloat()
-                // the text before unit
-                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                tcaChannel.put(displayWindowId, { value: frozenValue }, 1);
-            } catch (e) {
-                const errMsg = `Channel ${this.getChannelNames()} cannot be found`;
-                Log.error(errMsg);
-                Log.error(e);
+            if (this._getChannelAccessRight() < 1.5) {
+                // no write access, do not write
+                return;
             }
+
+            this.putChannelValue(this.getChannelNames()[0], value);
         };
+
+        const calcInputSize = () => {
+            const width = this.getAllStyle()["width"];
+            const height = this.getAllStyle()["height"];
+            if (this.getAllText()["appearance"] === "traditional") {
+                return [width - shadowWidth * 2, height - shadowWidth * 2];
+            } else {
+                return [width, height];
+            }
+        }
 
         // press escape key to blur input box
         React.useEffect(() => {
@@ -1290,30 +1302,90 @@ export class Probe extends BaseWidget {
         }, []);
 
         return (
-            <form onSubmit={handleSubmit} style={{ width: "100%", height: "100%" }}>
-                <this._StyledInputInLine
+            <form
+                ref={keyRefForm}
+                onSubmit={handleSubmit}
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
+                }}
+            >
+                <input
                     ref={keyRef}
-                    isEditing={g_widgets1.isEditing()}
-                    textAlign={
-                        this.getText().horizontalAlign === "flex-start" ? "left" : this.getText().horizontalAlign === "center" ? "center" : "right"
-                    }
-                    highlightBackgroundColor={this.getText().highlightBackgroundColor}
+                    style={{
+                        backgroundColor: "rgba(0,0,0,0)",
+                        // border: "none",
+                        width: calcInputSize()[0],
+                        height: calcInputSize()[1],
+                        padding: 0,
+                        margin: 0,
+                        textOverflow: "ellipsis",
+                        overflow: "visible",
+                        whiteSpace: "nowrap",
+                        outline: this.getAllText()["appearance"] === "traditional" ? "solid 1px rgba(100, 100, 250, 0.5)" : "none",
+                        textAlign:
+                            this.getAllText().horizontalAlign === "flex-start"
+                                ? "left"
+                                : this.getAllText().horizontalAlign === "center"
+                                    ? "center"
+                                    : "right",
+                        // color: this.getAllStyle()["color"],
+                        color: this._getElementAreaRawTextStyle(),
+                        fontFamily: this.getAllStyle()["fontFamily"],
+                        fontSize: this.getAllStyle()["fontSize"],
+                        fontStyle: this.getAllStyle()["fontStyle"],
+                        fontWeight: this.getAllStyle()["fontWeight"],
+                        // padding: 10,
+                        borderRight: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none",
+                        borderBottom: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none",
+                        borderLeft: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(100,100,100,1)` : "none",
+                        borderTop: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(100,100,100,1)` : "none",
+                    }}
+                    onMouseOver={(event: any) => {
+                        event.preventDefault();
+                        if (!g_widgets1.isEditing()) {
+                            if (this._getChannelAccessRight() > 1.5) {
+                                event.target.style["cursor"] = "text";
+                            } else {
+                                event.target.style["cursor"] = "not-allowed";
+                            }
+                        } else {
+                            event.target.style["cursor"] = "default";
+                        }
+                    }}
+                    onMouseOut={(event: any) => {
+                        event.preventDefault();
+                        event.target.style["cursor"] = "default";
+                    }}
                     type="text"
                     name="value"
-                    value={document.activeElement === keyRef.current ? frozenValue : value}
+                    value={value}
                     onFocus={(event: any) => {
-                        event?.preventDefault();
-                        // keyRef.current?.select();
-                        setFrozenValue(value);
+                        isFocused.current = true;
+                        // this.setFocusStatus(true);
+                        keyRef.current?.select();
+
+                        if (keyRef.current !== null) {
+                            keyRef.current.style["backgroundColor"] = this.getAllText()["highlightBackgroundColor"];
+                        }
                     }}
                     onChange={(event: any) => {
-                        console.log(document.activeElement === keyRef.current)
                         event.preventDefault();
-                        setFrozenValue(event.target.value);
+                        if (this._getChannelAccessRight() < 1.5) {
+                            // no write access, do not update
+                            return;
+                        }
+                        setValue(event.target.value);
                     }}
                     onBlur={(event: any) => {
-                        event?.preventDefault();
-                        setValue(`${valueRaw}`);
+                        isFocused.current = false;
+                        // this.setFocusStatus(false);
+                        setValue(`${this.parseValue()}`);
+                        if (keyRef.current !== null) {
+                            // keyRef.current.style["backgroundColor"] = `rgba(0,0,0,0)`;
+                            keyRef.current.style["backgroundColor"] = this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle();
+                        }
                     }}
                 />
             </form>

@@ -313,7 +313,7 @@ export class EmbeddedDisplay extends BaseWidget {
                     referrerPolicy="no-referrer"
                     // ! iframe and its parent share the same sessionStorage, which causes an issue 
                     // ! that we cannot refresh the web page
-                    sandbox="allow-scripts allow-same-origin"
+                    sandbox="allow-scripts allow-same-origin allow-popups"
                     // sandbox="allow-scripts"
                     style={{
                         border: "none",

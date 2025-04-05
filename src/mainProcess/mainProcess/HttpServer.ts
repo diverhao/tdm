@@ -71,8 +71,14 @@ export class HttpServer {
         passport.serializeUser((user, done) => done(null, user));
         passport.deserializeUser((user: any, done) => done(null, user));
 
-        this._server.use(session({ secret: "secretKey", resave: false, saveUninitialized: true }));
-        this._server.use(express.json()); // Middleware to parse JSON requests
+        this._server.use(session({
+            secret: "secretKey",
+            resave: false,
+            saveUninitialized: true
+        }));
+        this.getServer()?.use(express.json({ limit: 10 * 1024 * 1024 })); // Increase the limit to 10 MB
+        this.getServer()?.use(express.urlencoded({ limit: 10 * 1024 * 1024, extended: true }));
+        // this._server.use(express.json()); // Middleware to parse JSON requests
         this._server.use(passport.initialize());
         this._server.use(passport.session());
 
@@ -83,10 +89,10 @@ export class HttpServer {
         //         origin: "*",
         //         methods: ['GET', 'POST'],
         //         allowedHeaders: ['Content-Type', 'Authorization'],
-              
+
         //     }
         // ));
-        
+
 
         // Skip authentication for specific routes (like "/" and "/login")
         this._server.use((req: any, res: any, next: any) => {
@@ -118,16 +124,18 @@ export class HttpServer {
         });
 
 
-        this.getServer()?.use(express.json({ limit: 10 * 1024 * 1024 })); // Increase the limit to 10 MB
-        this.getServer()?.use(express.urlencoded({ limit: 10 * 1024 * 1024, extended: true }));
 
         // ----------------- LDAP -------------------------
 
 
 
         // root access to login page
-        this.getServer()?.get("/", (request: IncomingMessage, response: any, next: any) => {
-            response.sendFile(path.join(__dirname, "../../webpack/resources/webpages/login.html"))
+        this.getServer()?.get("/", (req: any, res: any, next: any) => {
+            if (req.session.user) {
+                // Already logged in!
+                return res.redirect('/main');
+            }
+            res.sendFile(path.join(__dirname, "../../webpack/resources/webpages/login.html"))
         });
 
         // LDAP Authentication Route
@@ -147,8 +155,16 @@ export class HttpServer {
                     Log.error("-1", "Profile not selected in web mode. Quit.")
                     return;
                 }
+
+                // store session
+                req.session.user = {
+                    username: req.body.username
+                };
+
                 res.redirect('/main');  // Redirect to the protected page
-            });
+            }
+        );
+
 
 
         // main window

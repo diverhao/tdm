@@ -81,7 +81,17 @@
         "productName": "TDM",
         "copyright": "",
         "asar": true,
+        "extraResources": [
+            {
+                "from": "resources/bin/",
+                "to": "bin",
+                "filter": [
+                    "**/*"
+                ]
+            }
+        ],
         "asarUnpack": [
+            "**/bin/**",
             "dist/mainProcess/wsPv/WsPvClient.js",
             "dist/mainProcess/wsPv/WsPvClient.py",
             "dist/mainProcess/resources/webpages/tdm.png",
