@@ -345,6 +345,14 @@ export class DataViewer extends BaseWidget {
         return this.showSettingsPage;
     }
 
+    hasData = () => {
+        if (this.getPlot().x.length > 0 && this.getPlot().x[0].length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     // ----------------------- styles -----------------------
 
     // defined in super class

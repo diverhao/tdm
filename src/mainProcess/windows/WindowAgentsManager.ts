@@ -540,12 +540,19 @@ export class WindowAgentsManager {
                 utilityOptions["menus"] = this.getMainProcess().getChannelAgentsManager().getDbdFiles().getMenus();
             }
 
+            // normally a utility window is not editable, but the DataViewer's editable means it can 
+            // have "Save" in context menu. But still, it does not have "Edit Display" in context menu
+            let editable = false;
+            if (utilityType === "DataViewer" || utilityType === "Probe" || utilityType === "ChannelGraph" || utilityType === "PvTable" || utilityType === "PvMonitor") {
+                editable = true;
+            }
+
             // (1)
             const tdl = UtilityWindow.creatUtilityBlankTdl(utilityType) as type_tdl;
             const windowOptions: type_options_createDisplayWindow = {
                 tdl: tdl,
                 mode: "operating" as "editing" | "operating",
-                editable: false,
+                editable: editable,
                 tdlFileName: "",
                 macros: [],
                 replaceMacros: false,

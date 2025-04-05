@@ -576,7 +576,7 @@ export class IpcManagerOnDisplayWindow {
     handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
 
         Log.debug("received data", JSON.stringify(newDbrData, null, 4));
-                
+
         let channelNames = Object.keys(newDbrData);
 
         // special widgets that has new dbr data mapping, this mapping should only occurs once
@@ -837,18 +837,24 @@ export class IpcManagerOnDisplayWindow {
         const displayWindowId = this.getDisplayWindowClient().getWindowId();
         const tdlFileName = this.getDisplayWindowClient().getTdlFileName();
         const tdl = this.getDisplayWindowClient().generateTdl();
+
+        const canvas = g_widgets1.getWidget("Canvas");
+        let windowName = "";
+        if (canvas instanceof Canvas) {
+            windowName = canvas.getWindowName();
+        }
+
         // windows that can be closed immediately
         // (1) window is not modified since opening
-        // (2) utility window
-        if (history.getCurrentTdlIndex() > 0 || tdlFileName === "") {
+        // (2) utility window: Text Editor and Data Viewer
+        if (history.getCurrentTdlIndex() > 0
+            || tdlFileName === ""
+            || (isUtilityWindow && windowName.startsWith("TDM Text Editor"))
+            || (isUtilityWindow && windowName.startsWith("TDM Data Viewer"))
+        ) {
             // don't close window yet, pop up save dialog
             if (isUtilityWindow) {
                 // utility window: close immediately except modified TextEditor
-                const canvas = g_widgets1.getWidget("Canvas");
-                let windowName = "";
-                if (canvas instanceof Canvas) {
-                    windowName = canvas.getWindowName();
-                }
                 // if it is a Text Editor utility window
                 if (windowName.startsWith("TDM Text Editor")) {
                     // find the widget
@@ -875,7 +881,30 @@ export class IpcManagerOnDisplayWindow {
                             return;
                         }
                     }
+                } else if (windowName.startsWith("TDM Data Viewer")) {
+                    // if it contains any trace data, bring up the prompt to Save/Do not save/Cancel
+                    let dataViewerWidget: DataViewer | undefined = undefined;
+                    for (let widget of g_widgets1.getWidgets2().values()) {
+                        if (widget instanceof DataViewer) {
+                            dataViewerWidget = widget;
+                            break;
+                        }
+                    }
+                    if (dataViewerWidget !== undefined) {
+                        console.log(dataViewerWidget.hasData())
+                        if (dataViewerWidget.hasData() === true) {
+                            this.sendFromRendererProcess("window-will-be-closed", {
+                                displayWindowId: displayWindowId,
+                                close: false,
+                                tdlFileName: undefined,
+                                tdl: undefined,
+                                widgetKey: dataViewerWidget.getWidgetKey(),
+                            });
+                            return;
+                        }
+                    }
                 }
+
                 this.sendFromRendererProcess("window-will-be-closed", {
                     displayWindowId: displayWindowId,
                     close: true,
@@ -994,6 +1023,18 @@ export class IpcManagerOnDisplayWindow {
             if (buttons !== undefined && buttons.length === 3) {
                 const attachment = info["attachment"];
                 buttons[0]["handleClick"] = () => {
+                    const widgetKey = attachment["widgetKey"];
+                    if (widgetKey !== undefined) {
+                        const widget = g_widgets1.getWidget2(widgetKey);
+                        if (widget instanceof DataViewer) {
+                            const data = widget.getPlot().prepareExportData();
+                            this.sendFromRendererProcess("window-will-be-closed",
+                                { ...{ ...attachment, dataViewerData: data }, saveConfirmation: "Save" }
+                            );
+                            return;
+                        }
+                    }
+
                     this.sendFromRendererProcess("window-will-be-closed",
                         { ...attachment, saveConfirmation: "Save" }
                     );

@@ -2566,6 +2566,25 @@ export class DataViewerPlot {
     }
 
     exportData = () => {
+        const result = this.prepareExportData();
+
+        const windowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const mainProcessMode = displayWindowClient.getMainProcessMode();
+        if (mainProcessMode === "web") {
+            const blob = new Blob([JSON.stringify(result, null, 4)], { type: 'text/json' });
+            const dateNowStr = GlobalMethods.convertEpochTimeToString(Date.now());
+            const suggestedName = `DataViewer-data-${dateNowStr}.json`;
+            const description = 'Data Viewer data';
+            const applicationKey = "application/json";
+            const applicationValue = [".json"];
+            displayWindowClient.downloadData(blob, suggestedName, description, applicationKey, applicationValue);
+        } else {
+            g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("data-viewer-export-data", windowId, result);
+        }
+    };
+
+    prepareExportData = () => {
         const result: Record<string, Record<string, number[] | string[]>> = {};
         for (let ii = 0; ii < this.getMainWidget().getChannelNames().length; ii++) {
             const channelName = this.getMainWidget().getChannelNames()[ii];
@@ -2588,22 +2607,9 @@ export class DataViewerPlot {
                 Data: processedY,
             };
         }
+        return result;
 
-        const windowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        const mainProcessMode = displayWindowClient.getMainProcessMode();
-        if (mainProcessMode === "web") {
-            const blob = new Blob([JSON.stringify(result, null, 4)], { type: 'text/json' });
-            const dateNowStr = GlobalMethods.convertEpochTimeToString(Date.now());
-            const suggestedName = `DataViewer-data-${dateNowStr}.json`;
-            const description = 'Data Viewer data';
-            const applicationKey = "application/json";
-            const applicationValue = [".json"];
-            displayWindowClient.downloadData(blob, suggestedName, description, applicationKey, applicationValue);
-        } else {
-            g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("data-viewer-export-data", windowId, result);
-        }
-    };
+    }
 
     /**
      * Invoked when the plot should be changed, i.e. 

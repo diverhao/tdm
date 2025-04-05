@@ -679,6 +679,7 @@ export class IpcManagerOnMainProcess {
             // try to save the contents if we are closing a TextEditor utility window
             textEditorFileName?: string;
             textEditorContents?: string;
+            dataViewerData?: Record<string, Record<string, number[] | string[]>>;
             widgetKey?: string;
             saveConfirmation?: "Save" | "Don't Save" | "Cancel",
         }
@@ -761,6 +762,67 @@ export class IpcManagerOnMainProcess {
                                 // failed to save, restore state
                                 displayWindowAgent.readyToClose = false;
                             }
+                        } else if (data["widgetKey"] !== undefined && data["widgetKey"].startsWith("DataViewer") && data["dataViewerData"] !== undefined) {
+                            // save DataViewer data
+                            // const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+
+                            let fileName = "";
+
+                            if (browserWindow instanceof BrowserWindow) {
+                                if (this.getMainProcess().getMainProcessMode() === "desktop") {
+                                    fileName = dialog.showSaveDialogSync(browserWindow, {
+                                        title: "Select a file to save to",
+                                        filters: [
+                                            {
+                                                name: "json",
+                                                extensions: ["json"],
+                                            },
+                                        ],
+                                    });
+                                } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
+                                    // todo
+                                    // displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
+                                    //     {
+                                    //         command: "data-viewer-export-data",
+                                    //         humanReadableMessages: ["Save file to"], // each string has a new line
+                                    //         buttons: [
+                                    //             {
+                                    //                 text: "OK",
+                                    //             },
+                                    //             {
+                                    //                 text: "Cancel",
+                                    //             }
+                                    //         ],
+                                    //         defaultInputText: "",
+                                    //         attachment: {
+                                    //             displayWindowId: displayWindowId,
+                                    //             data: data,
+                                    //             fileName1: fileName1,
+                                    //         }
+                                    //     }
+                                    // );
+                                    // return;
+                                }
+                            }
+                            try {
+                                fs.writeFileSync(fileName, JSON.stringify(data["dataViewerData"], null, 4));
+                                Log.debug(this.getMainProcessId(), "Successfully saved DataViewer data to", fileName);
+                                closeBrowserWindow();
+                            } catch (e) {
+                                // if Cancel or error, do not close the window
+                                Log.error(this.getMainProcessId(), `Cannot save DataViewer data to file ${fileName}`);
+                                displayWindowAgent.readyToClose = false;
+
+                                // displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                                //     // command?: string | undefined,
+                                //     messageType: "error", // | "warning" | "info", // symbol
+                                //     humanReadableMessages: [`Cannot save DataViewer data to file ${fileName}`], // each string has a new line
+                                //     rawMessages: [`${e}`], // computer generated messages
+                                //     // buttons?: type_DialogMessageBoxButton[] | undefined,
+                                //     // attachment?: any,
+                                // })
+                            }
+                            return;
                         } else {
                             // any other types of window
                             let tdlFileName: string | undefined = data["tdlFileName"];
@@ -835,7 +897,11 @@ export class IpcManagerOnMainProcess {
                             {
                                 command: "window-will-be-closed-confirm",
                                 messageType: "warning",
-                                humanReadableMessages: [`Do you want to save the changes you made? Your changes will be lost if you don't save them.`],
+                                humanReadableMessages:
+                                    data["widgetKey"] !== undefined && data["widgetKey"].startsWith("DataViewer_") ?
+                                        [`Do you want to save the data? They will be lost if you don't save them.`]
+                                        :
+                                        [`Do you want to save the changes you made? Your changes will be lost if you don't save them.`],
                                 rawMessages: [],
                                 buttons: [
                                     {
@@ -1374,7 +1440,7 @@ export class IpcManagerOnMainProcess {
                         }
                     }
                 }
-                
+
                 for (let tdlFileName of tdlFileNames) {
                     // .tdl, .edl, or .bob
                     if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp") {

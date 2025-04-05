@@ -164,6 +164,10 @@ export class DisplayWindowAgent {
         this._macros = JSON.parse(JSON.stringify(options["macros"]));
         this.updateHash();
 
+        // for a regular display window, editable means it can be switched to Editing mode, and in operating mode, it only has 
+        // "Save As" choice. 
+        // for a Utility window, it can never go to Editing mode, in operating mode, editable means some Utility windows have
+        // "Save" option because they contain runtime data
         this._editable = options["editable"];
         // mode bit "editing" overrides the "editable" bit
         if (options["mode"] === "editing") {
