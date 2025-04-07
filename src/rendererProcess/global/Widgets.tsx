@@ -39,6 +39,7 @@ import { BooleanButton } from "../widgets/BooleanButton/BooleanButton";
 import { RadioButton } from "../widgets/RadioButton/RadioButton";
 import { ComboBox } from "../widgets/ComboBox/ComboBox";
 import { BinaryImage } from "../widgets/BinaryImage/BinaryImage";
+import { Table } from "../widgets/Table/Table";
 import { Polyline } from "../widgets/Polyline/Polyline";
 import { Arc } from "../widgets/Arc/Arc";
 import { Rectangle } from "../widgets/Rectangle/Rectangle";
@@ -97,6 +98,7 @@ export type type_widgetType =
     | "RadioButton"
     | "ComboBox"
     | "BinaryImage"
+    | "Table"
     | "TextUpdate"
     | "Help"
     | "Terminal"
@@ -398,6 +400,13 @@ export class Widgets {
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
+            case "Table":
+                tdl = Table.generateDefaultTdl("Table");
+                tdl.style.left = x;
+                tdl.style.top = y;
+                tdl.style.width = width;
+                tdl.style.height = height;
+                break;
             case "Polyline":
                 tdl = Polyline.generateDefaultTdl("Polyline");
                 tdl.style.left = x;
@@ -638,6 +647,10 @@ export class Widgets {
             }
             case "BinaryImage": {
                 widget = new BinaryImage(widgetTdl);
+                break;
+            }
+            case "Table": {
+                widget = new Table(widgetTdl);
                 break;
             }
             case "Polyline": {
@@ -1525,7 +1538,8 @@ export class Widgets {
 
         window.resizeTo(width + dx, height + dy);
 
-        for (const widgetKey of this.getWidgets().keys()) {
+        // the dynamically added widgets changes the array (set) of the widget keys
+        for (const widgetKey of JSON.parse(JSON.stringify([...this.getWidgets().keys()]))) {
             // (5)
             const widget = this.getWidget2(widgetKey);
             if (widget instanceof BaseWidget) {
@@ -1542,6 +1556,9 @@ export class Widgets {
 
         if (newMode === rendererWindowStatus.operating) {
             this.connectAllTcaChannels();
+            this.hideTableTemplateWidgets();
+        } else if (newMode === rendererWindowStatus.editing) {
+            this.showTableTemplateWidgets();
         }
         this.addToForceUpdateWidgets("GroupSelection2");
         // (7)
@@ -1555,6 +1572,45 @@ export class Widgets {
             this.terminateWindowAttachedScript();
         }
     };
+
+    // ----------------------- Table widget ------------------------------
+
+    // the template widgets inside a Table should be hidden/shown in operating/editing mode
+
+    _tableTemplateWidgets: string[] = [];
+
+    getTableTemplateWidgets = () => {
+        return this._tableTemplateWidgets;
+    }
+
+    clearTableTemplateWidgets = () => {
+        this._tableTemplateWidgets.length = 0;
+    }
+
+    hideTableTemplateWidgets = () => {
+        for (const widgetKey of this.getTableTemplateWidgets()) {
+            const widget = this.getWidget2(widgetKey);
+            if (widget instanceof BaseWidget) {
+                widget.getStyle()["display"] = "none";
+                this.addToForceUpdateWidgets(widgetKey);
+            }
+        }
+        this.clearTableTemplateWidgets();
+    }
+
+
+    showTableTemplateWidgets = () => {
+        for (const widgetKey of this.getTableTemplateWidgets()) {
+            const widget = this.getWidget2(widgetKey);
+            if (widget instanceof BaseWidget) {
+                widget.getStyle()["display"] = "inline-flex";
+                this.addToForceUpdateWidgets(widgetKey);
+            }
+        }
+        this.clearTableTemplateWidgets();
+    }
+
+
 
     // ----------------------------- window attached script ---------------------
 

@@ -382,6 +382,12 @@ export class ContextMenuDesktop {
                     },
                 },
                 {
+                    label: "Table",
+                    click: () => {
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "table");
+                    },
+                },
+                {
                     label: "Group",
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "group");

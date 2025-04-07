@@ -228,6 +228,7 @@ export class IpcManagerOnMainProcess {
         processId: string,
         windowId: string,
     }) => {
+        console.log("+++++++++++++++++++++++++++++++++web socket ipc connected", data)
         // the main processes' ipc manager
         const ipcManager = this.getMainProcess().getMainProcesses().getIpcManager();
         const mainProcess = this.getMainProcess();
@@ -2217,6 +2218,7 @@ export class IpcManagerOnMainProcess {
             displayWindowId: string;
             widgetKey: string;
             mode: "editing" | "operating";
+            tdl?: type_tdl,
             tdlFileName: string;
             macros: [string, string][];
             currentTdlFolder: string;
@@ -2225,28 +2227,51 @@ export class IpcManagerOnMainProcess {
     ) => {
 
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-        FileReader.readTdlFile(options["tdlFileName"], selectedProfile, options["currentTdlFolder"]).then((tdlFileResult) => {
-            if (tdlFileResult !== undefined) {
-                const tdl = tdlFileResult.tdl;
-                // do not block (await)
-                this.getMainProcess().getWindowAgentsManager().createIframeDisplay(
-                    {
-                        tdl: tdl,
-                        mode: options["mode"],
-                        editable: false,
-                        // tdlFileName: options["tdlFileName"],
-                        tdlFileName: tdlFileResult["fullTdlFileName"],
-                        macros: options["macros"],
-                        replaceMacros: options["replaceMacros"],
-                        hide: false,
-                        utilityType: undefined,
-                        utilityOptions: undefined,
-                    },
-                    options["widgetKey"],
-                    options["displayWindowId"]
-                );
-            }
-        });
+
+        if (options["tdl"] === undefined) {
+
+
+
+            FileReader.readTdlFile(options["tdlFileName"], selectedProfile, options["currentTdlFolder"]).then((tdlFileResult) => {
+                if (tdlFileResult !== undefined) {
+                    const tdl = tdlFileResult.tdl;
+                    // do not block (await)
+                    this.getMainProcess().getWindowAgentsManager().createIframeDisplay(
+                        {
+                            tdl: tdl,
+                            mode: options["mode"],
+                            editable: false,
+                            // tdlFileName: options["tdlFileName"],
+                            tdlFileName: tdlFileResult["fullTdlFileName"],
+                            macros: options["macros"],
+                            replaceMacros: options["replaceMacros"],
+                            hide: false,
+                            utilityType: undefined,
+                            utilityOptions: undefined,
+                        },
+                        options["widgetKey"],
+                        options["displayWindowId"]
+                    );
+                }
+            });
+        } else {
+            const tdl = options["tdl"];
+            this.getMainProcess().getWindowAgentsManager().createIframeDisplay(
+                {
+                    tdl: tdl,
+                    mode: options["mode"],
+                    editable: false,
+                    tdlFileName: options["tdlFileName"],
+                    macros: options["macros"],
+                    replaceMacros: options["replaceMacros"],
+                    hide: false,
+                    utilityType: undefined,
+                    utilityOptions: undefined,
+                },
+                options["widgetKey"],
+                options["displayWindowId"]
+            );
+        }
     };
 
     handleSwitchIframeDisplayTab = (

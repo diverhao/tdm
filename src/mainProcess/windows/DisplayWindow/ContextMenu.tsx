@@ -827,6 +827,12 @@ export class ContextMenu {
                     },
                 },
                 {
+                    label: "Table",
+                    click: () => {
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "table");
+                    },
+                },
+                {
                     label: "Group",
                     click: () => {
                         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "group");

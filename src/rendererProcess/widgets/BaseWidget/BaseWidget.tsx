@@ -1174,7 +1174,8 @@ export abstract class BaseWidget {
         const result: Record<string, any> = {
             ...this.getStyle(),
             ...this.getRulesStyle(),
-            display: "inline-flex",
+            // display: "inline-flex",
+            display: this.getAllStyle()["display"],
             left: this.getBorderType() === "outside" ? allStyle["left"] - allStyle["borderWidth"] : allStyle["left"],
             top: this.getBorderType() === "outside" ? allStyle["top"] - allStyle["borderWidth"] : allStyle["top"],
             // if it is a readback-type widget, we skip the mouse left-button-down event in operating mode, 

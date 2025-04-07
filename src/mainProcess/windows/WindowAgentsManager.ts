@@ -331,7 +331,7 @@ export class WindowAgentsManager {
                         }))
                     }
                 }
-                Log.debug(this.getMainProcessId(), "we have obtained ifram uuid", displayWindowId);
+                Log.info(this.getMainProcessId(), "we have obtained ifram uuid", displayWindowId);
                 await displayWindowAgent.creationPromise;
                 Log.debug(this.getMainProcessId(), "lifted", displayWindowAgent.getId());
 

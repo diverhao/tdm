@@ -174,7 +174,7 @@ export class TextUpdate extends BaseWidget {
         let style: React.CSSProperties = {};
         if (g_widgets1.isEditing()) {
             style = {
-                display: "inline-flex",
+                display: this.getAllStyle()["display"],
                 top: 0,
                 left: 0,
                 width: "100%",
@@ -212,7 +212,8 @@ export class TextUpdate extends BaseWidget {
                 fontWeight: allStyle.fontWeight,
                 // color: allStyle["color"],
                 ...this.getElementBodyRawStyle(),
-                display: "inline-flex",
+                // display: "inline-flex",
+                display: this.getAllStyle()["display"],
                 backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
                 outline: this._getElementAreaRawOutlineStyle(),
                 // opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,

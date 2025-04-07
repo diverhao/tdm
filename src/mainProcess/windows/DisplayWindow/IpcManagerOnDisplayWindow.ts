@@ -29,6 +29,7 @@ import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/Fi
 import { TcaChannel } from "../../../rendererProcess/channel/TcaChannel";
 import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/ChannelGraph";
 import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
+import { Table } from "../../../rendererProcess/widgets/Table/Table";
 
 // var recorder;
 // var blobs = [];
@@ -212,6 +213,9 @@ export class IpcManagerOnDisplayWindow {
         if (widget instanceof EmbeddedDisplay) {
             widget.loadHtml(options["iframeDisplayId"]);
             widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
+        } else if (widget instanceof Table) {
+            widget.loadHtml(options["iframeDisplayId"]);
+            widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
         }
     };
 
@@ -353,6 +357,8 @@ export class IpcManagerOnDisplayWindow {
                 g_widgets1.createWidgetFromMouse("Help");
             } else if (subcommand === "binary-image") {
                 g_widgets1.createWidgetFromMouse("BinaryImage");
+            } else if (subcommand === "table") {
+                g_widgets1.createWidgetFromMouse("Table");
             } else if (subcommand === "terminal") {
                 g_widgets1.createWidgetFromMouse("Terminal");
             } else if (subcommand === "calculator") {
