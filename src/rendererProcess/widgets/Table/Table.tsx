@@ -13,7 +13,7 @@ import { rendererWindowStatus } from "../../global/Widgets";
 import path from "path";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 
-export type type_Group_tdl = {
+export type type_Table_tdl = {
     type: string;
     widgetKey: string;
     key: string;
@@ -22,9 +22,9 @@ export type type_Group_tdl = {
     channelNames: string[];
     groupNames: string[];
     rules: type_rules_tdl;
-    itemNames: string[];
-    itemBackgroundColors: string[];
-    widgetKeys: string[][];
+    // itemNames: string[];
+    // itemBackgroundColors: string[];
+    widgetKeys: string[];
     macros: [string, string][][]; // this macro is for this Table widget only, not the macro for the whole display
 };
 
@@ -54,15 +54,15 @@ export class Table extends BaseWidget {
 
     // _rules: TextUpdateRules;
 
-    _itemNames: string[];
-    _itemBackgroundColors: string[];
-    _widgetKeys: string[][];
+    // _itemNames: string[];
+    // _itemBackgroundColors: string[];
+    _widgetKeys: string[];
     _macros: [string, string][][] = [];
 
-    _allWidgetKeys: string[] = [];
-    _tmp_itemBackgroundColor = "rgba(0,0,0,0.14159265358979323846264338327)";
+    // _allWidgetKeys: string[] = [];
+    // _tmp_itemBackgroundColor = "rgba(0,0,0,0.14159265358979323846264338327)";
 
-    constructor(widgetTdl: type_Group_tdl) {
+    constructor(widgetTdl: type_Table_tdl) {
         super(widgetTdl);
 
         this.setStyle({ ...Table._defaultTdl.style, ...widgetTdl.style });
@@ -70,10 +70,10 @@ export class Table extends BaseWidget {
 
         // this._rules = new TextUpdateRules(this, widgetTdl);
 
-        this.setSelectedGroup(this.getText()["selectedGroup"]);
+        // this.setSelectedGroup(this.getText()["selectedGroup"]);
 
-        this._itemNames = JSON.parse(JSON.stringify(widgetTdl["itemNames"]));
-        this._itemBackgroundColors = JSON.parse(JSON.stringify(widgetTdl["itemBackgroundColors"]));
+        // this._itemNames = JSON.parse(JSON.stringify(widgetTdl["itemNames"]));
+        // this._itemBackgroundColors = JSON.parse(JSON.stringify(widgetTdl["itemBackgroundColors"]));
         this._widgetKeys = JSON.parse(JSON.stringify(widgetTdl["widgetKeys"]));
         this._macros = JSON.parse(JSON.stringify(widgetTdl["macros"]));
 
@@ -167,20 +167,6 @@ export class Table extends BaseWidget {
         );
     };
 
-    removeGroupMembers = () => {
-        for (const widgetKey of this.getAllWidgetKeys()) {
-            try {
-                const widget = g_widgets1.getWidget2(widgetKey);
-                if (widget instanceof BaseWidget) {
-                    g_widgets1.removeWidget(widgetKey, false, false);
-                }
-            } catch (e) {
-                Log.error(e);
-            }
-        }
-        g_flushWidgets();
-    };
-
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): JSX.Element => {
         return (
@@ -210,13 +196,12 @@ export class Table extends BaseWidget {
     };
 
     _ElementGroups = () => {
-        const [, forceUpdate] = React.useState({});
         // todo: looks like we don't need this, it causes flash when we start to move the Group widget
         // what does it do?
         // do it once
         React.useEffect(() => {
-            // this.updateGroup(this.getSelectedGroup());
-            // g_flushWidgets();
+            this.updateGroup();
+            g_flushWidgets();
         }, []);
 
         return (
@@ -227,144 +212,50 @@ export class Table extends BaseWidget {
                     position: "absolute",
                 }}
             >
-
-                {this.getItemNames().map((itemName: string, index: number) => {
-                    return <this._ElementGroup index={index}></this._ElementGroup>;
-                })}
-                {<this._ElementTabs></this._ElementTabs>}
+                <this._ElementGroup></this._ElementGroup>
             </div>
         );
     };
 
-    calcTabsLeft = () => {
-        switch (this.getText()["tabPosition"]) {
-            case "top":
-                return 0;
-            case "left":
-                return -1 * this.getText()["tabWidth"] - 8 - this.getStyle()["borderWidth"];
-            case "bottom":
-                return 0;
-            case "right":
-                return this.getStyle()["width"] + 8 + this.getStyle()["borderWidth"];
-            default:
-                Log.error("Error in tab calculation");
+
+    /**
+     * [[["SYS", "RNG"], ["SUBSYS", "BPM"]], [["SYS", "BST"], ["SUBSYS", "BLM"]]] --> "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM"
+     */
+    serializeMacros = () => {
+        const macros = this.getMacros();
+        let result: string = "";
+        for (const rowMacros of macros) {
+            const rowMacrosStr = GlobalMethods.serializeMacros(rowMacros);
+            result = result + rowMacrosStr + "\n";
         }
-    };
-    calcTabsTop = () => {
-        switch (this.getText()["tabPosition"]) {
-            case "top":
-                return -1 * this.getText()["tabHeight"] - 8 - this.getStyle()["borderWidth"];
-            case "left":
-                return 0;
-            case "bottom":
-                return this.getStyle()["height"] + 8 + this.getStyle()["borderWidth"];
-            case "right":
-                return 0;
-            default:
-                Log.error("Error in tab calculation");
+        if (result.endsWith("\n")) {
+            result = result.substring(0, result.length - 1);
         }
-    };
+        return result;
+    }
 
-    _ElementTabs = () => {
-        const [, forceUpdate] = React.useState({});
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    flexDirection: this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "row" : "column",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                    width:
-                        this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "100%" : this.getText()["tabWidth"],
-                    height:
-                        this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? this.getText()["tabHeight"] : "100%",
-                    position: "absolute",
-                    left: this.calcTabsLeft(),
-                    top: this.calcTabsTop(),
-                }}
-            >
-                {this.getItemNames().map((itemName: string, index: number) => {
-                    return (
-                        <div
-                            key={`${itemName}-${index}-${this.getItemNames()[index]}`}
-                            style={{
-                                display: "inline-flex",
-                                justifyContent: this.getText()["horizontalAlign"],
-                                alignItems: "center",
-                                width:
-                                    this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom"
-                                        ? this.getText()["tabWidth"]
-                                        : "100%",
-                                height: this.getText()["tabHeight"],
-                                backgroundColor:
-                                    this.getSelectedGroup() === index ? this.getText()["tabSelectedColor"] : this.getText()["tabDefaultColor"],
-                                // border: "solid 1px black",
-                                fontWeight: this.getSelectedGroup() === index ? "bold" : "normal",
-                                overflow: "hidden",
-                                whiteSpace: "nowrap",
-                                padding: 4,
-                                borderRadius: 4,
-                                margin: 3,
-                                // marginBottom: 5,
-                                // marginTop: 15,
-                                // marginLeft: 15,
-                            }}
-                            onMouseDown={(event: any) => {
-                                // event.preventDefault();
-                                // forceUpdate({});
-                                // this.selectTab(index);
-                                event.stopPropagation();
-                                this.updateGroup(index);
+    /**
+     * "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM" --> [[["SYS", "RNG"], ["SUBSYS", "BPM"]], [["SYS", "BST"], ["SUBSYS", "BLM"]]]
+     */
+    deserializeMacros = (str: string) => {
+        const macrosStrLines = str.split("\n");
+        const result: [string, string][][] = [];
 
-                                g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-
-                                if (g_widgets1.isEditing()) {
-                                    this.selectGroup(index, true);
-                                }
-                                g_widgets1.updateSidebar(true);
-                                g_flushWidgets();
-                            }}
-                        >
-                            {itemName}
-                        </div>
-                    );
-                })}
-            </div>
-        );
-    };
-
-    selectGroup = (index: number, doFlush: boolean = false) => {
-        // select this widget first
-        this.simpleSelect(false);
-        // this widget may have been selected, we must do it again to successfully refresh it when we click the
-        // tab
-        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-        // then selection others, why??
-        for (let widgetKey of this.getWidgetKeys()[index]) {
-            try {
-                const widget = g_widgets1.getWidget2(widgetKey);
-                if (widget instanceof BaseWidget) {
-                    widget.simpleSelect(false);
-                }
-            } catch (e) {
-                Log.error(e);
-            }
+        for (const rowMacrosStr of macrosStrLines) {
+            const rowMacros = GlobalMethods.deserializeMacros(rowMacrosStr);
+            result.push(rowMacros);
         }
-        g_widgets1.updateSidebar(true);
-        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-        if (doFlush) {
-            g_flushWidgets();
-        }
-    };
+        return result;
+    }
 
-    _ElementGroup = ({ index }: any) => {
+    _ElementGroup = ({ }: any) => {
         // when the Group widget is being resized, deselect all its child widgets in all sub-groups,
         // so that these children won't be resized
         if (g_widgets1.getRendererWindowStatusStr().includes("resizingWidget")) {
-            this.updateGroup(this.getSelectedGroup());
+            this.updateGroup();
             if (this.isSelected()) {
                 // deselect all insider widgets
-                for (let widgetKey of this.getAllWidgetKeys()) {
+                for (let widgetKey of this.getWidgetKeys()) {
                     try {
                         const widget = g_widgets1.getWidget2(widgetKey);
                         if (widget instanceof BaseWidget) {
@@ -381,7 +272,7 @@ export class Table extends BaseWidget {
         // when the Group widget is being moved, select all its child widgets in all Groups
         if (g_widgets1.getRendererWindowStatusStr().includes("movingWidget")) {
             if (this.isSelected()) {
-                for (let widgetKey of this.getAllWidgetKeys()) {
+                for (let widgetKey of this.getWidgetKeys()) {
                     try {
                         const widget = g_widgets1.getWidget2(widgetKey);
                         if (widget instanceof BaseWidget) {
@@ -401,14 +292,14 @@ export class Table extends BaseWidget {
                     position: "absolute",
                     top: 0,
                     left: 0,
-                    backgroundColor: this.getItemBackgroundColors()[index],
-                    visibility: index === this.getSelectedGroup() ? "visible" : "hidden",
+                    // backgroundColor: this.getItemBackgroundColors()[index],
+                    // visibility: index === this.getSelectedGroup() ? "visible" : "hidden",
                 }}
                 onMouseDown={(event: any) => {
                     this._handleMouseDown(event);
                     if (g_widgets1.isEditing()) {
-                        this.updateGroup(index);
-                        this.selectGroup(index);
+                        this.updateGroup();
+                        // this.selectGroup();
                     }
                 }}
                 onMouseUp={(event: any) => {
@@ -424,79 +315,29 @@ export class Table extends BaseWidget {
         );
     };
 
-    _handleMouseDownOnResizer(event: MouseEvent, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
-        super._handleMouseDownOnResizer(event, index);
-        if (g_widgets1.isEditing()) {
-            if (this._tmp_itemBackgroundColor === "rgba(0,0,0,0.14159265358979323846264338327)") {
-                this._tmp_itemBackgroundColor = this.getItemBackgroundColors()[this.getSelectedGroup()];
-                this.getItemBackgroundColors()[this.getSelectedGroup()] = "rgba(0,0,0,0)";
-            }
-        }
-    }
 
     _handleMouseUpOnResizer(event: any, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
         super._handleMouseUpOnResizer(event, index);
         if (g_widgets1.isEditing()) {
-            this.getItemBackgroundColors()[this.getSelectedGroup()] = this._tmp_itemBackgroundColor;
-            this._tmp_itemBackgroundColor = "rgba(0,0,0,0.14159265358979323846264338327)";
-            this.updateGroup(this.getSelectedGroup());
-            this.selectGroup(this.getSelectedGroup(), true);
+            this.updateGroup();
         }
     }
 
     // only update data and visibility, nothing about selection of widgets
-    // (1) find all widgets inside the bound, put their widgetKeys to this._allWidgetKeys
-    // (2) compare the this._allWidgetKeys and this._widgetKeys, if the widget is not in this._allWidgetKeys,
+    // (1) find all widgets inside the bound, put their widgetKeys to this._widgetKeys
+    // (2) compare the this._widgetKeys and this._widgetKeys, if the widget is not in this._allWidgetKeys,
     //     it means this widget is not in-bound, then we remove this widgetKey out of this._widgetKeys
     //     and set its "visibility" style to "visible", no flush yet
     // (3) put all visible in-bound widgets to the old selected group's this._widgetKeys, and set their visibility to "hidden",
     //     before doing it, clear this this._widgetKeys[this.selectedGroup]
     // (4) update this._selectedGroup
     // (5) set all widgets that belong to the currently selected to group visible
-    updateGroup = (index: number) => {
+    updateGroup = () => {
         // (1)
         this._updateCoverage(false);
-        // (2)
-        for (let widgetKeys of this.getWidgetKeys()) {
-            for (let widgetKey of widgetKeys) {
-                if (!this.getAllWidgetKeys().includes(widgetKey)) {
-                    try {
-                        const widget = g_widgets1.getWidget2(widgetKey);
-                        if (widget instanceof BaseWidget) {
-                            // widget.simpleDeselect(true);
-                            widget.getStyle()["visibility"] = "visible";
-                            g_widgets1.addToForceUpdateWidgets(widgetKey);
-                        }
-                    } catch (e) {
-                        Log.error(e);
-                    }
-                }
-            }
-        }
-        // (3)
-        this.getWidgetKeys()[this.getSelectedGroup()] = [];
-        for (let widgetKey of this.getAllWidgetKeys()) {
-            try {
-                const widget = g_widgets1.getWidget2(widgetKey);
-                if (widget instanceof BaseWidget) {
-                    widget.simpleDeselect(true);
-
-                    if (widget.getStyle()["visibility"] === "visible" || widget.getStyle()["visibility"] === undefined) {
-                        this.getWidgetKeys()[this.getSelectedGroup()].push(widgetKey);
-                        widget.getStyle()["visibility"] = "hidden";
-                        g_widgets1.addToForceUpdateWidgets(widgetKey);
-                    }
-                }
-            } catch (e) {
-                Log.error(e);
-            }
-        }
-
-        // (4)
-        this.setSelectedGroup(index);
-
         // (5)
-        for (let widgetKey of this.getWidgetKeys()[this.getSelectedGroup()]) {
+        // for (let widgetKey of this.getWidgetKeys()[this.getSelectedGroup()]) {
+        for (let widgetKey of this.getWidgetKeys()) {
             try {
                 const widget = g_widgets1.getWidget2(widgetKey);
                 if (widget instanceof BaseWidget) {
@@ -519,24 +360,22 @@ export class Table extends BaseWidget {
 
     // only modify data, nothing about selection
     private _updateCoverage = (doFlush: boolean) => {
-        this.getAllWidgetKeys().length = 0;
+        this.getWidgetKeys().length = 0;
 
         let selectionChanged = false;
-        const group = g_widgets1.getGroupSelection2();
-        const groupsInfo: Record<string, any> = {};
 
-        for (let [widgetKey1, widget1] of g_widgets1.getWidgets2()) {
+        for (let [widgetKey1, widget] of g_widgets1.getWidgets2()) {
             // only select selectable widget, e.g. TextUpdate
             //todo: provide a programtic way to determine special widgets
             // const widgetType = widget1.getType();
 
-            if (!(widget1 instanceof BaseWidget)) {
+            if (!(widget instanceof BaseWidget)) {
                 continue;
             }
 
             // widget boundary
             // todo: more generic
-            const widget = widget1 as BaseWidget;
+            // const widget = widget1 as BaseWidget;
             let widgetLeft = widget.getStyle().left;
             let widgetTop = widget.getStyle().top;
             let widgetRight = widgetLeft + widget.getStyle().width;
@@ -549,72 +388,11 @@ export class Table extends BaseWidget {
             let regionDown = regionTop + this._style.height;
 
             const isInside = regionLeft < widgetLeft && regionTop < widgetTop && regionDown > widgetDown && regionRight > widgetRight;
-            const wasInside = widget.isSelected();
-
-            if (widget.isInGroup()) {
-                // if widget is in a group, topGroupName must be a string
-                const topGroupName = widget.getTopGroupName() as string;
-                if (groupsInfo[topGroupName] === undefined) {
-                    groupsInfo[topGroupName] = {
-                        totalCount: 0,
-                        insideCount: 0,
-                        // any widget in this group
-                        memberName: widget.getWidgetKey(),
-                    };
-                }
-                // add total count
-                groupsInfo[topGroupName].totalCount++;
-                if (isInside) {
-                    groupsInfo[topGroupName].insideCount++;
-                }
-            } else {
-                if (isInside) {
-                    this.getAllWidgetKeys().push(widget.getWidgetKey());
-                }
+            if (isInside) {
+                this.getWidgetKeys().push(widget.getWidgetKey());
             }
         }
 
-        // ------ group --------
-        for (const groupInfo of Object.values(groupsInfo)) {
-            // todo: more generic
-            const widget = g_widgets1.getWidget2(groupInfo.memberName);
-            if (widget instanceof BaseWidget) {
-                // if (groupInfo.totalCount === groupInfo.insideCount && !widget.isSelected()) {
-                if (groupInfo.totalCount === groupInfo.insideCount) {
-                    // select the whole group
-                    // widget.selectOnMouseMove();
-
-                    const topGroupName = widget.getTopGroupName();
-                    for (let [, widget] of g_widgets1.getWidgets2()) {
-                        if (widget instanceof BaseWidget && widget.getTopGroupName() === topGroupName) {
-                            this.getAllWidgetKeys().push(widget.getWidgetKey());
-                            // widget.simpleSelect(doFlush);
-                        }
-                    }
-
-                    selectionChanged = true;
-                }
-                // if (groupInfo.totalCount !== groupInfo.insideCount && widget.isSelected()) {
-                if (groupInfo.totalCount !== groupInfo.insideCount) {
-                    // deselect the whole group
-                    // the widget must have been in a group
-                    const index = this.getAllWidgetKeys().indexOf(widget.getWidgetKey());
-                    if (index > -1) {
-                        // this.getWidgets().splice(index, 1);
-
-                        const topGroupName = widget.getTopGroupName();
-                        for (let [, widget] of g_widgets1.getWidgets2()) {
-                            if (widget instanceof BaseWidget && widget.getTopGroupName() === topGroupName) {
-                                this.getAllWidgetKeys().splice(index, 1);
-                                // widget.simpleSelect(doFlush);
-                            }
-                        }
-                    }
-                    // widget.simpleDeselectGroup(false);
-                    selectionChanged = true;
-                }
-            }
-        }
 
         if (selectionChanged) {
             // do not flush yet, wait to the end
@@ -672,10 +450,11 @@ export class Table extends BaseWidget {
 
     copyTemplateWidgetsTdls = () => {
         const result: Record<string, any>[] = [];
-        const widgetKeys = this.getWidgetKeys()[0];
+        const widgetKeys = this.getWidgetKeys();
 
         if (widgetKeys !== undefined && widgetKeys.length > 0) {
             for (let widgetKey of widgetKeys) {
+                console.log(widgetKey)
                 const widget = g_widgets1.getWidget2(widgetKey);
                 if (widget instanceof BaseWidget) {
                     const widgetTdl = widget.getTdlCopy(true);
@@ -704,7 +483,7 @@ export class Table extends BaseWidget {
 
         React.useEffect(() => {
             if (iframeElementRef.current !== null) {
-                iframeElementRef.current.style["backgroundColor"] = this.iframeBackgroundColor;
+                iframeElementRef.current.style["backgroundColor"] = "rgba(255,255,255,1)"; // always white
             }
         });
 
@@ -728,16 +507,15 @@ export class Table extends BaseWidget {
                 referrerPolicy="no-referrer"
                 // ! iframe and its parent share the same sessionStorage, which causes an issue 
                 // ! that we cannot refresh the web page
-                sandbox="allow-scripts allow-same-origin allow-popups"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
                 // sandbox="allow-scripts"
                 style={{
                     border: "none",
-                    backgroundColor: this.iframeBackgroundColor,
+                    backgroundColor: "rgba(255,255,255,1)", // always white
                 }}
             >
             </iframe>
         );
-
     };
 
     createDynamicWidgets = () => {
@@ -766,12 +544,12 @@ export class Table extends BaseWidget {
         const canvsWidgetTdl = Canvas.generateDefaultTdl();
         canvsWidgetTdl["style"]["width"] = this.getAllStyle()["width"];
         canvsWidgetTdl["style"]["height"] = this.getAllStyle()["height"];
-        canvsWidgetTdl["style"]["backgroundColor"] = "rgba(255, 0, 0, 0.1)";
+        canvsWidgetTdl["style"]["backgroundColor"] = this.getAllStyle()["backgroundColor"];
         tdl["Canvas"] = canvsWidgetTdl;
 
 
         // create widgets Tdl
-        for (let ii = 0; ii < 30; ii++) {
+        for (let ii = 0; ii < this.getMacros().length; ii++) {
             for (const widgetTdlOriginal of templateWidgetsTdls) {
 
                 const widgetTdl = JSON.parse(JSON.stringify(widgetTdlOriginal));
@@ -786,15 +564,24 @@ export class Table extends BaseWidget {
 
                 // replace macros
 
+                const canvas = g_widgets1.getWidget2("Canvas");
+                if (!(canvas instanceof Canvas)) {
+                    const errMsg = "No Canvas widget";
+                    throw new Error(errMsg);
+                }
+
                 if (this.getMacros()[ii] !== undefined) {
-                    const canvas = g_widgets1.getWidget2("Canvas");
-                    if (!(canvas instanceof Canvas)) {
-                        const errMsg = "No Canvas widget";
-                        throw new Error(errMsg);
-                    }
                     const macros = [...canvas.getAllMacros(), ...this.getMacros()[ii]];
 
                     if (macros !== undefined && macros.length > 0) {
+
+                        // replace Label text
+                        if (widgetTdl["widgetKey"].startsWith("Label_")) {
+                            widgetTdl["text"]["text"] = BaseWidget.expandChannelName(widgetTdl["text"]["text"], macros, true);
+                        }
+
+                        // todo: Action Button: replace text, execute command, write PV ...
+
                         for (let ii = 0; ii < widgetTdl["channelNames"].length; ii++) {
                             const channelName = widgetTdl["channelNames"][ii];
                             const expandedChannelName = BaseWidget.expandChannelName(channelName, macros, true);
@@ -802,15 +589,10 @@ export class Table extends BaseWidget {
                         }
                     }
                 }
-
             }
         }
 
         this.iframeDisplayId = "";
-        // let macros = this.expandItemMacros(0);
-
-        // let tdlFileName = this.getTdlFileNames()[this.getSelectedTab()];
-        // tdlFileName = BaseWidget.expandChannelName(tdlFileName, macros);
 
         const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
         ipcManager.sendFromRendererProcess("obtain-iframe-uuid", {
@@ -826,8 +608,17 @@ export class Table extends BaseWidget {
         });
     }
 
+    removeDynamicWidgets = () => {
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        if (this.iframeDisplayId !== "") {
+            displayWindowClient.getIpcManager().sendFromRendererProcess("close-iframe-display", {
+                displayWindowId: this.iframeDisplayId,
+            })
+        }
+    }
+
     iframeDisplayId: string = "";
-    iframeBackgroundColor: string = "rgba(255, 0, 0, 0.1)"
+    // iframeBackgroundColor: string = "rgba(255, 0, 0, 0)"
 
 
     loadHtml = (iframeDisplayId: string) => {
@@ -836,56 +627,6 @@ export class Table extends BaseWidget {
         g_flushWidgets();
     };
 
-    setIframeBackgroundColor = (tdlBackgroundColor: string) => {
-        this.iframeBackgroundColor = tdlBackgroundColor;
-    }
-
-    // hideTemplateWidgets = () => {
-
-    //     for (const widgetKey of this.getWidgetKeys()[0]) {
-
-    //         if (widgetKey !== undefined) {
-    //             const widget = g_widgets1.getWidget2(widgetKey);
-    //             if (widget instanceof BaseWidget) {
-    //                 console.log("hiding", widgetKey)
-    //                 widget.getStyle()["display"] = "none";
-    //                 widget.getAllStyle()["display"] = "none";
-    //                 g_widgets1.addToForceUpdateWidgets(widgetKey);
-    //             }
-    //         }
-    //     }
-    // }
-
-    // showTemplateWidgets = () => {
-    //     for (const widgetKey of this.getWidgetKeys()[0]) {
-    //         if (widgetKey !== undefined) {
-    //             const widget = g_widgets1.getWidget2(widgetKey);
-    //             if (widget instanceof BaseWidget) {
-    //                 widget.getStyle()["display"] = "inline-flex";
-    //                 widget.getAllStyle()["display"] = "inline-flex";
-    //                 g_widgets1.addToForceUpdateWidgets(widgetKey);
-    //             }
-    //         }
-    //     }
-    // }
-
-    removeDynamicWidgets = () => {
-
-        // for (let ii = 0; ii < 10; ii++) {
-        //     for (const widgetKeys of this.getDynamicWidgetKeys()) {
-        //         g_widgets1.removeWidget(widgetKeys, false, false);
-        //     }
-        // }
-        // this.setDynamicWidgetKeys([]);
-
-        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        if (this.iframeDisplayId !== "") {
-            displayWindowClient.getIpcManager().sendFromRendererProcess("close-iframe-display", {
-                displayWindowId: this.iframeDisplayId,
-            })
-        }
-
-    }
 
     // ----------------------- styles -----------------------
 
@@ -899,8 +640,8 @@ export class Table extends BaseWidget {
 
     // properties when we create a new TextUpdate
     // the level 1 properties all have corresponding public or private variable in the widget
-    static _defaultTdl: type_Group_tdl = {
-        type: "Group",
+    static _defaultTdl: type_Table_tdl = {
+        type: "Table",
         widgetKey: "", // "key" is a reserved keyword
         key: "",
         // the style for outmost div
@@ -946,9 +687,8 @@ export class Table extends BaseWidget {
         channelNames: [],
         groupNames: [],
         rules: [],
-        itemNames: ["Group-1"],
-        itemBackgroundColors: ["rgba(255,255,255,1)"],
-        widgetKeys: [[]],
+
+        widgetKeys: [],
         macros: [],
     };
 
@@ -958,9 +698,9 @@ export class Table extends BaseWidget {
         result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
         result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
         result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.itemNames = JSON.parse(JSON.stringify(this._defaultTdl.itemNames));
-        result.itemBackgroundColors = JSON.parse(JSON.stringify(this._defaultTdl.itemBackgroundColors));
+        // result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
+        // result.itemNames = JSON.parse(JSON.stringify(this._defaultTdl.itemNames));
+        // result.itemBackgroundColors = JSON.parse(JSON.stringify(this._defaultTdl.itemBackgroundColors));
         result.widgetKeys = JSON.parse(JSON.stringify(this._defaultTdl.widgetKeys));
         result.macros = JSON.parse(JSON.stringify(this._defaultTdl.macros));
         return result;
@@ -969,8 +709,8 @@ export class Table extends BaseWidget {
     // defined in super class
     getTdlCopy(newKey: boolean) {
         const result = super.getTdlCopy(newKey);
-        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
-        result["itemBackgroundColors"] = JSON.parse(JSON.stringify(this.getItemBackgroundColors()));
+        // result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
+        // result["itemBackgroundColors"] = JSON.parse(JSON.stringify(this.getItemBackgroundColors()));
         result["widgetKeys"] = JSON.parse(JSON.stringify(this.getWidgetKeys()));
         result["macros"] = JSON.parse(JSON.stringify(this.getMacros()));
         return result;
@@ -991,27 +731,27 @@ export class Table extends BaseWidget {
     // getResizerStyles()
     // getRules()
 
-    getItemNames = () => {
-        return this._itemNames;
-    };
+    // getItemNames = () => {
+    //     return this._itemNames;
+    // };
 
-    getItemBackgroundColors = () => {
-        return this._itemBackgroundColors;
-    };
+    // getItemBackgroundColors = () => {
+    //     return this._itemBackgroundColors;
+    // };
 
-    getAllWidgetKeys = () => {
-        return this._allWidgetKeys;
-    };
+    // getAllWidgetKeys = () => {
+    //     return this._allWidgetKeys;
+    // };
 
-    getSelectedGroup = () => {
-        // return this._selectedGroup;
-        return this.getText()["selectedGroup"];
-    };
+    // getSelectedGroup = () => {
+    //     // return this._selectedGroup;
+    //     return this.getText()["selectedGroup"];
+    // };
 
-    setSelectedGroup = (newIndex: number) => {
-        // this._selectedGroup = newIndex;
-        this.getText()["selectedGroup"] = newIndex;
-    };
+    // setSelectedGroup = (newIndex: number) => {
+    //     // this._selectedGroup = newIndex;
+    //     this.getText()["selectedGroup"] = newIndex;
+    // };
 
     getWidgetKeys = () => {
         return this._widgetKeys;
@@ -1019,6 +759,10 @@ export class Table extends BaseWidget {
 
     getMacros = () => {
         return this._macros;
+    }
+
+    setMacros = (newMacros: [string, string][][]) => {
+        this._macros = newMacros;
     }
 
     // ---------------------- setters -------------------------
@@ -1047,7 +791,7 @@ export class Table extends BaseWidget {
         super.jobsAsEditingModeBegins();
         this.removeDynamicWidgets();
         if (this.getWidgetKeys()[0] !== undefined) {
-            g_widgets1.getTableTemplateWidgets().push(...this.getWidgetKeys()[0]);
+            g_widgets1.getTableTemplateWidgets().push(...this.getWidgetKeys());
         }
     }
 
@@ -1055,7 +799,7 @@ export class Table extends BaseWidget {
         super.jobsAsOperatingModeBegins();
         this.createDynamicWidgets();
         if (this.getWidgetKeys()[0] !== undefined) {
-            g_widgets1.getTableTemplateWidgets().push(...this.getWidgetKeys()[0]);
+            g_widgets1.getTableTemplateWidgets().push(...this.getWidgetKeys());
         }
     }
 }

@@ -7,7 +7,9 @@ export class SidebarLargeInput {
     value: string = "";
     setValue: any;
     readableText: string = "";
+    title: string = ""
     updater: any = undefined;
+
     readonly id: string = "sidebar-large-input";
 
     constructor() {
@@ -137,6 +139,97 @@ export class SidebarLargeInput {
             </div>
         )
     }
+
+
+    createTextareaElement = (value: string, title: string, readableText: string, updater: any) => {
+        this.removeElement();
+
+        this.title = title;
+        this.value = value;
+        this.readableText = readableText;
+        this.updater = updater;
+
+        // transparent backdrop
+        const newElement = document.createElement('div');
+        newElement.id = this.getId();
+
+        newElement.style.position = "absolute";
+        newElement.style.left = "0px";
+        newElement.style.top = "0px";
+        newElement.style.width = "100%";
+        newElement.style.height = "100%";
+        newElement.style.display = "inline-flex";
+        newElement.style.alignItems = "flex-start";
+        newElement.style.justifyContent = "center";
+
+        ReactDOM.createRoot(newElement).render(<this._ElementTextarea></this._ElementTextarea>);
+        document.body.appendChild(newElement);
+    }
+
+
+    _ElementTextarea = () => {
+        const [localValue, setLocalValue] = React.useState(this.getValue());
+        return (
+            <div style={{
+                display: "inline-flex",
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0, 0, 0, 0.2)",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                backdropFilter: "blur(10px)",
+            }}>
+                <div style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "85%",
+                    height: "80%",
+                    backgroundColor: "rgba(20,20,20,1)",
+                    color: "rgba(210,210,210,1)",
+                    borderRadius: 6,
+                }}>
+                    <h2>
+                        {this.title}
+                    </h2>
+                    <p style={{ fontSize: 13, marginTop: 0 }}>
+                        {this.readableText}
+                    </p>
+                    <textarea
+                        style={{
+                            width: "90%",
+                            // height: "80%",
+                            outline: "none",
+                            border: "none",
+                            flexGrow: 1,
+                            marginBottom: 20,
+                        }}
+                        value={localValue}
+                        onChange={(event: any) => {
+                            setLocalValue(event.target.value);
+                        }}
+                    >
+                    </textarea>
+                    <ElementRectangleButton
+                        handleClick={() => {
+                            this.value = localValue;
+
+                            this.updater(localValue);
+                            this.removeElement();
+                        }}
+                        additionalStyle={{
+                            marginBottom: 20,
+                        }}
+                    >
+                        OK
+                    </ElementRectangleButton>
+                </div>
+            </div>
+        )
+    }
+
     // --------------- getters and setters ----------------------
     getId = () => {
         return this.id;

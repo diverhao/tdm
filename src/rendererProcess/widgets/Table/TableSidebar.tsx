@@ -1,36 +1,17 @@
 import * as React from "react";
 import { Table } from "./Table";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarGroupItems } from "../../helperWidgets/SidebarComponents/SidebarGroupItems";
-import { SidebarEmbeddedDisplayTabPosition } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabPosition";
-import { SidebarEmbeddedDisplayTabDefaultColor } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabDefaultColor";
-import { SidebarEmbeddedDisplayTabSelectedColor } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabSelectedColor";
-import { SidebarEmbeddedDisplayTabWidth } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabWidth";
-import { SidebarEmbeddedDisplayTabHeight } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabHeight";
-import { SidebarEmbeddedDisplayShowTab } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayShowTab";
 import { Log } from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
-
+import { SidebarTableRowsConfig } from "../../helperWidgets/SidebarComponents/SidebarTableRowsConfig"
 
 export class TableSidebar extends BaseWidgetSidebar {
 
-    private _sidebarGroupItems: SidebarGroupItems;
-    _sidebarEmbeddedDisplayTabPosition: SidebarEmbeddedDisplayTabPosition;
-    _sidebarEmbeddedDisplayTabSelectedColor: SidebarEmbeddedDisplayTabSelectedColor;
-    _sidebarEmbeddedDisplayTabDefaultColor: SidebarEmbeddedDisplayTabDefaultColor;
-    _sidebarEmbeddedDisplayTabWidth: SidebarEmbeddedDisplayTabWidth;
-    _sidebarEmbeddedDisplayTabHeight: SidebarEmbeddedDisplayTabHeight;
-    _sidebarEmbeddedDisplayShowTab: SidebarEmbeddedDisplayShowTab;
+    _sidebarTableRowsConfig: SidebarTableRowsConfig;
 
-    constructor(group: Table) {
-        super(group);
-        this._sidebarGroupItems = new SidebarGroupItems(this);
-        this._sidebarEmbeddedDisplayTabPosition = new SidebarEmbeddedDisplayTabPosition(this);
-        this._sidebarEmbeddedDisplayTabSelectedColor = new SidebarEmbeddedDisplayTabSelectedColor(this);
-        this._sidebarEmbeddedDisplayTabDefaultColor = new SidebarEmbeddedDisplayTabDefaultColor(this);
-        this._sidebarEmbeddedDisplayTabWidth = new SidebarEmbeddedDisplayTabWidth(this);
-        this._sidebarEmbeddedDisplayTabHeight = new SidebarEmbeddedDisplayTabHeight(this);
-        this._sidebarEmbeddedDisplayShowTab = new SidebarEmbeddedDisplayShowTab(this);
+    constructor(table: Table) {
+        super(table);
+        this._sidebarTableRowsConfig = new SidebarTableRowsConfig(this);
 
     }
 
@@ -79,7 +60,7 @@ export class TableSidebar extends BaseWidgetSidebar {
             <div style={{ ...this.getStyle() }}
                 onMouseDown={this.handleMouseDown}
             >
-                <h3>Group</h3>
+                <h3>Table</h3>
                 {/* ---------------- positions -------------------------- */}
                 <this._BlockTitle>
                     <b>Position</b>
@@ -89,7 +70,7 @@ export class TableSidebar extends BaseWidgetSidebar {
                     {this.getSidebarY().getElement()}
                     {this.getSidebarWidth().getElement()}
                     {this.getSidebarHeight().getElement()}
-                    {this.getSidebarAngle().getElement()}
+                    {/* {this.getSidebarAngle().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- channel -------------------------- */}
@@ -103,57 +84,44 @@ export class TableSidebar extends BaseWidgetSidebar {
                 {/* </this._BlockBody> */}
                 {/* <this._HorizontalLine /> */}
                 {/* ---------------- background -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Background</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* color */}
-                {/* {this.getSidebarBackgroundColor().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
-                {/* ---------------- text -------------------------- */}
                 <this._BlockTitle>
-                    <b>Text</b>
+                    <b>Background</b>
                 </this._BlockTitle>
                 <this._BlockBody>
                     {/* color */}
-                    {this.getSidebarTextColor().getElement()}
+                    {this.getSidebarBackgroundColor().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
+                {/* ---------------- text -------------------------- */}
+                {/* <this._BlockTitle> */}
+                    {/* <b>Text</b> */}
+                {/* </this._BlockTitle> */}
+                {/* <this._BlockBody> */}
+                    {/* color */}
+                    {/* {this.getSidebarTextColor().getElement()} */}
                     {/* {this.getSidebarXAlign().getElement()} */}
                     {/* {this.getSidebarYAlign().getElement()} */}
                     {/* {this.getSidebarWrapWord().getElement()} */}
-                </this._BlockBody>
-                <this._HorizontalLine />
-                {/* ---------------------------- tab ------------------------ */}
-                <this._BlockTitle>
-                    <b>Tabs</b>
-                </this._BlockTitle>
-                <this._BlockBody>
-                    {this.getSidebarEmbeddedDisplayTabPosition().getElement()}
-                    {this.getSidebarEmbeddedDisplayTabDefaultColor().getElement()}
-                    {this.getSidebarEmbeddedDisplayTabSelectedColor().getElement()}
-                    {this.getSidebarEmbeddedDisplayTabWidth().getElement()}
-                    {this.getSidebarEmbeddedDisplayTabHeight().getElement()}
-                    {this.getSidebarEmbeddedDisplayShowTab().getElement()}
-                </this._BlockBody>
-                <this._HorizontalLine />
+                {/* </this._BlockBody> */}
+                {/* <this._HorizontalLine /> */}
 
                 {/* ----------------------- font --------------------------- */}
+                {/* <this._BlockTitle> */}
+                    {/* <b>Font</b> */}
+                {/* </this._BlockTitle> */}
+                {/* <this._BlockBody> */}
+                    {/* {this.getSidebarFontFamily().getElement()} */}
+                    {/* {this.getSidebarFontSize().getElement()} */}
+                    {/* {this.getSidebarFontStyle().getElement()} */}
+                    {/* {this.getSidebarFontWeight().getElement()} */}
+                {/* </this._BlockBody> */}
+                {/* <this._HorizontalLine /> */}
+                {/* ---------------------- rows ---------------------- */}
                 <this._BlockTitle>
-                    <b>Font</b>
+                    <b>Rows</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {this.getSidebarFontFamily().getElement()}
-                    {this.getSidebarFontSize().getElement()}
-                    {this.getSidebarFontStyle().getElement()}
-                    {this.getSidebarFontWeight().getElement()}
-                </this._BlockBody>
-                <this._HorizontalLine />
-                {/* ---------------------- groups ---------------------- */}
-                <this._BlockTitle>
-                    <b>Groups</b>
-                </this._BlockTitle>
-                <this._BlockBody>
-                    {this.getSidebarGroupItems().getElement()}
+                    {this.getSidebarTableRowsConfig().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
 
@@ -193,32 +161,10 @@ export class TableSidebar extends BaseWidgetSidebar {
     // getFormStyle()
     // getInputStyle()
 
-    getSidebarGroupItems = () => {
-        return this._sidebarGroupItems;
+    getSidebarTableRowsConfig = () => {
+        return this._sidebarTableRowsConfig;
     }
 
-    getSidebarEmbeddedDisplayTabPosition = () => {
-        return this._sidebarEmbeddedDisplayTabPosition;
-    }
-
-    getSidebarEmbeddedDisplayTabSelectedColor = () => {
-        return this._sidebarEmbeddedDisplayTabSelectedColor;
-    }
-
-    getSidebarEmbeddedDisplayTabDefaultColor = () => {
-        return this._sidebarEmbeddedDisplayTabDefaultColor;
-    }
-
-    getSidebarEmbeddedDisplayTabWidth = () => {
-        return this._sidebarEmbeddedDisplayTabWidth;
-    }
-    getSidebarEmbeddedDisplayTabHeight = () => {
-        return this._sidebarEmbeddedDisplayTabHeight;
-    }
-
-    getSidebarEmbeddedDisplayShowTab = () => {
-        return this._sidebarEmbeddedDisplayShowTab;
-    }
     // ------------------------- style -------------------------
 
     // defined in super class

@@ -429,7 +429,7 @@ const binarySearch = (data: number[], target: number, mode: boolean) => {
  */
 export const getCurrentDateTimeStr = (useAsFileName: boolean = false) => {
     const now = new Date();
-  
+
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
@@ -437,12 +437,60 @@ export const getCurrentDateTimeStr = (useAsFileName: boolean = false) => {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
     const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
-  
+
     // note: : is not allowed as a file name
     if (useAsFileName === true) {
         return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}_${milliseconds}`;
     } else {
         return `${year}-${month}-${day}-${hours}:${minutes}:${seconds}.${milliseconds}`;
     }
-  }
-  
+}
+
+
+
+/**
+ * "SYS=RNG, SUBSYS=BPM --> [["SYS", "RNG"], ["SUBSYS", "BPM"]]
+ */
+export const deserializeMacros = (str: string): [string, string][] => {
+    const result: [string, string][] = [];
+    const macroStrList = str.split(/[\s\t]*[,]+[\s\t]*/); // ["SYS=RNG", "SUBSYS="BPM]
+
+    try {
+        for (const macroStr of macroStrList) {
+            const macroKeyValuePair = macroStr.trim().replaceAll(",", "").split(/[\s]*=[\s]*/); // ["SYS", "RNG"]
+            if (macroKeyValuePair.length === 2) {
+                const key = macroKeyValuePair[0].trim();
+                const value = macroKeyValuePair[1].trim();
+                if (key !== "") {
+                    result.push([key, value]);
+                }
+
+            }
+        }
+        return result;
+    } catch (e) {
+        return [];
+    }
+}
+
+
+/**
+ * [["SYS", "RNG"], ["SUBSYS", "BPM"]] --> "SYS=RNG, SUBSYS=BPM"
+ */
+export const serializeMacros = (macros: [string, string][]) => {
+    try {
+        let result: string = "";
+        for (const macro of macros) {
+            const key = macro[0];
+            const value = macro[1];
+            result = result + key + "=" + value + ", ";
+        }
+        if (result.endsWith(", ")) {
+            result = result.substring(0, result.length - 2);
+        }
+        return result;
+    } catch (e) {
+        return "";
+    }
+
+}

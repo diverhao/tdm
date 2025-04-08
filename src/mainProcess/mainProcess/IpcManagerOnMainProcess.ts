@@ -228,7 +228,6 @@ export class IpcManagerOnMainProcess {
         processId: string,
         windowId: string,
     }) => {
-        console.log("+++++++++++++++++++++++++++++++++web socket ipc connected", data)
         // the main processes' ipc manager
         const ipcManager = this.getMainProcess().getMainProcesses().getIpcManager();
         const mainProcess = this.getMainProcess();
