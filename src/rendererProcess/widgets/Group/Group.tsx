@@ -682,7 +682,7 @@ export class Group extends BaseWidget {
         // (2) they may be modified
         style: {
             position: "absolute",
-            display: "inline-block",
+            display: "inline-flex",
             backgroundColor: "rgba(240, 240, 240, 0)",
             left: 100,
             top: 100,

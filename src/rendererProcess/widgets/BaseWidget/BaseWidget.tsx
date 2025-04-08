@@ -913,7 +913,7 @@ export abstract class BaseWidget {
         opacity: 1,
         width: 10,
         height: 10,
-        display: "inline-block",
+        display: "inline-flex",
     };
 
     _resizerStyles: Record<string, any> = {
@@ -923,7 +923,7 @@ export abstract class BaseWidget {
             opacity: 1,
             width: 10,
             height: 10,
-            display: "inline-block",
+            display: "inline-flex",
             left: -5,
             top: -5,
             cursor: "nwse-resize",

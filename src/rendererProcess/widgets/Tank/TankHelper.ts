@@ -25,7 +25,7 @@ export class TankHelper extends BaseWidgetHelper {
         style: {
             // basics
             position: "absolute",
-            display: "inline-block",
+            display: "inline-flex",
             // dimensions
             left: 100,
             top: 100,

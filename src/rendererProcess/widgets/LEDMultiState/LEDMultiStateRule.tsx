@@ -9,7 +9,7 @@ export class LEDMultiStateRule extends BaseWidgetRule {
             style: {
                 // basics
                 // position: "absolute",
-                // display: "inline-block",
+                // display: "inline-flex",
                 // dimensions
                 // left: 0,
                 // top: 0,

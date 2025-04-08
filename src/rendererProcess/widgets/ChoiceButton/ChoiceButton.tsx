@@ -479,7 +479,7 @@ export class ChoiceButton extends BaseWidget {
         style: {
             // basics
             position: "absolute",
-            display: "inline-block",
+            display: "inline-flex",
             // dimensions
             left: 0,
             top: 0,

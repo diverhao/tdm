@@ -170,7 +170,7 @@ export class TextUpdate extends BaseWidget {
     _ElementAreaRaw = ({ }: any): JSX.Element => {
         const allStyle = this.getAllStyle();
         const allText = this.getAllText();
-
+        console.log("============ allText", allText)
         let style: React.CSSProperties = {};
         if (g_widgets1.isEditing()) {
             style = {
@@ -360,7 +360,7 @@ export class TextUpdate extends BaseWidget {
         style: {
             // basics
             position: "absolute",
-            display: "inline-block",
+            display: "inline-flex",
             // dimensions
             left: 100,
             top: 100,

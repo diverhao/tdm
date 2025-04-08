@@ -375,7 +375,7 @@ export class DataViewer extends BaseWidget {
         // (2) they may be modified
         style: {
             position: "absolute",
-            display: "inline-block",
+            display: "inline-flex",
             backgroundColor: "rgba(255, 255, 255, 1)",
             left: 0,
             top: 0,

@@ -711,7 +711,7 @@ export class Spinner extends BaseWidget {
         // (2) they may be modified
         style: {
             position: "absolute",
-            display: "inline-block",
+            display: "inline-flex",
             backgroundColor: "rgba(128, 255, 255, 1)",
             left: 100,
             top: 100,
