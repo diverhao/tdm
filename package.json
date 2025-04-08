@@ -1,6 +1,6 @@
 {
     "name": "tdm",
-    "version": "25.04.04",
+    "version": "25.04.08",
     "description": "A display manager for EPICS",
     "main": "./dist/mainProcess/startMainProcess.js",
     "repository": "https://github.com/MyApp/my-app",
@@ -81,17 +81,7 @@
         "productName": "TDM",
         "copyright": "",
         "asar": true,
-        "extraResources": [
-            {
-                "from": "resources/bin/",
-                "to": "bin",
-                "filter": [
-                    "**/*"
-                ]
-            }
-        ],
         "asarUnpack": [
-            "**/bin/**",
             "dist/mainProcess/wsPv/WsPvClient.js",
             "dist/mainProcess/wsPv/WsPvClient.py",
             "dist/mainProcess/resources/webpages/tdm.png",

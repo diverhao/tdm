@@ -206,7 +206,6 @@ export class IpcManagerOnDisplayWindow {
             widgetKey: string;
             iframeDisplayId: string;
             tdlBackgroundColor: string;
-
         }
     ) => {
         const widget = g_widgets1.getWidget2(options["widgetKey"]);
@@ -215,7 +214,7 @@ export class IpcManagerOnDisplayWindow {
             widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
         } else if (widget instanceof Table) {
             widget.loadHtml(options["iframeDisplayId"]);
-            // widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
+            widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
         }
     };
 

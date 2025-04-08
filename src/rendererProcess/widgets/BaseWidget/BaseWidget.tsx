@@ -1509,7 +1509,6 @@ export abstract class BaseWidget {
         const tmp: any[] = [...this.getEqChannelArray()];
         const channelNames = this.getChannelNamesLevel4();
 
-        Log.info("evaluating eq channel ================================", channelNames, this.getEqChannelNameIndices(), this.getEqChannelArray())
         for (let index = 0; index < channelNames.length; index++) {
             const channelName = channelNames[index];
             // in some cases channelName is just a number
@@ -1532,7 +1531,7 @@ export abstract class BaseWidget {
                 return undefined;
             }
         }
-        console.log("tmp ===============", tmp)
+
         try {
             const result = mathjs.evaluate(tmp.join(""));
             if (typeof result === "boolean") {

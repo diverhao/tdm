@@ -479,11 +479,12 @@ export class Table extends BaseWidget {
     _ElementIframeInOperating = () => {
 
         const iframeElementRef = React.useRef<any>(null);
-        const webviewElementRef = React.useRef<any>(null);
 
         React.useEffect(() => {
             if (iframeElementRef.current !== null) {
-                iframeElementRef.current.style["backgroundColor"] = "rgba(255,255,255,1)"; // always white
+                // iframeElementRef.current.style["backgroundColor"] = "rgba(255,255,255,1)"; // always white
+                iframeElementRef.current.style["backgroundColor"] = this.iframeBackgroundColor;
+
             }
         });
 
@@ -511,7 +512,9 @@ export class Table extends BaseWidget {
                 // sandbox="allow-scripts"
                 style={{
                     border: "none",
-                    backgroundColor: "rgba(255,255,255,1)", // always white
+                    // backgroundColor: "rgba(255,255,255,1)", // always white
+                    backgroundColor: this.iframeBackgroundColor,
+
                 }}
             >
             </iframe>
@@ -542,11 +545,10 @@ export class Table extends BaseWidget {
 
         // create Canvas Tdl
         const canvsWidgetTdl = Canvas.generateDefaultTdl();
-        canvsWidgetTdl["style"]["width"] = this.getAllStyle()["width"];
-        canvsWidgetTdl["style"]["height"] = this.getAllStyle()["height"];
-        canvsWidgetTdl["style"]["backgroundColor"] = this.getAllStyle()["backgroundColor"];
+        canvsWidgetTdl["style"]["width"] = this.getStyle()["width"];
+        canvsWidgetTdl["style"]["height"] = this.getStyle()["height"];
+        canvsWidgetTdl["style"]["backgroundColor"] = this.getStyle()["backgroundColor"];
         tdl["Canvas"] = canvsWidgetTdl;
-
 
         // create widgets Tdl
         for (let ii = 0; ii < this.getMacros().length; ii++) {
@@ -575,12 +577,47 @@ export class Table extends BaseWidget {
 
                     if (macros !== undefined && macros.length > 0) {
 
-                        // replace Label text
+                        // replace macros in Label text 
                         if (widgetTdl["widgetKey"].startsWith("Label_")) {
                             widgetTdl["text"]["text"] = BaseWidget.expandChannelName(widgetTdl["text"]["text"], macros, true);
                         }
 
-                        // todo: Action Button: replace text, execute command, write PV ...
+                        // replace macros in rules
+                        // the channel names in rules are expanded in BaseWidget.processChannelNames()
+                        // {
+                        //     "id": "6831fbe7-0589-481d-ae00-60edbbae5162",
+                        //     "boolExpression": "true",
+                        //     "propertyName": "X",
+                        //     "propertyValue": 923
+                        // }
+                        for (const rule of widgetTdl["rules"]) {
+                            rule["boolExpression"] = BaseWidget.expandChannelName(rule["boolExpression"], macros, true);
+                            rule["propertyValue"] = BaseWidget.expandChannelName(rule["propertyValue"], macros, true);
+                        }
+
+                        // replace macros in Action Button
+                        if (widgetTdl["widgetKey"].startsWith("ActionButton_")) {
+
+                            widgetTdl["text"]["text"] = BaseWidget.expandChannelName(widgetTdl["text"]["text"], macros, true);
+
+                            for (const action of widgetTdl["actions"]) {
+                                action["label"] = BaseWidget.expandChannelName(action["label"], macros, true);
+
+                                if (action["type"] === "OpenDisplay") {
+                                    action["fileName"] = BaseWidget.expandChannelName(action["fileName"], macros, true);
+                                    action["externalMacros"] = [...this.getMacros()[ii], ...action["externalMacros"]];
+                                } else if (action["type"] === "WritePV") {
+                                    action["channelName"] = BaseWidget.expandChannelName(action["channelName"], macros, true);
+                                    action["channelValue"] = BaseWidget.expandChannelName(action["channelValue"], macros, true);
+                                } else if (action["type"] === "ExecuteScript") {
+                                    action["fileName"] = BaseWidget.expandChannelName(action["fileName"], macros, true);
+                                } else if (action["type"] === "ExecuteCommand") {
+                                    action["command"] = BaseWidget.expandChannelName(action["command"], macros, true);
+                                } else if (action["type"] === "OpenWebPage") {
+                                    action["url"] = BaseWidget.expandChannelName(action["url"], macros, true);
+                                }
+                            }
+                        }
 
                         for (let ii = 0; ii < widgetTdl["channelNames"].length; ii++) {
                             const channelName = widgetTdl["channelNames"][ii];
@@ -618,14 +655,17 @@ export class Table extends BaseWidget {
     }
 
     iframeDisplayId: string = "";
-    // iframeBackgroundColor: string = "rgba(255, 0, 0, 0)"
-
+    iframeBackgroundColor: string = "rgba(0,0,0,0)";
 
     loadHtml = (iframeDisplayId: string) => {
         this.iframeDisplayId = iframeDisplayId;
         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
         g_flushWidgets();
     };
+    setIframeBackgroundColor = (tdlBackgroundColor: string) => {
+        console.log("++++++++++++++++++++ set background color", tdlBackgroundColor)
+        this.iframeBackgroundColor = tdlBackgroundColor;
+    }
 
 
     // ----------------------- styles -----------------------
