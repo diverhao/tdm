@@ -61,7 +61,9 @@ export class ChannelAgentsManager {
             if (epicsLogLevelEntryValue !== undefined) {
                 epicsLogLevel = type_log_levels[epicsLogLevelEntryValue as keyof typeof type_log_levels];
             }
-            this._context = new Context(this.getProfile().convertToTcaInput()["EPICS CA Settings"], epicsLogLevel);
+            const epicsCaSettings = this.getProfile().convertToTcaInput()["EPICS CA Settings"];
+            const epicsTcaLibSettings = this.getProfile().convertToTcaInput()["epics-tca Settings"];
+            this._context = new Context({...epicsCaSettings, ...epicsTcaLibSettings}, epicsLogLevel);
             await this._context.initialize();
         } else {
             Log.info(this.getMainProcessId(), "EPICS CA context already exists");
