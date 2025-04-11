@@ -539,7 +539,6 @@ export class Table extends BaseWidget {
 
         const dY = overallTop;
         const dH = overallHeight + margin;
-        console.log(dY, dH)
 
         const tdl: Record<string, any> = {};
 
@@ -663,7 +662,6 @@ export class Table extends BaseWidget {
         g_flushWidgets();
     };
     setIframeBackgroundColor = (tdlBackgroundColor: string) => {
-        console.log("++++++++++++++++++++ set background color", tdlBackgroundColor)
         this.iframeBackgroundColor = tdlBackgroundColor;
     }
 

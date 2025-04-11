@@ -144,7 +144,7 @@ export class Rectangle extends BaseWidget {
         return (
             // always update the div below no matter the TextUpdateBody is .memo or not
             // TextUpdateResizer does not update if it is .memo
-            <div style={{...this.getElementBodyRawStyle(), display: "inline-flex"}}>
+            <div style={{...this.getElementBodyRawStyle()}}>
                 <this._ElementArea></this._ElementArea>
                 {this._showResizers() ? <this._ElementResizer /> : null}
             </div>

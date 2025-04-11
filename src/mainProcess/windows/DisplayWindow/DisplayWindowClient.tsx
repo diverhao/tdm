@@ -38,6 +38,10 @@ import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/Fi
 import path from "path";
 import { KeyboardEvent } from "react";
 
+import '../../resources/css/katex.min.css';
+// import '../../resources/css/simple.css';
+
+
 console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Finished loading modules.")
 
 /**

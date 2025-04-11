@@ -12,6 +12,8 @@ cp ${TDM_ROOT}/src/mainProcess/windows/DisplayWindow/DisplayWindow.html ${TDM_RO
 cp ${TDM_ROOT}/src/mainProcess/windows/MainWindow/MainWindow-web.html ${TDM_ROOT}/dist/webpack/MainWindow.html
 cp ${TDM_ROOT}/src/mainProcess/windows/DisplayWindow/DisplayWindow-web.html ${TDM_ROOT}/dist/webpack/DisplayWindow.html
 
+cp -a ${TDM_ROOT}/src/mainProcess/resources/css/fonts ${TDM_ROOT}/dist/mainProcess/windows/DisplayWindow/
+
 cp -a ${TDM_ROOT}/src/mainProcess/resources ${TDM_ROOT}/dist/mainProcess/
 
 cp -a ${TDM_ROOT}/src/mainProcess/wsPv/*.py ${TDM_ROOT}/dist/mainProcess/wsPv/

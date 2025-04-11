@@ -77,6 +77,27 @@ module.exports = {
 					},
 				],
 			},
+			{
+				test: /\.css$/i,
+				use: [
+					"style-loader",
+					{
+						loader: "css-loader",
+						options: {
+                            url: false,
+							sourceMap: true, // This ensures that URLs in CSS are treated relative
+						},
+					},
+				],
+			},
+			{
+				test: /\.(woff2?|ttf|eot|svg)$/,
+				type: "asset/resource",
+				generator: {
+					filename: "mainProcess/windows/DisplayWindow/fonts/[name][ext]",
+					// filename: "../mainProcess/windows/DisplayWindow/fonts/[name][ext]",
+				},
+			},
 		],
 	},
 	resolve: {
@@ -102,21 +123,21 @@ module.exports = {
 		// hot: true,
 		devMiddleware: {
 			writeToDisk: true,
-		},        
-        hot: false,  // Disable Hot Module Replacement
-        liveReload: false,  // Disable Live Reloading
-      webSocketServer: false,
-    
-        // catch errors produced by vis-network lib in ChannelGraph, 
-        // this error is more like a warning
+		},
+		hot: false, // Disable Hot Module Replacement
+		liveReload: false, // Disable Live Reloading
+		webSocketServer: false,
+
+		// catch errors produced by vis-network lib in ChannelGraph,
+		// this error is more like a warning
 		client: {
-            webSocketURL: {
-                protocol: 'ws',  // Must specify a valid WebSocket protocol
-                hostname: 'localhost',  // Required field
-                port: '0',  // Setting port to '0' prevents connections
-                pathname: '/'  // Default WebSocket path
-              },
-                      overlay: {
+			webSocketURL: {
+				protocol: "ws", // Must specify a valid WebSocket protocol
+				hostname: "localhost", // Required field
+				port: "0", // Setting port to '0' prevents connections
+				pathname: "/", // Default WebSocket path
+			},
+			overlay: {
 				runtimeErrors: (error) => {
 					if (error.message.includes("ResizeObserver loop completed with undelivered notifications")) {
 						return false;

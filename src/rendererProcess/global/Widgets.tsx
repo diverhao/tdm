@@ -1592,10 +1592,11 @@ export class Widgets {
             const widget = this.getWidget2(widgetKey);
             if (widget instanceof BaseWidget) {
                 widget.getStyle()["display"] = "none";
+                console.log("+++++++++++++++++++++++ hide", widgetKey)
                 this.addToForceUpdateWidgets(widgetKey);
             }
         }
-        this.clearTableTemplateWidgets();
+        // this.clearTableTemplateWidgets();
     }
 
 
