@@ -99,7 +99,11 @@ export class HttpServer {
             if (req.path === '/' || req.path === '/login' || req.path.startsWith("/resources/webpages/")) {
                 return next(); // Skip authentication for these routes
             }
-            this.isAuthenticated(req, res, next); // Apply authentication middleware to all other routes
+
+            // no authentication, for demo
+            return next();
+            // with authentication
+            // this.isAuthenticated(req, res, next); // Apply authentication middleware to all other routes
         });
 
         this.getServer()?.use(session({
@@ -224,7 +228,7 @@ export class HttpServer {
         if (httpsOptions === undefined) {
             return;
         }
-        this._httpsServer = https.createServer(httpsOptions, this.getServer()).listen(this.getPort(), () => {
+        this._httpsServer = https.createServer(httpsOptions, this.getServer()).listen(this.getPort(), "0.0.0.0", () => {
             Log.info(`HTTPS Server running on https://localhost:${this.getPort()}`);
         });
     };
