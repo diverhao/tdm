@@ -115,7 +115,7 @@ export class MainPage {
         if (page !== undefined) {
             // root.render(page.getElement());
             // this.getMainWidget().switchView(newPage)
-            
+
             g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
             g_flushWidgets()
             // the requested data comes in "new-data" event, 
@@ -809,6 +809,50 @@ export class MainPage {
             >
                 {text}
             </div>
+        )
+    }
+
+
+    _ElementModifyButton = ({ imgSrc, handleClick, hint, setHint }: { imgSrc: string, handleClick: () => void, hint: string, setHint: (hint: string) => void }) => {
+        const imgRef = React.useRef<any>(null);
+
+        return (
+            <img
+                ref={imgRef}
+                src={imgSrc}
+                style={{
+                    width: this.baseFontSize,
+                    height: this.baseFontSize,
+                    cursor: "pointer",
+                    opacity: 0.2,
+                    marginLeft: 3,
+
+                }}
+                onClick={() => {
+                    handleClick();
+                }}
+                onMouseEnter={() => {
+                    if (imgRef.current !== null) {
+                        imgRef.current.style["opacity"] = 1;
+                        imgRef.current.style["outline"] = 'solid 2px blue';
+                        // imgRef.current.style["filter"] = 'invert(100%)';
+                        // imgRef.current.style["backgroundColor"] = 'rgba(255,255,255,1)';
+                    }
+                    setHint(hint)
+                }}
+
+
+                onMouseLeave={() => {
+                    if (imgRef.current !== null) {
+                        imgRef.current.style["opacity"] = 0.2;
+                        imgRef.current.style["outline"] = 'none';
+                        // imgRef.current.style["filter"] = '';
+                        // imgRef.current.style["backgroundColor"] = 'rgba(0,0,0,0)';
+                    }
+                    setHint("")
+                }}
+            >
+            </img>
         )
     }
 

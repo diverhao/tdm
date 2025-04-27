@@ -4,7 +4,6 @@ import { ElementRectangleButton } from "./RectangleButton";
 import { ALARM_STATUS, MainPage, SEVERITES } from "./MainPage";
 import { type_data } from "./MainPage";
 import { calcSeverityColor, capitalizeFirstLetter, replaceObjectField, speakText } from "./GlobalMethod";
-import { ElementModifyButton } from "./SharedElements"
 
 export class TreePage {
     _forceUpdate: (input: any) => void = () => { };
@@ -22,6 +21,7 @@ export class TreePage {
     _ElementPa: () => React.JSX.Element;
     _ElementTestPa: () => React.JSX.Element;
     _ElementTestTalk: () => React.JSX.Element;
+    _ElementModifyButton: (input: { imgSrc: string, handleClick: () => void, hint: string, setHint: (hint: string) => void }) => React.JSX.Element;
 
     selectedPathStr = "";
     mouseOnPathStr = "";
@@ -31,6 +31,7 @@ export class TreePage {
         this._ElementPa = mainPage._ElementPa;
         this._ElementTestPa = mainPage._ElementTestPa;
         this._ElementTestTalk = mainPage._ElementTestTalk;
+        this._ElementModifyButton = this._mainPage._ElementModifyButton;
     }
 
     // ------------------ communicate with WebSocket server --------------------
@@ -638,7 +639,7 @@ export class TreePage {
                         display: this.getEditing() === true ? "inline-flex" : "none",
                         flexDirection: "row",
                     }}>
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "delete-symbol.svg"}
                             handleClick={() => {
                                 this.removeNode(pathStr)
@@ -646,9 +647,9 @@ export class TreePage {
                             hint={"Delete this system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "arrowUp-2.svg"}
                             handleClick={() => {
                                 this.moveUpNode(pathStr)
@@ -656,9 +657,9 @@ export class TreePage {
                             hint={"Move up system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "arrowDown-2.svg"}
                             handleClick={() => {
                                 this.moveDownNode(pathStr)
@@ -666,9 +667,9 @@ export class TreePage {
                             hint={"Move down system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "copy-symbol.svg"}
                             handleClick={() => {
                                 this.duplicateNode(pathStr)
@@ -676,9 +677,9 @@ export class TreePage {
                             hint={"Duplicate this system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "add-symbol.svg"}
                             handleClick={() => {
                                 this.addSiblingNode(pathStr, "system");
@@ -686,9 +687,9 @@ export class TreePage {
                             hint={"Add new system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "add-child-symbol.svg"}
                             handleClick={() => {
                                 this.addChildNode(pathStr, "subsystem")
@@ -696,10 +697,10 @@ export class TreePage {
                             hint={"Add new sub-system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "add-child-symbol.svg"}
                             handleClick={() => {
                                 this.addChildNode(pathStr, "pv")
@@ -707,10 +708,10 @@ export class TreePage {
                             hint={"Add new PV"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "settings.svg"}
                             handleClick={() => {
                                 this.getMainPage().getConfigPage().showingConfigPage = pathStr;
@@ -719,7 +720,7 @@ export class TreePage {
                             hint={"Configure system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
                     </div>
                 </div>
@@ -831,7 +832,7 @@ export class TreePage {
                         justifyContent: "flex-start",
                         alignItems: "center",
                     }}>
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "delete-symbol.svg"}
                             handleClick={() => {
                                 this.removeNode(pathStr)
@@ -839,9 +840,9 @@ export class TreePage {
                             hint={"Delete this sub-system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "arrowUp-2.svg"}
                             handleClick={() => {
                                 this.moveUpNode(pathStr)
@@ -849,9 +850,9 @@ export class TreePage {
                             hint={"Move up sub-system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "arrowDown-2.svg"}
                             handleClick={() => {
                                 this.moveDownNode(pathStr)
@@ -859,10 +860,10 @@ export class TreePage {
                             hint={"Move down sub-system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "copy-symbol.svg"}
                             handleClick={() => {
                                 this.duplicateNode(pathStr)
@@ -870,9 +871,9 @@ export class TreePage {
                             hint={"Duplicate this sub-system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "add-symbol.svg"}
                             handleClick={() => {
                                 this.addSiblingNode(pathStr, "subsystem")
@@ -880,9 +881,9 @@ export class TreePage {
                             hint={"Add a new sub-system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "add-child-symbol.svg"}
                             handleClick={() => {
                                 this.addChildNode(pathStr, "pv")
@@ -890,9 +891,9 @@ export class TreePage {
                             hint={"Add a new PV"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
-                        <ElementModifyButton
+                        <this._ElementModifyButton
                             imgSrc={this.getMainPage().resourcePath + "settings.svg"}
                             handleClick={() => {
                                 this.getMainPage().getConfigPage().showingConfigPage = pathStr;
@@ -901,7 +902,7 @@ export class TreePage {
                             hint={"Configure sub-system"}
                             setHint={this.setHint}
                         >
-                        </ElementModifyButton>
+                        </this._ElementModifyButton>
 
                     </div>
                 </div>
@@ -991,7 +992,7 @@ export class TreePage {
                         alignItems: 'center',
                     }}
                 >
-                    <ElementModifyButton
+                    <this._ElementModifyButton
                         imgSrc={this.getMainPage().resourcePath + "delete-symbol.svg"}
                         handleClick={() => {
                             this.removeNode(pathStr)
@@ -999,9 +1000,9 @@ export class TreePage {
                         hint={"Delete PV"}
                         setHint={this.setHint}
                     >
-                    </ElementModifyButton>
+                    </this._ElementModifyButton>
 
-                    <ElementModifyButton
+                    <this._ElementModifyButton
                         imgSrc={this.getMainPage().resourcePath + "arrowUp-2.svg"}
                         handleClick={() => {
                             this.moveUpNode(pathStr)
@@ -1009,9 +1010,9 @@ export class TreePage {
                         hint={"Move PV up"}
                         setHint={this.setHint}
                     >
-                    </ElementModifyButton>
+                    </this._ElementModifyButton>
 
-                    <ElementModifyButton
+                    <this._ElementModifyButton
                         imgSrc={this.getMainPage().resourcePath + "arrowDown-2.svg"}
                         handleClick={() => {
                             this.moveDownNode(pathStr)
@@ -1019,9 +1020,9 @@ export class TreePage {
                         hint={"Move PV down"}
                         setHint={this.setHint}
                     >
-                    </ElementModifyButton>
+                    </this._ElementModifyButton>
 
-                    <ElementModifyButton
+                    <this._ElementModifyButton
                         imgSrc={this.getMainPage().resourcePath + "copy-symbol.svg"}
                         handleClick={() => {
                             this.duplicateNode(pathStr)
@@ -1029,9 +1030,9 @@ export class TreePage {
                         hint={"Duplicate PV"}
                         setHint={this.setHint}
                     >
-                    </ElementModifyButton>
+                    </this._ElementModifyButton>
 
-                    <ElementModifyButton
+                    <this._ElementModifyButton
                         imgSrc={this.getMainPage().resourcePath + "add-symbol.svg"}
                         handleClick={() => {
                             this.addSiblingNode(pathStr, "pv")
@@ -1039,10 +1040,10 @@ export class TreePage {
                         hint={"Add new PV"}
                         setHint={this.setHint}
                     >
-                    </ElementModifyButton>
+                    </this._ElementModifyButton>
 
 
-                    <ElementModifyButton
+                    <this._ElementModifyButton
                         imgSrc={this.getMainPage().resourcePath + "settings.svg"}
                         handleClick={() => {
                             this.getMainPage().getConfigPage().showingConfigPage = pathStr;
@@ -1051,7 +1052,7 @@ export class TreePage {
                         hint={"Configure PV"}
                         setHint={this.setHint}
                     >
-                    </ElementModifyButton>
+                    </this._ElementModifyButton>
 
 
                 </div>

@@ -1,15 +1,17 @@
 import * as React from "react";
 import { MainPage } from "./MainPage";
 import { ElementRectangleButton } from "./RectangleButton";
-import { ElementModifyButton } from "./SharedElements";
+// import { ElementModifyButton } from "./SharedElements";
 import { calcSeverityColor, capitalizeFirstLetter, replaceObjectField } from "./GlobalMethod";
 
 export class ConfigPage {
     private _mainPage: MainPage;
     showingConfigPage = "";
+    _ElementModifyButton: (input: { imgSrc: string, handleClick: () => void, hint: string, setHint: (hint: string) => void }) => React.JSX.Element;
 
     constructor(mainPage: MainPage) {
         this._mainPage = mainPage;
+        this._ElementModifyButton = this._mainPage._ElementModifyButton;
         this.styleInputBox = {
             paddingTop: 1,
             paddingBottom: 1,
@@ -102,6 +104,8 @@ export class ConfigPage {
                     </div>
                     <div
                         style={{
+                            display: "inline-flex",
+                            flexDirection: "column",
                             width: "80%",
                             height: "80%",
                             overflowX: "hidden",
@@ -481,8 +485,8 @@ export class ConfigPage {
                 >
                     {capitalizeFirstLetter(name)}
 
-                    <ElementModifyButton
-                        imgSrc="add-symbol.svg"
+                    <this._ElementModifyButton
+                        imgSrc={this.getMainPage().resourcePath + "add-symbol.svg"}
                         handleClick={() => {
 
                             // update the whole StringDetails
@@ -499,7 +503,7 @@ export class ConfigPage {
                         }}
                         hint={""}
                         setHint={(hint: string) => { }}
-                    ></ElementModifyButton>
+                    ></this._ElementModifyButton>
                 </div>
                 <div
                     style={{
@@ -558,8 +562,8 @@ export class ConfigPage {
                 >
                     {capitalizeFirstLetter(name).replaceAll("_", " ")}
 
-                    <ElementModifyButton
-                        imgSrc="add-symbol.svg"
+                    <this._ElementModifyButton
+                        imgSrc={this.getMainPage().resourcePath + "add-symbol.svg"}
                         handleClick={() => {
                             // update the whole StringDetails
                             // replace the 
@@ -577,7 +581,7 @@ export class ConfigPage {
                         }}
                         hint=""
                         setHint={(hint: string) => { }}
-                    ></ElementModifyButton>
+                    ></this._ElementModifyButton>
                 </div>
                 <div
                     style={{
@@ -689,8 +693,8 @@ export class ConfigPage {
                         visibility: "hidden",
                     }}
                 >
-                    <ElementModifyButton
-                        imgSrc={"arrowUp-2.svg"}
+                    <this._ElementModifyButton
+                        imgSrc={this.getMainPage().resourcePath + "arrowUp-2.svg"}
                         handleClick={() => {
                             // event.preventDefault();
                             // update the whole StringDetails
@@ -724,11 +728,11 @@ export class ConfigPage {
                         }}
                         hint={""}
                         setHint={(hint: string) => { }}
-                    ></ElementModifyButton>
+                    ></this._ElementModifyButton>
 
 
-                    <ElementModifyButton
-                        imgSrc="arrowDown-2.svg"
+                    <this._ElementModifyButton
+                        imgSrc={this.getMainPage().resourcePath + "arrowDown-2.svg"}
                         handleClick={() => {
                             // update the whole StringDetails
                             const thisPath = JSON.parse(pathStr);
@@ -762,11 +766,11 @@ export class ConfigPage {
                         hint={""}
                         setHint={(hint: string) => { }}
                     >
-                    </ElementModifyButton>
+                    </this._ElementModifyButton>
 
 
-                    <ElementModifyButton
-                        imgSrc="delete-symbol.svg"
+                    <this._ElementModifyButton
+                        imgSrc={this.getMainPage().resourcePath + "delete-symbol.svg"}
                         handleClick={() => {
                             // update the whole StringDetails
                             const thisPath = JSON.parse(pathStr);
@@ -781,7 +785,7 @@ export class ConfigPage {
                         hint={""}
                         setHint={(hint: string) => { }}
                     >
-                    </ElementModifyButton>
+                    </this._ElementModifyButton>
                 </div>
             </div>
         )
@@ -924,8 +928,8 @@ export class ConfigPage {
                         visibility: "hidden",
                     }}
                 >
-                    <ElementModifyButton
-                        imgSrc={"arrowUp-2.svg"}
+                    <this._ElementModifyButton
+                        imgSrc={this.getMainPage().resourcePath + "arrowUp-2.svg"}
                         handleClick={() => {
 
                             // update the whole StringDetails
@@ -964,11 +968,11 @@ export class ConfigPage {
                         setHint={(hint: string) => { }}
                     >
 
-                    </ElementModifyButton>
+                    </this._ElementModifyButton>
 
-                    <ElementModifyButton
+                    <this._ElementModifyButton
 
-                        imgSrc={"arrowDown-2.svg"}
+                        imgSrc={this.getMainPage().resourcePath + "arrowDown-2.svg"}
                         handleClick={() => {
 
                             // update the whole StringDetails
@@ -1005,11 +1009,11 @@ export class ConfigPage {
                         hint=""
                         setHint={(hint: string) => { }}
                     >
-                    </ElementModifyButton>
+                    </this._ElementModifyButton>
 
 
-                    <ElementModifyButton
-                        imgSrc="delete-symbol.svg"
+                    <this._ElementModifyButton
+                        imgSrc={this.getMainPage().resourcePath + "delete-symbol.svg"}
                         handleClick={() => {
 
                             // update the whole StringDetails
@@ -1026,7 +1030,7 @@ export class ConfigPage {
                         hint=""
                         setHint={(hint: string) => { }}
                     >
-                    </ElementModifyButton>
+                    </this._ElementModifyButton>
                 </div>
             </div>
         )

@@ -3,7 +3,6 @@ import { ALARM_STATUS, MainPage, SEVERITES } from "./MainPage";
 import { Table } from "./Table";
 import { calcSeverityColor, convertEpochTimeToString, speakText } from "./GlobalMethod";
 import { ElementRectangleButton } from "./RectangleButton";
-import { ElementModifyButton } from "./SharedElements";
 
 enum type_sorting_item {
     "name",
@@ -50,6 +49,7 @@ export class TablePage {
     _ElementTableCell: ({ children, columnIndex, additionalStyle }: any) => React.JSX.Element;
     _ElementTableHeaderResizer: ({ columnIndex }: any) => React.JSX.Element;
     _ElementOpenDisplaysRunCommands: ({ pathStr, show }: { pathStr: string, show: boolean }) => React.JSX.Element | null;
+    _ElementModifyButton: (input: { imgSrc: string, handleClick: () => void, hint: string, setHint: (hint: string) => void }) => React.JSX.Element;
 
     constructor(mainPage: MainPage) {
         this._mainPage = mainPage;
@@ -70,6 +70,7 @@ export class TablePage {
         this._ElementTableCell = this._table.getElementTableCell();
         this._ElementTableHeaderResizer = this._table.getElementTableHeaderResizer();
         this._ElementOpenDisplaysRunCommands = this._mainPage._ElementOpenDisplaysRunCommands;
+        this._ElementModifyButton = this._mainPage._ElementModifyButton;
     }
 
 
@@ -205,7 +206,7 @@ export class TablePage {
                     </this._ElementTableFilter>
                 </div>
 
-                {/* (un-)acknowledged PVs talbe */}
+                {/* (un-)acknowledged PVs table */}
                 <this._ElementPvsTable
                     pathStrs={pathStrs}
                     filterText={filterText}
@@ -429,6 +430,8 @@ export class TablePage {
                     paddingLeft: 20,
                     fontSize: this.getMainPage().baseFontSize,
                     fontFamily: this.getMainPage().baseFontFamily,
+                    display: "inline-flex",
+                    flexDirection: "column",
                 }}
             >
 
@@ -521,7 +524,7 @@ export class TablePage {
                         >
                             Description &nbsp;
                             <img
-                                src={"arrowDown-thin.svg"}
+                                src={this.getMainPage().resourcePath + "arrowDown-thin.svg"}
                                 style={{
                                     width: this.getMainPage().baseFontSize * 0.8,
                                     height: this.getMainPage().baseFontSize * 0.8,
@@ -530,7 +533,7 @@ export class TablePage {
                             >
                             </img>
                             <img
-                                src={"arrowUp-thin.svg"}
+                                src={this.getMainPage().resourcePath + "arrowUp-thin.svg"}
                                 style={{
                                     width: this.getMainPage().baseFontSize * 0.8,
                                     height: this.getMainPage().baseFontSize * 0.8,
@@ -583,7 +586,7 @@ export class TablePage {
                             </div>
 
                             <img
-                                src={"arrowDown-thin.svg"}
+                                src={this.getMainPage().resourcePath + "arrowDown-thin.svg"}
                                 style={{
                                     width: this.getMainPage().baseFontSize * 0.8,
                                     height: this.getMainPage().baseFontSize * 0.8,
@@ -592,7 +595,7 @@ export class TablePage {
                             >
                             </img>
                             <img
-                                src={"arrowUp-thin.svg"}
+                                src={this.getMainPage().resourcePath + "arrowUp-thin.svg"}
                                 style={{
                                     width: this.getMainPage().baseFontSize * 0.8,
                                     height: this.getMainPage().baseFontSize * 0.8,
@@ -645,7 +648,7 @@ export class TablePage {
                             </div>
 
                             <img
-                                src={"arrowDown-thin.svg"}
+                                src={this.getMainPage().resourcePath + "arrowDown-thin.svg"}
                                 style={{
                                     width: this.getMainPage().baseFontSize * 0.8,
                                     height: this.getMainPage().baseFontSize * 0.8,
@@ -654,7 +657,7 @@ export class TablePage {
                             >
                             </img>
                             <img
-                                src={"arrowUp-thin.svg"}
+                                src={this.getMainPage().resourcePath + "arrowUp-thin.svg"}
                                 style={{
                                     width: this.getMainPage().baseFontSize * 0.8,
                                     height: this.getMainPage().baseFontSize * 0.8,
@@ -707,7 +710,7 @@ export class TablePage {
                             </div>
 
                             <img
-                                src={"arrowDown-thin.svg"}
+                                src={this.getMainPage().resourcePath + "arrowDown-thin.svg"}
                                 style={{
                                     width: this.getMainPage().baseFontSize * 0.8,
                                     height: this.getMainPage().baseFontSize * 0.8,
@@ -716,7 +719,7 @@ export class TablePage {
                             >
                             </img>
                             <img
-                                src={"arrowUp-thin.svg"}
+                                src={this.getMainPage().resourcePath + "arrowUp-thin.svg"}
                                 style={{
                                     width: this.getMainPage().baseFontSize * 0.8,
                                     height: this.getMainPage().baseFontSize * 0.8,
@@ -769,7 +772,7 @@ export class TablePage {
                             </div>
 
                             <img
-                                src={"arrowDown-thin.svg"}
+                                src={this.getMainPage().resourcePath + "arrowDown-thin.svg"}
                                 style={{
                                     width: this.getMainPage().baseFontSize * 0.8,
                                     height: this.getMainPage().baseFontSize * 0.8,
@@ -778,7 +781,7 @@ export class TablePage {
                             >
                             </img>
                             <img
-                                src={"arrowUp-thin.svg"}
+                                src={this.getMainPage().resourcePath + "arrowUp-thin.svg"}
                                 style={{
                                     width: this.getMainPage().baseFontSize * 0.8,
                                     height: this.getMainPage().baseFontSize * 0.8,
@@ -830,7 +833,7 @@ export class TablePage {
                                 </div>
                             </div>
                             <img
-                                src={"arrowDown-thin.svg"}
+                                src={this.getMainPage().resourcePath + "arrowDown-thin.svg"}
                                 style={{
                                     width: this.getMainPage().baseFontSize * 0.8,
                                     height: this.getMainPage().baseFontSize * 0.8,
@@ -839,7 +842,7 @@ export class TablePage {
                             >
                             </img>
                             <img
-                                src={"arrowUp-thin.svg"}
+                                src={this.getMainPage().resourcePath + "arrowUp-thin.svg"}
                                 style={{
                                     width: this.getMainPage().baseFontSize * 0.8,
                                     height: this.getMainPage().baseFontSize * 0.8,
@@ -913,7 +916,7 @@ export class TablePage {
 
                 </this._ElementTableLine>
 
-                {/* each un-acknowledged pv */}
+                {/* each (un-)acknowledged pv */}
                 {pathStrs.map((pathStr: string, index: number) => {
                     const path = JSON.parse(pathStr);
                     const pvName = path[path.length - 1] as string;
@@ -922,7 +925,7 @@ export class TablePage {
                     const description = pvData["description"] as string;
                     const severity = SEVERITES[status["severity"]];
                     const alarmStatus = ALARM_STATUS[status["alarm_status"]];
-
+                    console.log("===============", pathStr, pvName, filterText.toLowerCase())
                     if (pvName.toLowerCase().includes(filterText.toLowerCase()) === false
                         && description.toLowerCase().includes(filterText.toLowerCase()) === false
                         && severity.toLowerCase().includes(filterText.toLowerCase()) === false
@@ -930,7 +933,7 @@ export class TablePage {
                     ) {
                         return null;
                     }
-
+                    console.log("ok")
                     return (
                         <this._ElementTableLine
                             key={pathStr + `-${index}` + `${description}` + `${status["value"]}`}
@@ -947,8 +950,8 @@ export class TablePage {
                                 ></this._ElementOpenDisplaysRunCommands>
 
                                 {this.getEditing() === true ?
-                                    <ElementModifyButton
-                                        imgSrc={"settings.svg"}
+                                    <this._ElementModifyButton
+                                        imgSrc={this.getMainPage().resourcePath + "settings.svg"}
                                         handleClick={() => {
                                             this.getMainPage().getConfigPage().showingConfigPage = pathStr;
                                             this._forceUpdate({});
@@ -956,7 +959,7 @@ export class TablePage {
                                         hint={""}
                                         setHint={() => { }}
                                     >
-                                    </ElementModifyButton>
+                                    </this._ElementModifyButton>
                                     :
                                     null
                                 }
