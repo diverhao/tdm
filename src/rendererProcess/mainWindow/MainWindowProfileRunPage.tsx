@@ -131,6 +131,10 @@ export class MainWindowProfileRunPage {
         const quitTdmProcess = () => {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("quit-tdm-process");
         }
+        const openTalhk = () => {
+            // todo: include alarm handler server address
+            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Talhk", {serverAddress: "http://localhost:4000"});
+        }
 
 
         const buttonFunctions: Record<string, any> = {
@@ -143,6 +147,7 @@ export class MainWindowProfileRunPage {
             "Channel Graph": openChannelGraphWindow,
             "PV Table": openPvTablesWindow,
             "PV Monitor": openPvMonitorWindow,
+            "Talhk": openTalhk,
             "CaSnooper": openCaSnooperWindow,
             "Casw": openCaswWindow,
             "Calculator": openCalculatorWindow,

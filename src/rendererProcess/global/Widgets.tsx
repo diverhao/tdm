@@ -26,6 +26,7 @@ import { insertToMap } from "./GlobalMethods";
 import * as GlobalMethods from "../global/GlobalMethods";
 import { Probe } from "../widgets/Probe/Probe";
 import { DataViewer } from "../widgets/DataViewer/DataViewer";
+import { Talhk } from "../widgets/Talhk/Talhk";
 import { XYPlot } from "../widgets/XYPlot/XYPlot";
 import { PvTable } from "../widgets/PvTable/PvTable";
 import { TextEntry } from "../widgets/TextEntry/TextEntry";
@@ -84,6 +85,7 @@ export type type_widgetType =
     | "MouseSelectionRegion"
     | "GroupSelection2"
     | "DataViewer"
+    | "Talhk"
     | "XYPlot"
     | "Probe"
     | "PvTable"
@@ -739,6 +741,10 @@ export class Widgets {
             }
             case "DataViewer": {
                 widget = new DataViewer(widgetTdl);
+                break;
+            }
+            case "Talhk": {
+                widget = new Talhk(widgetTdl);
                 break;
             }
             case "XYPlot": {

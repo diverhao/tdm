@@ -2027,7 +2027,7 @@ export class IpcManagerOnMainProcess {
 
     createUtilityDisplayWindow = (
         event: any,
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "Help" | "PvMonitor" | "FileConverter",
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "Help" | "PvMonitor" | "FileConverter" | "Talhk",
         utilityOptions: Record<string, any>,
         httpResponse: any = undefined
     ) => {
@@ -2129,8 +2129,10 @@ export class IpcManagerOnMainProcess {
                 }
             }
             utilityOptions["EPICS_CA_REPEATER_PORT"] = port;
+        } else if (utilityType === "Talhk") {
+            // utilityOptions
+            // { serverAddress: "http://localhost:4000" }
         }
-
 
         windowAgentsManager.createUtilityDisplayWindow(utilityType, utilityOptions, httpResponse);
     };

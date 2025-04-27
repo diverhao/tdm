@@ -528,7 +528,7 @@ export class WindowAgentsManager {
     // almost the same as this.createDisplayWindow()
     // options are from the "create-utility-display-window" event, they are simply bounced back
     createUtilityDisplayWindow = async (
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "PvMonitor" | "Help" | "FileConverter",
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "PvMonitor" | "Help" | "FileConverter" | "Talhk",
         utilityOptions: Record<string, any>,
         httpResponse: any = undefined,
     ) => {

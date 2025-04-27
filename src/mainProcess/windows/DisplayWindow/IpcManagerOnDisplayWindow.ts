@@ -725,7 +725,7 @@ export class IpcManagerOnDisplayWindow {
             editable: boolean;
             externalMacros: [string, string][];
             useExternalMacros: boolean;
-            utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "Casw" | "PvMonitor" | "CaSnooper" | "FileConverter";
+            utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "Casw" | "PvMonitor" | "CaSnooper" | "FileConverter" | "Talhk";
             utilityOptions: Record<string, any>;
         }
     ) => {

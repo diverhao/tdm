@@ -39,6 +39,7 @@ import path from "path";
 import { KeyboardEvent } from "react";
 
 import '../../resources/css/katex.min.css';
+import { Talhk } from "../../../rendererProcess/widgets/Talhk/Talhk";
 // import '../../resources/css/simple.css';
 
 
@@ -602,7 +603,7 @@ export class DisplayWindowClient {
         editable: boolean,
         externalMacros: [string, string][],
         useExternalMacros: boolean,
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | undefined,
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk" | undefined,
         utilityOptions: Record<string, any>
     ) => {
         Log.info("new tdl ", newTdl, utilityType, editable)
@@ -630,7 +631,8 @@ export class DisplayWindowClient {
             utilityType === "Casw" ||
             utilityType === "PvMonitor" ||
             utilityType === "FileConverter" ||
-            utilityType === "Help"
+            utilityType === "Help" ||
+            utilityType === "Talhk"
         ) {
             this._appendUtilityWidgetTdl(newTdl, utilityType, utilityOptions);
             initialMode = rendererWindowStatus.operating;
@@ -704,7 +706,7 @@ export class DisplayWindowClient {
      */
     private _appendUtilityWidgetTdl = (
         tdl: type_tdl,
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter",
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk",
         utilityOptions: Record<string, any>
     ) => {
         console.log("tdl", utilityType)
@@ -881,6 +883,17 @@ export class DisplayWindowClient {
             )
             // put CaSnooper on top of XYPlot, so that the mouse click/down reaches CaSnooper
             tdl[widgetKey2] = widgetTdl2;
+            tdl[widgetKey] = widgetTdl;
+        } else if (utilityType === "Talhk") {
+            // default size is 100%
+            const widgetTdl = Talhk.generateWidgetTdl(utilityOptions); // set server address from utilityOptions
+            widgetTdl.style.width = "100%";
+            widgetTdl.style.height = "100%";
+            widgetTdl.style.boxSizing = "border-box";
+            tdl["Canvas"].style.backgroundColor = "rgba(255, 255, 255, 1)";
+
+            // widgetTdl.style.padding = "20px";
+            const widgetKey = widgetTdl.widgetKey;
             tdl[widgetKey] = widgetTdl;
         } else if (utilityType === "Casw") {
             // default size is 100%

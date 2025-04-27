@@ -1,0 +1,6 @@
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 10 40 H 70 " fill="transparent" stroke="black" stroke-width="10"  />
+	<path d="M 40 10 V 70 " fill="transparent" stroke="black" stroke-width="10" />
+	<path d="M 70 60 V 90 " fill="transparent" stroke="black" stroke-width="10" />
+	<path d="M 55 75 H 85 " fill="transparent" stroke="black" stroke-width="10" />
+</svg>
