@@ -17,9 +17,7 @@ export class PA {
         const audioArrayBuffer = this.base64ToArrayBuffer(voiceData);
 
         // Process and play the audio
-        await this.playAudioBuffer(audioArrayBuffer, 16000);
-
-
+        await this.playAudioBuffer(audioArrayBuffer, this.AUDIO_CONFIG["sampleRate"]);
     }
 
     base64ToBlob = (base64: string, mimeType: string) => {
@@ -158,11 +156,11 @@ export class PA {
     playbackAudioContext: any;
     audioSource: any;
     // Play the audio buffer
-    playAudioBuffer = async (arrayBuffer: ArrayBuffer, sampleRate: number = 44100) => {
+    playAudioBuffer = async (arrayBuffer: ArrayBuffer, sampleRate: number) => {
         // Initialize audio context if not already done
         if (!this.playbackAudioContext) {
             this.playbackAudioContext = new (window.AudioContext)({
-                sampleRate: sampleRate || 44100
+                sampleRate: sampleRate
             });
         }
 

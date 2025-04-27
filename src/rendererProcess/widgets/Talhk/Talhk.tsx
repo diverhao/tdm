@@ -10,7 +10,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 // import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Log } from "../../../mainProcess/log/Log";
-import { MainPage } from "./MainPage";
+import { MainPage } from "./client/MainPage";
 
 
 export type type_Talhk_tdl = {

@@ -7,9 +7,9 @@ import { AreaPage } from "./AreaPage";
 import { ConfigPage } from "./ConfigPage";
 import { PA } from "./PA";
 import { speakText } from "./GlobalMethod";
-import { Talhk } from "./Talhk";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { g_flushWidgets } from "../../helperWidgets/Root/Root";
+import { Talhk } from "../Talhk";
+import { g_widgets1 } from "../../../global/GlobalVariables";
+import { g_flushWidgets } from "../../../helperWidgets/Root/Root";
 export enum SEVERITES {
     NO_ALARM,
     MINOR,
