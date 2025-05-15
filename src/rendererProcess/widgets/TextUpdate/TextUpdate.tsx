@@ -170,7 +170,6 @@ export class TextUpdate extends BaseWidget {
     _ElementAreaRaw = ({ }: any): JSX.Element => {
         const allStyle = this.getAllStyle();
         const allText = this.getAllText();
-        console.log("============ allText", allText)
         let style: React.CSSProperties = {};
         if (g_widgets1.isEditing()) {
             style = {
@@ -239,9 +238,9 @@ export class TextUpdate extends BaseWidget {
      */
     getChannelValueStrRepresentation = () => {
         const rawChannelValue = this._getChannelValue(false);
-        if (Array.isArray(rawChannelValue) && typeof rawChannelValue[0] === "string") {
-            // concate the string
-            return rawChannelValue.join("");
+
+        if (Array.isArray(rawChannelValue)) {
+            return '[' + rawChannelValue.join(",") + ']';
         }
         return rawChannelValue;
     }
@@ -268,7 +267,7 @@ export class TextUpdate extends BaseWidget {
     // isSelected()
     // _getElementAreaRawOutlineStyle()
 
-    _parseChannelValueElement = (channelValueElement: number | string | boolean | undefined) => {
+    _parseChannelValueElement = (channelValueElement: number | string | boolean | undefined): string => {
 
 
         if (typeof channelValueElement === "number") {
@@ -289,6 +288,7 @@ export class TextUpdate extends BaseWidget {
             } else if (format === "hexadecimal") {
                 return `0x${channelValueElement.toString(16)}`;
             } else if (format === "string") {
+                // use a number array to represent a string
                 // MacOS ignores the non-displayable characters, but Linux shows rectangle for these characters
                 if (channelValueElement >= 32 && channelValueElement <= 126) {
                     return `${String.fromCharCode(channelValueElement)}`;
@@ -296,10 +296,15 @@ export class TextUpdate extends BaseWidget {
                     return "";
                 }
             } else {
-                return channelValueElement;
+                return `${channelValueElement}`;
             }
         } else {
-            return `${channelValueElement}`;
+            if (g_widgets1.isEditing() === true) {
+                return `${channelValueElement}`;
+            } else {
+                return `${channelValueElement}`;
+            }
+
         }
     };
 
@@ -317,7 +322,7 @@ export class TextUpdate extends BaseWidget {
             for (let element of channelValue) {
                 result.push(this._parseChannelValueElement(element));
             }
-            if (this.getAllText()["format"] === "string") {
+            if (this.getAllText()["format"] === "string" && typeof channelValue[0] === "number") {
                 return result.join("");
             } else {
                 return result;

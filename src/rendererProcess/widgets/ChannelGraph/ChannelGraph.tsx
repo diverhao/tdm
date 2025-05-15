@@ -18,7 +18,7 @@ import { Network } from "vis-network/standalone/esm/vis-network";
 import { VisData } from "vis-network/declarations/network/gephiParser";
 import { DataSet } from "vis-network/standalone/esm/vis-network";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { ChannelSeverity, TcaChannel } from "../../channel/TcaChannel";
+import { ChannelSeverity, menuScan, TcaChannel } from "../../channel/TcaChannel";
 import { Log } from "../../../mainProcess/log/Log";
 import { DbdFiles } from "../../channel/DbdFiles";
 import { ChannelGraphSidebar } from "./ChannelGraphSidebar";
@@ -58,6 +58,7 @@ export enum colors {
     MINOR = "rgba(255,128,0,1)",
     MAJOR = "rgba(255,0,0,1)",
     INVALID = "rgba(255,0,255,1)",
+    NOT_CONNECTED = "rgba(200,0,200,1)",
     inlink = "rgb(0, 128, 128)",
     outlink = "rgb(128, 0, 128)",
     fwdlink = "rgba(0,0,255,1)",
@@ -932,7 +933,7 @@ export class ChannelGraph extends BaseWidget {
             for (let linkFieldName of Object.keys(links)) { // INP, INPA, FLNK, OUT, ...
 
                 const linkFieldValue = links[linkFieldName]; // "pv1.VAL3 NPP MS", "1", "@dev3 c5 s7", or undefined
-                console.log("linkFieldName, linkfieldValue", linkFieldName, linkFieldValue)
+                // console.log("linkFieldName, linkfieldValue", linkFieldName, linkFieldValue)
                 if (linkFieldValue === "" || linkFieldValue === undefined) {
                     continue;
                 }
@@ -978,7 +979,7 @@ export class ChannelGraph extends BaseWidget {
                             highlight: colors.highlight,
                         }
                     };
-                    console.log("insert satellite node", linkFieldTargetChannelBaseName)
+                    // console.log("insert satellite node", linkFieldTargetChannelBaseName)
                     allNodes.add(linkFieldTargetChannelNode)
                 }
 
@@ -997,7 +998,7 @@ export class ChannelGraph extends BaseWidget {
                 // create edge for each link
                 const from = linkType === "inLinks" ? linkFieldTargetChannelNode.id : mainNode.id;
                 const to = linkType === "inLinks" ? mainNode.id : linkFieldTargetChannelNode.id;
-                console.log("new edge:", "from = ", from, "to = ", to, "label = ", edgeLabel, "with color", edgeColors[linkType])
+                // console.log("new edge:", "from = ", from, "to = ", to, "label = ", edgeLabel, "with color", edgeColors[linkType])
                 allEdges.add({
                     from: from,
                     to: to,
@@ -1106,7 +1107,12 @@ export class ChannelGraph extends BaseWidget {
             const metaPromises = Promise.all([rtypPromise, scanPromise, calcPromise]);
             const meta = await metaPromises;
             rtyp = meta[0];
-            scan = meta[1];
+            if (typeof meta[1] === "number") {
+                scan = menuScan[meta[1]];
+            } else {
+                scan = meta[1];
+            }
+            
             calc = meta[2];
         }
 
@@ -1309,6 +1315,7 @@ export class ChannelGraph extends BaseWidget {
         if (fieldTcaChannel !== undefined) {
             // await fieldTcaChannel.getMeta(this.getWidgetKey());
             const dbrData = await fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
+
             fieldTcaChannel.destroy(this.getWidgetKey());
             if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
                 const fieldValue = dbrData["value"];

@@ -327,7 +327,7 @@ export class TextEntry extends BaseWidget {
     parseValue = () => {
         const value = this._getChannelValue();
         let unit = ` ${this._getChannelUnit()}`;
-        if (this._getChannelUnit() === undefined) {
+        if (this._getChannelUnit() === undefined || this._getChannelUnit().trim() === "") {
             unit = "";
         }
         if (g_widgets1.isEditing()) {

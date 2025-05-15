@@ -134,7 +134,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
                 } else if (propertyName === "h") {
                     tdl["style"]["height"] = EdlConverter.convertEdlWorH(propertyValue, undefined);
                 } else if (propertyName === "controlPv") {
-                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue));
+                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
                 } else if (propertyName === "fgColor") {
                     tdl["style"]["color"] = EdlConverter.convertEdlColor(propertyValue, edl["colorPv"], "Text Color", tdl);
                 } else if (propertyName === "fgAlarm") {
@@ -281,7 +281,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
                 } else if (propertyName === "h") {
                     tdl["style"]["height"] = EdlConverter.convertEdlWorH(propertyValue, undefined);
                 } else if (propertyName === "controlPv") {
-                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue));
+                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
                 } else if (propertyName === "fgColor") {
                     tdl["style"]["color"] = EdlConverter.convertEdlColor(propertyValue, edl["colorPv"], "Text Color", tdl);
                 } else if (propertyName === "fgAlarm") {

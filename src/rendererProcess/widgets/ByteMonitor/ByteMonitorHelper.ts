@@ -139,7 +139,7 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
                 } else if (propertyName === "h") {
                     tdl["style"]["height"] = parseInt(propertyValue);
                 } else if (propertyName === "controlPv") {
-                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue));
+                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
                 } else if (propertyName === "lineColor") {
                     tdl["text"]["lineColor"] = EdlConverter.convertEdlColor(propertyValue);
                 } else if (propertyName === "onColor") {

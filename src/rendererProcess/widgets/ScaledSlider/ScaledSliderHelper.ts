@@ -197,7 +197,7 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
 					tdl["text"]["stepSize"] = EdlConverter.convertEdlNumber(propertyValue);
 				} else if (propertyName === "controlPv") {
 					// it is a control-type widget, use real pv name
-					tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue));
+					tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
 				} else if (propertyName === "font") {
 					const { fontFamily, fontWeight, fontSize, fontStyle } = EdlConverter.convertEdlFont(propertyValue);
 					tdl["style"]["fontFamily"] = fontFamily;

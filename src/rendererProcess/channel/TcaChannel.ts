@@ -17,6 +17,31 @@ export enum ChannelSeverity {
 }
 
 
+export enum ChannelAlarmStatus {
+    NO_ALARM,
+    READ,
+    WRITE,
+    HIHI,
+    HIGH,
+    LOLO,
+    LOW,
+    STATE,
+    COS,
+    COMM,
+    TIMEOUT,
+    HWLIMIT,
+    CALC,
+    SCAN,
+    LINK,
+    SOFT,
+    BAD_SUB,
+    UDF,
+    DISABLE,
+    SIMM,
+    READ_ACCESS,
+    WRITE_ACCESS,
+};
+
 export enum pvaValueDisplayType {
     NOT_DEFINED,
     OBJECT_RAW_FIELD,
@@ -24,6 +49,20 @@ export enum pvaValueDisplayType {
     PRIMITIVE_RAW_FIELD,
     PRIMITIVE_VALUE_FIELD
 }
+
+export enum menuScan {
+    "Passive",
+    "Event",
+    "I/O Intr",
+    "10 second",
+    "5 second",
+    "2 second",
+    "1 second",
+    ".5 second",
+    ".2 second",
+    ".1 second",
+};
+
 
 /**
  * Represents a CA channel on renderer window. <br>
@@ -50,16 +89,32 @@ export class TcaChannel {
     // allowed characters in LOCAL channel name init value
     // a-z A-Z 0-9 _ - : . ;
     // we should also include macro: $\{\}\(\)
-    static regexLocalChannelName = /^loc:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(<([(number)(string)(number\[\])(string\[\])(enum)]+)>)?(\(([a-zA-Z0-9\:\-\_\.;,\]\["']+)\))?$/;
-    static regexGlobalChannelName = /^glb:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(<([(number)(string)(number\[\])(string\[\])(enum)]+)>)?(\(([a-zA-Z0-9\:\-\_\.;,"']+)\))?$/;
+    // static regexLocalChannelName = /^loc:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(<([(number)(string)(number\[\])(string\[\])(enum)]+)>)?(\(([a-zA-Z0-9\:\-\_\.;,\]\["']+)\))?$/;
+    // static regexGlobalChannelName = /^glb:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(<([(number)(string)(number\[\])(string\[\])(enum)]+)>)?(\(([a-zA-Z0-9\:\-\_\.;,"']+)\))?$/;
+    static regexLocalChannelNameRegular = /^loc:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(\s*)=(\s*)(.*)/;
+    static regexLocalChannelNameEnum = /^loc:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(\s*):(\s*)\[(((\s*)("[^"]+")(\s*),)*)(((\s*)("[^"]+")(\s*))+)\](\s*)=(\s*)(.*)/;
+
+    static regexGlobalChannelNameRegular = /^glb:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(\s*)=(\s*)(.*)/;
+    static regexGlobalChannelNameEnum = /^glb:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)(\s*):(\s*)\[(((\s*)("[^"]+")(\s*),)*)(((\s*)("[^"]+")(\s*))+)\](\s*)=(\s*)(.*)/;
+
+    // static regexLocalGlobalSimpleChannelName = /^loc:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)/;
+    static regexLocalSimpleChannelName = /^loc:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)/;
+    static regexGlobalSimpleChannelName = /^glb:\/\/([a-zA-Z0-9\:\-\_\.;$\{\}@]+)/;
+
+    static regexLocalChannelName = new RegExp(`${this.regexLocalChannelNameRegular.source}|${this.regexLocalChannelNameEnum.source}|${this.regexLocalSimpleChannelName.source}`, 'i');
+    static regexGlobalChannelName = new RegExp(`${this.regexGlobalChannelNameRegular.source}|${this.regexGlobalChannelNameEnum.source}|${this.regexGlobalSimpleChannelName.source}`, 'i');
+
+
     // allowed character in EPICS channel name
     // a-z A-Z 0-9 _ - : . ; [ ] < > 
     static regexEpicsChannelName = /^[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+$/;
     // "pva://" + regular EPICS PV name
     static regexPvaChannelName = /^pva:\/\/[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+$/;
 
-    constructor(channelName: string) {
 
+
+
+    constructor(channelName: string) {
         if (TcaChannel.checkChannelName(channelName) === "ca") {
             this._channelName = channelName;
         } else if (TcaChannel.checkChannelName(channelName) === "pva") {
@@ -141,28 +196,6 @@ export class TcaChannel {
     }
 
     /**
-     * Input is in format of "[abc, def,ghi, it is ok]". The string cannot contain comma (,).
-     * 
-     * If parse fails, return []
-     */
-    static parseStringArray = (input: string): string[] => {
-        let result: string[] = [];
-        if ((!input.trim().startsWith("[")) || (!input.trim().endsWith("]"))) {
-            result = [];
-        }
-        else {
-            // cannot contain `,` otherwise the parse may be incorrect
-            result = [];
-            const inputArray = input.trim().slice(1, input.trim().length - 1).split(",");
-            for (let elementRaw of inputArray) {
-                const element = elementRaw.trim().replaceAll(`"`, "").replaceAll(`'`, "");
-                result.push(element);
-            }
-        }
-        return result;
-    }
-
-    /**
      * if type def is not provided, use <number>
      * if init value is not provided or cannot be correctly parsed,
      *   if type def explicitly === <number>
@@ -182,107 +215,138 @@ export class TcaChannel {
      * if local channel name cannot be extract or the raw input cannot be parsed in regex, then do not create this TcaChannel
      *
      */
+
     static extractNameAndMetaFromLocalChannelName = (channelName: string): {
         localChannelName: string,
         type: "number" | "string" | "number[]" | "string[]" | "enum",
         initValue: number | string | number[] | string[],
         strings: string[],
+        forceUpdateTo0: boolean,
     } | undefined => {
-        const regexArrayLocal = channelName.match(this.regexLocalChannelName);
-        const regexArrayGlobal = channelName.match(this.regexGlobalChannelName);
-        let channelNamePrefix = "";
-        let regexArray: RegExpMatchArray | null = null;
-        if (regexArrayLocal === null && regexArrayGlobal !== null) {
-            regexArray = regexArrayGlobal;
-            channelNamePrefix = "glb://"
-        } else if (regexArrayLocal !== null && regexArrayGlobal === null) {
-            regexArray = regexArrayLocal;
-            channelNamePrefix = "loc://"
-        } else {
+        const result: {
+            localChannelName: string,
+            type: "number" | "string" | "number[]" | "string[]" | "enum",
+            initValue: number | string | number[] | string[],
+            strings: string[],
+            forceUpdateTo0: boolean,
+        } = {
+            localChannelName: "",
+            type: "number",
+            initValue: 0,
+            strings: [],
+            forceUpdateTo0: false,
+        }
+
+        // not a valid global or local PV
+        if (channelName.match(this.regexLocalChannelName) === null
+            && channelName.match(this.regexGlobalChannelName) === null
+            && channelName.match(this.regexLocalSimpleChannelName) === null
+            && channelName.match(this.regexGlobalSimpleChannelName) === null) {
             return undefined;
         }
 
-        const localChannelName = channelNamePrefix + regexArray[1];
-        let type = regexArray[3];
-        if (type === undefined) {
-            type = "number";
+        // loc://pv1 or glb://pv1
+        const channelNameArray = channelName.trim().split("=");
+        if (channelNameArray.length === 1) {
+            result["localChannelName"] = channelName.trim();
+            return result;
         }
 
-        const initValueRaw = regexArray[5];
+        try {
+            if (channelName.match(this.regexLocalChannelNameRegular) !== null || channelName.match(this.regexGlobalChannelNameRegular) !== null) {
+                // loc://pv1 = 37.8
+                // loc://pv1 = "37"
+                // loc://pv1 = "ABCD"
+                // loc://pv1 = ["A", "B"]
+                // loc://pv1 = [37, 39.2]
 
-
-        let initValue: number | string | number[] | string[] = 0;
-        let strings: string[] = [];
-        if (type === "number") {
-            if (initValueRaw === undefined) {
-                initValue = 0;
-            } else {
-                initValue = parseFloat(initValueRaw);
-                if (isNaN(initValue)) {
-                    initValue = 0;
-                }
-            }
-        } else if (type === "string") {
-            if (initValueRaw === undefined) {
-                initValue = "";
-            } else {
-                initValue = initValueRaw.replaceAll("'", "").replaceAll(`"`, "").trim();
-            }
-        } else if (type === "number[]") {
-            if (initValueRaw === undefined) {
-                initValue = [] as number[];
-            } else {
-                initValue = [] as number[];
-                const initValueArray = this.parseStringArray(initValueRaw);
-                for (let element of initValueArray) {
-                    const elementNum = parseFloat(element);
-                    if (isNaN(elementNum)) {
-                        initValue = [] as number[];
-                        break;
-                    } else {
-                        initValue.push(elementNum);
-                    }
-                }
-            }
-        } else if (type === "string[]") {
-            if (initValueRaw === undefined) {
-                initValue = [] as string[];
-            } else {
-                initValue = this.parseStringArray(initValueRaw);
-            }
-        } else if (type === "enum") {
-            if (initValueRaw === undefined) {
-                initValue = 0;
-                strings = [];
-            } else {
-                const initValueArray = this.parseStringArray("[" + initValueRaw + "]");
-                const initValueStr = initValueArray[0];
-                if (initValueStr !== undefined) {
-                    initValue = parseInt(initValueStr);
-                    if (isNaN(initValue)) {
-                        initValue = 0;
-                        strings = [];
-                    } else {
-                        for (let ii = 1; ii < initValueArray.length; ii++) {
-                            strings.push(initValueArray[ii]);
+                result["localChannelName"] = channelNameArray[0].trim();
+                const initValueStr = channelNameArray[1].trim();
+                const initValue = JSON.parse(initValueStr);
+                if (Array.isArray(initValue)) {
+                    if (initValue.length > 0) {
+                        const firstElementType = typeof initValue[0];
+                        if (firstElementType === "number") {
+                            result["type"] = "number[]";
+                        } else if (firstElementType === "string") {
+                            result["type"] = "string[]";
+                        } else {
+                            return undefined;
                         }
+                        result["initValue"] = initValue;
+                    } else {
+                        result["type"] = "number[]";
+                        result["initValue"] = [];
+                    }
+                    return result;
+                } else if (typeof initValue === "number") {
+                    result["type"] = "number";
+                    result["initValue"] = initValue;
+                    if (initValue === 0) {
+                        result["forceUpdateTo0"] = true;
+                    }
+                    return result;
+                } else if (typeof initValue === "string") {
+                    result["type"] = "string";
+                    result["initValue"] = initValue;
+                    return result;
+
+                } else {
+                    return undefined;
+                }
+            } else if (channelName.match(this.regexLocalChannelNameEnum) !== null || channelName.match(this.regexGlobalChannelNameEnum) !== null) {
+                // loc://pv1 : ["AA", "BB"] = 0
+                // loc://pv1 : ["AA", "BB"] = "AA"
+                const localChannelNameArray = channelNameArray[0].trim().split(":");
+                if (localChannelNameArray.length !== 3) {
+                    return undefined;
+                }
+
+                const localChannelName = localChannelNameArray[0].trim() + ":" + localChannelNameArray[1].trim();
+                result["localChannelName"] = localChannelName;
+                result["type"] = "enum";
+
+                const stringsStr = localChannelNameArray[2].trim();
+                const strings = JSON.parse(stringsStr);
+                if (Array.isArray(strings) === false) {
+                    return undefined;
+                }
+                if (strings.length < 1) {
+                    return undefined;
+                }
+                if (typeof strings[0] !== "string") {
+                    return undefined;
+                }
+
+                const initValueStr = channelNameArray[1].trim();
+                const initValue = JSON.parse(initValueStr);
+                if (typeof initValue === "number") {
+                    if (typeof strings[initValue] === "string") {
+                        result["strings"] = strings;
+                        result["initValue"] = initValue;
+                    } else {
+                        return undefined;
+                    }
+                } else if (typeof initValue === "string") {
+                    if (strings.includes(initValue)) {
+                        const initValueNum = strings.indexOf(initValue);
+                        result["strings"] = strings;
+                        result["initValue"] = initValueNum;
+                    } else {
+                        return undefined;
                     }
                 } else {
-                    initValue = 0;
-                    strings = [];
+                    return undefined;
                 }
+
             }
-        } else {
-            type = "number";
-            initValue = 0;
+        } catch (e) {
+            Log.error(e);
+            return undefined;
         }
-        return {
-            localChannelName: localChannelName,
-            type: type as "number" | "string" | "number[]" | "string[]" | "enum",
-            initValue: initValue,
-            strings: strings,
-        }
-    };
+
+        return result;
+    }
 
     /**
      * Validate if a channel name is legal
@@ -298,10 +362,17 @@ export class TcaChannel {
         const meta = TcaChannel.extractNameAndMetaFromLocalChannelName(channelName);
         if (meta !== undefined) {
             if (meta["type"] === "number") {
-                // if (meta["initValue"] !== 0) {
-                this.getDbrData()["value"] = meta["initValue"];
-                this.getDbrData()["type"] = meta["type"];
-                // }
+                if (this.getDbrData()["value"] === undefined || meta["initValue"] !== 0) {
+                    this.getDbrData()["value"] = meta["initValue"];
+                    this.getDbrData()["type"] = meta["type"];
+                }
+                // distinguisih `loc://pv1` and `loc://pv1 = 0`, the former case is ignored
+                // if the `dbrData["value"]` field is not 0; but for the later case, we force
+                // to assign 0 to `dbrData["value"]`
+                if (meta["initValue"] === 0 && meta["forceUpdateTo0"] === true) {
+                    this.getDbrData()["value"] = meta["initValue"];
+                    this.getDbrData()["type"] = meta["type"];
+                }
             } else if (meta["type"] === "string") {
                 // if (meta["initValue"] !== "") {
                 this.getDbrData()["value"] = meta["initValue"];
@@ -520,6 +591,7 @@ export class TcaChannel {
                     if (choices !== undefined) {
                         if (choices.includes(valueStr)) {
                             value = choices.indexOf(valueStr);
+                            return value;
                         } else {
                             return undefined;
                         }
@@ -1052,9 +1124,11 @@ export class TcaChannel {
                 return ChannelSeverity.MINOR;
             } else if (severityNum === 2) {
                 return ChannelSeverity.MAJOR;
+            } else if (severityNum === 3) {
+                return ChannelSeverity.INVALID;
             } else {
                 // any other cases
-                return ChannelSeverity.INVALID;
+                return ChannelSeverity.NOT_CONNECTED;
             }
         } else if (TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
             // try to get the alarm field
@@ -1068,9 +1142,11 @@ export class TcaChannel {
                     return ChannelSeverity.MINOR;
                 } else if (severityNum === 2) {
                     return ChannelSeverity.MAJOR;
+                } else if (severityNum === 3) {
+                    return ChannelSeverity.INVALID;
                 } else {
                     // any other cases
-                    return ChannelSeverity.INVALID;
+                    return ChannelSeverity.NOT_CONNECTED;
                 }
             } else {
                 // return ChannelSeverity.INVALID;
@@ -1083,6 +1159,60 @@ export class TcaChannel {
     getSeverityStr = () => {
         const severityNum = this.getSeverity();
         return ChannelSeverity[severityNum];
+    }
+
+    /**
+     * Get the alarm status of the channel.
+     * 
+     * For PVA channel, the top-level "alarm" field will be used to indicate the channel's alarm status.
+     *
+     * @returns {ChannelAlarmStatus} Alarm status of the channel. If the channel is not connected, return UDF.
+     * If the display window is in editing mode, return NO_ALARM.
+     */
+    getAlarmStatus = (): ChannelAlarmStatus => {
+        // always NO_ALARM in editing mode
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return ChannelAlarmStatus.NO_ALARM;
+        }
+        if (TcaChannel.checkChannelName(this.getChannelName()) === "local" || TcaChannel.checkChannelName(this.getChannelName()) === "global") {
+            return ChannelAlarmStatus.NO_ALARM;
+        }
+
+        if (TcaChannel.checkChannelName(this.getChannelName()) === "ca") {
+
+            const value = this.getDbrData()["value"];
+            if (value === undefined) {
+                return ChannelAlarmStatus.UDF;
+            }
+
+            const alarmStatusNum = this.getDbrData()["status"];
+            if (typeof alarmStatusNum === "number") {
+                return alarmStatusNum;
+            } else {
+                return ChannelAlarmStatus.UDF;
+            }
+        } else if (TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
+            // try to get the alarm field
+            const alarm = this.getDbrData()["alarm"];
+
+            if (alarm !== undefined) {
+                const alarmStatusNum = alarm["alarm"];
+                if (typeof alarmStatusNum === "number") {
+                    return alarmStatusNum
+                } else {
+                    return ChannelAlarmStatus.UDF;
+                }
+            } else {
+                // return UDF;
+                return ChannelAlarmStatus.UDF;
+            }
+        }
+        return ChannelAlarmStatus.UDF;
+    };
+
+    getAlarmStatusStr = () => {
+        const alarmStatusNum = this.getAlarmStatus();
+        return ChannelAlarmStatus[alarmStatusNum];
     }
 
     /**
@@ -1122,7 +1252,7 @@ export class TcaChannel {
             return "";
         }
         const units = this.getDbrData()["units"];
-        if (units === undefined)  {
+        if (units === undefined) {
             return "";
         } else {
             return units;
@@ -1276,7 +1406,7 @@ export class TcaChannel {
         return new Date(GlobalMethods.converEpicsTimeStampToEpochTime(msSince1990UTC));
     };
 
-    
+
 
     /**
      * Get status of this channel.
@@ -1395,7 +1525,7 @@ export class TcaChannel {
         return this._dbrData;
     };
     appendToDbrData = (newDbrData: type_dbrData | type_dbrData[] | type_LocalChannel_data | { value: undefined }) => {
-        if (Array.isArray(newDbrData) ) {
+        if (Array.isArray(newDbrData)) {
             for (const dbrData of newDbrData) {
                 this._dbrData = { ...this._dbrData, ...dbrData };
             }

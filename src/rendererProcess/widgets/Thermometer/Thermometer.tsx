@@ -524,6 +524,9 @@ export class Thermometer extends BaseWidget {
     calcPvLimits = (): [number, number] => {
         let minPvValue = this.getAllText()["minPvValue"];
         let maxPvValue = this.getAllText()["maxPvValue"];
+        if (minPvValue === undefined || maxPvValue === undefined) {
+            return [0, 10];
+        }
         const channelName = this.getChannelNames()[0];
         try {
             const channel = g_widgets1.getTcaChannel(channelName);
@@ -539,6 +542,7 @@ export class Thermometer extends BaseWidget {
             }
         } catch (e) {
             Log.error(e);
+            return [0, 10];
         }
         return [minPvValue, maxPvValue];
     };

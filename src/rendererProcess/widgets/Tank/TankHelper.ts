@@ -196,7 +196,7 @@ export class TankHelper extends BaseWidgetHelper {
                     tdl["text"]["containerColor"] = EdlConverter.convertEdlColor(propertyValue);
                     tdl["style"]["backgroundColor"] = EdlConverter.convertEdlColor(propertyValue);
                 } else if (propertyName === "indicatorPv") {
-                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true));
+                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
                 } else if (propertyName === "showScale") {
                     tdl["text"]["showLabels"] = EdlConverter.convertEdlBoolean(propertyValue);
                 } else if (propertyName === "limitsFromDb") {

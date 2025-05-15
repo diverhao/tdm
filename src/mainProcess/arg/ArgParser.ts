@@ -20,10 +20,10 @@ export type type_args = {
 // For whatever reason, "npm start" ignores all elements starting with "--" in process.argv, 
 // "--settings ~/.tdm/profiles.json" becomes "~/.tdm/profile.json"
 // In deveopment mode, we cannot pass anything started with "--" to electron
-let dashdash = "";
-if (app.isPackaged) {
-    dashdash = "--";
-}
+let dashdash = "--";
+// if (app.isPackaged) {
+//     dashdash = "--";
+// }
 
 const dashdashMacros = `${dashdash}macros`;
 const dashdashSettings = `${dashdash}settings`;

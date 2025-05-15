@@ -1134,8 +1134,10 @@ export class EdlConverter {
 
     static generatePvUndefinedExpression = (propertyValue: string) => {
         const fullPv = this.convertEdlPv(propertyValue, true);
+        console.log("full PV", fullPv, propertyValue)
         // real pvs
         const pvList = this.extractPvsFromFullPv(fullPv);
+        console.log("  pv List", pvList)
         let result = "";
         for (let pv of pvList) {
             if (pv.replaceAll('"', "").trim() === "" || pv.startsWith(".") === true) {
@@ -1154,14 +1156,14 @@ export class EdlConverter {
         }
     }
 
-    static convertEdlPv = (propertyValue: string | undefined, fullPv: boolean = true) => {
+    static convertEdlPv = (propertyValue: string | undefined, fullPv: boolean = true, virtualPvWitInitValue: boolean = false) => {
 
         if (propertyValue === undefined) {
             return "";
         } else {
             // CALC\ and LOC\ cannot be used at the same time, it is OK to do like below
             return this.convertEdlCalcChannelName(
-                this.convertEdlLocalChannelName(propertyValue.replaceAll(`"`, "").replaceAll("PROXY\\\\", "")),
+                this.convertEdlLocalChannelName(propertyValue.replaceAll(`"`, "").replaceAll("PROXY\\\\", ""), virtualPvWitInitValue),
                 fullPv
             );
         }
@@ -1267,7 +1269,7 @@ export class EdlConverter {
         return str;
     }
 
-    static convertEdlLocalChannelName = (channelName: string) => {
+    static convertEdlLocalChannelName = (channelName: string, virtualPvWitInitValue: boolean) => {
         if (channelName.replaceAll(`"`, "").replaceAll('"', "").startsWith("LOC\\")) {
             let newChannelName = channelName
                 .replaceAll(`"`, "")
@@ -1293,6 +1295,8 @@ export class EdlConverter {
                     if (part1.endsWith("()")) {
                         part1 = part1.slice(0, part1.length - 1) + '"")';
                     }
+                    // now part1 looks like <string>("") or <number>("ABC")
+                    part1 = part1.replace(">(", '>="').replace("<string>", "").replace(")", '"');
                 } else if (part1.startsWith("d:") || part1.startsWith("i:")) {
                     part1 = part1.replace("d:", "<number>(").replace("i:", "<number>(");
                     part1 = `${part1})`;
@@ -1300,9 +1304,25 @@ export class EdlConverter {
                     if (part1.endsWith("()")) {
                         part1 = part1.slice(0, part1.length - 1) + "0)";
                     }
+                    // now part1 looks like <number>(0) or <number>(3.7)
+                    part1 = part1.replace(">(", ">=").replace("<number>", "").replace(")", "");
                 } else if (part1.startsWith("e:")) {
                     part1 = part1.replace("e:", "<enum>(");
                     part1 = `${part1})`;
+                    // now part1 looks like <enum>(0,zero,one,two) -> :["zero", "one", "two"] = 0
+                    const part1Array = part1.split(",");
+                    if (part1Array.length >= 2) {
+                        part1 = `:[`;
+                        for (let ii = 1; ii < part1Array.length; ii++) {
+                            if (ii === part1Array.length - 1) {
+                                part1 = part1 + '"' + part1Array[ii].replace(")", "") + '"';
+                            } else {
+                                part1 = part1 + '"' + part1Array[ii] + '"' + ",";
+                            }
+                        }
+                        part1 = part1 + "] = ";
+                        part1 = part1 + part1Array[0].replace("<enum>(", "");
+                    }
                 } else {
                     part1 = `(${part1})`;
                 }
@@ -1310,9 +1330,21 @@ export class EdlConverter {
             }
             let result = newChannelNameArray.join("");
             if (result.includes(`$(DID)`)) {
-                return result.replace(`$(DID)`, "");
+                result = result.replace(`$(DID)`, "");
+                if (virtualPvWitInitValue === true) {
+                    return result;
+                } else {
+                    const resultArray = result.split("=");
+                    return resultArray[0].split(":[")[0];
+                }
             } else {
-                return result.replace("loc://", "glb://");
+                result = result.replace("loc://", "glb://");
+                if (virtualPvWitInitValue === true) {
+                    return result;
+                } else {
+                    const resultArray = result.split("=");
+                    return resultArray[0].split(":[")[0];
+                }
             }
         } else {
             return channelName;
@@ -1393,11 +1425,11 @@ export class EdlConverter {
                 for (let item of commandArray) {
                     if (item.trim().replaceAll(`"`, "").endsWith(".stp")) {
                         if (convertEdlSuffix === true) {
-                            action["fileName"] = item.trim().replaceAll(`"`,"").replace(".stp", ".tdl");
+                            action["fileName"] = item.trim().replaceAll(`"`, "").replace(".stp", ".tdl");
                         } else {
-                            action["fileName"] = item.trim().replaceAll(`"`,"");
+                            action["fileName"] = item.trim().replaceAll(`"`, "");
                         }
-                        
+
                         break;
                     }
                 }

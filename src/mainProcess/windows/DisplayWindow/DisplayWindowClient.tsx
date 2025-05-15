@@ -381,6 +381,13 @@ export class DisplayWindowClient {
                             channelName = channelNames;
                         }
 
+                        // the window ID for virtual PV is annoying
+                        if (typeof channelName === "string") {
+                            if (channelName.includes("@")) {
+                                channelName = channelName.split("@")[0];
+                            }
+                        }
+
                         // const left = event.clientX;
                         // const top = event.clientY;
                         const left = getMouseEventClientX(event);

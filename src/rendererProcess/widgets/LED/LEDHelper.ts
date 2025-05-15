@@ -190,7 +190,7 @@ export class LEDHelper extends BaseWidgetHelper {
                 } else if (propertyName === "labelType") {
                     tdl["text"]["useChannelItems"] = edl["labelType"]?.replaceAll(`"`, "") === "literal" ? false : true;
                 } else if (propertyName === "indicatorPv") {
-                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true));
+                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
                 } else if (propertyName === "font") {
                     const { fontFamily, fontWeight, fontSize, fontStyle } = EdlConverter.convertEdlFont(propertyValue);
                     tdl["style"]["fontFamily"] = fontFamily;

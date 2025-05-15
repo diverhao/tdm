@@ -134,7 +134,6 @@ export class ThermometerSidebar extends BaseWidgetSidebar {
                     <b>Container</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {this.getSidebarProgressBarBackgroundColor().getElement()}
                     {this.getSidebarThermometerTubeWidth().getElement()}
                     {this.getSidebarThermometerBulbDiameter().getElement()}
                 </this._BlockBody>

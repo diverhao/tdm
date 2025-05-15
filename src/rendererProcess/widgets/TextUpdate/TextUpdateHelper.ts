@@ -141,7 +141,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                 } else if (propertyName === "h") {
                     tdl["style"]["height"] = EdlConverter.convertEdlWorH(propertyValue, edl["lineWidth"]);
                 } else if (propertyName === "controlPv") {
-                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true));
+                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
                 } else if (propertyName === "fgColor") {
                     // the text color honors the ruled-color
                     tdl["style"]["color"] = EdlConverter.convertEdlColor(
@@ -380,7 +380,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                 } else if (propertyName === "h") {
                     tdl["style"]["height"] = EdlConverter.convertEdlNumber(propertyValue);
                 } else if (propertyName === "controlPv") {
-                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true));
+                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
                 } else if (propertyName === "fgColor") {
                     tdl["style"]["color"] = EdlConverter.convertEdlColor(propertyValue, EdlConverter.convertEdlPv(edl["colorPv"]), "Text Color", tdl);
                 } else if (propertyName === "bgColor") {
@@ -491,6 +491,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                 id: uuidv4(),
             });
         }
+        console.log("edl", edl)
         if (edl["controlPv"] !== undefined) {
             tdl["rules"].push({
                 boolExpression: EdlConverter.generatePvUndefinedExpression(edl["controlPv"]),

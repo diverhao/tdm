@@ -17,6 +17,7 @@ export enum ChannelSeverity {
     MINOR,
     MAJOR,
     INVALID,
+    NOT_CONNECTED,
 }
 /**
  * Represents a CA channel. <br>
@@ -151,7 +152,7 @@ export class CaChannelAgent {
                                 // the "value: undefined" won't be sent to the display window due to the
                                 // serialization. However, we can use this feature (bug) to retain the
                                 // last meaningful value for the widget, only updating the severity.
-                                let newDbrData = { value: undefined, severity: ChannelSeverity.INVALID };
+                                let newDbrData = { value: undefined, severity: ChannelSeverity.NOT_CONNECTED };
                                 (displayWindowAgent as DisplayWindowAgent).addNewChannelData(this.getChannelName(), newDbrData);
                             }
                         }, 200)

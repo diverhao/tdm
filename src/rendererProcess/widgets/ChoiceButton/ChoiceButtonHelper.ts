@@ -150,10 +150,10 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
                     tdl["style"]["height"] = parseInt(propertyValue);
                 } else if (propertyName === "controlPv") {
                     // it is a control-type widget, only use real channel name, i.e. "val0" or "loc://abc"
-                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue));
+                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
                 } else if (propertyName === "indicatorPv") {
                     if (edl["controlPv"] === undefined || edl["controlPv"].trim() === "") {
-                        tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue));
+                        tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
                     }
                 } else if (propertyName === "fgColor") {
                     tdl["style"]["color"] = EdlConverter.convertEdlColor(

@@ -45,6 +45,7 @@ export class Probe extends BaseWidget {
         Value: "value",
         "Value Count": "valueCount",
         Severity: "severity",
+        "Alarm Status": "status",
         Access: "accessRight",
         Unit: "units",
         "DBR Type": "DBR_TYPE",
@@ -271,6 +272,8 @@ export class Probe extends BaseWidget {
                         }
                     } else if (key === "Severity") {
                         value = tcaChannel.getSeverityStr();
+                    } else if (key === "Alarm Status") {
+                        value = tcaChannel.getAlarmStatusStr();
                     } else if (key === "Time") {
                         const us0 = Date.UTC(90, 0, 1, 0, 0, 0, 0);
                         let us = value * 1000 + dbrData["nanoSeconds"] * 1e-6;

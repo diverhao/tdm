@@ -147,7 +147,7 @@ export class RadioButtonHelper extends BaseWidgetHelper {
 					tdl["style"]["backgroundColor"] = EdlConverter.convertEdlColor(propertyValue);
 				} else if (propertyName === "controlPv") {
 					// it is a control-type widget, only use real channel name, i.e. "val0" or "loc://abc"
-					tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue));
+					tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
 				} else if (propertyName === "font") {
 					const { fontFamily, fontWeight, fontSize, fontStyle } = EdlConverter.convertEdlFont(propertyValue);
 					tdl["style"]["fontFamily"] = fontFamily;

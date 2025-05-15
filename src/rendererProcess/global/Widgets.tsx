@@ -1598,7 +1598,6 @@ export class Widgets {
             const widget = this.getWidget2(widgetKey);
             if (widget instanceof BaseWidget) {
                 widget.getStyle()["display"] = "none";
-                console.log("+++++++++++++++++++++++ hide", widgetKey)
                 this.addToForceUpdateWidgets(widgetKey);
             }
         }
@@ -1705,7 +1704,6 @@ export class Widgets {
             }
             tcaChannel.getMeta(undefined);
             // (3)
-            console.log("start to monitor XXX ========================")
             tcaChannel.monitor();
         }
     };

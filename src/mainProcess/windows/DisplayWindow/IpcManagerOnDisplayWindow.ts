@@ -26,21 +26,16 @@ import { LogViewer, type_logData } from "../../../rendererProcess/widgets/LogVie
 import { PvMonitor } from "../../../rendererProcess/widgets/PvMonitor/PvMonitor";
 import { type_DialogInputBox, type_DialogMessageBox } from "../../../rendererProcess/helperWidgets/Prompt/Prompt";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
-import { TcaChannel } from "../../../rendererProcess/channel/TcaChannel";
+import { ChannelSeverity, TcaChannel } from "../../../rendererProcess/channel/TcaChannel";
 import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/ChannelGraph";
 import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
 import { Table } from "../../../rendererProcess/widgets/Table/Table";
+
 
 // var recorder;
 // var blobs = [];
 
 
-export enum ChannelSeverity {
-    NO_ALARM,
-    MINOR,
-    MAJOR,
-    INVALID,
-}
 /**
  * Manage IPC messages sent from main process for main window. <br>
  *
@@ -610,7 +605,7 @@ export class IpcManagerOnDisplayWindow {
                     if (data === undefined) {
                         // the reason may be the IOC is offline, network glitch, or other issues that is not initiated
                         // by the channel access client
-                        tcaChannel.appendToDbrData({ value: undefined, severity: ChannelSeverity.INVALID });
+                        tcaChannel.appendToDbrData({ value: undefined, severity: ChannelSeverity.NOT_CONNECTED });
                     } else {
                         // (a) normal situation
                         // (b) if the epics channel is softly destroyed (IOC offline, network down), it sends
@@ -620,6 +615,7 @@ export class IpcManagerOnDisplayWindow {
                         //     value is kept. We use this feature (bug) to keep the old value, so that something 
                         //     can be displayed in the widget. The widget only updates the severity and the corresponding 
                         //     severity outline.
+                        // console.log("append to data", data)
                         tcaChannel.appendToDbrData(data);
                     }
                     // (2)
@@ -896,7 +892,7 @@ export class IpcManagerOnDisplayWindow {
                         }
                     }
                     if (dataViewerWidget !== undefined) {
-                        console.log(dataViewerWidget.hasData())
+                        // console.log(dataViewerWidget.hasData())
                         if (dataViewerWidget.hasData() === true) {
                             this.sendFromRendererProcess("window-will-be-closed", {
                                 displayWindowId: displayWindowId,

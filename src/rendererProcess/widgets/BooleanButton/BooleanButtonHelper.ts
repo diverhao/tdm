@@ -248,7 +248,7 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
                     // } else if (propertyName === "offLabel" && type === "Message Button") {
                     //     tdl["text"]["offLabel"] = propertyValue.replaceAll(`"`, "");
                 } else if (propertyName === "controlPv") {
-                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true));
+                    tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
                 } else if (propertyName === "font") {
                     const { fontFamily, fontWeight, fontSize, fontStyle } = EdlConverter.convertEdlFont(propertyValue);
                     tdl["style"]["fontFamily"] = fontFamily;

@@ -32,7 +32,7 @@ export enum AlarmOutlineStyle {
     "solid 1.5px red",
     "double red medium",
     "dashed 1.5px rgba(255,0,255,1)",
-    "dotted 1.5px rgba(255,0,255,1)",
+    "dotted 1.5px rgba(200,0,200,1)",
 }
 
 export enum AlarmBackgroundStyle {
@@ -40,7 +40,7 @@ export enum AlarmBackgroundStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
-    "rgba(255,0,254,1)",
+    "rgba(200,0,200,1)",
 }
 
 export enum AlarmTextStyle {
@@ -48,7 +48,7 @@ export enum AlarmTextStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
-    "rgba(255,0,254,1)",
+    "rgba(200,0,200,1)",
 }
 
 export enum AlarmShapeStyle {
@@ -56,7 +56,7 @@ export enum AlarmShapeStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
-    "rgba(255,0,254,1)",
+    "rgba(200,0,200,1)",
 }
 
 export enum AlarmFillStyle {
@@ -64,7 +64,7 @@ export enum AlarmFillStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
-    "rgba(255,0,254,1)",
+    "rgba(200,0,200,1)",
 }
 
 export enum AlarmPointerStyle {
@@ -72,7 +72,7 @@ export enum AlarmPointerStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
-    "rgba(255,0,254,1)",
+    "rgba(200,0,200,1)",
 }
 
 export enum AlarmDialStyle {
@@ -80,7 +80,7 @@ export enum AlarmDialStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
-    "rgba(255,0,254,1)",
+    "rgba(200,0,200,1)",
 }
 
 export enum AlarmContainerStyle {
@@ -88,7 +88,7 @@ export enum AlarmContainerStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
-    "rgba(255,0,254,1)",
+    "rgba(200,0,200,1)",
 }
 
 export enum AlarmSelectedBackgroundStyle {
@@ -96,7 +96,7 @@ export enum AlarmSelectedBackgroundStyle {
     "rgba(255,128,0,1)",
     "rgba(255,0,0,1)",
     "rgba(255,0,255,1)",
-    "rgba(255,0,254,1)",
+    "rgba(200,0,200,1)",
 }
 
 /**
@@ -1564,7 +1564,8 @@ export abstract class BaseWidget {
 
     static extractLocalChannelName = (localChannelName: string) => {
         if (TcaChannel.checkChannelName(localChannelName) === "local" || TcaChannel.checkChannelName(localChannelName) === "global") {
-            return localChannelName.split(/[\(<]+/)[0];
+            // return localChannelName.split(/[\(<]+/)[0];
+            return localChannelName.split(/(=)|(:[\s]*\[)/)[0].trim()
         } else {
             return localChannelName;
         }
@@ -1654,6 +1655,11 @@ export abstract class BaseWidget {
         // }
 
         const severity = this._getChannelSeverity();
+        // if this channel is not connected, always show alarm border
+        if (severity === ChannelSeverity.NOT_CONNECTED) {
+            return AlarmOutlineStyle[ChannelSeverity.NOT_CONNECTED];
+        }
+
         // this is a function used in operation mode, use getAllText()
         const alarmBorder = this.getAllText().alarmBorder;
         if (g_widgets1.isEditing()) {
@@ -1721,7 +1727,7 @@ export abstract class BaseWidget {
         if (alarmShape === true) {
             const alarmLevelStr = this.getText()["alarmLevel"];
             const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
-            console.log("alarm shape = ", alarmShape, alarmLevel, alarmLevelStr)
+            // console.log("alarm shape = ", alarmShape, alarmLevel, alarmLevelStr)
 
             if (severity >= alarmLevel) {
                 return AlarmShapeStyle[severity];
@@ -1920,10 +1926,10 @@ export abstract class BaseWidget {
                                 {
                                     text: "OK",
                                     handleClick: (dialogInputText?: string) => {
-                                        console.log("pass word is ", dialogInputText, "...")
+                                        // console.log("pass word is ", dialogInputText, "...")
                                         if (dialogInputText !== password) {
                                             // password does not match
-                                            console.log("pass word does notmatch")
+                                            // console.log("pass word does notmatch")
                                             ipcManager.handleDialogShowMessageBox(undefined,
                                                 {
                                                     command: "write-pv-confirmation-wit-password-failed",

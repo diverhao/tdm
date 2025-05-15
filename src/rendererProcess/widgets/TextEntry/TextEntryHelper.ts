@@ -148,7 +148,7 @@ export class TextEntryHelper extends BaseWidgetHelper {
 				} else if (propertyName === "h") {
 					tdl["style"]["height"] = parseInt(propertyValue);
 				} else if (propertyName === "controlPv") {
-					tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true));
+					tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
 				} else if (propertyName === "fgColor") {
 					tdl["style"]["color"] = EdlConverter.convertEdlColor(propertyValue, EdlConverter.convertEdlPv(edl["controlPv"]), "Text Color", tdl);
 				} else if (propertyName === "bgColor") {
@@ -330,7 +330,7 @@ export class TextEntryHelper extends BaseWidgetHelper {
 				} else if (propertyName === "h") {
 					tdl["style"]["height"] = parseInt(propertyValue);
 				} else if (propertyName === "controlPv") {
-					tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true));
+					tdl["channelNames"].push(EdlConverter.convertEdlPv(propertyValue, true, true));
 				} else if (propertyName === "fgColor") {
 					tdl["style"]["color"] = EdlConverter.convertEdlColor(propertyValue, EdlConverter.convertEdlPv(edl["colorPv"]), "Text Color", tdl);
 				} else if (propertyName === "bgColor") {

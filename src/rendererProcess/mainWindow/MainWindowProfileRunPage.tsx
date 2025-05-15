@@ -147,7 +147,7 @@ export class MainWindowProfileRunPage {
             "Channel Graph": openChannelGraphWindow,
             "PV Table": openPvTablesWindow,
             "PV Monitor": openPvMonitorWindow,
-            "Talhk": openTalhk,
+            // "Talhk": openTalhk,
             "CaSnooper": openCaSnooperWindow,
             "Casw": openCaswWindow,
             "Calculator": openCalculatorWindow,

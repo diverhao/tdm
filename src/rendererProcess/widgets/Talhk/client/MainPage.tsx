@@ -1,5 +1,4 @@
 import * as React from "react";
-// import ReactDOM from "react-dom/client";
 import { ElementRectangleButton } from "./RectangleButton";
 import { TreePage } from "./TreePage";
 import { TablePage } from "./TablePage";
@@ -7,9 +6,8 @@ import { AreaPage } from "./AreaPage";
 import { ConfigPage } from "./ConfigPage";
 import { PA } from "./PA";
 import { speakText } from "./GlobalMethod";
+import { BasePage } from "./BasePage";
 import { Talhk } from "../Talhk";
-import { g_widgets1 } from "../../../global/GlobalVariables";
-import { g_flushWidgets } from "../../../helperWidgets/Root/Root";
 export enum SEVERITES {
     NO_ALARM,
     MINOR,
@@ -47,10 +45,8 @@ export enum ALARM_STATUS {
 
 export type type_data = Record<string, any> | string | number | boolean;
 
-// global variables
-// const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
-export class MainPage {
+export class MainPage extends BasePage {
 
     private _data: Record<string, any> = {};
     private _ws: WebSocket | undefined = undefined;
@@ -62,34 +58,19 @@ export class MainPage {
     private _pa: PA;
     baseFontSize = 14;
     baseFontFamily = "MyFont, sans-serif";
-    private _mediaRecorder: MediaRecorder | undefined = undefined;
     showInfoPage: boolean = false;
     infoPageData: { type: "info" | "error" | "warning", messages: string[] } = {
         type: "info",
         messages: [],
     };
 
-    _mainWidget: Talhk;
-    _serverAddress: string;
-
-    resourcePath = "../../../webpack/resources/webpages/"
-
     constructor(mainWidget: Talhk, serverAddress: string) {
-        this._mainWidget = mainWidget;
-        this._serverAddress = serverAddress;
+        super(mainWidget, serverAddress);
 
         this.addEventListeners();
         this.requestWsPort();
         this.configPage = new ConfigPage(this);
         this._pa = new PA(this);
-    }
-
-    getServerAddress = () => {
-        return this._serverAddress
-    }
-
-    getMainWidget = () => {
-        return this._mainWidget
     }
 
     handlePaVoiceData = async (messageData: { voiceData: string }) => {
@@ -112,23 +93,17 @@ export class MainPage {
             return;
         }
         const page = this.getView();
-        if (page !== undefined) {
-            // root.render(page.getElement());
-            // this.getMainWidget().switchView(newPage)
 
-            g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-            g_flushWidgets()
-            // the requested data comes in "new-data" event, 
-            // the new-data will be handled separately for difference Page
-            this.requestData([]);
+        if (page !== undefined) {
+            this.refreshPage(page);
         }
+
     }
 
     // ----------------- websocket -------------------
 
     startWs = () => {
-        // const hostName = window.location.hostname;
-        const hostName = this.getServerAddress().replace("http://", "").split(":")[0];
+        const hostName = this.getHostName();
         const wsAddress = "ws://" + hostName + ":" + `${this.getWsPort()}`
         this._ws = new WebSocket(wsAddress);
 
@@ -180,7 +155,7 @@ export class MainPage {
 
     // ------------------ communicating with server --------------------
 
-    requestData = (path: string[]) => {
+    requestData(path: string[]) {
         this.sendToServer("request-data", {
             path: path,
         });
@@ -856,14 +831,4 @@ export class MainPage {
         )
     }
 
-    // -----------------------------------------
-
 }
-
-// export let mainPage: undefined | MainPage = undefined;
-
-// const font = new FontFace('MyFont', 'url(/fonts/Inter-VariableFont_opsz.ttf)');
-// font.load().then((loadedFont) => {
-//     document.fonts.add(loadedFont);
-//     mainPage = new MainPage();
-// });
