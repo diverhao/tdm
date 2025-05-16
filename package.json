@@ -87,6 +87,7 @@
         "asarUnpack": [
             "dist/mainProcess/wsPv/WsPvClient.js",
             "dist/mainProcess/wsPv/WsPvClient.py",
+            "dist/test/tdmDemo/**",
             "dist/mainProcess/resources/webpages/tdm.png",
             "dist/mainProcess/resources/webpages/tdm.svg"
         ],

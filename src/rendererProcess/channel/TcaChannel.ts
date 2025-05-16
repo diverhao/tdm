@@ -546,6 +546,20 @@ export class TcaChannel {
         }
 
         // console.log("send to main process for put", channelName, displayWindowId, dbrData, ioTimeout, pvaValueField)
+        // the backend must have a full channel name
+        if (TcaChannel.checkChannelName(channelName) === "local" && !channelName.includes("@window_")) {
+            channelName = channelName + "@window_" + displayWindowId;
+        }
+
+        // force update
+        // this syntax is only for 
+        if ((TcaChannel.checkChannelName(channelName) === "local" || TcaChannel.checkChannelName(channelName) === "global")
+            && channelName.includes(".PROC")
+        ) {
+            channelName = channelName.replace(".PROC", "");
+            dbrData["PROC"] = true;
+        }
+
         g_widgets1
             .getRoot()
             .getDisplayWindowClient()

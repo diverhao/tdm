@@ -47,6 +47,7 @@ class WsPvClient:
                             req = getChannel[id]
                             callback = req["callback"]
                             if callback != "":
+                                message["channelName"] = channelName
                                 callback(message)
                 del self.getChannels[channelName]
             # -------------- MONITOR ------------------
@@ -61,7 +62,9 @@ class WsPvClient:
                         callback = self.monitorChannels[channelName][
                             "callback"]
                         if callback != "":
-                            callback(dbrDataObj[channelNameRaw])
+                            data = dbrDataObj[channelNameRaw]
+                            data["channelName"] = channelName
+                            callback(data)
 
     def on_error(self, ws, error):
         self.log("error", str(error))
@@ -122,12 +125,22 @@ class WsPvClient:
         self.sendData(data)
 
     def put(self, channelName, value):
+        # having a force update is dangerous in programming, it may cause
+        # infinite loop. The .PROC is only for GUI
+        # forceProc = False
+        # if ".PROC" in channelName:
+        #     channelName = channelName.replace(".PROC", "")
+        #     forceProc = True
+        
         data = {
             "channelName": self.parseChannelName(channelName),
             "command": "PUT",
             "displayWindowId": self.displayWindowId,
             "value": value,
         }
+        # if forceProc == True:
+        #     data["PROC"] = True
+        
         self.sendData(data)
 
     def sendData(self, data):

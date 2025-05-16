@@ -1994,7 +1994,7 @@ export abstract class BaseWidget {
                 }
                 return;
             }
-
+            console.log("put channel value ===========", tcaChannel.getChannelName())
             tcaChannel.put(displayWindowId, { value: value }, 1);
         } catch (e) {
             Log.error(e);

@@ -1933,6 +1933,7 @@ export class IpcManagerOnMainProcess {
         }
         // ioId and widgetKey are bounced back
         displayWindowAgent.sendFromMainProcess("tca-get-result", ioId, widgetKey, data);
+        return data;
     };
 
     /**

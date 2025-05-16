@@ -1,0 +1,68 @@
+{
+    "Canvas": {
+        "type": "Canvas",
+        "widgetKey": "Canvas",
+        "key": "Canvas",
+        "style": {
+            "position": "fixed",
+            "display": "inline-block",
+            "left": 0,
+            "top": 0,
+            "height": 479,
+            "width": 571,
+            "backgroundColor": "rgba(255, 255, 255, 1)",
+            "margin": 0,
+            "border": 0,
+            "padding": 0,
+            "overflow": "hidden"
+        },
+        "macros": [],
+        "windowName": "",
+        "script": "",
+        "xGridSize": 1,
+        "yGridSize": 1,
+        "gridColor": "rgba(128,128,128,1)",
+        "showGrid": true,
+        "isUtilityWindow": false
+    },
+    "Label_6c490e5c-b46c-41ba-84cb-a6df178b67bf": {
+        "type": "Label",
+        "widgetKey": "Label_6c490e5c-b46c-41ba-84cb-a6df178b67bf",
+        "key": "Label_6c490e5c-b46c-41ba-84cb-a6df178b67bf",
+        "style": {
+            "position": "absolute",
+            "display": "inline-flex",
+            "left": 175,
+            "top": 196,
+            "width": 274,
+            "height": 65,
+            "backgroundColor": "rgba(255,255,255,0)",
+            "transform": "rotate(0deg)",
+            "borderStyle": "solid",
+            "borderWidth": 0,
+            "borderColor": "rgba(0, 0, 0, 1)",
+            "color": "rgba(255,53,53,1)",
+            "fontFamily": "TDM Default",
+            "fontSize": 48,
+            "fontStyle": "italic",
+            "fontWeight": "bold",
+            "outlineStyle": "none",
+            "outlineWidth": 1,
+            "outlineColor": "black"
+        },
+        "text": {
+            "text": "You got me!",
+            "horizontalAlign": "flex-start",
+            "verticalAlign": "flex-start",
+            "wrapWord": false,
+            "invisibleInOperation": false,
+            "alarmBorder": true,
+            "alarmBackground": false,
+            "alarmText": false,
+            "alarmLevel": "MINOR"
+        },
+        "channelNames": [],
+        "groupNames": [],
+        "rules": []
+    }
+}

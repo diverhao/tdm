@@ -1,0 +1,56 @@
+# static PV
+# tick-tok PV
+# enum PV
+# string pv
+# waveform pv
+
+record(ai, tdm:demo:01) {
+    field(PINI, "1")
+    field(VAL, "3")
+}
+
+record(calc, tdm:demo:02) {
+    field(SCAN, "1 second")
+    field(INPA, "tdm:demo:02")
+    field(CALC, "A+1>10?0:A+1")
+    field(HIGH, "5")
+    field(HIHI, "8")
+    field(HSV, "MINOR")
+    field(HHSV, "MAJOR")
+}
+
+record(bi, tdm:demo:03) {
+    field(PINI, "1")
+    field(ONAM, "bi ONE")
+    field(ZNAM, "bi ZERO")
+    field(OSV, "MAJOR")
+    field(ZSV, "NO_ALARM")
+}
+
+record(mbbi, tdm:demo:04) {
+    field(PINI, "1")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(TWVL, "2")
+    field(THVL, "3")
+    field(ZRST, "mbbi ZERO")
+    field(ONST, "mbbi ONE")
+    field(TWST, "mbbi TWO")
+    field(THST, "mbbi THREE")
+}
+
+record(stringin, tdm:demo:05) {
+    field(PINI, "1")
+    field(VAL, "This is TDM")
+}
+
+record(waveform, tdm:demo:06) {
+    field(PINI, "1")
+    field(NELM, "100")
+    field(FTVL, "DOUBLE")
+}
+
+
+record(ai, tdm:demo:07) {
+    field(PINI, "1")
+}

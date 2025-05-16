@@ -84,8 +84,9 @@ export class LocalChannelAgent {
         }
 
         // update value,
-        const newValue = dbrData["value"];
-        if (this.getDbrData()["value"] === newValue) {
+        let newValue = dbrData["value"];
+        const oldValue = this.getDbrData()["value"];
+        if (oldValue === newValue) {
             dbrDataChanged = false;
         } else {
             // the new value must be the same type as the type
@@ -145,6 +146,12 @@ export class LocalChannelAgent {
             } 
         }
 
+        // force update, without changing the value, like .PROC in EPICS PV
+        if (dbrData["PROC"] === true) {
+            dbrDataChanged = true;
+            newValue = oldValue;
+        }
+
         if (!dbrDataChanged) {
             return;
         }
@@ -161,7 +168,6 @@ export class LocalChannelAgent {
                 });
             }
         }
-
         if (dbrDataChanged) {
             this.monitorEvent.emit("PUT");
         }

@@ -63,12 +63,16 @@ export class WsPvServer {
                     return;
                 }
 
-                const channelName = message["channelName"];
+                let channelName = message["channelName"];
                 const command = message["command"];
                 const displayWindowId = message["displayWindowId"];
+
                 if (channelName === undefined || command === undefined || displayWindowId === undefined) {
                     Log.debug(this.getMainProcessId(), "Message does not have channelName, command, or displayWindowId");
                     return;
+                }
+                if ((channelName as string).startsWith("loc://") && !(channelName as string).includes("@window_")) {
+                    channelName = channelName + "@window_" + displayWindowId;
                 }
 
                 const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
@@ -82,10 +86,10 @@ export class WsPvServer {
 
                 if (command === "GET") {
                     Log.debug(this.getMainProcessId(), `WebSocket PV server, GET ${message}`);
-                    const dbrData = this.getIpcManager().handleTcaGet(undefined, channelName, displayWindowId, undefined, -1, 1, undefined, false);
+                    const dbrData = await this.getIpcManager().handleTcaGet(undefined, channelName, displayWindowId, undefined, -1, 1, undefined, false);
                     wsClient.send(JSON.stringify({ ...dbrData, ...message, channelName: channelName }));
                 } else if (command === "MONITOR") {
-                    const channelName = message["channelName"];
+                    // const channelName = message["channelName"];
                     // register this websocket client
                     if (displayWindowAgent instanceof DisplayWindowAgent) {
                         displayWindowAgent.setWebSocketMonitorClient(wsClient);
@@ -97,7 +101,7 @@ export class WsPvServer {
                     this.getIpcManager().handleTcaMonitor(undefined, displayWindowId, channelName);
                 } else if (command === "PUT") {
                     const value = message["value"];
-                    this.getIpcManager().handleTcaPut(undefined, channelName, displayWindowId, {value: value}, 1, "");
+                    this.getIpcManager().handleTcaPut(undefined, channelName, displayWindowId, message, 1, "");
                 } else {
                     Log.debug(this.getMainProcessId(), `Unknow command ${command}`);
                 }

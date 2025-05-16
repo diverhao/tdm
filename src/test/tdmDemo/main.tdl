@@ -1,0 +1,119 @@
+{
+    "Canvas": {
+        "type": "Canvas",
+        "widgetKey": "Canvas",
+        "key": "Canvas",
+        "style": {
+            "position": "fixed",
+            "display": "inline-block",
+            "left": 0,
+            "top": 0,
+            "height": 793,
+            "width": 1066,
+            "backgroundColor": "rgba(255, 255, 255, 1)",
+            "margin": 0,
+            "border": 0,
+            "padding": 0,
+            "overflow": "hidden"
+        },
+        "macros": [],
+        "windowName": "",
+        "script": "",
+        "xGridSize": 1,
+        "yGridSize": 1,
+        "gridColor": "rgba(128,128,128,1)",
+        "showGrid": true,
+        "isUtilityWindow": false
+    },
+    "Label_de770396-a820-49c3-89e4-18c23f5ed168": {
+        "type": "Label",
+        "widgetKey": "Label_de770396-a820-49c3-89e4-18c23f5ed168",
+        "key": "Label_de770396-a820-49c3-89e4-18c23f5ed168",
+        "style": {
+            "position": "absolute",
+            "display": "inline-flex",
+            "left": 217,
+            "top": 11,
+            "width": 605,
+            "height": 81,
+            "backgroundColor": "rgba(255,255,255,0)",
+            "transform": "rotate(0deg)",
+            "borderStyle": "solid",
+            "borderWidth": 0,
+            "borderColor": "rgba(0, 0, 0, 1)",
+            "color": "rgba(60,100,60,1)",
+            "fontFamily": "TDM Default",
+            "fontSize": 36,
+            "fontStyle": "normal",
+            "fontWeight": "normal",
+            "outlineStyle": "none",
+            "outlineWidth": 1,
+            "outlineColor": "black"
+        },
+        "text": {
+            "text": "Welcome to SNS Control Lab",
+            "horizontalAlign": "center",
+            "verticalAlign": "center",
+            "wrapWord": false,
+            "invisibleInOperation": false,
+            "alarmBorder": true,
+            "alarmBackground": false,
+            "alarmText": false,
+            "alarmLevel": "MINOR"
+        },
+        "channelNames": [],
+        "groupNames": [],
+        "rules": []
+    },
+    "ActionButton_12182eb7-2f4e-4421-b4f1-3ccebcfd9afa": {
+        "type": "ActionButton",
+        "widgetKey": "ActionButton_12182eb7-2f4e-4421-b4f1-3ccebcfd9afa",
+        "key": "ActionButton_12182eb7-2f4e-4421-b4f1-3ccebcfd9afa",
+        "style": {
+            "position": "absolute",
+            "display": "inline-flex",
+            "left": 44,
+            "top": 107,
+            "width": 109,
+            "height": 30,
+            "backgroundColor": "rgba(210, 210, 210, 1)",
+            "borderStyle": "solid",
+            "borderWidth": 0,
+            "borderColor": "rgba(0, 0, 0, 1)",
+            "color": "rgba(0,0,0,1)",
+            "fontFamily": "TDM Default",
+            "fontSize": 14,
+            "fontStyle": "normal",
+            "fontWeight": "normal",
+            "transform": "rotate(0deg)",
+            "outlineStyle": "none",
+            "outlineWidth": 1,
+            "outlineColor": "black"
+        },
+        "text": {
+            "wrapWord": false,
+            "horizontalAlign": "center",
+            "verticalAlign": "center",
+            "alarmBorder": true,
+            "text": "TDM Demo",
+            "invisibleInOperation": false,
+            "appearance": "traditional",
+            "alarmText": false,
+            "alarmBackground": false,
+            "alarmLevel": "MINOR"
+        },
+        "channelNames": [],
+        "groupNames": [],
+        "rules": [],
+        "actions": [
+            {
+                "type": "OpenDisplay",
+                "label": "Demo",
+                "fileName": "./tdm-demo.tdl",
+                "externalMacros": [],
+                "useParentMacros": false,
+                "openInSameWindow": false
+            }
+        ]
+    }
+}
