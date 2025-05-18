@@ -92,8 +92,15 @@ export class MainProcess {
                     } else if (this.getMainProcessMode() === "web") {
                         // do not open main window in web mode
 
+                        // the 1st, not the 0th, profile should be selected
                         const profileNames = this.getProfiles().getProfileNames();
-                        const profileName = profileNames[0];
+                        let profileName = "";
+                        for (const profileNameTmp of profileNames) {
+                            if (profileNameTmp !== "For All Profiles") {
+                                profileName = profileNameTmp;
+                                break;
+                            }
+                        }
 
                         // only prepare the server-side stuff: update selected profile name, create Channel Access Context
                         // copied from this.getIpcManager().handleProfileSelected()
@@ -221,24 +228,25 @@ export class MainProcess {
                 // throws an exception, re-throw below
                 Profiles.validateProfiles(profilesFileContents);
 
-                if (this.getMainProcessMode() === "desktop" || this.getMainProcessMode() === "ssh-server") {
+                if (this.getMainProcessMode() === "desktop" || this.getMainProcessMode() === "ssh-server" || this.getMainProcessMode() === "web") {
                     const newProfiles = new Profiles(profilesFileContents);
                     newProfiles.setFilePath(filePath);
                     this.setProfiles(newProfiles);
                     return newProfiles;
                 } else {
-                    // web mode
-                    // use the first profile
-                    const key = Object.keys(profilesFileContents)[0];
-                    const value = Object.values(profilesFileContents)[0];
-                    const singleProfileFileContents: Record<string, any> = {};
-                    singleProfileFileContents[key] = value;
+                    // // web mode
+                    // // use the first profile
+                    // const key = Object.keys(profilesFileContents)[0];
+                    // const value = Object.values(profilesFileContents)[0];
+                    // const singleProfileFileContents: Record<string, any> = {};
+                    // singleProfileFileContents[key] = value;
 
-                    const newProfiles = new Profiles(singleProfileFileContents);
-                    newProfiles.setFilePath(filePath);
-                    this.setProfiles(newProfiles);
+                    // const newProfiles = new Profiles(singleProfileFileContents);
+                    // newProfiles.setFilePath(filePath);
+                    // this.setProfiles(newProfiles);
 
-                    return newProfiles;
+                    // return newProfiles;
+                    throw new Error("Unknown mode");
                 }
             } catch (e) {
                 // (2)

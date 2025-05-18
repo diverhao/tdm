@@ -44,74 +44,7 @@ export class MainProcesses {
             if (typeof port !== "number") {
                 port = httpServerPort; // default 3000
             }
-
-            // read profiles file for https certificate and key file names
-            // this is done before creating the Profiles object
-            // then create the HttpServer object
-            const profilesJson = this.readProfilesJsonFromFileSync();
-            let firstProfileJson = Object.values(profilesJson)[0];
-            if (Object.keys(profilesJson)[0] === "For All Profiles") {
-                firstProfileJson = Object.values(profilesJson)[1];
-            }
-            if (firstProfileJson === undefined) {
-                throw new Error("Web mode: no profile. Quit");
-            }
-            const webServerCategoryJson = firstProfileJson["Web Server"];
-            if (webServerCategoryJson === undefined) {
-                throw new Error("Web mode: no Web Server cateogry in first profile. Quit");
-            }
-            const httpsKeyFileProperty = webServerCategoryJson["Https Key File"];
-            const httpsCertificateProperty = webServerCategoryJson["Https Certificate"];
-            if (httpsKeyFileProperty === undefined || httpsCertificateProperty === undefined) {
-                throw new Error("Web mode: https key file or certificate property not defined in profile. Quit");
-            }
-            const httpsKeyFileName = httpsKeyFileProperty["value"];
-            const httpsCertificateFileName = httpsCertificateProperty["value"];
-            if (httpsKeyFileName === undefined || httpsCertificateFileName === undefined) {
-                throw new Error("Web mode: https key file name or certificate file name not defined in profile. Quit");
-            }
-
-            const ldapUriProperty = webServerCategoryJson["LDAP URI"]
-            if (ldapUriProperty === undefined) {
-                throw new Error("");
-            }
-            const ldapDistinguishedNameProperty = webServerCategoryJson["LDAP Distinguished Name"]
-            if (ldapDistinguishedNameProperty === undefined) {
-                throw new Error("");
-            }
-            const ldapSearchBaseProperty = webServerCategoryJson["LDAP Search Base"]
-            if (ldapSearchBaseProperty === undefined) {
-                throw new Error("");
-            }
-            const ldapSearchFilterProperty = webServerCategoryJson["LDAP Search Filter"]
-            if (ldapSearchFilterProperty === undefined) {
-                throw new Error("");
-            }
-            const ldapSearchScopeProperty = webServerCategoryJson["LDAP Search Scope"]
-            if (ldapSearchScopeProperty === undefined) {
-                throw new Error("");
-            }
-            const ldapUri = ldapUriProperty["value"];
-            const ldapDistinguishedName = ldapDistinguishedNameProperty["value"];
-            const ldapSearchBase = ldapSearchBaseProperty["value"];
-            const ldapSearchFilter = ldapSearchFilterProperty["value"];
-            const ldapSearchScope = ldapSearchScopeProperty["value"];
-
-
-            const httpsOptions: { url: string, bindDN: string, searchBase: string, searchFilter: string, searchScope: string, key: Buffer, cert: Buffer } = {
-                url: ldapUri,
-                bindDN: ldapDistinguishedName,
-                // bindCredentials: ldapBindCredentials,
-                searchBase: ldapSearchBase,
-                searchFilter: ldapSearchFilter,
-                searchScope: ldapSearchScope,
-                key: fs.readFileSync(httpsKeyFileName),
-                cert: fs.readFileSync(httpsCertificateFileName),
-            };
-
             this._httpServer = new HttpServer(this, port);
-            this._httpServer.setHttpsOptions(httpsOptions);
-            this._httpServer.setLdapOptions(httpsOptions);
             this._httpServer.createServer();
 
             // in web mode, the websocket (wss://) server port must be the same as the https port

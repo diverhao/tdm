@@ -379,6 +379,30 @@ export class MainWindowProfileEditPage {
             this._forceUpdatePage();
         }
 
+        const addWebServerCategory_SNS = () => {
+            const categoryJson = Profile.generateWebServerCategory_SNS() as Record<string, any>;
+            const categoryName = Object.keys(categoryJson)[0]; // should be "Web Server"
+            if (Object.keys(this.getLocalProfile()).includes(categoryName)) {
+                Log.error("Web Server category already exists");
+                return;
+            }
+            this.getLocalProfile()[categoryName] = JSON.parse(JSON.stringify(categoryJson[categoryName]));
+            selectCategory(undefined, categoryName);
+            this._forceUpdatePage();
+        }
+
+        const addArchiveCategory_SNS = () => {
+            const categoryJson = Profile.generateArchiveCategory_SNS() as Record<string, any>;
+            const categoryName = Object.keys(categoryJson)[0]; // should be "Web Server"
+            if (Object.keys(this.getLocalProfile()).includes(categoryName)) {
+                Log.error("Archieve category already exists");
+                return;
+            }
+            this.getLocalProfile()[categoryName] = JSON.parse(JSON.stringify(categoryJson[categoryName]));
+            selectCategory(undefined, categoryName);
+            this._forceUpdatePage();
+        }
+
         return (
             <div
                 style={style}
@@ -392,6 +416,8 @@ export class MainWindowProfileEditPage {
                         callbacks={{
                             "Add Empty Category": () => { addCategory() },
                             "Add Web Server Category": () => { addWebServerCategory() },
+                            "Add Web Server Category for SNS": () => { addWebServerCategory_SNS() },
+                            "Add Archive Category for SNS": () => { addArchiveCategory_SNS() },
                         }}
                     ></ElementDropDownMenu>
                 </div>

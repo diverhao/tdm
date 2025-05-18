@@ -468,4 +468,69 @@ export class Profile {
         }
     }
 
+
+    static generateWebServerCategory_SNS = () => {
+        return {
+            "Web Server": {
+                "DESCRIPTION_691a2740-e41f-4dac-94d8-d615af03d100": "The web server configurations for SNS control system.",
+                "Authentication Method": {
+                    "DESCRIPTION": "What authentication method to login the website.",
+                    "value": "No authentication",
+                    "choices": [
+                        "No authentication",
+                        "LDAP",
+                    ]
+                },
+                "LDAP URI": {
+                    "DESCRIPTION": "LDAP URI.",
+                    "value": "ldaps://ldapu.ornl.gov"
+                },
+                "LDAP Distinguished Name": {
+                    "DESCRIPTION": "User's distinguished name. The ${username} will be replaced with the user's input user name.",
+                    "value": ""
+                },
+                "LDAP Search Base": {
+                    "DESCRIPTION": "Search base for the LDAP.",
+                    "value": "ou=Users,dc=ornl,dc=gov"
+                },
+                "LDAP Search Filter": {
+                    "DESCRIPTION": "Search filter for the LDAP. The ${username} will be replaced with the user's input user name.",
+                    "value": "(uid={{username}})"
+                },
+                "LDAP Search Scope": {
+                    "DESCRIPTION": "The search scope for LDAP.",
+                    "value": "sub"
+                },
+                "Https Key File": {
+                    "DESCRIPTION": "HTTPS key file.",
+                    "value": "/Users/1h7/projects2/javascript/test89-https-express/server.key"
+                },
+                "Https Certificate": {
+                    "DESCRIPTION": "HTTPS certificate.",
+                    "value": "/Users/1h7/projects2/javascript/test89-https-express/server.cert"
+                }
+            },
+        }
+    }
+
+    static generateArchiveCategory_SNS = () => {
+        return {
+            "Archieve": {
+                "DESCRIPTION_691a2740-e41f-4dac-94d8-d614ad03d100": "The SNS archive configurations.",
+                "Oracle database username": {
+                    "DESCRIPTION": "The user name for Oracle database.",
+                    "value": "sns_reports"
+                },
+                "Oracle database password": {
+                    "DESCRIPTION": "Password.",
+                    "value": "You guess"
+                },
+                "Oracle database connection string": {
+                    "DESCRIPTION": "Connection string.",
+                    "value": "Guess again"
+                }
+            },
+        }
+    }
+
 }
