@@ -40,6 +40,7 @@ import { KeyboardEvent } from "react";
 
 import '../../resources/css/katex.min.css';
 import { Talhk } from "../../../rendererProcess/widgets/Talhk/Talhk";
+import { FileBrowser } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
 // import '../../resources/css/simple.css';
 
 
@@ -610,7 +611,7 @@ export class DisplayWindowClient {
         editable: boolean,
         externalMacros: [string, string][],
         useExternalMacros: boolean,
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk" | undefined,
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | undefined,
         utilityOptions: Record<string, any>
     ) => {
         Log.info("new tdl ", newTdl, utilityType, editable)
@@ -639,6 +640,7 @@ export class DisplayWindowClient {
             utilityType === "PvMonitor" ||
             utilityType === "FileConverter" ||
             utilityType === "Help" ||
+            utilityType === "FileBrowser" ||
             utilityType === "Talhk"
         ) {
             this._appendUtilityWidgetTdl(newTdl, utilityType, utilityOptions);
@@ -713,7 +715,7 @@ export class DisplayWindowClient {
      */
     private _appendUtilityWidgetTdl = (
         tdl: type_tdl,
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk",
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser",
         utilityOptions: Record<string, any>
     ) => {
         console.log("tdl", utilityType)
@@ -831,6 +833,20 @@ export class DisplayWindowClient {
         } else if (utilityType === "ChannelGraph") {
             // default size is 100%
             const widgetTdl = ChannelGraph.generateWidgetTdl(utilityOptions);
+            const widgetKey = widgetTdl.widgetKey;
+            widgetTdl.style.width = "100%";
+            widgetTdl.style.height = "100%";
+            // widgetTdl.style.boxSizing = "border-box";
+            // widgetTdl.style.padding = "20px";
+
+            // widgetTdl.text.singleWidget = true;
+            // widgetTdl.style.boxSizing = "border-box";
+            // widgetTdl.style["top"] = 0;
+            tdl[widgetKey] = widgetTdl;
+            // tdl["Canvas"].style.backgroundColor = "rgba(0, 0, 0, 1)";
+        } else if (utilityType === "FileBrowser") {
+            // default size is 100%
+            const widgetTdl = FileBrowser.generateWidgetTdl(utilityOptions);
             const widgetKey = widgetTdl.widgetKey;
             widgetTdl.style.width = "100%";
             widgetTdl.style.height = "100%";

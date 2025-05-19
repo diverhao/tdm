@@ -74,14 +74,14 @@ export class MainProcess {
         // 3 modes: ssh-client, desktop, and web
         if (this.getMainProcessMode() === "ssh-client") {
             if (sshServerConfig !== undefined) {
-                this.setWindowAgentsManager(new WindowAgentsManager(this));
+                this.setWindowAgentsManager(this._windowAgentsManager);
                 let callingProcessId = sshServerConfig["callingProcessId"];
                 this._sshClient = new SshClient(this, sshServerConfig, callingProcessId)
             } else {
                 Log.error(this.getProcessId(), "Input for MainProcess constructor error: sshServerConfig cannot be undefined in ssh-client mode");
             }
         } else {
-            this.setWindowAgentsManager(new WindowAgentsManager(this));
+            this.setWindowAgentsManager(this._windowAgentsManager);
             this.createProfilesFromFile(profilesFileName).then(() => {
                 app.whenReady().then(async () => {
                     if (this.getMainProcessMode() === "desktop") {

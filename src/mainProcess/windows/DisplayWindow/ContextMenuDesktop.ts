@@ -421,6 +421,12 @@ export class ContextMenuDesktop {
                     },
                 },
                 {
+                    label: "File Browser",
+                    click: () => {
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "file-browser");
+                    },
+                },
+                {
                     label: "XY Plot",
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "xy-plot");
@@ -432,18 +438,12 @@ export class ContextMenuDesktop {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "pv-table");
                     },
                 },
-                {
-                    label: "PV Monitor",
-                    click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "pv-monitor");
-                    },
-                },
-                {
-                    label: "Terminal",
-                    click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "terminal");
-                    },
-                },
+                // {
+                //     label: "Terminal",
+                //     click: () => {
+                //         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "terminal");
+                //     },
+                // },
                 {
                     label: "Calculator",
                     click: () => {
@@ -952,6 +952,12 @@ export class ContextMenuDesktop {
             },
         },
         {
+            label: "File Browser",
+            click: () => {
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", "");
+            },
+        },
+        {
             label: "Data Viewer",
             click: () => {
                 this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "data-viewer", []);
@@ -1229,7 +1235,13 @@ export class ContextMenuDesktop {
         {
             label: "PV Monitor",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "pv-monitor", this._widgetKeys);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "pv-monitor", [""]);
+            },
+        },
+        {
+            label: "File Browser",
+            click: () => {
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", "");
             },
         },
         {

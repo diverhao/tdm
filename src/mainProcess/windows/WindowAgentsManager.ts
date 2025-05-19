@@ -22,6 +22,7 @@ export type type_options_createDisplayWindow = {
     utilityType?: string;
     utilityOptions?: Record<string, any>;
     postCommand?: string;
+    isPreviewDisplayWindow?: boolean;
 };
 
 export class WindowAgentsManager {
@@ -36,8 +37,10 @@ export class WindowAgentsManager {
      * the preloadedDisplayWindowAgent is available. If not, it will create a new window.
      */
     preloadedDisplayWindowAgent: DisplayWindowAgent | undefined = undefined;
+    previewDisplayWindowAgent: DisplayWindowAgent | undefined = undefined;
     // preloadedEmbeddedDisplayAgent: DisplayWindowAgent | undefined = undefined;
     creatingPreloadedDisplayWindow: boolean = false;
+    creatingPreviewDisplayWindow: boolean = false;
     /**
      * Embedded display
      */
@@ -48,6 +51,10 @@ export class WindowAgentsManager {
     constructor(mainProcess: MainProcess) {
         this._mainProcess = mainProcess;
         this._mainProcessId = mainProcess.getProcessId();
+        setTimeout(() => {
+            console.log("step 1 =====================")
+            this.createPreviewDisplayWindow();
+        }, 3000)
     }
 
     // ------------------- tmp, will be formal ----------------------------------
@@ -185,7 +192,7 @@ export class WindowAgentsManager {
             );
             // (0)
             // preloaded window only for desktop mode
-            if (httpResponse === undefined) {
+            if (httpResponse === undefined && options["isPreviewDisplayWindow"] !== true) {
                 // ssh-server does not have preloaded display window
                 if (this.getMainProcess().getMainProcessMode() !== "ssh-server") {
                     let displayWindowAgent = this.replacePreloadedDisplayWindow(options);
@@ -482,6 +489,41 @@ export class WindowAgentsManager {
         }
     };
 
+
+    private createPreviewDisplayWindow = async () => {
+        // (0)
+        if (this.previewDisplayWindowAgent !== undefined) {
+            return this.previewDisplayWindowAgent;
+        }
+        // guard
+        this.creatingPreviewDisplayWindow = true;
+        // (1)
+        const tdl = FileReader.getBlankWhiteTdl();
+        // (2)
+        const options: type_options_createDisplayWindow = {
+            tdl: tdl,
+            mode: "operating" as "operating" | "editing",
+            editable: false,
+            tdlFileName: "",
+            macros: [],
+            replaceMacros: false,
+            hide: true,
+            isPreviewDisplayWindow: true,
+        };
+        const displayWindowAgent = await this.createDisplayWindow(options);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            Log.info(this.getMainProcessId(), `Created preview display window ${displayWindowAgent.getId()}`);
+            // (3)
+            this.previewDisplayWindowAgent = displayWindowAgent;
+            this.creatingPreviewDisplayWindow = false;
+            return displayWindowAgent;
+        } else {
+            Log.error(this.getMainProcessId(), `Failed to create preview display window`);
+            this.creatingPreviewDisplayWindow = false;
+            return undefined;
+        }
+    };
+
     /**
      * Create a blank display window.
      */
@@ -528,7 +570,7 @@ export class WindowAgentsManager {
     // almost the same as this.createDisplayWindow()
     // options are from the "create-utility-display-window" event, they are simply bounced back
     createUtilityDisplayWindow = async (
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "PvMonitor" | "Help" | "FileConverter" | "Talhk",
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "PvMonitor" | "Help" | "FileConverter" | "Talhk" | "FileBrowser",
         utilityOptions: Record<string, any>,
         httpResponse: any = undefined,
     ) => {

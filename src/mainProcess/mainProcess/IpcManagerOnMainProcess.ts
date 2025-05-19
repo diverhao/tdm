@@ -115,6 +115,8 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("ca-snooper-command", this.handleCaSnooperCommand);
         this.ipcMain.on("request-epics-dbd", this.handleRequestEpicsDbd);
         this.ipcMain.on("ca-sw-command", this.handleCaswCommand);
+        this.ipcMain.on("fetch-folder-content", this.handleFetchFolderContent);
+        this.ipcMain.on("fetch-thumbnail", this.handleFetchThumbnail)
 
         // profiles
         this.ipcMain.on("open-profiles", this.handleOpenProfiles);
@@ -1797,12 +1799,14 @@ export class IpcManagerOnMainProcess {
      * process to show the pre-loaded window and update various fields. In this way, the pre-loaded window
      * does not flash.
      */
-    handleNewTdlRendered = (event: any, displayWindowId: string, windowName: string, tdlFileName: string, mode: string) => {
+    handleNewTdlRendered = async (event: any, displayWindowId: string, windowName: string, tdlFileName: string, mode: string) => {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             // ignore the preloaded display window's new TDL, and ignore the iframe embedded display
-            if (displayWindowAgent !== windowAgentsManager.preloadedDisplayWindowAgent && displayWindowAgent.getBrowserWindow() !== undefined) {
+            if (displayWindowAgent !== windowAgentsManager.preloadedDisplayWindowAgent
+                && displayWindowAgent !== windowAgentsManager.previewDisplayWindowAgent
+                && displayWindowAgent.getBrowserWindow() !== undefined) {
                 displayWindowAgent.show();
                 // displayWindowAgent.setTdlFileName(tdlFileName);
                 displayWindowAgent.setWindowName(windowName);
@@ -1825,8 +1829,25 @@ export class IpcManagerOnMainProcess {
                 // send local font names to display window
                 displayWindowAgent.sendFromMainProcess("local-font-names", this.getMainProcess().getMainProcesses().getLocalFontNames());
 
+                this.getMainProcess().getWindowAgentsManager().setDockMenu();
+            } else if (displayWindowAgent === windowAgentsManager.previewDisplayWindowAgent) {
+                await displayWindowAgent.takeThumbnail();
+                const tdlFileName = displayWindowAgent.getTdlFileName();
+                const fileBrowserDisplayWindowId = displayWindowAgent.getForFileBrowserWindowId();
+                const fileBrowserWidgetKey = displayWindowAgent.getForFileBrowserWidgetKey();
+                if (fileBrowserDisplayWindowId !== "" && fileBrowserWidgetKey !== "") {
+                    const fileBrowserDisplayWindowAgent = windowAgentsManager.getAgent(fileBrowserDisplayWindowId);
+                    if (fileBrowserDisplayWindowAgent instanceof DisplayWindowAgent) {
+                        fileBrowserDisplayWindowAgent.sendFromMainProcess("fetch-thumbnail", {
+                            widgetKey: fileBrowserWidgetKey,
+                            tdlFileName: tdlFileName,
+                            image: displayWindowAgent.getThumbnail(),
+                        });
+                        displayWindowAgent.setForFileBrowserWindowId("");
+                        displayWindowAgent.setForFileBrowserWidgetKey("");
+                    }
+                }
             }
-            this.getMainProcess().getWindowAgentsManager().setDockMenu();
         }
 
     };
@@ -2028,7 +2049,7 @@ export class IpcManagerOnMainProcess {
 
     createUtilityDisplayWindow = (
         event: any,
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "Help" | "PvMonitor" | "FileConverter" | "Talhk",
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "Help" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser",
         utilityOptions: Record<string, any>,
         httpResponse: any = undefined
     ) => {
@@ -2133,6 +2154,10 @@ export class IpcManagerOnMainProcess {
         } else if (utilityType === "Talhk") {
             // utilityOptions
             // { serverAddress: "http://localhost:4000" }
+        } else if (utilityType === "FileBrowser") {
+            if (utilityOptions["path"] === "$HOME") {
+                utilityOptions["path"] = os.homedir();
+            }
         }
 
         windowAgentsManager.createUtilityDisplayWindow(utilityType, utilityOptions, httpResponse);
@@ -2641,6 +2666,140 @@ export class IpcManagerOnMainProcess {
                 caswServer.stopCaswServer(options["displayWindowId"]);
             }
         }
+    }
+
+    handleFetchFolderContent = (event: any, options: {
+        displayWindowId: string,
+        widgetKey: string,
+        folderPath: string,
+    }) => {
+        try {
+            // read the folder
+            const folderPath = options["folderPath"];
+            const rawResult = fs.readdirSync(folderPath);
+            const result: {
+                name: string, // only the name
+                type: "file" | "folder",
+                size: number,
+                timeModified: number,
+            }[] = [];
+            for (const name of rawResult) {
+                const fullPath = path.join(folderPath, name);
+                const stats = fs.statSync(fullPath);
+                const type = stats.isDirectory() ? "folder" : "file";
+                const size = stats.size; // byte
+                const timeModified = stats.mtime; // Date 
+                result.push({
+                    name: name,
+                    type: type,
+                    size: size,
+                    timeModified: timeModified.getTime(),
+                });
+            }
+            // send back
+            const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
+            if (displayWindowAgent instanceof DisplayWindowAgent) {
+                displayWindowAgent.sendFromMainProcess("fetch-folder-content", {
+                    widgetKey: options["widgetKey"],
+                    folderContent: result,
+                })
+            }
+        } catch (e) {
+            Log.error(this.getMainProcessId(), `File Browser -- Failed to read folder ${options["folderPath"]}`);
+            const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
+            if (displayWindowAgent instanceof DisplayWindowAgent) {
+                displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                    // command?: string | undefined;
+                    messageType: "error", // | "warning" | "info";
+                    humanReadableMessages: [`Failed to read folder ${options["folderPath"]}.`],
+                    rawMessages: [],
+                    // buttons?: type_DialogMessageBoxButton[] | undefined;
+                    // attachment?: any;
+                })
+                // let 
+                displayWindowAgent.sendFromMainProcess("fetch-folder-content", {
+                    widgetKey: options["widgetKey"],
+                    folderContent: {},
+                    success: false,
+                })
+            }
+        }
+    }
+
+    handleFetchThumbnail = async (event: any, message: {
+        displayWindowId: string,
+        widgetKey: string,
+        tdlFileName: string
+    }) => {
+        // open this tdl file in preview display window
+
+        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
+        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        if (selectedProfile === undefined) {
+            Log.error(this.getMainProcessId(), "Profile not selected!");
+            return;
+        }
+
+        let editable = false;
+        const mode = "editing";
+        const fileBrowserDisplayWindowId = message["displayWindowId"];
+        let fileBrowserDisplayWindowAgent: MainWindowAgent | DisplayWindowAgent | undefined = undefined;
+        if (fileBrowserDisplayWindowId !== undefined) {
+            fileBrowserDisplayWindowAgent = windowAgentsManager.getAgent(fileBrowserDisplayWindowId);
+        }
+
+        const tdlFileName = message["tdlFileName"];
+
+        FileReader.readTdlFile(tdlFileName, selectedProfile).then((tdlFileResult) => {
+            if (tdlFileResult !== undefined) {
+                const tdl = tdlFileResult["tdl"];
+                const previewDisplayWindowAgent = this.getMainProcess().getWindowAgentsManager().previewDisplayWindowAgent;
+                if (previewDisplayWindowAgent instanceof DisplayWindowAgent) {
+                    // todo: race condition, 2 requests at the same time
+                    previewDisplayWindowAgent.setForFileBrowserWindowId(fileBrowserDisplayWindowId);
+                    previewDisplayWindowAgent.setForFileBrowserWidgetKey(message["widgetKey"]);
+
+                    previewDisplayWindowAgent.sendFromMainProcess("new-tdl", {
+                        newTdl: tdl,
+                        tdlFileName: tdlFileName,
+                        initialModeStr: mode,
+                        editable: editable,
+                        externalMacros: [],
+                        useExternalMacros: false,
+                        // utilityType: options["utilityType"],
+                        // utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
+                    });
+                } else {
+                    Log.error(this.getMainProcessId(), `Cannot read tdl file ${tdlFileName}`);
+                    if (fileBrowserDisplayWindowAgent !== undefined) {
+                        fileBrowserDisplayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                            // command?: string | undefined;
+                            messageType: "error", // | "warning" | "info";
+                            humanReadableMessages: [`The hidden preview display is not ready.`],
+                            rawMessages: [],
+                            // buttons?: type_DialogMessageBoxButton[] | undefined;
+                            // attachment?: any;
+                        })
+                    }
+                }
+            } else {
+                Log.error(this.getMainProcessId(), `Cannot read tdl file ${tdlFileName}`);
+                if (fileBrowserDisplayWindowAgent !== undefined) {
+                    fileBrowserDisplayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                        // command?: string | undefined;
+                        messageType: "error", // | "warning" | "info";
+                        humanReadableMessages: [`Failed to open file ${tdlFileName}`],
+                        rawMessages: [],
+                        // buttons?: type_DialogMessageBoxButton[] | undefined;
+                        // attachment?: any;
+                    })
+                }
+            }
+        })
+
+
+        // take screenshot for this window
+        // send back
     }
 
     // --------------------- ssh login ----------------------

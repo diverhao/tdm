@@ -30,6 +30,7 @@ import { ChannelSeverity, TcaChannel } from "../../../rendererProcess/channel/Tc
 import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/ChannelGraph";
 import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
 import { Table } from "../../../rendererProcess/widgets/Table/Table";
+import { FileBrowser, type_folder_content } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
 
 
 // var recorder;
@@ -193,6 +194,8 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("save-text-file-status", this.handleSaveTextFileStatus)
         this.ipcRenderer.on("new-log", this.handleNewLog)
         this.ipcRenderer.on("file-converter-command", this.handleFileConverterCommand);
+        this.ipcRenderer.on("fetch-folder-content", this.handleFetchFolderContent);
+        this.ipcRenderer.on("fetch-thumbnail", this.handleFetchThumbnail)
     };
 
     handleObtainedIframeUuid = (
@@ -421,6 +424,8 @@ export class IpcManagerOnDisplayWindow {
                 g_widgets1.createWidgetFromMouse("ActionButton");
             } else if (subcommand === "pv-monitor") {
                 g_widgets1.createWidgetFromMouse("PvMonitor");
+            } else if (subcommand === "file-browser") {
+                g_widgets1.createWidgetFromMouse("FileBrowser");
             }
         } else if (command === "select-all-widgets") {
             g_widgets1.selectAllWidgets(true);
@@ -489,6 +494,8 @@ export class IpcManagerOnDisplayWindow {
             g_widgets1.openPvTableWindow(subcommand as string[]);
         } else if (command === "pv-monitor") {
             g_widgets1.openPvMonitorWindow(subcommand as string[]);
+        } else if (command === "file-browser") {
+            g_widgets1.openFileBrowserWindow(subcommand as string);
         } else if (command === "data-viewer") {
             g_widgets1.openDataViewerWindow(subcommand as string[]);
         } else if (command === "terminal") {
@@ -721,7 +728,7 @@ export class IpcManagerOnDisplayWindow {
             editable: boolean;
             externalMacros: [string, string][];
             useExternalMacros: boolean;
-            utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "Casw" | "PvMonitor" | "CaSnooper" | "FileConverter" | "Talhk";
+            utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "Casw" | "PvMonitor" | "CaSnooper" | "FileConverter" | "Talhk" | "FileBrowser";
             utilityOptions: Record<string, any>;
         }
     ) => {
@@ -997,6 +1004,34 @@ export class IpcManagerOnDisplayWindow {
             widget.handleNewData(info);
         }
     }
+
+    handleFetchFolderContent = (event: any, message: {
+        widgetKey: string,
+        folderContent: type_folder_content,
+        success?: boolean, // false if failed, otherwise success
+    }) => {
+        const widget = g_widgets1.getWidget(message["widgetKey"]);
+        if (widget instanceof FileBrowser) {
+            if (message["success"] !== false) {
+                widget.updateFolderContent(message["folderContent"]);
+            } else {
+                // failed
+                widget.handleFetchFolderContentFailed();
+            }
+            
+        }
+    }
+
+    handleFetchThumbnail = (event: any, message: {
+        widgetKey: string,
+        tdlFileName: string,
+        image: string,
+    }) => {
+        const widget = g_widgets1.getWidget(message["widgetKey"]);
+        if (widget instanceof FileBrowser) {
+            widget.updateThumbnail(message);
+        }
+    }   
 
     // handleErrorMessage = (event: any, info: {
     //     messageType: "error" | "warnng" | "info",

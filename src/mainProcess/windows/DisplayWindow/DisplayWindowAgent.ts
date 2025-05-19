@@ -1,4 +1,4 @@
-import { nativeImage, BrowserWindow, MenuItem, Menu, dialog, clipboard, desktopCapturer, webFrame, webContents, Tray, app } from "electron";
+import { nativeImage, BrowserWindow, MenuItem, Menu, dialog, clipboard, desktopCapturer, webFrame, webContents, Tray, app, screen } from "electron";
 import * as path from "path";
 import * as url from "url";
 import { type_options_createDisplayWindow, WindowAgentsManager } from "../../windows/WindowAgentsManager";
@@ -96,6 +96,10 @@ export class DisplayWindowAgent {
 
     webSocketMonitorClient: WebSocket | undefined;
     webSocketMonitorChannelNames: string[] = [];
+
+
+    private forFileBrowserWindowId: string = '';
+    private forFileBrowserWidgetKey: string = '';
 
     // private _htmlIndex: string = "";
 
@@ -1300,7 +1304,7 @@ export class DisplayWindowAgent {
             this.thumbnail = "";
             result[displayWindowId] = null;
         }
-        if (mainWindowAgent !== undefined) {
+        if (mainWindowAgent !== undefined && this.hiddenWindow === false) {
             mainWindowAgent.sendFromMainProcess("new-thumbnail", result);
         } else {
             Log.error(this.getMainProcessId(), "Main window not ready");
@@ -1315,31 +1319,49 @@ export class DisplayWindowAgent {
         return this.thumbnail;
     }
 
-    takeThumbnail = (windowName: string | undefined = undefined, tdlFileName: string | undefined = undefined) => {
+    takeThumbnail = async (windowName: string | undefined = undefined, tdlFileName: string | undefined = undefined) => {
         try {
             const browserWindow = this.getBrowserWindow();
             if (browserWindow instanceof BrowserWindow) {
                 const webContents = browserWindow.webContents;
                 // console.log("=================== take thumbnail ================\n");
-                webContents.capturePage().then((image: Electron.NativeImage) => {
-                    const size = image.getSize();
-                    let resizedImage: any = image;
+                const image: Electron.NativeImage = await webContents.capturePage();
+                const size = image.getSize();
+                let resizedImage: Electron.NativeImage = image;
+
+
+                if (this.hiddenWindow === true) {
+                    const bounds = browserWindow.getBounds(); // Get window's bounds (position and size)
+                    const display = screen.getDisplayMatching(bounds); // Find matching display
+                    const factor = display.scaleFactor;
+
+                    resizedImage = resizedImage.crop({
+                        x: 0,
+                        y: 0,
+                        width: size.width - 200 * factor, // why 400, sidebar is 200
+                        height: size.height,
+                    })
+                }
+
+                const maxSize = this.getForFileBrowserWindowId() === "" ? 100 : 800;
+                if (size.height > maxSize || size.width > maxSize) {
                     if (size.height > size.width) {
-                        resizedImage = image.resize({
-                            height: 100,
+                        resizedImage = resizedImage.resize({
+                            height: maxSize
                         });
                     } else {
-                        resizedImage = image.resize({
-                            width: 100,
+                        resizedImage = resizedImage.resize({
+                            width: maxSize,
                         });
                     }
-                    const imageBuffer = resizedImage.toPNG();
-                    const imageBase64 = imageBuffer.toString("base64");
-                    const displayWindowId = this.getId();
-                    if (this.readyToClose === false) {
-                        this.updateThumbnail(displayWindowId, `data:image/png;base64,${imageBase64}`, windowName, tdlFileName);
-                    }
-                });
+                }
+                const imageBuffer = resizedImage.toPNG();
+                const imageBase64 = imageBuffer.toString("base64");
+                const displayWindowId = this.getId();
+                if (this.readyToClose === false) {
+                    this.updateThumbnail(displayWindowId, `data:image/png;base64,${imageBase64}`, windowName, tdlFileName);
+                }
+                ;
             }
         } catch (e) {
             // ! When the app quits, it may cause an unexpected error that pops up in GUI.
@@ -1489,6 +1511,7 @@ export class DisplayWindowAgent {
                         title = this.getId();
                     }
                 }
+                console.log("=========================", this.hiddenWindow)
                 const windowOptions: Electron.BrowserWindowConstructorOptions = {
                     width: 800,
                     height: 500,
@@ -1511,7 +1534,7 @@ export class DisplayWindowAgent {
                         webSecurity: false,
                         defaultFontFamily: {
                             standard: "Arial",
-                        }
+                        },
                     },
                 };
                 try {
@@ -1936,6 +1959,22 @@ export class DisplayWindowAgent {
         }
     };
 
+    setForFileBrowserWindowId = (newId: string) => {
+        this.forFileBrowserWindowId = newId;
+    }
+
+    getForFileBrowserWindowId = () => {
+        return this.forFileBrowserWindowId;
+    }
+
+    setForFileBrowserWidgetKey = (newKey: string) => {
+        this.forFileBrowserWidgetKey = newKey;
+    }
+
+    getForFileBrowserWidgetKey = () => {
+        return this.forFileBrowserWidgetKey;
+    }
+
     // ------------------------- hash ----------------------------
     /**
      * Calculate hash for this display window based on file name and macros.<br>
@@ -2000,6 +2039,9 @@ export class DisplayWindowAgent {
     setIsUtilityWindow = (newValue: boolean) => {
         this._isUtilityWindow = newValue;
     }
+
+
+
 
     // ---------------------- process info ---------------------------
     getProcessInfo = async (withThumbnail: boolean) => {

@@ -4,6 +4,7 @@ import { GlobalVariables } from "./GlobalVariables";
 import { MainWindowClient } from "../../mainProcess/windows/MainWindow/MainWindowClient";
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
 import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
+import path from "path";
 
 export class MainWindowProfileRunPage {
     private _profiles: Record<string, any>;
@@ -51,7 +52,7 @@ export class MainWindowProfileRunPage {
         };
         const openRemoteFile = (event: any) => {
             // open the large input
-            this._largeInput.createElement("", (newValue: "string") => {}, "Remote TDL File Path", (newValue: string) => {
+            this._largeInput.createElement("", (newValue: "string") => { }, "Remote TDL File Path", (newValue: string) => {
                 this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file", {
                     tdlFileNames: [newValue],
                     mode: "operating",
@@ -63,6 +64,82 @@ export class MainWindowProfileRunPage {
                 });
             }, true)
         };
+        // const openFileBrowser = (event: any) => {
+        //     this.getMainWindowClient().getIpcManager().sendFromRendererProcess("new-tdm-process");
+        // };
+
+
+        const openFileBrowser = (event: any) => {
+            // priority:
+            // the valid input path variable which should be an absolute path
+            // this tdl file's path
+            // the first absolute default TDL file path
+            // the first absolute default search path
+            // HOME folder
+            let openPath = "";
+
+            // try input path
+            // try {
+            //     const normalized = path.normalize(inputPath);
+            //     if (typeof normalized === 'string' && normalized.length > 0 && path.isAbsolute(inputPath)) {
+            //         openPath = inputPath;
+            //     }
+            // } catch {
+            // }
+
+            // try this TDL file's folder
+            // if (openPath === "") {
+            //     const tdlFileName = this.getRoot().getDisplayWindowClient().getTdlFileName();
+            //     if (tdlFileName !== "" && path.isAbsolute(tdlFileName)) {
+            //         const tdlFilePath = path.dirname(tdlFileName);
+            //         openPath = tdlFilePath;
+            //     }
+            // }
+
+            // try first absoluate default search path
+            if (openPath === "") {
+                if (this._selectedProfile["EPICS Custom Environment"] !== undefined) {
+                    if (this._selectedProfile["EPICS Custom Environment"]["Default TDL Files"] !== undefined) {
+                        const defaultTdlFiles = this._selectedProfile["EPICS Custom Environment"]["Default TDL Files"]["value"];
+                        if (Array.isArray(defaultTdlFiles)) {
+                            for (const tdlFileName of defaultTdlFiles) {
+                                if (tdlFileName !== "" && path.isAbsolute(tdlFileName)) {
+                                    const tdlFilePath = path.dirname(tdlFileName);
+                                    openPath = tdlFilePath;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // try first absoluate default search path
+            if (openPath === "") {
+                if (this._selectedProfile["EPICS Custom Environment"] !== undefined) {
+                    if (this._selectedProfile["EPICS Custom Environment"]["Default Search Paths"] !== undefined) {
+                        const defaultSearchPaths = this._selectedProfile["EPICS Custom Environment"]["Default Search Paths"]["value"];
+                        if (Array.isArray(defaultSearchPaths)) {
+                            for (const searchPath of defaultSearchPaths) {
+                                console.log("     ", searchPath, path.isAbsolute(searchPath))
+                                if (path.isAbsolute(searchPath)) {
+                                    openPath = searchPath;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // fall back to home dir
+            if (openPath === "") {
+                openPath = "$HOME"
+            }
+
+            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "FileBrowser", { path: openPath });
+        };
+
         const [, forceUpdate] = React.useState({});
 
         this.forceUpdateWsOpenerPort = () => {
@@ -133,13 +210,14 @@ export class MainWindowProfileRunPage {
         }
         const openTalhk = () => {
             // todo: include alarm handler server address
-            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Talhk", {serverAddress: "http://localhost:4000"});
+            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Talhk", { serverAddress: "http://localhost:4000" });
         }
 
 
         const buttonFunctions: Record<string, any> = {
             "Open file": openFile,
             "Open file from remote": openRemoteFile,
+            "File Browser": openFileBrowser,
             "Create new display": this.createNewDisplay,
             "Open default windows": openDefaultDisplayWindows,
             "Data Viewer": openDataViewerWindow,

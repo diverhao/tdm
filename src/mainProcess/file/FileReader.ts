@@ -571,7 +571,7 @@ export class FileReader {
                 style: {
                     position: "fixed",
                     display: "inline-block",
-                    backgroundColor: "rgba(255, 255, 255, 1)",
+                    backgroundColor: "rgba(255, 0, 255, 1)",
                     margin: 0,
                     border: 0,
                     padding: 0,

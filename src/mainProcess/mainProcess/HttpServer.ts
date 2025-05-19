@@ -304,11 +304,11 @@ export class HttpServer {
             }
         );
 
-
-
-        // main window
+        // HTTP POST requests
+        // normally the communication should be through websocket, but some commands can only be done in http
         this._server.post("/command",
             (request: any, response: any) => {
+                // the received JSON is automatically parsed
                 const command = request.body["command"];
                 Log.debug("-1", "Received POST request from", request.socket.address(), "command =", command);
                 const data = request.body["data"];

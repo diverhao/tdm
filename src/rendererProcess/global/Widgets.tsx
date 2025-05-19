@@ -65,6 +65,7 @@ import { Label } from "../widgets/Label/Label";
 import { EmbeddedDisplay } from "../widgets/EmbeddedDisplay/EmbeddedDisplay";
 import { Group } from "../widgets/Group/Group";
 import { PvMonitor } from "../widgets/PvMonitor/PvMonitor";
+import { FileBrowser } from "../widgets/FileBrowser/FileBrowser";
 import { ActionButton } from "../widgets/ActionButton/ActionButton";
 import { type_LocalChannel_data } from "../../mainProcess/channel/LocalChannelAgent";
 import path, { dirname } from "path";
@@ -129,6 +130,7 @@ export type type_widgetType =
     | "EmbeddedDisplay"
     | "Group"
     | "PvMonitor"
+    | "FileBrowser"
     | "ActionButton";
 
 /**
@@ -493,6 +495,13 @@ export class Widgets {
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
+            case "FileBrowser":
+                tdl = FileBrowser.generateDefaultTdl("FileBrowser");
+                tdl.style.left = x;
+                tdl.style.top = y;
+                tdl.style.width = width;
+                tdl.style.height = height;
+                break;
             case "Thermometer":
                 tdl = Thermometer.generateDefaultTdl("Thermometer");
                 tdl.style.left = x;
@@ -693,6 +702,10 @@ export class Widgets {
             }
             case "PvMonitor": {
                 widget = new PvMonitor(widgetTdl);
+                break;
+            }
+            case "FileBrowser": {
+                widget = new FileBrowser(widgetTdl);
                 break;
             }
             case "Thermometer": {
@@ -2403,6 +2416,94 @@ export class Widgets {
                         window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                     });
             }
+        }
+    };
+
+    openFileBrowserWindow = (inputPath: string) => {
+        // priority:
+        // the valid input path variable which should be an absolute path
+        // this tdl file's path
+        // the first absolute default TDL file path
+        // the first absolute default search path
+        // HOME folder
+        let openPath = "";
+
+        // try input path
+        try {
+            const normalized = path.normalize(inputPath);
+            if (typeof normalized === 'string' && normalized.length > 0 && path.isAbsolute(inputPath)) {
+                openPath = inputPath;
+            }
+        } catch {
+        }
+
+        // try this TDL file's folder
+        if (openPath === "") {
+            const tdlFileName = this.getRoot().getDisplayWindowClient().getTdlFileName();
+            if (tdlFileName !== "" && path.isAbsolute(tdlFileName)) {
+                const tdlFilePath = path.dirname(tdlFileName);
+                openPath = tdlFilePath;
+            }
+        }
+
+        // try first absoluate default search path
+        if (openPath === "") {
+            const defaultTdlFiles = this.getRoot().getDisplayWindowClient().getProfileEntry("EPICS Custom Environment", "Default TDL Files");
+            if (Array.isArray(defaultTdlFiles)) {
+                for (const tdlFileName of defaultTdlFiles) {
+                    if (tdlFileName !== "" && path.isAbsolute(tdlFileName)) {
+                        const tdlFilePath = path.dirname(tdlFileName);
+                        openPath = tdlFilePath;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // try first absoluate default search path
+        if (openPath === "") {
+            const defaultSearchPaths = this.getRoot().getDisplayWindowClient().getProfileEntry("EPICS Custom Environment", "Default Search Paths");
+            if (Array.isArray(defaultSearchPaths)) {
+                for (const searchPath of defaultSearchPaths) {
+                    console.log("     ", searchPath, path.isAbsolute(searchPath))
+                    if (path.isAbsolute(searchPath)) {
+                        openPath = searchPath;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // fall back to home dir
+        if (openPath === "") {
+            openPath = "$HOME"
+        }
+
+        if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
+            this.getRoot()
+                .getDisplayWindowClient()
+                .getIpcManager()
+                .sendFromRendererProcess("create-utility-display-window", "FileBrowser", { path: openPath });
+        } else {
+            const currentSite = `https://${window.location.host}/`;
+
+            this.getRoot()
+                .getDisplayWindowClient()
+                .getIpcManager()
+                .sendPostRequestCommand("create-utility-display-window", {
+                    utilityType: "FileBrowser",
+                    utilityOptions: { path: path },
+                })
+                .then((response: any) => {
+                    // decode string
+                    return response.json();
+                })
+                .then((data) => {
+                    const ipcServerPort = data["ipcServerPort"];
+                    const displayWindowId = data["displayWindowId"];
+                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
+                });
         }
     };
 
