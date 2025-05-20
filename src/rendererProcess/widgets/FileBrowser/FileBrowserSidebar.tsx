@@ -3,10 +3,13 @@ import { FileBrowser } from "./FileBrowser";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 import {Log} from "../../../mainProcess/log/Log";
+import { SidebarFileBrowserPath } from "../../helperWidgets/SidebarComponents/SidebarFileBrowserPath";
 
 export class FileBrowserSidebar extends BaseWidgetSidebar {
+    _sidebarFileBrowserPath: SidebarFileBrowserPath;
     constructor(textUpdate: FileBrowser) {
         super(textUpdate);
+        this._sidebarFileBrowserPath = new SidebarFileBrowserPath(this);
     }
 
     // ------------------------------------- elements --------------------------------------
@@ -81,6 +84,15 @@ export class FileBrowserSidebar extends BaseWidgetSidebar {
                     {this.getSidebarNumberFormat().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine /> */}
+                {/* ---------------- path -------------------------- */}
+                <this._BlockTitle>
+                    <b>Path</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {/* color */}
+                    {this.getSidebarFileBrowserPath().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
                 <this._BlockTitle>
                     <b>Background</b>
@@ -131,6 +143,10 @@ export class FileBrowserSidebar extends BaseWidgetSidebar {
             </div>
         );
     };
+
+    getSidebarFileBrowserPath = () => {
+        return this._sidebarFileBrowserPath;
+    }
 
     // defined in super class
     // getElement()

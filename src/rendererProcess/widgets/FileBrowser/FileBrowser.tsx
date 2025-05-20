@@ -62,7 +62,7 @@ export class FileBrowser extends BaseWidget {
 
     // _rules: TextUpdateRules;
 
-    _folderPath: string = "";
+    // _folderPath: string = "";
     _folderContent: type_folder_content = [];
     readonly _modal: boolean;
 
@@ -91,7 +91,7 @@ export class FileBrowser extends BaseWidget {
 
         this.setStyle({ ...FileBrowser._defaultTdl.style, ...widgetTdl.style });
         this.setText({ ...FileBrowser._defaultTdl.text, ...widgetTdl.text });
-        this._folderPath = widgetTdl["text"]["path"];
+        // this._folderPath = widgetTdl["text"]["path"];
         this._modal = widgetTdl["text"]["modal"];
 
         // this._rules = new FileBrowser(this, widgetTdl);
@@ -1160,70 +1160,53 @@ export class FileBrowser extends BaseWidget {
     // isInGroup()
     // isSelected()
     // _getElementAreaRawOutlineStyle()
+    
+    // _parseChannelValueElement = (channelValueElement: number | string | boolean | undefined): string => {
 
-    _parseChannelValueElement = (channelValueElement: number | string | boolean | undefined): string => {
 
+    //     if (typeof channelValueElement === "number") {
+    //         const scale = Math.max(this.getAllText()["scale"], 0);
+    //         const format = this.getAllText()["format"];
+    //         if (format === "decimal") {
+    //             return channelValueElement.toFixed(scale);
+    //         } else if (format === "default") {
+    //             const channelName = this.getChannelNames()[0];
+    //             const defaultScale = g_widgets1.getChannelPrecision(channelName);
+    //             if (defaultScale !== undefined) {
+    //                 return channelValueElement.toFixed(defaultScale);
+    //             } else {
+    //                 return channelValueElement.toFixed(scale);
+    //             }
+    //         } else if (format === "exponential") {
+    //             return channelValueElement.toExponential(scale);
+    //         } else if (format === "hexadecimal") {
+    //             return `0x${channelValueElement.toString(16)}`;
+    //         } else if (format === "string") {
+    //             // use a number array to represent a string
+    //             // MacOS ignores the non-displayable characters, but Linux shows rectangle for these characters
+    //             if (channelValueElement >= 32 && channelValueElement <= 126) {
+    //                 return `${String.fromCharCode(channelValueElement)}`;
+    //             } else {
+    //                 return "";
+    //             }
+    //         } else {
+    //             return `${channelValueElement}`;
+    //         }
+    //     } else {
+    //         if (g_widgets1.isEditing() === true) {
+    //             return `${channelValueElement}`;
+    //         } else {
+    //             return `${channelValueElement}`;
+    //         }
 
-        if (typeof channelValueElement === "number") {
-            const scale = Math.max(this.getAllText()["scale"], 0);
-            const format = this.getAllText()["format"];
-            if (format === "decimal") {
-                return channelValueElement.toFixed(scale);
-            } else if (format === "default") {
-                const channelName = this.getChannelNames()[0];
-                const defaultScale = g_widgets1.getChannelPrecision(channelName);
-                if (defaultScale !== undefined) {
-                    return channelValueElement.toFixed(defaultScale);
-                } else {
-                    return channelValueElement.toFixed(scale);
-                }
-            } else if (format === "exponential") {
-                return channelValueElement.toExponential(scale);
-            } else if (format === "hexadecimal") {
-                return `0x${channelValueElement.toString(16)}`;
-            } else if (format === "string") {
-                // use a number array to represent a string
-                // MacOS ignores the non-displayable characters, but Linux shows rectangle for these characters
-                if (channelValueElement >= 32 && channelValueElement <= 126) {
-                    return `${String.fromCharCode(channelValueElement)}`;
-                } else {
-                    return "";
-                }
-            } else {
-                return `${channelValueElement}`;
-            }
-        } else {
-            if (g_widgets1.isEditing() === true) {
-                return `${channelValueElement}`;
-            } else {
-                return `${channelValueElement}`;
-            }
-
-        }
-    };
+    //     }
+    // };
 
     // only for TextUpdate and TextEntry
     // they are suitable to display array data in various formats,
     // other types of widgets, such as Meter, Spinner, Tanks, ProgressBar, Thermometer, ScaledSlider are not for array data
     _getChannelValue = (raw: boolean = false) => {
-
-        const channelValue = this.getChannelValueForMonitorWidget(raw);
-
-        if (typeof channelValue === "number" || typeof channelValue === "string") {
-            return this._parseChannelValueElement(channelValue);
-        } else if (Array.isArray(channelValue)) {
-            const result: any[] = [];
-            for (let element of channelValue) {
-                result.push(this._parseChannelValueElement(element));
-            }
-            if (this.getAllText()["format"] === "string" && typeof channelValue[0] === "number") {
-                return result.join("");
-            } else {
-                return result;
-            }
-        } else {
-            return channelValue;
-        }
+        return 0;
     };
 
     _getChannelSeverity = () => {
@@ -1240,7 +1223,7 @@ export class FileBrowser extends BaseWidget {
     };
 
     getFolderPath = () => {
-        return this._folderPath;
+        return this.getText()["path"];
     }
 
     getFolderContent = () => {
@@ -1249,7 +1232,7 @@ export class FileBrowser extends BaseWidget {
 
     setFolderPath = (newPath: string, updateInput: boolean = true) => {
         this.oldFolderPath = this.getFolderPath();
-        this._folderPath = newPath;
+        this.getText()["path"] = newPath;
         if (updateInput === true) {
             this.setFolderPathInput(newPath);
         }
@@ -1397,4 +1380,9 @@ export class FileBrowser extends BaseWidget {
             this._sidebar = new FileBrowserSidebar(this);
         }
     }
+    jobsAsOperatingModeBegins() {
+        super.jobsAsOperatingModeBegins();
+        this.fetchFolderContent();
+    }
+    
 }
