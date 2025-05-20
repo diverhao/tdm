@@ -1511,18 +1511,40 @@ export class DisplayWindowAgent {
                         title = this.getId();
                     }
                 }
-                console.log("=========================", this.hiddenWindow)
+
+                let modal = false;
+                let frame = true;
+
+                // FileBrowser modal window
+                let parent: undefined | BrowserWindow = undefined;
+                const utilityOptions = options["utilityOptions"];
+                const utilityType = options["utilityType"];
+                if (utilityOptions !== undefined && utilityType === "FileBrowser") {
+                    if (utilityOptions["parentDisplayWindowId"] !== undefined) {
+                        const parentDisplayWindowAgent = this.getWindowAgentsManager().getAgent(utilityOptions["parentDisplayWindowId"]);
+                        if (parentDisplayWindowAgent instanceof DisplayWindowAgent) {
+                            parent = parentDisplayWindowAgent.getBrowserWindow();
+                            modal = true;
+                            frame = false;
+                        }
+                    }
+                }
+                
                 const windowOptions: Electron.BrowserWindowConstructorOptions = {
                     width: 800,
                     height: 500,
                     backgroundColor: `rgb(255, 255, 255)`,
                     title: `${title}`,
                     resizable: true,
-                    frame: true, // with chrome
                     autoHideMenuBar: true,
                     minWidth: 100,
                     minHeight: 100,
+                    // modal window: for file browser
+                    modal: modal,
+                    parent: parent,
+                    frame: true,
                     show: !this.hiddenWindow, // hide preloaded window
+
                     icon: path.join(__dirname, '../../../webpack/resources/webpages/tdm-logo.png'),
                     webPreferences: {
                         nodeIntegration: true, // use node.js

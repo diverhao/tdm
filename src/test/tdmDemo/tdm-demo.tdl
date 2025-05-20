@@ -1644,9 +1644,9 @@
         ],
         "itemNames": [
             "./letterA_img.png",
-            "/Users/1h7/tmp/letterB_img.png",
-            "/Users/1h7/tmp/letterC_img.png",
-            "/Users/1h7/tmp/letterD_img.png"
+            "./letterB_img.png",
+            "./letterC_img.png",
+            "./letterD_img.png"
         ]
     },
     "Label_3947672a-459c-4606-b935-5b0d8ec9e662": {

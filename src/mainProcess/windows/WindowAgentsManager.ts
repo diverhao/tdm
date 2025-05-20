@@ -51,10 +51,7 @@ export class WindowAgentsManager {
     constructor(mainProcess: MainProcess) {
         this._mainProcess = mainProcess;
         this._mainProcessId = mainProcess.getProcessId();
-        setTimeout(() => {
-            console.log("step 1 =====================")
-            this.createPreviewDisplayWindow();
-        }, 3000)
+        // this.createPreviewDisplayWindow();
     }
 
     // ------------------- tmp, will be formal ----------------------------------
@@ -146,7 +143,6 @@ export class WindowAgentsManager {
      *
      */
     createDisplayWindow = async (options: type_options_createDisplayWindow, httpResponse: any = undefined) => {
-        // writeFileSync("/Users/haohao/tdm.log", `createDisplayWindow ===================== ${JSON.stringify(options)}\n`, {flag: "a"});
         let { tdl, mode, editable, tdlFileName, macros, replaceMacros, hide } = options;
         if (this.getMainProcess().getMainProcessMode() === "ssh-client") {
 
@@ -191,8 +187,8 @@ export class WindowAgentsManager {
                 } mode`
             );
             // (0)
-            // preloaded window only for desktop mode
-            if (httpResponse === undefined && options["isPreviewDisplayWindow"] !== true) {
+            // preloaded window only for desktop mode, always create a new display if modal === true
+            if ((httpResponse === undefined && options["isPreviewDisplayWindow"] !== true) && !(options["utilityOptions"] !== undefined && options["utilityOptions"]["modal"] === true)) {
                 // ssh-server does not have preloaded display window
                 if (this.getMainProcess().getMainProcessMode() !== "ssh-server") {
                     let displayWindowAgent = this.replacePreloadedDisplayWindow(options);
@@ -490,7 +486,7 @@ export class WindowAgentsManager {
     };
 
 
-    private createPreviewDisplayWindow = async () => {
+    createPreviewDisplayWindow = async () => {
         // (0)
         if (this.previewDisplayWindowAgent !== undefined) {
             return this.previewDisplayWindowAgent;

@@ -121,7 +121,6 @@ export class MainWindowProfileRunPage {
                         const defaultSearchPaths = this._selectedProfile["EPICS Custom Environment"]["Default Search Paths"]["value"];
                         if (Array.isArray(defaultSearchPaths)) {
                             for (const searchPath of defaultSearchPaths) {
-                                console.log("     ", searchPath, path.isAbsolute(searchPath))
                                 if (path.isAbsolute(searchPath)) {
                                     openPath = searchPath;
                                     break;
@@ -137,7 +136,7 @@ export class MainWindowProfileRunPage {
                 openPath = "$HOME"
             }
 
-            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "FileBrowser", { path: openPath });
+            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "FileBrowser", { path: openPath, modal: false });
         };
 
         const [, forceUpdate] = React.useState({});

@@ -12,6 +12,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Log } from "../../../mainProcess/log/Log";
 import path from "path";
+import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
 
 
 export type type_FileBrowser_tdl = {
@@ -63,14 +64,26 @@ export class FileBrowser extends BaseWidget {
 
     _folderPath: string = "";
     _folderContent: type_folder_content = [];
-
+    readonly _modal: boolean;
 
     forceUpdate = (input: any) => { };
+    forceUpdateButtons = (input: any) => { };
     onlyShowTdmFiles: boolean = true;
     setThumbnail: (input: any) => void = (input) => { };
     setFolderPathInput: (input: any) => void = (input) => { };
     oldFolderPath: string = "";
     filterText: string = "";
+
+    _selectedItem: type_single_file_folder = {
+        name: "", // only the name
+        type: "file",
+        size: -1,
+        timeModified: -1,
+    };
+
+    getSelectedItem = () => { return this._selectedItem };
+
+    setSelectedItem = (newItem: type_single_file_folder) => { this._selectedItem = newItem };
 
     constructor(widgetTdl: type_FileBrowser_tdl) {
         super(widgetTdl);
@@ -79,6 +92,7 @@ export class FileBrowser extends BaseWidget {
         this.setStyle({ ...FileBrowser._defaultTdl.style, ...widgetTdl.style });
         this.setText({ ...FileBrowser._defaultTdl.text, ...widgetTdl.text });
         this._folderPath = widgetTdl["text"]["path"];
+        this._modal = widgetTdl["text"]["modal"];
 
         // this._rules = new FileBrowser(this, widgetTdl);
 
@@ -87,7 +101,6 @@ export class FileBrowser extends BaseWidget {
         window.addEventListener('keydown', (event) => {
             if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
                 event.preventDefault();
-                console.log('Global prevent:', event.key);
             }
         }, { passive: false });
 
@@ -240,7 +253,7 @@ export class FileBrowser extends BaseWidget {
                 ref={elementRef}
                 style={{
                     backgroundColor: "rgba(255, 255, 255, 1)",
-                    overflow: "auto",
+                    // overflow: "scroll",
                     width: "100%",
                     height: "100%",
                     paddingTop: 30,
@@ -248,144 +261,138 @@ export class FileBrowser extends BaseWidget {
                     paddingBottom: 30,
                     paddingRight: 30,
                     display: "inline-flex",
+                    justifyContent: "space-between",
                     flexDirection: "column",
-                }}>
-                <this._ElementHeader></this._ElementHeader>
+                    boxSizing: "border-box",
+                    overflow: "hidden",
+                }}
+            >
                 <div style={{
                     display: "inline-flex",
-                    flexDirection: "row",
+                    flexDirection: "column",
                     width: "100%",
+                    flexShrink: 1,
+                    overflow: "hidden",
+                    maxHeight: "100%",
+                    // overflowY: "scroll",
                 }}>
-                    <this._ElementTable></this._ElementTable>
-                    <this._ElementThumbnail parentElementRef={elementRef}></this._ElementThumbnail>
+                    <this._ElementHeader></this._ElementHeader>
+                    <div style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        width: "100%",
+                        flexShrink: 1,
+                        // overflow: "auto",
+                        maxHeight: "100%",
+                        overflowY: "auto",
+                        overflowX: "hidden",
+                    }}>
+                        <this._ElementTable></this._ElementTable>
+                        <this._ElementThumbnail parentElementRef={elementRef}></this._ElementThumbnail>
+                    </div>
                 </div>
+                <this._ElementWindowOperations></this._ElementWindowOperations>
             </div>
         )
     }
 
     _ElementTable = () => {
-        const [selectedItem, setSelectedItem] = React.useState("");
+        const [, forceUpdate] = React.useState({});
 
         return (
-            <table
-                tabIndex={0} // Make the table focusable
-                style={{
-                    borderCollapse: "collapse",
-                    tableLayout: "fixed",
-                    marginBottom: 50,
-                    outline: "none",
-                }}
-                onKeyDown={(event: React.KeyboardEvent) => {
-                    if (event.key !== "ArrowUp" && event.key !== "ArrowDown" && event.key !== "Enter") {
-                        return;
-                    }
-
-                    let toBeSelectedItemIndex = -1;
-
-                    let selectedItemIndex = -1;
-                    for (let ii = 0; ii < this.getFolderContent().length; ii++) {
-                        const element = this.getFolderContent()[ii];
-                        const name = element["name"];
-                        if (name === selectedItem) {
-                            selectedItemIndex = ii;
-                            break;
+            <div style={{
+                overflow: "auto",
+                // maxHeight: "100%",
+                width: "65%",
+                backgroundColor: "rgba(0, 200, 200, 0)",
+            }}>
+                <table
+                    tabIndex={0} // Make the table focusable
+                    style={{
+                        borderCollapse: "collapse",
+                        tableLayout: "fixed",
+                        marginBottom: 50,
+                        outline: "none",
+                    }}
+                    onKeyDown={(event: React.KeyboardEvent) => {
+                        if (event.key !== "ArrowUp" && event.key !== "ArrowDown" && event.key !== "Enter") {
+                            return;
                         }
-                    }
 
-                    if (event.key === "Enter") {
-                        // same as double click on table row
-                        const element = this.getFolderContent()[selectedItemIndex];
-                        if (element["type"] === "folder") {
-                            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                            const ipcManager = displayWindowClient.getIpcManager();
-                            const displayWindowId = displayWindowClient.getWindowId();
-                            const newFolderPath = path.join(this.getFolderPath(), element["name"]);
-                            this.setFolderPath(newFolderPath);
-                            this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg")
-                            this.fetchFolderContent();
+                        let toBeSelectedItemIndex = -1;
 
-                        } else if (element["type"] = "file") {
-                            const fullTdlFileName = path.join(this.getFolderPath(), element["name"]);
-                            if (fullTdlFileName.endsWith(".tdl") || fullTdlFileName.endsWith(".edl") || fullTdlFileName.endsWith(".db") || fullTdlFileName.endsWith(".tempate")) {
+                        let selectedItemIndex = -1;
+                        for (let ii = 0; ii < this.getFolderContent().length; ii++) {
+                            const element = this.getFolderContent()[ii];
+                            const name = element["name"];
+                            if (name === this.getSelectedItem()["name"]) {
+                                selectedItemIndex = ii;
+                                break;
+                            }
+                        }
+
+                        if (event.key === "Enter") {
+                            // same as double click on table row
+                            const element = this.getFolderContent()[selectedItemIndex];
+                            if (element["type"] === "folder") {
                                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                 const ipcManager = displayWindowClient.getIpcManager();
                                 const displayWindowId = displayWindowClient.getWindowId();
-                                const editableRaw = displayWindowClient.getProfileEntry("EPICS Custom Environment", "Manually Opened TDL Editable");
+                                const newFolderPath = path.join(this.getFolderPath(), element["name"]);
+                                this.setFolderPath(newFolderPath);
+                                this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg")
+                                this.fetchFolderContent();
 
-                                let editable = true;
-                                if (editableRaw === undefined) {
-                                    editable = false;
-                                } else if (typeof editableRaw === "string" && editableRaw.toLowerCase() === "no") {
-                                    editable = false;
-                                } else if (typeof editableRaw === "string" && editableRaw.toLowerCase() === "yes") {
-                                    editable = true;
-                                } else {
-                                    editable = false;
-                                }
-                                const modeRaw = displayWindowClient.getProfileEntry("EPICS Custom Environment", "Manually Opened TDL Mode");
-                                let mode = "operating";
-                                if (modeRaw === undefined) {
-                                    mode = "operating";
-                                } else if (typeof modeRaw === "string" && modeRaw.toLowerCase() === "operating") {
-                                    mode = "operating";
-                                } else if (typeof modeRaw === "string" && modeRaw.toLowerCase() === "editing") {
-                                    mode = "editing"
-                                } else {
-                                    mode = "operating";
-                                }
+                            } else if (element["type"] = "file") {
+                                const fullTdlFileName = path.join(this.getFolderPath(), element["name"]);
+                                if (fullTdlFileName.endsWith(".tdl") || fullTdlFileName.endsWith(".edl") || fullTdlFileName.endsWith(".db") || fullTdlFileName.endsWith(".tempate")) {
+                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                    const ipcManager = displayWindowClient.getIpcManager();
+                                    const displayWindowId = displayWindowClient.getWindowId();
+                                    const editableRaw = displayWindowClient.getProfileEntry("EPICS Custom Environment", "Manually Opened TDL Editable");
 
-                                ipcManager.sendFromRendererProcess("open-tdl-file", {
-                                    tdlFileNames: [fullTdlFileName],
-                                    mode: mode,
-                                    editable: editable,
-                                    macros: [],
-                                    replaceMacros: false,
-                                    currentTdlFolder: this.getFolderPath(),
-                                    openInSameWindow: false,
-                                    windowId: displayWindowId,
-                                })
-                            }
-                        }
-                        return;
-                    } else if (event.key === "ArrowDown") {
-                        for (let ii = selectedItemIndex + 1; ii < this.getFolderContent().length; ii++) {
-                            const nextElement = this.getFolderContent()[ii];
-                            const name = nextElement["name"];
-                            // the element is a tdl file or a folder
-                            if (this.onlyShowTdmFiles === true) {
-                                if (name.endsWith(".tdl") || nextElement["type"] === "folder") {
-                                    if (name.toLowerCase().includes(this.filterText.toLowerCase())) {
-                                        toBeSelectedItemIndex = ii;
-                                        break;
+                                    let editable = true;
+                                    if (editableRaw === undefined) {
+                                        editable = false;
+                                    } else if (typeof editableRaw === "string" && editableRaw.toLowerCase() === "no") {
+                                        editable = false;
+                                    } else if (typeof editableRaw === "string" && editableRaw.toLowerCase() === "yes") {
+                                        editable = true;
+                                    } else {
+                                        editable = false;
                                     }
-                                } else {
-                                    // skip
-                                }
-                            } else {
-                                if (name.toLowerCase().includes(this.filterText.toLowerCase())) {
-                                    toBeSelectedItemIndex = ii;
-                                    break;
+                                    const modeRaw = displayWindowClient.getProfileEntry("EPICS Custom Environment", "Manually Opened TDL Mode");
+                                    let mode = "operating";
+                                    if (modeRaw === undefined) {
+                                        mode = "operating";
+                                    } else if (typeof modeRaw === "string" && modeRaw.toLowerCase() === "operating") {
+                                        mode = "operating";
+                                    } else if (typeof modeRaw === "string" && modeRaw.toLowerCase() === "editing") {
+                                        mode = "editing"
+                                    } else {
+                                        mode = "operating";
+                                    }
+
+                                    ipcManager.sendFromRendererProcess("open-tdl-file", {
+                                        tdlFileNames: [fullTdlFileName],
+                                        mode: mode,
+                                        editable: editable,
+                                        macros: [],
+                                        replaceMacros: false,
+                                        currentTdlFolder: this.getFolderPath(),
+                                        openInSameWindow: false,
+                                        windowId: displayWindowId,
+                                    })
                                 }
                             }
-                        }
-                    } else if (event.key === "ArrowUp") {
-                        if (event.altKey === true || event.metaKey === true) {
-                            // go up one level, same as the go to parent folder
-                            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                            const ipcManager = displayWindowClient.getIpcManager();
-                            const displayWindowId = displayWindowClient.getWindowId();
-                            const newFolderPath = path.dirname(this.getFolderPath());
-                            this.setFolderPath(newFolderPath);
-                            this.fetchFolderContent();
-                            this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
                             return;
-                        } else {
-                            for (let ii = selectedItemIndex - 1; ii >= 0; ii--) {
-                                const prevElement = this.getFolderContent()[ii];
-                                const name = prevElement["name"];
+                        } else if (event.key === "ArrowDown") {
+                            for (let ii = selectedItemIndex + 1; ii < this.getFolderContent().length; ii++) {
+                                const nextElement = this.getFolderContent()[ii];
+                                const name = nextElement["name"];
                                 // the element is a tdl file or a folder
                                 if (this.onlyShowTdmFiles === true) {
-                                    if (name.endsWith(".tdl") || prevElement["type"] === "folder") {
+                                    if (name.endsWith(".tdl") || nextElement["type"] === "folder") {
                                         if (name.toLowerCase().includes(this.filterText.toLowerCase())) {
                                             toBeSelectedItemIndex = ii;
                                             break;
@@ -400,95 +407,129 @@ export class FileBrowser extends BaseWidget {
                                     }
                                 }
                             }
+                        } else if (event.key === "ArrowUp") {
+                            if (event.altKey === true || event.metaKey === true) {
+                                // go up one level, same as the go to parent folder
+                                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                const ipcManager = displayWindowClient.getIpcManager();
+                                const displayWindowId = displayWindowClient.getWindowId();
+                                const newFolderPath = path.dirname(this.getFolderPath());
+                                this.setFolderPath(newFolderPath);
+                                this.fetchFolderContent();
+                                this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
+                                return;
+                            } else {
+                                for (let ii = selectedItemIndex - 1; ii >= 0; ii--) {
+                                    const prevElement = this.getFolderContent()[ii];
+                                    const name = prevElement["name"];
+                                    // the element is a tdl file or a folder
+                                    if (this.onlyShowTdmFiles === true) {
+                                        if (name.endsWith(".tdl") || prevElement["type"] === "folder") {
+                                            if (name.toLowerCase().includes(this.filterText.toLowerCase())) {
+                                                toBeSelectedItemIndex = ii;
+                                                break;
+                                            }
+                                        } else {
+                                            // skip
+                                        }
+                                    } else {
+                                        if (name.toLowerCase().includes(this.filterText.toLowerCase())) {
+                                            toBeSelectedItemIndex = ii;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
                         }
-                    }
 
 
-                    if (toBeSelectedItemIndex > this.getFolderContent().length - 1 || toBeSelectedItemIndex < 0) {
-                        return;
-                    } else {
-                        // same as onMouseDown for table row
-                        const element = this.getFolderContent()[toBeSelectedItemIndex];
-                        setSelectedItem(element["name"]);
-                        if (element["name"].endsWith(".tdl")) {
-                            // wait for the new thumbnail
-                            this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
-                            this.fetchThumbnail(element["name"]);
-                        } else if (element["type"] === "folder") {
-                            this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
-                            // this.setThumbnail("../../../mainProcess/resources/webpages/open-file-symbol.svg");
+                        if (toBeSelectedItemIndex > this.getFolderContent().length - 1 || toBeSelectedItemIndex < 0) {
+                            return;
                         } else {
-                            this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
-                            // this.setThumbnail("../../../mainProcess/resources/webpages/copy-symbol.svg");
+                            // same as onMouseDown for table row
+                            const element = this.getFolderContent()[toBeSelectedItemIndex];
+                            this.setSelectedItem(element);
+                            forceUpdate({});
+                            this.forceUpdateButtons({});
+                            if (element["name"].endsWith(".tdl")) {
+                                // wait for the new thumbnail
+                                this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
+                                this.fetchThumbnail(element["name"]);
+                            } else if (element["type"] === "folder") {
+                                this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
+                                // this.setThumbnail("../../../mainProcess/resources/webpages/open-file-symbol.svg");
+                            } else {
+                                this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
+                                // this.setThumbnail("../../../mainProcess/resources/webpages/copy-symbol.svg");
+                            }
+
                         }
 
-                    }
+                    }}
 
-                }}
+                >
+                    <thead>
+                        <tr style={{ textAlign: "left", backgroundColor: "rgba(220, 220, 220, 1)" }}>
+                            <th style={{
+                                paddingTop: 3,
+                                paddingBottom: 3,
+                                paddingLeft: 4,
+                                paddingRight: 4,
+                                maxWidth: '50em',
+                            }}>
+                                Name
+                            </th>
+                            <th style={{
+                                paddingTop: 3,
+                                paddingBottom: 3,
+                                paddingLeft: 4,
+                                paddingRight: 4,
+                            }}>
+                                Date Modified
+                            </th>
+                            <th style={{
+                                paddingTop: 3,
+                                paddingBottom: 3,
+                                paddingLeft: 4,
+                                paddingRight: 4,
+                            }}>
+                                Size
+                            </th>
+                            <th style={{
+                                paddingTop: 3,
+                                paddingBottom: 3,
+                                paddingLeft: 4,
+                                paddingRight: 4,
+                            }}>
+                                Kind
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {this.getFolderContent().map((element: type_single_file_folder, index: number) => {
 
-            >
-                <thead>
-                    <tr style={{ textAlign: "left", backgroundColor: "rgba(220, 220, 220, 1)" }}>
-                        <th style={{
-                            paddingTop: 3,
-                            paddingBottom: 3,
-                            paddingLeft: 4,
-                            paddingRight: 4,
-                            maxWidth: '50em',
-                        }}>
-                            Name
-                        </th>
-                        <th style={{
-                            paddingTop: 3,
-                            paddingBottom: 3,
-                            paddingLeft: 4,
-                            paddingRight: 4,
-                        }}>
-                            Date Modified
-                        </th>
-                        <th style={{
-                            paddingTop: 3,
-                            paddingBottom: 3,
-                            paddingLeft: 4,
-                            paddingRight: 4,
-                        }}>
-                            Size
-                        </th>
-                        <th style={{
-                            paddingTop: 3,
-                            paddingBottom: 3,
-                            paddingLeft: 4,
-                            paddingRight: 4,
-                        }}>
-                            Kind
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {this.getFolderContent().map((element: type_single_file_folder, index: number) => {
-
-                        const fileType = this.getFileType(element["name"], element["type"]);
-                        if (fileType === "File" && this.onlyShowTdmFiles === true) {
-                            return null;
-                        } else if (!element["name"].toLowerCase().includes(this.filterText.toLowerCase())) {
-                            return null;
-                        } else {
-                            const isSelected = selectedItem === element["name"] ? true : false;
-                            return (
-                                <this._ElementTableRow
-                                    element={element}
-                                    key={element["name"]}
-                                    isSelected={isSelected}
-                                    selectedItem={selectedItem}
-                                    setSelectedItem={setSelectedItem}
-                                    index={index}
-                                >
-                                </this._ElementTableRow>
-                            )
-                        }
-                    })}
-                </tbody>
-            </table>
+                            const fileType = this.getFileType(element["name"], element["type"]);
+                            if (fileType === "File" && this.onlyShowTdmFiles === true) {
+                                return null;
+                            } else if (!element["name"].toLowerCase().includes(this.filterText.toLowerCase())) {
+                                return null;
+                            } else {
+                                const isSelected = this.getSelectedItem()["name"] === element["name"] ? true : false;
+                                return (
+                                    <this._ElementTableRow
+                                        element={element}
+                                        key={element["name"]}
+                                        isSelected={isSelected}
+                                        forceUpdateTable={forceUpdate}
+                                        index={index}
+                                    >
+                                    </this._ElementTableRow>
+                                )
+                            }
+                        })}
+                    </tbody>
+                </table>
+            </div>
         )
     }
 
@@ -528,6 +569,7 @@ export class FileBrowser extends BaseWidget {
                 justifyContent: "center",
                 alignItems: "flex-start",
                 width: "100%",
+                flexShrink: 0,
             }}>
                 <div style={{
                     display: "inline-flex",
@@ -557,6 +599,57 @@ export class FileBrowser extends BaseWidget {
                 </div>
             </div>
         )
+    }
+
+    _ElementWindowOperations = () => {
+        const [, forceUpdate] = React.useState({});
+        this.forceUpdateButtons = forceUpdate;
+
+        if (this.getModal() === true) {
+            return (
+                <div style={{
+                    bottom: 10,
+                    maxHeight: "100%",
+                    flexShrink: 0,
+                    boxSizing: "border-box",
+                    overflow: "auto",
+                    // marginBottom: 50,
+                }}>
+                    {/* close the modal window */}
+                    <ElementRectangleButton
+                        handleMouseDown={(event: any) => {
+                            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                            const ipcManager = displayWindowClient.getIpcManager();
+                            const displayWindowId = displayWindowClient.getWindowId();
+                            ipcManager.sendFromRendererProcess("close-window", displayWindowId);
+                        }}
+                    >
+                        Cancel
+                    </ElementRectangleButton>
+
+                    &nbsp;&nbsp;
+
+                    {/* open button */}
+                    <ElementRectangleButton
+                        defaultBackgroundColor={this.getSelectedItem()["name"] === "" ? "rgba(180, 180, 180, 1)" : "rgba(65, 115, 183, 1)"}
+                        highlightBackgroundColor={this.getSelectedItem()["name"] === "" ? "rgba(180, 180, 180, 1)" : "rgba(65, 115, 183, 0.8)"}
+                        handleMouseDown={(event: any) => {
+                            const selectedItem = this.getSelectedItem();
+                            if (selectedItem["name"] !== "") { // one item is selected
+                                // open file or folder
+                                this.handleDoubleClickOnItem(selectedItem);
+                            } else {
+                                // do nothing
+                            }
+                        }}
+                    >
+                        Open
+                    </ElementRectangleButton>
+                </div>
+            )
+        } else {
+            return null;
+        }
     }
 
     _ElementFolderPath = () => {
@@ -630,6 +723,13 @@ export class FileBrowser extends BaseWidget {
                     const displayWindowId = displayWindowClient.getWindowId();
                     const newFolderPath = path.dirname(this.getFolderPath());
                     this.setFolderPath(newFolderPath);
+                    this.setSelectedItem({
+                        "name": "",
+                        "size": -1,
+                        "timeModified": -1,
+                        "type": "file",
+                    })
+                    this.forceUpdateButtons({});
                     this.fetchFolderContent();
                     this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
                 }}
@@ -686,7 +786,7 @@ export class FileBrowser extends BaseWidget {
         )
     }
 
-    _ElementTableRow = ({ element, index, isSelected, setSelectedItem, selectedItem }: { element: type_single_file_folder, index: number, isSelected: boolean, setSelectedItem: any, selectedItem: string }) => {
+    _ElementTableRow = ({ element, index, isSelected, forceUpdateTable }: { element: type_single_file_folder, index: number, isSelected: boolean, forceUpdateTable: any }) => {
         const elementRef = React.useRef<any>(null);
 
         return (
@@ -709,8 +809,10 @@ export class FileBrowser extends BaseWidget {
                 }}
 
                 onMouseDown={() => {
-                    if (element["name"] !== selectedItem) {
-                        setSelectedItem(element["name"]);
+                    if (element["name"] !== this.getSelectedItem()["name"]) {
+                        this.setSelectedItem(element);
+                        this.forceUpdateButtons({});
+                        forceUpdateTable({});
                         if (element["name"].endsWith(".tdl")) {
                             // wait for the new thumbnail
                             this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
@@ -726,57 +828,7 @@ export class FileBrowser extends BaseWidget {
                 }}
 
                 onDoubleClick={() => {
-                    if (element["type"] === "folder") {
-                        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                        const ipcManager = displayWindowClient.getIpcManager();
-                        const displayWindowId = displayWindowClient.getWindowId();
-                        const newFolderPath = path.join(this.getFolderPath(), element["name"]);
-                        this.setFolderPath(newFolderPath);
-                        this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg")
-                        this.fetchFolderContent();
-
-                    } else if (element["type"] = "file") {
-                        const fullTdlFileName = path.join(this.getFolderPath(), element["name"]);
-                        if (fullTdlFileName.endsWith(".tdl") || fullTdlFileName.endsWith(".edl") || fullTdlFileName.endsWith(".db") || fullTdlFileName.endsWith(".tempate")) {
-                            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                            const ipcManager = displayWindowClient.getIpcManager();
-                            const displayWindowId = displayWindowClient.getWindowId();
-                            const editableRaw = displayWindowClient.getProfileEntry("EPICS Custom Environment", "Manually Opened TDL Editable");
-
-                            let editable = true;
-                            if (editableRaw === undefined) {
-                                editable = false;
-                            } else if (typeof editableRaw === "string" && editableRaw.toLowerCase() === "no") {
-                                editable = false;
-                            } else if (typeof editableRaw === "string" && editableRaw.toLowerCase() === "yes") {
-                                editable = true;
-                            } else {
-                                editable = false;
-                            }
-                            const modeRaw = displayWindowClient.getProfileEntry("EPICS Custom Environment", "Manually Opened TDL Mode");
-                            let mode = "operating";
-                            if (modeRaw === undefined) {
-                                mode = "operating";
-                            } else if (typeof modeRaw === "string" && modeRaw.toLowerCase() === "operating") {
-                                mode = "operating";
-                            } else if (typeof modeRaw === "string" && modeRaw.toLowerCase() === "editing") {
-                                mode = "editing"
-                            } else {
-                                mode = "operating";
-                            }
-
-                            ipcManager.sendFromRendererProcess("open-tdl-file", {
-                                tdlFileNames: [fullTdlFileName],
-                                mode: mode,
-                                editable: editable,
-                                macros: [],
-                                replaceMacros: false,
-                                currentTdlFolder: this.getFolderPath(),
-                                openInSameWindow: false,
-                                windowId: displayWindowId,
-                            })
-                        }
-                    }
+                    this.handleDoubleClickOnItem(element);
                 }}
             >
                 <td style={{
@@ -877,6 +929,65 @@ export class FileBrowser extends BaseWidget {
         )
     }
 
+    handleDoubleClickOnItem = (element: type_single_file_folder) => {
+        if (element["type"] === "folder") {
+            const newFolderPath = path.join(this.getFolderPath(), element["name"]);
+            this.setFolderPath(newFolderPath);
+            this.setSelectedItem({ name: "", timeModified: -1, size: -1, type: "file" });
+            this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg")
+            this.fetchFolderContent();
+        } else if (element["type"] = "file") {
+            const fullTdlFileName = path.join(this.getFolderPath(), element["name"]);
+            if (fullTdlFileName.endsWith(".tdl") || fullTdlFileName.endsWith(".edl") || fullTdlFileName.endsWith(".db") || fullTdlFileName.endsWith(".tempate")) {
+                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                const ipcManager = displayWindowClient.getIpcManager();
+                const displayWindowId = displayWindowClient.getWindowId();
+                const editableRaw = displayWindowClient.getProfileEntry("EPICS Custom Environment", "Manually Opened TDL Editable");
+
+                let editable = true;
+                if (editableRaw === undefined) {
+                    editable = false;
+                } else if (typeof editableRaw === "string" && editableRaw.toLowerCase() === "no") {
+                    editable = false;
+                } else if (typeof editableRaw === "string" && editableRaw.toLowerCase() === "yes") {
+                    editable = true;
+                } else {
+                    editable = false;
+                }
+                const modeRaw = displayWindowClient.getProfileEntry("EPICS Custom Environment", "Manually Opened TDL Mode");
+                let mode = "operating";
+                if (modeRaw === undefined) {
+                    mode = "operating";
+                } else if (typeof modeRaw === "string" && modeRaw.toLowerCase() === "operating") {
+                    mode = "operating";
+                } else if (typeof modeRaw === "string" && modeRaw.toLowerCase() === "editing") {
+                    mode = "editing"
+                } else {
+                    mode = "operating";
+                }
+
+                ipcManager.sendFromRendererProcess("open-tdl-file", {
+                    tdlFileNames: [fullTdlFileName],
+                    mode: mode,
+                    editable: editable,
+                    macros: [],
+                    replaceMacros: false,
+                    currentTdlFolder: this.getFolderPath(),
+                    openInSameWindow: false,
+                    windowId: displayWindowId,
+                })
+
+                // close the modal window
+                if (this.getModal() === true) {
+                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                    const ipcManager = displayWindowClient.getIpcManager();
+                    const displayWindowId = displayWindowClient.getWindowId();
+                    ipcManager.sendFromRendererProcess("close-window", displayWindowId);
+                }
+            }
+        }
+    }
+
     _ElementOnlyShowTdmFiles = () => {
 
         const [checked, setChecked] = React.useState(this.onlyShowTdmFiles);
@@ -911,20 +1022,6 @@ export class FileBrowser extends BaseWidget {
         this.setThumbnail = setThumbnail;
         const elementRef = React.useRef<any>(null);
 
-        const calcImagePosition = () => {
-            if (elementRef.current !== null && parentElementRef.curent !== null) {
-                const positionData = elementRef.current.getBoundingClientRect();
-                console.log(positionData)
-                const width = positionData["width"];
-                const left = positionData["left"];
-                const right = positionData["right"];
-                const top = positionData["top"] + parentElementRef.current.scrollTop;// + window.scrollY;
-                return [left + 30, top];
-            } else {
-                return [30, 30];
-            }
-        }
-
         return (
             <div
                 ref={elementRef}
@@ -932,17 +1029,17 @@ export class FileBrowser extends BaseWidget {
                     display: "inline-flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    width: "100%",
-                    flexGrow: 1,
+                    width: "35%",
                     overflow: "hidden",
+                    backgroundColor: "rgba(200, 200, 0, 0)",
                 }}>
                 <img src={thumbnail} style={{
-                    maxWidth: 400,
-                    maxHeight: 400,
+                    width: "atuo",
+                    height: "auto",
+                    maxWidth: "95%",
+                    maxHeight: "95%",
+                    objectFit: "contain",
                     borderRadius: 5,
-                    position: "fixed",
-                    left: calcImagePosition()[0],
-                    top: calcImagePosition()[1],
                     border: thumbnail === "../../../mainProcess/resources/webpages/blank.svg" ? "none" : "solid 1px rgba(150, 150, 150, 1)",
                 }}
                 >
@@ -1162,6 +1259,10 @@ export class FileBrowser extends BaseWidget {
         this._folderContent = newContent;
     }
 
+    getModal = () => {
+        return this._modal;
+    }
+
     // ----------------------- styles -----------------------
 
     // defined in super class
@@ -1224,6 +1325,7 @@ export class FileBrowser extends BaseWidget {
             alarmLevel: "MINOR",
             path: "",
             permission: "WRITE", // READ, WRITE
+            modal: false,
         },
         channelNames: [],
         groupNames: [],
@@ -1247,6 +1349,7 @@ export class FileBrowser extends BaseWidget {
         result["style"]["left"] = 0;
         result["style"]["top"] = 0;
         result["text"]["path"] = utilityOptions['path'];
+        result["text"]["modal"] = utilityOptions['modal'];
 
         // result.recordTypesFieldNames = utilityOptions.recordTypesFieldNames as Record<string, string[]>;
         // result.recordTypesMenus = utilityOptions.recordTypesMenus as Record<string, string[]>;

@@ -1174,6 +1174,8 @@ export class IpcManagerOnMainProcess {
                 // the main window has received all the necessary information to switch to run page
                 await mainWindowAgent.creationPromise2;
                 mainWindowAgent.sendFromMainProcess("after-profile-selected", selectedProfileName);
+                // create the preview window for file browser
+                windowAgentsManager.createPreviewDisplayWindow();
             }
         }
     }
@@ -2155,6 +2157,7 @@ export class IpcManagerOnMainProcess {
             // utilityOptions
             // { serverAddress: "http://localhost:4000" }
         } else if (utilityType === "FileBrowser") {
+            // type of utilityOptions: {path: string, parentDisplayWindowId: string, modal: boolean}
             if (utilityOptions["path"] === "$HOME") {
                 utilityOptions["path"] = os.homedir();
             }

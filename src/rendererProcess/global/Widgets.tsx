@@ -2419,13 +2419,14 @@ export class Widgets {
         }
     };
 
-    openFileBrowserWindow = (inputPath: string) => {
+    openFileBrowserWindow = (data: [string, boolean]) => {
         // priority:
         // the valid input path variable which should be an absolute path
         // this tdl file's path
         // the first absolute default TDL file path
         // the first absolute default search path
         // HOME folder
+        const [inputPath, modal] = data;
         let openPath = "";
 
         // try input path
@@ -2483,7 +2484,8 @@ export class Widgets {
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
-                .sendFromRendererProcess("create-utility-display-window", "FileBrowser", { path: openPath });
+                .sendFromRendererProcess("create-utility-display-window", "FileBrowser", 
+                    { path: openPath, parentDisplayWindowId: this.getRoot().getDisplayWindowClient().getWindowId(), modal: modal });
         } else {
             const currentSite = `https://${window.location.host}/`;
 

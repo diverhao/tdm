@@ -190,6 +190,12 @@ export class ContextMenuDesktop {
             },
         },
         {
+            label: "Open Display with File Browser",
+            click: () => {
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
+            },
+        },
+        {
             label: "Create New Display",
             accelerator: "CmdOrCtrl+n",
             click: () => {
@@ -912,6 +918,12 @@ export class ContextMenuDesktop {
             // },
         },
         {
+            label: "Open Display with File Browser",
+            click: () => {
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
+            },
+        },
+        {
             label: "Create New Display",
             accelerator: "CmdOrCtrl+n",
             click: () => {
@@ -949,12 +961,6 @@ export class ContextMenuDesktop {
             label: "PV Monitor",
             click: () => {
                 this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "pv-monitor", [""]);
-            },
-        },
-        {
-            label: "File Browser",
-            click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", "");
             },
         },
         {
@@ -1199,6 +1205,12 @@ export class ContextMenuDesktop {
             // },
         },
         {
+            label: "Open Display with File Browser",
+            click: () => {
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
+            },
+        },
+        {
             label: "Create New Display",
             accelerator: "CmdOrCtrl+n",
             click: () => {
@@ -1236,12 +1248,6 @@ export class ContextMenuDesktop {
             label: "PV Monitor",
             click: () => {
                 this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "pv-monitor", [""]);
-            },
-        },
-        {
-            label: "File Browser",
-            click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", "");
             },
         },
         {

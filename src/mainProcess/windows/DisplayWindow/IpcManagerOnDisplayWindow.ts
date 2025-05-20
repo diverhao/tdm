@@ -31,6 +31,7 @@ import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/Chan
 import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
 import { Table } from "../../../rendererProcess/widgets/Table/Table";
 import { FileBrowser, type_folder_content } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
+import path from "path";
 
 
 // var recorder;
@@ -194,6 +195,7 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("save-text-file-status", this.handleSaveTextFileStatus)
         this.ipcRenderer.on("new-log", this.handleNewLog)
         this.ipcRenderer.on("file-converter-command", this.handleFileConverterCommand);
+        // file browser
         this.ipcRenderer.on("fetch-folder-content", this.handleFetchFolderContent);
         this.ipcRenderer.on("fetch-thumbnail", this.handleFetchThumbnail)
     };
@@ -495,7 +497,7 @@ export class IpcManagerOnDisplayWindow {
         } else if (command === "pv-monitor") {
             g_widgets1.openPvMonitorWindow(subcommand as string[]);
         } else if (command === "file-browser") {
-            g_widgets1.openFileBrowserWindow(subcommand as string);
+            g_widgets1.openFileBrowserWindow(subcommand as [string, boolean]);
         } else if (command === "data-viewer") {
             g_widgets1.openDataViewerWindow(subcommand as string[]);
         } else if (command === "terminal") {
@@ -1018,7 +1020,6 @@ export class IpcManagerOnDisplayWindow {
                 // failed
                 widget.handleFetchFolderContentFailed();
             }
-            
         }
     }
 
@@ -1031,7 +1032,7 @@ export class IpcManagerOnDisplayWindow {
         if (widget instanceof FileBrowser) {
             widget.updateThumbnail(message);
         }
-    }   
+    }
 
     // handleErrorMessage = (event: any, info: {
     //     messageType: "error" | "warnng" | "info",
@@ -1106,8 +1107,8 @@ export class IpcManagerOnDisplayWindow {
                     // );
                 };
             }
-
         }
+
         this.getDisplayWindowClient().getPrompt().createElement("dialog-message-box", info);
     };
 
