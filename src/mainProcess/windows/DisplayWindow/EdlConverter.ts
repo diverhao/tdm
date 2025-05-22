@@ -1011,7 +1011,7 @@ export class EdlConverter {
         } else {
             if (this.isRuledColor(indexStr)) {
                 const defaultColorStr = this.getDefaultColorStrOfRuledColor(indexStr);
-                if (controlPv !== undefined && tdlRulePropertyName !== undefined && tdl !== undefined) {
+                if (controlPv !== undefined && controlPv !== "" && tdlRulePropertyName !== undefined && tdl !== undefined) {
                     // rules
                     const dynamicColorRules = this.ruledColors[indexStr];
                     for (let ii = 0; ii < Object.keys(dynamicColorRules).length; ii++) {
@@ -2189,6 +2189,7 @@ export class EdlConverter {
     };
 
     static convertEdlPrecision = (propertyValue: string) => {
+        console.log("precision ===================", propertyValue);
         const result = parseInt(propertyValue);
         if (!isNaN(result)) {
             if (result < 0) {
@@ -2298,8 +2299,10 @@ export class EdlConverter {
         }
 
         const itemIsWebpage: boolean[] = [];
-        for (let ii = 0; ii < tdlFileNames.length; ii++) {
-            itemMacros.push([]);
+        for (let ii = 0; ii < Math.max(tdlFileNames.length, itemNames.length, itemMacros.length); ii++) {
+            if (itemMacros[ii] === undefined || itemMacros[ii] === null) {
+                itemMacros[ii] = [];
+            }
             itemIsWebpage.push(false);
         }
         return {

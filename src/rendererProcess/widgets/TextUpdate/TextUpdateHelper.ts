@@ -300,6 +300,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
             "limitsFromDb", // ! not in tdm
             "fieldLen", // ! what is it?
             "nullPv", // ! not in tdm, a PV name
+            "precision", // not in tdm
             // ! when it is set, the text color is taken control by it when the "controlPv" is in NO_ALARM
             // ! severity. If the below "nullCondition" is satisfied, the text color becomes the
             // ! "nullColor", if not satisfied, the text color is the regular text color.
@@ -404,6 +405,8 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                     alarmPropertyNames.push(propertyName);
                 } else if (propertyName === "format") {
                     tdl["text"]["format"] = EdlConverter.convertEdlDisplayMode(propertyValue);
+                } else if (propertyName === "precision") {
+                    tdl["text"]["scale"] = EdlConverter.convertEdlPrecision(propertyValue);
                 } else if (propertyName === "useAlarmBorder") {
                     // in "Text Control", the useAlarmBorder changes the border, not outline
                     if (type === "Text Control") {
@@ -416,6 +419,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                 }
             }
         }
+
 
         // all alarm-sensitive rules override others
         for (let alarmPropertyName of alarmPropertyNames) {
@@ -491,7 +495,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                 id: uuidv4(),
             });
         }
-        console.log("edl", edl)
+
         if (edl["controlPv"] !== undefined) {
             tdl["rules"].push({
                 boolExpression: EdlConverter.generatePvUndefinedExpression(edl["controlPv"]),

@@ -164,7 +164,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
 							edl["symbols"],
 							convertEdlSufffix
 						);
-						tdl["tdlFileNames"] = tdlFileNames;
+                        tdl["tdlFileNames"] = tdlFileNames;
 						tdl["itemNames"] = itemNames;
 						tdl["itemMacros"] = itemMacros;
 						tdl["itemIsWebpage"] = itemIsWebpage;

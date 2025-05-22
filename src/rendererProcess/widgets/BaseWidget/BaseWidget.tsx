@@ -1381,12 +1381,15 @@ export abstract class BaseWidget {
 
         // special case: .SEVR channel, append it base channel name. In case the server does not reply
         // the GET request for .SEVR, we can use the "severity" field value of dbr data in the base channel
-        for (const channelNameLevel1 of resultLevel1) {
-            if (channelNameLevel1.endsWith(".SEVR")) {
-                const rawChannelName = channelNameLevel1.replaceAll(".SEVR", "");
-                this.getChannelNamesLevel0().push(rawChannelName);
-            }
-        }
+        // for (const channelNameLevel1 of resultLevel1) {
+        // for (let ii = 0; ii < resultLevel1.length; ii++) {
+        //     const channelNameLevel1 = resultLevel1[ii];
+        //     if (channelNameLevel1.endsWith(".SEVR")) {
+        //         const rawChannelName = channelNameLevel1.replaceAll(".SEVR", "");
+        //         this.getChannelNamesLevel0().push(rawChannelName);
+        //         resultLevel1[ii] = rawChannelName;
+        //     }
+        // }
 
         if (removeDuplicated && !isCalcChanenl) {
             const resultSet = new Set(resultLevel1);
@@ -1582,6 +1585,52 @@ export abstract class BaseWidget {
             return this.getChannelNamesLevel0()[0];
         } else {
             return value;
+        }
+    };
+
+
+    _parseChannelValueElement = (channelValueElement: number | string | boolean | undefined): string => {
+
+        if (typeof channelValueElement === "number") {
+            let scale = this.getAllText()["scale"];
+            if (typeof scale !== "number") {
+                scale = 0;
+            } else {
+                scale = Math.max(0, scale);
+            }
+            const format = this.getAllText()["format"];
+            if (format === "decimal") {
+                return channelValueElement.toFixed(scale);
+            } else if (format === "default") {
+                // const channelName = this.getChannelNames()[0];
+                // const defaultScale = g_widgets1.getChannelPrecision(channelName);
+                // if (defaultScale !== undefined) {
+                //     return channelValueElement.toFixed(defaultScale);
+                // } else {
+                return channelValueElement.toFixed(scale);
+                // }
+            } else if (format === "exponential") {
+                return channelValueElement.toExponential(scale);
+            } else if (format === "hexadecimal") {
+                return `0x${channelValueElement.toString(16)}`;
+            } else if (format === "string") {
+                // use a number array to represent a string
+                // MacOS ignores the non-displayable characters, but Linux shows rectangle for these characters
+                if (channelValueElement >= 32 && channelValueElement <= 126) {
+                    return `${String.fromCharCode(channelValueElement)}`;
+                } else {
+                    return "";
+                }
+            } else {
+                return `${channelValueElement}`;
+            }
+        } else {
+            if (g_widgets1.isEditing() === true) {
+                return `${channelValueElement}`;
+            } else {
+                return `${channelValueElement}`;
+            }
+
         }
     };
 
@@ -1881,7 +1930,7 @@ export abstract class BaseWidget {
     /**
      * Put channel value
      */
-    putChannelValue = (channelName: string, value: string | number | string[] | number[] | undefined, text? : Record<string, any>) => {
+    putChannelValue = (channelName: string, value: string | number | string[] | number[] | undefined, text?: Record<string, any>) => {
         if (g_widgets1.isEditing()) {
             return;
         }
@@ -1901,7 +1950,7 @@ export abstract class BaseWidget {
         if (text === undefined) {
             text = this.getAllText();
         }
-        
+
 
         try {
             const tcaChannel = g_widgets1.getTcaChannel(channelName);
@@ -1994,7 +2043,7 @@ export abstract class BaseWidget {
                 }
                 return;
             }
-            console.log("put channel value ===========", tcaChannel.getChannelName())
+            Log.info("put channel value ===========", tcaChannel.getChannelName())
             tcaChannel.put(displayWindowId, { value: value }, 1);
         } catch (e) {
             Log.error(e);

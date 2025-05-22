@@ -109,10 +109,9 @@ export class TankHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_Tank_tdl => {
-        console.log("\n------------", `Parsing Bar`, "------------------\n");
         const tdl = this.generateDefaultTdl("Tank") as type_Tank_tdl;
         // all properties for this widget
-
+        console.log("edl ===", edl)
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
             "major", // not in tdm
@@ -186,7 +185,7 @@ export class TankHelper extends BaseWidgetHelper {
                     tdl["text"]["fillColorMinor"] = tdl["text"]["fillColor"];
                     tdl["text"]["fillColorMajor"] = tdl["text"]["fillColor"];
                 } else if (propertyName === "indicatorAlarm") {
-                    alarmPropertyNames.push(propertyName);
+                    tdl["text"]["alarmFill"] = true;
                 } else if (propertyName === "fgColor") {
                     tdl["style"]["color"] = EdlConverter.convertEdlColor(propertyValue);
                     tdl["style"]["borderColor"] = EdlConverter.convertEdlColor(propertyValue);

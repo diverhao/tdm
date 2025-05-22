@@ -2735,7 +2735,10 @@ export class IpcManagerOnMainProcess {
         tdlFileName: string
     }) => {
         // open this tdl file in preview display window
-
+        if (this.getMainProcess().getMainProcessMode() === "web") {
+            return;
+        }
+        
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {

@@ -494,3 +494,15 @@ export const serializeMacros = (macros: [string, string][]) => {
     }
 
 }
+
+
+/**
+ * Convert a floating point number to most human-readable string
+ * 
+ * 1.2345678 --> 1.23
+ * 12345678  --> 1.2e7
+ * 
+ */
+export const convertNumberToStringAuto = () => {
+
+}

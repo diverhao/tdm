@@ -399,40 +399,6 @@ export class TextEntry extends BaseWidget {
     // 	return this._getFirstChannelValue();
     // };
 
-    _parseChannelValueElement = (channelValueElement: number | string | boolean | undefined) => {
-        // const channelValue = this.getChannelValueForMonitorWidget(raw);
-
-        if (typeof channelValueElement === "number") {
-            const scale = Math.max(this.getAllText()["scale"], 0);
-            const format = this.getAllText()["format"];
-            if (format === "decimal") {
-                return channelValueElement.toFixed(scale);
-            } else if (format === "default") {
-                const channelName = this.getChannelNames()[0];
-                const defaultScale = g_widgets1.getChannelPrecision(channelName);
-                if (defaultScale !== undefined) {
-                    return channelValueElement.toFixed(defaultScale);
-                } else {
-                    return channelValueElement.toFixed(scale);
-                }
-            } else if (format === "exponential") {
-                return channelValueElement.toExponential(scale);
-            } else if (format === "hexadecimal") {
-                return `0x${channelValueElement.toString(16)}`;
-            } else if (format === "string") {
-                // MacOS ignores the non-displayable characters, but Linux shows rectangle for these characters
-                if (channelValueElement >= 32 && channelValueElement <= 126) {
-                    return `${String.fromCharCode(channelValueElement)}`;
-                } else {
-                    return "";
-                }
-            } else {
-                return channelValueElement;
-            }
-        } else {
-            return `${channelValueElement}`;
-        }
-    };
 
     // only for TextUpdate and TextEntry
     // they are suitable to display array data in various formats,

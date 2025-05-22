@@ -1692,7 +1692,7 @@ export class Widgets {
     connectAllTcaChannels = (reconnect: boolean = false) => {
         // there should be no TcaChannel
         if (Object.keys(this.getTcaChannels()).length > 0 && reconnect === false) {
-            Log.info("There should be no channel connection on this window for connectAllTcaChannels().")
+            Log.debug("There should be no channel connection on this window when we run connectAllTcaChannels().")
             return;
         }
         // (1)
@@ -1753,6 +1753,7 @@ export class Widgets {
         if (!TcaChannel.validateChannelName(channelNameLevel4)) {
             return tcaChannel;
         }
+        // the .SEVR channel is created as its original channel, some old IOC does not have .SEVR field
         try {
             tcaChannel = this.getTcaChannel(channelNameLevel4);
             // if this local channel name contains meta data, replace it
@@ -1872,15 +1873,11 @@ export class Widgets {
             return channelName;
         }
 
-        const isSevrChannel = channelName.endsWith(".SEVR");
-
         try {
             const tcaChannel = this.getTcaChannel(channelName);
             let value = tcaChannel.getValue(raw);
-            if (isSevrChannel === true && value === undefined) {
-                // try the raw channel's dbrData["severity"]
-                const rawTcaChannel = this.getTcaChannel(channelName.replaceAll(".SEVR", ""));
-                value = rawTcaChannel.getDbrData()["severity"];
+            if (tcaChannel.getFieldType() === "SEVR") {
+                value = tcaChannel.getDbrData()["severity"];
             }
             return value;
         } catch (e) {
@@ -1906,20 +1903,10 @@ export class Widgets {
         try {
             const tcaChannel = this.getTcaChannel(channelName);
             let severity = tcaChannel.getSeverity();
-
-            // in some cases, the IOC does not reply for GET request of xxx.SEVR
-            // So, the channel xxx.SEVR has undefined value and undefined severity
-            // in this case, try to get the raw channel's severity
-            if (severity === ChannelSeverity.INVALID && channelName.endsWith(".SEVR")) {
-                channelName = channelName.replaceAll(".SEVR", "");
-                severity = this.getChannelSeverity(channelName);
-            }
-
-
             return severity;
         } catch (e) {
             // Log.error(e);
-            return ChannelSeverity.INVALID;
+            return ChannelSeverity.NOT_CONNECTED;
         }
     };
 
@@ -2466,7 +2453,7 @@ export class Widgets {
             const defaultSearchPaths = this.getRoot().getDisplayWindowClient().getProfileEntry("EPICS Custom Environment", "Default Search Paths");
             if (Array.isArray(defaultSearchPaths)) {
                 for (const searchPath of defaultSearchPaths) {
-                    console.log("     ", searchPath, path.isAbsolute(searchPath))
+                    // console.log("     ", searchPath, path.isAbsolute(searchPath))
                     if (path.isAbsolute(searchPath)) {
                         openPath = searchPath;
                         break;
@@ -2484,7 +2471,7 @@ export class Widgets {
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
-                .sendFromRendererProcess("create-utility-display-window", "FileBrowser", 
+                .sendFromRendererProcess("create-utility-display-window", "FileBrowser",
                     { path: openPath, parentDisplayWindowId: this.getRoot().getDisplayWindowClient().getWindowId(), modal: modal });
         } else {
             const currentSite = `https://${window.location.host}/`;
@@ -2494,7 +2481,7 @@ export class Widgets {
                 .getIpcManager()
                 .sendPostRequestCommand("create-utility-display-window", {
                     utilityType: "FileBrowser",
-                    utilityOptions: { path: path },
+                    utilityOptions: { path: openPath, parentDisplayWindowId: this.getRoot().getDisplayWindowClient().getWindowId(), modal: modal },
                 })
                 .then((response: any) => {
                     // decode string

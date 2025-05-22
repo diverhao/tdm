@@ -635,6 +635,13 @@ export class ContextMenu {
             },
         },
         {
+            label: "Open Display on Server",
+            click: () => {
+                // this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "file-browser", ["", false]);
+            },
+        },
+        {
             label: "Create New Display",
             accelerator: "CmdOrCtrl+n",
             click: () => {
@@ -1304,7 +1311,6 @@ export class ContextMenu {
                 this.getDisplayWindowClient().openTdlFileInWebMode();
 
             },
-
             // click: () => {
             //     // this.getDisplayWindowAgent().getWindowAgentsManager().handleOpenTdlFiles(undefined, undefined, "operating", true, [], false);
             //     this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles(undefined, {
@@ -1318,6 +1324,14 @@ export class ContextMenu {
             //     // .handleOpenTdlFiles(undefined, undefined, "operating", true, [], false);
             // },
         },
+        {
+            label: "Open Display on Server",
+            click: () => {
+                // this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "file-browser", ["", false]);
+            },
+        },
+
         {
             label: "Create New Display",
             accelerator: "CmdOrCtrl+n",
@@ -1567,6 +1581,13 @@ export class ContextMenu {
             //     });
             //     // .handleOpenTdlFiles(undefined, undefined, "operating", true, [], false);
             // },
+        },
+        {
+            label: "Open Display on Server",
+            click: () => {
+                // this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "file-browser", ["", false]);
+            },
         },
         {
             label: "Create New Display",

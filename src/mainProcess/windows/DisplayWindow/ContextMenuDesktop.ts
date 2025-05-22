@@ -969,12 +969,12 @@ export class ContextMenuDesktop {
                 this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "data-viewer", []);
             },
         },
-        {
-            label: "Terminal",
-            click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "terminal");
-            },
-        },
+        // {
+        //     label: "Terminal",
+        //     click: () => {
+        //         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "terminal");
+        //     },
+        // },
         {
             label: "Calculator",
             click: () => {
@@ -1256,12 +1256,12 @@ export class ContextMenuDesktop {
                 this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "data-viewer", this._widgetKeys);
             },
         },
-        {
-            label: "Terminal",
-            click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "terminal");
-            },
-        },
+        // {
+        //     label: "Terminal",
+        //     click: () => {
+        //         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "terminal");
+        //     },
+        // },
         {
             label: "Calculator",
             click: () => {

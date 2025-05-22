@@ -346,7 +346,7 @@ export class IpcManagerOnDisplayWindow {
 
     // ----------------------- event handlers -----------------------------
 
-    handleContextMenuCommand = (event: any, command: string, subcommand: string | string[] | undefined) => {
+    handleContextMenuCommand = (event: any, command: string, subcommand: string | string[] | undefined | [string, boolean]) => {
         Log.debug("context menu command:", command, "subcommand", subcommand);
         // editing mode
         if (command === "create-widget") {
@@ -584,7 +584,7 @@ export class IpcManagerOnDisplayWindow {
      */
     handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
 
-        Log.debug("received data", JSON.stringify(newDbrData, null, 4));
+        Log.info("received data", JSON.stringify(newDbrData, null, 4));
 
         let channelNames = Object.keys(newDbrData);
 
@@ -599,8 +599,21 @@ export class IpcManagerOnDisplayWindow {
                 if (channelName.startsWith("pva://")) {
                     tcaChannels = g_widgets1.getTcaSubPvaChannels(channelName);
                 } else {
-                    tcaChannels = [g_widgets1.getTcaChannel(channelName)];
+                    try {
+                        tcaChannels.push(g_widgets1.getTcaChannel(channelName));
+                        console.log("i am not good")
+                    } catch (e) {
+
+                    }
+                    try {
+                        tcaChannels.push(g_widgets1.getTcaChannel(channelName + ".SEVR"));
+                        console.log("i am good")
+                    } catch (e) {
+
+                    }
                 }
+
+                console.log(tcaChannels)
 
                 for (let tcaChannel of tcaChannels) {
 
@@ -609,6 +622,8 @@ export class IpcManagerOnDisplayWindow {
                         // does not always happen
                         continue;
                     }
+
+
 
                     let data = newDbrData[channelName];
                     if (data === undefined) {

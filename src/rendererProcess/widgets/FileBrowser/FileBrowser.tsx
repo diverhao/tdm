@@ -334,57 +334,7 @@ export class FileBrowser extends BaseWidget {
                         if (event.key === "Enter") {
                             // same as double click on table row
                             const element = this.getFolderContent()[selectedItemIndex];
-                            if (element["type"] === "folder") {
-                                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                                const ipcManager = displayWindowClient.getIpcManager();
-                                const displayWindowId = displayWindowClient.getWindowId();
-                                const newFolderPath = path.join(this.getFolderPath(), element["name"]);
-                                this.setFolderPath(newFolderPath);
-                                this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg")
-                                this.fetchFolderContent();
-
-                            } else if (element["type"] = "file") {
-                                const fullTdlFileName = path.join(this.getFolderPath(), element["name"]);
-                                if (fullTdlFileName.endsWith(".tdl") || fullTdlFileName.endsWith(".edl") || fullTdlFileName.endsWith(".db") || fullTdlFileName.endsWith(".tempate")) {
-                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                                    const ipcManager = displayWindowClient.getIpcManager();
-                                    const displayWindowId = displayWindowClient.getWindowId();
-                                    const editableRaw = displayWindowClient.getProfileEntry("EPICS Custom Environment", "Manually Opened TDL Editable");
-
-                                    let editable = true;
-                                    if (editableRaw === undefined) {
-                                        editable = false;
-                                    } else if (typeof editableRaw === "string" && editableRaw.toLowerCase() === "no") {
-                                        editable = false;
-                                    } else if (typeof editableRaw === "string" && editableRaw.toLowerCase() === "yes") {
-                                        editable = true;
-                                    } else {
-                                        editable = false;
-                                    }
-                                    const modeRaw = displayWindowClient.getProfileEntry("EPICS Custom Environment", "Manually Opened TDL Mode");
-                                    let mode = "operating";
-                                    if (modeRaw === undefined) {
-                                        mode = "operating";
-                                    } else if (typeof modeRaw === "string" && modeRaw.toLowerCase() === "operating") {
-                                        mode = "operating";
-                                    } else if (typeof modeRaw === "string" && modeRaw.toLowerCase() === "editing") {
-                                        mode = "editing"
-                                    } else {
-                                        mode = "operating";
-                                    }
-
-                                    ipcManager.sendFromRendererProcess("open-tdl-file", {
-                                        tdlFileNames: [fullTdlFileName],
-                                        mode: mode,
-                                        editable: editable,
-                                        macros: [],
-                                        replaceMacros: false,
-                                        currentTdlFolder: this.getFolderPath(),
-                                        openInSameWindow: false,
-                                        windowId: displayWindowId,
-                                    })
-                                }
-                            }
+                            this.handleDoubleClickOnItem(element);
                             return;
                         } else if (event.key === "ArrowDown") {
                             for (let ii = selectedItemIndex + 1; ii < this.getFolderContent().length; ii++) {
@@ -416,7 +366,7 @@ export class FileBrowser extends BaseWidget {
                                 const newFolderPath = path.dirname(this.getFolderPath());
                                 this.setFolderPath(newFolderPath);
                                 this.fetchFolderContent();
-                                this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
+                                this.setThumbnail("../../resources/webpages/blank.svg");
                                 return;
                             } else {
                                 for (let ii = selectedItemIndex - 1; ii >= 0; ii--) {
@@ -453,14 +403,14 @@ export class FileBrowser extends BaseWidget {
                             this.forceUpdateButtons({});
                             if (element["name"].endsWith(".tdl")) {
                                 // wait for the new thumbnail
-                                this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
+                                this.setThumbnail("../../resources/webpages/blank.svg");
                                 this.fetchThumbnail(element["name"]);
                             } else if (element["type"] === "folder") {
-                                this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
-                                // this.setThumbnail("../../../mainProcess/resources/webpages/open-file-symbol.svg");
+                                this.setThumbnail("../../resources/webpages/blank.svg");
+                                // this.setThumbnail("../../resources/webpages/open-file-symbol.svg");
                             } else {
-                                this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
-                                // this.setThumbnail("../../../mainProcess/resources/webpages/copy-symbol.svg");
+                                this.setThumbnail("../../resources/webpages/blank.svg");
+                                // this.setThumbnail("../../resources/webpages/copy-symbol.svg");
                             }
 
                         }
@@ -663,7 +613,7 @@ export class FileBrowser extends BaseWidget {
                     // like refresh, force fetch
                     this.setFolderPath(folderPath);
                     this.fetchFolderContent();
-                    this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
+                    this.setThumbnail("../../resources/webpages/blank.svg");
                 }}
                 style={{
                     width: "100%",
@@ -731,7 +681,7 @@ export class FileBrowser extends BaseWidget {
                     })
                     this.forceUpdateButtons({});
                     this.fetchFolderContent();
-                    this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
+                    this.setThumbnail("../../resources/webpages/blank.svg");
                 }}
                 style={{
                     fontSize: GlobalVariables.defaultFontSize * 1.5,
@@ -763,7 +713,7 @@ export class FileBrowser extends BaseWidget {
                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                     this.setFolderPath(this.getFolderPath());
                     this.fetchFolderContent();
-                    this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
+                    this.setThumbnail("../../resources/webpages/blank.svg");
                 }}
                 style={{
                     fontSize: GlobalVariables.defaultFontSize * 1.5,
@@ -815,14 +765,14 @@ export class FileBrowser extends BaseWidget {
                         forceUpdateTable({});
                         if (element["name"].endsWith(".tdl")) {
                             // wait for the new thumbnail
-                            this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
+                            this.setThumbnail("../../resources/webpages/blank.svg");
                             this.fetchThumbnail(element["name"]);
                         } else if (element["type"] === "folder") {
-                            this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
-                            // this.setThumbnail("../../../mainProcess/resources/webpages/open-file-symbol.svg");
+                            this.setThumbnail("../../resources/webpages/blank.svg");
+                            // this.setThumbnail("../../resources/webpages/open-file-symbol.svg");
                         } else {
-                            this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg");
-                            // this.setThumbnail("../../../mainProcess/resources/webpages/copy-symbol.svg");
+                            this.setThumbnail("../../resources/webpages/blank.svg");
+                            // this.setThumbnail("../../resources/webpages/copy-symbol.svg");
                         }
                     }
                 }}
@@ -854,7 +804,7 @@ export class FileBrowser extends BaseWidget {
                             maxWidth: "100%",
                             overflow: "hidden",
                         }}>
-                            <img src="../../../mainProcess/resources/webpages/folder-symbol.svg"
+                            <img src="../../resources/webpages/folder-symbol.svg"
                                 style={{ width: GlobalVariables.defaultFontSize, height: GlobalVariables.defaultFontSize, opacity: 1, }}
                             >
                             </img>
@@ -872,7 +822,7 @@ export class FileBrowser extends BaseWidget {
                                 maxWidth: "100%",
                                 overflow: "hidden",
                             }}>
-                                <img src="../../../mainProcess/resources/webpages/tdm-logo-large-fill.png"
+                                <img src="../../resources/webpages/tdm-logo-large-fill.png"
                                     style={{ width: GlobalVariables.defaultFontSize, height: GlobalVariables.defaultFontSize }}
                                 >
                                 </img>
@@ -889,7 +839,7 @@ export class FileBrowser extends BaseWidget {
                                 maxWidth: "100%",
                                 overflow: "hidden",
                             }}>
-                                <img src="../../../mainProcess/resources/webpages/document-symbol.svg"
+                                <img src="../../resources/webpages/document-symbol.svg"
                                     style={{ width: GlobalVariables.defaultFontSize, height: GlobalVariables.defaultFontSize }}
                                 >
                                 </img>
@@ -934,7 +884,7 @@ export class FileBrowser extends BaseWidget {
             const newFolderPath = path.join(this.getFolderPath(), element["name"]);
             this.setFolderPath(newFolderPath);
             this.setSelectedItem({ name: "", timeModified: -1, size: -1, type: "file" });
-            this.setThumbnail("../../../mainProcess/resources/webpages/blank.svg")
+            this.setThumbnail("../../resources/webpages/blank.svg")
             this.fetchFolderContent();
         } else if (element["type"] = "file") {
             const fullTdlFileName = path.join(this.getFolderPath(), element["name"]);
@@ -966,16 +916,47 @@ export class FileBrowser extends BaseWidget {
                     mode = "operating";
                 }
 
-                ipcManager.sendFromRendererProcess("open-tdl-file", {
-                    tdlFileNames: [fullTdlFileName],
-                    mode: mode,
-                    editable: editable,
-                    macros: [],
-                    replaceMacros: false,
-                    currentTdlFolder: this.getFolderPath(),
-                    openInSameWindow: false,
-                    windowId: displayWindowId,
-                })
+
+                if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
+                    ipcManager.sendFromRendererProcess("open-tdl-file", {
+                        tdlFileNames: [fullTdlFileName],
+                        mode: mode,
+                        editable: editable,
+                        macros: [],
+                        replaceMacros: false,
+                        currentTdlFolder: this.getFolderPath(),
+                        openInSameWindow: false,
+                        windowId: displayWindowId,
+                    })
+
+                } else {
+                    const currentSite = `https://${window.location.host}/`;
+
+                    g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendPostRequestCommand(
+                        "open-tdl-file", {
+                        tdlFileNames: [fullTdlFileName],
+                        mode: mode,
+                        editable: editable,
+                        macros: [],
+                        replaceMacros: false, // not used
+                        // currentTdlFolder: currentTdlFolder,
+                        // openInSameWindow: openInSameWindow,
+                        windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                    }).then((response: any) => {
+                        // decode string
+                        return response.json()
+                    }).then(data => {
+                        const ipcServerPort = data["ipcServerPort"];
+                        const displayWindowId = data["displayWindowId"];
+                        // const href = `${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`;
+                        const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
+                        // open in new tab
+                        // ! important: avoid shared sessionStorage
+                        window.open(href, "_blank", "noopener, noreferrer")
+                        // open in current tab
+                        // window.location.href = href;
+                    })
+                }
 
                 // close the modal window
                 if (this.getModal() === true) {
@@ -1018,7 +999,7 @@ export class FileBrowser extends BaseWidget {
     }
 
     _ElementThumbnail = ({ parentElementRef }: any) => {
-        const [thumbnail, setThumbnail] = React.useState("../../../mainProcess/resources/webpages/blank.svg");
+        const [thumbnail, setThumbnail] = React.useState("../../resources/webpages/blank.svg");
         this.setThumbnail = setThumbnail;
         const elementRef = React.useRef<any>(null);
 
@@ -1040,7 +1021,7 @@ export class FileBrowser extends BaseWidget {
                     maxHeight: "95%",
                     objectFit: "contain",
                     borderRadius: 5,
-                    border: thumbnail === "../../../mainProcess/resources/webpages/blank.svg" ? "none" : "solid 1px rgba(150, 150, 150, 1)",
+                    border: thumbnail === "../../resources/webpages/blank.svg" ? "none" : "solid 1px rgba(150, 150, 150, 1)",
                 }}
                 >
                 </img>
@@ -1069,16 +1050,21 @@ export class FileBrowser extends BaseWidget {
     }
 
     fetchThumbnail = (fileName: string) => {
-        if (fileName.endsWith(".tdl")) {
-            const tdlFileName = path.join(this.getFolderPath(), fileName);
-            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-            const displayWindowId = displayWindowClient.getWindowId();
-            const ipcManager = displayWindowClient.getIpcManager();
-            ipcManager.sendFromRendererProcess("fetch-thumbnail", {
-                displayWindowId: displayWindowId,
-                widgetKey: this.getWidgetKey(),
-                tdlFileName: tdlFileName,
-            })
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        if (displayWindowClient.getMainProcessMode() === "web") {
+            return;
+        } else {
+            if (fileName.endsWith(".tdl")) {
+                const tdlFileName = path.join(this.getFolderPath(), fileName);
+                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                const displayWindowId = displayWindowClient.getWindowId();
+                const ipcManager = displayWindowClient.getIpcManager();
+                ipcManager.sendFromRendererProcess("fetch-thumbnail", {
+                    displayWindowId: displayWindowId,
+                    widgetKey: this.getWidgetKey(),
+                    tdlFileName: tdlFileName,
+                })
+            }
         }
     }
 
@@ -1160,7 +1146,7 @@ export class FileBrowser extends BaseWidget {
     // isInGroup()
     // isSelected()
     // _getElementAreaRawOutlineStyle()
-    
+
     // _parseChannelValueElement = (channelValueElement: number | string | boolean | undefined): string => {
 
 
@@ -1384,5 +1370,5 @@ export class FileBrowser extends BaseWidget {
         super.jobsAsOperatingModeBegins();
         this.fetchFolderContent();
     }
-    
+
 }

@@ -108,6 +108,7 @@ export class TextEntryHelper extends BaseWidgetHelper {
 			"h",
 			"controlPv",
 			"fgColor",
+            "precision",
 			"lineWidth", // ! the border line only shows in editing mode, not in operating mode
 			// ! The lineWidth and lineAlarm are ignored in this converter
 			"lineAlarm", // ! behavior in edm is inconsistent, ignore it
@@ -159,6 +160,8 @@ export class TextEntryHelper extends BaseWidgetHelper {
 					// 	alarmPropertyNames.push(propertyName);
 					// } else if (propertyName === "lineWidth") {
 					// 	tdl["style"]["borderWidth"] = parseInt(propertyValue);
+				} else if (propertyName === "precision") {
+					tdl["text"]["scale"] = EdlConverter.convertEdlPrecision(propertyValue);
 				} else if (propertyName === "font") {
 					const { fontFamily, fontWeight, fontSize, fontStyle } = EdlConverter.convertEdlFont(propertyValue);
 					tdl["style"]["fontFamily"] = fontFamily;
@@ -274,6 +277,7 @@ export class TextEntryHelper extends BaseWidgetHelper {
 			"useKp", // not in tdm, use keypad
 			"useDisplayBg",
 			"showUnits",
+            "precision",
 			"changeValOnLoseFocus", // not in tdm
 			"fastUpdate", // not in tdm
 			"date", // not in tdm
@@ -352,6 +356,8 @@ export class TextEntryHelper extends BaseWidgetHelper {
 					alarmPropertyNames.push(propertyName);
 				} else if (propertyName === "useAlarmBorder") {
 					alarmPropertyNames.push(propertyName);
+				} else if (propertyName === "precision") {
+					tdl["text"]["scale"] = EdlConverter.convertEdlPrecision(propertyValue);
 				} else if (propertyName === "format") {
                     tdl["text"]["format"] = EdlConverter.convertEdlDisplayMode(propertyValue);
 				} else {

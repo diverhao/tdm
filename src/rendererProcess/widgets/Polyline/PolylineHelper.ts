@@ -137,6 +137,8 @@ export class PolylineHelper extends BaseWidgetHelper {
 		tdl["text"]["lineWidth"] = 1;
 		tdl["text"]["lineColor"] = "rgba(0,0,0,1)";
 
+        // console.log("edl", edl, alarmPropertyNames, tdl)
+
 		for (const propertyName of propertyNames) {
 			const propertyValue = edl[propertyName];
 
@@ -211,6 +213,7 @@ export class PolylineHelper extends BaseWidgetHelper {
 				}
 			}
 		}
+        console.log("edl", edl, alarmPropertyNames, tdl)
 
 		for (let alarmPropertyName of alarmPropertyNames) {
 			if (alarmPropertyName === "lineAlarm") {
@@ -245,7 +248,6 @@ export class PolylineHelper extends BaseWidgetHelper {
 				console.log("Skip alarm-sensitive property", alarmPropertyName);
 			}
 		}
-
 		// if alarmPv exists in edl setting, but its value is not available in operation, the widget becomes invisible
 		// These behaviors override the alarm-sensitive
 		if (edl["alarmPv"] !== undefined) {

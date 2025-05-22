@@ -84,6 +84,9 @@ export class TcaChannel {
     _pvaType: any = undefined;
     _enumChoices: string[] = [];
 
+    _fieldType: "SEVR" | "" = "";
+
+
     // allowed character in LOCAL channel name
     // a-z A-Z 0-9 _ - : . ;
     // allowed characters in LOCAL channel name init value
@@ -116,7 +119,12 @@ export class TcaChannel {
 
     constructor(channelName: string) {
         if (TcaChannel.checkChannelName(channelName) === "ca") {
-            this._channelName = channelName;
+            if (channelName.endsWith(".SEVR")) {
+                this._channelName = channelName.replaceAll(".SEVR", "");
+                this._fieldType = "SEVR";
+            } else {
+                this._channelName = channelName;
+            }
         } else if (TcaChannel.checkChannelName(channelName) === "pva") {
             this._channelName = channelName;
         } else if (TcaChannel.checkChannelName(channelName) === "local" || TcaChannel.checkChannelName(channelName) === "global") {
@@ -491,6 +499,7 @@ export class TcaChannel {
         const windowId = displayWindowClient.getWindowId();
         // never timeout
         const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["READ"], timeout, undefined);
+
         ipcManager.sendFromRendererProcess("tca-get-meta", this.getChannelName(), windowId, widgetKey, ioId, timeout);
         try {
             let message: type_dbrData | type_LocalChannel_data = await this.getIoPromise(ioId);
@@ -954,7 +963,10 @@ export class TcaChannel {
                 const widget = g_widgets1.getWidget2(widgetKey);
                 if (widget instanceof BaseWidget) {
                     const channelNames = widget.getChannelNames();
-                    const index = channelNames.indexOf(this.getChannelName());
+                    let index = channelNames.indexOf(this.getChannelName());
+                    if (this.getFieldType() === "SEVR") {
+                        index = channelNames.indexOf(this.getChannelName() + ".SEVR");
+                    }
                     if (index > -1) {
                         channelNames.splice(index, 1);
                     }
@@ -973,7 +985,12 @@ export class TcaChannel {
 
         if (this.getWidgetKeys().size === 0) {
             // (3)
-            delete g_widgets1.getTcaChannels()[this.getChannelName()];
+            if (this.getFieldType() === "SEVR") {
+                delete g_widgets1.getTcaChannels()[this.getChannelName() + ".SEVR"];
+            } else {
+                delete g_widgets1.getTcaChannels()[this.getChannelName()];
+            }
+    
             // (4)
             this.getReadWriteIos().rejectAllIos(this);
             // (5)
@@ -1074,7 +1091,11 @@ export class TcaChannel {
                 return undefined;
             }
         } else {
-            const value = this.getDbrData()["value"];
+            let value = this.getDbrData()["value"];
+            if (this.getFieldType() === "SEVR") {
+                value = this.getDbrData()["severity"];
+                return value;
+            }
 
             if (value === undefined) {
                 return undefined;
@@ -1644,5 +1665,8 @@ export class TcaChannel {
             return undefined;
         }
         return data;
+    }
+    getFieldType = () => {
+        return this._fieldType;
     }
 }

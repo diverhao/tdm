@@ -238,7 +238,6 @@ export class TextUpdate extends BaseWidget {
      */
     getChannelValueStrRepresentation = () => {
         const rawChannelValue = this._getChannelValue(false);
-
         if (Array.isArray(rawChannelValue)) {
             return '[' + rawChannelValue.join(",") + ']';
         }
@@ -276,13 +275,13 @@ export class TextUpdate extends BaseWidget {
             if (format === "decimal") {
                 return channelValueElement.toFixed(scale);
             } else if (format === "default") {
-                const channelName = this.getChannelNames()[0];
-                const defaultScale = g_widgets1.getChannelPrecision(channelName);
-                if (defaultScale !== undefined) {
-                    return channelValueElement.toFixed(defaultScale);
-                } else {
+                // const channelName = this.getChannelNames()[0];
+                // const defaultScale = g_widgets1.getChannelPrecision(channelName);
+                // if (defaultScale !== undefined) {
+                //     return channelValueElement.toFixed(defaultScale);
+                // } else {
                     return channelValueElement.toFixed(scale);
-                }
+                // }
             } else if (format === "exponential") {
                 return channelValueElement.toExponential(scale);
             } else if (format === "hexadecimal") {
@@ -314,7 +313,7 @@ export class TextUpdate extends BaseWidget {
     _getChannelValue = (raw: boolean = false) => {
 
         const channelValue = this.getChannelValueForMonitorWidget(raw);
-
+        console.log("channel value ===============================", channelValue)
         if (typeof channelValue === "number" || typeof channelValue === "string") {
             return this._parseChannelValueElement(channelValue);
         } else if (Array.isArray(channelValue)) {

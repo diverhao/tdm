@@ -762,12 +762,11 @@ export class DisplayWindowAgent {
 
         // check if there is any other BrowserWindow,
         const hasPreloadedBrowserWindow = this.getWindowAgentsManager().preloadedDisplayWindowAgent === undefined ? 0 : 1;
-        // const hasPreloadedBrowserView = this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === undefined ? 0 : 1;
+        const hasPreviewBrowserWindow = this.getWindowAgentsManager().previewDisplayWindowAgent === undefined ? 0 : 1;
         const numBrowserWindows = Object.keys(this.getWindowAgentsManager().getAgents()).length;
 
-
         // if (numBrowserWindows - hasPreloadedBrowserView - hasPreloadedBrowserWindow <= 0) {
-        if (numBrowserWindows - hasPreloadedBrowserWindow <= 0) {
+        if (numBrowserWindows - hasPreloadedBrowserWindow - hasPreviewBrowserWindow <= 0) {
             if (this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" || this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "ssh-client") {
                 // quit on desktop mode
                 this.getWindowAgentsManager().getMainProcess().quit();
@@ -1513,7 +1512,6 @@ export class DisplayWindowAgent {
                 }
 
                 let modal = false;
-                let frame = true;
 
                 // FileBrowser modal window
                 let parent: undefined | BrowserWindow = undefined;
@@ -1525,7 +1523,6 @@ export class DisplayWindowAgent {
                         if (parentDisplayWindowAgent instanceof DisplayWindowAgent) {
                             parent = parentDisplayWindowAgent.getBrowserWindow();
                             modal = true;
-                            frame = false;
                         }
                     }
                 }
@@ -1539,7 +1536,7 @@ export class DisplayWindowAgent {
                     autoHideMenuBar: true,
                     minWidth: 100,
                     minHeight: 100,
-                    // modal window: for file browser
+                    // modal window: for file browser, this may not work on Linux
                     modal: modal,
                     parent: parent,
                     frame: true,
@@ -1655,7 +1652,7 @@ export class DisplayWindowAgent {
                         ipcServerPort: ipcServerPort,
                         displayWindowId: displayWindowId,
                     };
-                    Log.debug("-1", "IPC websocket: replay for", command, msg);
+                    Log.info("-1", "IPC websocket: reply for", command, msg);
                     httpResponse.json(msg);
                 } else if (requestMethod === "GET") {
 
