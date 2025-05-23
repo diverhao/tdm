@@ -1513,6 +1513,15 @@ export class DisplayWindowClient {
         }
     }
 
+    getOsType = () => {
+        const platform = navigator.platform.toLowerCase();
+        // keep the same as os.platform()
+        if (platform.includes('win')) return 'win32';
+        if (platform.includes('mac')) return 'darwin';
+        if (platform.includes('linux')) return 'linux';
+        return "unknown";
+    }
+
     getContextMenu = () => {
         return this._contextMenu;
     }

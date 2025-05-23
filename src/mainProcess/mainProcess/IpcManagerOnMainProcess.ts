@@ -2202,9 +2202,17 @@ export class IpcManagerOnMainProcess {
                         ? [{ name: "media", extensions: ["jpg", "jpeg", "png", "gif", "svg", "bmp", "pdf", "mp4", "ogg", "webm", "mp3", "mov"] }]
                         : options["filterType"] === "script"
                             ? [{ name: "script", extensions: ["py", "js"] }]
-                            : [{ name: "picture", extensions: ["jpg", "jpeg", "png", "gif", "svg", "bmp"] }];
+                            : options["filterType"] === "file-converter"
+                                ? [{ name: "EDM Files", extensions: ["edl"] }]
+                                : [{ name: "picture", extensions: ["jpg", "jpeg", "png", "gif", "svg", "bmp"] }];
                 // default to open file
-                const properties = options["properties"] === undefined ? ["openFile"] : options["properties"];
+                let properties = options["properties"] === undefined ? ["openFile"] : options["properties"];
+                // ! linux cannot select any file if properties is set, if it is not set, we cannot select folder
+                // ! file-converter is the only
+                if (options["filterType"] === "file-converter" && os.platform() === "linux") {
+                    properties = undefined;
+                }
+                console.log(fileFilters, properties)
                 fileNames = dialog.showOpenDialogSync({
                     title: "Select a file",
                     filters: fileFilters,
@@ -2738,7 +2746,7 @@ export class IpcManagerOnMainProcess {
         if (this.getMainProcess().getMainProcessMode() === "web") {
             return;
         }
-        
+
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {

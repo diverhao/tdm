@@ -10,7 +10,7 @@ import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { XYPlot } from "../XYPlot/XYPlot";
 import { convertDateObjToString } from "../../global/GlobalMethods";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 
 export type type_FileConverterData = {
@@ -447,30 +447,32 @@ export class FileConverter extends BaseWidget {
                     >
                     </input>
                 </form>
-                <ElementRectangleButton
-                    marginLeft={20}
-                    handleClick={(event: any) => {
-                        event.preventDefault();
-                        // if (this.getStatus() === "converting") {
-                        //     return;
-                        // }
-                        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                        const displayWindowId = displayWindowClient.getWindowId();
-                        displayWindowClient.getIpcManager().sendFromRendererProcess("select-a-file",
-                            // they will be bounced back and handled by handleSelectAFile below
-                            {
-                                displayWindowId: displayWindowId,
-                                widgetKey: this.getWidgetKey(),
-                                filterType: "tdl",
-                                properties: ["openFile", "openDirectory"],
-                                inputType: "src",
-                            });
+                {g_widgets1.getRoot().getDisplayWindowClient().getOsType() === "linux" ? null :
+                    <ElementRectangleButton
+                        marginLeft={20}
+                        handleClick={(event: any) => {
+                            event.preventDefault();
+                            // if (this.getStatus() === "converting") {
+                            //     return;
+                            // }
+                            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                            const displayWindowId = displayWindowClient.getWindowId();
+                            displayWindowClient.getIpcManager().sendFromRendererProcess("select-a-file",
+                                // they will be bounced back and handled by handleSelectAFile below
+                                {
+                                    displayWindowId: displayWindowId,
+                                    widgetKey: this.getWidgetKey(),
+                                    filterType: "file-converter",
+                                    properties: ["openFile", "openDirectory"],
+                                    inputType: "src",
+                                });
 
-                    }}
+                        }}
 
-                >
-                    Select a file or folder
-                </ElementRectangleButton>
+                    >
+                        Select a file or folder
+                    </ElementRectangleButton>
+                }
             </div >
         )
     }
@@ -517,29 +519,35 @@ export class FileConverter extends BaseWidget {
                     >
                     </input>
                 </form>
-                <ElementRectangleButton
-                    marginLeft={20}
-                    handleClick={(event: any) => {
-                        event.preventDefault();
-                        // if (this.getStatus() === "converting") {
-                        //     return;
-                        // }
-                        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                        const displayWindowId = displayWindowClient.getWindowId();
-                        displayWindowClient.getIpcManager().sendFromRendererProcess("select-a-file",
-                            // they will be bounced back and handled by handleSelectAFile below
-                            {
-                                displayWindowId: displayWindowId,
-                                widgetKey: this.getWidgetKey(),
-                                filterType: "tdl",
-                                properties: ["openDirectory", "createDirectory", "promptToCreate"], // open folder and create directory
-                                inputType: "dest",
-                            });
+                {g_widgets1.getRoot().getDisplayWindowClient().getOsType() === "linux" ? null :
+                    // ! linux cannot properly allow user to select file or folder if "properties" is set
+                    // ! meanwhile, if we set properties to "undefined", we can only select file, we cannot
+                    // ! select folder. To avoid confusion, let's hide this button
+                    <ElementRectangleButton
+                        marginLeft={20}
+                        handleClick={(event: any) => {
+                            event.preventDefault();
+                            // if (this.getStatus() === "converting") {
+                            //     return;
+                            // }
+                            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                            const displayWindowId = displayWindowClient.getWindowId();
 
-                    }}
-                >
-                    Select a folder
-                </ElementRectangleButton>
+                            displayWindowClient.getIpcManager().sendFromRendererProcess("select-a-file",
+                                // they will be bounced back and handled by handleSelectAFile below
+                                {
+                                    displayWindowId: displayWindowId,
+                                    widgetKey: this.getWidgetKey(),
+                                    filterType: "file-converter",
+                                    properties: ["openDirectory", "createDirectory", "promptToCreate"], // open folder and create directory
+                                    inputType: "dest",
+                                });
+
+                        }}
+                    >
+                        Select a folder
+                    </ElementRectangleButton>
+                }
             </div>
         )
     }
