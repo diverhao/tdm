@@ -24,12 +24,13 @@ export class MainProcesses {
     _applicationMenu: ApplicationMenu;
     _localFontNames: string[] = [];
     _sshServerSelfDestructionCountDown: NodeJS.Timeout | undefined = undefined;
+    readonly _site: string;
 
     writingToLog: string = "";
     logStream: undefined | fs.WriteStream = undefined;
 
     constructor(args: type_args) {
-
+        this._site = args["site"];
         this._profilesFileName = args["settings"];
         // if this profile is not found, show profile-selection page
         // 9527 is the starting port for opener server, if this port is being used, increase it until there is an available one
@@ -326,6 +327,10 @@ export class MainProcesses {
             this.writingToLog = "";
             return;
         }
+    }
+
+    getSite = () => {
+        return this._site;
     }
 
 }

@@ -198,6 +198,9 @@ export class IpcManagerOnDisplayWindow {
         // file browser
         this.ipcRenderer.on("fetch-folder-content", this.handleFetchFolderContent);
         this.ipcRenderer.on("fetch-thumbnail", this.handleFetchThumbnail)
+
+        // site info
+        this.ipcRenderer.on("site-info", this.handleSiteInfo)
     };
 
     handleObtainedIframeUuid = (
@@ -1049,14 +1052,12 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    // handleErrorMessage = (event: any, info: {
-    //     messageType: "error" | "warnng" | "info",
-    //     humanReadableMessages: string[],
-    //     rawMessages: string[],
-    // }) => {
-    //     Log.info('received error message', info)
-    //     this.getDisplayWindowClient().getPrompt().createElement("error-message", info);
-    // }
+    handleSiteInfo = (event: any, siteInfo: {
+        site: string
+    }) => {
+        const displayWindowClient = this.getDisplayWindowClient();
+        displayWindowClient.setSite(siteInfo["site"]);
+    }
 
     handleDialogShowMessageBox = (event: any, info: type_DialogMessageBox) => {
         const command = info["command"];

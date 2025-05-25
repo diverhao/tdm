@@ -226,7 +226,7 @@ export class IpcManagerOnMainWindow {
      * After the main window GUI is created, the profiles and its file name are sent from main process. This function
      * is also invoked when the Profiles is changed. <br>
      */
-    private _handleAfterMainWindowGuiCreated = (event: any, profiles: Record<string, any>, profilesFileName: string, envDefault: Record<string, any>, envOs: Record<string, any>, logFileName: string) => {
+    private _handleAfterMainWindowGuiCreated = (event: any, profiles: Record<string, any>, profilesFileName: string, envDefault: Record<string, any>, envOs: Record<string, any>, logFileName: string, site: string) => {
         const mainWindowClient = this.getMainWindowClient();
         // in editing page, we need the env default and env os
         mainWindowClient.setEnvDefault(envDefault);
@@ -236,6 +236,7 @@ export class IpcManagerOnMainWindow {
         mainWindowClient.setProfileEditPage(new MainWindowProfileEditPage(mainWindowClient));
         mainWindowClient.setStartupPage(new MainWindowStartupPage(mainWindowClient));
         mainWindowClient.setLogFileName(logFileName);
+        mainWindowClient.setSite(site);
         const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
         root.render(mainWindowClient.getElement());
 

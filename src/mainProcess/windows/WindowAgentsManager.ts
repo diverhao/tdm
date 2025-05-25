@@ -231,6 +231,8 @@ export class WindowAgentsManager {
                     return undefined;
                 }
                 displayWindowAgent.sendFromMainProcess("selected-profile-contents", selectedProfile.getContents());
+                const site = this.getMainProcess().getMainProcesses().getSite();
+                displayWindowAgent.sendFromMainProcess("site-info", {site: site});
 
                 // (5)
                 displayWindowAgent.sendFromMainProcess("new-tdl", {
@@ -725,6 +727,7 @@ export class WindowAgentsManager {
             const envDefault = env.getEnvDefault();
             const envOs = env.getEnvOs();
 
+            const site = this.getMainProcess().getMainProcesses().getSite();
             mainWindowAgent.sendFromMainProcess(
                 "after-main-window-gui-created",
                 this.getMainProcess().getProfiles().serialize(),
@@ -732,6 +735,7 @@ export class WindowAgentsManager {
                 envDefault,
                 envOs,
                 this.getMainProcess().getMainProcesses().writingToLog,
+                site,
             );
 
             // "Emitted when the application is activated"
@@ -749,6 +753,7 @@ export class WindowAgentsManager {
                         envDefault,
                         envOs,
                         this.getMainProcess().getMainProcesses().writingToLog,
+                        site,
                     );
 
                     // if (cmdLineSelectedProfile !== "") {

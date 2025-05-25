@@ -11,6 +11,21 @@ import path from "path";
 import os from "os";
 import { execSync } from "child_process";
 
+/**
+ * "site" is defined in package.json. We can use this variable to add
+ * customized settings or functionalities to TDM for the specific site.
+ * 
+ * For example, in "sns-office-user", the default profiles file is the 
+ * `profiles-sns-office-user.json` located in the package. It contains a
+ * `Archive` category which defines the EPICS archive for SNS.
+ * 
+ * Available sites: 
+ *  - "" (empty)
+ *  - sns-office-engineer
+ *  - sns-office-user
+ */
+import {site} from "../../package.json";
+
 // true for the first TDM instance 
 // false for the later TDM instances
 // const isTheFirstApp = app.requestSingleInstanceLock();
@@ -43,7 +58,11 @@ ArgParser.printTdmBanner();
 //     'abcd' 
 // ]
 // console.log("process.argv:", process.argv);
-const args = ArgParser.parseArgs(process.argv);
+const args = ArgParser.parseArgs(process.argv, site);
+
+if (site === "sns-office-user") {
+    args["settings"] = path.join(__dirname, "resources/profiles/profiles-sns-office-user.json");
+}
 
 // if (args["mainProcessMode"] === "ssh-server") {
 // app.commandLine.appendSwitch("disable-gpu");
@@ -151,6 +170,7 @@ if (args["attach"] === -1) {
                                 cwd: "",
                                 mainProcessMode: "desktop", // | "web"; // "ssh-server" or "ssh-client" mode process can only be created inside the program
                                 httpServerPort: 3000,
+                                site: site,
                             },
                             undefined)
                     }

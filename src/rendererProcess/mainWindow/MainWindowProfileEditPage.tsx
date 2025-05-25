@@ -403,6 +403,16 @@ export class MainWindowProfileEditPage {
             this._forceUpdatePage();
         }
 
+        const dropDownMenuCallbacks: Record<string, any> = {
+            "Add Empty Category": () => { addCategory() },
+            // "Add Web Server Category": () => { addWebServerCategory() },
+        };
+
+        if (this.getMainWindowClient().getSite() === "sns-office-engineer") {
+            dropDownMenuCallbacks["Add Web Server Category for SNS"] = () => { addWebServerCategory_SNS() };
+            dropDownMenuCallbacks["Add Archive Category for SNS"] = () => { addArchiveCategory_SNS() };
+        }
+
         return (
             <div
                 style={style}
@@ -413,12 +423,7 @@ export class MainWindowProfileEditPage {
                     width: "100%",
                 }}>
                     <ElementDropDownMenu
-                        callbacks={{
-                            "Add Empty Category": () => { addCategory() },
-                            "Add Web Server Category": () => { addWebServerCategory() },
-                            "Add Web Server Category for SNS": () => { addWebServerCategory_SNS() },
-                            "Add Archive Category for SNS": () => { addArchiveCategory_SNS() },
-                        }}
+                        callbacks={dropDownMenuCallbacks}
                     ></ElementDropDownMenu>
                 </div>
             </div>

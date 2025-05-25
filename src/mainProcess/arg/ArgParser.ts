@@ -15,6 +15,7 @@ export type type_args = {
     cwd: string;
     mainProcessMode: "desktop" | "web" | "ssh-server"; // "ssh-client" mode process can only be created inside the program
     httpServerPort: number;
+    site: string;
 };
 
 // For whatever reason, "npm start" ignores all elements starting with "--" in process.argv, 
@@ -66,7 +67,7 @@ Options:
 -----------------------------------------------
 `);
 
-    static parseArgs = (argv: string[]) => {
+    static parseArgs = (argv: string[], site: string) => {
         this.printHelp();
         const result: type_args = {
             macros: [],
@@ -78,6 +79,7 @@ Options:
             cwd: process.cwd(),
             mainProcessMode: "desktop",
             httpServerPort: httpServerPort,
+            site: site,
         };
 
         // the process.argv is different for development mode and packaged TDM
@@ -153,6 +155,7 @@ Options:
                 cwd: process.cwd(),
                 mainProcessMode: "desktop",
                 httpServerPort: 3000,
+                site: site,
             };
             return resultTmp;
         }

@@ -432,6 +432,7 @@ export class Profile {
         };
     };
 
+    // for testing purpose
     static generateWebServerCategory = () => {
         return {
             "Web Server": {
@@ -523,11 +524,11 @@ export class Profile {
                 },
                 "Oracle database password": {
                     "DESCRIPTION": "Password.",
-                    "value": "You guess"
+                    "value": "sns"
                 },
                 "Oracle database connection string": {
                     "DESCRIPTION": "Connection string.",
-                    "value": "Guess again"
+                    "value": "(DESCRIPTION=\\n        (LOAD_BALANCE=OFF)\\n        (FAILOVER=ON)\\n        (ADDRESS=(PROTOCOL=TCP)(HOST=snsappa.sns.ornl.gov)(PORT=1610))\\n        (ADDRESS=(PROTOCOL=TCP)(HOST=snsappb.sns.ornl.gov)(PORT=1610))\\n        (CONNECT_DATA=(SERVICE_NAME=prod_controls))\\n        )"
                 }
             },
         }

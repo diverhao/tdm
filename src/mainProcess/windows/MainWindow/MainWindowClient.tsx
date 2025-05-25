@@ -60,6 +60,8 @@ export class MainWindowClient {
     private _envDefault: Record<string, any> = {};
     private _envOs: Record<string, any> = {};
 
+    private _site: string = "";
+
     constructor(mainWindowId: string, ipcServerPort: number, hostname: string | undefined = undefined) {
         this._loadCustomFonts();
         this._windowId = mainWindowId;
@@ -288,7 +290,14 @@ export class MainWindowClient {
     setLogFileName = (newName: string) => {
         this._logFileName = newName;
     }
+    
+    getSite = () => {
+        return this._site;
+    }
 
+    setSite = (newSite: string) => {
+        this._site = newSite;
+    }
 
 }
 

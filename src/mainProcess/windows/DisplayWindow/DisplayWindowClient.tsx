@@ -77,6 +77,7 @@ export class DisplayWindowClient {
     private _keyboard: Keyboard;
     private _actionHistory: ActionHistory;
     private _videoRecorder: VideoRecorder;
+    private _site: string = "";
 
     private _profileContents: Record<string, any> = {};
 
@@ -1584,6 +1585,14 @@ export class DisplayWindowClient {
         } else {
             return true;
         }
+    }
+
+    getSite = () => {
+        return this._site;
+    }
+
+    setSite = (newSite: string) => {
+        this._site = newSite;
     }
 }
 
