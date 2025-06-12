@@ -447,7 +447,7 @@ export class TcaChannel {
     // if useInterval === true, the data is periodically sent to display window
     get = async (
         widgetKey: string | undefined,
-        ioTimeout: number,
+        ioTimeout: number | undefined,
         dbrType: Channel_DBR_TYPES | undefined,
         useInterval: boolean, // only use interval (0.1 s) to send back data, the return value is undefined in this case
         callback?: () => void

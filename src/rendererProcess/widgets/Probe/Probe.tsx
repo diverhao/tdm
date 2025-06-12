@@ -170,7 +170,7 @@ export class Probe extends BaseWidget {
         if (rtypTcaChannel !== undefined) {
             this.rtyp = this.rtypWaitingName;
             await rtypTcaChannel.getMeta(this.getWidgetKey());
-            const dbrData = await rtypTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
+            const dbrData = await rtypTcaChannel.get(this.getWidgetKey(), undefined, undefined, false);
             if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
                 const rtyp = dbrData["value"];
                 if (rtyp !== undefined && this.rtyp === this.rtypWaitingName) {
@@ -203,13 +203,13 @@ export class Probe extends BaseWidget {
                     const fieldTcaChannel = g_widgets1.getTcaChannel(channelNameLevel5);
                     // trigger the data so that the
                     fieldTcaChannel.getMeta(this.getWidgetKey());
-                    fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, true);
+                    fieldTcaChannel.get(this.getWidgetKey(), undefined, undefined, true);
                     fieldTcaChannel.monitor();
                 } catch (e) {
                     const fieldTcaChannel = g_widgets1.createTcaChannel(channelNameLevel5, this.getWidgetKey());
                     if (fieldTcaChannel !== undefined) {
                         fieldTcaChannel.getMeta(this.getWidgetKey());
-                        fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, true);
+                        fieldTcaChannel.get(this.getWidgetKey(), undefined, undefined, true);
                         // fieldTcaChannel.getMeta(undefined);
                         fieldTcaChannel.monitor();
                     }

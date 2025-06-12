@@ -169,7 +169,7 @@ export class ChannelGraph extends BaseWidget {
             forceAtlas2Based: {
                 gravitationalConstant: -100, // Increase repulsion
                 springLength: 200, // minimum edge length
-                sprintConstant: 0.05
+                springConstant: 0.05
             },
             stabilization: {
                 enabled: true,
@@ -1101,9 +1101,9 @@ export class ChannelGraph extends BaseWidget {
             scan = channelJson["SCAN"] === undefined ? "Passive" : channelJson["SCAN"];
             calc = channelJson["CALC"] === undefined ? "" : channelJson["CALC"];
         } else {
-            const rtypPromise = this.getFieldValue(newChannelName, "RTYP"); // 1 second timeout, channel is coming from IOC
-            const scanPromise = this.getFieldValue(newChannelName, "SCAN"); // 1 second timeout, channel is coming from IOC
-            const calcPromise = this.getFieldValue(newChannelName, "CALC"); // 1 second timeout, channel is coming from IOC
+            const rtypPromise = this.getFieldValue(newChannelName, "RTYP", 10); // 10 second timeout, channel is coming from IOC
+            const scanPromise = this.getFieldValue(newChannelName, "SCAN", 10); // 10 second timeout, channel is coming from IOC
+            const calcPromise = this.getFieldValue(newChannelName, "CALC", 1); // 1 second timeout, channel is coming from IOC
             const metaPromises = Promise.all([rtypPromise, scanPromise, calcPromise]);
             const meta = await metaPromises;
             rtyp = meta[0];
@@ -1187,7 +1187,7 @@ export class ChannelGraph extends BaseWidget {
                         tcaChannels.push(fieldTcaChannel);
                         // trigger the data so that the
                         // await fieldTcaChannel.getMeta(this.getWidgetKey());
-                        const promise = fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false).then((dbrData: any) => {
+                        const promise = fieldTcaChannel.get(this.getWidgetKey(), 10, undefined, false).then((dbrData: any) => {
                             const value = dbrData["value"];
                             if (typeof value === "string") {
                                 links[linkFieldName] = value;
@@ -1204,7 +1204,7 @@ export class ChannelGraph extends BaseWidget {
                         if (fieldTcaChannel !== undefined) {
                             tcaChannels.push(fieldTcaChannel);
                             // await fieldTcaChannel.getMeta(this.getWidgetKey());
-                            const promise = fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false).then((dbrData: any) => {
+                            const promise = fieldTcaChannel.get(this.getWidgetKey(), 10, undefined, false).then((dbrData: any) => {
                                 const value = dbrData["value"];
                                 if (typeof value === "string") {
                                     links[linkFieldName] = value;
@@ -1257,48 +1257,7 @@ export class ChannelGraph extends BaseWidget {
     }
 
 
-    getRTYP1 = async (channelName: string) => {
-        console.log("getting RTYP of", channelName)
-        // if (this.rtyp !== "" || this.rtyp === this.rtypWaitingName) {
-        //     console.log("RTYP already obtained or waiting");
-        //     return;
-        // }
-
-
-        const rtypChannelName = `${channelName}.RTYP`;
-        let rtypTcaChannel: TcaChannel | undefined = undefined;
-        try {
-            rtypTcaChannel = g_widgets1.getTcaChannel(rtypChannelName);
-        } catch (e) {
-            rtypTcaChannel = g_widgets1.createTcaChannel(rtypChannelName, this.getWidgetKey());
-        }
-        if (rtypTcaChannel !== undefined) {
-            // this.rtyp = this.rtypWaitingName;
-            await rtypTcaChannel.getMeta(this.getWidgetKey());
-            const dbrData = await rtypTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
-            rtypTcaChannel.destroy(this.getWidgetKey());
-            if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
-                const rtyp = dbrData["value"];
-                console.log(rtypChannelName, "value is", rtyp)
-                return rtyp;
-                // if (rtyp !== undefined && this.rtyp === this.rtypWaitingName) {
-                //     this.rtyp = `${rtyp}`;
-                //     this.connectFieldChannels();
-                //     return;
-                // }
-            } else {
-                console.log("Failed to get value for", `${rtypChannelName}`);
-                // GET timeout, reconnect
-                // this.rtyp = "";
-                // this.mapDbrData();
-            }
-        } else {
-            console.log("Channel", `${rtypChannelName} does not exist`);
-        }
-        return undefined;
-    };
-
-    getFieldValue = async (channelName: string, fieldType: "RTYP" | "SCAN" | "CALC") => {
+    getFieldValue = async (channelName: string, fieldType: "RTYP" | "SCAN" | "CALC", timeout: number) => {
         console.log("getting field", fieldType, "of", channelName)
         // if (this.rtyp !== "" || this.rtyp === this.rtypWaitingName) {
         //     console.log("RTYP already obtained or waiting");
@@ -1314,7 +1273,7 @@ export class ChannelGraph extends BaseWidget {
         }
         if (fieldTcaChannel !== undefined) {
             // await fieldTcaChannel.getMeta(this.getWidgetKey());
-            const dbrData = await fieldTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
+            const dbrData = await fieldTcaChannel.get(this.getWidgetKey(), timeout, undefined, false);
 
             fieldTcaChannel.destroy(this.getWidgetKey());
             if ((dbrData !== undefined) && dbrData["value"] !== undefined) {

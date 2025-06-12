@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "site": "",
+    "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
         "web": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron . main-process-mode web",
@@ -54,6 +54,7 @@
         "@types/express-session": "^1.18.1",
         "@types/html2canvas": "^1.0.0",
         "@types/passport": "^1.0.17",
+        "@types/three": "^0.177.0",
         "@xterm/addon-fit": "^0.10.0",
         "@xterm/addon-web-links": "^0.11.0",
         "@xterm/xterm": "^5.5.0",
@@ -77,6 +78,7 @@
         "react-router-dom": "^6.24.0",
         "react-router-hash-link": "^2.4.3",
         "ssh2": "^1.15.0",
+        "three": "^0.177.0",
         "ts-loader": "^9.5.0",
         "uuid": "^9.0.0",
         "vis-network": "^9.1.9",

@@ -889,8 +889,8 @@ export class SidebarXYPlotYAxis {
                     <option value="solid">Solid</option>
                     <option value="dashed">Dashed</option>
                     <option value="dotted">Dotted</option>
-                    <option value="dash-dot">Dash Dot</option>
-                    <option value="dash-dot-dot">Dash Dot Dot</option>
+                    {/* <option value="dash-dot">Dash Dot</option>
+                    <option value="dash-dot-dot">Dash Dot Dot</option> */}
                     <option value="none">None</option>
                 </select>
             </form>

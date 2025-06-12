@@ -8,7 +8,12 @@ import { calcTicks, refineTicks } from "../../global/GlobalMethods";
 import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import * as GlobalMethods from "../../global/GlobalMethods";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
+import * as THREE from 'three';
+import { Line2 } from 'three/examples/jsm/lines/Line2';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export type type_yAxis = {
     label: string;
@@ -143,9 +148,146 @@ export class XYPlotPlot {
             this.plotHeight = this.getStyle().height - this.titleHeight * 0 - this.xAxisLabelHeight * 0 - this.xAxisTickHeight * 0 - this.toolbarHeight * 0;
         }
         this.initXY();
+
     }
 
     // --------------------------- plot calculation ---------------------------
+
+    mapXYsToPointsWebGl = (index: number): Float32Array<ArrayBuffer> => {
+        // x and y data are odd and even indices
+        let xData = this.xy[index];
+        let yData = this.xy[index + 1];
+
+        let yIndex = this.getYIndex(index);
+
+        let useLog10Scale = false;
+        if (this.yAxes[yIndex] !== undefined) {
+            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
+        }
+
+        // if there is no xData (undefined) or the x PV is empty ("")
+        if (this.getMainWidget().getChannelNames()[index] === "" || xData.length === 0) {
+            const dataSize = yData.length;
+            xData = [...Array(dataSize).keys()];
+        }
+        // xData and yData must be same size
+        if (xData.length !== yData.length) {
+            const positions = new Float32Array(3);
+            return positions;
+        }
+
+        if (xData.length === 0) {
+            const positions = new Float32Array(3);
+            return positions;
+        }
+
+
+        let valXmin = this.xAxis.valMin;
+        let valXmax = this.xAxis.valMax;
+        let valYmin = this.yAxes[yIndex].valMin;
+        let valYmax = this.yAxes[yIndex].valMax;
+
+        // x autoScale is valid only if there is only one x-y pair
+        // if (this.xAxis.autoScale && this.getMainWidget().getChannelNamesLevel0().length === 2) {
+        if (this.xAxis.autoScale) {
+            valXmin = Math.min(...xData);
+            valXmax = Math.max(...xData);
+        }
+
+        if (this.yAxes[yIndex].autoScale) {
+            valYmin = Math.min(...yData);
+            valYmax = Math.max(...yData);
+        }
+
+        // extra space in x and y directions
+        if (!useLog10Scale) {
+            const dx = Math.abs(valXmax - valXmin) * this.xPlotRangeExtension / 100;
+            const dy = Math.abs(valYmax - valYmin) * this.yPlotRangeExtension / 100;
+            valXmax = valXmax + dx;
+            valXmin = valXmin - dx;
+            valYmax = valYmax + dy;
+            valYmin = valYmin - dy;
+        }
+
+        const len = Math.min(xData.length, yData.length);
+        const positions = new Float32Array(len * 3);
+
+        for (let ii = 0; ii < len; ii++) {
+            const valX = xData[ii];
+            const valY = yData[ii];
+            const pointX = this.mapXToPointWebGl(index, [valX, valY], [valXmin, valXmax, valYmin, valYmax]);
+            const pointY = this.mapYToPointWebGl(index, [valX, valY], [valXmin, valXmax, valYmin, valYmax]);
+            if (pointX === undefined || pointY === undefined || isNaN(pointX) || isNaN(pointY)) {
+                continue;
+            }
+            // const [pointX, pointY] = pointXY;
+            // result = result + `${pointX}` + "," + `${pointY} `;
+            positions[3 * ii] = pointX;
+            positions[3 * ii + 1] = -1 * pointY;
+            positions[3 * ii + 2] = 0;
+        }
+        return positions;
+    };
+
+    mapXToPointWebGl = (
+        index: number,
+        [valX, valY]: [number, number],
+        [valXmin, valXmax, valYmin, valYmax]: [number, number, number, number]
+    ): number => {
+
+        let yIndex = this.getYIndex(index);
+
+        if (this.yAxes[yIndex] === undefined) {
+            return 0;
+        }
+        const pointXmin = -1;
+        const pointXmax = 1;
+        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
+        // const pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
+        return pointX;
+    };
+
+    mapYToPointWebGl = (
+        index: number,
+        [valX, valY]: [number, number],
+        [valXmin, valXmax, valYmin, valYmax]: [number, number, number, number]
+    ): number => {
+
+        let yIndex = this.getYIndex(index);
+        let useLog10Scale = false;
+        if (this.yAxes[yIndex] !== undefined) {
+            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
+        }
+
+        if (this.yAxes[yIndex] === undefined) {
+            return 0;
+        }
+        const pointYmin = -1;
+        const pointYmax = 1;
+
+        // valY, valYmin, valYmax for Log10
+        // if we use Log10Scale, do not use extra space
+        if (useLog10Scale) {
+            valYmin = Math.log10(valYmin);
+            valYmax = Math.log10(valYmax);
+            valY = Math.log10(valY);
+        }
+        if (useLog10Scale) {
+            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
+                valY = -20
+            }
+            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
+                valYmin = -20
+            }
+            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
+                valYmax = 0
+            }
+        }
+
+        // const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
+        const pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
+        return pointY;
+    };
 
     mapXYsToPoints = (index: number): string => {
         let result = "";
@@ -740,7 +882,38 @@ export class XYPlotPlot {
         );
     };
 
-    _ElementLine = ({ index }: any) => {
+    _ElementLines = () => {
+        const canUseWebGl = g_widgets1.getRoot().getDisplayWindowClient().canUseWebGl();
+        if (canUseWebGl) {
+            // canvas with webgl
+            return (
+                <this._ElementLinesWebGl></this._ElementLinesWebGl>
+            )
+        } else {
+            // svg
+            return (
+                <this._ElementLinesSvg></this._ElementLinesSvg>
+            )
+        }
+    }
+
+    _ElementLinesSvg = () => {
+        return (
+            <>
+                {this.xy.map((xyData: number[], index: number) => {
+                    if (index % 2 === 0 && this.getTraceHidden(this.getYIndex(index)) === false) {
+                        // return <this._ElementLine key={`${xyData[0]}-${index}`} index={index}></this._ElementLine>;
+                        return (<this._ElementLineSvg key={`${xyData[0]}-${index}`} index={index}></this._ElementLineSvg>)
+                    } else {
+                        return null;
+                    }
+                })}
+
+            </>
+        )
+    }
+
+    _ElementLineSvg = ({ index }: { index: number }) => {
         return (
             <svg
                 width={`${this.plotWidth}`}
@@ -884,7 +1057,281 @@ export class XYPlotPlot {
                 })}
             </svg>
         );
+    }
+
+    // ------------------------- webgl ----------------------
+
+    calcWebGlShadeColor = (rgbaColor: string) => {
+        // "rgba(255, 0, 0, 1)" --> "1.0, 0.0, 0.0, 1.0"
+        const color1 = rgbaColor.replace("rgba", "").replace("rgb", "").replace("(", "").replace(")", "");
+        const colorStrs = color1.split(",");
+
+        let result: string = "";
+        if (colorStrs.length !== 4) {
+            return "0.0, 0.0, 0.0, 1.0";
+        }
+
+        for (let ii = 0; ii < colorStrs.length; ii++) {
+            const colorStr = colorStrs[ii];
+            const colorNum = parseFloat(colorStr);
+            if (isNaN(colorNum)) {
+                return "0.0, 0.0, 0.0, 1.0";
+            }
+            if (ii < 3) {
+                result = result + `${colorNum / 255}` + ", ";
+            } else {
+                result = result + `${colorNum}`;
+            }
+        }
+        return result;
+    }
+
+    _ElementLinesWebGl = () => {
+        const mountRef = React.useRef<HTMLDivElement>(null);
+
+        const fun1 = () => {
+            const scene = new THREE.Scene();
+            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+
+            // const scene = this.webGlScene;
+            // const camera = this.webGlCamera;
+            // this.clearWebGlScene();
+
+            camera.position.z = 1;
+            const containerWidth = this.plotWidth;
+            const containerHeight = this.plotHeight;
+
+            const pixelWorldUnitRatioX = containerWidth / 2;
+            const pixelWorldUnitRatioY = containerHeight / 2;
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(containerWidth, containerHeight);
+            mountRef.current!.appendChild(renderer.domElement);
+
+            // for test
+            // const leng = 50000;
+            // const randomArray = Array.from({ length: leng }, () => Math.random() * 10);
+            // this.xy[0] = [];
+            // this.xy[1] = randomArray;
+
+            // const randomArray1 = Array.from({ length: leng }, () => 10 + Math.random() * 10);
+            // this.xy[2] = [];
+            // this.xy[3] = randomArray1;
+
+            // const randomArray2 = Array.from({ length: leng }, () => 20 + Math.random() * 10);
+            // this.xy[4] = [];
+            // this.xy[5] = randomArray2;
+
+            // const randomArray3 = Array.from({ length: leng }, () => 30 + Math.random() * 10);
+            // this.xy[6] = [];
+            // this.xy[7] = randomArray3;
+
+            this.xy.forEach((XorYData: number[], index: number) => {
+                if (index % 2 === 1 || this.getTraceHidden(this.getYIndex(index)) === true) {
+                    return;
+                }
+
+                // for both points and lines
+                const positions = this.mapXYsToPointsWebGl(index);
+                console.log("positions =========", positions)
+                const color = this.yAxes[this.getYIndex(index)].lineColor;
+
+                const showLine = this.yAxes[this.getYIndex(index)].lineStyle === "none" ? false : true;
+                const showPoint = this.yAxes[this.getYIndex(index)].pointType === "none" ? false : true;
+
+                // ---------------- points --------------
+                if (showPoint === true) {
+                    const pointGeometry = new THREE.BufferGeometry();
+                    pointGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                    const pointSize = this.yAxes[this.getYIndex(index)].pointSize;
+                    const pointType = this.yAxes[this.getYIndex(index)].pointType;
+
+                    const shadeTypeValue = pointType === "circle" ?
+                        1
+                        :
+                        pointType === "square" ?
+                            0
+                            :
+                            pointType === "diamond" ?
+                                2
+                                :
+                                pointType === "x" ?
+                                    4
+                                    :
+                                    pointType === "triangle" ?
+                                        3
+                                        :
+                                        pointType === "asterisk" ?
+                                            5
+                                            :
+                                            1;
+
+                    const pointMaterial = new THREE.ShaderMaterial({
+                        uniforms: {
+                            // for some shapes, the actual point size is different from pointSize value
+                            size: { value: pointSize },
+                            shapeType: { value: shadeTypeValue }
+                        },
+                        vertexShader: `
+                         uniform float size;
+                         void main() {
+                           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                           gl_PointSize = size;
+                         }
+                        `,
+                        fragmentShader: `
+                        uniform int shapeType;
+                        void main() {
+                          // Get coordinate within the point
+                          vec2 coord = gl_PointCoord - vec2(0.5);
+                          gl_FragColor = vec4(${this.calcWebGlShadeColor(color)});
+                    
+                          if (shapeType == 0) {
+                            // Default square (built-in behavior)
+                            // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                          }
+                          else if (shapeType == 1) {
+                            // Circle - discard fragments outside radius
+                            float radius = length(coord);
+                            if (radius > 0.5) discard;
+                          }
+                          else if (shapeType == 2) {
+                            // Diamond
+                            float diamond = abs(coord.x) + abs(coord.y);
+                            if (diamond > 0.5) discard;
+                          }
+                          else if (shapeType == 3) {
+                            // Triangle
+                            if (coord.y < -0.25) discard; // Bottom cutoff
+                            if (abs(coord.x) > 0.5 * (0.5 - coord.y)) discard; // Sides
+                          }
+                          else if (shapeType == 4) {
+                            // X
+                            float lineWidth = 0.1;
+                            float diagonal1 = abs(coord.x + coord.y);
+                            float diagonal2 = abs(coord.x - coord.y);
+                            if (diagonal1 > lineWidth && diagonal2 > lineWidth) discard;
+                          }
+                          else if (shapeType == 5) {
+                            // Asterisk
+                            float lineWidth = 0.08;
+                            float angle = atan(coord.y, coord.x);
+                            float radius = length(coord);
+                            
+                            // Main cross
+                            float cross1 = abs(coord.x);
+                            float cross2 = abs(coord.y);
+                            
+                            // Diagonal crosses (rotated by 45 degrees)
+                            float diag1 = abs(coord.x + coord.y) * 0.707; // 1/sqrt(2)
+                            float diag2 = abs(coord.x - coord.y) * 0.707;
+                            
+                            if (radius > 0.5) discard;
+                            if (cross1 > lineWidth && cross2 > lineWidth && 
+                                diag1 > lineWidth && diag2 > lineWidth) discard;
+                          }
+                        }
+                        `,
+                        transparent: true
+                    });
+
+
+                    const points = new THREE.Points(pointGeometry, pointMaterial);
+                    scene.add(points);
+                }
+
+                // ---------------- line ----------------
+                if (showLine === true) {
+                    const lineGeometry = new LineGeometry();
+                    lineGeometry.setPositions(positions);
+
+                    const lineWidth = this.yAxes[this.getYIndex(index)].lineWidth;
+
+                    // negligible
+                    const lineMaterial = new LineMaterial({
+                        worldUnits: false,
+                        color: new THREE.Color(color),
+                        linewidth: lineWidth,
+                        resolution: new THREE.Vector2(containerWidth, containerHeight),
+                        // todo: define dashed
+                        dashed: true,
+                        // when in dashed dashSize = 5 * lineWidth, gapSize = 2 * lineWidth
+                        // when in dotted dashSize = 1 * lineWidth, gapSize = 3 * lineWidth
+                        dashSize: this.calcDashSizeWebGl(index),
+                        gapSize: this.calcGapSizeWebGl(index),
+                    });
+
+                    // negligible
+                    const line = new Line2(lineGeometry, lineMaterial);
+
+                    // negligible
+                    line.computeLineDistances();
+
+                    // 15%
+                    scene.add(line);
+                }
+            });
+
+            // negligible
+            renderer.render(scene, camera);
+
+            return () => {
+                mountRef.current?.removeChild(renderer.domElement);
+                renderer.dispose();
+            };
+        };
+
+        React.useEffect(fun1);
+
+        return <div ref={mountRef} style={{ width: this.plotWidth, height: this.plotWidth }} />;
     };
+
+    calcDashSizeWebGl = (index: number) => {
+        const yIndex = this.getYIndex(index);
+        const yAxis = this.yAxes[yIndex];
+        const pixelWorldUnitRatioX = this.plotWidth / 2;
+        const pixelWorldUnitRatioY = this.plotHeight / 2;
+        const lineWidth = yAxis["lineWidth"] / pixelWorldUnitRatioX;
+        switch (yAxis["lineStyle"]) {
+            case "solid":
+                return 1;
+            case "dotted":
+                return lineWidth * 1;
+            case "dashed":
+                return lineWidth * 4;
+            case "dash-dot":
+                return 1;
+            case "dash-dot-dot":
+                return 1;
+            default:
+                return 0;
+        }
+    };
+
+    calcGapSizeWebGl = (index: number) => {
+        const yIndex = this.getYIndex(index);
+        const yAxis = this.yAxes[yIndex];
+        const pixelWorldUnitRatioX = this.plotWidth / 2;
+        const pixelWorldUnitRatioY = this.plotHeight / 2;
+        const lineWidth = yAxis["lineWidth"] / pixelWorldUnitRatioX;
+        switch (yAxis["lineStyle"]) {
+            case "solid":
+                return 0;
+            case "dotted":
+                return lineWidth * 2;
+            case "dashed":
+                return lineWidth * 2;
+            case "dash-dot":
+                return 0;
+            case "dash-dot-dot":
+                return 0;
+            default:
+                return 1;
+        }
+    };
+
+    // ---------------------- svg ------------------------
 
     calcStrokeDasharray = (index: number) => {
         const yIndex = this.getYIndex(index);
@@ -905,6 +1352,8 @@ export class XYPlotPlot {
                 return "";
         }
     };
+
+
 
     getYIndex = (index: number) => {
         return Math.floor((index + 0.01) / 2);
@@ -1423,7 +1872,7 @@ export class XYPlotPlot {
                                         result[channelName] = undefined;
                                     }
                                 }
-                                navigator.clipboard.writeText(JSON.stringify(result, null ,4));
+                                navigator.clipboard.writeText(JSON.stringify(result, null, 4));
                             }
                         }}
                     >
@@ -2307,13 +2756,7 @@ export class XYPlotPlot {
                 {/* tick lines first */}
                 <this._ElementXYTickLines></this._ElementXYTickLines>
                 {/* data */}
-                {this.xy.map((xyData: number[], index: number) => {
-                    if (index % 2 === 0 && this.getTraceHidden(this.getYIndex(index)) === false) {
-                        return <this._ElementLine key={`${xyData[0]}-${index}`} index={index}></this._ElementLine>;
-                    } else {
-                        return null;
-                    }
-                })}
+                <this._ElementLines></this._ElementLines>
                 {/* legend */}
                 {this.getMainWidget().getText()["showLegend"] === true || this.peekLegend === true ? (
                     <this._ElementLegends></this._ElementLegends>

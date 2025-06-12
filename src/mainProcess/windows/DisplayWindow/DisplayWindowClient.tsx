@@ -84,6 +84,9 @@ export class DisplayWindowClient {
 
     private _processId: string = "";
 
+
+    private _webGlSupported: boolean = false;
+
     private _contextMenu: ContextMenu;
 
     private _hostname: string = "localhost";
@@ -168,6 +171,8 @@ export class DisplayWindowClient {
         } else {
             this._hostname = hostname;
         }
+
+        this.checkWebGLSupported();
 
         Log.debug("Finished creating DisplayWindowClient object");
     }
@@ -1594,6 +1599,22 @@ export class DisplayWindowClient {
     setSite = (newSite: string) => {
         this._site = newSite;
     }
+
+
+    checkWebGLSupported = () => {
+        try {
+            const canvas = document.createElement('canvas');
+            this._webGlSupported = !!(window.WebGLRenderingContext &&
+                (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+        } catch (e) {
+            this._webGlSupported = false;
+        }
+    }
+
+    canUseWebGl = () => {
+        return this._webGlSupported;
+    }
+
 }
 
 
