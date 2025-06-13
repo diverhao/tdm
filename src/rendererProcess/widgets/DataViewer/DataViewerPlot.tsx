@@ -475,6 +475,125 @@ export class DataViewerPlot {
         return pointY;
     };
 
+    mapXToPointThumbnailWebGl = (index: number, [valX, valY]: [number, number], plotHeight: number, isThumbnail: boolean = false): number => {
+        let useLog10Scale = false;
+        const yAxis = this.yAxes[index];
+        if (yAxis !== undefined) {
+            useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
+        }
+
+        let valXmin = this.xAxis.valMin;
+        let valXmax = this.xAxis.valMax;
+        let valYmin = Math.min(...this.generateFallbackYTicks());
+        let valYmax = Math.max(...this.generateFallbackYTicks());
+        if (useLog10Scale) {
+            valYmin = Math.log10(valYmin);
+            valYmax = Math.log10(valYmax);
+        }
+        if (yAxis !== undefined) {
+            valYmin = yAxis.valMin;
+            valYmax = yAxis.valMax;
+            if (useLog10Scale) {
+                valYmin = Math.log10(valYmin);
+                valYmax = Math.log10(valYmax);
+            }
+        }
+        if (useLog10Scale) {
+            valY = Math.log10(valY);
+        }
+        if (useLog10Scale) {
+            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
+                valY = 0
+            }
+            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
+                valYmin = 0
+            }
+            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
+                valYmax = 0
+            }
+        }
+
+        // thumbnail always use max range
+        if (isThumbnail) {
+            for (let xData0 of this.x) {
+                if (xData0.length > 1) {
+                    valXmin = Math.min(valXmin, xData0[0]);
+                    valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
+                }
+            }
+        }
+
+        // const pointXmin = 0;
+        // const pointXmax = this.plotWidth;
+        const pointXmin = -1;
+        const pointXmax = 1;
+        const pointYmin = 0;
+        let pointYmax = plotHeight;
+        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
+        // let pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
+        // return [pointX, pointY];
+        return pointX;
+    };
+
+    mapYToPointThumbnailWebGl = (index: number, [valX, valY]: [number, number], plotHeight: number, isThumbnail: boolean = false): number => {
+        let useLog10Scale = false;
+        const yAxis = this.yAxes[index];
+        if (yAxis !== undefined) {
+            useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
+        }
+
+        let valXmin = this.xAxis.valMin;
+        let valXmax = this.xAxis.valMax;
+        let valYmin = Math.min(...this.generateFallbackYTicks());
+        let valYmax = Math.max(...this.generateFallbackYTicks());
+        if (useLog10Scale) {
+            valYmin = Math.log10(valYmin);
+            valYmax = Math.log10(valYmax);
+        }
+        if (yAxis !== undefined) {
+            valYmin = yAxis.valMin;
+            valYmax = yAxis.valMax;
+            if (useLog10Scale) {
+                valYmin = Math.log10(valYmin);
+                valYmax = Math.log10(valYmax);
+            }
+        }
+        if (useLog10Scale) {
+            valY = Math.log10(valY);
+        }
+        if (useLog10Scale) {
+            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
+                valY = 0
+            }
+            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
+                valYmin = 0
+            }
+            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
+                valYmax = 0
+            }
+        }
+
+        // thumbnail always use max range
+        if (isThumbnail) {
+            for (let xData0 of this.x) {
+                if (xData0.length > 1) {
+                    valXmin = Math.min(valXmin, xData0[0]);
+                    valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
+                }
+            }
+        }
+
+        const pointXmin = 0;
+        const pointXmax = this.plotWidth;
+        // const pointYmin = 0;
+        // let pointYmax = plotHeight;
+        const pointYmin = -1;
+        let pointYmax = 1;
+        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
+        let pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
+        return pointY;
+    };
+
     mapXYToPoint = (index: number, [valX, valY]: [number, number], plotHeight: number, isThumbnail: boolean = false): [number, number] => {
         let useLog10Scale = false;
         const yAxis = this.yAxes[index];
@@ -865,14 +984,108 @@ export class DataViewerPlot {
 
             >
                 {/* data */}
-                {this.x.map((xData: number[], index: number) => {
-                    return <this._ElementThumbnailLine key={this.yAxes[index].label + `-${index}`} index={index}></this._ElementThumbnailLine>;
-                })}
+                <this._ElementThumbnailLines></this._ElementThumbnailLines>
                 <this._ElementThumbnailViewBoxLeft></this._ElementThumbnailViewBoxLeft>
                 <this._ElementThumbnailViewBoxRight></this._ElementThumbnailViewBoxRight>
                 <this._ElementThumbnailViewBox></this._ElementThumbnailViewBox>
             </div>)
     }
+
+    _ElementThumbnailLines = () => {
+        const canUseWebGl = g_widgets1.getRoot().getDisplayWindowClient().canUseWebGl();
+        if (canUseWebGl) {
+            // canvas with webgl
+            return (
+                <this._ElementThumbnailLinesWebGl></this._ElementThumbnailLinesWebGl>
+            )
+        } else {
+            // svg
+            return (
+                <this._ElementThumbnailLinesSvg></this._ElementThumbnailLinesSvg>
+            )
+        }
+    }
+
+    _ElementThumbnailLinesSvg = () => {
+        return (
+            <>
+                {this.x.map((xData: number[], index: number) => {
+                    return <this._ElementThumbnailLine key={this.yAxes[index].label + `-${index}`} index={index}></this._ElementThumbnailLine>;
+                })}
+            </>
+        )
+    }
+
+
+    _ElementThumbnailLinesWebGl = () => {
+        const mountRef = React.useRef<HTMLDivElement>(null);
+
+        const fun1 = () => {
+            const scene = new THREE.Scene();
+            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+
+            camera.position.z = 1;
+            const containerWidth = this.plotWidth;
+            const containerHeight = this.thumbnailHeight;
+
+            const pixelWorldUnitRatioX = containerWidth / 2;
+            const pixelWorldUnitRatioY = containerHeight / 2;
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(containerWidth, containerHeight);
+            mountRef.current!.appendChild(renderer.domElement);
+
+            this.x.forEach((xData: number[], index: number) => {
+
+                const positions = this.mapXYsToPointsThumbnailWebGl(index);
+                const color = this.yAxes[index].lineColor;
+
+                // const showLine = this.yAxes[index].show;
+                const showLine = true;
+
+                // ---------------- line ----------------
+                if (showLine === true) {
+                    const lineGeometry = new LineGeometry();
+                    lineGeometry.setPositions(positions);
+
+                    // const lineWidth = this.yAxes[this.getYIndex(index)].lineWidth;
+                    const lineWidth = 1;
+
+                    // negligible
+                    const lineMaterial = new LineMaterial({
+                        worldUnits: false,
+                        color: new THREE.Color(color),
+                        linewidth: lineWidth,
+                        resolution: new THREE.Vector2(containerWidth, containerHeight),
+                    });
+
+                    // negligible
+                    const line = new Line2(lineGeometry, lineMaterial);
+
+                    // negligible
+                    line.computeLineDistances();
+
+                    // 15%
+                    scene.add(line);
+                }
+            });
+
+            // negligible
+            renderer.render(scene, camera);
+
+            return () => {
+                mountRef.current?.removeChild(renderer.domElement);
+                renderer.dispose();
+            };
+        };
+
+        React.useEffect(fun1);
+
+        return <div ref={mountRef} style={{ width: this.plotWidth, height: this.thumbnailHeight }} />;
+    };
+
+
 
     _ElementThumbnail = React.memo(this._ElementThumbnailRaw, () => {
         if (this.updateThumbnail) {
@@ -1189,6 +1402,39 @@ export class DataViewerPlot {
 
         }
         return `${pointsXYOnPlot}`
+    };
+
+    mapXYsToPointsThumbnailWebGl = (index: number): Float32Array<ArrayBuffer> => {
+        const xData0 = this.x[index];
+        const yData0 = this.y[index];
+
+        // y data exists
+        if (yData0 === undefined) {
+            const positions = new Float32Array(3);
+            return positions;
+        }
+
+
+        // down sample the data
+        let [xData, yData] = GlobalMethods.downSampleXyData(xData0, yData0, this.plotWidth);
+
+        const len = Math.min(xData.length, yData.length);
+        if (len === 0) {
+            return new Float32Array(3);
+        }
+        const positions = new Float32Array(len * 3);
+
+        for (let ii = 0; ii < len; ii++) {
+            if (xData[ii] !== undefined && yData[ii] !== undefined) {
+                const pointX = this.mapXToPointWebGl(index, [xData[ii], yData[ii]], this.thumbnailHeight);
+                const pointY = this.mapYToPointWebGl(index, [xData[ii], yData[ii]], this.thumbnailHeight);
+                positions[ii * 3] = pointX;
+                positions[ii * 3 + 1] = -1 * pointY;
+                positions[ii * 3 + 2] = 0;
+            }
+
+        }
+        return positions;
     };
 
 
@@ -2312,34 +2558,10 @@ export class DataViewerPlot {
             renderer.setSize(containerWidth, containerHeight);
             mountRef.current!.appendChild(renderer.domElement);
 
-            // for test
-            // const leng = 50000;
-            // const randomArray = Array.from({ length: leng }, () => Math.random() * 10);
-            // this.xy[0] = [];
-            // this.xy[1] = randomArray;
-
-            // const randomArray1 = Array.from({ length: leng }, () => 10 + Math.random() * 10);
-            // this.xy[2] = [];
-            // this.xy[3] = randomArray1;
-
-            // const randomArray2 = Array.from({ length: leng }, () => 20 + Math.random() * 10);
-            // this.xy[4] = [];
-            // this.xy[5] = randomArray2;
-
-            // const randomArray3 = Array.from({ length: leng }, () => 30 + Math.random() * 10);
-            // this.xy[6] = [];
-            // this.xy[7] = randomArray3;
-
             this.x.forEach((xData: number[], index: number) => {
-                // if (index % 2 === 1 || this.getTraceHidden(this.getYIndex(index)) === true) {
-                //     return;
-                // }
 
-                // for both points and lines
                 const positions = this.mapXYsToPointsWebGl(index);
                 const color = this.yAxes[index].lineColor;
-                // const color = this.yAxes[this.getYIndex(index)].lineColor;
-                // const color = "rgba(255, 0, 0, 1)";
 
                 const showLine = this.yAxes[index].show;
 
@@ -2357,12 +2579,6 @@ export class DataViewerPlot {
                         color: new THREE.Color(color),
                         linewidth: lineWidth,
                         resolution: new THREE.Vector2(containerWidth, containerHeight),
-                        // todo: define dashed
-                        // dashed: true,
-                        // when in dashed dashSize = 5 * lineWidth, gapSize = 2 * lineWidth
-                        // when in dotted dashSize = 1 * lineWidth, gapSize = 3 * lineWidth
-                        // dashSize: this.calcDashSizeWebGl(index),
-                        // gapSize: this.calcGapSizeWebGl(index),
                     });
 
                     // negligible
