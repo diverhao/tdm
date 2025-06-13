@@ -8,6 +8,11 @@ import { Log } from "../../../mainProcess/log/Log";
 import { type_LocalChannel_data } from "../../../mainProcess/channel/LocalChannelAgent";
 // import { type_xAxis } from "../XYPlot/XYPlotPlot";
 import uuid from "uuid";
+import * as THREE from 'three';
+import { Line2 } from 'three/examples/jsm/lines/Line2';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 type type_yAxis = {
     label: string;
@@ -265,6 +270,64 @@ export class DataViewerPlot {
         return `${pointsXYOnPlot}`
     };
 
+    mapXYsToPointsWebGl = (index: number): Float32Array<ArrayBuffer> => {
+        const xData0 = this.x[index];
+        const yData0 = this.y[index];
+
+        // y data exists
+        if (yData0 === undefined) {
+            const positions = new Float32Array(3);
+            return positions;
+        }
+
+        // xMaxIndex is inclusive
+        let [xMinIndex, xMaxIndex] = GlobalMethods.binarySearchRange(xData0, this.xAxis.valMin, this.xAxis.valMax);
+        if (xMinIndex === -100 || xMaxIndex === -100) {
+            // binary search did not find, corner case, try linear search
+            [xMinIndex, xMaxIndex] = this.linearSearchRange(xData0, this.xAxis.valMin, this.xAxis.valMax);
+            if (xMinIndex === -100 || xMaxIndex === -100) {
+                // no data within the plot range
+                const positions = new Float32Array(3);
+                return positions;
+            }
+        }
+
+        let xData = xData0;
+        let yData = yData0;
+        if (xMinIndex === 0 && xMaxIndex === xData0.length - 1) {
+        } else {
+            xData = xData.slice(Math.max(xMinIndex - 1, 0), xMaxIndex + 2);
+            yData = yData.slice(Math.max(xMinIndex - 1, 0), xMaxIndex + 2);
+        }
+
+        // down sample the data
+        const maxPoints = this.plotWidth * 2;
+        [xData, yData] = GlobalMethods.downSampleXyData(xData, yData, maxPoints);
+
+
+        const len = Math.min(xData.length, yData.length);
+        const positions = new Float32Array(len * 3);
+
+        const pointsXYOnPlot: [number, number][] = [];
+        for (let ii = 0; ii < len; ii++) {
+            if (xData[ii] !== undefined && yData[ii] !== undefined) {
+                // const pointXY = this.mapXYToPoint(index, [xData[ii], yData[ii]], this.plotHeight);
+                const pointX = this.mapXToPointWebGl(index, [xData[ii], yData[ii]], this.plotHeight);
+                const pointY = this.mapYToPointWebGl(index, [xData[ii], yData[ii]], this.plotHeight);
+                // out of range SVG polyline point
+                // pointXY[0] = Math.round(Math.min(Math.max(pointXY[0], -100), 100000));
+                // pointXY[1] = Math.round(Math.min(Math.max(pointXY[1], -100), 100000));
+                // pointsXYOnPlot.push(pointXY);
+                positions[3 * ii] = pointX;
+                positions[3 * ii + 1] = -1 * pointY;
+                positions[3 * ii + 2] = 0;
+
+            }
+        }
+        // return `${pointsXYOnPlot}`
+        return positions;
+    };
+
     linearSearchRange = (data: number[], valMin: number, valMax: number) => {
         let minIndex = -100;
         let maxIndex = -100;
@@ -292,6 +355,125 @@ export class DataViewerPlot {
         return [minIndex, maxIndex];
     }
 
+
+    mapXToPointWebGl = (index: number, [valX, valY]: [number, number], plotHeight: number, isThumbnail: boolean = false): number => {
+        let useLog10Scale = false;
+        const yAxis = this.yAxes[index];
+        if (yAxis !== undefined) {
+            useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
+        }
+
+        let valXmin = this.xAxis.valMin;
+        let valXmax = this.xAxis.valMax;
+        let valYmin = Math.min(...this.generateFallbackYTicks());
+        let valYmax = Math.max(...this.generateFallbackYTicks());
+        if (useLog10Scale) {
+            valYmin = Math.log10(valYmin);
+            valYmax = Math.log10(valYmax);
+        }
+        if (yAxis !== undefined) {
+            valYmin = yAxis.valMin;
+            valYmax = yAxis.valMax;
+            if (useLog10Scale) {
+                valYmin = Math.log10(valYmin);
+                valYmax = Math.log10(valYmax);
+            }
+        }
+        if (useLog10Scale) {
+            valY = Math.log10(valY);
+        }
+        if (useLog10Scale) {
+            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
+                valY = 0
+            }
+            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
+                valYmin = 0
+            }
+            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
+                valYmax = 0
+            }
+        }
+
+        // thumbnail always use max range
+        if (isThumbnail) {
+            for (let xData0 of this.x) {
+                if (xData0.length > 1) {
+                    valXmin = Math.min(valXmin, xData0[0]);
+                    valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
+                }
+            }
+        }
+
+        // const pointXmin = 0;
+        // const pointXmax = this.plotWidth;
+        const pointXmin = -1;
+        const pointXmax = 1;
+        const pointYmin = 0;
+        let pointYmax = plotHeight;
+        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
+        // let pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
+        // return [pointX, pointY];
+        return pointX;
+    };
+
+    mapYToPointWebGl = (index: number, [valX, valY]: [number, number], plotHeight: number, isThumbnail: boolean = false): number => {
+        let useLog10Scale = false;
+        const yAxis = this.yAxes[index];
+        if (yAxis !== undefined) {
+            useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
+        }
+
+        let valXmin = this.xAxis.valMin;
+        let valXmax = this.xAxis.valMax;
+        let valYmin = Math.min(...this.generateFallbackYTicks());
+        let valYmax = Math.max(...this.generateFallbackYTicks());
+        if (useLog10Scale) {
+            valYmin = Math.log10(valYmin);
+            valYmax = Math.log10(valYmax);
+        }
+        if (yAxis !== undefined) {
+            valYmin = yAxis.valMin;
+            valYmax = yAxis.valMax;
+            if (useLog10Scale) {
+                valYmin = Math.log10(valYmin);
+                valYmax = Math.log10(valYmax);
+            }
+        }
+        if (useLog10Scale) {
+            valY = Math.log10(valY);
+        }
+        if (useLog10Scale) {
+            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
+                valY = 0
+            }
+            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
+                valYmin = 0
+            }
+            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
+                valYmax = 0
+            }
+        }
+
+        // thumbnail always use max range
+        if (isThumbnail) {
+            for (let xData0 of this.x) {
+                if (xData0.length > 1) {
+                    valXmin = Math.min(valXmin, xData0[0]);
+                    valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
+                }
+            }
+        }
+
+        const pointXmin = 0;
+        const pointXmax = this.plotWidth;
+        // const pointYmin = 0;
+        // let pointYmax = plotHeight;
+        const pointYmin = -1;
+        let pointYmax = 1;
+        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
+        let pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
+        return pointY;
+    };
 
     mapXYToPoint = (index: number, [valX, valY]: [number, number], plotHeight: number, isThumbnail: boolean = false): [number, number] => {
         let useLog10Scale = false;
@@ -1112,7 +1294,6 @@ export class DataViewerPlot {
             return null;
         }
 
-        const points = this.mapXYsToPoints(index).split(",");
 
         return (
             <svg
@@ -1130,25 +1311,6 @@ export class DataViewerPlot {
                     stroke={this.yAxes[index].lineColor}
                     fill="none"
                 ></polyline>
-                {
-                    // points.map((pointXorY: string, ii: number) => {
-                    //     if (ii % 2 === 0) {
-                    //         return null
-                    //         // (
-                    //         //     <circle
-                    //         //         key={pointXorY + `${ii}`}
-                    //         //         cx={parseInt(points[ii])}
-                    //         //         cy={parseInt(points[ii + 1])}
-                    //         //         r={3}
-                    //         //     >
-                    //         //     </circle>
-                    //         // )
-                    //     } else {
-                    //         return null
-                    //     }
-
-                    // })
-                }
             </svg>
         );
     };
@@ -2098,11 +2260,134 @@ export class DataViewerPlot {
                 {/* tick lines first */}
                 <this._ElementXYTickLines></this._ElementXYTickLines>
                 {/* data */}
+                <this._ElementLines></this._ElementLines>
+            </div>
+        );
+    };
+
+    _ElementLines = () => {
+        const canUseWebGl = g_widgets1.getRoot().getDisplayWindowClient().canUseWebGl();
+        if (canUseWebGl) {
+            // canvas with webgl
+            return (
+                <this._ElementLinesWebGl></this._ElementLinesWebGl>
+            )
+        } else {
+            // svg
+            return (
+                <this._ElementLinesSvg></this._ElementLinesSvg>
+            )
+        }
+    }
+
+
+
+    _ElementLinesSvg = () => {
+        return (
+            <>
                 {this.x.map((xData: number[], index: number) => {
                     return <this._ElementLine key={this.yAxes[index].label + `-${index}`} index={index}></this._ElementLine>;
                 })}
-            </div>
-        );
+            </>
+        )
+    }
+
+
+    _ElementLinesWebGl = () => {
+        const mountRef = React.useRef<HTMLDivElement>(null);
+
+        const fun1 = () => {
+            const scene = new THREE.Scene();
+            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+
+            camera.position.z = 1;
+            const containerWidth = this.plotWidth;
+            const containerHeight = this.plotHeight;
+
+            const pixelWorldUnitRatioX = containerWidth / 2;
+            const pixelWorldUnitRatioY = containerHeight / 2;
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(containerWidth, containerHeight);
+            mountRef.current!.appendChild(renderer.domElement);
+
+            // for test
+            // const leng = 50000;
+            // const randomArray = Array.from({ length: leng }, () => Math.random() * 10);
+            // this.xy[0] = [];
+            // this.xy[1] = randomArray;
+
+            // const randomArray1 = Array.from({ length: leng }, () => 10 + Math.random() * 10);
+            // this.xy[2] = [];
+            // this.xy[3] = randomArray1;
+
+            // const randomArray2 = Array.from({ length: leng }, () => 20 + Math.random() * 10);
+            // this.xy[4] = [];
+            // this.xy[5] = randomArray2;
+
+            // const randomArray3 = Array.from({ length: leng }, () => 30 + Math.random() * 10);
+            // this.xy[6] = [];
+            // this.xy[7] = randomArray3;
+
+            this.x.forEach((xData: number[], index: number) => {
+                // if (index % 2 === 1 || this.getTraceHidden(this.getYIndex(index)) === true) {
+                //     return;
+                // }
+
+                // for both points and lines
+                const positions = this.mapXYsToPointsWebGl(index);
+                const color = this.yAxes[index].lineColor;
+                // const color = this.yAxes[this.getYIndex(index)].lineColor;
+                // const color = "rgba(255, 0, 0, 1)";
+
+                const showLine = this.yAxes[index].show;
+
+                // ---------------- line ----------------
+                if (showLine === true) {
+                    const lineGeometry = new LineGeometry();
+                    lineGeometry.setPositions(positions);
+
+                    // const lineWidth = this.yAxes[this.getYIndex(index)].lineWidth;
+                    const lineWidth = this.yAxes[index].lineWidth;
+
+                    // negligible
+                    const lineMaterial = new LineMaterial({
+                        worldUnits: false,
+                        color: new THREE.Color(color),
+                        linewidth: lineWidth,
+                        resolution: new THREE.Vector2(containerWidth, containerHeight),
+                        // todo: define dashed
+                        // dashed: true,
+                        // when in dashed dashSize = 5 * lineWidth, gapSize = 2 * lineWidth
+                        // when in dotted dashSize = 1 * lineWidth, gapSize = 3 * lineWidth
+                        // dashSize: this.calcDashSizeWebGl(index),
+                        // gapSize: this.calcGapSizeWebGl(index),
+                    });
+
+                    // negligible
+                    const line = new Line2(lineGeometry, lineMaterial);
+
+                    // negligible
+                    line.computeLineDistances();
+
+                    // 15%
+                    scene.add(line);
+                }
+            });
+
+            // negligible
+            renderer.render(scene, camera);
+
+            return () => {
+                mountRef.current?.removeChild(renderer.domElement);
+                renderer.dispose();
+            };
+        };
+
+        React.useEffect(fun1);
+
+        return <div ref={mountRef} style={{ width: this.plotWidth, height: this.plotWidth }} />;
     };
 
 

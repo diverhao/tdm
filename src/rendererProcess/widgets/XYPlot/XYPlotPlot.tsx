@@ -1093,10 +1093,6 @@ export class XYPlotPlot {
             const scene = new THREE.Scene();
             const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
 
-            // const scene = this.webGlScene;
-            // const camera = this.webGlCamera;
-            // this.clearWebGlScene();
-
             camera.position.z = 1;
             const containerWidth = this.plotWidth;
             const containerHeight = this.plotHeight;
@@ -1134,7 +1130,6 @@ export class XYPlotPlot {
 
                 // for both points and lines
                 const positions = this.mapXYsToPointsWebGl(index);
-                console.log("positions =========", positions)
                 const color = this.yAxes[this.getYIndex(index)].lineColor;
 
                 const showLine = this.yAxes[this.getYIndex(index)].lineStyle === "none" ? false : true;
