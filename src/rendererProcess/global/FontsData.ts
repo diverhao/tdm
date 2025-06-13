@@ -3,10 +3,22 @@ export class FontsData {
 
     static g_fonts: Record<string, Record<string, FontFace>> = {
         "TDM Default": {
-            Regular: new FontFace("TDM Default", `url(../../resources/fonts/LiberationSans/LiberationSans-Regular.ttf)`, { style: "normal", weight: "normal" }),
-            Bold: new FontFace("TDM Default", `url(../../resources/fonts//LiberationSans/LiberationSans-Bold.ttf)`, { style: "normal", weight: "bold" }),
-            Italic: new FontFace("TDM Default", `url(../../resources/fonts/LiberationSans/LiberationSans-Italic.ttf)`, { style: "italic", weight: "normal" }),
+            Regular: new FontFace("TDM Default", `url(../../resources/fonts/Inter/Inter-VariableFont_opsz.ttf)`, { style: "normal", weight: "normal" }),
+            Bold: new FontFace("TDM Default", `url(../../resources/fonts/Inter/Inter-VariableFont_opsz.ttf)`, { style: "normal", weight: "700" }),
+            Italic: new FontFace("TDM Default", `url(../../resources/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf)`, { style: "italic", weight: "normal" }),
+            ItalicBold: new FontFace("TDM Default", `url(../../resources/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf)`, { style: "italic", weight: "700" }),
         },
+        "Inter": {
+            Regular: new FontFace("Inter", `url(../../resources/fonts/Inter/Inter-VariableFont_opsz.ttf)`, { style: "normal", weight: "normal" }),
+            Bold: new FontFace("Inter", `url(../../resources/fonts/Inter/Inter-VariableFont_opsz.ttf)`, { style: "normal", weight: "700" }),
+            Italic: new FontFace("Inter", `url(../../resources/fonts/Inter/Inter-VariableFont_opsz.ttf)`, { style: "italic", weight: "normal" }),
+            ItalicBold: new FontFace("Inter", `url(../../resources/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf)`, { style: "italic", weight: "700" }),
+        },
+        // "TDM Default": {
+        //     Regular: new FontFace("TDM Default", `url(../../resources/fonts/LiberationSans/LiberationSans-Regular.ttf)`, { style: "normal", weight: "normal" }),
+        //     Bold: new FontFace("TDM Default", `url(../../resources/fonts//LiberationSans/LiberationSans-Bold.ttf)`, { style: "normal", weight: "bold" }),
+        //     Italic: new FontFace("TDM Default", `url(../../resources/fonts/LiberationSans/LiberationSans-Italic.ttf)`, { style: "italic", weight: "normal" }),
+        // },
         Tinos: {
             Regular: new FontFace("Tinos", `url(../../resources/fonts//Tinos/Tinos-Regular.ttf)`, { style: "normal", weight: "normal" }),
             Bold: new FontFace("Tinos", `url(../../resources/fonts//Tinos/Tinos-Bold.ttf)`, { style: "normal", weight: "bold" }),

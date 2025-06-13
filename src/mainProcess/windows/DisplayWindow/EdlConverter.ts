@@ -1049,7 +1049,7 @@ export class EdlConverter {
     // -------------------------------- font --------------------------------------
     static fontFamilyMap: Record<string, string> = {
         courier: "Courier Prime",
-        helvetica: "Liberation Sans",
+        helvetica: "Inter",
     };
     static fontWeightMap: Record<string, string> = {
         bold: "bold",
@@ -1065,7 +1065,7 @@ export class EdlConverter {
     static convertEdlFont = (propertyValue: string) => {
         const propertyValueArray = propertyValue.replaceAll(`"`, "").split("-");
 
-        let fontFamily = "Liberation Sans";
+        let fontFamily = "Inter";
         let fontSize = 14;
         let fontStyle = "normal";
         let fontWeight = "normal";

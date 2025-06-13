@@ -1243,32 +1243,22 @@ export class XYPlotPlot {
 
                     const lineWidth = this.yAxes[this.getYIndex(index)].lineWidth;
 
-                    // negligible
                     const lineMaterial = new LineMaterial({
                         worldUnits: false,
                         color: new THREE.Color(color),
                         linewidth: lineWidth,
                         resolution: new THREE.Vector2(containerWidth, containerHeight),
-                        // todo: define dashed
                         dashed: true,
-                        // when in dashed dashSize = 5 * lineWidth, gapSize = 2 * lineWidth
-                        // when in dotted dashSize = 1 * lineWidth, gapSize = 3 * lineWidth
                         dashSize: this.calcDashSizeWebGl(index),
                         gapSize: this.calcGapSizeWebGl(index),
                     });
 
-                    // negligible
                     const line = new Line2(lineGeometry, lineMaterial);
-
-                    // negligible
                     line.computeLineDistances();
-
-                    // 15%
                     scene.add(line);
                 }
             });
 
-            // negligible
             renderer.render(scene, camera);
 
             return () => {

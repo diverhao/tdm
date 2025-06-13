@@ -1049,10 +1049,8 @@ export class DataViewerPlot {
                     const lineGeometry = new LineGeometry();
                     lineGeometry.setPositions(positions);
 
-                    // const lineWidth = this.yAxes[this.getYIndex(index)].lineWidth;
                     const lineWidth = 1;
 
-                    // negligible
                     const lineMaterial = new LineMaterial({
                         worldUnits: false,
                         color: new THREE.Color(color),
@@ -1060,18 +1058,12 @@ export class DataViewerPlot {
                         resolution: new THREE.Vector2(containerWidth, containerHeight),
                     });
 
-                    // negligible
                     const line = new Line2(lineGeometry, lineMaterial);
-
-                    // negligible
                     line.computeLineDistances();
-
-                    // 15%
                     scene.add(line);
                 }
             });
 
-            // negligible
             renderer.render(scene, camera);
 
             return () => {
@@ -2573,7 +2565,6 @@ export class DataViewerPlot {
                     // const lineWidth = this.yAxes[this.getYIndex(index)].lineWidth;
                     const lineWidth = this.yAxes[index].lineWidth;
 
-                    // negligible
                     const lineMaterial = new LineMaterial({
                         worldUnits: false,
                         color: new THREE.Color(color),
@@ -2581,18 +2572,13 @@ export class DataViewerPlot {
                         resolution: new THREE.Vector2(containerWidth, containerHeight),
                     });
 
-                    // negligible
                     const line = new Line2(lineGeometry, lineMaterial);
-
-                    // negligible
                     line.computeLineDistances();
 
-                    // 15%
                     scene.add(line);
                 }
             });
 
-            // negligible
             renderer.render(scene, camera);
 
             return () => {

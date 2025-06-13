@@ -648,7 +648,17 @@ export class ProfilesViewer extends BaseWidget {
                     marginTop: 10,
                     marginBottom: 10,
                 }}>
-                This TDM instance is using profiles from {`${this.getText()["profilesFileName"]}`}
+                    {g_widgets1.getRoot().getDisplayWindowClient().canUseWebGl() === true ? "This computer uses WebGL" : "This computer cannot use WebGL"}
+                </div>
+                <div>
+                    <hr></hr>
+                </div>
+                <div style={{
+                    color: "rgba(100, 100, 100, 1)",
+                    marginTop: 10,
+                    marginBottom: 10,
+                }}>
+                    This TDM instance is using profiles from {`${this.getText()["profilesFileName"]}`}
                 </div>
                 <div>
                     <hr></hr>
