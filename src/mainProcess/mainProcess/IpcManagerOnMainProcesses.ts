@@ -39,6 +39,16 @@ export class IpcManagerOnMainProcesses {
             this.server = new WebSocketServer({
                 host: "127.0.0.1",
                 port: this.getPort(),
+                maxPayload: 50 * 1024 * 1024,
+                perMessageDeflate: {
+                    zlibDeflateOptions: {
+                        // See zlib defaults.
+                        chunkSize: 1024,
+                        memLevel: 7,
+                        level: 3
+                    },
+                    threshold: 10 * 1024 // Only compress messages > 10 KB
+                }
             });
         } else {
             // if in web mode, use the same port as https server
@@ -99,7 +109,9 @@ export class IpcManagerOnMainProcesses {
             });
 
             // for whatever reason the websocket connection is closed, clean up the server side
-            wsClient.on("close", () => {
+            wsClient.on("close", (code: number, reason: Buffer) => {
+                Log.info("-1", "WebSocket client closed.", code, reason);
+
                 // same as "error" event below
                 const index = Object.values(this.getClients()).indexOf(wsClient);
                 if (index !== -1) {

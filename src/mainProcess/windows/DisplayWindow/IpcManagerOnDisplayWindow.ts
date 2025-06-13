@@ -90,6 +90,10 @@ export class IpcManagerOnDisplayWindow {
             Log.error("IPC websocket client error:", err)
         }
 
+        client.onclose = (ev: CloseEvent) => {
+            Log.error("IPC websocket connection closed", ev);
+        }
+
         client.onmessage = (event: any) => {
             const messageBuffer = event.data;
             const message = JSON.parse(messageBuffer.toString(), (key, value) =>

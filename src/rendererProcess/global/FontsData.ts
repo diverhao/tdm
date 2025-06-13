@@ -11,7 +11,7 @@ export class FontsData {
         "Inter": {
             Regular: new FontFace("Inter", `url(../../resources/fonts/Inter/Inter-VariableFont_opsz.ttf)`, { style: "normal", weight: "normal" }),
             Bold: new FontFace("Inter", `url(../../resources/fonts/Inter/Inter-VariableFont_opsz.ttf)`, { style: "normal", weight: "700" }),
-            Italic: new FontFace("Inter", `url(../../resources/fonts/Inter/Inter-VariableFont_opsz.ttf)`, { style: "italic", weight: "normal" }),
+            Italic: new FontFace("Inter", `url(../../resources/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf)`, { style: "italic", weight: "normal" }),
             ItalicBold: new FontFace("Inter", `url(../../resources/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf)`, { style: "italic", weight: "700" }),
         },
         // "TDM Default": {

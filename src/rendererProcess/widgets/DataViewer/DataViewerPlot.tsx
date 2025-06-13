@@ -270,7 +270,7 @@ export class DataViewerPlot {
         return `${pointsXYOnPlot}`
     };
 
-    mapXYsToPointsWebGl = (index: number): Float32Array<ArrayBuffer> => {
+    mapXYsToPointsWebGl = (index: number): Float32Array => {
         const xData0 = this.x[index];
         const yData0 = this.y[index];
 
@@ -1396,7 +1396,7 @@ export class DataViewerPlot {
         return `${pointsXYOnPlot}`
     };
 
-    mapXYsToPointsThumbnailWebGl = (index: number): Float32Array<ArrayBuffer> => {
+    mapXYsToPointsThumbnailWebGl = (index: number): Float32Array => {
         const xData0 = this.x[index];
         const yData0 = this.y[index];
 

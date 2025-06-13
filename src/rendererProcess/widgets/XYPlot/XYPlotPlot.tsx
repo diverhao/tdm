@@ -153,7 +153,7 @@ export class XYPlotPlot {
 
     // --------------------------- plot calculation ---------------------------
 
-    mapXYsToPointsWebGl = (index: number): Float32Array<ArrayBuffer> => {
+    mapXYsToPointsWebGl = (index: number): Float32Array => {
         // x and y data are odd and even indices
         let xData = this.xy[index];
         let yData = this.xy[index + 1];
