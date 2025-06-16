@@ -36,7 +36,6 @@ import html2canvas from "html2canvas";
 import { convertEpochTimeToString } from "../../../rendererProcess/global/GlobalMethods";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
 import path from "path";
-import { KeyboardEvent } from "react";
 
 import '../../resources/css/katex.min.css';
 import { Talhk } from "../../../rendererProcess/widgets/Talhk/Talhk";
@@ -232,6 +231,14 @@ export class DisplayWindowClient {
         }
     }
 
+    moveWindow = (dx: number, dy: number) => {
+        this.getIpcManager().sendFromRendererProcess("move-window", {
+            displayWindowId: this.getWindowId(),
+            dx: dx,
+            dy: dy,
+        })
+    }
+
 
     // mid or right button down on the window
     // the left-button down event is handled in each widget in a more efficient way
@@ -261,6 +268,51 @@ export class DisplayWindowClient {
                 event.preventDefault();
             }
         })
+
+        /**
+         * Move window using mid button
+         */
+        if (this.getMainProcessMode() === "desktop" && this.isInIframe() === false) {
+            window.addEventListener('mousedown', (e) => {
+
+                if ((e.button === 1)) { // middle button
+
+                    // set always on top
+                    // this.setWindowAlwaysOnTop(true);
+
+                    const handleMouseMove = (event: MouseEvent) => {
+                        // remove the "Channel Name Peek Div"
+                        if (g_widgets1 === undefined) {
+                            return;
+                        }
+                        g_widgets1.removeChannelNamePeekDiv();
+
+                        const dx = event.movementX;
+                        const dy = event.movementY;
+                        this.moveWindow(dx, dy);
+                    };
+
+                    const handleMouseUp = () => {
+                        console.log("mouse is up")
+                        // this.setWindowAlwaysOnTop(false);
+                        // cancel always on top
+                        window.removeEventListener('mousemove', handleMouseMove);
+                        window.removeEventListener('mouseup', handleMouseUp);
+
+                        document.body.removeEventListener('mouseenter', handleMouseUp);
+                        document.body.removeEventListener('mouseleave', handleMouseUp);
+                    };
+
+                    window.addEventListener('mousemove', handleMouseMove);
+                    window.addEventListener('mouseup', handleMouseUp);
+
+                    document.body.addEventListener('mouseenter', handleMouseUp);
+                    document.body.addEventListener('mouseleave', handleMouseUp);
+
+                }
+            });
+        }
+
 
         // the right button down in operating mode is handled by this callback function
         // In operating mode, all the mouse events on the readback-type widgets are ignored.
@@ -1613,6 +1665,17 @@ export class DisplayWindowClient {
 
     canUseWebGl = () => {
         return this._webGlSupported;
+    }
+
+    isInIframe = () => {
+        return window.self !== window.top;
+    }
+
+    setWindowAlwaysOnTop = (state: boolean) => {
+        this.getIpcManager().sendFromRendererProcess("set-window-always-on-top", {
+            displayWindowId: this.getWindowId(),
+            state: state,
+        })
     }
 
 }

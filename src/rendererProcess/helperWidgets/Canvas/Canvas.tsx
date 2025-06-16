@@ -259,7 +259,10 @@ export class Canvas {
             backgroundImage: this.getShowGrid() === true && g_widgets1.isEditing() && this.getXGridSize() > 2.5 && this.getYGridSize() > 2.5 ? `repeating-linear-gradient(${this.getGridColor()} 0 1px, transparent 1px 100%), repeating-linear-gradient(90deg, ${this.getGridColor()} 0 1px, transparent 1px 100%)` : "",
             backgroundSize: `${this.getXGridSize()}px ${this.getYGridSize()}px`,
             outline: mainProcesMode === "web" ? "1px solid black" : "none",
-        }} onMouseDown={this._handleMouseDown}></div>;
+        }}
+            onMouseDown={this._handleMouseDown}
+        >
+        </div>;
     };
 
     // --------------------- style and tdl -------------------------

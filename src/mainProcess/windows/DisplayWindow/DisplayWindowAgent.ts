@@ -1558,6 +1558,7 @@ export class DisplayWindowAgent {
                 };
                 try {
                     await app.whenReady();
+                    app.focus({steal: true});
                     const window = new BrowserWindow(windowOptions);
                     this._browserWindow = window;
                     this._browserWindow.webContents.setWindowOpenHandler(({ url }) => {

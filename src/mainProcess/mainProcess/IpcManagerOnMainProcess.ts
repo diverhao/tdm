@@ -76,6 +76,8 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("open-default-display-windows", this.handleOpenDefaultDisplayWindows);
         this.ipcMain.on("create-blank-display-window", this.handleCreateBlankDisplayWindow);
         this.ipcMain.on("zoom-window", this.handleZoomWindow);
+        this.ipcMain.on("move-window", this.handleMoveWindow)
+        this.ipcMain.on("set-window-always-on-top", this.handleSetWindowAlwaysOnTop)
         // ------------------ tdl file ----------------------
         // open a tdl file, which creates a new display window
         this.ipcMain.on("open-tdl-file", this.handleOpenTdlFiles);
@@ -1865,6 +1867,44 @@ export class IpcManagerOnMainProcess {
             }
         }
     };
+
+    handleMoveWindow = (event: any, data: {
+        displayWindowId: string,
+        dx: number,
+        dy: number
+    }) => {
+        const displayWindowId = data["displayWindowId"];
+        const dx = data["dx"];
+        const dy = data["dy"];
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            const browserWindow = displayWindowAgent.getBrowserWindow();
+            if (browserWindow instanceof BrowserWindow) {
+                const bounds = browserWindow.getBounds();
+                browserWindow.setBounds({
+                    x: bounds.x + dx,
+                    y: bounds.y + dy,
+                    width: bounds.width,
+                    height: bounds.height
+                })
+            }
+        }
+    }
+
+    handleSetWindowAlwaysOnTop = (event: any, data: {
+        displayWindowId: string,
+        state: boolean
+    }) => {
+        const displayWindowId = data["displayWindowId"];
+        const state = data["state"];
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            const browserWindow = displayWindowAgent.getBrowserWindow();
+            if (browserWindow instanceof BrowserWindow) {
+                browserWindow.setAlwaysOnTop(state);
+            }
+        }
+    }
 
     /**
      * script is full path or empty string

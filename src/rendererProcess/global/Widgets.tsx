@@ -3461,7 +3461,6 @@ export class Widgets {
         const channelNamePeekDiv = document.getElementById(channelNamePeekDivId);
         channelNamePeekDiv?.remove();
         this.setChannelNamePeekDivId("");
-
     }
 
     // same as the DisplayWindowClient mouse down event
