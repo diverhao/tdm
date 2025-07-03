@@ -173,7 +173,7 @@ export class HttpServer {
         // ----------------------- midware stack ----------------------------
         // all incoming http request need to go through the midwares
 
-        // parse JSON, increase the limit to 10 MB
+        // parse JSON, increase the limit to 10 MB, we can get json via req.data
         this._server.use(express.json({ limit: 10 * 1024 * 1024 }));
         this._server.use(express.urlencoded({ limit: 10 * 1024 * 1024, extended: true }));
 
@@ -186,7 +186,7 @@ export class HttpServer {
         }));
         // init passport.js
         this._server.use(passport.initialize());
-        // add .user, .isAuthenticated(), to every req
+        // add .user, .isAuthenticated(), to req
         this._server.use(passport.session());
 
 

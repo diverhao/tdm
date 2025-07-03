@@ -30,7 +30,7 @@ export type type_folder_content = type_single_file_folder[];
 
 
 export type type_single_file_folder = {
-    name: string, // only the name
+    name: string, // only the name for regular file/folder, absolute path for bookmark
     type: "file" | "folder",
     size: number,
     timeModified: number,
@@ -104,6 +104,17 @@ export class FileBrowser extends BaseWidget {
             }
         }, { passive: false });
 
+        window.addEventListener("mousedown", (event) => {
+
+            const renameButton = document.getElementById("element-rename-item");
+            if (event.target === renameButton) {
+                return;
+            }
+            if (this.getItemNameBeingEdited() === true) {
+                this.setItemNameBeingEdited(false);
+                this.forceUpdate({});
+            }
+        })
     }
 
     // ------------------------- event ---------------------------------
@@ -236,6 +247,9 @@ export class FileBrowser extends BaseWidget {
         );
     };
 
+
+
+
     _ElementFileBrowser = () => {
         const [, forceUpdate] = React.useState({});
         const elementRef = React.useRef<any>(null);
@@ -245,9 +259,21 @@ export class FileBrowser extends BaseWidget {
             if (g_widgets1.isEditing()) {
                 return;
             } else {
-                this.fetchFolderContent();
+                const bookmarks = this.getBookmarks();
+                if (bookmarks.length === 0) {
+                    // if bookmarks is empty, use the path of first default tdl file
+                    // if there is no default tdl file, use the HOME folder
+                    this.fetchFolderContent();
+                } else {
+                    // bookmarks is not empty
+                    this.updateFolderContent(bookmarks);
+                    this.getText()["path"] = "bookmarks-ABCD";
+                    this.setFolderPath("bookmarks-ABCD"); // magic word
+                }
             }
         }, [])
+
+
         return (
             <div
                 ref={elementRef}
@@ -331,7 +357,7 @@ export class FileBrowser extends BaseWidget {
                             }
                         }
 
-                        if (event.key === "Enter") {
+                        if (event.key === "Enter" && this.getItemNameBeingEdited() === false) {
                             // same as double click on table row
                             const element = this.getFolderContent()[selectedItemIndex];
                             this.handleDoubleClickOnItem(element);
@@ -429,35 +455,38 @@ export class FileBrowser extends BaseWidget {
                             }}>
                                 Name
                             </th>
-                            <th style={{
-                                paddingTop: 3,
-                                paddingBottom: 3,
-                                paddingLeft: 4,
-                                paddingRight: 4,
-                            }}>
-                                Date Modified
-                            </th>
-                            <th style={{
-                                paddingTop: 3,
-                                paddingBottom: 3,
-                                paddingLeft: 4,
-                                paddingRight: 4,
-                            }}>
-                                Size
-                            </th>
-                            <th style={{
-                                paddingTop: 3,
-                                paddingBottom: 3,
-                                paddingLeft: 4,
-                                paddingRight: 4,
-                            }}>
-                                Kind
-                            </th>
+                            {this.getFolderPath() === "bookmarks-ABCD" ? null :
+                                <>
+                                    <th style={{
+                                        paddingTop: 3,
+                                        paddingBottom: 3,
+                                        paddingLeft: 4,
+                                        paddingRight: 4,
+                                    }}>
+                                        Date Modified
+                                    </th>
+                                    <th style={{
+                                        paddingTop: 3,
+                                        paddingBottom: 3,
+                                        paddingLeft: 4,
+                                        paddingRight: 4,
+                                    }}>
+                                        Size
+                                    </th>
+                                    <th style={{
+                                        paddingTop: 3,
+                                        paddingBottom: 3,
+                                        paddingLeft: 4,
+                                        paddingRight: 4,
+                                    }}>
+                                        Kind
+                                    </th>
+                                </>
+                            }
                         </tr>
                     </thead>
                     <tbody>
                         {this.getFolderContent().map((element: type_single_file_folder, index: number) => {
-
                             const fileType = this.getFileType(element["name"], element["type"]);
                             if (fileType === "File" && this.onlyShowTdmFiles === true) {
                                 return null;
@@ -483,8 +512,13 @@ export class FileBrowser extends BaseWidget {
         )
     }
 
+    setFilterText = (input: any) => {}
+
     _ElementFilter = () => {
         const [filterText, setFilterText] = React.useState("");
+
+        this.setFilterText = setFilterText;
+
         return (
             <form onSubmit={(event: any) => { event.preventDefault() }}
                 style={{
@@ -543,9 +577,30 @@ export class FileBrowser extends BaseWidget {
                     width: "100%",
                 }}>
                     <this._ElementFilter></this._ElementFilter>
-                    <this._ElementGoToParentFolder></this._ElementGoToParentFolder>
-                    <this._ElementRefreshFolder></this._ElementRefreshFolder>
+                    <this._ElementBookmarks></this._ElementBookmarks>
+                    {/* <this._ElementRefreshFolder></this._ElementRefreshFolder> */}
+                    {/* <this._ElementGoToParentFolder></this._ElementGoToParentFolder> */}
+                    {/* <this._ElementRenameItem></this._ElementRenameItem> */}
+                    {/* <this._ElementCreateTdlFile></this._ElementCreateTdlFile> */}
+                    {/* <this._ElementCreateFolder></this._ElementCreateFolder> */}
                     <this._ElementOnlyShowTdmFiles></this._ElementOnlyShowTdmFiles>
+                </div>
+                <div style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    marginBottom: 15,
+                    width: "100%",
+                }}>
+                    {/* <this._ElementFilter></this._ElementFilter> */}
+                    {/* <this._ElementBookmarks></this._ElementBookmarks> */}
+                    <this._ElementRefreshFolder></this._ElementRefreshFolder>
+                    <this._ElementGoToParentFolder></this._ElementGoToParentFolder>
+                    <this._ElementRenameItem></this._ElementRenameItem>
+                    <this._ElementCreateTdlFile></this._ElementCreateTdlFile>
+                    <this._ElementCreateFolder></this._ElementCreateFolder>
+                    {/* <this._ElementOnlyShowTdmFiles></this._ElementOnlyShowTdmFiles> */}
                 </div>
             </div>
         )
@@ -629,7 +684,7 @@ export class FileBrowser extends BaseWidget {
                         border: "none",
                     }}
                     type={"text"}
-                    value={folderPath}
+                    value={folderPath.replace("-ABCD", "")}
                     onChange={(event: any) => {
                         event.preventDefault();
                         setFolderPath(event.target.value);
@@ -668,38 +723,155 @@ export class FileBrowser extends BaseWidget {
             <div
                 ref={elementRef}
                 onMouseDown={() => {
-                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                    const ipcManager = displayWindowClient.getIpcManager();
-                    const displayWindowId = displayWindowClient.getWindowId();
-                    const newFolderPath = path.dirname(this.getFolderPath());
-                    this.setFolderPath(newFolderPath);
-                    this.setSelectedItem({
-                        "name": "",
-                        "size": -1,
-                        "timeModified": -1,
-                        "type": "file",
-                    })
-                    this.forceUpdateButtons({});
-                    this.fetchFolderContent();
-                    this.setThumbnail("../../resources/webpages/blank.svg");
+                    if (this.getFolderPath() === "bookmarks-ABCD") {
+                        return;
+                    } else {
+                        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                        const ipcManager = displayWindowClient.getIpcManager();
+                        const displayWindowId = displayWindowClient.getWindowId();
+                        const newFolderPath = path.dirname(this.getFolderPath());
+                        this.setFolderPath(newFolderPath);
+                        this.setSelectedItem({
+                            "name": "",
+                            "size": -1,
+                            "timeModified": -1,
+                            "type": "file",
+                        })
+                        this.forceUpdateButtons({});
+                        this.fetchFolderContent();
+                        this.setThumbnail("../../resources/webpages/blank.svg");
+                    }
                 }}
                 style={{
-                    fontSize: GlobalVariables.defaultFontSize * 1.5,
-                    cursor: "pointer",
-                    marginRight: 10,
+                    fontSize: GlobalVariables.defaultFontSize * 1,
+                    cursor: this.getFolderPath() === "bookmarks-ABCD" ? "default" : "pointer",
+                    marginRight: 20,
+                    opacity: this.getFolderPath() === "bookmarks-ABCD" ? 0 : 1,
                 }}
                 onMouseEnter={() => {
-                    if (elementRef.current !== null) {
+                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
                         elementRef.current.style["opacity"] = 0.8;
                     }
                 }}
                 onMouseLeave={() => {
-                    if (elementRef.current !== null) {
+                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
                         elementRef.current.style["opacity"] = 1;
                     }
                 }}
             >
-                ⬆️
+                Up
+            </div>
+        )
+    }
+
+    _ElementRenameItem = () => {
+        const elementRef = React.useRef<any>(null);
+
+        return (
+            <div
+                id={"element-rename-item"}
+                ref={elementRef}
+                onMouseDown={() => {
+                    if (this.getFolderPath() === "bookmarks-ABCD") {
+                        return;
+                    } else {
+                        // changes the item name to an input box
+                        this.changeSelectedItemName();
+                    }
+                }}
+
+                style={{
+                    fontSize: GlobalVariables.defaultFontSize * 1,
+                    cursor: this.getFolderPath() === "bookmarks-ABCD" ? "default" : "pointer",
+                    marginRight: 20,
+                    opacity: this.getFolderPath() === "bookmarks-ABCD" ? 0 : 1,
+                }}
+                onMouseEnter={() => {
+                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
+                        elementRef.current.style["opacity"] = 0.8;
+                    }
+                }}
+                onMouseLeave={() => {
+                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
+                        elementRef.current.style["opacity"] = 1;
+                    }
+                }}
+            >
+                Rename
+            </div>
+        )
+    }
+
+    _ElementCreateTdlFile = () => {
+        const elementRef = React.useRef<any>(null);
+
+        return (
+            <div
+                id={"element-rename-item"}
+                ref={elementRef}
+                onMouseDown={() => {
+                    if (this.getFolderPath() === "bookmarks-ABCD") {
+                        return;
+                    } else {
+                        this.createTdlFile();
+                    }
+                }}
+
+                style={{
+                    fontSize: GlobalVariables.defaultFontSize * 1,
+                    cursor: this.getFolderPath() === "bookmarks-ABCD" ? "default" : "pointer",
+                    marginRight: 20,
+                    opacity: this.getFolderPath() === "bookmarks-ABCD" ? 0 : 1,
+                }}
+                onMouseEnter={() => {
+                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
+                        elementRef.current.style["opacity"] = 0.8;
+                    }
+                }}
+                onMouseLeave={() => {
+                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
+                        elementRef.current.style["opacity"] = 1;
+                    }
+                }}
+            >
+                Create File
+            </div>
+        )
+    }
+
+    _ElementCreateFolder = () => {
+        const elementRef = React.useRef<any>(null);
+
+        return (
+            <div
+                id={"element-rename-item"}
+                ref={elementRef}
+                onMouseDown={() => {
+                    if (this.getFolderPath() === "bookmarks-ABCD") {
+                        return;
+                    } else {
+                        this.createFolder();
+                    }
+                }}
+
+                style={{
+                    fontSize: GlobalVariables.defaultFontSize * 1,
+                    cursor: this.getFolderPath() === "bookmarks-ABCD" ? "default" : "pointer",
+                    marginRight: 20,
+                    opacity: this.getFolderPath() === "bookmarks-ABCD" ? 0 : 1,
+                }}
+                onMouseEnter={() => {
+                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
+                        elementRef.current.style["opacity"] = 0.8;
+                    }
+                }}
+                onMouseLeave={() => {
+                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
+                        elementRef.current.style["opacity"] = 1;
+                    }
+                }}
+            >
+                Create Folder
             </div>
         )
     }
@@ -710,15 +882,54 @@ export class FileBrowser extends BaseWidget {
             <div
                 ref={elementRef}
                 onMouseDown={() => {
-                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                    this.setFolderPath(this.getFolderPath());
-                    this.fetchFolderContent();
+                    if (this.getFolderPath() === "bookmarks-ABCD") {
+                        // do nothing
+                    } else {
+                        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                        this.setFolderPath(this.getFolderPath());
+                        this.fetchFolderContent();
+                        this.setThumbnail("../../resources/webpages/blank.svg");
+                    }
+                }}
+                style={{
+                    fontSize: GlobalVariables.defaultFontSize * 1,
+                    cursor: this.getFolderPath() === "bookmarks-ABCD" ? "default" : "pointer",
+                    marginRight: 20,
+                    opacity: this.getFolderPath() === "bookmarks-ABCD" ? 0 : 1,
+                }}
+                onMouseEnter={() => {
+                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
+                        elementRef.current.style["opacity"] = 0.8;
+                    }
+                }}
+                onMouseLeave={() => {
+                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
+                        elementRef.current.style["opacity"] = 1;
+                    }
+                }}
+            >
+                Refresh
+            </div>
+        )
+    }
+
+
+    _ElementBookmarks = () => {
+        const elementRef = React.useRef<any>(null);
+        return (
+            <div
+                ref={elementRef}
+                onMouseDown={() => {
+                    const bookmarks = this.getBookmarks();
+                    this.updateFolderContent(bookmarks);
+                    this.getText()["path"] = "bookmarks-ABCD";
+                    this.setFolderPath("bookmarks-ABCD"); // magic word
                     this.setThumbnail("../../resources/webpages/blank.svg");
                 }}
                 style={{
-                    fontSize: GlobalVariables.defaultFontSize * 1.5,
+                    fontSize: GlobalVariables.defaultFontSize * 1,
                     cursor: "pointer",
-                    marginRight: 10,
+                    marginRight: 20,
                 }}
                 onMouseEnter={() => {
                     if (elementRef.current !== null) {
@@ -731,7 +942,8 @@ export class FileBrowser extends BaseWidget {
                     }
                 }}
             >
-                🔄
+                Bookmarks
+
             </div>
         )
     }
@@ -809,7 +1021,8 @@ export class FileBrowser extends BaseWidget {
                             >
                             </img>
                             &nbsp;
-                            {element["name"]}
+                            {/* {element["name"]} */}
+                            <this._ElementItemName name={element["name"]} ></this._ElementItemName>
                         </div>
                         :
                         element["name"].endsWith(".tdl") ?
@@ -827,7 +1040,8 @@ export class FileBrowser extends BaseWidget {
                                 >
                                 </img>
                                 &nbsp;
-                                {element["name"]}
+                                <this._ElementItemName name={element["name"]} ></this._ElementItemName>
+                                {/* {element["name"]} */}
                             </div>
                             :
                             <div style={{
@@ -844,50 +1058,223 @@ export class FileBrowser extends BaseWidget {
                                 >
                                 </img>
                                 &nbsp;
-                                {element["name"]}
+                                {/* {element["name"]} */}
+                                <this._ElementItemName name={element["name"]}></this._ElementItemName>
                             </div>
                     }
                     {/* {element["name"]} */}
                 </td>
-                <td style={{
-                    paddingTop: 3,
-                    paddingBottom: 3,
-                    paddingLeft: 4,
-                    paddingRight: 15,
-                }}>
-                    {GlobalMethods.convertEpochTimeToString(element["timeModified"])}
-                </td>
-                <td style={{
-                    paddingTop: 3,
-                    paddingBottom: 3,
-                    paddingLeft: 4,
-                    paddingRight: 15,
-                }}>
-                    {this.getFileSize(element["size"])}
-                </td>
-                <td style={{
-                    paddingTop: 3,
-                    paddingBottom: 3,
-                    paddingLeft: 4,
-                    paddingRight: 4,
-                    borderTopRightRadius: 3,
-                    borderBottomRightRadius: 3,
-                }}>
-                    {this.getFileType(element["name"], element["type"])}
-                </td>
+                {this.getFolderPath() === "bookmarks-ABCD" ? null :
+                    <>
+                        <td style={{
+                            paddingTop: 3,
+                            paddingBottom: 3,
+                            paddingLeft: 4,
+                            paddingRight: 15,
+                        }}>
+                            {GlobalMethods.convertEpochTimeToString(element["timeModified"])}
+                        </td>
+                        <td style={{
+                            paddingTop: 3,
+                            paddingBottom: 3,
+                            paddingLeft: 4,
+                            paddingRight: 15,
+                        }}>
+                            {this.getFileSize(element["size"])}
+                        </td>
+                        <td style={{
+                            paddingTop: 3,
+                            paddingBottom: 3,
+                            paddingLeft: 4,
+                            paddingRight: 4,
+                            borderTopRightRadius: 3,
+                            borderBottomRightRadius: 3,
+                        }}>
+                            {this.getFileType(element["name"], element["type"])}
+                        </td>
+                    </>
+                }
             </tr>
         )
     }
 
+    _ElementItemName = ({ name }: { name: string }) => {
+        const editing = this.getItemNameBeingEdited() === true && this.getSelectedItem()["name"] === name;
+        const [name1, setName1] = React.useState(name);
+        if (editing === true) {
+            return (
+                <form
+                    style={{
+                        width: "100%",
+                    }}
+                    onSubmit={(event: any) => {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        if (name !== name1) {
+                            this.setItemNameBeingEdited(false);
+                            // tell main process this change
+                            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                            const ipcManager = displayWindowClient.getIpcManager();
+                            ipcManager.sendFromRendererProcess("file-browser-command", {
+                                displayWindowId: displayWindowClient.getWindowId(),
+                                widgetKey: this.getWidgetKey(),
+                                command: "change-item-name",
+                                folder: this.getFolderPath(),
+                                oldName: name,
+                                newName: name1,
+                            })
+                        }
+
+
+                    }}
+                    onMouseDown={(event: any) => {
+                        // do not let the window capture this event, it will set the editing name to false
+                        event.stopPropagation();
+                    }}
+                    onDoubleClick={(event: any) => {
+                        event.stopPropagation();
+                    }}
+                >
+                    <input
+                        style={{
+                            outline: "none",
+                            border: "none",
+                            padding: 0,
+                            fontSize: GlobalVariables.defaultFontSize,
+                            fontFamily: GlobalVariables.defaultFontFamily,
+                            width: "100%",
+                        }}
+                        spellCheck={false}
+                        value={name1}
+                        onChange={(event: any) => {
+                            setName1(event.target.value);
+                        }}
+                    >
+                    </input>
+                </form>
+            )
+        }
+        return (
+            <div style={{
+                display: "inline-flex",
+                justifyContent: "center",
+                alignItems: "center",
+                width: "100%",
+            }}>
+                {name}
+            </div>
+        )
+    }
+
+    private _itemNameBeingEdited: boolean = false;
+
+    getItemNameBeingEdited = () => {
+        return this._itemNameBeingEdited;
+    }
+
+    setItemNameBeingEdited = (state: boolean) => {
+        this._itemNameBeingEdited = state;
+    }
+
+    changeSelectedItemName = () => {
+        const selectedItem = this.getSelectedItem();
+        if (selectedItem !== undefined) {
+            const oldName = selectedItem.name;
+            // modify text in renderer process
+            this.setItemNameBeingEdited(true);
+            this.forceUpdate({});
+            // send command to main process after confirming the change, i.e. hit Enter key
+            // in main process: try to change name, if succeeded, send OK message, nothing need to be done on client; 
+            //                                      if failed, send NOT_OK message and re-read folder, client change things back;
+        }
+    }
+
+    createTdlFile = () => {
+        // go over the files/folders, find a non-existing Untitled file name
+        let fileName = "Untitled-1.tdl";
+        const existingIndices: number[] = [];
+        for (const item of this.getFolderContent()) {
+            if (item.name.startsWith("Untitled-") && item.name.endsWith(".tdl")) {
+                const indexStr = item.name.replace("Untitled-", "").replace(".tdl", "");
+                const index = parseInt(indexStr);
+                if (typeof index === "number") {
+                    existingIndices.push(index);
+                }
+            }
+        }
+
+        for (let index = 1; index < existingIndices.length + 2; index++) {
+            if (!existingIndices.includes(index)) {
+                fileName = `Untitled-${index}.tdl`;
+                break;
+            }
+        }
+        // tell main process to create this file
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const ipcManager = displayWindowClient.getIpcManager();
+        ipcManager.sendFromRendererProcess("file-browser-command", {
+            displayWindowId: displayWindowClient.getWindowId(),
+            widgetKey: this.getWidgetKey(),
+            command: "create-tdl-file",
+            fullFileName: path.join(this.getFolderPath(), fileName),
+        })
+        // after the file is successfully created, main process tell renderer process
+        // renderer process 
+    }
+
+
+    createFolder = () => {
+        // go over the files/folders, find a non-existing Untitled file name
+        let folderName = "Untitled-Folder-1";
+        const existingIndices: number[] = [];
+        for (const item of this.getFolderContent()) {
+            if (item.name.startsWith("Untitled-Folder-")) {
+                const indexStr = item.name.replace("Untitled-Folder-", "");
+                const index = parseInt(indexStr);
+                if (typeof index === "number") {
+                    existingIndices.push(index);
+                }
+            }
+        }
+
+        for (let index = 1; index < existingIndices.length + 2; index++) {
+            if (!existingIndices.includes(index)) {
+                folderName = `Untitled-Folder-${index}`;
+                break;
+            }
+        }
+        // tell main process to create this file
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const ipcManager = displayWindowClient.getIpcManager();
+        ipcManager.sendFromRendererProcess("file-browser-command", {
+            displayWindowId: displayWindowClient.getWindowId(),
+            widgetKey: this.getWidgetKey(),
+            command: "create-folder",
+            fullFolderName: path.join(this.getFolderPath(), folderName),
+        })
+        // after the file is successfully created, main process tell renderer process
+        // renderer process 
+    }
+
+
     handleDoubleClickOnItem = (element: type_single_file_folder) => {
         if (element["type"] === "folder") {
-            const newFolderPath = path.join(this.getFolderPath(), element["name"]);
+            let newFolderPath = path.join(this.getFolderPath(), element["name"]);
+            if (path.isAbsolute(element['name'])) {
+                newFolderPath = element["name"];
+            }
             this.setFolderPath(newFolderPath);
             this.setSelectedItem({ name: "", timeModified: -1, size: -1, type: "file" });
             this.setThumbnail("../../resources/webpages/blank.svg")
+            // clear filter
+            this.setFilterText("");
+            this.filterText = "";
             this.fetchFolderContent();
         } else if (element["type"] = "file") {
-            const fullTdlFileName = path.join(this.getFolderPath(), element["name"]);
+            let fullTdlFileName = path.join(this.getFolderPath(), element["name"]);
+            if (path.isAbsolute(element['name'])) {
+                fullTdlFileName = element["name"];
+            }
             if (fullTdlFileName.endsWith(".tdl") || fullTdlFileName.endsWith(".edl") || fullTdlFileName.endsWith(".db") || fullTdlFileName.endsWith(".tempate")) {
                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                 const ipcManager = displayWindowClient.getIpcManager();
@@ -1055,7 +1442,11 @@ export class FileBrowser extends BaseWidget {
             return;
         } else {
             if (fileName.endsWith(".tdl")) {
-                const tdlFileName = path.join(this.getFolderPath(), fileName);
+                let tdlFileName = path.join(this.getFolderPath(), fileName);
+                if (this.getFolderPath() === "bookmarks-ABCD" || path.isAbsolute(fileName)) {
+                    tdlFileName = fileName;
+                }
+
                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                 const displayWindowId = displayWindowClient.getWindowId();
                 const ipcManager = displayWindowClient.getIpcManager();
@@ -1232,6 +1623,31 @@ export class FileBrowser extends BaseWidget {
         return this._modal;
     }
 
+    getBookmarks = (): type_single_file_folder[] => {
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const bookmarks = displayWindowClient.getProfileEntry("EPICS Custom Environment", "File Browser Bookmarks");
+        if (Array.isArray(bookmarks)) {
+            const result: type_single_file_folder[] = [];
+            for (const [name, path] of bookmarks) {
+                let type: "folder" | "file" = "folder";
+                if (path.includes(".")) {
+                    type = "file";
+                }
+                result.push(
+                    {
+                        name: path,
+                        type: type,
+                        size: 0,
+                        timeModified: 0
+                    }
+                )
+            }
+            return result;
+        } else {
+            return [];
+        }
+    }
+
     // ----------------------- styles -----------------------
 
     // defined in super class
@@ -1368,7 +1784,7 @@ export class FileBrowser extends BaseWidget {
     }
     jobsAsOperatingModeBegins() {
         super.jobsAsOperatingModeBegins();
-        this.fetchFolderContent();
+        // this.fetchFolderContent();
     }
 
 }

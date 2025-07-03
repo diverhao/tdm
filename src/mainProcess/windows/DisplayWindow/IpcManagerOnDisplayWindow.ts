@@ -201,6 +201,7 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("file-converter-command", this.handleFileConverterCommand);
         // file browser
         this.ipcRenderer.on("fetch-folder-content", this.handleFetchFolderContent);
+        this.ipcRenderer.on("file-browser-command", this.handleFileBrowserCommand);
         this.ipcRenderer.on("fetch-thumbnail", this.handleFetchThumbnail)
 
         // site info
@@ -608,19 +609,16 @@ export class IpcManagerOnDisplayWindow {
                 } else {
                     try {
                         tcaChannels.push(g_widgets1.getTcaChannel(channelName));
-                        console.log("i am not good")
                     } catch (e) {
 
                     }
                     try {
                         tcaChannels.push(g_widgets1.getTcaChannel(channelName + ".SEVR"));
-                        console.log("i am good")
                     } catch (e) {
 
                     }
                 }
 
-                console.log(tcaChannels)
 
                 for (let tcaChannel of tcaChannels) {
 
@@ -1042,6 +1040,60 @@ export class IpcManagerOnDisplayWindow {
                 // failed
                 widget.handleFetchFolderContentFailed();
             }
+        }
+    }
+
+    handleFileBrowserCommand = (event: any, message: {
+        displayWindowId: string,
+        widgetKey: string,
+        command: "change-item-name" | "create-tdl-file",
+        folder?: string,
+        oldName?: string,
+        newName?: string,
+        fullFileName?: string,
+        success: boolean,
+    }) => {
+        const widget = g_widgets1.getWidget(message["widgetKey"]);
+        if (widget instanceof FileBrowser) {
+
+            if (message["command"] === "change-item-name") {
+
+                if (message["success"] === true) {
+                    widget.setItemNameBeingEdited(false);
+                    // set folderContent
+                    const folder = message["folder"];
+                    const oldName = message["oldName"];
+                    const newName = message["newName"];
+                    if (folder === undefined || oldName === undefined || newName === undefined) {
+                        return;
+                    }
+
+                    const folderContent = widget.getFolderContent();
+                    for (const item of folderContent) {
+                        if (item["name"] === oldName) {
+                            item["name"] = newName;
+                            break;
+                        }
+                    }
+                    widget.forceUpdate({});
+                } else {
+                    // change back to the old name automatically
+                    widget.forceUpdate({});
+                }
+            } else if (message["command"] === "create-tdl-file") {
+                if (message["success"] === true) {
+                    widget.fetchFolderContent();
+                } else {
+                    // do nothing
+                }
+            } else if (message["command"] === "create-folder") {
+                if (message["success"] === true) {
+                    widget.fetchFolderContent();
+                } else {
+                    // do nothing
+                }
+            }
+
         }
     }
 

@@ -118,6 +118,7 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("request-epics-dbd", this.handleRequestEpicsDbd);
         this.ipcMain.on("ca-sw-command", this.handleCaswCommand);
         this.ipcMain.on("fetch-folder-content", this.handleFetchFolderContent);
+        this.ipcMain.on("file-browser-command", this.handleFileBrowserCommand);
         this.ipcMain.on("fetch-thumbnail", this.handleFetchThumbnail)
 
         // profiles
@@ -2252,7 +2253,7 @@ export class IpcManagerOnMainProcess {
                 if (options["filterType"] === "file-converter" && os.platform() === "linux") {
                     properties = undefined;
                 }
-                console.log(fileFilters, properties)
+                // console.log(fileFilters, properties)
                 fileNames = dialog.showOpenDialogSync({
                     title: "Select a file",
                     filters: fileFilters,
@@ -2771,6 +2772,116 @@ export class IpcManagerOnMainProcess {
                 displayWindowAgent.sendFromMainProcess("fetch-folder-content", {
                     widgetKey: options["widgetKey"],
                     folderContent: {},
+                    success: false,
+                })
+            }
+        }
+    }
+
+    handleFileBrowserCommand = (event: any, message: {
+        displayWindowId: string,
+        widgetKey: string,
+        command: "change-item-name" | "create-tdl-file" | "create-folder",
+        folder?: string,
+        oldName?: string,
+        newName?: string,
+        fullFileName?: string,
+        fullFolderName?: string
+    }) => {
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(message["displayWindowId"]);
+        if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
+            return;
+        }
+        if (message["command"] === "change-item-name") {
+            const folder = message["folder"];
+            const oldName = message["oldName"];
+            const newName = message["newName"];
+            if (folder === undefined || oldName === undefined || newName === undefined) {
+                return;
+            }
+            const fullOldFileName = path.join(folder, oldName);
+            const fullNewFileName = path.join(folder, newName);
+            if (path.isAbsolute(fullOldFileName) && path.isAbsolute(fullNewFileName)) {
+                try {
+                    if (fs.existsSync(fullNewFileName)) {
+                        throw new Error(`File ${fullNewFileName} already exists`);
+                    }
+
+                    fs.renameSync(fullOldFileName, fullNewFileName);
+                    displayWindowAgent.sendFromMainProcess("file-browser-command", {
+                        ...message,
+                        success: true,
+                    })
+                } catch (err) {
+                    Log.error('Error renaming file:', err);
+                    // send error message to renderer process
+                    displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                        // command?: string | undefined;
+                        messageType: "error", // | "warning" | "info";
+                        humanReadableMessages: [`Failed to change file name from ${oldName} to ${newName}`, `Reason: ${err}`],
+                        rawMessages: [],
+                        // buttons?: type_DialogMessageBoxButton[] | undefined;
+                        // attachment?: any;
+                    })
+
+                    displayWindowAgent.sendFromMainProcess("file-browser-command", {
+                        ...message,
+                        success: false,
+                    })
+                }
+            }
+        } else if (message["command"] === "create-tdl-file") {
+            const fullFileName = message["fullFileName"];
+            if (fullFileName === undefined) {
+                return;
+            }
+            // create empty tdl file
+            const tdl = FileReader.getBlankWhiteTdl();
+            try {
+                fs.writeFileSync(fullFileName, JSON.stringify(tdl, null, 4));
+                displayWindowAgent.sendFromMainProcess("file-browser-command", {
+                    ...message,
+                    success: true,
+                })
+
+            } catch (e) {
+                displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                    // command?: string | undefined;
+                    messageType: "error", // | "warning" | "info";
+                    humanReadableMessages: [`Failed to create file ${fullFileName}`, `Reason ${e}`],
+                    rawMessages: [],
+                    // buttons?: type_DialogMessageBoxButton[] | undefined;
+                    // attachment?: any;
+                })
+                displayWindowAgent.sendFromMainProcess("file-browser-command", {
+                    ...message,
+                    success: false,
+                })
+            }
+        } else if (message["command"] === "create-folder") {
+            const fullFolderName = message["fullFolderName"];
+            if (fullFolderName === undefined) {
+                return;
+            }
+            // create empty tdl file
+            try {
+                fs.mkdirSync(fullFolderName);
+                displayWindowAgent.sendFromMainProcess("file-browser-command", {
+                    ...message,
+                    success: true,
+                })
+
+            } catch (e) {
+                displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                    // command?: string | undefined;
+                    messageType: "error", // | "warning" | "info";
+                    humanReadableMessages: [`Failed to create file ${fullFolderName}`, `Reason: ${e}`],
+                    rawMessages: [],
+                    // buttons?: type_DialogMessageBoxButton[] | undefined;
+                    // attachment?: any;
+                })
+                displayWindowAgent.sendFromMainProcess("file-browser-command", {
+                    ...message,
                     success: false,
                 })
             }
