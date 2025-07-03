@@ -36,6 +36,15 @@ export type type_single_file_folder = {
     timeModified: number,
 };
 
+enum type_sorting_method {
+    time_ascending,
+    time_decending,
+    name_ascending,
+    name_decending,
+    size_ascending,
+    size_decending,
+}
+
 export class FileBrowser extends BaseWidget {
     // level-1 properties in tdl file
     // _type: string;
@@ -74,6 +83,8 @@ export class FileBrowser extends BaseWidget {
     oldFolderPath: string = "";
     filterText: string = "";
 
+    private _sortingMethod: type_sorting_method = type_sorting_method.name_ascending;
+
     _selectedItem: type_single_file_folder = {
         name: "", // only the name
         type: "file",
@@ -84,6 +95,14 @@ export class FileBrowser extends BaseWidget {
     getSelectedItem = () => { return this._selectedItem };
 
     setSelectedItem = (newItem: type_single_file_folder) => { this._selectedItem = newItem };
+
+    getSortingMethod = () => {
+        return this._sortingMethod;
+    }
+
+    setSortingMethod = (newMethod: type_sorting_method) => {
+        this._sortingMethod = newMethod;
+    }
 
     constructor(widgetTdl: type_FileBrowser_tdl) {
         super(widgetTdl);
@@ -323,7 +342,10 @@ export class FileBrowser extends BaseWidget {
     }
 
     _ElementTable = () => {
+
         const [, forceUpdate] = React.useState({});
+
+        this.sortFolderContent();
 
         return (
             <div style={{
@@ -452,8 +474,29 @@ export class FileBrowser extends BaseWidget {
                                 paddingLeft: 4,
                                 paddingRight: 4,
                                 maxWidth: '50em',
-                            }}>
-                                Name
+                                display: "inline-flex",
+                                justifyContent: 'center',
+                                alignItems: "center",
+                            }}
+                                onMouseDown={(event: any) => {
+                                    event.preventDefault();
+                                    if (this.getSortingMethod() === type_sorting_method.name_ascending) {
+                                        this.setSortingMethod(type_sorting_method.name_decending);
+                                    } else {
+                                        this.setSortingMethod(type_sorting_method.name_ascending);
+                                    }
+                                    this.forceUpdate({});
+                                }}
+                            >
+                                Name &nbsp;
+                                {this.getSortingMethod() === type_sorting_method.name_ascending ?
+                                    <img src={"../../resources/webpages/arrowUp-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                    :
+                                    this.getSortingMethod() === type_sorting_method.name_decending ?
+                                        <img src={"../../resources/webpages/arrowDown-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                        :
+                                        null
+                                }
                             </th>
                             {this.getFolderPath() === "bookmarks-ABCD" ? null :
                                 <>
@@ -462,16 +505,53 @@ export class FileBrowser extends BaseWidget {
                                         paddingBottom: 3,
                                         paddingLeft: 4,
                                         paddingRight: 4,
-                                    }}>
-                                        Date Modified
+                                    }}
+                                        onMouseDown={(event: any) => {
+                                            event.preventDefault();
+                                            if (this.getSortingMethod() === type_sorting_method.time_ascending) {
+                                                this.setSortingMethod(type_sorting_method.time_decending);
+                                            } else {
+                                                this.setSortingMethod(type_sorting_method.time_ascending);
+                                            }
+                                            this.forceUpdate({});
+                                        }}
+
+                                    >
+                                        Date Modified &nbsp;
+                                        {this.getSortingMethod() === type_sorting_method.time_ascending ?
+                                            <img src={"../../resources/webpages/arrowUp-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                            :
+                                            this.getSortingMethod() === type_sorting_method.time_decending ?
+                                                <img src={"../../resources/webpages/arrowDown-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                                :
+                                                null
+                                        }
                                     </th>
                                     <th style={{
                                         paddingTop: 3,
                                         paddingBottom: 3,
                                         paddingLeft: 4,
                                         paddingRight: 4,
-                                    }}>
-                                        Size
+                                    }}
+                                        onMouseDown={(event: any) => {
+                                            event.preventDefault();
+                                            if (this.getSortingMethod() === type_sorting_method.size_ascending) {
+                                                this.setSortingMethod(type_sorting_method.size_decending);
+                                            } else {
+                                                this.setSortingMethod(type_sorting_method.size_ascending);
+                                            }
+                                            this.forceUpdate({});
+                                        }}
+                                    >
+                                        Size &nbsp;
+                                        {this.getSortingMethod() === type_sorting_method.size_ascending ?
+                                            <img src={"../../resources/webpages/arrowUp-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                            :
+                                            this.getSortingMethod() === type_sorting_method.size_decending ?
+                                                <img src={"../../resources/webpages/arrowDown-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                                :
+                                                null
+                                        }
                                     </th>
                                     <th style={{
                                         paddingTop: 3,
@@ -512,7 +592,7 @@ export class FileBrowser extends BaseWidget {
         )
     }
 
-    setFilterText = (input: any) => {}
+    setFilterText = (input: any) => { }
 
     _ElementFilter = () => {
         const [filterText, setFilterText] = React.useState("");
@@ -560,7 +640,7 @@ export class FileBrowser extends BaseWidget {
                     flexDirection: "row",
                     justifyContent: "flex-start",
                     alignItems: "center",
-                    marginBottom: 15,
+                    marginBottom: 10,
                     width: "100%",
                 }}>
                     <div style={{ fontSize: 30 }}>
@@ -573,7 +653,7 @@ export class FileBrowser extends BaseWidget {
                     flexDirection: "row",
                     justifyContent: "flex-start",
                     alignItems: "center",
-                    marginBottom: 15,
+                    marginBottom: 5,
                     width: "100%",
                 }}>
                     <this._ElementFilter></this._ElementFilter>
@@ -590,7 +670,7 @@ export class FileBrowser extends BaseWidget {
                     flexDirection: "row",
                     justifyContent: "flex-start",
                     alignItems: "center",
-                    marginBottom: 15,
+                    marginBottom: 5,
                     width: "100%",
                 }}>
                     {/* <this._ElementFilter></this._ElementFilter> */}
@@ -717,236 +797,168 @@ export class FileBrowser extends BaseWidget {
         )
     }
 
-    _ElementGoToParentFolder = () => {
+    _ElementHeaderTemplate = ({ onMouseDown, text, id }: { onMouseDown: (event: any) => void, text: string, id: string }) => {
         const elementRef = React.useRef<any>(null);
         return (
             <div
                 ref={elementRef}
-                onMouseDown={() => {
-                    if (this.getFolderPath() === "bookmarks-ABCD") {
-                        return;
-                    } else {
-                        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                        const ipcManager = displayWindowClient.getIpcManager();
-                        const displayWindowId = displayWindowClient.getWindowId();
-                        const newFolderPath = path.dirname(this.getFolderPath());
-                        this.setFolderPath(newFolderPath);
-                        this.setSelectedItem({
-                            "name": "",
-                            "size": -1,
-                            "timeModified": -1,
-                            "type": "file",
-                        })
-                        this.forceUpdateButtons({});
-                        this.fetchFolderContent();
-                        this.setThumbnail("../../resources/webpages/blank.svg");
-                    }
-                }}
+                onMouseDown={onMouseDown}
                 style={{
                     fontSize: GlobalVariables.defaultFontSize * 1,
                     cursor: this.getFolderPath() === "bookmarks-ABCD" ? "default" : "pointer",
-                    marginRight: 20,
+                    marginRight: 10,
                     opacity: this.getFolderPath() === "bookmarks-ABCD" ? 0 : 1,
+                    backgroundColor: "rgba(200, 200, 200, 0)",
+                    padding: 5,
+                    paddingLeft: 8,
+                    paddingRight: 8,
+                    borderRadius: 4,
                 }}
+                id={id}
                 onMouseEnter={() => {
                     if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
                         elementRef.current.style["opacity"] = 0.8;
+                        elementRef.current.style.backgroundColor = "rgba(200, 200, 200, 1)";
                     }
                 }}
                 onMouseLeave={() => {
                     if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
                         elementRef.current.style["opacity"] = 1;
+                        elementRef.current.style.backgroundColor = "rgba(200, 200, 200, 0)";
                     }
                 }}
             >
-                Up
+                {text}
             </div>
+        )
+    }
+
+    _ElementGoToParentFolder = () => {
+        return (
+            <this._ElementHeaderTemplate
+                onMouseDown={
+                    () => {
+                        if (this.getFolderPath() === "bookmarks-ABCD") {
+                            return;
+                        } else {
+                            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                            const ipcManager = displayWindowClient.getIpcManager();
+                            const displayWindowId = displayWindowClient.getWindowId();
+                            const newFolderPath = path.dirname(this.getFolderPath());
+                            this.setFolderPath(newFolderPath);
+                            this.setSelectedItem({
+                                "name": "",
+                                "size": -1,
+                                "timeModified": -1,
+                                "type": "file",
+                            })
+                            this.forceUpdateButtons({});
+                            this.fetchFolderContent();
+                            this.setThumbnail("../../resources/webpages/blank.svg");
+                        }
+                    }
+                }
+                text={"Up"}
+                id={"Up"}
+            ></this._ElementHeaderTemplate>
         )
     }
 
     _ElementRenameItem = () => {
-        const elementRef = React.useRef<any>(null);
-
         return (
-            <div
+            <this._ElementHeaderTemplate
+                onMouseDown={
+                    () => {
+                        if (this.getFolderPath() === "bookmarks-ABCD") {
+                            return;
+                        } else {
+                            // changes the item name to an input box
+                            this.changeSelectedItemName();
+                        }
+                    }
+                }
+                text={"Rename"}
                 id={"element-rename-item"}
-                ref={elementRef}
-                onMouseDown={() => {
-                    if (this.getFolderPath() === "bookmarks-ABCD") {
-                        return;
-                    } else {
-                        // changes the item name to an input box
-                        this.changeSelectedItemName();
-                    }
-                }}
-
-                style={{
-                    fontSize: GlobalVariables.defaultFontSize * 1,
-                    cursor: this.getFolderPath() === "bookmarks-ABCD" ? "default" : "pointer",
-                    marginRight: 20,
-                    opacity: this.getFolderPath() === "bookmarks-ABCD" ? 0 : 1,
-                }}
-                onMouseEnter={() => {
-                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
-                        elementRef.current.style["opacity"] = 0.8;
-                    }
-                }}
-                onMouseLeave={() => {
-                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
-                        elementRef.current.style["opacity"] = 1;
-                    }
-                }}
-            >
-                Rename
-            </div>
+            ></this._ElementHeaderTemplate>
         )
     }
 
     _ElementCreateTdlFile = () => {
-        const elementRef = React.useRef<any>(null);
-
         return (
-            <div
-                id={"element-rename-item"}
-                ref={elementRef}
-                onMouseDown={() => {
-                    if (this.getFolderPath() === "bookmarks-ABCD") {
-                        return;
-                    } else {
-                        this.createTdlFile();
-                    }
-                }}
-
-                style={{
-                    fontSize: GlobalVariables.defaultFontSize * 1,
-                    cursor: this.getFolderPath() === "bookmarks-ABCD" ? "default" : "pointer",
-                    marginRight: 20,
-                    opacity: this.getFolderPath() === "bookmarks-ABCD" ? 0 : 1,
-                }}
-                onMouseEnter={() => {
-                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
-                        elementRef.current.style["opacity"] = 0.8;
-                    }
-                }}
-                onMouseLeave={() => {
-                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
-                        elementRef.current.style["opacity"] = 1;
-                    }
-                }}
-            >
-                Create File
-            </div>
+            <this._ElementHeaderTemplate
+                onMouseDown={
+                    () => {
+                        if (this.getFolderPath() === "bookmarks-ABCD") {
+                            return;
+                        } else {
+                            this.createTdlFile();
+                        }
+                    }}
+                text={"Create TDL File"}
+                id={"Create TDL File"}
+            ></this._ElementHeaderTemplate>
         )
     }
 
     _ElementCreateFolder = () => {
-        const elementRef = React.useRef<any>(null);
-
         return (
-            <div
-                id={"element-rename-item"}
-                ref={elementRef}
-                onMouseDown={() => {
-                    if (this.getFolderPath() === "bookmarks-ABCD") {
-                        return;
-                    } else {
-                        this.createFolder();
+            <this._ElementHeaderTemplate
+                onMouseDown={
+                    () => {
+                        if (this.getFolderPath() === "bookmarks-ABCD") {
+                            return;
+                        } else {
+                            this.createFolder();
+                        }
                     }
-                }}
-
-                style={{
-                    fontSize: GlobalVariables.defaultFontSize * 1,
-                    cursor: this.getFolderPath() === "bookmarks-ABCD" ? "default" : "pointer",
-                    marginRight: 20,
-                    opacity: this.getFolderPath() === "bookmarks-ABCD" ? 0 : 1,
-                }}
-                onMouseEnter={() => {
-                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
-                        elementRef.current.style["opacity"] = 0.8;
-                    }
-                }}
-                onMouseLeave={() => {
-                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
-                        elementRef.current.style["opacity"] = 1;
-                    }
-                }}
-            >
-                Create Folder
-            </div>
+                }
+                text={"Create Folder"}
+                id={"Create Folder"}
+            ></this._ElementHeaderTemplate>
         )
     }
+
 
     _ElementRefreshFolder = () => {
-        const elementRef = React.useRef<any>(null);
         return (
-            <div
-                ref={elementRef}
-                onMouseDown={() => {
-                    if (this.getFolderPath() === "bookmarks-ABCD") {
-                        // do nothing
-                    } else {
-                        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                        this.setFolderPath(this.getFolderPath());
-                        this.fetchFolderContent();
-                        this.setThumbnail("../../resources/webpages/blank.svg");
+            <this._ElementHeaderTemplate
+                onMouseDown={
+                    () => {
+                        if (this.getFolderPath() === "bookmarks-ABCD") {
+                            // do nothing
+                        } else {
+                            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                            this.setFolderPath(this.getFolderPath());
+                            this.fetchFolderContent();
+                            this.setThumbnail("../../resources/webpages/blank.svg");
+                        }
                     }
-                }}
-                style={{
-                    fontSize: GlobalVariables.defaultFontSize * 1,
-                    cursor: this.getFolderPath() === "bookmarks-ABCD" ? "default" : "pointer",
-                    marginRight: 20,
-                    opacity: this.getFolderPath() === "bookmarks-ABCD" ? 0 : 1,
-                }}
-                onMouseEnter={() => {
-                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
-                        elementRef.current.style["opacity"] = 0.8;
-                    }
-                }}
-                onMouseLeave={() => {
-                    if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
-                        elementRef.current.style["opacity"] = 1;
-                    }
-                }}
-            >
-                Refresh
-            </div>
+                }
+                text={"Refresh"}
+                id={"Refresh"}
+            ></this._ElementHeaderTemplate>
         )
     }
-
 
     _ElementBookmarks = () => {
-        const elementRef = React.useRef<any>(null);
         return (
-            <div
-                ref={elementRef}
-                onMouseDown={() => {
-                    const bookmarks = this.getBookmarks();
-                    this.updateFolderContent(bookmarks);
-                    this.getText()["path"] = "bookmarks-ABCD";
-                    this.setFolderPath("bookmarks-ABCD"); // magic word
-                    this.setThumbnail("../../resources/webpages/blank.svg");
-                }}
-                style={{
-                    fontSize: GlobalVariables.defaultFontSize * 1,
-                    cursor: "pointer",
-                    marginRight: 20,
-                }}
-                onMouseEnter={() => {
-                    if (elementRef.current !== null) {
-                        elementRef.current.style["opacity"] = 0.8;
+            <this._ElementHeaderTemplate
+                onMouseDown={
+                    () => {
+                        const bookmarks = this.getBookmarks();
+                        this.updateFolderContent(bookmarks);
+                        this.getText()["path"] = "bookmarks-ABCD";
+                        this.setFolderPath("bookmarks-ABCD"); // magic word
+                        this.setThumbnail("../../resources/webpages/blank.svg");
                     }
-                }}
-                onMouseLeave={() => {
-                    if (elementRef.current !== null) {
-                        elementRef.current.style["opacity"] = 1;
-                    }
-                }}
-            >
-                Bookmarks
-
-            </div>
+                }
+                text={"Refresh"}
+                id={"Refresh"}
+            ></this._ElementHeaderTemplate>
         )
     }
+
+
 
     _ElementTableRow = ({ element, index, isSelected, forceUpdateTable }: { element: type_single_file_folder, index: number, isSelected: boolean, forceUpdateTable: any }) => {
         const elementRef = React.useRef<any>(null);
@@ -1101,6 +1113,9 @@ export class FileBrowser extends BaseWidget {
     _ElementItemName = ({ name }: { name: string }) => {
         const editing = this.getItemNameBeingEdited() === true && this.getSelectedItem()["name"] === name;
         const [name1, setName1] = React.useState(name);
+        if (name === "Untitled-1.tdl") {
+            console.log(editing, name)
+        }
         if (editing === true) {
             return (
                 <form
@@ -1178,8 +1193,7 @@ export class FileBrowser extends BaseWidget {
 
     changeSelectedItemName = () => {
         const selectedItem = this.getSelectedItem();
-        if (selectedItem !== undefined) {
-            const oldName = selectedItem.name;
+        if (selectedItem !== undefined && selectedItem.name !== "") {
             // modify text in renderer process
             this.setItemNameBeingEdited(true);
             this.forceUpdate({});
@@ -1646,6 +1660,28 @@ export class FileBrowser extends BaseWidget {
         } else {
             return [];
         }
+    }
+
+    sortFolderContent = () => {
+        const folderContent = this.getFolderContent();
+
+        if (this.getSortingMethod() === type_sorting_method.name_ascending) {
+            folderContent.sort((a, b) => { return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1 })
+        } else if (this.getSortingMethod() === type_sorting_method.name_decending) {
+            folderContent.sort((a, b) => { return a.name.toLowerCase() > b.name.toLowerCase() ? -1 : 1 })
+        } else if (this.getSortingMethod() === type_sorting_method.time_ascending) {
+            folderContent.sort((a, b) => { return a.timeModified - b.timeModified })
+        } else if (this.getSortingMethod() === type_sorting_method.time_decending) {
+            folderContent.sort((a, b) => { return -a.timeModified + b.timeModified })
+        } else if (this.getSortingMethod() === type_sorting_method.size_ascending) {
+            folderContent.sort((a, b) => { return a.size - b.size })
+        } else if (this.getSortingMethod() === type_sorting_method.size_decending) {
+            folderContent.sort((a, b) => { return b.size - a.size })
+        } else {
+            // do nothing
+        }
+
+
     }
 
     // ----------------------- styles -----------------------
