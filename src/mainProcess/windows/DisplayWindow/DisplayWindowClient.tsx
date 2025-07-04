@@ -1085,11 +1085,18 @@ export class DisplayWindowClient {
      */
     saveTdl = (tdlFileName: string) => {
         if (this.getMainProcessMode() === "web") {
-            const tdl = this.generateTdl();
-            // this.downloadTdl();
-            const blob = new Blob([JSON.stringify(tdl, null, 4)], { type: 'text/json' });
-            this.downloadData(blob, tdlFileName);
-            return;
+            if (tdlFileName === "") {
+                // save tdl to local computer
+                const tdl = this.generateTdl();
+                const blob = new Blob([JSON.stringify(tdl, null, 4)], { type: 'text/json' });
+                this.downloadData(blob, tdlFileName);
+                return;
+            } else {
+                // save to server, the server will make sure the file is allowed to be saved
+                if (this.getActionHistory().getModified() === true) {
+                    this.getIpcManager().sendFromRendererProcess("save-tdl-file", this.getWindowId(), this.generateTdl(), tdlFileName);
+                }
+            }
         } else {
             if (this.getActionHistory().getModified() === true) {
                 Log.debug("We are going to save TDL", tdlFileName)

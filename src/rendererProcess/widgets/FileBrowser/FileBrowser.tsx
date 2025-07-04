@@ -833,6 +833,7 @@ export class FileBrowser extends BaseWidget {
         )
     }
 
+
     _ElementGoToParentFolder = () => {
         return (
             <this._ElementHeaderTemplate
@@ -841,6 +842,7 @@ export class FileBrowser extends BaseWidget {
                         if (this.getFolderPath() === "bookmarks-ABCD") {
                             return;
                         } else {
+                            // in web mode, if the path 
                             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                             const ipcManager = displayWindowClient.getIpcManager();
                             const displayWindowId = displayWindowClient.getWindowId();
@@ -952,8 +954,8 @@ export class FileBrowser extends BaseWidget {
                         this.setThumbnail("../../resources/webpages/blank.svg");
                     }
                 }
-                text={"Refresh"}
-                id={"Refresh"}
+                text={"Bookmarks"}
+                id={"Bookmarks"}
             ></this._ElementHeaderTemplate>
         )
     }
@@ -1443,11 +1445,40 @@ export class FileBrowser extends BaseWidget {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const displayWindowId = displayWindowClient.getWindowId();
         const ipcManager = displayWindowClient.getIpcManager();
+
+        // if in web mode, only the folders and its sub-folders that are explicited defined
+        // in bookmarks can be fetched
+        if (displayWindowClient.getMainProcessMode() === "web") {
+            let allowToVisit = false;
+            const folderPath = this.getFolderPath();
+            const bookmarks = this.getBookmarks();
+            for (const bookmark of bookmarks) {
+                const bookmarkFolder = bookmark["name"];
+                if (typeof folderPath === "string" && folderPath.includes(bookmarkFolder)) {
+                    allowToVisit = true;
+                    break;
+                }
+            }
+            if (allowToVisit === false) {
+                displayWindowClient.getIpcManager().handleDialogShowMessageBox(undefined,
+                    {
+                        messageType: "error", // | "warning" | "info";
+                        humanReadableMessages: [`You are no5 allowed to visit ${folderPath}.`],
+                        rawMessages: [],
+                    }
+                );
+                // change folderPath back
+                this.setFolderPath(this.oldFolderPath)
+                return;
+            }
+        }
+
         ipcManager.sendFromRendererProcess("fetch-folder-content", {
             displayWindowId: displayWindowId,
             widgetKey: this.getWidgetKey(),
             folderPath: this.getFolderPath(),
         })
+
     }
 
     fetchThumbnail = (fileName: string) => {
@@ -1552,47 +1583,6 @@ export class FileBrowser extends BaseWidget {
     // isSelected()
     // _getElementAreaRawOutlineStyle()
 
-    // _parseChannelValueElement = (channelValueElement: number | string | boolean | undefined): string => {
-
-
-    //     if (typeof channelValueElement === "number") {
-    //         const scale = Math.max(this.getAllText()["scale"], 0);
-    //         const format = this.getAllText()["format"];
-    //         if (format === "decimal") {
-    //             return channelValueElement.toFixed(scale);
-    //         } else if (format === "default") {
-    //             const channelName = this.getChannelNames()[0];
-    //             const defaultScale = g_widgets1.getChannelPrecision(channelName);
-    //             if (defaultScale !== undefined) {
-    //                 return channelValueElement.toFixed(defaultScale);
-    //             } else {
-    //                 return channelValueElement.toFixed(scale);
-    //             }
-    //         } else if (format === "exponential") {
-    //             return channelValueElement.toExponential(scale);
-    //         } else if (format === "hexadecimal") {
-    //             return `0x${channelValueElement.toString(16)}`;
-    //         } else if (format === "string") {
-    //             // use a number array to represent a string
-    //             // MacOS ignores the non-displayable characters, but Linux shows rectangle for these characters
-    //             if (channelValueElement >= 32 && channelValueElement <= 126) {
-    //                 return `${String.fromCharCode(channelValueElement)}`;
-    //             } else {
-    //                 return "";
-    //             }
-    //         } else {
-    //             return `${channelValueElement}`;
-    //         }
-    //     } else {
-    //         if (g_widgets1.isEditing() === true) {
-    //             return `${channelValueElement}`;
-    //         } else {
-    //             return `${channelValueElement}`;
-    //         }
-
-    //     }
-    // };
-
     // only for TextUpdate and TextEntry
     // they are suitable to display array data in various formats,
     // other types of widgets, such as Meter, Spinner, Tanks, ProgressBar, Thermometer, ScaledSlider are not for array data
@@ -1639,10 +1629,11 @@ export class FileBrowser extends BaseWidget {
 
     getBookmarks = (): type_single_file_folder[] => {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        const bookmarks = displayWindowClient.getProfileEntry("EPICS Custom Environment", "File Browser Bookmarks");
+        let bookmarks = displayWindowClient.getProfileEntry("EPICS Custom Environment", "File Browser Bookmarks");
+
         if (Array.isArray(bookmarks)) {
             const result: type_single_file_folder[] = [];
-            for (const [name, path] of bookmarks) {
+            for (const [path, writePermission] of bookmarks) {
                 let type: "folder" | "file" = "folder";
                 if (path.includes(".")) {
                     type = "file";
@@ -1660,6 +1651,7 @@ export class FileBrowser extends BaseWidget {
         } else {
             return [];
         }
+
     }
 
     sortFolderContent = () => {

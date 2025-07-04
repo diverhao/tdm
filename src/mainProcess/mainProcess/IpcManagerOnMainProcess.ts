@@ -1646,8 +1646,33 @@ export class IpcManagerOnMainProcess {
     handleSaveTdlFile = (event: any, windowId: string, tdl: type_tdl, tdlFileName1: string) => {
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
         if (mainProcessMode === "web") {
-            // do not save to web server
-            return;
+            // make sure the file is allowed to save
+            const bookmarks = this.getMainProcess().getProfiles().getSelectedProfile()?.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
+            let allowToSave = false;
+            if (Array.isArray(bookmarks)) {
+                for (const bookmark of bookmarks) {
+                    const bookmarkFolder = bookmark[0];
+                    const permissionToWrite = bookmark[1];
+                    if (tdlFileName1.includes(bookmarkFolder) && typeof permissionToWrite === "string" && permissionToWrite.toLowerCase() === "yes") {
+                        allowToSave = true;
+                        break;
+                    }
+                }
+            }
+            if (allowToSave === false) {
+                const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(windowId);
+                if (displayWindowAgent instanceof DisplayWindowAgent) {
+                    displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                        // command?: string | undefined;
+                        messageType: "error", // | "warning" | "info";
+                        humanReadableMessages: [`You are not allowed to visit ${tdlFileName1}.`],
+                        rawMessages: [],
+                        // buttons?: type_DialogMessageBoxButton[] | undefined;
+                        // attachment?: any;
+                    })
+                }
+                return;
+            }
         }
         // if tdlFileName is not "", then it must be the resolved full path of this tdl file
         let tdlFileName: string | undefined = tdlFileName1;
@@ -2725,6 +2750,43 @@ export class IpcManagerOnMainProcess {
         widgetKey: string,
         folderPath: string,
     }) => {
+
+        // web mode: only the folders and their sub-folders explicitly defined in bookmarks can be visited
+        if (this.getMainProcess().getMainProcessMode() === "web") {
+            const folderPath = options["folderPath"];
+            let allowToRead = false;
+            const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+            if (selectedProfile !== undefined) {
+                const bookmarks = selectedProfile.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
+                if (bookmarks !== undefined) {
+                    for (const bookmark of bookmarks) {
+                        const bookmarkFolder = bookmark[0];
+                        if (typeof bookmarkFolder === "string") {
+                            if (folderPath.includes(bookmarkFolder)) {
+                                allowToRead = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (allowToRead === false) {
+                const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
+                if (displayWindowAgent instanceof DisplayWindowAgent) {
+                    displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                        // command?: string | undefined;
+                        messageType: "error", // | "warning" | "info";
+                        humanReadableMessages: [`You are not allowed to visit ${folderPath}.`],
+                        rawMessages: [],
+                        // buttons?: type_DialogMessageBoxButton[] | undefined;
+                        // attachment?: any;
+                    })
+                }
+                return;
+            }
+        }
+
+
         try {
             // read the folder
             const folderPath = options["folderPath"];
@@ -2776,6 +2838,7 @@ export class IpcManagerOnMainProcess {
                 })
             }
         }
+
     }
 
     handleFileBrowserCommand = (event: any, message: {
@@ -2792,6 +2855,45 @@ export class IpcManagerOnMainProcess {
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
             return;
         }
+        // need explicit write permission in web mode
+        if (this.getMainProcess().getMainProcessMode() === "web") {
+            const folderPath = typeof message["folder"] === "string" ? message["folder"] : typeof message["fullFileName"] === "string" ? message["fullFileName"] : typeof message["fullFolderName"] === "string" ? message["fullFolderName"] : "";
+            let allowToWrite = false;
+            const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+            if (selectedProfile !== undefined) {
+                const bookmarks = selectedProfile.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
+                if (bookmarks !== undefined) {
+                    for (const bookmark of bookmarks) {
+                        const bookmarkFolder = bookmark[0];
+                        const permissionToWrite = bookmark[1];
+                        if (typeof bookmarkFolder === "string" && typeof permissionToWrite === "string") {
+                            if (folderPath.includes(bookmarkFolder) && permissionToWrite.toLowerCase() === "yes") {
+                                allowToWrite = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (allowToWrite === false) {
+                const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(message["displayWindowId"]);
+                if (displayWindowAgent instanceof DisplayWindowAgent) {
+                    displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                        // command?: string | undefined;
+                        messageType: "error", // | "warning" | "info";
+                        humanReadableMessages: [`You are not allowed to ${message["command"].replaceAll("-", " ")} for ${folderPath}.`],
+                        rawMessages: [],
+                        // buttons?: type_DialogMessageBoxButton[] | undefined;
+                        // attachment?: any;
+                    })
+                }
+                return;
+            }
+        }
+
+
+
+
         if (message["command"] === "change-item-name") {
             const folder = message["folder"];
             const oldName = message["oldName"];

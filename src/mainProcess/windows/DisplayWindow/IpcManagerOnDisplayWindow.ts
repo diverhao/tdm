@@ -355,7 +355,7 @@ export class IpcManagerOnDisplayWindow {
     // ----------------------- event handlers -----------------------------
 
     handleContextMenuCommand = (event: any, command: string, subcommand: string | string[] | undefined | [string, boolean]) => {
-        Log.debug("context menu command:", command, "subcommand", subcommand);
+        Log.info("context menu command:", command, "subcommand", subcommand);
         // editing mode
         if (command === "create-widget") {
             if (subcommand === "text-update") {

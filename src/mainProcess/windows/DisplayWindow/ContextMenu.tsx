@@ -416,8 +416,8 @@ export class ContextMenu {
             || widgetKey.includes("Help")
             || widgetKey.includes("FileConverter")
             || widgetKey.includes("Terminal")) {
-            // they have not state, the "Save Display As" is removed
-            this.removeItems(["Reload Display", "Save Display As", "Duplicate Display", "Copy PV Names", "Copy PV Values"]);
+            // they have not state, the "Download Display" is removed
+            this.removeItems(["Reload Display", "Download Display", "Duplicate Display", "Copy PV Names", "Copy PV Values"]);
         } else if (widgetKey.includes("PvMonitor")
             || widgetKey.includes("TextEditor")) {
             // they are stateful, we should be able to save them
@@ -583,15 +583,15 @@ export class ContextMenu {
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "execute-display", undefined)
             },
         },
-        // {
-        //     label: "Save Display (to remove)",
-        //     accelerator: "CmdOrCtrl+s",
-        //     click: () => {
-        //         // this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "save-display");
-        //     },
-        // },
         {
-            label: "Save Display As",
+            label: "Save Display on Server",
+            accelerator: "CmdOrCtrl+s",
+            click: () => {
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "save-display", undefined);
+            },
+        },
+        {
+            label: "Download Display",
             accelerator: "CmdOrCtrl+Shift+s",
             click: () => {
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "save-display-as", undefined);
@@ -635,7 +635,7 @@ export class ContextMenu {
             },
         },
         {
-            label: "Open Display on Server",
+            label: "Browse Display on Server",
             click: () => {
                 // this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "file-browser", ["", false]);
@@ -1269,7 +1269,7 @@ export class ContextMenu {
             },
         },
         {
-            label: "Save Display As",
+            label: "Download Display",
             accelerator: "CmdOrCtrl+Shift+s",
             click: () => {
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "save-display-as", undefined);
@@ -1325,7 +1325,7 @@ export class ContextMenu {
             // },
         },
         {
-            label: "Open Display on Server",
+            label: "Browse Displays on Server",
             click: () => {
                 // this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "file-browser", ["", false]);
@@ -1526,7 +1526,7 @@ export class ContextMenu {
             },
         },
         {
-            label: "Save Display As",
+            label: "Download Display",
             accelerator: "CmdOrCtrl+Shift+s",
             click: () => {
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "save-display-as", undefined);
@@ -1583,7 +1583,7 @@ export class ContextMenu {
             // },
         },
         {
-            label: "Open Display on Server",
+            label: "Browse Displays on Server",
             click: () => {
                 // this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "file-browser", ["", false]);
