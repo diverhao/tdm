@@ -462,6 +462,12 @@ export class ContextMenuDesktop {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "channel-graph");
                     },
                 },
+                {
+                    label: "Seq Graph",
+                    click: () => {
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "seq-graph");
+                    },
+                },
                 // do not explicitly create Help widget
                 // {
                 //     label: "Help",
@@ -987,6 +993,12 @@ export class ContextMenuDesktop {
                 this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "channel-graph", [""]);
             },
         },
+        {
+            label: "Seq Graph",
+            click: () => {
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "seq-graph");
+            },
+        },
         { type: "separator" },
         {
             label: "Toggle Title",
@@ -1274,6 +1286,12 @@ export class ContextMenuDesktop {
                 this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "channel-graph", this._widgetKeys);
             },
         },
+        {
+            label: "Seq Graph",
+            click: () => {
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "seq-graph");
+            },
+        },
 
         { type: "separator" },
         {
@@ -1467,7 +1485,7 @@ export class ContextMenuDesktop {
         // if their editable bit in DisplayWindowAgent is true, then they should be able to "Save" in operating mode
         // The purpose of this "Save" is updating the settings 
         if (this.getDisplayWindowAgent().isUtilityWindow() &&
-            (widgetKey.includes("DataViewer") || widgetKey.includes("Probe") || widgetKey.includes("ChannelGraph") || widgetKey.includes("PvTable") || widgetKey.includes("PvMonitor"))
+            (widgetKey.includes("DataViewer") || widgetKey.includes("Probe") || widgetKey.includes("ChannelGraph") || widgetKey.includes("PvTable") || widgetKey.includes("PvMonitor") || widgetKey.includes("SeqGraph"))
         ) {
             // these utility windows should never be editable
             this.removeItems(["Edit Display"]);

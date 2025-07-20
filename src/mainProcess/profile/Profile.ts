@@ -364,6 +364,11 @@ export class Profile {
                         "YES",
                     ]
                 },
+                "File Browser Bookmarks": {
+                    "DESCRIPTION": "Bookmarks for File Browser. The first column is the folder/file path. The second column is for Web mode write permission: if YES, the user can create/modify/rename files, if NO, the user can only read the file/folder.",
+                    "value": [],
+                    "type": "[string,string][]"
+                },
                 // speical type for "Macros"
                 Macros: { value: [], DESCRIPTION: "Macros for default tdl files. Left column is the macro name, right column is the macro value.", type: "[string,string][]" },
                 "EPICS Log Level": { value: "error", DESCRIPTION: "The log level for EPICS library (epics-tca).", choices: ["trace", "debug", "info", "warn", "error", "fatal"] },

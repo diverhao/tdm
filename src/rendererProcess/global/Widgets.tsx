@@ -71,6 +71,7 @@ import { type_LocalChannel_data } from "../../mainProcess/channel/LocalChannelAg
 import path, { dirname } from "path";
 import { Log } from "../../mainProcess/log/Log";
 import { SidebarWidgetsList } from "../helperWidgets/SidebarComponents/SidebarWidgetsList";
+import { SeqGraph } from "../widgets/SeqGraph/SeqGraph";
 
 /**
  * Widget object types union: 3 special types + BaseWidget.
@@ -106,6 +107,7 @@ export type type_widgetType =
     | "Help"
     | "Terminal"
     | "ChannelGraph"
+    | "SeqGraph"
     | "Calculator"
     | "ProfilesViewer"
     | "LogViewer"
@@ -565,6 +567,13 @@ export class Widgets {
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
+            case "SeqGraph":
+                tdl = SeqGraph.generateDefaultTdl("SeqGraph");
+                tdl.style.left = x;
+                tdl.style.top = y;
+                tdl.style.width = width;
+                tdl.style.height = height;
+                break;
             case "PvTable":
                 tdl = PvTable.generateDefaultTdl("PvTable");
                 tdl.style.left = x;
@@ -766,6 +775,10 @@ export class Widgets {
             }
             case "ChannelGraph": {
                 widget = new ChannelGraph(widgetTdl);
+                break;
+            }
+            case "SeqGraph": {
+                widget = new SeqGraph(widgetTdl);
                 break;
             }
             case "PvTable": {
@@ -2733,6 +2746,66 @@ export class Widgets {
 
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
             this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "ChannelGraph", options);
+        } else {
+            const currentSite = `https://${window.location.host}/`;
+            this.getRoot()
+                .getDisplayWindowClient()
+                .getIpcManager()
+                .sendPostRequestCommand("create-utility-display-window", {
+                    utilityType: "ChannelGraph",
+                    utilityOptions: options,
+                })
+                .then((response: any) => {
+                    // decode string
+                    return response.json();
+                })
+                .then((data) => {
+                    const ipcServerPort = data["ipcServerPort"];
+                    const displayWindowId = data["displayWindowId"];
+                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
+                });
+        }
+
+    };
+
+
+    openSeqGraphWindow = () => {
+        // if (channelName === undefined) {
+        //     channelName = "";
+        // }
+
+        let options = {};
+
+        // if (widgetKeys?.length === 0 || widgetKeys === undefined) {
+
+        // } else {
+        //     const widgetKey = widgetKeys[0];
+        //     let widget = undefined;
+        //     try {
+        //         widget = this.getWidget2(widgetKey);
+        //     } catch (e) {
+        //         Log.error(e);
+        //     }
+        //     if (widget !== undefined && widget instanceof BaseWidget) {
+        //         const channelNames = widget.getChannelNames();
+        //         channelName = channelNames[0];
+        //     }
+        // }
+
+        // if (channelName !== "") {
+        //     options = {
+        //         channelNames: [channelName],
+        //     }
+        // } else {
+        //     options = {
+        //         channelNames: [],
+        //     }
+        // }
+
+
+        if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
+            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "SeqGraph", options);
         } else {
             const currentSite = `https://${window.location.host}/`;
             this.getRoot()

@@ -40,6 +40,7 @@ import path from "path";
 import '../../resources/css/katex.min.css';
 import { Talhk } from "../../../rendererProcess/widgets/Talhk/Talhk";
 import { FileBrowser } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
+import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 // import '../../resources/css/simple.css';
 
 
@@ -669,7 +670,7 @@ export class DisplayWindowClient {
         editable: boolean,
         externalMacros: [string, string][],
         useExternalMacros: boolean,
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | undefined,
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph" | undefined,
         utilityOptions: Record<string, any>
     ) => {
         Log.info("new tdl ", newTdl, utilityType, editable)
@@ -699,7 +700,8 @@ export class DisplayWindowClient {
             utilityType === "FileConverter" ||
             utilityType === "Help" ||
             utilityType === "FileBrowser" ||
-            utilityType === "Talhk"
+            utilityType === "Talhk" ||
+            utilityType === "SeqGraph"
         ) {
             this._appendUtilityWidgetTdl(newTdl, utilityType, utilityOptions);
             initialMode = rendererWindowStatus.operating;
@@ -773,7 +775,7 @@ export class DisplayWindowClient {
      */
     private _appendUtilityWidgetTdl = (
         tdl: type_tdl,
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser",
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph",
         utilityOptions: Record<string, any>
     ) => {
         console.log("tdl", utilityType)
@@ -891,6 +893,20 @@ export class DisplayWindowClient {
         } else if (utilityType === "ChannelGraph") {
             // default size is 100%
             const widgetTdl = ChannelGraph.generateWidgetTdl(utilityOptions);
+            const widgetKey = widgetTdl.widgetKey;
+            widgetTdl.style.width = "100%";
+            widgetTdl.style.height = "100%";
+            // widgetTdl.style.boxSizing = "border-box";
+            // widgetTdl.style.padding = "20px";
+
+            // widgetTdl.text.singleWidget = true;
+            // widgetTdl.style.boxSizing = "border-box";
+            // widgetTdl.style["top"] = 0;
+            tdl[widgetKey] = widgetTdl;
+            // tdl["Canvas"].style.backgroundColor = "rgba(0, 0, 0, 1)";
+        } else if (utilityType === "SeqGraph") {
+            // default size is 100%
+            const widgetTdl = SeqGraph.generateWidgetTdl(utilityOptions);
             const widgetKey = widgetTdl.widgetKey;
             widgetTdl.style.width = "100%";
             widgetTdl.style.height = "100%";

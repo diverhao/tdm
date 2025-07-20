@@ -32,6 +32,7 @@ import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
 import { Table } from "../../../rendererProcess/widgets/Table/Table";
 import { FileBrowser, type_folder_content } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
 import path from "path";
+import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 
 
 // var recorder;
@@ -426,6 +427,8 @@ export class IpcManagerOnDisplayWindow {
                 g_widgets1.createWidgetFromMouse("XYPlot");
             } else if (subcommand === "channel-graph") {
                 g_widgets1.createWidgetFromMouse("ChannelGraph");
+            } else if (subcommand === "seq-graph") {
+                g_widgets1.createWidgetFromMouse("SeqGraph");
             } else if (subcommand === "embedded-display") {
                 g_widgets1.createWidgetFromMouse("EmbeddedDisplay");
             } else if (subcommand === "group") {
@@ -512,6 +515,8 @@ export class IpcManagerOnDisplayWindow {
             g_widgets1.openTerminalWindow();
         } else if (command === "channel-graph") {
             g_widgets1.openChannelGraphWindow(subcommand as string[]);
+        } else if (command === "seq-graph") {
+            g_widgets1.openSeqGraphWindow();
         } else if (command === "calculator") {
             g_widgets1.openCalculatorWindow();
         } else if (command === "help") {
@@ -659,7 +664,7 @@ export class IpcManagerOnDisplayWindow {
                                 // do not force update this widget upon new DBR data arrival, use its own mechanism to trigger the update
                                 g_widgets1.removeFromForceUpdateWidgets(widgetKey);
                             }
-                            if (widget instanceof DataViewer || widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph) {
+                            if (widget instanceof DataViewer || widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph || widget instanceof SeqGraph) {
                                 dbrDataMappedWidgets.push(widget);
                                 dbrDataMappedWidgetKeys.push(widgetKey)
                             }
@@ -672,7 +677,7 @@ export class IpcManagerOnDisplayWindow {
         }
 
         for (const widget of dbrDataMappedWidgets) {
-            if (widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph) {
+            if (widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph || widget instanceof SeqGraph) {
                 widget.mapDbrDataWitNewData(Object.keys(newDbrData));
             } else if (widget instanceof DataViewer) {
                 // remove force update, use the internal interval to update
@@ -750,11 +755,11 @@ export class IpcManagerOnDisplayWindow {
             editable: boolean;
             externalMacros: [string, string][];
             useExternalMacros: boolean;
-            utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "Casw" | "PvMonitor" | "CaSnooper" | "FileConverter" | "Talhk" | "FileBrowser";
+            utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "Casw" | "PvMonitor" | "CaSnooper" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph";
             utilityOptions: Record<string, any>;
         }
     ) => {
-        Log.info("Received a new-tdl");
+        Log.info("Received a new-tdl", options);
         this.getDisplayWindowClient().updateTdl(
             options["newTdl"],
             options["tdlFileName"],

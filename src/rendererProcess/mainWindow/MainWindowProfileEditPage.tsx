@@ -1942,30 +1942,33 @@ export class MainWindowProfileEditPage {
         const style = {
             display: "flex",
             flexDirection: "row",
-            width: "70%",
+            width: "80%",
             paddingLeft: "6px",
             outline: "none",
             fontSize: "13px",
+            fontFamily: GlobalVariables.defaultFontFamily,
         } as React.CSSProperties;
 
         const styleInput = {
             backgroundColor: "rgba(0,0,0,0)",
-            width: "25%",
+            width: "45%",
             border: "solid 1px rgb(190, 190, 190)",
             paddingLeft: "6px",
             outline: "none",
             fontSize: "13px",
             background: "white",
             boxSizing: "border-box",
+            fontFamily: GlobalVariables.defaultFontFamily,
         } as React.CSSProperties;
 
         const styleDiv = {
-            width: "25%",
+            width: "45%",
             border: "solid 1px rgba(190, 190, 190, 0)",
             paddingLeft: "6px",
             outline: "none",
             fontSize: "13px",
             boxSizing: "border-box",
+            fontFamily: GlobalVariables.defaultFontFamily,
         } as React.CSSProperties;
 
         if (isEditing) {

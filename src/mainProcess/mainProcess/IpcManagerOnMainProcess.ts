@@ -1830,6 +1830,7 @@ export class IpcManagerOnMainProcess {
      * does not flash.
      */
     handleNewTdlRendered = async (event: any, displayWindowId: string, windowName: string, tdlFileName: string, mode: string) => {
+
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
@@ -2117,7 +2118,7 @@ export class IpcManagerOnMainProcess {
 
     createUtilityDisplayWindow = (
         event: any,
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "Help" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser",
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "Help" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph",
         utilityOptions: Record<string, any>,
         httpResponse: any = undefined
     ) => {

@@ -4,7 +4,7 @@ import { type_Canvas_tdl } from "../../../rendererProcess/helperWidgets/Canvas/C
 // does not have BrowserWindow, should not be compared to "class MainWindow" or "class DisplayWindow"
 export class UtilityWindow {
     static creatUtilityBlankTdl = (
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "Help" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser"
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "Help" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph"
     ) => {
         if (utilityType === "Probe") {
             return {
@@ -221,13 +221,46 @@ export class UtilityWindow {
                         left: 0,
                         top: 0,
                         height: 500,
-                        width: 500,
+                        width: 800,
                         overflow: "hidden",
                     },
                     macros: [],
                     replaceMacros: false,
                     // used as identifier of the widgetTdl
                     windowName: "TDM Channel Graph",
+                    script: "",
+                    xGridSize: 1,
+                    yGridSize: 1,
+                    gridColor: "rgba(128,128,128,1)",
+                    showGrid: true,
+                    isUtilityWindow: true,
+                } as type_Canvas_tdl,
+            };
+
+        } else if (utilityType === "SeqGraph") {
+            return {
+                Canvas: {
+                    type: "Canvas",
+                    widgetKey: "Canvas",
+                    key: "Canvas",
+                    style: {
+                        position: "absolute",
+                        display: "inline-block",
+                        backgroundColor: `rgba(232,232,232,1)`,
+                        // all 0
+                        margin: 0,
+                        border: 0,
+                        padding: 0,
+                        left: 0,
+                        top: 0,
+                        height: 500,
+                        width: 800,
+                        overflow: "hidden",
+                    },
+                    macros: [],
+                    replaceMacros: false,
+                    // used as identifier of the widgetTdl
+                    windowName: "TDM Seq Graph",
                     script: "",
                     xGridSize: 1,
                     yGridSize: 1,

@@ -191,7 +191,7 @@ export class ChannelGraph extends BaseWidget {
         this._dbdFiles = new DbdFiles(JSON.parse(JSON.stringify(widgetTdl.recordTypes)), JSON.parse(JSON.stringify(widgetTdl.menus)));
 
         // this.initialChannelNames = widgetTdl["channelNames"];
-        console.log("---------------------------", this._dbdFiles)
+        // console.log("---------------------------", this._dbdFiles)
         // const css = document.createElement('link');
         // css.rel = 'stylesheet';
         // css.href = '../../../webpack/resources/css/prism.css'; // Make sure the path is correct relative to your HTML file

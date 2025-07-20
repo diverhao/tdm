@@ -1463,7 +1463,7 @@ export class FileBrowser extends BaseWidget {
                 displayWindowClient.getIpcManager().handleDialogShowMessageBox(undefined,
                     {
                         messageType: "error", // | "warning" | "info";
-                        humanReadableMessages: [`You are no5 allowed to visit ${folderPath}.`],
+                        humanReadableMessages: [`You are not allowed to visit ${folderPath}.`],
                         rawMessages: [],
                     }
                 );

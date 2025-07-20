@@ -213,6 +213,7 @@ export class WindowAgentsManager {
                 const displayWindowId = this.getMainProcess().obtainDisplayWindowHtmlIndex();
                 const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
                 // (2)
+
                 await displayWindowAgent.createBrowserWindow(httpResponse, options);
                 // (3)
                 // GUI is created
@@ -408,11 +409,10 @@ export class WindowAgentsManager {
         }
         this.preloadedDisplayWindowAgent = undefined;
 
-
-
         // (3)
         displayWindowAgent.setTdlFileName(tdlFileName);
         displayWindowAgent.setMacros(macros);
+        // displayWindowAgent.show() // for debug
         // context menu for desktop mode is also updated
         displayWindowAgent.setEditable(editable);
         if (options["utilityType"] !== undefined) {
@@ -568,7 +568,7 @@ export class WindowAgentsManager {
     // almost the same as this.createDisplayWindow()
     // options are from the "create-utility-display-window" event, they are simply bounced back
     createUtilityDisplayWindow = async (
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "PvMonitor" | "Help" | "FileConverter" | "Talhk" | "FileBrowser",
+        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "PvMonitor" | "Help" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph",
         utilityOptions: Record<string, any>,
         httpResponse: any = undefined,
     ) => {
@@ -583,7 +583,7 @@ export class WindowAgentsManager {
             // normally a utility window is not editable, but the DataViewer's editable means it can 
             // have "Save" in context menu. But still, it does not have "Edit Display" in context menu
             let editable = false;
-            if (utilityType === "DataViewer" || utilityType === "Probe" || utilityType === "ChannelGraph" || utilityType === "PvTable" || utilityType === "PvMonitor") {
+            if (utilityType === "DataViewer" || utilityType === "Probe" || utilityType === "ChannelGraph" || utilityType === "PvTable" || utilityType === "PvMonitor" || utilityType === "SeqGraph") {
                 editable = true;
             }
 
@@ -600,6 +600,7 @@ export class WindowAgentsManager {
                 utilityType: utilityType,
                 utilityOptions: utilityOptions,
             };
+
             const displayWindowAgent = await this.createDisplayWindow(windowOptions, httpResponse);
 
             if (displayWindowAgent === undefined) {
