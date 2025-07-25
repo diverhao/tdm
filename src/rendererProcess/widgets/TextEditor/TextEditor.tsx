@@ -420,6 +420,12 @@ export class TextEditor extends BaseWidget {
                                     elementCodeWrapperRef.current.scrollLeft = scrollLeft;
                                 }
                             }}
+                            onDragStart={(event: any) => {
+                                event.preventDefault();
+                            }}
+                            onDrop={(event: any) => {
+                                event.preventDefault();
+                            }}
                         >
                         </textarea>
                     }

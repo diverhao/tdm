@@ -20,6 +20,8 @@ export class SeqProgram {
     _status: "running" | "stopped" = "stopped";
     _mainWidget: SeqGraph;
     _stateSets: SeqStateSet[] = [];
+    _channelNames: string[] = [];
+
     constructor(name: string, mainWidget: SeqGraph) {
         this._name = name;
         this._mainWidget = mainWidget;
@@ -72,9 +74,9 @@ export class SeqProgram {
         this.setStatus("running");
     }
 
-    stop = () => {
+    pause = () => {
         for (const stateSet of this.getStateSets()) {
-            stateSet.stop();
+            stateSet.pause();
         }
         this.setStatus("stopped");
     }
@@ -86,7 +88,9 @@ export class SeqProgram {
         }
     }
 
-    // _stateSets: SeqStateSet[] = [];
+    /**
+     * Clear the all the data in this program, including all state sets
+     */
     clear = () => {
         for (const stateSet of this.getStateSets()) {
             stateSet.clear();
@@ -122,6 +126,21 @@ export class SeqProgram {
         } catch (e) {
             console.log("Failed to put channel value for", channelName);
         }
+    }
+
+
+    registerChannels = (...channelNames: (string | string[])[]) => {
+        for (const channelName of channelNames) {
+            if (typeof channelName === "string") {
+                this.getChannelNames().push(channelName);
+            } else if (Array.isArray(channelName)) {
+                this.registerChannels(channelName);
+            }
+        }
+    }
+
+    getChannelNames = () => {
+        return this._channelNames;
     }
 
 }
@@ -195,7 +214,7 @@ export class SeqStateSet {
             state.clear();
         }
         this.getStates().length = 0;
-        
+
     }
 
     /**
@@ -223,7 +242,7 @@ export class SeqStateSet {
         }
     }
 
-    stop = () => {
+    pause = () => {
         this.setCurrentState(undefined);
         this.setPreviousCondition(undefined);
     }
@@ -373,26 +392,6 @@ export class Condition {
 
 
 
-export class SeqChannel {
-    _program: SeqProgram;
-    _channel: TcaChannel | undefined = undefined;
-    constructor(program: SeqProgram) {
-        this._program = program;
-    }
-
-    getProgram = () => {
-        return this._program;
-    }
-
-    setChannel = (channel: TcaChannel) => {
-        this._channel = channel;
-    }
-
-    getChannel = () => {
-        return this._channel;
-    }
-}
-
 // --------------------------------
 
 // const prog = new SeqProgram("test01");
@@ -450,4 +449,26 @@ export class SeqChannel {
 //     });
 
 // })
+
+// --------------- seq functions ------------------
+
+export class SeqChannel {
+    _program: SeqProgram;
+    _channel: TcaChannel | undefined = undefined;
+    constructor(program: SeqProgram) {
+        this._program = program;
+    }
+
+    getProgram = () => {
+        return this._program;
+    }
+
+    setChannel = (channel: TcaChannel) => {
+        this._channel = channel;
+    }
+
+    getChannel = () => {
+        return this._channel;
+    }
+}
 

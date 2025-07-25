@@ -24,6 +24,8 @@ import { DbdFiles } from "../../channel/DbdFiles";
 import { SeqGraphSidebar } from "./SeqGraphSidebar";
 import { Condition, SeqProgram, SeqState, SeqStateSet } from "./SeqProgram";
 import { ElementMacrosTable } from "../../helperWidgets/SharedElements/MacrosTable";
+import { parseSeq } from "./SeqParser";
+// import { parseSeq } from "./SeqParser";
 
 
 enum type_channelSource {
@@ -491,21 +493,30 @@ export class SeqGraph extends BaseWidget {
                         <h2>
                             Sequencer
                         </h2>
-                        <textarea style={{
-                            padding: 10,
-                            fontFamily: "monospace",
-                            fontSize: GlobalVariables.defaultFontSize,
-                            height: "100%",
-                            lineHeight: 1.5,
-                            outline: "none",
-                            border: "solid 1px rgba(150, 150, 150, 1)",
-                            resize: "none",
-                        }}
+                        <textarea
+                            style={{
+                                padding: 10,
+                                fontFamily: "Consolas,Monaco,'Andale Mono','Ubuntu Mono',monospace",
+                                fontSize: GlobalVariables.defaultFontSize,
+                                height: "100%",
+                                lineHeight: 1.5,
+                                outline: "none",
+                                border: "solid 1px rgba(150, 150, 150, 1)",
+                                resize: "none",
+                            }}
+                            draggable={false}
                             value={seqContent}
                             spellCheck={false}
                             onChange={(event: any) => {
+                                event.preventDefault();
                                 setSeqContent(event.target.value);
                                 this.getText()["seqContent"] = event.target.value;
+                            }}
+                            onDragStart={(event: any) => {
+                                event.preventDefault();
+                            }}
+                            onDrop={(event: any) => {
+                                event.preventDefault();
                             }}
                         >
                             {this.getText()["seqContent"]}
@@ -542,66 +553,34 @@ export class SeqGraph extends BaseWidget {
             }}>
                 Seq Graph for {this.getSeqProgram().getName()}
 
-                <img
-                    style={{
-                        width: 35,
-                        height: 35,
-                        outline: "2px solid rgba(0,0,0,0)",
-                        marginLeft: 50,
-                    }}
-                    ref={elementSettingsRef}
-                    onMouseEnter={() => {
-                        if (elementSettingsRef.current !== null) {
-                            elementSettingsRef.current.style["outline"] = "2px solid rgba(190,190,190,1)"
-                        }
-                    }}
-                    onMouseLeave={() => {
-                        if (elementSettingsRef.current !== null) {
-                            elementSettingsRef.current.style["outline"] = "2px solid rgba(190,190,190,0)"
-                        }
-                    }}
-                    onClick={() => {
+                <ElementRectangleButton
+                    handleClick={() => {
                         this.setShowConfigPage(true);
                     }}
-                    src={"../../resources/webpages/settings.svg"}
-                ></img>
+                    marginLeft={40}
+                >
+                    Edit Program Code
+                </ElementRectangleButton>
 
 
                 <ElementRectangleButton
                     handleClick={
                         () => {
                             this.clearSeqProgram();
-                            this.buildSeqProgram();
+                            this.jobsAsOperatingModeBegins();
                         }
                     }
                     marginLeft={10}
                 >
-                    Reset Program
+                    Re-build Program
 
                 </ElementRectangleButton>
 
-                <img
-                    style={{
-                        width: 35,
-                        height: 35,
-                        outline: "2px solid rgba(0,0,0,0)",
-                        marginLeft: 10,
-                    }}
-                    ref={elementRef}
-                    onMouseEnter={() => {
-                        if (elementRef.current !== null) {
-                            elementRef.current.style["outline"] = "2px solid rgba(190,190,190,1)"
-                        }
-                    }}
-                    onMouseLeave={() => {
-                        if (elementRef.current !== null) {
-                            elementRef.current.style["outline"] = "2px solid rgba(190,190,190,0)"
-                        }
-                    }}
-                    onClick={() => {
+                <ElementRectangleButton
+                    handleClick={() => {
                         if (this.getSeqProgram().getStatus() === "running") {
                             console.log("stop the program")
-                            this.getSeqProgram().stop();
+                            this.getSeqProgram().pause();
                         } else {
                             console.log("start the program")
                             this.getSeqProgram().start();
@@ -639,11 +618,14 @@ export class SeqGraph extends BaseWidget {
 
                         forceUpdate({});
                     }}
-                    src={this.getSeqProgram().getStatus() === "running" ?
-                        "../../resources/webpages/pause.svg"
+                    marginLeft={10}
+                >
+                    {this.getSeqProgram().getStatus() === "running" ?
+                        "Pause"
                         :
-                        "../../resources/webpages/play.svg"}
-                ></img>
+                        "Run"}
+                </ElementRectangleButton>
+
             </div>
         )
     }
@@ -764,15 +746,243 @@ export class SeqGraph extends BaseWidget {
 
 
 
+    buildSeqProgram = () => {
+
+        const SeqStateSet_class = SeqStateSet;
+        const SeqState_class = SeqState;
+        const Condition_class = Condition;
+        const value_of = this.value_of;
+        const caput = this.caput;
+        const connect = this.connect;
+
+        const seqContent = this.getText()["seqContent"];
+
+        const global: Record<string, any> = {};
+
+        const seqContent1 = `
+
+global.pv1 = "Input_voltage";
+global.pv2 = "Indicator_light";
+
+// connect("Input_voltage", "Indicator_light");
+connect(global.pv1, global.pv2)
+
+
+ss volt_check {
+    state light_off {
+        when(value_of(global.pv1) > 5.0) {
+            caput(global.pv2, 1);
+        } state light_on
+    }
+
+    state light_on {
+        when(value_of(global.pv1) <= 5.0) {
+            caput(global.pv2, 0);
+        } state light_off
+    }
+}`;
+        const seq = parseSeq(seqContent);
+        console.log(seq)
+        const preambleStr = seq["preamble"];
+        const stateSetsData = seq["stateSets"];
+
+        eval(preambleStr);
+        console.log("name = ", this.getSeqProgram().getName(), this.getSeqProgram().getStateSets())
+
+
+        for (const stateSetData of stateSetsData) {
+            //   const stateSetResult = {};
+            //   stateSetResult["name"] = name;
+            //   stateSetResult["states"] = [];
+
+            // state set name
+            const stateSet = new SeqStateSet(this.getSeqProgram(), stateSetData["name"]);
+            this.getSeqProgram().addStateSet(stateSet);
+
+            // states
+            for (const stateData of stateSetData["states"]) {
+                //   const stateResult = {};
+                //   stateResult["name"] = name;
+                //   stateResult["entryBlocks"] = [];
+                //   stateResult["conditions"] = [];
+                //   stateResult["exitBlocks"] = [];
+
+
+                // entry function
+                const entryBlocks = stateData["entryBlocks"];
+                let entryFunc: () => any = () => { };
+                if (entryBlocks.length > 0) {
+                    entryFunc = () => {
+                        eval(entryBlocks[0]);
+                    }
+                }
+
+                // exit function
+                const exitBlocks = stateData["exitBlocks"];
+                let exitFunc: () => any = () => { };
+                if (exitBlocks.length > 0) {
+                    exitFunc = () => {
+                        eval(exitBlocks[0]);
+                    }
+                }
+
+                // create SeqState object
+                let state = new SeqState(
+                    stateSet,
+                    stateData["name"],
+                    entryFunc,
+                    exitFunc,
+                );
+                stateSet.addState(state);
+            }
+
+            // conditions
+            for (const stateData of stateSetData["states"]) {
+                const thisStateName = stateData["name"];
+                const thisState = stateSet.getState(thisStateName);
+                if (thisState === undefined) {
+                    continue;
+                }
+
+                const conditionsData = stateData["conditions"];
+                for (const conditionData of conditionsData) {
+                    // {
+                    //     booleanCondition: booleanCondition,
+                    //     action: action,
+                    //     nextState: next_state,
+                    // }
+                    const nextStateName = conditionData["nextState"];
+                    const nextState = stateSet.getState(nextStateName);
+
+                    const actionStr = conditionData["action"];
+                    const actionFunc = () => { eval(actionStr);};
+
+                    const booleanConditionStr = conditionData["booleanCondition"];
+                    const booleanConditionFunc = () => { return (eval(booleanConditionStr)) };
+
+                    if (nextState !== undefined) {
+                        const condition = new Condition(
+                            nextState, 
+                            booleanConditionFunc, 
+                            actionFunc, 
+                            booleanConditionStr.replace(/value_of\((.*?)\)/g, '$1').trim().slice(1,-1),
+                            actionStr);
+                        thisState.addCondition(condition);
+                    }
+                }
+            }
+        }
+
+        console.log(this.getSeqProgram())
+
+        // (2) channel names 
+
+
+        this.getChannelNamesLevel0().push(...this.getSeqProgram().getChannelNames());
+        this.processChannelNames();
+        g_widgets1.connectAllTcaChannels(true)
+
+        // (3) prepare data set for plot
+        const prog = this.getSeqProgram();
+
+        const allNodes = this.networkData["nodes"];
+        const allEdges = this.networkData["edges"];
+
+        // add nodes
+        for (const stateSet of prog.getStateSets()) {
+            for (const state of stateSet.getStates()) {
+                // each state is a node
+                const stateNode = {
+                    id: state.getId(),
+                    label: state.getName(),
+                    shape: "big ellipse",
+                    physics: false,
+                    // x: x + 100 * (Math.random() - 0.5),
+                    // y: y + 100 * (Math.random() - 0.5),
+                    // no border needed
+                    color: {
+                        // background: source === "IOC" ? colors.background : colors.dbfilenode,
+                        highlight: colors.highlight,
+
+                    }
+                };
+                allNodes.add(stateNode)
+            }
+        }
+
+        // add edges
+        for (const stateSet of prog.getStateSets()) {
+            for (const state of stateSet.getStates()) {
+                // each condition is an edge
+                for (const condition of state.getConditions()) {
+                    const booleanFuncText = condition.getBooleanFuncText();
+                    const execFuncText = condition.getExecFuncText();
+                    const toState = condition.getNextState();
+
+                    const from = state.getId();
+                    const to = toState.getId();
+
+                    if (from === undefined || to === undefined) {
+                        continue;
+                    }
+
+                    allEdges.add({
+                        id: condition.getId(),
+                        from: from,
+                        to: to,
+                        label: booleanFuncText,
+                        // color: edgeColors[linkType],
+                        arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+                    })
+
+                }
+            }
+        }
+
+    }
+
+    value_of = (channelName: string) => {
+        try {
+            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+            const channel = g_widgets1.getTcaChannel(channelName);
+            const channelValue = channel.getValue();
+            return channelValue;
+        } catch (e) {
+            console.log("Failed to put channel value for", channelName);
+        }
+        return undefined;
+    }
+
+    caput = (channelName: string, value: string | string[] | number | number[]) => {
+        try {
+            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+            const channel = g_widgets1.getTcaChannel(channelName);
+            channel.put(displayWindowId, { value: value }, 1);
+        } catch (e) {
+            console.log("Failed to put channel value for", channelName);
+        }
+    }
+
+
+    connect = (...channelNames: string[]) => {
+        this.getSeqProgram().getChannelNames().length = 0;
+        this.getSeqProgram().getChannelNames().push(...channelNames);
+    }
+
+
+
+    // todo: build the program based on seq source code
 
     /**
      * Build the seq program based on the .st file 
      * 
      * (1) add all state sets to this._seqProgram in a top-down fashion
      * 
-     * (2) add channels to BaseWidget._channelNamesLevel0
+     * (2) add channels to BaseWidget._channelNamesLevel0, process channel names, and connect all channels
+     * 
+     * (3) generate the network graph
      */
-    buildSeqProgram = () => {
+    buildSeqProgram1 = () => {
 
         // (1)
         const prog = this.getSeqProgram();
@@ -831,6 +1041,9 @@ export class SeqGraph extends BaseWidget {
         // (2)
         this.getChannelNamesLevel0().push("Input_voltage");
         this.getChannelNamesLevel0().push("Indicator_light");
+
+        this.processChannelNames();
+        g_widgets1.connectAllTcaChannels(true)
 
         // prog.start()
 
@@ -898,14 +1111,14 @@ export class SeqGraph extends BaseWidget {
 
     stopSeqProgram = () => {
         console.log("Stop Seq program")
-        this.getSeqProgram().stop();
+        this.getSeqProgram().pause();
     }
 
 
 
 
     /**
-     * (1) clear all nodes
+     * (1) remove all nodes
      * 
      * (2) reset view port
      * 
@@ -917,6 +1130,10 @@ export class SeqGraph extends BaseWidget {
      *     added to channel names list
      * 
      * (6) process channel names
+     * 
+     * (7) set the program status to "stopped"
+     * 
+     * (8) force update the widget
      */
     clearSeqProgram = () => {
         // (1)
@@ -930,6 +1147,7 @@ export class SeqGraph extends BaseWidget {
             scale: 1,                 // Default zoom level
             animation: false
         });
+
         // (3)
         this.getSeqProgram().clear();
 
@@ -943,9 +1161,7 @@ export class SeqGraph extends BaseWidget {
         }
 
         // (5)
-        if (this.getChannelNamesLevel0().length > 0) {
-            this.getChannelNamesLevel0().splice(1);
-        }
+        this.getChannelNamesLevel0().length = 0;
 
         // (6)
         this.processChannelNames();
