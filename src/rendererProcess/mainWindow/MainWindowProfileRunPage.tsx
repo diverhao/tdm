@@ -171,6 +171,9 @@ export class MainWindowProfileRunPage {
         const openChannelGraphWindow = () => {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "ChannelGraph", { channelNames: [] });
         }
+        const openSeqGraphWindow = () => {
+            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "SeqGraph", { });
+        }
 
         const openPvMonitorWindow = () => {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "PvMonitor", { channelNames: [] });
@@ -222,6 +225,7 @@ export class MainWindowProfileRunPage {
             "Data Viewer": openDataViewerWindow,
             "Probe": openProbeWindow,
             "Channel Graph": openChannelGraphWindow,
+            "Seq Graph": openSeqGraphWindow,
             "PV Table": openPvTablesWindow,
             "PV Monitor": openPvMonitorWindow,
             // "Talhk": openTalhk,

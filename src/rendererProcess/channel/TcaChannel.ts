@@ -16,6 +16,19 @@ export enum ChannelSeverity {
     NOT_CONNECTED,
 }
 
+export enum PVA_STATUS_TYPE {
+    OK = 0,
+    WARNING = 1,
+    ERROR = 2,
+    FATAL = 3,
+    OKOK = 255
+}
+
+export type type_pva_status = {
+    type: PVA_STATUS_TYPE;
+    message?: string;
+    callTree?: string;
+};
 
 export enum ChannelAlarmStatus {
     NO_ALARM,
@@ -517,19 +530,28 @@ export class TcaChannel {
     // ioTimeout is honored in main process' put().
     // the provided dbrData.value is always a string, we must convert it to the corresponding data type
     // according to this.dbrData.DBR_TYPE
+
+    /**
+     * @returns return false if failed, e.g. value parse error, timeout before received the PUT notification
+     * 
+     *          if waitNotify === false, always return undefined
+     * 
+     *          if waitNotify === true, for CA, returns status code; for PVA, returns type_pva_status
+     */
     put = async (
         displayWindowId: string,
         dbrData: type_dbrData | type_LocalChannel_data,
         ioTimeout: number,
+        waitNotify: boolean = false,
         callback?: () => void
-    ): Promise<void> => {
+    ): Promise<number | boolean | type_pva_status | undefined> => {
         // todo: array data
         // a number[], e.g. [1.2, 3.4, 5.6] is converted to string "1.2,3.4,5.6"
         const value = this.parseInput(dbrData);
         if (value === undefined) {
             // parse failed
             Log.error("Failed to parse value in", dbrData, "for PUT operation of", this.getChannelName());
-            return;
+            return false;
         }
 
         // might be [1,2,3], "abc", 37.8
@@ -573,14 +595,42 @@ export class TcaChannel {
             .getRoot()
             .getDisplayWindowClient()
             .getIpcManager()
-            .sendFromRendererProcess("tca-put", channelName, displayWindowId, dbrData, ioTimeout, pvaValueField);
+            .sendFromRendererProcess("tca-put", channelName, displayWindowId, dbrData, ioTimeout, pvaValueField, ioId, waitNotify);
+
+        if (waitNotify === true) {
+            try {
+                const result = await this.getIoPromise(ioId);
+                // undefined if the CA operation fails, the IO ID for synchronous version (waitNotify = false), the ECA status code for asynchronous version (waitNotify = true). PVA always returns a Status
+                const status = result["status"];
+                if (status === undefined) {
+                    return false;
+                }
+                return status;
+            } catch (e) {
+                Log.error(e);
+                return false;
+            }
+        } else {
+            return undefined;
+        }
+
+        // always reject if waitNotify === false
         try {
-            // always rejected
-            await this.getIoPromise(ioId);
+            const result = await this.getIoPromise(ioId);
+            // if waitNotify === false, it rejects at here, below is only for waitNotify === true
+            console.log("caput result = ", result)
+            // undefined if the CA operation fails, the IO ID for synchronous version (waitNotify = false), the ECA status code for asynchronous version (waitNotify = true). PVA always returns a Status
+            const status = result["status"];
+            return status;
         } catch (e) {
             Log.error(e);
+            if (waitNotify === true) {
+                return undefined;
+            } else {
+                // always return undefined if waitNotify === false
+                return undefined;
+            }
         }
-        // does not block
     };
 
 
@@ -990,7 +1040,7 @@ export class TcaChannel {
             } else {
                 delete g_widgets1.getTcaChannels()[this.getChannelName()];
             }
-    
+
             // (4)
             this.getReadWriteIos().rejectAllIos(this);
             // (5)

@@ -26,7 +26,7 @@ import { LogViewer, type_logData } from "../../../rendererProcess/widgets/LogVie
 import { PvMonitor } from "../../../rendererProcess/widgets/PvMonitor/PvMonitor";
 import { type_DialogInputBox, type_DialogMessageBox } from "../../../rendererProcess/helperWidgets/Prompt/Prompt";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
-import { ChannelSeverity, TcaChannel } from "../../../rendererProcess/channel/TcaChannel";
+import { ChannelSeverity, TcaChannel, type_pva_status } from "../../../rendererProcess/channel/TcaChannel";
 import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/ChannelGraph";
 import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
 import { Table } from "../../../rendererProcess/widgets/Table/Table";
@@ -168,6 +168,8 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("new-tdl", this.handleNewTdl);
         this.ipcRenderer.on("selected-profile-contents", this.handleSelectedProfileContents);
         this.ipcRenderer.on("tca-get-result", this.handleTcaGetResult);
+        this.ipcRenderer.on("tca-put-result", this.handleTcaPutResult);
+
         this.ipcRenderer.on("tca-get-pva-type-result", this.handleTcaGetPvaTypeResult);
         this.ipcRenderer.on("dialog-show-message-box", this.handleDialogShowMessageBox);
         this.ipcRenderer.on("dialog-show-input-box", this.handleDialogShowInputBox);
@@ -733,6 +735,24 @@ export class IpcManagerOnDisplayWindow {
             g_widgets1.addToForceUpdateWidgets(widgetKey);
         }
         g_flushWidgets();
+    };
+
+
+    // (1) resolve IO, letting TcaChannel.get() to continue, writing the data to TcaChannel
+    // (2) determine which widgets should be re-rendered
+    // (3) flush widgets
+    handleTcaPutResult = (event: any, result: {
+        channelName: string,
+        displayWindowId: string,
+        ioId: number,
+        waitNotify: boolean,
+        status: number | type_pva_status | undefined, // undefined if the CA operation fails, the IO ID for synchronous version (waitNotify = false), the ECA status code for asynchronous version (waitNotify = true). PVA always returns a Status
+    }) => {
+        // console.log(newDbrData);
+        // console.log("receive", JSON.stringify(newDbrData));
+        const readWriteIos = g_widgets1.getReadWriteIos();
+        // lift the block of PUT operation
+        readWriteIos.resolveIo(result["ioId"], result);
     };
 
     handleTcaGetPvaTypeResult = (event: any, channelName: string, widgetKey: string | undefined, pvaType: any) => {

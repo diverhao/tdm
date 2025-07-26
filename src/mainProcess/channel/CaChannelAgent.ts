@@ -1,4 +1,4 @@
-import { Channel, ChannelMonitor, Context, Channel_DBR_TYPES } from "epics-tca";
+import { Channel, ChannelMonitor, Context, Channel_DBR_TYPES, type_pva_status, PVA_STATUS_TYPE } from "epics-tca";
 import { type_dbrData } from "../../rendererProcess/global/GlobalVariables";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { ChannelAgentsManager } from "./ChannelAgentsManager";
@@ -303,10 +303,12 @@ export class CaChannelAgent {
      *
      * @param {type_dbrData} dbrData The data we want to put.
      * @param {number} ioTimeout Time out [s] of the operation. Default 1 second.
+     * @returns undefined if the CA operation fails, the IO ID for synchronous version (waitNotify = false), the ECA status code for asynchronous version (waitNotify = true). PVA always returns a Status
      */
-    put = async (displayWindowId: string, dbrData: type_dbrData, ioTimeout: number = 1): Promise<void> => {
+    put = async (displayWindowId: string, dbrData: type_dbrData, waitNotify: boolean, ioTimeout: number = 1): Promise<number | undefined> => {
 
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.PUT);
+        let putStatus: number | undefined = undefined;
         try {
             const channel = this.getChannel();
             if (channel === undefined) {
@@ -319,18 +321,24 @@ export class CaChannelAgent {
                 const errMsg = `Value to put for channel ${this.getChannelName()} is undefined.`;
                 throw new Error(errMsg);
             }
-            await channel.put(newValue, ioTimeout);
+            putStatus = await channel.put(newValue, ioTimeout, waitNotify);
         } catch (e) {
             Log.error(this.getMainProcessId(), e);
+            putStatus = undefined;
         }
         // this.reduceClientsNum();
         // this.addPutOperation();
         this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.PUT);
         this.checkLifeCycle();
+
+        return putStatus;
     };
 
-    putPva = async (displayWindowId: string, dbrData: type_dbrData, ioTimeout: number = 1, pvaValueField: string): Promise<void> => {
+    putPva = async (displayWindowId: string, dbrData: type_dbrData, ioTimeout: number = 1, pvaValueField: string): Promise<type_pva_status> => {
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.PUT);
+        let putStatus: type_pva_status = {
+                type: PVA_STATUS_TYPE["ERROR"],
+        }
         try {
             const channel = this.getChannel();
             if (channel === undefined) {
@@ -359,7 +367,7 @@ export class CaChannelAgent {
                 throw new Error(errMsg);
             }
             // console.log(`Run command await channel.putPva("${pvRequest}", [${[newValue]}], ${ioTimeout})`)
-            await channel.putPva(pvRequest, [newValue], ioTimeout);
+            putStatus = await channel.putPva(pvRequest, [newValue], ioTimeout);
         } catch (e) {
             Log.error(this.getMainProcessId(), e);
         }
@@ -367,6 +375,7 @@ export class CaChannelAgent {
         // this.addPutOperation();
         this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.PUT);
         this.checkLifeCycle();
+        return putStatus;
     };
 
     /**

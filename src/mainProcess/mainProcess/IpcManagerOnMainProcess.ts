@@ -2088,6 +2088,8 @@ export class IpcManagerOnMainProcess {
         dbrData: type_dbrData | type_LocalChannel_data,
         ioTimeout: number, // second
         pvaValueField: string,
+        ioId: number = -1,
+        waitNotify: boolean = false,
     ) => {
 
         const mainProcess = this.getMainProcess();
@@ -2099,19 +2101,21 @@ export class IpcManagerOnMainProcess {
             const errMsg = `Cannot find window with ID ${displayWindowId}`;
             throw new Error(errMsg);
         }
-        const success = windowAgent.tcaPut(channelName, dbrData, ioTimeout, pvaValueField);
+        const status = await windowAgent.tcaPut(channelName, dbrData, ioTimeout, pvaValueField, waitNotify);
 
-        // let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-        // if (!(channelAgent instanceof CaChannelAgent)) {
-        //     return;
-        // }
-        // if (channelAgent === undefined) {
-        //     channelAgent = channelAgentsManager.createChannelAgent(channelName);
-        // }
-        // if (!(channelAgent instanceof CaChannelAgent)) {
-        //     return;
-        // }
-        // channelAgent.put(displayWindowId, dbrData, ioTimeout);
+        if (waitNotify === true) {
+            const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
+            if (displayWindowAgent instanceof DisplayWindowAgent) {
+                displayWindowAgent.sendFromMainProcess("tca-put-result", {
+                    channelName: channelName,
+                    displayWindowId: displayWindowId,
+                    ioId: ioId,
+                    waitNotify: waitNotify,
+                    status: status,
+                })
+            }
+        }
+
     };
 
     // ------------------------------------------------------------

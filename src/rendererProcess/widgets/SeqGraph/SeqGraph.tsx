@@ -127,6 +127,7 @@ export class SeqGraph extends BaseWidget {
 
     _macros: [string, string][] = [];
 
+    updateLogElement = (input: any) => { };
 
 
     // Define network options
@@ -191,7 +192,6 @@ export class SeqGraph extends BaseWidget {
     // initialChannelNames: string[] = [];
 
     constructor(widgetTdl: type_SeqGraph_tdl) {
-        console.log("channel graph widget tdl", widgetTdl)
         super(widgetTdl);
         // this.setReadWriteType("read");
 
@@ -337,7 +337,8 @@ export class SeqGraph extends BaseWidget {
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                <this._ElementChannelGraph></this._ElementChannelGraph>
+                <this._ElementSeqGraph></this._ElementSeqGraph>
+                <this._ElementLog></this._ElementLog>
             </div>
         );
     };
@@ -355,7 +356,115 @@ export class SeqGraph extends BaseWidget {
         </div>
     }
 
-    _ElementChannelGraph = () => {
+    _ElementLog = () => {
+        const [, forceUpdate] = React.useState({});
+        const [showContent, setShowContent] = React.useState(false);
+        const [logHeight, setLogHeight] = React.useState(200);
+        const showHideElementRef = React.useRef<any>(null);
+
+        const handleMouseDown = () => {
+            window.addEventListener("mousemove", handleMouseMove);
+            window.addEventListener("mouseup", handleMouseUp);
+        }
+
+        const handleMouseMove = (event: any) => {
+            const dy = event.movementY;
+            setLogHeight((oldValue: number) => {
+                return Math.min(window.innerHeight * 0.6, Math.max(40, oldValue - dy));
+            })
+        };
+
+        const handleMouseUp = () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseup", handleMouseUp);
+        }
+
+        this.updateLogElement = forceUpdate;
+        return (
+            <div style={{
+                position: "fixed",
+                bottom: 0,
+                width: "100%",
+                // maxHeight: "40%",
+                // height: logHeight + 20,
+                backgroundColor: "rgba(255, 255, 255, 1)",
+                display: "inline-flex",
+                flexDirection: "column",
+                userSelect: "text",
+            }}>
+                <div style={{
+                    width: "100%",
+                    height: 20,
+                    backgroundColor: "rgba(210, 210, 210, 1)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    cursor: showContent === true ? "ns-resize" : "default",
+                    flexDirection: "row",
+                }}
+                    onMouseDown={() => {
+                        handleMouseDown();
+                    }}
+                >
+                    <div
+                        ref={showHideElementRef}
+                        style={{
+                            // border: "solid 1px",
+                            // borderRadius: 4,
+                            marginRight: 10,
+                            cursor: "pointer",
+                        }}
+                        onClick={() => {
+                            if (showContent === true) {
+                                setShowContent(false);
+                            } else {
+                                setShowContent(true);
+                            }
+                        }}
+                        onMouseEnter={() => {
+                            if (showHideElementRef.current !== null) {
+                                showHideElementRef.current.style["backgroundColor"] = "rgba(150, 150, 150, 1)";
+                            }
+                        }}
+                        onMouseLeave={() => {
+                            if (showHideElementRef.current !== null) {
+                                showHideElementRef.current.style["backgroundColor"] = "rgba(190, 190, 190, 0)";
+                            }
+                        }}
+                    >
+                        {showContent === true ? "Hide Log" : "Show Log"}
+                    </div>
+
+                </div>
+                <div
+                    style={{
+                        display: showContent === true ? "inline-flex" : "none",
+                        flexDirection: "column",
+                        width: "100%",
+                        height: logHeight,
+                        boxSizing: "border-box",
+                        fontFamily: "monospace",
+                        paddingLeft: 10,
+                    }}
+                >
+                    {
+                        this.getSeqProgram().getLog().map((log: string, index: number) => {
+                            return (
+                                <div
+                                    key={log}
+                                >
+                                    {log}
+                                </div>
+                            )
+                        })
+                    }
+
+                </div>
+            </div>
+        )
+    }
+
+    _ElementSeqGraph = () => {
         const elementRef = React.useRef<any>(null);
         const [showConfigPage, setShowConfigPage] = React.useState(false);
         this.setShowConfigPage = setShowConfigPage;
@@ -758,16 +867,6 @@ export class SeqGraph extends BaseWidget {
         }
     }
 
-    delay = async (dt: number) => {
-        const promise = new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve("");
-            }, dt * 1000)
-        })
-        await promise;
-        return true;
-    }
-
 
 
     buildSeqProgram = async () => {
@@ -775,12 +874,12 @@ export class SeqGraph extends BaseWidget {
         const global: any = {};
 
         const createAsyncFuncFromStr = (code: string) => {
-            const fn = new Function("connect", "caput", "value_of", "delay", "global", "value_is_changed", "alarm_of", "severity_of", `
+            const fn = new Function("connect", "caput", "value_of", "delay", "global", "value_is_changed", "alarm_of", "severity_of", "print", `
         return async () => {
           ${code}
         };
       `);
-            return fn(this.connect, this.caput, this.value_of, this.delay, global, this.value_is_changed, this.alarm_of, this.severity_of); 
+            return fn(this.connect, this.caput, this.value_of, this.delay, global, this.value_is_changed, this.alarm_of, this.severity_of, this.print);
         };
 
         const createFuncFromStr = (code: string) => {
@@ -800,18 +899,20 @@ global.pv1 = "Input_voltage";
 global.pv2 = "Indicator_light";
 
 // connect("Input_voltage", "Indicator_light");
-connect(global.pv1, global.pv2)
+connect(global.pv1, global.pv2, "valaaa")
 
 ss volt_check {
     state light_off {
-        when(value_is_changed(global.pv1)) {
+        when(value_of(global.pv1) > 5.0) {
             caput(global.pv2, 1);
+            print("thisi s zhubobofu");
         } state light_on
     }
 
     state light_on {
-        when((await delay(0.1)) && (value_of(global.pv1) <= 5.0)) {
+        when(value_of(global.pv1) <= 5.0) {
             caput(global.pv2, 0);
+            print("that is zhubobofu");
         } state light_off
     }
 }`;
@@ -844,10 +945,11 @@ ss volt_check {
                 const entryBlocks = stateData["entryBlocks"];
                 let entryFunc: () => any = () => { };
                 if (entryBlocks.length > 0) {
+                    console.log("entry blocks", entryBlocks)
                     // entryFunc = () => {
                     //     eval(entryBlocks[0]);
                     // }
-                    entryFunc = createAsyncFuncFromStr(entryBlocks[0]);
+                    entryFunc = createAsyncFuncFromStr(entryBlocks[0].action);
                 }
 
                 // exit function
@@ -857,7 +959,7 @@ ss volt_check {
                     // exitFunc = () => {
                     //     eval(exitBlocks[0]);
                     // }
-                    exitFunc = createAsyncFuncFromStr(exitBlocks[0]);
+                    exitFunc = createAsyncFuncFromStr(exitBlocks[0].action);
                 }
 
                 // create SeqState object
@@ -889,6 +991,7 @@ ss volt_check {
                     const nextState = stateSet.getState(nextStateName);
 
                     const actionStr = conditionData["action"];
+                    console.log("action string", actionStr)
                     // const actionFunc = () => { eval(actionStr); };
                     const actionFunc = createAsyncFuncFromStr(actionStr);
 
@@ -977,6 +1080,20 @@ ss volt_check {
 
     }
 
+    delay = async (dt: number) => {
+        const promise = new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve("");
+            }, dt * 1000)
+        })
+        try {
+            await promise;
+        } catch (e) {
+        }
+
+        return true;
+    }
+
     value_of = (channelName: string) => {
         try {
             const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
@@ -1021,14 +1138,38 @@ ss volt_check {
     }
 
 
-    caput = (channelName: string, value: string | string[] | number | number[]) => {
+    caput = async (channelName: string, value: string | string[] | number | number[]): Promise<boolean> => {
         try {
             const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
             const channel = g_widgets1.getTcaChannel(channelName);
-            channel.put(displayWindowId, { value: value }, 1);
+            // always wait notify
+            const status = await channel.put(displayWindowId, { value: value }, 1, true); // always wait notify
+            // should not happend: the above .put is waitNotify
+            if (status === undefined) {
+                return false;
+            }
+            // failed
+            if (typeof status === "boolean") {
+                return status;
+            }
+            // ca, success, a number
+            if (status === 1) {
+                return true;
+            }
+            // pva, success
+            if (typeof status === "object" && (status["type"] === 0 || status["type"] === 255)) {
+                return true;
+            }
+            // fallback
+            return false;
         } catch (e) {
-            console.log("Failed to put channel value for", channelName);
+            Log.error("Failed to put channel value for", channelName);
+            return false;
         }
+    }
+
+    print = (info: string) => {
+        this.getSeqProgram().prependLog(info);
     }
 
 
@@ -1290,15 +1431,6 @@ ss volt_check {
         // result.menus = utilityOptions.menus as Record<string, any>;
         return result;
     };
-
-    // // static method for generating a widget tdl with external PV name
-    // static generateWidgetTdl = (utilityOptions: Record<string, any>): type_ChannelGraph_tdl => {
-    //     // utilityOptions = {} for it
-    //     const result = this.generateDefaultTdl("ChannelGraph");
-    //     // result.text["externalMacros"] = utilityOptions["externalMacros"];
-    //     // result.text["tdlFileName"] = utilityOptions["tdlFileName"];
-    //     return result as type_ChannelGraph_tdl;
-    // };
 
     // defined in super class
     getTdlCopy(newKey: boolean = true) {

@@ -2,6 +2,7 @@
 
 import { TcaChannel } from "../../channel/TcaChannel";
 import { g_widgets1 } from "../../global/GlobalVariables";
+import { convertEpochTimeToString } from "../Talhk/client/GlobalMethod";
 import { SeqGraph } from "./SeqGraph";
 
 let id = 0;
@@ -21,7 +22,7 @@ export class SeqProgram {
     _mainWidget: SeqGraph;
     _stateSets: SeqStateSet[] = [];
     _channelNames: string[] = [];
-
+    _log: string[] = [];
 
 
     constructor(name: string, mainWidget: SeqGraph) {
@@ -97,12 +98,28 @@ export class SeqProgram {
         for (const stateSet of this.getStateSets()) {
             stateSet.clear();
         }
+        this.clearLog();
         this.getStateSets().length = 0;
     }
 
 
     getChannelNames = () => {
         return this._channelNames;
+    }
+
+    getLog = () => {
+        return this._log;
+    }
+
+    prependLog = (newLog: string) => {
+        const timeStr = convertEpochTimeToString(Date.now());
+        this.getLog().unshift("[" + timeStr + "] " + newLog);
+        this.getMainWidget().updateLogElement({});
+    }
+
+    clearLog = () => {
+        this.getLog().length = 0;
+        this.getMainWidget().updateLogElement({});
     }
 
 }

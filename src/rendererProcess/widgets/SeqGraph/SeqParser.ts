@@ -123,6 +123,7 @@ state_entry
           / entryBlock:state_entry_block {
                 return {type: "entry_block", value: entryBlock};
             }) _ {
+       console.log(entry);
       return entry;
   }
 
@@ -277,7 +278,8 @@ escape
 
 balanced_braces
     = "{" _ content:brace_content _ "}" {
-          return "{" + content + "}"
+          // return "{" + content + "}"
+          return content
       }
 
 brace_content
