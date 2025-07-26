@@ -22,6 +22,8 @@ export class SeqProgram {
     _stateSets: SeqStateSet[] = [];
     _channelNames: string[] = [];
 
+
+
     constructor(name: string, mainWidget: SeqGraph) {
         this._name = name;
         this._mainWidget = mainWidget;
@@ -67,9 +69,9 @@ export class SeqProgram {
         this.getStateSets().push(newStateSet);
     }
 
-    start = () => {
+    start = async () => {
         for (const stateSet of this.getStateSets()) {
-            stateSet.start();
+            await stateSet.start();
         }
         this.setStatus("running");
     }
@@ -81,10 +83,10 @@ export class SeqProgram {
         this.setStatus("stopped");
     }
 
-    checkCurrentStates = () => {
-        console.log("aaa")
+    checkCurrentStates = async () => {
+        // skip if we are in the middle of checking conditions
         for (const stateSet of this.getStateSets()) {
-            stateSet.checkCurrentState();
+            await stateSet.checkCurrentState(false);
         }
     }
 
@@ -98,46 +100,6 @@ export class SeqProgram {
         this.getStateSets().length = 0;
     }
 
-    compareChannelNum = (channelName: string, compare: ">" | "===" | "<", value: number) => {
-        try {
-            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-            const channel = g_widgets1.getTcaChannel(channelName);
-            const channelValue = channel.getValue();
-            if (typeof channelValue === "number") {
-                if (compare === ">") {
-                    return channelValue > value;
-                } else if (compare === "===") {
-                    return channelValue === value;
-                } else if (compare === "<") {
-                    return channelValue < value;
-                }
-            }
-        } catch (e) {
-            console.log("Failed to put channel value for", channelName);
-        }
-        return false;
-    }
-
-    putChannel = (channelName: string, value: number) => {
-        try {
-            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-            const channel = g_widgets1.getTcaChannel(channelName);
-            channel.put(displayWindowId, { value: value }, 1);
-        } catch (e) {
-            console.log("Failed to put channel value for", channelName);
-        }
-    }
-
-
-    registerChannels = (...channelNames: (string | string[])[]) => {
-        for (const channelName of channelNames) {
-            if (typeof channelName === "string") {
-                this.getChannelNames().push(channelName);
-            } else if (Array.isArray(channelName)) {
-                this.registerChannels(channelName);
-            }
-        }
-    }
 
     getChannelNames = () => {
         return this._channelNames;
@@ -152,6 +114,8 @@ export class SeqStateSet {
     _states: SeqState[] = [];
     _currentState: SeqState | undefined = undefined;
     _previousCondition: Condition | undefined = undefined;
+    _busyCheckingConditions: boolean = false;
+
     constructor(program: SeqProgram, name: string) {
         this._program = program;
         this._name = name;
@@ -167,6 +131,14 @@ export class SeqStateSet {
 
     getStates = () => {
         return this._states;
+    }
+
+    getBusyCheckingConditions = () => {
+        return this._busyCheckingConditions;
+    }
+
+    setBusyCheckingConditions = (busy: boolean) => {
+        this._busyCheckingConditions = busy;
     }
 
     addState = (newState: SeqState) => {
@@ -220,23 +192,23 @@ export class SeqStateSet {
     /**
      * Invoked on any Channel monitor update
      */
-    checkCurrentState = () => {
-        const currentState = this.getCurrentState();
-        // console.log("check current state", currentState?.getName())
-        if (currentState !== undefined) {
-            currentState.checkConditions();
+    checkCurrentState = async (newEntrance: boolean) => {
+        if (this.getBusyCheckingConditions() === false) {
+            const currentState = this.getCurrentState();
+            // console.log("check current state", currentState?.getName())
+            if (currentState !== undefined) {
+                await currentState.checkConditions(newEntrance);
+            }
         }
     }
 
-    start = () => {
+    start = async () => {
         // set the starting state
         const firstState = this.getStates()[0];
         if (firstState !== undefined) {
             // execute the entry function
             this.setCurrentState(firstState);
-            const entryFunc = firstState.getEntryFunc();
-            entryFunc();
-            this.checkCurrentState();
+            await this.checkCurrentState(true);
         } else {
             throw new Error(`No Seq State defined in state set ${this.getName}`);
         }
@@ -308,37 +280,56 @@ export class SeqState {
         this.getConditions().length = 0;
     }
 
-    checkConditions = () => {
-        // console.log("check conditions on ss", this.getName())
+    checkConditions = async (newEntrance: boolean) => {
+        this.getStateSet().setBusyCheckingConditions(true);
+
+        let nextState: undefined | SeqState = undefined;
+
+        if (newEntrance) {
+            // execute entry function if this is a new state
+            const entryFunc = this.getEntryFunc();
+            await entryFunc();
+        }
+
         for (const condition of this.getConditions()) {
             const booleanFunc = condition.getBooleanFunc();
-
+            console.log("booleanFunc", booleanFunc)
+            console.log("booleanFunc starts")
+            const booleanResult = await booleanFunc();
+            console.log("booleanFunc ends")
             // transition to next state
-            if (booleanFunc() === true) {
-                // execute exec function of this condition
+            if (booleanResult === true) {
+                // execute exec/action function of this condition
                 const execFunc = condition.getExecFunc();
-                execFunc();
-
-                // execute exit function of this state
-                const exitFunc = this.getExitFunc();
-                exitFunc();
+                await execFunc();
 
                 // go to next state
-                const nextState = condition.getNextState();
+                nextState = condition.getNextState();
                 this.getStateSet().setCurrentState(nextState);
                 this.getStateSet().setPreviousCondition(condition);
                 console.log("Leave state", this.getName());
                 console.log("Go to next state:", nextState.getName());
 
-                // execute next state's entry function
-                const nextEntryFunc = nextState.getEntryFunc();
-                nextEntryFunc();
-
                 // stops at the first true condition
                 break;
             }
         }
+
+        // execute exit function if there is a next state, and the next state is different from current state
+        if (nextState !== undefined && nextState !== this) {
+            const exitFunc = this.getExitFunc();
+            await exitFunc();
+        }
+
+        this.getStateSet().setBusyCheckingConditions(false);
+
+        // check condition if there is a next state, and the next state is different from current state
+        if (nextState !== undefined && nextState !== this) {
+            await nextState.checkConditions(true);
+        }
+
     }
+
 
     getId = () => {
         return this._id;
@@ -349,6 +340,7 @@ export class SeqState {
 export class Condition {
     _id: number = (id++);
     _nextState: SeqState;
+    // _booleanFunc: () => Promise<boolean> = async () => { return new Promise((resolve) => { resolve(false) }) };
     _booleanFunc: () => boolean = () => { return false };
     _booleanFuncText: string = "";
     _execFunc: () => void = () => { };
