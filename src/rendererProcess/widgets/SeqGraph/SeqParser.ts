@@ -128,14 +128,14 @@ state_entry
   }
 
 state_entry_block
-    = "entry" _ action:balanced_braces {
+    = "entry" _ action:balanced_braces_content {
         return {
             action: action,
         }
     }
 
 state_exit_block
-    = "exit" _ action:balanced_braces {
+    = "exit" _ action:balanced_braces_content {
         return {
             action: action,
         }
@@ -144,7 +144,7 @@ state_exit_block
 // ---------------- condition ---------------------------
 
 condition
-    = _ "when" _ booleanCondition:balanced_brackets _ action:balanced_braces _ "state" __ next_state:variable_name  _ {
+    = _ "when" _ booleanCondition:balanced_brackets _ action:balanced_braces_content _ "state" __ next_state:variable_name  _ {
         return {
             booleanCondition: booleanCondition,
             action: action,
@@ -278,8 +278,12 @@ escape
 
 balanced_braces
     = "{" _ content:brace_content _ "}" {
-          // return "{" + content + "}"
-          return content
+          return "{" + content + "}"
+      }
+
+balanced_braces_content
+    = "{" _ content:brace_content _ "}" {
+          return content;
       }
 
 brace_content
@@ -306,7 +310,6 @@ non_bracket_char
 // ----------------------------------------
 
 `;
-
 
 
 const stripComments = (code: string) => {
@@ -336,6 +339,14 @@ const processPreamble = (code: string) => {
 
 export const parseSeq = (input: string) => {
     let code = stripComments(input);
+
+    if (code.trim() === "") {
+        return {
+            preamble: "",
+            stateSets: [],
+        }
+    }
+
     const tmp = processPreamble(code);
     code = tmp["code"];
     const preamble = tmp["preamble"];

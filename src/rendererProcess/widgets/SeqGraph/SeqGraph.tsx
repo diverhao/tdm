@@ -361,6 +361,7 @@ export class SeqGraph extends BaseWidget {
         const [showContent, setShowContent] = React.useState(false);
         const [logHeight, setLogHeight] = React.useState(200);
         const showHideElementRef = React.useRef<any>(null);
+        const copyElementRef = React.useRef<any>(null);
 
         const handleMouseDown = () => {
             window.addEventListener("mousemove", handleMouseMove);
@@ -395,7 +396,7 @@ export class SeqGraph extends BaseWidget {
                 <div style={{
                     width: "100%",
                     height: 20,
-                    backgroundColor: "rgba(210, 210, 210, 1)",
+                    backgroundColor: "rgba(245, 245, 245, 1)",
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "flex-end",
@@ -407,12 +408,40 @@ export class SeqGraph extends BaseWidget {
                     }}
                 >
                     <div
-                        ref={showHideElementRef}
+                        ref={copyElementRef}
                         style={{
-                            // border: "solid 1px",
-                            // borderRadius: 4,
+                            userSelect: "none",
                             marginRight: 10,
                             cursor: "pointer",
+                            paddingLeft: 5,
+                            paddingRight: 5,
+                            borderRadius: 2,
+                        }}
+                        onClick={() => {
+                            navigator.clipboard.writeText(this.getSeqProgram().getLog().join("\n"));
+                        }}
+                        onMouseEnter={() => {
+                            if (copyElementRef.current !== null) {
+                                copyElementRef.current.style["backgroundColor"] = "rgba(150, 150, 150, 1)";
+                            }
+                        }}
+                        onMouseLeave={() => {
+                            if (copyElementRef.current !== null) {
+                                copyElementRef.current.style["backgroundColor"] = "rgba(190, 190, 190, 0)";
+                            }
+                        }}
+                    >
+                        {showContent === true ? "Copy Log" : ""}
+                    </div>
+                    <div
+                        ref={showHideElementRef}
+                        style={{
+                            userSelect: "none",
+                            marginRight: 10,
+                            cursor: "pointer",
+                            paddingLeft: 5,
+                            paddingRight: 5,
+                            borderRadius: 2,
                         }}
                         onClick={() => {
                             if (showContent === true) {
@@ -445,6 +474,8 @@ export class SeqGraph extends BaseWidget {
                         boxSizing: "border-box",
                         fontFamily: "monospace",
                         paddingLeft: 10,
+                        backgroundColor: "rgba(245, 245, 245, 1)",
+                        overflowY: "auto",
                     }}
                 >
                     {
@@ -870,42 +901,45 @@ export class SeqGraph extends BaseWidget {
 
 
     buildSeqProgram = async () => {
+        try {
 
-        const global: any = {};
+            const global: any = {};
 
-        const createAsyncFuncFromStr = (code: string) => {
-            const fn = new Function("connect", "caput", "value_of", "delay", "global", "value_is_changed", "alarm_of", "severity_of", "print", `
+            const createAsyncFuncFromStr = (code: string) => {
+                const fn = new Function("connect", "caput", "value_of", "delay", "global", "value_is_changed", "alarm_of", "severity_of", "print", `
         return async () => {
           ${code}
         };
       `);
-            return fn(this.connect, this.caput, this.value_of, this.delay, global, this.value_is_changed, this.alarm_of, this.severity_of, this.print);
-        };
+                return fn(this.connect, this.caput, this.value_of, this.delay, global, this.value_is_changed, this.alarm_of, this.severity_of, this.print);
+            };
 
-        const createFuncFromStr = (code: string) => {
-            const fn = new Function(`
+            const createFuncFromStr = (code: string) => {
+                const fn = new Function(`
   return (() => {
     ${code}
   });
 `)();
-            return fn;
-        };
+                return fn;
+            };
 
-        const seqContent1 = this.getText()["seqContent"];
+            let seqContent1 = this.getText()["seqContent"];
 
-        const seqContent = `
+            let seqContent = `
 
 global.pv1 = "Input_voltage";
 global.pv2 = "Indicator_light";
-
+global.a = 37;
 // connect("Input_voltage", "Indicator_light");
-connect(global.pv1, global.pv2, "valaaa")
+connect(global.pv1, global.pv2, "{SYS}:abc")
+
 
 ss volt_check {
     state light_off {
         when(value_of(global.pv1) > 5.0) {
             caput(global.pv2, 1);
-            print("thisi s zhubobofu");
+            print(\`thisi s zhubobofu {SYS1} \${global.a} \`);
+
         } state light_on
     }
 
@@ -917,167 +951,178 @@ ss volt_check {
     }
 }`;
 
-        const seq = parseSeq(seqContent);
-        const preambleStr = seq["preamble"];
-        const stateSetsData = seq["stateSets"];
-        const preambleFunc = createAsyncFuncFromStr(preambleStr);
-        await preambleFunc();
+            seqContent = this.replaceMacros(seqContent);
+            const seq = parseSeq(seqContent);
+            const preambleStr = seq["preamble"];
+            const stateSetsData = seq["stateSets"];
+            const preambleFunc = createAsyncFuncFromStr(preambleStr);
+            await preambleFunc();
 
-        for (const stateSetData of stateSetsData) {
-            //   const stateSetResult = {};
-            //   stateSetResult["name"] = name;
-            //   stateSetResult["states"] = [];
+            for (const stateSetData of stateSetsData) {
+                //   const stateSetResult = {};
+                //   stateSetResult["name"] = name;
+                //   stateSetResult["states"] = [];
 
-            // state set name
-            const stateSet = new SeqStateSet(this.getSeqProgram(), stateSetData["name"]);
-            this.getSeqProgram().addStateSet(stateSet);
+                // state set name
+                const stateSet = new SeqStateSet(this.getSeqProgram(), stateSetData["name"]);
+                this.getSeqProgram().addStateSet(stateSet);
 
-            // states
-            for (const stateData of stateSetData["states"]) {
-                //   const stateResult = {};
-                //   stateResult["name"] = name;
-                //   stateResult["entryBlocks"] = [];
-                //   stateResult["conditions"] = [];
-                //   stateResult["exitBlocks"] = [];
+                // states
+                for (const stateData of stateSetData["states"]) {
+                    //   const stateResult = {};
+                    //   stateResult["name"] = name;
+                    //   stateResult["entryBlocks"] = [];
+                    //   stateResult["conditions"] = [];
+                    //   stateResult["exitBlocks"] = [];
 
 
-                // entry function
-                const entryBlocks = stateData["entryBlocks"];
-                let entryFunc: () => any = () => { };
-                if (entryBlocks.length > 0) {
-                    console.log("entry blocks", entryBlocks)
-                    // entryFunc = () => {
-                    //     eval(entryBlocks[0]);
-                    // }
-                    entryFunc = createAsyncFuncFromStr(entryBlocks[0].action);
-                }
-
-                // exit function
-                const exitBlocks = stateData["exitBlocks"];
-                let exitFunc: () => any = () => { };
-                if (exitBlocks.length > 0) {
-                    // exitFunc = () => {
-                    //     eval(exitBlocks[0]);
-                    // }
-                    exitFunc = createAsyncFuncFromStr(exitBlocks[0].action);
-                }
-
-                // create SeqState object
-                let state = new SeqState(
-                    stateSet,
-                    stateData["name"],
-                    entryFunc,
-                    exitFunc,
-                );
-                stateSet.addState(state);
-            }
-
-            // conditions
-            for (const stateData of stateSetData["states"]) {
-                const thisStateName = stateData["name"];
-                const thisState = stateSet.getState(thisStateName);
-                if (thisState === undefined) {
-                    continue;
-                }
-
-                const conditionsData = stateData["conditions"];
-                for (const conditionData of conditionsData) {
-                    // {
-                    //     booleanCondition: booleanCondition,
-                    //     action: action,
-                    //     nextState: next_state,
-                    // }
-                    const nextStateName = conditionData["nextState"];
-                    const nextState = stateSet.getState(nextStateName);
-
-                    const actionStr = conditionData["action"];
-                    console.log("action string", actionStr)
-                    // const actionFunc = () => { eval(actionStr); };
-                    const actionFunc = createAsyncFuncFromStr(actionStr);
-
-                    const booleanConditionStr = conditionData["booleanCondition"];
-                    // const booleanConditionFunc = async () => { return (eval(booleanConditionStr)) };
-                    const booleanConditionFunc = createAsyncFuncFromStr("return " + booleanConditionStr);
-
-                    if (nextState !== undefined) {
-                        const condition = new Condition(
-                            nextState,
-                            booleanConditionFunc,
-                            actionFunc,
-                            booleanConditionStr.replace(/value_of\((.*?)\)/g, '$1').trim().slice(1, -1),
-                            actionStr);
-                        thisState.addCondition(condition);
+                    // entry function
+                    const entryBlocks = stateData["entryBlocks"];
+                    let entryFunc: () => any = () => { };
+                    if (entryBlocks.length > 0) {
+                        console.log("entry blocks", entryBlocks)
+                        // entryFunc = () => {
+                        //     eval(entryBlocks[0]);
+                        // }
+                        entryFunc = createAsyncFuncFromStr(entryBlocks[0].action);
                     }
-                }
-            }
-        }
 
-        console.log(this.getSeqProgram())
-
-        // (2) channel names 
-
-
-        this.getChannelNamesLevel0().push(...this.getSeqProgram().getChannelNames());
-        this.processChannelNames();
-        g_widgets1.connectAllTcaChannels(true)
-
-        // (3) prepare data set for plot
-        const prog = this.getSeqProgram();
-
-        const allNodes = this.networkData["nodes"];
-        const allEdges = this.networkData["edges"];
-
-        // add nodes
-        for (const stateSet of prog.getStateSets()) {
-            for (const state of stateSet.getStates()) {
-                // each state is a node
-                const stateNode = {
-                    id: state.getId(),
-                    label: state.getName(),
-                    shape: "big ellipse",
-                    physics: false,
-                    // x: x + 100 * (Math.random() - 0.5),
-                    // y: y + 100 * (Math.random() - 0.5),
-                    // no border needed
-                    color: {
-                        // background: source === "IOC" ? colors.background : colors.dbfilenode,
-                        highlight: colors.highlight,
-
+                    // exit function
+                    const exitBlocks = stateData["exitBlocks"];
+                    let exitFunc: () => any = () => { };
+                    if (exitBlocks.length > 0) {
+                        // exitFunc = () => {
+                        //     eval(exitBlocks[0]);
+                        // }
+                        exitFunc = createAsyncFuncFromStr(exitBlocks[0].action);
                     }
-                };
-                allNodes.add(stateNode)
-            }
-        }
 
-        // add edges
-        for (const stateSet of prog.getStateSets()) {
-            for (const state of stateSet.getStates()) {
-                // each condition is an edge
-                for (const condition of state.getConditions()) {
-                    const booleanFuncText = condition.getBooleanFuncText();
-                    const execFuncText = condition.getExecFuncText();
-                    const toState = condition.getNextState();
+                    // create SeqState object
+                    let state = new SeqState(
+                        stateSet,
+                        stateData["name"],
+                        entryFunc,
+                        exitFunc,
+                    );
+                    stateSet.addState(state);
+                }
 
-                    const from = state.getId();
-                    const to = toState.getId();
-
-                    if (from === undefined || to === undefined) {
+                // conditions
+                for (const stateData of stateSetData["states"]) {
+                    const thisStateName = stateData["name"];
+                    const thisState = stateSet.getState(thisStateName);
+                    if (thisState === undefined) {
                         continue;
                     }
 
-                    allEdges.add({
-                        id: condition.getId(),
-                        from: from,
-                        to: to,
-                        label: booleanFuncText,
-                        // color: edgeColors[linkType],
-                        arrows: { to: { enabled: true, scaleFactor: 0.5 } },
-                    })
+                    const conditionsData = stateData["conditions"];
+                    for (const conditionData of conditionsData) {
+                        // {
+                        //     booleanCondition: booleanCondition,
+                        //     action: action,
+                        //     nextState: next_state,
+                        // }
+                        const nextStateName = conditionData["nextState"];
+                        const nextState = stateSet.getState(nextStateName);
 
+                        const actionStr = conditionData["action"];
+                        console.log("action string", actionStr)
+                        // const actionFunc = () => { eval(actionStr); };
+                        const actionFunc = createAsyncFuncFromStr(actionStr);
+
+                        const booleanConditionStr = conditionData["booleanCondition"];
+                        // const booleanConditionFunc = async () => { return (eval(booleanConditionStr)) };
+                        const booleanConditionFunc = createAsyncFuncFromStr("return " + booleanConditionStr);
+
+                        if (nextState !== undefined) {
+                            const condition = new Condition(
+                                nextState,
+                                booleanConditionFunc,
+                                actionFunc,
+                                booleanConditionStr.replace(/value_of\((.*?)\)/g, '$1').trim().slice(1, -1),
+                                actionStr);
+                            thisState.addCondition(condition);
+                        }
+                    }
                 }
             }
-        }
 
+            console.log(this.getSeqProgram())
+
+            // (2) channel names 
+
+
+            this.getChannelNamesLevel0().push(...this.getSeqProgram().getChannelNames());
+            this.processChannelNames();
+            g_widgets1.connectAllTcaChannels(true)
+
+            // (3) prepare data set for plot
+            const prog = this.getSeqProgram();
+
+            const allNodes = this.networkData["nodes"];
+            const allEdges = this.networkData["edges"];
+
+            // add nodes
+            for (const stateSet of prog.getStateSets()) {
+                for (const state of stateSet.getStates()) {
+                    // each state is a node
+                    const stateNode = {
+                        id: state.getId(),
+                        label: state.getName(),
+                        shape: "big ellipse",
+                        physics: false,
+                        // x: x + 100 * (Math.random() - 0.5),
+                        // y: y + 100 * (Math.random() - 0.5),
+                        // no border needed
+                        color: {
+                            // background: source === "IOC" ? colors.background : colors.dbfilenode,
+                            highlight: colors.highlight,
+
+                        }
+                    };
+                    allNodes.add(stateNode)
+                }
+            }
+
+            // add edges
+            for (const stateSet of prog.getStateSets()) {
+                for (const state of stateSet.getStates()) {
+                    // each condition is an edge
+                    for (const condition of state.getConditions()) {
+                        const booleanFuncText = condition.getBooleanFuncText();
+                        const execFuncText = condition.getExecFuncText();
+                        const toState = condition.getNextState();
+
+                        const from = state.getId();
+                        const to = toState.getId();
+
+                        if (from === undefined || to === undefined) {
+                            continue;
+                        }
+
+                        allEdges.add({
+                            id: condition.getId(),
+                            from: from,
+                            to: to,
+                            label: booleanFuncText,
+                            // color: edgeColors[linkType],
+                            arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+                        })
+
+                    }
+                }
+            }
+
+        } catch (e) {
+            Log.error(e);
+            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+            displayWindowClient.getIpcManager().handleDialogShowMessageBox(undefined, {
+                messageType: "error",
+                humanReadableMessages: ["Error building the seq program.", `${e}`],
+                rawMessages: [],
+            })
+
+        }
     }
 
     delay = async (dt: number) => {
@@ -1180,6 +1225,20 @@ ss volt_check {
             this.prevChannelValues[name] = undefined;
         }
 
+    }
+
+    replaceMacros = (code: string) => {
+        const result = code.replace(/(?<!\$)\{([^{}]*)\}/g, (match, key) => {
+            for (const macro of this.getMacros()) {
+                if (macro[0] === key) {
+                    const value = macro[1];
+                    return value;
+                }
+            }
+            return "{" + key + "}"; // Example: convert to uppercase and wrap in []
+        });
+
+        return result;
     }
 
 
@@ -1485,7 +1544,11 @@ ss volt_check {
     // }
 
     jobsAsOperatingModeBegins() {
-        this.buildSeqProgram();
+        try {
+            this.buildSeqProgram();
+        } catch (e) {
+
+        }
         super.jobsAsEditingModeBegins();
     }
 }
