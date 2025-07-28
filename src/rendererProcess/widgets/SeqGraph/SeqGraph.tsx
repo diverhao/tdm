@@ -216,6 +216,10 @@ export class SeqGraph extends BaseWidget {
         // this._rules = new TextUpdateRules(this, widgetTdl);
 
         this._sidebar = new SeqGraphSidebar(this);
+        window.addEventListener("mousedown", (event: any) => {
+            this.setShowEdgePeekContent(false);
+
+        })
     }
 
     // ------------------------- event ---------------------------------
@@ -503,6 +507,8 @@ export class SeqGraph extends BaseWidget {
         // const rawChannelName = this.getChannelNames()[0];
         // const [channelName, setChannelName] = React.useState(rawChannelName === undefined? "": rawChannelName);
         const [channelName, setChannelName] = React.useState("");
+        const [showEdgePeekContent, setShowEdgePeekContent] = React.useState(false);
+        this.setShowEdgePeekContent = setShowEdgePeekContent;
 
         React.useEffect(() => {
             if (g_widgets1.isEditing()) {
@@ -516,19 +522,11 @@ export class SeqGraph extends BaseWidget {
                         console.log("re-render +++++++++++++++++++++++")
 
                         this.network = new Network(elementRef.current, this.networkData, this.networkOptions);
-                        // this.networkClickCallback = (params: any) => {
-                        //     this.handleClickNode(params);
-                        // };
-                        // this.networkDoubleClickCallback = (params: any) => {
-                        //     this.handleDoubleClickNode(params);
-                        // };
-                        // // this.network will not be changed in future
-                        // this.network.on('click', this.networkClickCallback);
-                        // this.network.on("doubleClick", this.networkDoubleClickCallback);
-                        // if (this.getChannelNames().length > 0 && this.getChannelNames()[0].trim() !== "") {
-                        //     // this.expandNode(this.getChannelNames()[0]);
-                        //     setChannelName(this.getChannelNames()[0]);
-                        // }
+                        this.networkClickCallback = (params: any) => {
+                            this.handleClickEdge(params);
+                        };
+                        // click edge
+                        this.network.on('click', this.networkClickCallback);
                     }
                 }
             }, 0)
@@ -572,7 +570,29 @@ export class SeqGraph extends BaseWidget {
                     : null
                 }
                 {g_widgets1.isEditing() ? <this._ElementMask></this._ElementMask> : null}
-
+                {showEdgePeekContent === true ?
+                    <div style={{
+                        position: "absolute",
+                        border: "solid 1px rgba(150, 150, 150, 1)",
+                        top: 60,
+                        left: 20,
+                        padding: 10,
+                        zIndex: 20000,
+                        borderRadius: 7,
+                        maxWidth: "50%",
+                        maxHeight: "50%",
+                        // whiteSpace: "wrap",
+                        overflow: "auto",
+                        userSelect: "text",
+                        backgroundColor: "rgba(245, 245, 245, 1)",
+                        fontFamily: "monospace"
+                    }}
+                        onMouseDown={(event: MouseEvent) => { event.stopPropagation(); }}
+                    >
+                        {this.edgePeekContent}
+                    </div>
+                    : null
+                }
 
             </div>
         );
@@ -624,7 +644,7 @@ export class SeqGraph extends BaseWidget {
                             }}
                         />
                         <div style={{ color: "rgba(150, 150, 150, 1)", wordWrap: "normal", whiteSpace: "wrap", marginLeft: 10 }}>
-                            In emulation mode, you can put any text before the first state set definition, 
+                            In emulation mode, you can put any text before the first state set definition,
                             and any text in the when(...) {"{"}...{"}"} condition and action. But there is no code allowed directly in state set or state.
                             You can only build and display the program in emulation mode.
                         </div>
@@ -804,60 +824,35 @@ export class SeqGraph extends BaseWidget {
     }
 
 
+    edgePeekContent: string = "";
+    setShowEdgePeekContent = (show: boolean) => { };
+
     /**
      * (1) find the node that is being clicked
      * 
      * (2) find the channel name for this node
      * 
      */
-    handleClickNode = async (params: any) => {
-        // (1)
-        const ids = params.nodes;
-        const nodes = this.networkData["nodes"];
-        const clickedNodes = nodes.get(ids);
-        const clickedNode = clickedNodes[0];
-        if (clickedNode !== undefined) {
-            // (2)
-            console.log("clicked node", clickedNode)
-            const nodeLabel = clickedNode["label"];
-            const channelName = nodeLabel.split("\n")[0].split(".")[0];
-            const channelNameType = TcaChannel.checkChannelName(channelName);
-            if (channelNameType !== "ca" && channelName !== "pva") {
-                console.log("Channel", channelName, "is not a valid CA or PVA channel. Stop expanding.");
-                return false;
-            }
+    handleClickEdge = async (params: any) => {
 
-            // const success = await this.expandNode(nodeLabel);
-            // console.log("create node", success, nodeLabel)
+        const ids = params.edges;
+        const idsNodes = params.nodes;
+        // if we click node, do not show edge peek content
+        if (idsNodes.length > 0) {
+            return false;
+        }
+        const edges = this.networkData["edges"];
+        const clickedEdges = edges.get(ids);
+        const clickedEdge = clickedEdges[0];
+        if (clickedEdge !== undefined) {
+            const edgeContent = clickedEdge.content;
+            this.edgePeekContent = edgeContent;
+            this.setShowEdgePeekContent(true);
         }
         return true;
     }
 
 
-
-    /**
-     * Open the Probe for this node
-     */
-    handleDoubleClickNode = async (params: any) => {
-        // (1)
-        const ids = params.nodes;
-        const nodes = this.networkData["nodes"];
-        const clickedNodes = nodes.get(ids);
-        const clickedNode = clickedNodes[0];
-        if (clickedNode !== undefined) {
-            // (2)
-            console.log("double clicked node", clickedNode)
-            const nodeLabel = clickedNode["label"];
-            const channelName = nodeLabel.split("\n")[0];
-
-            if (TcaChannel.checkChannelName(channelName) === "ca" || TcaChannel.checkChannelName(channelName) === "pva") {
-                // open Probe
-                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                displayWindowClient.getIpcManager().sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: [channelName] });
-
-            }
-        }
-    }
 
     prevChannelValues: Record<string, string | number | string[] | number[] | undefined> = {};
     valueChangedChannelNames: string[] = [];
@@ -981,8 +976,7 @@ ss volt_check {
     state light_off {
         when(value_of(global.pv1) > 5.0) {
             caput(global.pv2, 1);
-            print(\`thisi s zhubobofu {SYS1} \${global.a} \`);
-
+            print(\`thisi s zhubobofu {SYS1} \${global.a} \`);print(\`thisi s zhubobofu {SYS1} \${global.a} \`);print(\`thisi s zhubobofu {SYS1} \${global.a} \`);print(\`thisi s zhubobofu {SYS1} \${global.a} \`);print(\`thisi s zhubobofu {SYS1} \${global.a} \`);print(\`thisi s zhubobofu {SYS1} \${global.a} \`);
         } state light_on
     }
 
@@ -995,7 +989,7 @@ ss volt_check {
 }`;
 
             seqContent = this.replaceMacros(seqContent);
-            const seq = parseSeq(seqContent);
+            const seq = parseSeq(seqContent, this.getEmulateMode());
             const preambleStr = seq["preamble"];
             const stateSetsData = seq["stateSets"];
             const preambleFunc = createAsyncFuncFromStr(preambleStr);
@@ -1059,6 +1053,7 @@ ss volt_check {
                     }
 
                     const conditionsData = stateData["conditions"];
+                    let conditionIndex = 1;
                     for (const conditionData of conditionsData) {
                         // {
                         //     booleanCondition: booleanCondition,
@@ -1082,9 +1077,11 @@ ss volt_check {
                                 nextState,
                                 booleanConditionFunc,
                                 actionFunc,
-                                booleanConditionStr.replace(/value_of\((.*?)\)/g, '$1').trim().slice(1, -1),
+                                // booleanConditionStr.replace(/value_of\((.*?)\)/g, '$1').trim().slice(1, -1),
+                                `[${conditionIndex}] ` + booleanConditionStr,
                                 actionStr);
                             thisState.addCondition(condition);
+                            conditionIndex++;
                         }
                     }
                 }
@@ -1130,6 +1127,8 @@ ss volt_check {
             // add edges
             for (const stateSet of prog.getStateSets()) {
                 for (const state of stateSet.getStates()) {
+                    let selfLoopCount = 0;
+                    let selfRefOption: any = undefined;
                     // each condition is an edge
                     for (const condition of state.getConditions()) {
                         const booleanFuncText = condition.getBooleanFuncText();
@@ -1143,18 +1142,31 @@ ss volt_check {
                             continue;
                         }
 
+                        if (from === to) {
+                            console.log("self-loop detected", from, to, selfLoopCount);
+                            // self-loop edge
+                            selfRefOption = {
+                                angle: (selfLoopCount * Math.PI) / 2 + selfLoopCount * 0.1, // slightly change the angle for each self-loop
+                            }
+                            selfLoopCount++;
+
+                        }
+
                         allEdges.add({
                             id: condition.getId(),
                             from: from,
                             to: to,
                             label: booleanFuncText,
+                            content: execFuncText,
                             // color: edgeColors[linkType],
                             arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+                            selfReference: selfRefOption,
                         })
 
                     }
                 }
             }
+
 
         } catch (e) {
             Log.error(e);
