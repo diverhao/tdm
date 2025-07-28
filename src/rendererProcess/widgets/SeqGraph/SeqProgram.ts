@@ -23,6 +23,7 @@ export class SeqProgram {
     _stateSets: SeqStateSet[] = [];
     _channelNames: string[] = [];
     _log: string[] = [];
+    _stateSwitchCount: number[] = [];
 
 
     constructor(name: string, mainWidget: SeqGraph) {
@@ -71,6 +72,7 @@ export class SeqProgram {
     }
 
     start = async () => {
+        this.resetStateSwitchCount();
         for (const stateSet of this.getStateSets()) {
             await stateSet.start();
         }
@@ -122,6 +124,26 @@ export class SeqProgram {
         this.getMainWidget().updateLogElement({});
     }
 
+    getStateSwitchCount = () => {
+        return this._stateSwitchCount.length;
+    }
+    increaseStateSwitchCount = () => {
+        const timeNow = Date.now();
+        let numExpire = 0;
+        for (const time of this._stateSwitchCount) {
+            if (timeNow - time > 10 * 1000) {
+                numExpire++;
+            } else {
+                break;
+            }
+        }
+        this._stateSwitchCount.splice(0, numExpire);
+        this._stateSwitchCount.push(Date.now());
+        console.log(this._stateSwitchCount)
+    }
+    resetStateSwitchCount = () => {
+        this._stateSwitchCount.length = 0;
+    }
 }
 
 export class SeqStateSet {
@@ -324,6 +346,22 @@ export class SeqState {
                 nextState = condition.getNextState();
                 this.getStateSet().setCurrentState(nextState);
                 this.getStateSet().setPreviousCondition(condition);
+
+                // check if there are too many state switches, 300 switches within 10 seconds
+                this.getStateSet().getProgram().increaseStateSwitchCount();
+                if (this.getStateSet().getProgram().getStateSwitchCount() > 300) {
+                    // pause the program
+                    this.getStateSet().getProgram().pause();
+                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                    displayWindowClient.getIpcManager().handleDialogShowMessageBox(undefined, {
+                        messageType: "error",
+                        humanReadableMessages: ["There are more than 300 state switches in last 10 seconds. The program is stopped. Please check your program."],
+                        rawMessages: [],
+                    })
+                    // return immediately
+                    return;
+                }
+
                 console.log("Leave state", this.getName());
                 console.log("Go to next state:", nextState.getName());
 

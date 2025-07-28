@@ -129,6 +129,7 @@ export class SeqGraph extends BaseWidget {
 
     updateLogElement = (input: any) => { };
 
+    _emulateMode: boolean = false;
 
     // Define network options
     // https://rdrr.io/cran/visNetwork/man/visEdges.html
@@ -581,6 +582,7 @@ export class SeqGraph extends BaseWidget {
         const [, forceUpdate] = React.useState({});
         const [seqContent, setSeqContent] = React.useState(this.getText()["seqContent"]);
         this.forceUpdateConfigPage = () => { forceUpdate({}) };
+        const [checked, setCheck] = React.useState(this.getEmulateMode());
 
         return (
             <div style={{
@@ -601,6 +603,33 @@ export class SeqGraph extends BaseWidget {
                     width: "100%",
                     height: "100%",
                 }}>
+                    <div
+                        style={{
+                            position: "relative",
+                            paddingTop: 30,
+                            width: "80%",
+                            display: "inline-flex",
+                            flexDirection: "row",
+                            justifyContent: "flex-start",
+                            alignItems: "flex-start",
+                        }}>
+                        Emulation mode:
+
+                        <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(event: any) => {
+                                this.setEmulateMode(!checked)
+                                setCheck(!checked);
+                            }}
+                        />
+                        <div style={{ color: "rgba(150, 150, 150, 1)", wordWrap: "normal", whiteSpace: "wrap", marginLeft: 10 }}>
+                            In emulation mode, you can put any text before the first state set definition, 
+                            and any text in the when(...) {"{"}...{"}"} condition and action. But there is no code allowed directly in state set or state.
+                            You can only build and display the program in emulation mode.
+                        </div>
+
+                    </div>
                     <div
                         style={{
                             position: "relative",
@@ -691,7 +720,7 @@ export class SeqGraph extends BaseWidget {
                 fontSize: 25,
                 fontWeight: "bold",
             }}>
-                Seq Graph for {this.getSeqProgram().getName()}
+                Seq Graph
 
                 <ElementRectangleButton
                     handleClick={() => {
@@ -716,55 +745,59 @@ export class SeqGraph extends BaseWidget {
 
                 </ElementRectangleButton>
 
-                <ElementRectangleButton
-                    handleClick={async () => {
-                        if (this.getSeqProgram().getStatus() === "running") {
-                            console.log("stop the program")
-                            this.getSeqProgram().pause();
-                        } else {
-                            console.log("start the program")
-                            await this.getSeqProgram().start();
-                        }
-                        const allNodes = this.networkData["nodes"];
-                        const allEdges = this.networkData["edges"];
-
-                        // update the node color
-                        for (const seqSet of this.getSeqProgram().getStateSets()) {
-                            const currentState = seqSet.getCurrentState();
-                            for (const state of seqSet.getStates()) {
-                                allNodes.update({
-                                    id: state.getId(),
-                                    color: {
-                                        background: state === currentState ? colors["currentState"] : colors["background"],
-                                    }
-                                })
+                {this.getEmulateMode() === true ? "" :
+                    <ElementRectangleButton
+                        handleClick={async () => {
+                            if (this.getSeqProgram().getStatus() === "running") {
+                                console.log("stop the program")
+                                this.getSeqProgram().pause();
+                            } else {
+                                console.log("start the program")
+                                await this.getSeqProgram().start();
                             }
-                        }
+                            const allNodes = this.networkData["nodes"];
+                            const allEdges = this.networkData["edges"];
 
-                        // update edge color
-                        for (const seqSet of this.getSeqProgram().getStateSets()) {
-                            const prevCond = seqSet.getPreviousCondition();
-                            for (const state of seqSet.getStates()) {
-                                for (const condition of state.getConditions()) {
-                                    allEdges.update({
-                                        id: condition.getId(),
+                            // update the node color
+                            for (const seqSet of this.getSeqProgram().getStateSets()) {
+                                const currentState = seqSet.getCurrentState();
+                                for (const state of seqSet.getStates()) {
+                                    allNodes.update({
+                                        id: state.getId(),
                                         color: {
-                                            color: condition === prevCond ? colors["currentState"] : colors["background"],
+                                            background: state === currentState ? colors["currentState"] : colors["background"],
                                         }
                                     })
                                 }
                             }
-                        }
 
-                        forceUpdate({});
-                    }}
-                    marginLeft={10}
-                >
-                    {this.getSeqProgram().getStatus() === "running" ?
-                        "Pause"
-                        :
-                        "Run"}
-                </ElementRectangleButton>
+                            // update edge color
+                            for (const seqSet of this.getSeqProgram().getStateSets()) {
+                                const prevCond = seqSet.getPreviousCondition();
+                                for (const state of seqSet.getStates()) {
+                                    for (const condition of state.getConditions()) {
+                                        allEdges.update({
+                                            id: condition.getId(),
+                                            color: {
+                                                color: condition === prevCond ? colors["currentState"] : colors["background"],
+                                            }
+                                        })
+                                    }
+                                }
+                            }
+
+                            forceUpdate({});
+                        }}
+                        marginLeft={10}
+                    >
+                        {
+                            this.getSeqProgram().getStatus() === "running" ?
+                                "Pause"
+                                :
+                                "Run"
+                        }
+                    </ElementRectangleButton>
+                }
 
             </div>
         )
@@ -900,12 +933,15 @@ export class SeqGraph extends BaseWidget {
 
 
 
+
     buildSeqProgram = async () => {
         try {
 
             const global: any = {};
 
-            const createAsyncFuncFromStr = (code: string) => {
+
+
+            let createAsyncFuncFromStr = (code: string) => {
                 const fn = new Function("connect", "caput", "value_of", "delay", "global", "value_is_changed", "alarm_of", "severity_of", "print", `
         return async () => {
           ${code}
@@ -913,6 +949,13 @@ export class SeqGraph extends BaseWidget {
       `);
                 return fn(this.connect, this.caput, this.value_of, this.delay, global, this.value_is_changed, this.alarm_of, this.severity_of, this.print);
             };
+
+            if (this.getEmulateMode() === true) {
+                createAsyncFuncFromStr = (code: string) => {
+                    return async () => { let a: any = 33; return a };
+                };
+            }
+
 
             const createFuncFromStr = (code: string) => {
                 const fn = new Function(`
@@ -923,9 +966,9 @@ export class SeqGraph extends BaseWidget {
                 return fn;
             };
 
-            let seqContent1 = this.getText()["seqContent"];
+            let seqContent = this.getText()["seqContent"];
 
-            let seqContent = `
+            let seqContent1 = `
 
 global.pv1 = "Input_voltage";
 global.pv2 = "Indicator_light";
@@ -1032,7 +1075,7 @@ ss volt_check {
 
                         const booleanConditionStr = conditionData["booleanCondition"];
                         // const booleanConditionFunc = async () => { return (eval(booleanConditionStr)) };
-                        const booleanConditionFunc = createAsyncFuncFromStr("return " + booleanConditionStr);
+                        const booleanConditionFunc = createAsyncFuncFromStr("return " + booleanConditionStr) as any;
 
                         if (nextState !== undefined) {
                             const condition = new Condition(
@@ -1395,6 +1438,16 @@ ss volt_check {
     getMacros = () => {
         return this._macros;
     };
+
+
+    getEmulateMode = () => {
+        return this._emulateMode;
+    }
+
+    setEmulateMode = (newMode: boolean) => {
+        this._emulateMode = newMode;
+    }
+
 
     // ----------------------- styles -----------------------
 
