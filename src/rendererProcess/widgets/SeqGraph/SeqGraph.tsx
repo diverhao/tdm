@@ -25,6 +25,7 @@ import { SeqGraphSidebar } from "./SeqGraphSidebar";
 import { Condition, SeqProgram, SeqState, SeqStateSet } from "./SeqProgram";
 import { ElementMacrosTable } from "../../helperWidgets/SharedElements/MacrosTable";
 import { parseSeq } from "./SeqParser";
+import { content } from "html2canvas/dist/types/css/property-descriptors/content";
 // import { parseSeq } from "./SeqParser";
 
 
@@ -130,6 +131,8 @@ export class SeqGraph extends BaseWidget {
     updateLogElement = (input: any) => { };
 
     _emulateMode: boolean = false;
+    edgePeekContent: string = "";
+    setShowEdgePeekContent = (show: boolean) => { };
 
     // Define network options
     // https://rdrr.io/cran/visNetwork/man/visEdges.html
@@ -217,8 +220,9 @@ export class SeqGraph extends BaseWidget {
 
         this._sidebar = new SeqGraphSidebar(this);
         window.addEventListener("mousedown", (event: any) => {
-            this.setShowEdgePeekContent(false);
-
+            if (event.target !== null && event.target !== document.getElementById("edgePeekContent")) {
+                this.setShowEdgePeekContent(false);
+            }
         })
     }
 
@@ -571,23 +575,25 @@ export class SeqGraph extends BaseWidget {
                 }
                 {g_widgets1.isEditing() ? <this._ElementMask></this._ElementMask> : null}
                 {showEdgePeekContent === true ?
-                    <div style={{
-                        position: "absolute",
-                        border: "solid 1px rgba(150, 150, 150, 1)",
-                        top: 60,
-                        left: 20,
-                        padding: 10,
-                        zIndex: 20000,
-                        borderRadius: 7,
-                        maxWidth: "50%",
-                        maxHeight: "50%",
-                        // whiteSpace: "wrap",
-                        overflow: "auto",
-                        userSelect: "text",
-                        backgroundColor: "rgba(245, 245, 245, 1)",
-                        fontFamily: "monospace"
-                    }}
-                        onMouseDown={(event: MouseEvent) => { event.stopPropagation(); }}
+                    <div
+                        id="edgePeekContent"
+                        style={{
+                            position: "absolute",
+                            border: "solid 1px rgba(150, 150, 150, 1)",
+                            top: 60,
+                            left: 20,
+                            padding: 10,
+                            zIndex: 20000,
+                            borderRadius: 7,
+                            maxWidth: "50%",
+                            maxHeight: "50%",
+                            // whiteSpace: "wrap",
+                            overflow: "auto",
+                            userSelect: "text",
+                            backgroundColor: "rgba(245, 245, 245, 1)",
+                            fontFamily: "monospace"
+                        }}
+                    // onMouseDown={(event: MouseEvent) => {  }}
                     >
                         {this.edgePeekContent}
                     </div>
@@ -644,9 +650,8 @@ export class SeqGraph extends BaseWidget {
                             }}
                         />
                         <div style={{ color: "rgba(150, 150, 150, 1)", wordWrap: "normal", whiteSpace: "wrap", marginLeft: 10 }}>
-                            In emulation mode, you can put any text before the first state set definition,
-                            and any text in the when(...) {"{"}...{"}"} condition and action. But there is no code allowed directly in state set or state.
-                            You can only build and display the program in emulation mode.
+                            The emulation mode is intended for viewing the seq graph states logic.
+                            The code does not have to be compilable, but "state set", "state" and the "when" condition must be structually correct.
                         </div>
 
                     </div>
@@ -812,7 +817,7 @@ export class SeqGraph extends BaseWidget {
                     >
                         {
                             this.getSeqProgram().getStatus() === "running" ?
-                                "Pause"
+                                "Stop"
                                 :
                                 "Run"
                         }
@@ -824,8 +829,6 @@ export class SeqGraph extends BaseWidget {
     }
 
 
-    edgePeekContent: string = "";
-    setShowEdgePeekContent = (show: boolean) => { };
 
     /**
      * (1) find the node that is being clicked
@@ -837,17 +840,31 @@ export class SeqGraph extends BaseWidget {
 
         const ids = params.edges;
         const idsNodes = params.nodes;
-        // if we click node, do not show edge peek content
+        console.log(idsNodes)
+
+        // if we click node, show entry, when and exist
         if (idsNodes.length > 0) {
+            const nodes = this.networkData["nodes"];
+            const clickedNodes = nodes.get(idsNodes);
+            const clickedNode = clickedNodes[0];
+            console.log("clickedNode", clickedNode);
+
+            if (clickedNode !== undefined) {
+                const nodeContent = clickedNode.content;
+                this.edgePeekContent = nodeContent;
+                this.setShowEdgePeekContent(true);
+            }
             return false;
-        }
-        const edges = this.networkData["edges"];
-        const clickedEdges = edges.get(ids);
-        const clickedEdge = clickedEdges[0];
-        if (clickedEdge !== undefined) {
-            const edgeContent = clickedEdge.content;
-            this.edgePeekContent = edgeContent;
-            this.setShowEdgePeekContent(true);
+        } else {
+            const edges = this.networkData["edges"];
+            const clickedEdges = edges.get(ids);
+            const clickedEdge = clickedEdges[0];
+            console.log("clickedEdge", clickedEdge);
+            if (clickedEdge !== undefined) {
+                const edgeContent = clickedEdge.content;
+                this.edgePeekContent = edgeContent;
+                this.setShowEdgePeekContent(true);
+            }
         }
         return true;
     }
@@ -876,7 +893,11 @@ export class SeqGraph extends BaseWidget {
         const allEdges = this.networkData["edges"];
 
         // change current state and previous condition
-        await this.getSeqProgram().checkCurrentStates();
+        if (this.getSeqProgram().getStatus() === "running") {
+            await this.getSeqProgram().checkCurrentStates();
+        } else {
+            return;
+        }
 
         // update the node color
         for (const seqSet of this.getSeqProgram().getStateSets()) {
@@ -1016,22 +1037,20 @@ ss volt_check {
                     // entry function
                     const entryBlocks = stateData["entryBlocks"];
                     let entryFunc: () => any = () => { };
+                    let entryFuncStr = "";
                     if (entryBlocks.length > 0) {
                         console.log("entry blocks", entryBlocks)
-                        // entryFunc = () => {
-                        //     eval(entryBlocks[0]);
-                        // }
                         entryFunc = createAsyncFuncFromStr(entryBlocks[0].action);
+                        entryFuncStr = entryBlocks[0].action;
                     }
 
                     // exit function
                     const exitBlocks = stateData["exitBlocks"];
                     let exitFunc: () => any = () => { };
+                    let exitFuncStr = "";
                     if (exitBlocks.length > 0) {
-                        // exitFunc = () => {
-                        //     eval(exitBlocks[0]);
-                        // }
                         exitFunc = createAsyncFuncFromStr(exitBlocks[0].action);
+                        exitFuncStr = entryBlocks[0].action;
                     }
 
                     // create SeqState object
@@ -1040,6 +1059,8 @@ ss volt_check {
                         stateData["name"],
                         entryFunc,
                         exitFunc,
+                        entryFuncStr,
+                        exitFuncStr,
                     );
                     stateSet.addState(state);
                 }
@@ -1065,11 +1086,9 @@ ss volt_check {
 
                         const actionStr = conditionData["action"];
                         console.log("action string", actionStr)
-                        // const actionFunc = () => { eval(actionStr); };
                         const actionFunc = createAsyncFuncFromStr(actionStr);
 
                         const booleanConditionStr = conditionData["booleanCondition"];
-                        // const booleanConditionFunc = async () => { return (eval(booleanConditionStr)) };
                         const booleanConditionFunc = createAsyncFuncFromStr("return " + booleanConditionStr) as any;
 
                         if (nextState !== undefined) {
@@ -1111,6 +1130,7 @@ ss volt_check {
                         label: state.getName(),
                         shape: "big ellipse",
                         physics: false,
+                        content: state.getContentStr(),
                         // x: x + 100 * (Math.random() - 0.5),
                         // y: y + 100 * (Math.random() - 0.5),
                         // no border needed
@@ -1158,7 +1178,6 @@ ss volt_check {
                             to: to,
                             label: booleanFuncText,
                             content: execFuncText,
-                            // color: edgeColors[linkType],
                             arrows: { to: { enabled: true, scaleFactor: 0.5 } },
                             selfReference: selfRefOption,
                         })

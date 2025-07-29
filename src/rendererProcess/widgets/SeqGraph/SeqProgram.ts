@@ -73,10 +73,10 @@ export class SeqProgram {
 
     start = async () => {
         this.resetStateSwitchCount();
+        this.setStatus("running");
         for (const stateSet of this.getStateSets()) {
             await stateSet.start();
         }
-        this.setStatus("running");
     }
 
     pause = () => {
@@ -281,11 +281,56 @@ export class SeqState {
     _conditions: Condition[] = [];
     _entryFunc: () => void;
     _exitFunc: () => void;
-    constructor(stateSet: SeqStateSet, name: string, entryFunc: () => void, exitFunc: () => void) {
+    _entryFuncStr: string = "";
+    _exitFuncStr: string = "";
+    constructor(stateSet: SeqStateSet, name: string, entryFunc: () => void, exitFunc: () => void, entryFuncStr: string, exitFuncStr: string) {
         this._stateSet = stateSet;
         this._name = name;
         this._entryFunc = entryFunc;
         this._exitFunc = exitFunc;
+        this._entryFuncStr = entryFuncStr;
+        this._exitFuncStr = exitFuncStr;
+    }
+
+    getContentStr = () => {
+        let result = "";
+
+        // entry function
+        if (this.getEntryFuncStr() !== "") {
+            result = result + "entry {\n";
+            this.getEntryFuncStr().split("\n").forEach((line) => {
+                if (line.trim() !== "") {
+                    result = result + "    " + line.trim() + "\n";
+                }
+            });
+            result = result + "}\n\n";
+        }
+
+        // conditions
+        for (const condition of this.getConditions()) {
+            result = result + condition.getContentStr();
+        }
+
+        // exit function
+        if (this.getExitFuncStr() !== "") {
+            result = result + "exit {\n";
+            this.getExitFuncStr().split("\n").forEach((line) => {
+                if (line.trim() !== "") {
+                    result = result + "    " + line.trim() + "\n";
+                }
+            });
+            result = result + "}\n\n";
+        }
+        // result = result + "}\n";
+        return result;
+    }
+
+    getEntryFuncStr = () => {
+        return this._entryFuncStr;
+    }
+
+    getExitFuncStr = () => {
+        return this._exitFuncStr;
     }
 
     getStateSet = () => {
@@ -406,6 +451,32 @@ export class Condition {
         this._execFunc = execFunc;
         this._booleanFuncText = booleanFuncText;
         this._execFuncText = execFuncText;
+    }
+
+    getContentStr = () => {
+        let result = "";
+        result = result + "when ";
+
+        // remove the [1] index
+        this.getBooleanFuncText().trim().split(" ").forEach((token, index) => {
+            if (index === 0) {
+                // skip the first line
+                return;
+            }
+            result = result + token + " ";
+        });
+
+
+        result = result + "{\n";
+        this.getExecFuncText().split("\n").forEach((line) => {
+            if (line.trim() !== "") {
+                result = result + "    " + line.trim() + "\n";
+            }
+        });
+        // result = result + this.getExecFuncText() + "\n";
+        result = result + "}";
+        result = result + " state " + this.getNextState().getName() + "\n\n";
+        return result;
     }
 
     getNextState = () => {

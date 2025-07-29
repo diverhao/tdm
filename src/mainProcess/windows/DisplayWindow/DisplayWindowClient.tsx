@@ -487,7 +487,8 @@ export class DisplayWindowClient {
                     if ((widget instanceof Help) ||
                         (widget instanceof TdlViewer) ||
                         (widget instanceof TextEditor) ||
-                        (widget instanceof ProfilesViewer)
+                        (widget instanceof ProfilesViewer) ||
+                        (widget instanceof SeqGraph)
                     ) {
                         const selection = window.getSelection();
                         const textSelected = selection === null ? false : selection.toString().length > 0 ? true : false;
