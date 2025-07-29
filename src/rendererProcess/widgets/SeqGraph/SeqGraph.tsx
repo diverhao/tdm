@@ -365,9 +365,13 @@ export class SeqGraph extends BaseWidget {
         </div>
     }
 
+    setShowLog = (input: boolean) => { };
+
     _ElementLog = () => {
         const [, forceUpdate] = React.useState({});
         const [showContent, setShowContent] = React.useState(false);
+        this.setShowLog = setShowContent;
+
         const [logHeight, setLogHeight] = React.useState(200);
         const showHideElementRef = React.useRef<any>(null);
         const copyElementRef = React.useRef<any>(null);
@@ -401,7 +405,10 @@ export class SeqGraph extends BaseWidget {
                 display: "inline-flex",
                 flexDirection: "column",
                 userSelect: "text",
-            }}>
+            }}
+                onMouseDown={(event: MouseEvent) => { event.stopPropagation() }}
+
+            >
                 <div style={{
                     width: "100%",
                     height: 20,
@@ -426,6 +433,7 @@ export class SeqGraph extends BaseWidget {
                             paddingRight: 5,
                             borderRadius: 2,
                         }}
+
                         onClick={() => {
                             navigator.clipboard.writeText(this.getSeqProgram().getLog().join("\n"));
                         }}
@@ -452,6 +460,7 @@ export class SeqGraph extends BaseWidget {
                             paddingRight: 5,
                             borderRadius: 2,
                         }}
+                        onMouseDown={(event: MouseEvent) => { event.stopPropagation() }}
                         onClick={() => {
                             if (showContent === true) {
                                 setShowContent(false);
@@ -506,13 +515,14 @@ export class SeqGraph extends BaseWidget {
 
     _ElementSeqGraph = () => {
         const elementRef = React.useRef<any>(null);
-        const [showConfigPage, setShowConfigPage] = React.useState(false);
-        this.setShowConfigPage = setShowConfigPage;
         // const rawChannelName = this.getChannelNames()[0];
         // const [channelName, setChannelName] = React.useState(rawChannelName === undefined? "": rawChannelName);
         const [channelName, setChannelName] = React.useState("");
         const [showEdgePeekContent, setShowEdgePeekContent] = React.useState(false);
         this.setShowEdgePeekContent = setShowEdgePeekContent;
+        const [showConfigPage, setShowConfigPage] = React.useState(false);
+        this.setShowConfigPage = setShowConfigPage;
+
 
         React.useEffect(() => {
             if (g_widgets1.isEditing()) {
@@ -569,10 +579,9 @@ export class SeqGraph extends BaseWidget {
                 }}>
                     <this._ElementControl ></this._ElementControl>
                 </div>
-                {showConfigPage === true ?
-                    <this._ElementConfigPage setShowConfigPage={setShowConfigPage}></this._ElementConfigPage>
-                    : null
-                }
+
+                <this._ElementConfigPage showConfigPage={showConfigPage} setShowConfigPage={setShowConfigPage}></this._ElementConfigPage>
+
                 {g_widgets1.isEditing() ? <this._ElementMask></this._ElementMask> : null}
                 {showEdgePeekContent === true ?
                     <div
@@ -583,7 +592,7 @@ export class SeqGraph extends BaseWidget {
                             top: 60,
                             left: 20,
                             padding: 10,
-                            zIndex: 20000,
+                            zIndex: 10000,
                             borderRadius: 7,
                             maxWidth: "50%",
                             maxHeight: "50%",
@@ -593,9 +602,63 @@ export class SeqGraph extends BaseWidget {
                             backgroundColor: "rgba(245, 245, 245, 1)",
                             fontFamily: "monospace"
                         }}
-                    // onMouseDown={(event: MouseEvent) => {  }}
+                        onMouseDown={(event: MouseEvent) => { event.stopPropagation() }}
                     >
-                        {this.edgePeekContent}
+                        {/* {this.edgePeekContent} */}
+                        {this.edgePeekContent.split("\n").map((line: string, index: number) => {
+                            if (line.startsWith("// ----- conditions in state ")) {
+                                const stateName = line.replace("// ----- conditions in state ", "").replace(" -----", "");
+                                return (
+                                    <div
+                                        onMouseDown={(event: any) => { event.stopPropagation() }}
+                                        style={{
+                                            cursor: "pointer",
+                                            fontWeight: "bold",
+                                        }}
+                                        onClick={() => {
+                                            const regex = new RegExp(`state[\\s]+${stateName}[\\s]*{`, "g");
+                                            const foundStr = this.scrollToString(regex);
+                                            if (foundStr === true) {
+                                                // this.setShowEdgePeekContent(false);
+                                                this.setShowConfigPage(true);
+                                            }
+                                        }}
+                                    >
+                                        // ----- conditions in state {stateName} ----- {"\n"}
+                                    </div>
+                                )
+                            } else if (line.startsWith("// ----- state ")) {
+                                const stateName = line.replace("// ----- state ", "").replace(" -----", "");
+                                return (
+                                    <div
+                                        onMouseDown={(event: any) => { event.stopPropagation() }}
+                                        style={{
+                                            cursor: "pointer",
+                                            fontWeight: "bold",
+                                        }}
+                                        onClick={() => {
+                                            const regex = new RegExp(`state[\\s]+${stateName}[\\s]*{`, "g");
+                                            const foundStr = this.scrollToString(regex);
+                                            if (foundStr === true) {
+                                                // this.setShowEdgePeekContent(false);
+                                                this.setShowConfigPage(true);
+                                            }
+                                        }}
+
+                                    >
+                                        // ----- state {stateName} ----- {"\n"}
+                                    </div>
+                                )
+                            } else if (line === "") {
+                                return <div>{"\n"}</div>
+                            } else {
+                                return (
+                                    <div key={index} onMouseDown={(event: any) => { event.stopPropagation() }}>
+                                        {line}
+                                    </div>
+                                )
+                            }
+                        })}
                     </div>
                     : null
                 }
@@ -604,23 +667,96 @@ export class SeqGraph extends BaseWidget {
         );
     };
 
-    _ElementConfigPage = ({ setShowConfigPage }: any) => {
+    scrollToString = (searchStr: string | RegExp, option?: any) => { return false; };
+
+    _ElementConfigPage = ({ showConfigPage, setShowConfigPage }: any) => {
         const [, forceUpdate] = React.useState({});
         const [seqContent, setSeqContent] = React.useState(this.getText()["seqContent"]);
         this.forceUpdateConfigPage = () => { forceUpdate({}) };
         const [checked, setCheck] = React.useState(this.getEmulateMode());
+        const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+        const [searchStr, setSearchStr] = React.useState("");
+
+        const scrollToString = (
+            searchPattern: string | RegExp,
+            options?: { fromStart?: boolean }
+        ) => {
+            const textarea = textareaRef.current;
+            if (!textarea) {
+                console.error("Textarea reference is not set.");
+                return false;
+            }
+
+            let regex: RegExp;
+            if (typeof searchPattern === "string") {
+                regex = new RegExp(searchPattern, "mi"); // add 'i' for case-insensitive
+            } else {
+                // If RegExp, ensure 'i' flag is present
+                const flags = searchPattern.flags.includes("i") ? searchPattern.flags : searchPattern.flags + "i";
+                regex = new RegExp(searchPattern.source, flags);
+            }
+
+            const value = textarea.value;
+            const startPos = textarea.selectionEnd || 0;
+            let match: RegExpExecArray | null = null;
+
+            if (options?.fromStart) {
+                // Search from beginning
+                regex.lastIndex = 0;
+                match = regex.exec(value);
+            } else {
+                // Search from cursor position to end
+                regex.lastIndex = 0;
+                if (startPos < value.length) {
+                    const subValue = value.slice(startPos);
+                    match = regex.exec(subValue);
+                    if (match && match.index !== undefined) {
+                        match.index += startPos;
+                    }
+                }
+                // If not found, search from beginning to cursor position
+                if (!match) {
+                    const subValue = value.slice(0, startPos);
+                    match = regex.exec(subValue);
+                }
+            }
+
+            if (match && match.index !== undefined) {
+                textarea.selectionStart = match.index;
+                textarea.selectionEnd = match.index + match[0].length;
+                textarea.focus();
+                // Scroll to the matched text
+                const lineHeight = parseInt(window.getComputedStyle(textarea).lineHeight || "20", 10);
+                const beforeMatch = textarea.value.slice(0, match.index);
+                const linesBefore = beforeMatch.split("\n").length - 1;
+                textarea.scrollTop = linesBefore * lineHeight;
+                return true;
+            } else {
+                console.error("No match found for the given pattern.");
+                return false;
+            }
+        }
+        this.scrollToString = scrollToString;
 
         return (
             <div style={{
                 position: "absolute",
                 left: 0,
                 top: 0,
-                width: "100%",
-                height: "100%",
+                width: showConfigPage === true ? "100%" : 0,
+                height: showConfigPage === true ? "100%" : 0,
                 border: "solid 0px black",
                 boxSizing: "border-box",
                 backgroundColor: "white",
-            }}>
+                overflow: "hidden",
+                zIndex: 10001, // higher than peek page
+            }}
+                onMouseDown={(event: MouseEvent) => {
+                    event.stopPropagation();
+                }
+                }
+
+            >
                 <div style={{
                     display: "inline-flex",
                     justifyContent: "flex-start",
@@ -684,10 +820,58 @@ export class SeqGraph extends BaseWidget {
                         marginBottom: 20,
                         flex: 1,
                     }}>
-                        <h2>
-                            Sequencer
-                        </h2>
+                        <div style={{
+                            display: "inline-flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            width: "100%",
+                            justifyContent: "space-between",
+                        }}>
+                            <h2>
+                                Sequencer
+                            </h2>
+                            <div style={{
+                                display: "inline-flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "flex-end",
+                            }}>
+                                {/* search box */}
+                                <input
+                                    type="text"
+                                    style={{
+                                        width: "100%",
+                                        paddingTop: 1,
+                                        paddingBottom: 1,
+                                        paddingLeft: 3,
+                                        paddingRight: 3,
+                                        fontFamily: GlobalVariables.defaultFontFamily,
+                                        fontSize: GlobalVariables.defaultFontSize,
+                                        outline: "none",
+                                        border: "solid 1px rgba(150, 150, 150, 1)",
+                                        borderRadius: 0,
+                                    }}
+                                    value={searchStr}
+                                    onChange={(event: any) => {
+                                        setSearchStr(event.target.value);
+                                    }}
+                                    placeholder="Search"
+                                />
+                                {/* search button */}
+                                <ElementRectangleButton
+                                    marginLeft={10}
+                                    handleClick={() => {
+                                        if (searchStr !== "") {
+                                            const foundStr = this.scrollToString(searchStr);
+                                        }
+                                    }}
+                                >
+                                    Search
+                                </ElementRectangleButton>
+                            </div>
+                        </div>
                         <textarea
+                            ref={textareaRef}
                             style={{
                                 padding: 10,
                                 fontFamily: "Consolas,Monaco,'Andale Mono','Ubuntu Mono',monospace",
@@ -749,6 +933,7 @@ export class SeqGraph extends BaseWidget {
 
                 <ElementRectangleButton
                     handleClick={() => {
+                        this.setShowLog(false);
                         this.setShowConfigPage(true);
                     }}
                     marginLeft={40}
@@ -775,10 +960,10 @@ export class SeqGraph extends BaseWidget {
                         handleClick={async () => {
                             if (this.getSeqProgram().getStatus() === "running") {
                                 console.log("stop the program")
-                                this.getSeqProgram().pause();
+                                await this.stopSeqProgram();
                             } else {
                                 console.log("start the program")
-                                await this.getSeqProgram().start();
+                                await this.startSeqProgram();
                             }
                             const allNodes = this.networkData["nodes"];
                             const allEdges = this.networkData["edges"];
@@ -1130,7 +1315,7 @@ ss volt_check {
                         label: state.getName(),
                         shape: "big ellipse",
                         physics: false,
-                        content: state.getContentStr(),
+                        content: "// ----- conditions in state " + state.getName() + " -----\n\n" + state.getContentStr() + '\n\n// ----- conditions that transition to this state -----\n\n' + state.getConditionsContentLeadingToThisState(),
                         // x: x + 100 * (Math.random() - 0.5),
                         // y: y + 100 * (Math.random() - 0.5),
                         // no border needed
@@ -1177,7 +1362,8 @@ ss volt_check {
                             from: from,
                             to: to,
                             label: booleanFuncText,
-                            content: execFuncText,
+                            // content: execFuncText,
+                            content: "// ----- state " + state.getName() + " -----\n\n" + condition.getContentStr(),
                             arrows: { to: { enabled: true, scaleFactor: 0.5 } },
                             selfReference: selfRefOption,
                         })
@@ -1199,16 +1385,24 @@ ss volt_check {
         }
     }
 
+    delayQueue: { timeout: any, resolve: any, reject: any }[] = [];
+
     delay = async (dt: number) => {
+
         const promise = new Promise((resolve, reject) => {
-            setTimeout(() => {
+            const timeOut = setTimeout(() => {
                 resolve("");
+                this.delayQueue = this.delayQueue.filter((item) => item["timeout"] !== timeOut);
             }, dt * 1000)
+            const timeOutObj = { timeout: timeOut, resolve: resolve, reject: reject };
+            this.delayQueue.push(timeOutObj);
         })
         try {
             await promise;
         } catch (e) {
+            return false;
         }
+
 
         return true;
     }
@@ -1336,6 +1530,10 @@ ss volt_check {
 
     stopSeqProgram = () => {
         console.log("Stop Seq program")
+        // reject all delay Q
+        for (const item of this.delayQueue) {
+            item["reject"]("Program stopped");
+        }
         this.getSeqProgram().pause();
     }
 

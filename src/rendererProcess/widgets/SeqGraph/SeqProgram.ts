@@ -325,6 +325,26 @@ export class SeqState {
         return result;
     }
 
+    getConditionsContentLeadingToThisState = () => {
+
+        let resultStr: string = "";
+        for (const state of this.getStateSet().getStates()) {
+            let tmpStr = "";
+            for (const condition of state.getConditions()) {
+                if (condition.getNextState() === this) {
+                    const conditionStr = condition.getContentStr();
+                    tmpStr = tmpStr + conditionStr;
+                }
+            }
+            if (tmpStr !== "") {
+                resultStr = resultStr + "// ----- state " + state.getName() + " -----\n\n" + tmpStr;
+            }
+        }
+
+        return resultStr
+    }
+
+
     getEntryFuncStr = () => {
         return this._entryFuncStr;
     }
@@ -364,6 +384,9 @@ export class SeqState {
         this.getConditions().length = 0;
     }
 
+    /**
+     * if the user stops the program, this function throws an exception
+     */
     checkConditions = async (newEntrance: boolean) => {
         this.getStateSet().setBusyCheckingConditions(true);
 
@@ -396,7 +419,7 @@ export class SeqState {
                 this.getStateSet().getProgram().increaseStateSwitchCount();
                 if (this.getStateSet().getProgram().getStateSwitchCount() > 300) {
                     // pause the program
-                    this.getStateSet().getProgram().pause();
+                    this.getStateSet().getProgram().getMainWidget().stopSeqProgram();
                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                     displayWindowClient.getIpcManager().handleDialogShowMessageBox(undefined, {
                         messageType: "error",
@@ -496,7 +519,18 @@ export class Condition {
     }
 
     getExecFuncText = () => {
-        return this._execFuncText;
+        const execFuncTextArray = this._execFuncText.split("\n");
+        const resultArray: string[] = [];
+        for (const text of execFuncTextArray) {
+            if (text.trim() === "") {
+                continue;
+            }
+            if (text.trim().startsWith("//")) {
+                continue;
+            }
+            resultArray.push(text.trim());
+        }
+        return resultArray.join("\n");
     }
 
     getId = () => {
