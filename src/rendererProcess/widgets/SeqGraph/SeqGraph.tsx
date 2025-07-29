@@ -115,6 +115,7 @@ export class SeqGraph extends BaseWidget {
     currentId: number = 0;
 
     networkClickCallback: any = () => { };
+    networkDragStartCallback: any = () => { };
 
     networkDoubleClickCallback: any = () => { };
 
@@ -533,14 +534,42 @@ export class SeqGraph extends BaseWidget {
                     this.network?.destroy()
                 } else {
                     if (elementRef.current !== null) {
-                        console.log("re-render +++++++++++++++++++++++")
 
                         this.network = new Network(elementRef.current, this.networkData, this.networkOptions);
                         this.networkClickCallback = (params: any) => {
+                            this.handleClickEdge(params, false);
+                        };
+                        this.networkDoubleClickCallback = (params: any) => {
                             this.handleClickEdge(params);
+                        };
+                        this.networkDragStartCallback = (params: any) => {
+                            this.handleClickEdge(params, false);
                         };
                         // click edge
                         this.network.on('click', this.networkClickCallback);
+                        this.network.on('doubleClick', this.networkDoubleClickCallback);
+                        this.network.on("dragStart", this.networkDragStartCallback);
+
+
+                        // reset edge and node colors when node is deselected
+                        this.network.on("deselectNode", () => {
+                            const allEdges = this.networkData.edges;
+                            const allNodes = this.networkData.nodes;
+                            const allEdgesArr = allEdges.get();
+                            const allNodesArr = allNodes.get();
+                            allEdges.update(
+                                allEdgesArr.map(edge => ({
+                                    id: edge.id,
+                                    color: { color: colors.background, highlight: colors.MAJOR}
+                                }))
+                            );
+                            allNodes.update(
+                                allNodesArr.map(node => ({
+                                    id: node.id,
+                                    color: { color: colors.background, highlight: colors.MAJOR}
+                                }))
+                            );
+                        });
                     }
                 }
             }, 0)
@@ -1021,7 +1050,7 @@ export class SeqGraph extends BaseWidget {
      * (2) find the channel name for this node
      * 
      */
-    handleClickEdge = async (params: any) => {
+    handleClickEdge = async (params: any, showPeek: boolean = true) => {
 
         const ids = params.edges;
         const idsNodes = params.nodes;
@@ -1033,8 +1062,9 @@ export class SeqGraph extends BaseWidget {
             const clickedNodes = nodes.get(idsNodes);
             const clickedNode = clickedNodes[0];
             console.log("clickedNode", clickedNode);
+            this.highlightNetworkNode(clickedNode.id);
 
-            if (clickedNode !== undefined) {
+            if (clickedNode !== undefined && showPeek === true) {
                 const nodeContent = clickedNode.content;
                 this.edgePeekContent = nodeContent;
                 this.setShowEdgePeekContent(true);
@@ -1045,7 +1075,7 @@ export class SeqGraph extends BaseWidget {
             const clickedEdges = edges.get(ids);
             const clickedEdge = clickedEdges[0];
             console.log("clickedEdge", clickedEdge);
-            if (clickedEdge !== undefined) {
+            if (clickedEdge !== undefined && showPeek === true) {
                 const edgeContent = clickedEdge.content;
                 this.edgePeekContent = edgeContent;
                 this.setShowEdgePeekContent(true);
@@ -1053,7 +1083,6 @@ export class SeqGraph extends BaseWidget {
         }
         return true;
     }
-
 
 
     prevChannelValues: Record<string, string | number | string[] | number[] | undefined> = {};
@@ -1133,7 +1162,42 @@ export class SeqGraph extends BaseWidget {
     }
 
 
+    highlightNetworkNode = (nodeId: string) => {
+        const allNodes = this.networkData["nodes"];
+        const allEdges = this.networkData["edges"];
 
+        const allEdgesArr = allEdges.get();
+
+        // Reset all edges to default color
+        allEdges.update(
+            allEdgesArr.map(edge => ({
+                id: edge.id,
+                color: { color: colors.background, highlight: colors.background }
+            }))
+        );
+
+        // Edges pointing to selected node: blue
+        allEdges.update(
+            allEdgesArr
+                .filter(edge => edge.to === nodeId)
+                .map(edge => ({
+                    id: edge.id,
+                    color: { color: colors.background, highlight: colors.INVALID }
+                }))
+        );
+
+        // Edges starting from selected node: red
+        allEdges.update(
+            allEdgesArr
+                .filter(edge => edge.from === nodeId)
+                .map(edge => ({
+                    id: edge.id,
+                    color: { color: colors.background, highlight: colors.MAJOR }
+                }))
+        );
+        ;
+
+    }
 
     buildSeqProgram = async () => {
         try {
@@ -1321,8 +1385,8 @@ ss volt_check {
                         // no border needed
                         color: {
                             // background: source === "IOC" ? colors.background : colors.dbfilenode,
-                            highlight: colors.highlight,
-
+                            background: colors.background,
+                            highlight: colors.MAJOR,
                         }
                     };
                     allNodes.add(stateNode)
@@ -1366,6 +1430,10 @@ ss volt_check {
                             content: "// ----- state " + state.getName() + " -----\n\n" + condition.getContentStr(),
                             arrows: { to: { enabled: true, scaleFactor: 0.5 } },
                             selfReference: selfRefOption,
+                            color: {
+                                color: colors.background, // default edge color
+                                highlight: colors.MAJOR,
+                            }
                         })
 
                     }
