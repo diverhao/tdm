@@ -560,13 +560,13 @@ export class SeqGraph extends BaseWidget {
                             allEdges.update(
                                 allEdgesArr.map(edge => ({
                                     id: edge.id,
-                                    color: { color: colors.background, highlight: colors.MAJOR}
+                                    color: { color: colors.background, highlight: colors.MAJOR }
                                 }))
                             );
                             allNodes.update(
                                 allNodesArr.map(node => ({
                                     id: node.id,
-                                    color: { color: colors.background, highlight: colors.MAJOR}
+                                    color: { color: colors.background, highlight: colors.MAJOR }
                                 }))
                             );
                         });
@@ -988,10 +988,10 @@ export class SeqGraph extends BaseWidget {
                     <ElementRectangleButton
                         handleClick={async () => {
                             if (this.getSeqProgram().getStatus() === "running") {
-                                console.log("stop the program")
+                                Log.info("stop the program")
                                 await this.stopSeqProgram();
                             } else {
-                                console.log("start the program")
+                                Log.info("start the program")
                                 await this.startSeqProgram();
                             }
                             const allNodes = this.networkData["nodes"];
@@ -1005,6 +1005,7 @@ export class SeqGraph extends BaseWidget {
                                         id: state.getId(),
                                         color: {
                                             background: state === currentState ? colors["currentState"] : colors["background"],
+                                            highlight: colors["MAJOR"],
                                         }
                                     })
                                 }
@@ -1019,6 +1020,7 @@ export class SeqGraph extends BaseWidget {
                                             id: condition.getId(),
                                             color: {
                                                 color: condition === prevCond ? colors["currentState"] : colors["background"],
+                                                highlight: colors["MAJOR"],
                                             }
                                         })
                                     }
@@ -1054,14 +1056,12 @@ export class SeqGraph extends BaseWidget {
 
         const ids = params.edges;
         const idsNodes = params.nodes;
-        console.log(idsNodes)
 
         // if we click node, show entry, when and exist
         if (idsNodes.length > 0) {
             const nodes = this.networkData["nodes"];
             const clickedNodes = nodes.get(idsNodes);
             const clickedNode = clickedNodes[0];
-            console.log("clickedNode", clickedNode);
             this.highlightNetworkNode(clickedNode.id);
 
             if (clickedNode !== undefined && showPeek === true) {
@@ -1074,7 +1074,6 @@ export class SeqGraph extends BaseWidget {
             const edges = this.networkData["edges"];
             const clickedEdges = edges.get(ids);
             const clickedEdge = clickedEdges[0];
-            console.log("clickedEdge", clickedEdge);
             if (clickedEdge !== undefined && showPeek === true) {
                 const edgeContent = clickedEdge.content;
                 this.edgePeekContent = edgeContent;
@@ -1122,6 +1121,7 @@ export class SeqGraph extends BaseWidget {
                     id: node.id,
                     color: {
                         background: colors["background"],
+                        highlight: colors["MAJOR"],
                     }
                 }));
 
@@ -1131,6 +1131,7 @@ export class SeqGraph extends BaseWidget {
                     id: currentState.getId(),
                     color: {
                         background: colors["currentState"],
+                        highlight: colors["MAJOR"],
                     }
                 })
             }
@@ -1145,6 +1146,7 @@ export class SeqGraph extends BaseWidget {
                     id: edge.id,
                     color: {
                         color: colors["background"],
+                        highlight: colors["MAJOR"],
                     }
                 }));
 
@@ -1155,6 +1157,7 @@ export class SeqGraph extends BaseWidget {
                     id: prevCond.getId(),
                     color: {
                         color: colors["currentState"],
+                        highlight: colors["MAJOR"],
                     }
                 })
             }
@@ -1288,7 +1291,6 @@ ss volt_check {
                     let entryFunc: () => any = () => { };
                     let entryFuncStr = "";
                     if (entryBlocks.length > 0) {
-                        console.log("entry blocks", entryBlocks)
                         entryFunc = createAsyncFuncFromStr(entryBlocks[0].action);
                         entryFuncStr = entryBlocks[0].action;
                     }
@@ -1334,7 +1336,6 @@ ss volt_check {
                         const nextState = stateSet.getState(nextStateName);
 
                         const actionStr = conditionData["action"];
-                        console.log("action string", actionStr)
                         const actionFunc = createAsyncFuncFromStr(actionStr);
 
                         const booleanConditionStr = conditionData["booleanCondition"];
@@ -1355,7 +1356,6 @@ ss volt_check {
                 }
             }
 
-            console.log(this.getSeqProgram())
 
             // (2) channel names 
 
@@ -1412,7 +1412,6 @@ ss volt_check {
                         }
 
                         if (from === to) {
-                            console.log("self-loop detected", from, to, selfLoopCount);
                             // self-loop edge
                             selfRefOption = {
                                 angle: (selfLoopCount * Math.PI) / 2 + selfLoopCount * 0.1, // slightly change the angle for each self-loop
@@ -1482,7 +1481,7 @@ ss volt_check {
             const channelValue = channel.getValue();
             return channelValue;
         } catch (e) {
-            console.log("Failed to put channel value for", channelName);
+            Log.error("Failed to get channel value for", channelName);
         }
         return undefined;
     }
@@ -1501,7 +1500,7 @@ ss volt_check {
             const severity = channel.getSeverity();
             return severity;
         } catch (e) {
-            console.log("Failed to put channel value for", channelName);
+            Log.error("Failed to get channel severity for", channelName);
         }
         return ChannelSeverity.NOT_CONNECTED;
     }
@@ -1513,7 +1512,7 @@ ss volt_check {
             const alarmStatus = channel.getAlarmStatus();
             return alarmStatus;
         } catch (e) {
-            console.log("Failed to put channel value for", channelName);
+            Log.error("Failed to get channel alarm status for", channelName);
         }
         return ChannelAlarmStatus.UDF;
     }
@@ -1592,12 +1591,12 @@ ss volt_check {
      */
 
     startSeqProgram = async () => {
-        console.log("Start Seq program")
+        Log.info("Start Seq program")
         await this.getSeqProgram().start();
     }
 
     stopSeqProgram = () => {
-        console.log("Stop Seq program")
+        Log.info("Stop Seq program")
         // reject all delay Q
         for (const item of this.delayQueue) {
             item["reject"]("Program stopped");
