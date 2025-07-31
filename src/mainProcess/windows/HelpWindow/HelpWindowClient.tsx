@@ -1,7 +1,7 @@
 
 import ReactDOM from "react-dom/client";
 import React from "react";
-import { Help } from "../../../rendererProcess/widgets/Help/Help";
+import { Help } from "../../../rendererProcess/helperWidgets/Help/Help";
 
 
 export class HelpWindowClient {}

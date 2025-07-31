@@ -1,7 +1,3 @@
-// import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
-// import { BaseWidget } from "../BaseWidget/BaseWidget";
-// import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-// import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 
 import { Log } from "../../../mainProcess/log/Log";
 import * as React from "react";

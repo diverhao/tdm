@@ -26,7 +26,6 @@ import { LogViewer } from "../../../rendererProcess/widgets/LogViewer/LogViewer"
 import { ContextMenu } from "./ContextMenu";
 import { PromptOnDisplayWindow } from "../../../rendererProcess/helperWidgets/Prompt/PromptOnDisplayWindow";
 import { TextEntry } from "../../../rendererProcess/widgets/TextEntry/TextEntry";
-import { Help } from "../../../rendererProcess/widgets/Help/Help";
 import { CaSnooper } from "../../../rendererProcess/widgets/CaSnooper/CaSnooper";
 import { TextUpdate } from "../../../rendererProcess/widgets/TextUpdate/TextUpdate";
 import { PvMonitor } from "../../../rendererProcess/widgets/PvMonitor/PvMonitor";
@@ -484,8 +483,7 @@ export class DisplayWindowClient {
                     // widget-specific options
                     const widget = g_widgets1.getWidget2(widgetKeyResult);
 
-                    if ((widget instanceof Help) ||
-                        (widget instanceof TdlViewer) ||
+                    if ((widget instanceof TdlViewer) ||
                         (widget instanceof TextEditor) ||
                         (widget instanceof ProfilesViewer) ||
                         (widget instanceof SeqGraph)
@@ -928,15 +926,6 @@ export class DisplayWindowClient {
             // widgetTdl.style.boxSizing = "border-box";
             // widgetTdl.style.padding = "20px";
 
-            // widgetTdl.text.singleWidget = true;
-            // widgetTdl.style.boxSizing = "border-box";
-            // widgetTdl.style["top"] = 0;
-            tdl[widgetKey] = widgetTdl;
-            // tdl["Canvas"].style.backgroundColor = "rgba(0, 0, 0, 1)";
-        } else if (utilityType === "Help") {
-            // default size is 100%
-            const widgetTdl = Help.generateWidgetTdl(utilityOptions);
-            const widgetKey = widgetTdl.widgetKey;
             // widgetTdl.text.singleWidget = true;
             // widgetTdl.style.boxSizing = "border-box";
             // widgetTdl.style["top"] = 0;

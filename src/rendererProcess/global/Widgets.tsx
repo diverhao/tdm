@@ -1,5 +1,4 @@
 import { TextUpdate } from "../widgets/TextUpdate/TextUpdate";
-import { Help } from "../widgets/Help/Help";
 import { Terminal } from "../widgets/Terminal/Terminal";
 import { ChannelGraph } from "../widgets/ChannelGraph/ChannelGraph";
 import { Calculator } from "../widgets/Calculator/Calculator";
@@ -104,7 +103,6 @@ export type type_widgetType =
     | "BinaryImage"
     | "Table"
     | "TextUpdate"
-    | "Help"
     | "Terminal"
     | "ChannelGraph"
     | "SeqGraph"
@@ -303,13 +301,6 @@ export class Widgets {
                 break;
             case "TextUpdate":
                 tdl = TextUpdate.generateDefaultTdl("TextUpdate");
-                tdl.style.left = x;
-                tdl.style.top = y;
-                tdl.style.width = width;
-                tdl.style.height = height;
-                break;
-            case "Help":
-                tdl = Help.generateDefaultTdl("Help");
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
@@ -611,10 +602,6 @@ export class Widgets {
         switch (widgetType) {
             case "TextUpdate": {
                 widget = new TextUpdate(widgetTdl);
-                break;
-            }
-            case "Help": {
-                widget = new Help(widgetTdl);
                 break;
             }
             case "Terminal": {
@@ -2856,29 +2843,31 @@ export class Widgets {
     };
 
     openHelpWindow = () => {
-        // this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Calculator", {});
-        if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Help", {});
-        } else {
-            const currentSite = `https://${window.location.host}/`;
-            this.getRoot()
-                .getDisplayWindowClient()
-                .getIpcManager()
-                .sendPostRequestCommand("create-utility-display-window", {
-                    utilityType: "Help",
-                    utilityOptions: {},
-                })
-                .then((response: any) => {
-                    // decode string
-                    return response.json();
-                })
-                .then((data) => {
-                    const ipcServerPort = data["ipcServerPort"];
-                    const displayWindowId = data["displayWindowId"];
-                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
-                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
-                });
-        }
+        const url = "file://${tdm_root}/dist/webpack/HelpWindow.html";
+        this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("open-webpage", url);
+
+        // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
+        //     this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Help", {});
+        // } else {
+        //     const currentSite = `https://${window.location.host}/`;
+        //     this.getRoot()
+        //         .getDisplayWindowClient()
+        //         .getIpcManager()
+        //         .sendPostRequestCommand("create-utility-display-window", {
+        //             utilityType: "Help",
+        //             utilityOptions: {},
+        //         })
+        //         .then((response: any) => {
+        //             // decode string
+        //             return response.json();
+        //         })
+        //         .then((data) => {
+        //             const ipcServerPort = data["ipcServerPort"];
+        //             const displayWindowId = data["displayWindowId"];
+        //             // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
+        //             window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
+        //         });
+        // }
     };
 
     // ------------------------------- sidebar ---------------------------------

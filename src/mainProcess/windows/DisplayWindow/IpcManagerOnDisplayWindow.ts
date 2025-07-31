@@ -363,8 +363,6 @@ export class IpcManagerOnDisplayWindow {
         if (command === "create-widget") {
             if (subcommand === "text-update") {
                 g_widgets1.createWidgetFromMouse("TextUpdate");
-            } else if (subcommand === "help") {
-                g_widgets1.createWidgetFromMouse("Help");
             } else if (subcommand === "binary-image") {
                 g_widgets1.createWidgetFromMouse("BinaryImage");
             } else if (subcommand === "table") {
