@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+	</head>
+
+	<body style="-webkit-print-color-adjust: exact;">
+		<div id="root"></div>
+		<!-- one solution for Electron's "exports is not defined" error -->
+		<!-- We must also change "nodeIntegration" and "contextIsolation" in "app.js" -->
+		<!-- https://stackoverflow.com/questions/54619111/typescript-electron-exports-is-not-defined -->
+		<!-- <script> -->
+		<!-- require("./main.js"); -->
+		<!-- </script> -->
+		<!-- another solution for Electron's "exports is not defined" error -->
+		<!-- manually define a global variable "exports" -->
+		<script>
+			var exports = {};
+		</script>
+
+		<!-- load from webpack package  -->
+		<!-- the webpack package is transpiled to ESM module type (import/export), it can be loade by both -->
+		<!-- electron.js and browser. The embedded display (iframe) can be correctly displayed in this way. -->
+		<!-- it takes a significant amount of time to bundle the stuff -->
+		<!-- one significant difference between bundled and un-bundled versions is the __dirname is always / in bundled -->
+		<!-- version. In un-bundled version, the __dirname is the .js file's path on hard drive -->
+		<!-- The relative path for img (e.g. "../../abc.svg") is w.r.t. this html file. The "file://" prefix should always -->
+		<!-- come with absolute path -->
+		<!-- it is recommended to use for production -->
+		<script type="module" src="HelpWindowClient.js"></script>
+
+		<!-- load from local package -->
+		<!-- the below javascript file uses CommonJS module type (require), it can only be  -->
+		<!-- loaded in electron.js with "nodeIntegration" option enabled in BrowserWindow -->
+		<!-- the web browser can only use ESM module, we cannot load tdl file in web browser -->
+		<!-- the embedded display (iframe) cannot be shown in this way either -->
+		<!-- the advantage is we do not need to bundle the package, which consumes tens of seconds -->
+		<!-- it is recommended to use for development -->
+		<!-- <script type="module" src="./DisplayWindowClient.js"></script> -->
+
+		<script type="module">
+			new window.HelpWindowClientClass();
+		</script>
+	</body>
+</html>

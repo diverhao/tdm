@@ -53,14 +53,14 @@ const Element = ({ widget, linkPath }: any) => {
         <H2 registry={registry}>TDM at a Glance</H2>
         {/* EDM screen */}
         <SLIDESHOW
-            images={["../../resources/help/usage-example-01.png",
-                `../../resources/help/usage-example-02.png`,
-                `../../resources/help/usage-example-03.gif`,
-                `../../resources/help/usage-example-04.gif`,
-                `../../resources/help/usage-example-05.gif`,
-                `../../resources/help/usage-example-06.png`,
-                `../../resources/help/usage-example-07.gif`,
-                `../../resources/help/usage-example-08.png`,
+            images={["resources/help/usage-example-01.png",
+                `resources/help/usage-example-02.png`,
+                `resources/help/usage-example-03.gif`,
+                `resources/help/usage-example-04.gif`,
+                `resources/help/usage-example-05.gif`,
+                `resources/help/usage-example-06.png`,
+                `resources/help/usage-example-07.gif`,
+                `resources/help/usage-example-08.png`,
             ]}
             titles={["Main window",
                 "Graphical editor for TDM profile",

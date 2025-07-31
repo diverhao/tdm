@@ -76,7 +76,7 @@ const Element = ({ widget, linkPath }: any) => {
             PV name of this widget (the best feature of <LINK link={"https://github.com/gnartohl/edm"}>EDM</LINK>).
         </P>
 
-        <IMG src={"../../resources/help/operation-01.png"} width={"33%"}></IMG>
+        <IMG src={"resources/help/operation-01.png"} width={"33%"}></IMG>
 
         <P>
             Most options in this menu are intuitive. One of them is the <code>Duplicate Display</code>,

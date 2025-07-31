@@ -9,8 +9,11 @@ TDM_ROOT=$1
 
 cp ${TDM_ROOT}/src/mainProcess/windows/MainWindow/MainWindow.html ${TDM_ROOT}/dist/mainProcess/windows/MainWindow/
 cp ${TDM_ROOT}/src/mainProcess/windows/DisplayWindow/DisplayWindow.html ${TDM_ROOT}/dist/mainProcess/windows/DisplayWindow/
+cp ${TDM_ROOT}/src/mainProcess/windows/HelpWindow/HelpWindow.html ${TDM_ROOT}/dist/mainProcess/windows/HelpWindow/
+
 cp ${TDM_ROOT}/src/mainProcess/windows/MainWindow/MainWindow-web.html ${TDM_ROOT}/dist/webpack/MainWindow.html
 cp ${TDM_ROOT}/src/mainProcess/windows/DisplayWindow/DisplayWindow-web.html ${TDM_ROOT}/dist/webpack/DisplayWindow.html
+cp ${TDM_ROOT}/src/mainProcess/windows/HelpWindow/HelpWindow-web.html ${TDM_ROOT}/dist/webpack/HelpWindow.html
 
 cp -a ${TDM_ROOT}/src/mainProcess/resources/css/fonts ${TDM_ROOT}/dist/mainProcess/windows/DisplayWindow/
 

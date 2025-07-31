@@ -130,7 +130,7 @@ export class MainWindowProfileRunPage {
                     }
                 }
             }
-            
+
             // fall back to home dir
             if (openPath === "") {
                 openPath = "$HOME"
@@ -172,7 +172,7 @@ export class MainWindowProfileRunPage {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "ChannelGraph", { channelNames: [] });
         }
         const openSeqGraphWindow = () => {
-            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "SeqGraph", { });
+            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "SeqGraph", {});
         }
 
         const openPvMonitorWindow = () => {
@@ -205,7 +205,9 @@ export class MainWindowProfileRunPage {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "TextEditor", { fileName: "" });
         }
         const openHelpWindow = () => {
-            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Help", {});
+            // special character ${tdm_root} is replaced by the main process
+            const url = "file://${tdm_root}/dist/webpack/HelpWindow.html";
+            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-webpage", url);
         }
         const quitTdmProcess = () => {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("quit-tdm-process");

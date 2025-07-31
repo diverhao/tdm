@@ -73,7 +73,7 @@ const Element = ({ widget, linkPath }: any) => {
             profile block and choose <code>Edit</code>, as shown below:
         </P>
 
-        <IMG src={"../../resources/help/getStarted-01.gif"}></IMG>
+        <IMG src={"resources/help/getStarted-01.gif"}></IMG>
 
         <P>
             In the editing page,
@@ -84,7 +84,7 @@ const Element = ({ widget, linkPath }: any) => {
             and add/modify the <code>EPICS_CA_CONN_TMO</code>.
         </P>
 
-        <IMG src={"../../resources/help/getStarted-02.gif"}></IMG>
+        <IMG src={"resources/help/getStarted-02.gif"}></IMG>
 
         <P>
             Another commonly used profile category is the <code>EPICS Custom Environment</code>. It includes
@@ -103,7 +103,7 @@ const Element = ({ widget, linkPath }: any) => {
             after choosing the <code>Get Started</code> profile.
         </P>
 
-        <IMG src={"../../resources/help/getStarted-03.png"}></IMG>
+        <IMG src={"resources/help/getStarted-03.png"}></IMG>
 
         <P>
             This screen is called main window. It is the management window for the current TDM instance.
@@ -146,7 +146,7 @@ const Element = ({ widget, linkPath }: any) => {
             The above operations are shown below:
         </P>
 
-        <IMG src={"../../resources/help/getStarted-04.gif"}></IMG>
+        <IMG src={"resources/help/getStarted-04.gif"}></IMG>
 
         <P>
             We can always switch back to the <code>Editing</code> mode by right
@@ -213,7 +213,7 @@ const Element = ({ widget, linkPath }: any) => {
             TDM provides several advanced features to post-process data. One of them is the computed PV.
         </P>
 
-        <IMG src={"../../resources/help/getStarted-05.gif"}></IMG>
+        <IMG src={"resources/help/getStarted-05.gif"}></IMG>
 
         <P>
             In a computed PV, the value of an EPICS PV is evaluted in square brackets, i.e. <code>[val7]</code>. We can
@@ -254,7 +254,7 @@ const Element = ({ widget, linkPath }: any) => {
 
         <P>
             TDM provides a Text Editor to edit simple text files. You can click the Text Editor button
-            on the main window to open it. Or click the <img src={"../../resources/webpages/modify-symbol.svg"} width={`${GlobalVariables.defaultFontSize}px`}></img> symbol
+            on the main window to open it. Or click the <img src={"resources/webpages/modify-symbol.svg"} width={`${GlobalVariables.defaultFontSize}px`}></img> symbol
             to open the existing or create a new Python script.
         </P>
 
@@ -286,7 +286,7 @@ const Element = ({ widget, linkPath }: any) => {
             computed PVs <code>[val7] % 2 == 0</code> and <code>[val7] % 3 == 0</code> for the these rules.
         </P>
 
-        <IMG src={"../../resources/help/getStarted-06.gif"}></IMG>
+        <IMG src={"resources/help/getStarted-06.gif"}></IMG>
 
         <H3 registry={registry}>Tools</H3>
 
@@ -295,20 +295,20 @@ const Element = ({ widget, linkPath }: any) => {
             Channel Access name search requests. You can find this tool from the main window.
         </P>
 
-        <IMG src={"../../resources/help/getStarted-07.png"}></IMG>
+        <IMG src={"resources/help/getStarted-07.png"}></IMG>
 
         <P>
             The <code>PV Table</code> can be used to monitor multiple channels at a time. 
             There are several ways to add new channels to it:
         </P>
 
-        <IMG src={"../../resources/help/getStarted-08.gif"}></IMG>
+        <IMG src={"resources/help/getStarted-08.gif"}></IMG>
 
         <P>
             or, you can directly open a <code>.db</code> file to load all its channels.
         </P>
 
-        <IMG src={"../../resources/help/getStarted-09.gif"}></IMG>
+        <IMG src={"resources/help/getStarted-09.gif"}></IMG>
 
 
     </ARTICLE>)

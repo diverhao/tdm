@@ -41,6 +41,7 @@ const windowClientsConfig = {
 	entry: {
 		DisplayWindowClient: "./src/mainProcess/windows/DisplayWindow/DisplayWindowClient.tsx",
 		MainWindowClient: "./src/mainProcess/windows/MainWindow/MainWindowClient.tsx",
+        HelpWindowClient: "./src/mainProcess/windows/HelpWindow/HelpWindowClient.tsx",
 	},
 
 	output: {

@@ -134,7 +134,7 @@ const Element = ({ widget, linkPath }: any) => {
 
         <H2  registry={registry}>Architect</H2>
 
-        <IMG src={"../../resources/help/architect.png"}></IMG>
+        <IMG src={"resources/help/architect.png"}></IMG>
 
         <P>
             TDM is based on Electron to build the desktop application. As shown in the above figure, there is one main process and multiple renderer processes

@@ -83,7 +83,7 @@ const Element = ({ widget, linkPath }: any) => {
         </P>
 
 
-        <IMG src={"../../resources/help/Profile-01.png"} width={"26%"}></IMG>
+        <IMG src={"resources/help/Profile-01.png"} width={"26%"}></IMG>
 
         <H2 registry={registry}>Runtime profile</H2>
 

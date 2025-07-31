@@ -25,7 +25,7 @@ const Element = ({ widget, linkPath }: any) => {
             at operation. In editing mode, the Canvas properties can be set in its sidebar.
         </P>
 
-        <IMG src={"../../resources/help/edit-03.png"} width={"27%"}></IMG>
+        <IMG src={"resources/help/edit-03.png"} width={"27%"}></IMG>
         <P>
             You can explicitly define the Canvas size in the <code>Width</code> and <code>Height</code> properties
             in the sidebar, or resize the window in editing mode to define the Canvas size. 
@@ -34,7 +34,7 @@ const Element = ({ widget, linkPath }: any) => {
             In the widget, the macro is wrapped in <code>$&#123;&#125;</code> or <code>$()</code>
         </P>
 
-        <IMG src={"../../resources/help/edit-04.gif"} width={"80%"}></IMG>
+        <IMG src={"resources/help/edit-04.gif"} width={"80%"}></IMG>
 
         <P>
             The Canvas grid is for easily controlling the positions of widgets. When we use the mouse to
@@ -58,7 +58,7 @@ const Element = ({ widget, linkPath }: any) => {
             these widgets.
         </P>
 
-        <IMG src={"../../resources/help/edit-01.gif"} width={"80%"}></IMG>
+        <IMG src={"resources/help/edit-01.gif"} width={"80%"}></IMG>
 
         <P>
             To group multiple widgets, first select them, then right click on any such widget,
@@ -68,7 +68,7 @@ const Element = ({ widget, linkPath }: any) => {
             click anywhere else will bring this widget back to its original group.
         </P>
 
-        <IMG src={"../../resources/help/edit-02.gif"} width={"80%"}></IMG>
+        <IMG src={"resources/help/edit-02.gif"} width={"80%"}></IMG>
 
 
 
@@ -123,7 +123,7 @@ const Element = ({ widget, linkPath }: any) => {
             TDM allows users to show mathematical formulas using the <code>Label</code> widget.
         </P>
 
-        <IMG src={"../../resources/help/edit-05.gif"} width={"80%"}></IMG>
+        <IMG src={"resources/help/edit-05.gif"} width={"80%"}></IMG>
 
         <P>
             In TDM, color is defined in a color palatte. User can either pick the color on the platte, or 

@@ -2443,6 +2443,8 @@ export class IpcManagerOnMainProcess {
     // ------------------------- actions ------------------------
 
     handleOpenWebpage = (event: any, url: string) => {
+        // replace ${tdm_root} with the root path of TDM
+        url = url.replace("${tdm_root}", path.join(__dirname, "..", "..", ".."));
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         windowAgentsManager.createWebDisplayWindow(url);
     };
