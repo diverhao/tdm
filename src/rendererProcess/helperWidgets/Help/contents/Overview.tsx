@@ -11,10 +11,12 @@ const Element = ({ widget, linkPath }: any) => {
 
     return (<ARTICLE registry={registry} linkPath={linkPath} title={"Overview"}>
 
-        <P>TDM is a display manager for <LINK link={"https://epics-controls.org/"}>EPICS </LINK>
-            control system. It runs on x86- or ARM-based computer with Windows, MacOS, or
-            Linux operating system. Using this software, you can create, edit, and run graphical user interfaces
-            to monitor and control EPICS channels (process values).</P>
+        <P>
+            TDM is a display manager for the <LINK link={"https://epics-controls.org/"}>EPICS</LINK> control system. 
+            It runs on x86 or ARM computers with Windows, macOS, or Linux operating systems. 
+            With TDM, you can create, edit, and operate graphical user interfaces to monitor and control EPICS channels (process variables). 
+            The software is designed for flexibility and ease of use, supporting both simple and complex control system configurations.
+        </P>
         <P>
             In TDM, EPICS channels are monitored and controlled through various widgets displayed in the display windows.
             This software offers great flexibility, allowing you to arrange these widgets on a window using simple drag-and-drop

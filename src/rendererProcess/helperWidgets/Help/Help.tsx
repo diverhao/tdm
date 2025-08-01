@@ -485,13 +485,15 @@ export class Help {
                     width: "100%",
                     // backgroundColor: "red",
                     borderLeft: insideChapter === true ? "none" : this.selectedLinkPath === linkPath ? "solid 1px rgba(0, 120, 51, 1)" : "solid 1px rgba(180, 180, 180, 1)",
-                    color: this.selectedLinkPath === linkPath ? "rgba(0,120,51,1)" : "rgba(147,147,147,1)",
+                    color: this.selectedLinkPath === linkPath ? "rgba(0,120,51,1)" : "rgba(47,47,47,1)",
                     height: insideChapter ? 25 : 30,
                     display: "inline-flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    fontSize: insideChapter ? 13 : 14,
-                    fontWeight: insideChapter ? "thin" : "normal",
+                    fontSize: insideChapter ? 12 : 12,
+                    fontWeight: 500,
+                    flexShrink: 0,
+
                 }}
                 onClick={() => {
                     const oldSelectedLinkPath = this.selectedLinkPath;
@@ -544,7 +546,7 @@ export class Help {
 
                         elementRef.current.style["cursor"] = "default";
                         if (this.selectedLinkPath !== linkPath) {
-                            elementRef.current.style["color"] = "rgba(147, 147,147,1)";
+                            elementRef.current.style["color"] = "rgba(47, 47,47,1)";
                             if (!insideChapter) {
                                 elementRef.current.style["borderLeft"] = "solid 1px rgba(180, 180, 180, 1)";
                             }
@@ -562,7 +564,7 @@ export class Help {
                             if (insideChapter) {
                                 return articleName;
                             } else {
-                                return articleName.toUpperCase();
+                                return articleName;
                             }
                         })()
                     }
@@ -597,6 +599,7 @@ export class Help {
                     fontSize: 14,
                     fontWeight: "thin",
                     flexDirection: "column",
+                    flexShrink: 0,
                 }}
                 onMouseEnter={() => {
                     if (elementRef.current !== null) {
@@ -625,16 +628,19 @@ export class Help {
                         justifyContent: "space-between",
                         alignItems: "center",
                         flexDirection: "row",
-                        fontWeight: "normal",
-                        // color: "rgba(120,120,120,1)",
-                        opacity: 0.4,
+                        fontWeight: 500,
+                        color: "rgba(47,47,47,1)",
+                        // opacity: 0.4,
                         paddingRight: 5,
+                        fontSize: 12,
+                        flexShrink: 0,
+
                     }}
                     onMouseEnter={() => {
                         if (elementTitleRef.current !== null) {
                             elementTitleRef.current.style["cursor"] = "pointer";
-                            // elementTitleRef.current.style["color"] = "rgba(30,30,30,1)";
-                            elementTitleRef.current.style["opacity"] = 0.8;
+                            elementTitleRef.current.style["color"] = "rgba(30,30,30,1)";
+                            // elementTitleRef.current.style["opacity"] = 0.8;
                         }
                         if (elementDownArrowRef.current !== null && this.expandedChapter !== chapterName) {
                             elementDownArrowRef.current.style["display"] = "inline-flex";
@@ -643,7 +649,8 @@ export class Help {
                     onMouseLeave={() => {
                         if (elementTitleRef.current !== null) {
                             elementTitleRef.current.style["cursor"] = "default";
-                            elementTitleRef.current.style["opacity"] = 0.4;
+                            elementTitleRef.current.style["color"] = "rgba(47,47,47,1)";
+                            // elementTitleRef.current.style["opacity"] = 0.4;
                         }
                         if (elementDownArrowRef.current !== null && this.expandedChapter !== chapterName) {
                             elementDownArrowRef.current.style["display"] = "none";
@@ -740,11 +747,18 @@ export class Help {
                     maxWidth: 200,
                     boxSizing: "border-box",
                     display: showSidebar === true ? "inline-flex" : "none",
+                    // position: "relative",
                     flexDirection: "column",
                     whiteSpace: "nowrap", // keep text in one line
                     backgroundColor: "rgba(240, 240, 0, 0)",
-                    overflowY: "scroll",
-                    scrollbarWidth: "none", // Firefox
+                    overflowY: "auto", // let vertical scroll
+                    scrollbarWidth: "none",
+                    flexShrink: 0, // prevent shrinking, should be on every child element
+                    position: "sticky",
+                    top: 50,                // <-- height of top bar
+                    height: "calc(100vh - 100px)", // fill remaining space below top bar
+                    zIndex: 2,              // ensure above content if needed
+
                 }}
             >
                 {this.data.map((content: type_article | type_chapter, index: number) => {
@@ -840,10 +854,12 @@ export class Help {
                 justifyContent: "flex-start",
                 alignItems: "center",
                 flexDirection: "column",
-                overflowY: "hidden",
-                overflowX: "hidden",
+                // overflowY: "hidden", // do not hide
+                // overflowX: "hidden",
                 boxSizing: "border-box",
                 backgroundColor: "rgba(0, 255, 255, 0)",
+
+
             }}>
                 {/* banner */}
                 <this._ElementTopBar></this._ElementTopBar>
@@ -856,7 +872,6 @@ export class Help {
                     position: "relative",
                     boxSizing: "border-box",
                     padding: 50,
-                    overflow: "hidden",
                     maxWidth: 1000,
                 }}>
                     {/* sidebar for navigation */}
@@ -887,7 +902,7 @@ export class Help {
                     justifyContent: "flex-start",
                     alignItems: 'center',
                     flexDirection: "row",
-                    zIndex: 1,
+                    zIndex: 3,
                     boxSizing: "border-box",
                     paddingLeft: 50,
                 }}>
