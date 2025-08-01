@@ -1,7 +1,7 @@
 
 import { Log } from "../../../mainProcess/log/Log";
 import * as React from "react";
-import { HashRouter as Router, useLocation, Routes, Route, Link, useNavigate, ScrollRestoration } from 'react-router-dom';
+import { HashRouter, Routes, Route, useNavigate, createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 
 import { Overview } from "./contents/Overview";
 import { TechnicalOverview } from "./contents/TechnicalOverview";
@@ -21,6 +21,7 @@ export type type_article = {
 
 export type type_chapter = {
     chapterName: string,
+    linkPath: string,
     articles: type_article[];
 }
 
@@ -90,6 +91,7 @@ export class Help {
         },
         {
             chapterName: "Basic Topics",
+            linkPath: "/BasicTopics",
             articles: [
                 {
                     articleName: "Macro",
@@ -140,6 +142,7 @@ export class Help {
         },
         {
             chapterName: "Advanced Topics",
+            linkPath: "/AdvancedTopics",
             articles: [
                 {
                     articleName: "Command Line Options",
@@ -170,6 +173,7 @@ export class Help {
         },
         {
             chapterName: "Tools",
+            linkPath: "/Tools",
             articles: [
                 {
                     articleName: "Probe",
@@ -215,6 +219,7 @@ export class Help {
         },
         {
             chapterName: "Static Widgets",
+            linkPath: "/StaticWidgets",
             articles: [
                 {
                     articleName: "Label",
@@ -255,6 +260,7 @@ export class Help {
         },
         {
             chapterName: "Monitor Widgets",
+            linkPath: "/MonitorWidgets",
             articles: [
                 {
                     articleName: "Text Update",
@@ -301,6 +307,7 @@ export class Help {
         },
         {
             chapterName: "Control Widgets",
+            linkPath: "/ControlWidgets",
             articles: [
                 {
                     articleName: "Text Entry",
@@ -357,6 +364,7 @@ export class Help {
         },
         {
             chapterName: "Complex Widgets",
+            linkPath: "/ComplexWidgets",
             articles: [
                 {
                     articleName: "Action Button",
@@ -413,6 +421,7 @@ export class Help {
         },
         {
             chapterName: "Web Server",
+            linkPath: "/WebServer",
             articles: [
                 {
                     articleName: "Configure Web Server",
@@ -427,6 +436,15 @@ export class Help {
     ];
 
     constructor() {
+        // process data
+        for (const item of this.data) {
+            if ("chapterName" in item) {
+                const chapterLinkPath = item.linkPath;
+                for (const article of item.articles) {
+                    article.linkPath = chapterLinkPath + article.linkPath;
+                }
+            }
+        }
     }
     _Element = () => {
 
@@ -446,56 +464,10 @@ export class Help {
         );
     };
 
-    refScrollElement: any = undefined;
 
-    getScrollbarWidth = () => {
-        if (this.refScrollElement !== undefined && this.refScrollElement.current !== null) {
-            return this.refScrollElement.current.offsetWidth - this.refScrollElement.current.clientWidth;
-        } else {
-            return 0;
-        }
-    }
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementArea = ({ }: any): JSX.Element => {
 
-        const refElement = React.useRef<any>(null);
-        this.refScrollElement = refElement;
-
-        return (
-            <div
-                ref={refElement}
-                style={{
-                    display: "inline-flex",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    // userSelect: "none",
-                    overflow: "scroll",
-                    // whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    whiteSpace: "normal",
-                    // justifyContent: this.getAllText().horizontalAlign,
-                    // alignItems: this.getAllText().verticalAlign,
-                    // fontFamily: this.getAllStyle().fontFamily,
-                    // fontSize: this.getAllStyle().fontSize,
-                    // fontStyle: this.getAllStyle().fontStyle,
-                    // fontWeight: this.getAllStyle().fontWeight,
-                    // outline: this._getElementAreaRawOutlineStyle(),
-                    // color: this.getAllStyle()["color"],
-                }}
-                // title={"tooltip"}
-                // onMouseDown={this._handleMouseDown}
-                // onDoubleClick={this._handleMouseDoubleClick}
-            >
-                {/* <div
-                    style={{
-                        opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                    }}
-                >{`${this._getChannelValue()} ${this.getAllText()["showUnit"] === true ? this._getChannelUnit() : ""}`}</div> */}
-                <this._ElementHelp></this._ElementHelp>
-            </div>
-        );
+        return (<this._ElementHelp></this._ElementHelp>);
     };
     // ------------------------------------------------------
 
@@ -514,12 +486,12 @@ export class Help {
                     // backgroundColor: "red",
                     borderLeft: insideChapter === true ? "none" : this.selectedLinkPath === linkPath ? "solid 1px rgba(0, 120, 51, 1)" : "solid 1px rgba(180, 180, 180, 1)",
                     color: this.selectedLinkPath === linkPath ? "rgba(0,120,51,1)" : "rgba(147,147,147,1)",
-                    height: insideChapter ? 20 : 25,
+                    height: insideChapter ? 25 : 30,
                     display: "inline-flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    fontSize: insideChapter ? 13 : 13,
-                    fontWeight: insideChapter ? "thin" : "bold",
+                    fontSize: insideChapter ? 13 : 14,
+                    fontWeight: insideChapter ? "thin" : "normal",
                 }}
                 onClick={() => {
                     const oldSelectedLinkPath = this.selectedLinkPath;
@@ -584,7 +556,6 @@ export class Help {
                     width: "100%",
                     paddingLeft: insideChapter ? 10 : 15,
                     boxSizing: "border-box",
-
                 }}>
                     {
                         (() => {
@@ -601,8 +572,7 @@ export class Help {
     }
 
 
-    // NavigationChapter = ({ articleName, linkPath, element, isSelected }: any) => {
-    NavigationChapter = ({ chapterName, articles, isSelected }: any) => {
+    NavigationChapter = ({ chapterName, chapterLinkPath, articles, isSelected }: any) => {
 
         const elementRef = React.useRef<any>(null);
         const elementTitleRef = React.useRef<any>(null);
@@ -650,14 +620,15 @@ export class Help {
                         width: "100%",
                         paddingLeft: 15,
                         boxSizing: "border-box",
-                        height: 25,
+                        height: 30,
                         display: "inline-flex",
                         justifyContent: "space-between",
                         alignItems: "center",
                         flexDirection: "row",
-                        fontWeight: "bold",
+                        fontWeight: "normal",
                         // color: "rgba(120,120,120,1)",
-                        opacity: 0.4
+                        opacity: 0.4,
+                        paddingRight: 5,
                     }}
                     onMouseEnter={() => {
                         if (elementTitleRef.current !== null) {
@@ -698,7 +669,9 @@ export class Help {
                         }
                     }}
                 >
+                    {/* chapter name */}
                     <div>{chapterName.toUpperCase()}</div>
+                    {/* arrow */}
                     <div
                         style={{
                             display: this.expandedChapter === chapterName ? "inline-flex" : "none",
@@ -707,15 +680,20 @@ export class Help {
                         {this.expandedChapter === chapterName ? <><img src="resources/webpages/arrowUp.svg" width="10px"></img></> : <><img src="resources/webpages/arrowDown.svg" width="10px"></img></>}
                     </div>
                 </div>
-                {/* articles */}
+                {/* article names */}
                 <div
                     style={{
                         width: "100%",
                         marginLeft: 15,
-                        display: this.expandedChapter === chapterName ? "inline-flex" : "none",
+                        overflow: "hidden",
+                        maxHeight: this.expandedChapter === chapterName ? 500 : 0, // adjust maxHeight as needed
+                        opacity: this.expandedChapter === chapterName ? 1 : 0,
+                        display: "flex",
                         justifyContent: "flex-start",
                         alignItems: "flex-start",
                         flexDirection: "column",
+                        transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s",
+
                     }}>
                     {articles.map((article: type_article, index: number) => {
                         const articleName = article["articleName"];
@@ -737,218 +715,222 @@ export class Help {
         )
     }
 
+    // navigation side bar
+    _ElementNavigationSidebar = () => {
 
-    _ElementHelp = () => {
-        this.navigationUpdaters = {}
-
-        const [, forceUpdate] = React.useState({});
-        this.forceUpdate = forceUpdate;
-
-        const [topBannerWidth, setTopBannerWidth] = React.useState("100%");
+        const [showSidebar, setShowSidebar] = React.useState(true);
+        const sidebarRef = React.useRef<HTMLDivElement>(null);
 
         React.useEffect(() => {
-            setTopBannerWidth(`calc(100% - ${this.getScrollbarWidth()}px)`);
-        }, [])
-
-        // scroll to top, the scroll bar is in the ElementArea, not in the window or the children element
-        // the window.scrollTo() does not work
-        const ScrollToTop = () => {
-            const { pathname } = useLocation();
-            React.useEffect(() => {
-                if (this.refScrollElement !== undefined && this.refScrollElement.current !== null) {
-                    this.refScrollElement.current.scrollTop = 0;
+            function handleResize() {
+                if (sidebarRef.current) {
+                    setShowSidebar(window.innerWidth >= 800);
                 }
-            }, [pathname]);
-            return null;
-        };
+            }
+            window.addEventListener("resize", handleResize);
+            handleResize();
+            return () => window.removeEventListener("resize", handleResize);
+        }, []);
 
         return (
-            <Router>
-                <div
-                    style={{
-                        position: "relative",
-                        width: "100%",
-                        height: "100%",
-                        display: "inline-flex",
-                        flexDirection: "column",
-                        fontFamily: "sans-serif",
+            <div
+                ref={sidebarRef}
+                style={{
+                    minWidth: 200,
+                    maxWidth: 200,
+                    boxSizing: "border-box",
+                    display: showSidebar === true ? "inline-flex" : "none",
+                    flexDirection: "column",
+                    whiteSpace: "nowrap", // keep text in one line
+                    backgroundColor: "rgba(240, 240, 0, 0)",
+                    overflowY: "scroll",
+                    scrollbarWidth: "none", // Firefox
+                }}
+            >
+                {this.data.map((content: type_article | type_chapter, index: number) => {
+                    if ("articleName" in content) {
+                        const article = content;
+                        const articleName = article["articleName"];
+                        const linkPath = article["linkPath"];
+                        const element = article["element"];
+                        return <this.NavigationItem
+                            key={`${articleName}-${index}`}
+                            articleName={articleName}
+                            linkPath={linkPath}
+                            element={element}
+                            insideChapter={false} >
+                        </this.NavigationItem>
+                    } else if ("chapterName" in content) {
+                        const chapter = content;
+                        const chapterName = chapter["chapterName"];
+                        const articles = chapter["articles"];
+                        return <this.NavigationChapter
+                            key={`${chapterName}-${index}`}
+                            chapterName={chapterName}
+                            articles={articles}
+                            chapterLinkPath={chapter["linkPath"]}
+                        ></this.NavigationChapter>
+                    } else {
+                        return <></>
+                    }
+
+                })}
+            </div>
+        )
+    }
+
+    _ElementHelp = () => {
+        // HashRouter does not use createBrowserRouter, so we use <HashRouter> and <Routes>/<Route>
+        const routes = this.data.map((content: type_article | type_chapter, index: number) => {
+            if ("articleName" in content) {
+                const article = content;
+                return (
+                    <Route
+                        key={`article-${article.linkPath}-${index}`}
+                        path={article.linkPath}
+                        element={<this._ElementArticleOrChapter {...article} />}
+                    />
+                );
+            } else if ("chapterName" in content) {
+                const chapter = content;
+                return (
+                    chapter.articles.map((article: type_article, index: number) => {
+                        return (
+                            <Route
+                                key={`article-${article.linkPath}-${index}`}
+                                path={article.linkPath}
+                                element={<this._ElementArticleOrChapter {...article} />}
+                            />
+                        );
+                    })
+                );
+            } else {
+                Log.error("Help.tsx", "Invalid content type in data", content);
+                return (
+                    <Route
+                        key={`invalid-${index}`}
+                        path="/404"
+                        element={<div>Not Found</div>}
+                    />
+                );
+            }
+        });
+
+        return (
+            <HashRouter>
+                {/* static parts */}
+                <Routes>
+                    <Route path="/" element={<this.Layout />}>
+                        <Route index element={<this._ElementArticleOrChapter articleName="Overview" linkPath="/Overview" element={Overview} />} />
+                        {routes}
+                    </Route>
+                </Routes>
+            </HashRouter>
+        );
+    };
+
+
+    Layout = () => {
+        return (
+            <div style={{
+                fontFamily: "Inter, sans-serif",
+                width: "100%",
+                height: "100%",
+                display: "inline-flex",
+                justifyContent: "flex-start",
+                alignItems: "center",
+                flexDirection: "column",
+                overflowY: "hidden",
+                overflowX: "hidden",
+                boxSizing: "border-box",
+                backgroundColor: "rgba(0, 255, 255, 0)",
+            }}>
+                {/* banner */}
+                <this._ElementTopBar></this._ElementTopBar>
+                {/* below banner */}
+                <div style={{
+                    width: "100%",
+                    height: "100%",
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    position: "relative",
+                    boxSizing: "border-box",
+                    padding: 50,
+                    overflow: "hidden",
+                    maxWidth: 1000,
+                }}>
+                    {/* sidebar for navigation */}
+                    <this._ElementNavigationSidebar></this._ElementNavigationSidebar>
+                    {/* content */}
+                    <Outlet />
+                </div>
+            </div>
+        );
+    }
+
+    _ElementTopBar = () => {
+        return (
+            <div style={{
+                position: "relative",
+                width: "100%",
+                height: 50,
+                boxSizing: "border-box",
+            }}>
+                <div style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: 50,
+                    backgroundColor: "#2c2c32",
+                    display: "inline-flex",
+                    justifyContent: "flex-start",
+                    alignItems: 'center',
+                    flexDirection: "row",
+                    zIndex: 1,
+                    boxSizing: "border-box",
+                    paddingLeft: 50,
+                }}>
+                    {/* logo and text */}
+                    <div style={{
                         boxSizing: "border-box",
-                        padding: 0,
-                        paddingTop: 0,
-                        justifyContent: "flex-start",
+                        display: "inline-flex",
                         alignItems: "center",
-                        // backgroundColor: "rgba(255,255,0,1)",
+                        height: "100%",
                     }}>
-                    <ScrollToTop></ScrollToTop>
-                    {/* top banner, fixed position */}
-                    <div style={{
-                        display: "inline-flex",
-                        justifyContent: "center",
-                        alignItems: 'center',
-                        position: "fixed",
-                        width: topBannerWidth,
-                        height: 50,
-                        backgroundColor: "#2c2c32",
-                        flexDirection: "row",
-                        zIndex: 1,
-                        boxSizing: "border-box",
-                    }}>
+                        <img src="resources/webpages/tdm-logo.svg" height="50%"></img>
                         <div style={{
-                            width: 200,
-                            paddingLeft: 25,
-                            paddingRight: 10,
-                            boxSizing: "border-box",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            height: 50,
+                            marginLeft: 15,
+                            fontSize: 20,
+                            fontWeight: "lighter",
+                            color: "white",
                         }}>
-                            <img src="resources/webpages/tdm-logo.svg" height="50%"></img>
-                            <div style={{
-                                marginLeft: 15,
-                                fontSize: 20,
-                                fontWeight: "lighter",
-                                color: "white",
-                            }}>
-                                TDM
-                            </div>
-
-                        </div>
-                        <div style={{
-                            maxWidth: 600,
-                            boxSizing: "border-box",
-                        }}>
-                            <div style={{
-                                width: 600
-                            }}></div>
-                        </div>
-                        <div style={{
-                            width: 200,
-                            paddingLeft: 10,
-                            paddingRight: 25,
-                            boxSizing: "border-box",
-                            backgroundColor: "blue"
-                        }}>
-                        </div>
-
-                    </div>
-                    {/* navigation and contents */}
-                    <div style={{
-                        marginTop: 50,
-                        display: "inline-flex",
-                        flexDirection: "row",
-                    }}>
-                        {/* navigation */}
-                        <div style={{
-                            width: 230,
-                            paddingLeft: 25,
-                            paddingRight: 10,
-                            boxSizing: "border-box",
-                            marginTop: 50,
-                            position: "sticky",
-                            top: 100,
-                            height: 800,
-                            display: "inline-flex",
-                            flexDirection: "column",
-                        }}>
-                            {this.data.map((content: type_article | type_chapter, index: number) => {
-                                if ("articleName" in content) {
-                                    const article = content;
-                                    const articleName = article["articleName"];
-                                    const linkPath = article["linkPath"];
-                                    const element = article["element"];
-                                    return <this.NavigationItem
-                                        key={`${articleName}-${index}`}
-                                        articleName={articleName}
-                                        linkPath={linkPath}
-                                        element={element}
-                                        insideChapter={false} >
-                                    </this.NavigationItem>
-                                } else if ("chapterName" in content) {
-                                    const chapter = content;
-                                    const chapterName = chapter["chapterName"];
-                                    const articles = chapter["articles"];
-                                    return <this.NavigationChapter chapterName={chapterName} articles={articles}></this.NavigationChapter>
-                                } else {
-                                    return <></>
-                                }
-
-                            })}
-                        </div>
-                        {/* contents, router */}
-                        <div style={{
-                            // backgroundColor: "rgba(0, 255, 0, 0.5)",
-                            width: "calc(100% - 230px)",
-                            maxWidth: 700,
-                            // paddingRight: 25,
-                            boxSizing: "border-box",
-                            marginTop: 20,
-                            display: "flex",
-                        }}>
-                            <Routes>
-                                <Route
-                                    path="/"
-                                    key={`root`}
-                                    element={Overview(this, "/Overview")}
-                                ></Route>
-                                {
-                                    (() => {
-                                        const result: React.ReactElement[] = [];
-                                        for (let index = 0; index < this.data.length; index++) {
-                                            const content = this.data[index];
-                                            if ("articleName" in content) {
-                                                // an article
-                                                const article = content;
-                                                const articleName = article["articleName"];
-                                                const linkPath = article["linkPath"] as string;
-                                                const element = article["element"];
-                                                // instead of <Home />, we use return value of the function
-                                                // they run only once
-                                                result.push(<Route
-                                                    key={`${articleName}-${index}`}
-                                                    path={linkPath}
-                                                    element={element(this, linkPath)}
-                                                />)
-                                            } else if ("chapterName" in content) {
-                                                // a chapter
-                                                const articles = content["articles"];
-                                                // map all articles
-                                                for (let article of articles) {
-                                                    const articleName = article["articleName"];
-                                                    const linkPath = article["linkPath"] as string;
-                                                    const element = article["element"];
-                                                    Log.debug("register route", articleName, linkPath)
-                                                    result.push(<Route
-                                                        key={`${articleName}-${index}`}
-                                                        path={linkPath}
-                                                        element={element(this, linkPath)}
-                                                    />)
-
-                                                }
-                                            } else {
-                                                return <></>
-                                            }
-                                        }
-                                        return result;
-                                    })()
-                                }
-                            </Routes>
-
-                        </div>
-                        {/* blank patch on the right */}
-                        <div style={{
-                            width: 200,
-                            paddingRight: 25,
-                            paddingLeft: 10,
-                            boxSizing: "border-box",
-                            marginTop: 50,
-                        }}>
-
+                            TDM
                         </div>
                     </div>
                 </div>
-                {/* </div> */}
-            </Router >
+            </div>
         );
-    };
+    }
+
+
+    // content for router, chapter or article
+    _ElementArticleOrChapter = ({ articleName, linkPath, element }: any) => {
+        return (
+            <div
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    boxSizing: "border-box",
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                }}
+            >
+                {element(this, linkPath)}
+            </div>
+        );
+    }
 
 }

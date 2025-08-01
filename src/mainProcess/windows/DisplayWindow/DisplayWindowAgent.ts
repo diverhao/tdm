@@ -1756,8 +1756,8 @@ export class DisplayWindowAgent {
         }
         else {
 
-            let width = 900;
-            let height = 700;
+            let width = 1200;
+            let height = 1100;
             let resizable = true;
             const windowOptions = {
                 width: width,

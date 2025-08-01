@@ -51,7 +51,7 @@ const Element = ({ widget, linkPath }: any) => {
         </P>
 
         <P>
-            You can also open a 
+            You can also open a
         </P>
 
         <H2 registry={registry}>How to use</H2>
@@ -94,7 +94,6 @@ const Element = ({ widget, linkPath }: any) => {
             could be either <code>operating</code> or <code>editing</code>. The default TDL files
             will be in these modes when they are first opened. There are more such configurations.
         </P>
-
         <H3 registry={registry}>Create your display</H3>
 
         <P>
@@ -231,6 +230,7 @@ const Element = ({ widget, linkPath }: any) => {
             a Python script with following contents:
         </P>
 
+
         <code># Load libs</code>
         <code>import sys</code>
         <code>import os</code>
@@ -249,7 +249,7 @@ const Element = ({ widget, linkPath }: any) => {
         <code>client.monitor("val7", doubleValue)</code>
         <code></code>
         <code># run the program</code>
-        <code>client.run()</code>
+        <code>client.run()</code> 
 
 
         <P>
@@ -291,14 +291,14 @@ const Element = ({ widget, linkPath }: any) => {
         <H3 registry={registry}>Tools</H3>
 
         <P>
-            TDM provides several tools to help managing the software and the data. For example, the <code>CA Snooper</code> is used for detecting new 
+            TDM provides several tools to help managing the software and the data. For example, the <code>CA Snooper</code> is used for detecting new
             Channel Access name search requests. You can find this tool from the main window.
         </P>
 
         <IMG src={"resources/help/getStarted-07.png"}></IMG>
 
         <P>
-            The <code>PV Table</code> can be used to monitor multiple channels at a time. 
+            The <code>PV Table</code> can be used to monitor multiple channels at a time.
             There are several ways to add new channels to it:
         </P>
 

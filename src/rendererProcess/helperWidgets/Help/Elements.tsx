@@ -104,6 +104,7 @@ export const H1 = ({ children, marginTop }: any) => {
         fontSize: 35,
         marginBottom: 20,
         marginTop: marginTop === undefined ? "default" : marginTop,
+        color: "rgba(0,0,0,1)",
     }}>{children}</p>)
 }
 
@@ -117,6 +118,7 @@ export const H2 = ({ children, marginTop, registry }: any) => {
         marginBottom: 10,
         marginTop: marginTop === undefined ? "default" : marginTop,
         scrollMarginTop: 55, // top banner height + 5
+        color: "rgba(0,0,0,1)",
     }}
         id={children}>
         {children}
@@ -136,7 +138,7 @@ export const H3 = ({ children, marginTop, registry }: any) => {
         marginBottom: 5,
         marginTop: marginTop === undefined ? "default" : marginTop,
         scrollMarginTop: 55, // top banner height + 5
-
+        color: "rgba(0,0,0,1)",
     }}
         id={children}
     >
@@ -145,21 +147,36 @@ export const H3 = ({ children, marginTop, registry }: any) => {
 }
 
 export const P = ({ children }: any) => {
-    return <p style={{ lineHeight: 1.6, whiteSpace: "normal", marginTop: 8, marginBottom: 8 }}>{children}</p>
+    return <p
+        style={{
+            lineHeight: 1.6,
+            whiteSpace: "normal",
+            marginTop: 8,
+            marginBottom: 8,
+            color: "rgba(20,20,20,1)",
+            fontWeight: 300,
+        }}
+    >
+        {children}
+    </p>
 }
 
 export const IMG = ({ children, src, width }: any) => {
     return (
         <div style={{
             display: "inline-flex",
-            justifyContent: 'center',
+            justifyContent: 'flex-start',
             alignItems: "center",
             width: "100%",
+            marginTop: 20,
+            marginBottom: 20,
+            // border: "solid 1px rgba(200,200,200,1)",
         }}>
-            <img width={width === undefined ? "90%" : width} src={src} style={{
-                borderRadius: 3,
+            <img width={width === undefined ? "70%" : width} src={src} style={{
+                borderRadius: 5,
                 overflow: "hidden",
-
+                // border: "solid 1px rgba(200,200,200,1)",
+                boxSizing: "border-box",
             }}>{children}</img>
         </div>
     )
@@ -168,16 +185,18 @@ export const IMG = ({ children, src, width }: any) => {
 export const LI = ({ children }: any) => {
     return (
         <li style={{
-            lineHeight: 1.6
+            lineHeight: 1.6,
+            color: "rgba(20,20,20,1)",
+            fontWeight: 300,
         }}>{children}</li>
     )
 }
 
-export const SLIDESHOW = ({ images, titles, texts }: any) => {
+export const SLIDESHOW = ({ images, titles, texts, width }: any) => {
     const [imageIndex, setImageIndex] = React.useState(0);
     return (
         <div style={{
-            width: "100%",
+            width: width === undefined ? "70%" : width,
             aspectRatio: "2/1",
             position: "relative",
             // border: "solid 1px blue",
@@ -188,7 +207,8 @@ export const SLIDESHOW = ({ images, titles, texts }: any) => {
             backgroundColor: "rgba(230, 230, 230, 1)",
             padding: 20,
             boxSizing: "border-box",
-            fontWeight: "lighter",
+            fontWeight: 300,
+            color: "rgba(20,20,20,1)",
         }}>
             <div style={{
                 borderRadius: 3,
@@ -289,19 +309,22 @@ export const ARTICLE = ({ children, registry, title, linkPath }: any) => {
             flexDirection: "column",
             justifyContent: "flex-start",
             alignItems: "flex-start",
-            paddingLeft: 40,
             boxSizing: "border-box",
-            // overflow: "auto",
-            // height: "50%"
+            paddingLeft: 20,
             marginBottom: 30,
+            color: "rgba(50,50,50,1)",
+            fontWeight: 300,
+            fontFamily: "Inter, sans-serif",
         }}>
             {/* dummy spaces for articles that are not wide enough */}
             <div style={{
                 userSelect: "none",
-                backgroundColor: "rgba(0,0,0,0)",
+                height: 1,
+                paddingLeft: 20,
+                width: "100%",
+                backgroundColor: "rgba(255,0,0,0)",
                 color: "rgba(0,0,0,0)",
             }}>
-                ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             </div>
 
             <H1 marginTop={0}>{title}</H1>
