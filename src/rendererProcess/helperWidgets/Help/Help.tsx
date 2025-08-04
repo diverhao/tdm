@@ -12,6 +12,7 @@ import { Operation } from "./contents/Operation";
 import { Edit } from "./contents/Edit";
 import { Macro } from "./contents/Macro";
 import { ConfigureWebServer } from "./contents/ConfigureWebServer";
+import { FontsData } from "../../global/FontsData";
 
 export type type_article = {
     articleName: string,
@@ -453,6 +454,7 @@ export class Help {
             }
         }, { passive: false });
     }
+
     _Element = () => {
 
         return (
