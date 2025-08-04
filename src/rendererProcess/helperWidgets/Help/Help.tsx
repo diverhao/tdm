@@ -25,17 +25,6 @@ export type type_chapter = {
     articles: type_article[];
 }
 
-// export type type_Help_tdl = {
-//     type: string;
-//     widgetKey: string;
-//     key: string;
-//     style: Record<string, any>;
-//     text: Record<string, any>;
-//     channelNames: string[];
-//     groupNames: string[];
-//     rules: type_rules_tdl;
-// };
-
 /**
  * this widget should not be explicitly created like others
  */
@@ -213,6 +202,11 @@ export class Help {
                 {
                     articleName: "TDM Log",
                     linkPath: "/Log",
+                    element: Dummy,
+                },
+                {
+                    articleName: "File Converter",
+                    linkPath: "/FileConverter",
                     element: Dummy,
                 },
             ]
@@ -445,6 +439,19 @@ export class Help {
                 }
             }
         }
+
+        window.addEventListener('wheel', function (event) {
+            if (event.ctrlKey) {
+                event.preventDefault();
+                let zoom = Number(document.body.style.zoom) || 1;
+                if (event.deltaY < 0) {
+                    zoom = Math.min(zoom + 0.1, 3); // zoom in, max 300%
+                } else {
+                    zoom = Math.max(zoom - 0.1, 0.2); // zoom out, min 20%
+                }
+                document.body.style.zoom = `${zoom}`;
+            }
+        }, { passive: false });
     }
     _Element = () => {
 
@@ -484,7 +491,7 @@ export class Help {
                 style={{
                     width: "100%",
                     // backgroundColor: "red",
-                    borderLeft: insideChapter === true ? "none" : this.selectedLinkPath === linkPath ? "solid 1px rgba(0, 120, 51, 1)" : "solid 1px rgba(180, 180, 180, 1)",
+                    borderLeft: insideChapter === true ? "none" : this.selectedLinkPath === linkPath ? "solid 1px rgba(0, 120, 51, 1)" : "solid 1px rgba(220, 220, 220, 1)",
                     color: this.selectedLinkPath === linkPath ? "rgba(0,120,51,1)" : "rgba(47,47,47,1)",
                     height: insideChapter ? 25 : 30,
                     display: "inline-flex",
@@ -548,7 +555,7 @@ export class Help {
                         if (this.selectedLinkPath !== linkPath) {
                             elementRef.current.style["color"] = "rgba(47, 47,47,1)";
                             if (!insideChapter) {
-                                elementRef.current.style["borderLeft"] = "solid 1px rgba(180, 180, 180, 1)";
+                                elementRef.current.style["borderLeft"] = "solid 1px rgba(220, 220, 220, 1)";
                             }
                         }
                     }
@@ -592,7 +599,7 @@ export class Help {
                 ref={elementRef}
                 style={{
                     width: "100%",
-                    borderLeft: linkPaths.includes(this.selectedLinkPath) ? "solid 1px rgba(0, 120, 51, 1)" : "solid 1px rgba(180, 180, 180, 1)",
+                    borderLeft: linkPaths.includes(this.selectedLinkPath) ? "solid 1px rgba(0, 120, 51, 1)" : "solid 1px rgba(220, 220, 220, 1)",
                     display: "inline-flex",
                     justifyContent: "flex-start",
                     alignItems: "flex-start",
@@ -611,7 +618,7 @@ export class Help {
                 onMouseLeave={() => {
                     if (elementRef.current !== null) {
                         if (!linkPaths.includes(this.selectedLinkPath)) {
-                            elementRef.current.style["borderLeft"] = "solid 1px rgba(180, 180, 180, 1)";
+                            elementRef.current.style["borderLeft"] = "solid 1px rgba(220,220,220, 1)";
                         }
                     }
                 }}
