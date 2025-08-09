@@ -499,6 +499,9 @@ export const TREEWRAP = ({ tree, sideNote }: any) => {
             paddingTop: 10,
             paddingBottom: 10,
             boxSizing: "border-box",
+            marginTop: 20,
+            marginBottom: 20,
+
         }}>
             <TREE tree={tree} sideNote={sideNote} prefix={""} />
         </div>

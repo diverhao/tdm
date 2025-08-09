@@ -993,8 +993,7 @@ npm install -g typescript
             We should download the dependent libraries to compile TDM. On the top level folder of TDM, run
         </P>
 
-        <code>npm i</code>
-        <code>npm i -D</code>
+        <CODE>{`npm i\nnpm i -D`}</CODE>
 
         <P>
             The first command installs the necessary libraries for building and running TDM in development environment.
@@ -1006,25 +1005,25 @@ npm install -g typescript
             Next, we transpile the TypeScript code to JavaScript code. On the top level folder of TDM, run
         </P>
 
-        <code>
+        <CODE>
             tsc
-        </code>
+        </CODE>
 
         <P>
             To improve the performance of the software, we bundle more than 400 JavaScript files into one file using <LINK link={"https://webpack.js.org/"}>webpack</LINK>.
         </P>
 
-        <code>
+        <CODE>
             npm run build
-        </code>
+        </CODE>
 
         <P>
             Now we can run TDM:
         </P>
 
-        <code>
+        <CODE>
             npm start
-        </code>
+        </CODE>
 
         <H3 registry={registry}>Packaging</H3>
         <P>
@@ -1036,17 +1035,8 @@ npm install -g typescript
             This command generates the MacOS application for different targets:
         </P>
 
-        <code>
-            npm run build-mac
-        </code>
+        <CODE>{`npm run build-mac\nnpm run build-windows\nnpm run build-linux`}</CODE>
 
-        <code>
-            npm run build-windows
-        </code>
-
-        <code>
-            npm run build-linux
-        </code>
 
         <P>
             Or run <code>npm run build-all</code> to build all the above targets.
@@ -1073,10 +1063,13 @@ npm install -g typescript
 
         <H2 registry={registry}>Source code structure</H2>
 
+
         <P>
-            On the top level, the source code is organized into two folders, one for the backend main process, the other for
-            frontend renderer process. As shown below:
+            The source code is organized into several folders, each folder contains the code for a specific functionality.
+            The main process code is in <code>mainProcess</code> folder, while the renderer process code is in <code>rendererProcess</code> folder.
+            The <code>test</code> folder contains the test code and data files.
         </P>
+
 
         <TREEWRAP
             tree={parseTree(treeStr)}
@@ -1199,8 +1192,21 @@ npm install -g typescript
         ></TREEWRAP>
 
         <P>
-            The main process folder contains the main application logic that runs at the
+            The main process and renderer process code are cleanly separated. The main process code is written in TypeScript,
+            while the renderer process code is written in JSX style TypeScript.
+            The renderer process code is transpiled by WebPack to a single JavaScript file to improve the performance.
+            The "bridge" between the main process and renderer process is
         </P>
+        <CODE>
+            mainProcess/windows/DisplayWindow/DisplayWindowClient.tsx
+        </CODE>
+        <P>
+
+            It is loaded in the html file, which is opened by the main process Electron.js API.
+            Meanwhile, it contains all the renderer process code for the display window.
+        </P>
+
+
 
         <P>
             Updated August 4, 2025
