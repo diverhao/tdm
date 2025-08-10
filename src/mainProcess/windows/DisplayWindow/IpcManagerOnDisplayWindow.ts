@@ -97,11 +97,26 @@ export class IpcManagerOnDisplayWindow {
 
         client.onmessage = (event: any) => {
             const messageBuffer = event.data;
-            const message = JSON.parse(messageBuffer.toString(), (key, value) =>
-                value === null ? undefined : value);
+            // const message = JSON.parse(messageBuffer.toString(), (key, value) =>
+            //     value === null ? undefined : value);
+            const message= JSON.parse(messageBuffer);
+            this.replaceNullWithUndefined(message);
             this.parseMessage(message);
         };
     };
+
+    replaceNullWithUndefined = (obj: Record<string, any>) => {
+        if (obj && typeof obj === "object" && !Array.isArray(obj)) {
+            for (const key in obj) {
+                if (obj[key] === null) {
+                    obj[key] = undefined;
+                } else if (typeof obj[key] === "object") {
+                    this.replaceNullWithUndefined(obj[key]);
+                }
+            }
+        }
+    }
+
 
     parseMessage = (message: { processId: number; windowId: string; eventName: string; data: any[] }) => {
         const processId = message["processId"];
@@ -600,7 +615,6 @@ export class IpcManagerOnDisplayWindow {
     handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
 
         Log.debug("received data", JSON.stringify(newDbrData, null, 4));
-        console.log("new data", Array.isArray(newDbrData["pva://testNDArray"]))
 
         let channelNames = Object.keys(newDbrData);
 
