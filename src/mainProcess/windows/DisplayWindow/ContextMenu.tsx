@@ -851,6 +851,12 @@ export class ContextMenu {
                         this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "binary-image");
                     },
                 },
+                {
+                    label: "Image",
+                    click: () => {
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "image");
+                    },
+                },
 
                 { type: "separator" },
 

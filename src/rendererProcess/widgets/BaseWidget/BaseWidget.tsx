@@ -113,7 +113,7 @@ export enum AlarmSelectedBackgroundStyle {
  *
  * (3) Update `IpcManagerOnDisplayWindow.ts`, add the new widget's contextmenu event
  *
- * (4) Update `ContextMenu.ts`, add the new widget's contextmenu entry
+ * (4) Update `ContextMenu.ts` and `ContextMenuDesktop.ts`, add the new widget's contextmenu entry
  *
  * (5) Modify `Widgets.ts`, update variable `type_widgetType`, functions `initWidgetTdl()` and `createWidget()`. For
  * a regular widget, there are 9 places to update.

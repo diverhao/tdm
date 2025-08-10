@@ -405,6 +405,12 @@ export class ContextMenuDesktop {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "binary-image");
                     },
                 },
+                {
+                    label: "Image",
+                    click: () => {
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "image");
+                    },
+                },
 
                 { type: "separator" },
 

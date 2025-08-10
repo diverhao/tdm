@@ -1087,6 +1087,7 @@ export class TcaChannel {
             try {
                 const type = this.getPvaTypeAtPvRequest() as any;
                 const value = this.getPvaValueAtPvRequest() as any;
+                
 
                 // if the type is struct, try to find the values's .value field
                 if (type["typeIndex"] === "0x80") {

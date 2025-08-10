@@ -365,6 +365,8 @@ export class IpcManagerOnDisplayWindow {
                 g_widgets1.createWidgetFromMouse("TextUpdate");
             } else if (subcommand === "binary-image") {
                 g_widgets1.createWidgetFromMouse("BinaryImage");
+            } else if (subcommand === "image") {
+                g_widgets1.createWidgetFromMouse("Image");
             } else if (subcommand === "table") {
                 g_widgets1.createWidgetFromMouse("Table");
             } else if (subcommand === "terminal") {
@@ -598,6 +600,7 @@ export class IpcManagerOnDisplayWindow {
     handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
 
         Log.debug("received data", JSON.stringify(newDbrData, null, 4));
+        console.log("new data", Array.isArray(newDbrData["pva://testNDArray"]))
 
         let channelNames = Object.keys(newDbrData);
 

@@ -479,8 +479,9 @@ export class CaChannelAgent {
                     return;
                 }
             } else if (protocol === "pva") {
-
+                console.log("create monitor =============");
                 const monitor = await channel.createMonitorPva(undefined, this.getPvRequest(), (channelMonitor: ChannelMonitor) => {
+                    console.log("monitor callback =============");
                     const channelAgentsManager = this.getChannelAgentsManager();
                     const mainProcess = channelAgentsManager.getMainProcess();
                     const windowAgentsManager = mainProcess.getWindowAgentsManager();

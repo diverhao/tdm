@@ -39,6 +39,7 @@ import { BooleanButton } from "../widgets/BooleanButton/BooleanButton";
 import { RadioButton } from "../widgets/RadioButton/RadioButton";
 import { ComboBox } from "../widgets/ComboBox/ComboBox";
 import { BinaryImage } from "../widgets/BinaryImage/BinaryImage";
+import { Image } from "../widgets/Image/Image";
 import { Table } from "../widgets/Table/Table";
 import { Polyline } from "../widgets/Polyline/Polyline";
 import { Arc } from "../widgets/Arc/Arc";
@@ -101,6 +102,7 @@ export type type_widgetType =
     | "RadioButton"
     | "ComboBox"
     | "BinaryImage"
+    | "Image"
     | "Table"
     | "TextUpdate"
     | "Terminal"
@@ -397,6 +399,13 @@ export class Widgets {
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
+            case "Image":
+                tdl = Image.generateDefaultTdl("Image");
+                tdl.style.left = x;
+                tdl.style.top = y;
+                tdl.style.width = width;
+                tdl.style.height = height;
+                break;
             case "Table":
                 tdl = Table.generateDefaultTdl("Table");
                 tdl.style.left = x;
@@ -654,6 +663,10 @@ export class Widgets {
             }
             case "BinaryImage": {
                 widget = new BinaryImage(widgetTdl);
+                break;
+            }
+            case "Image": {
+                widget = new Image(widgetTdl);
                 break;
             }
             case "Table": {
