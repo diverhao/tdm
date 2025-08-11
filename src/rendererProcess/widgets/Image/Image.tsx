@@ -136,7 +136,8 @@ export class Image extends BaseWidget {
     // its value is changed in 3 places: this.select2(), this._handleMouseMove() and this._handleMouseUp()
     // private _readyToDeselect: boolean = false;
 
-    // _rules: TextUpdateRules;
+    // _rules: TextUpdatRules;
+    axisWidth: number = 40;
 
     constructor(widgetTdl: type_Image_tdl) {
         super(widgetTdl);
@@ -255,7 +256,10 @@ export class Image extends BaseWidget {
     };
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
+    forceUpdate = (input: any) => {};
     _ElementAreaRaw = ({ }: any): JSX.Element => {
+        const [, forceUpdate] = React.useState({});
+        this.forceUpdate = forceUpdate;
         const allStyle = this.getAllStyle();
         const allText = this.getAllText();
         let style: React.CSSProperties = {};
@@ -315,19 +319,547 @@ export class Image extends BaseWidget {
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                <this._ElementImage />
-                <this._ElementXrange></this._ElementXrange>
-                <this._ElementYrange></this._ElementYrange>
-                <this._ElementZrange></this._ElementZrange>
+                <this._ElementImageContainer />
+                {this.showConfigPage === true ? <this._ElementConfigPage /> : null}
+                {/* <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "column",
+                    }}
+                >
+                    <this._ElementXrange></this._ElementXrange>
+                    <this._ElementYrange></this._ElementYrange>
+                    <this._ElementZrange></this._ElementZrange>
+                    <this._ElementSwitchColorMap></this._ElementSwitchColorMap>
+                    <this._ElementXyzCursorValues></this._ElementXyzCursorValues>
+                </div>
                 <this._ElementZoomInButton />
                 <this._ElementZoomOutButton />
-                <this._ElementResetViewToFullButton />
-                <this._ElementColorMap></this._ElementColorMap>
-                <this._ElementSwitchColorMap></this._ElementSwitchColorMap>
+                <this._ElementResetViewToFullButton /> */}
             </div>
         );
     };
 
+    showConfigPage: boolean = false;
+    _ElementConfigPage = () => {
+        return (
+            <div style={{
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+                backgroundColor: "white",
+            }}>
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "column",
+                    }}
+                >
+                    <this._ElementXrange></this._ElementXrange>
+                    <this._ElementYrange></this._ElementYrange>
+                    <this._ElementZrange></this._ElementZrange>
+                    <this._ElementSwitchColorMap></this._ElementSwitchColorMap>
+                    <this._ElementXyzCursorValues></this._ElementXyzCursorValues>
+                </div>
+                <this._ElementZoomInButton />
+                <this._ElementZoomOutButton />
+                <this._ElementResetViewToFullButton />
+                <div 
+                style={{
+                    width: 20,
+                    height: 20,
+                    backgroundColor: "blue",
+                }}
+                onClick={() => {
+                    this.showConfigPage = false;
+                    this.forceUpdate({});
+                }}
+                >
+
+                </div>
+
+            </div>
+        )
+    }
+
+    colorMapWidth: number = 50;
+    calcImageSize = () => {
+        return Math.min(this.getAllStyle()["width"] - this.colorMapWidth, this.getAllStyle()["height"]) - this.axisWidth;
+    }
+
+    forceUpdateImageContainer = (input: any) => { };
+
+    /**
+     * x-axis, y-axis, and image
+     */
+    _ElementImageContainer = () => {
+        const [, forceUpdate] = React.useState({});
+        this.forceUpdateImageContainer = forceUpdate;
+        this.forceUpdateImage = forceUpdate;
+        return (
+            <div
+                style={{
+                    width: this.calcImageSize() + this.axisWidth,
+                    height: this.calcImageSize() + this.axisWidth,
+                    display: "inline-flex",
+                    flexDirection: 'column',
+                }}
+            >
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        width: "100%",
+                        height: this.calcImageSize(),
+                    }}
+                >
+                    {/* y axis */}
+                    <div
+                        style={{
+                            // backgroundColor: "blue",
+                            width: this.axisWidth,
+                            height: this.calcImageSize(),
+                        }}
+                    >
+                        <this._ElementYAxis
+                            totalHeight={this.renderer === undefined ? 20 : this.renderer.domElement.height}
+                        />
+
+                    </div>
+                    <this._ElementImage />
+                    <this._ElementColorMap
+                        totalHeight={this.renderer === undefined ? 20 : this.renderer.domElement.height}
+                    ></this._ElementColorMap>
+
+                </div>
+
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        width: "100%",
+                        height: this.calcImageSize(),
+                    }}
+                >
+                    <div
+                        style={{
+                            // backgroundColor: "green",
+                            width: this.axisWidth,
+                            height: this.axisWidth,
+                        }}
+                        onClick={() => {
+                            this.showConfigPage = true;
+                            this.forceUpdate({});
+                        }}
+                    >
+                    </div>
+                    <div
+                        style={{
+                            // backgroundColor: this.renderer !== undefined ? "cyan" : "magenta",
+                            // opacity: 1,
+                            width: this.renderer === undefined ? 20 : this.renderer.domElement.width,
+                            height: this.axisWidth,
+                        }}
+                    >
+                        <this._ElementXAxis
+                            totalWidth={this.renderer === undefined ? 20 : this.renderer.domElement.width}
+                        />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+
+    _ElementXAxis = ({ totalWidth }: { totalWidth: number }) => {
+        const calcTicks = () => {
+            if (this.camera === undefined) {
+                return [];
+            }
+            const { width, height } = this.getImageDimensions();
+            const min = this.camera.left + width / 2;
+            const max = this.camera.right + width / 2;
+            let dx = 1;
+            if (max - min > 1000) {
+                dx = 200;
+            } else if (max - min > 500) {
+                dx = 100;
+            } else if (max - min > 200) {
+                dx = 50;
+            } else if (max - min > 100) {
+                dx = 20;
+            } else if (max - min > 50) {
+                dx = 10;
+            } else if (max - min > 20) {
+                dx = 5;
+            } else if (max - min > 10) {
+                dx = 2;
+            } else if (max - min > 1) {
+                dx = 1;
+            }
+
+            let xStart = Math.ceil(min / dx) * dx;
+
+            const slope = totalWidth / (max - min);
+
+            const numPoints = totalWidth / 15 + 1;
+            const result: [number, number][] = [];
+            for (let value = xStart; value < max; value = value + dx) {
+                result.push([Math.round(value), slope * (Math.round(value) - min)])
+            }
+            console.log(slope, min, max, this.camera.left, this.camera.right)
+            console.log(result)
+            return result;
+
+        };
+        return (
+            <div style={{
+                width: "100%",
+                height: "100%",
+                // backgroundColor: "red",
+                position: "relative",
+                // display: "inline-flex",
+                // flexDirection: "column",
+                // justifyContent: "flex-start",
+                // top: 0,
+                overflow: "visible",
+            }}>
+
+                <svg
+                    style={{
+                        position: "absolute",
+                        width: "100%",
+                        height: "3px",
+                        top: 0,
+                        overflow: "visible",
+                    }}
+
+                >
+                    <polyline
+                        points={`-2,1 ${totalWidth},1`}
+                        strokeWidth={`2px`}
+                        stroke={"black"}
+                        fill="none"
+                    ></polyline>
+                </svg>
+                {calcTicks().map(([value, x]) => {
+                    return (
+                        <>
+                            <svg
+                                style={{
+                                    position: "absolute",
+                                    left: x,
+                                    top: 0,
+                                    width: 10,
+                                    height: 7,
+                                    display: "inline-flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    flexDirection: "column",
+                                }}
+
+                            >
+                                <polyline
+                                    points={`0,0 0,7`}
+                                    strokeWidth={`2px`}
+                                    stroke={"black"}
+                                    fill="none"
+                                >
+                                </polyline>
+                            </svg>
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    left: x,
+                                    top: 15,
+                                    width: 0,
+                                    height: 0,
+                                    // backgroundColor: "blue",
+                                    display: "inline-flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    flexDirection: "column",
+                                }}
+                            >
+                                {value}
+                            </div>
+                        </>
+                    )
+                })}
+            </div>
+        )
+    }
+
+    _ElementYAxis = ({ totalHeight }: { totalHeight: number }) => {
+        const calcTicks = () => {
+            if (this.camera === undefined) {
+                return [];
+            }
+            const { width, height } = this.getImageDimensions();
+
+            const min = this.camera.bottom + height / 2;
+            const max = this.camera.top + height / 2;
+            // console.log(min, max)
+            let dy = 1;
+            if (max - min > 1000) {
+                dy = 200;
+            } else if (max - min > 500) {
+                dy = 100;
+            } else if (max - min > 200) {
+                dy = 50;
+            } else if (max - min > 100) {
+                dy = 20;
+            } else if (max - min > 50) {
+                dy = 10;
+            } else if (max - min > 20) {
+                dy = 5;
+            } else if (max - min > 10) {
+                dy = 2;
+            } else if (max - min > 1) {
+                dy = 1;
+            }
+
+            let yStart = Math.ceil(min / dy) * dy;
+
+            const slope = totalHeight / (max - min);
+
+
+            const result: [number, number][] = [];
+            for (let value = yStart; value < max; value = value + dy) {
+                result.push([Math.round(value), slope * (Math.round(value) - min)])
+            }
+            // console.log(slope, min, max, this.camera.left, this.camera.right)
+            console.log(result)
+            return result;
+
+        };
+        return (
+            <div style={{
+                width: "100%",
+                height: "100%",
+                // backgroundColor: "red",
+                position: "relative",
+                display: "inline-flex",
+                justifyContent: "flex-end",
+            }}>
+                {/* long vertical line */}
+                <svg
+                    style={{
+                        height: "100%",
+                        width: "10px",
+                        right: 0,
+                    }}
+
+                >
+                    <polyline
+                        points={`9,0 9,${totalHeight}`}
+                        strokeWidth={`2px`}
+                        stroke={"black"}
+                        fill="none"
+                    ></polyline>
+                </svg>
+                {calcTicks().map(([value, y]) => {
+                    return (
+                        <>
+                            <svg
+                                style={{
+                                    position: "absolute",
+                                    right: 0,
+                                    top: totalHeight - y,
+                                    width: 7,
+                                    height: 3,
+                                    display: "inline-flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    overflow: "visible",
+                                    flexDirection: "column",
+                                }}
+
+                            >
+                                <polyline
+                                    points={`0,0 7,0`}
+                                    strokeWidth={`2px`}
+                                    stroke={"black"}
+                                    fill="none"
+                                >
+                                </polyline>
+                            </svg>
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    left: 20,
+                                    top: totalHeight - y,
+                                    transform: "rotate(270deg)",
+                                    width: 0,
+                                    height: 0,
+                                    // backgroundColor: "blue",
+                                    display: "inline-flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    flexDirection: "column",
+                                }}
+                            >
+                                {value}
+                            </div>
+                        </>
+                    )
+                })}
+            </div>
+        )
+    }
+
+    forceUpdateColorMap = (input: any) => { };
+
+    _ElementColorMap = ({ totalHeight }: { totalHeight: number }) => {
+        const calcTicks = () => {
+            if (this.camera === undefined) {
+                return [];
+            }
+            const { width, height } = this.getImageDimensions();
+
+            const min = this.zMin;
+            const max = this.zMax;
+            // console.log(min, max)
+            let dy = 1;
+            if (max - min > 50000) {
+                dy = 10000;
+            } else if (max - min > 20000) {
+                dy = 5000;
+            } else if (max - min > 10000) {
+                dy = 2000;
+            } else if (max - min > 5000) {
+                dy = 1000;
+            } else if (max - min > 2000) {
+                dy = 500;
+            } else if (max - min > 1000) {
+                dy = 200;
+            } else if (max - min > 500) {
+                dy = 100;
+            } else if (max - min > 200) {
+                dy = 50;
+            } else if (max - min > 100) {
+                dy = 20;
+            } else if (max - min > 50) {
+                dy = 10;
+            } else if (max - min > 20) {
+                dy = 5;
+            } else if (max - min > 10) {
+                dy = 2;
+            } else if (max - min > 1) {
+                dy = 1;
+            }
+
+            let yStart = Math.ceil(min / dy) * dy;
+
+            const slope = totalHeight / (max - min);
+
+
+            const result: [number, number][] = [];
+            for (let value = yStart; value < max; value = value + dy) {
+                result.push([Math.round(value), slope * (Math.round(value) - min)])
+            }
+            // console.log(slope, min, max, this.camera.left, this.camera.right)
+            console.log(result)
+            return result;
+
+        };
+        return (
+            <div style={{
+                // position: "absolute",
+                // zIndex: 1000,
+                right: 0,
+                bottom: 0,
+                // marginLeft: 20,
+                // paddingLeft: 20,
+
+                // width: "100%",
+                // height: "100%",
+                height: totalHeight,
+                // backgroundColor: "red",
+                position: "relative",
+                display: "inline-flex",
+                justifyContent: "flex-end",
+            }}>
+                {/* long vertical line */}
+                <svg
+                    style={{
+                        height: "100%",
+                        width: "10px",
+                        left: 50,
+                    }}
+
+                >
+                    <polyline
+                        points={`9,0 9,${totalHeight}`}
+                        strokeWidth={`2px`}
+                        stroke={"black"}
+                        fill="none"
+                    ></polyline>
+                </svg>
+                {calcTicks().map(([value, y]) => {
+                    return (
+                        <>
+                            <svg
+                                style={{
+                                    position: "absolute",
+                                    right: 0 + 15,
+                                    top: totalHeight - y,
+                                    width: 7,
+                                    height: 3,
+                                    display: "inline-flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    overflow: "visible",
+                                    flexDirection: "column",
+                                }}
+
+                            >
+                                <polyline
+                                    points={`0,0 7,0`}
+                                    strokeWidth={`2px`}
+                                    stroke={"black"}
+                                    fill="none"
+                                >
+                                </polyline>
+                            </svg>
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    right: 20 + 10,
+                                    top: totalHeight - y,
+                                    transform: "rotate(270deg)",
+                                    width: 0,
+                                    height: 0,
+                                    // backgroundColor: "blue",
+                                    display: "inline-flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    flexDirection: "column",
+                                }}
+                            >
+                                {value}
+                            </div>
+                        </>
+                    )
+                })}
+                <div style={{
+                    background: this.generateGradientStops(),
+                    height: "100%",
+                    width: 15,
+                    // position: "absolute",
+                    // zIndex: 1000,
+                    // left: 20,
+                    // bottom: 0,
+                    // backgroundColor: "rgba(255, 255,0, 0.5)",
+                    // width: 100,
+                    // height: 100,
+
+                }}>
+                </div>
+
+            </div>
+        )
+    }
 
     texture: THREE.DataTexture | undefined = undefined;
     renderer: THREE.WebGLRenderer | undefined = undefined;
@@ -368,7 +900,6 @@ export class Image extends BaseWidget {
             return;
         }
 
-        const pixelActualSize = this.calcPixelSize();
         this.zoomLevel = 1;
         const zoom = 1;
         const { width, height } = this.getImageDimensions();
@@ -386,6 +917,22 @@ export class Image extends BaseWidget {
     }
 
     playing: boolean = true;
+    imageValueBackup: number[] = [];
+    imageDimensionsBackup: { width: number, height: number } = { width: -1, height: -1 };
+
+    setPlaying = (playing: boolean) => {
+        if (this.playing === playing) {
+            return;
+        }
+        if (playing === false) {
+            this.imageValueBackup = JSON.parse(JSON.stringify(this.getImageValue()));
+            this.imageDimensionsBackup = JSON.parse(JSON.stringify(this.getImageDimensions()));
+        } else {
+            this.imageValueBackup = [];
+            this.imageDimensionsBackup = { width: -1, height: -1 };
+        }
+        this.playing = playing;
+    }
 
     switchColorMap = (newColorMap: string) => {
         let currentColorMap = this.getText()["colorMap"];
@@ -393,9 +940,8 @@ export class Image extends BaseWidget {
             currentColorMap = "gray";
         }
         this.getText()["colorMap"] = newColorMap;
-        // completely redo the image
-        this.resetImage();
         this.forceUpdateImage({});
+        this.forceUpdateColorMap({});
     }
 
     zoomImage = (zoomFactor: number, centerX: number, centerY: number) => {
@@ -474,8 +1020,8 @@ export class Image extends BaseWidget {
 
         const pixelActualSize = this.calcPixelSize();
         const camera = this.camera;
-        const panX = dx / pixelActualSize;
-        const panY = dy / pixelActualSize;
+        const panX = dx / pixelActualSize[0];
+        const panY = dy / pixelActualSize[1];
         camera.left = camera.left - panX
         camera.right = camera.right - panX;
         camera.top = camera.top + panY;
@@ -545,7 +1091,7 @@ export class Image extends BaseWidget {
                     console.log("Zoom Out clicked");
                     // this.zoomImage(this.zoomLevel / 1.1, 75, 35)
 
-                    this.playing = !this.playing;
+                    this.setPlaying(!playing);
                     setPlaying(!playing);
                     if (this.playing === true) {
                         // update immediately
@@ -579,23 +1125,14 @@ export class Image extends BaseWidget {
         return gradient;
     }
 
-    _ElementColorMap = () => {
 
+    setXyzCursorValues = (input: any) => { };
+    _ElementXyzCursorValues = () => {
+        const [values, setValues] = React.useState([0, 0, 0]);
+        this.setXyzCursorValues = setValues;
         return (
-            <div style={{
-                background: this.generateGradientStops(),
-                height: "100%",
-                width: 50,
-                position: "absolute",
-                zIndex: 1000,
-                right: 0,
-                bottom: 0,
-                // backgroundColor: "rgba(255, 255,0, 0.5)",
-                // width: 100,
-                // height: 100,
-
-            }}>
-
+            <div>
+                {values[0]},{values[1]},{values[2]}
             </div>
         )
     }
@@ -616,6 +1153,7 @@ export class Image extends BaseWidget {
                                 return;
                             }
                             this.getText()["zMin"] = value;
+                            this.processData();
                             this.forceUpdateImage({});
                         }
                     }
@@ -649,6 +1187,7 @@ export class Image extends BaseWidget {
                                 return;
                             }
                             this.getText()["zMax"] = value;
+                            this.processData();
                             this.forceUpdateImage({});
                         }
                     }
@@ -677,6 +1216,7 @@ export class Image extends BaseWidget {
                     onChange={(event: any) => {
                         this.getText()["autoZ"] = !autoZ;
                         setAutoZ(!autoZ);
+                        this.processData();
                         this.forceUpdateImage({});
                     }}
                 >
@@ -837,6 +1377,7 @@ export class Image extends BaseWidget {
         )
     }
 
+    lastMouesPositions: [number, number] = [-1, -1];
 
     _ElementSwitchColorMap = () => {
         const [colorMap, setColorMap] = React.useState(this.getText()["colorMap"]);
@@ -853,10 +1394,6 @@ export class Image extends BaseWidget {
                             </option>
                         )
                     })}
-                    {/* <option value="jet">Jet</option>
-                    <option value="hot">Hot</option>
-                    <option value="cool">Cold</option>
-                    <option value="gray">Gray</option> */}
                 </select>
 
             </div>
@@ -868,7 +1405,7 @@ export class Image extends BaseWidget {
         const mountRef = React.useRef<HTMLDivElement>(null);
         this.mountRef = mountRef;
         const [, forceUpdate] = React.useState({});
-        this.forceUpdateImage = forceUpdate;
+        // this.forceUpdateImage = forceUpdate;
 
 
         // let processData = this.processData_GrayMap;
@@ -921,8 +1458,8 @@ export class Image extends BaseWidget {
 
 
             const scene = new THREE.Scene();
-            const containerWidth = this.getAllStyle()["width"] as number;
-            const containerHeight = this.getAllStyle()["height"] as number;
+            const containerWidth = this.getAllStyle()["width"] as number - this.axisWidth;
+            const containerHeight = this.getAllStyle()["height"] as number - this.axisWidth;
             // const containerMinSize = Math.min(containerWidth, containerHeight);
             // a "pixel" is a unit in image, not screen
             const pixelMaxWidth = containerWidth / width;
@@ -1004,9 +1541,12 @@ export class Image extends BaseWidget {
             }
             // console.log("fun2 running A");
             const { width, height } = this.getImageDimensions();
-            if (this.playing === true) {
-                processData();
-            }
+            // if (this.playing === true) {
+            processData();
+            // }
+
+            // update cursor readout
+            this.handleMouseMoveOnImage(...this.lastMouesPositions);
 
             // console.log("fun2 running B");
             this.texture.needsUpdate = true; // upload changes to GPU
@@ -1022,15 +1562,24 @@ export class Image extends BaseWidget {
         React.useEffect(fun2);
 
         return (
-            <div ref={mountRef}
+            <div
+                ref={mountRef}
                 style={{
-                    width: Math.min(this.getAllStyle()["width"], this.getAllStyle()["height"]),
-                    height: Math.min(this.getAllStyle()["width"], this.getAllStyle()["height"])
+                    width: this.calcImageSize(),
+                    height: this.calcImageSize(),
                 }}
 
                 onMouseDown={(event: any) => {
                     window.addEventListener("mousemove", this.panImageEventListener);
                     window.addEventListener("mouseup", this.cancelPanImageEventListener);
+                }}
+
+                onMouseMove={(event: any) => {
+                    if (this.renderer === undefined || this.camera === undefined) {
+                        return;
+                    }
+                    this.lastMouesPositions = [event.clientX, event.clientY];
+                    this.handleMouseMoveOnImage(event.clientX, event.clientY);
                 }}
 
                 onWheel={(event: any) => {
@@ -1058,6 +1607,51 @@ export class Image extends BaseWidget {
         );
     };
 
+    handleMouseMoveOnImage = (clientX: number, clientY: number) => {
+        if (this.renderer === undefined || this.camera === undefined) {
+            return;
+        }
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        const { width, height } = this.getImageDimensions();
+        const mouse = new THREE.Vector2();
+        const raycaster = new THREE.Raycaster();
+
+
+        // Convert mouse to normalized device coordinates
+        mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+        // Get a ray from the camera
+        raycaster.setFromCamera(mouse, this.camera);
+
+        // Define the target plane in world space
+        // Example: XY-plane at z = 0
+        const planeZ = 0;
+        const origin = raycaster.ray.origin;
+        const direction = raycaster.ray.direction;
+
+        // t is the distance along the ray to the plane
+        const t = (planeZ - origin.z) / direction.z;
+
+        if (t >= 0) {
+            const point = origin.clone().add(direction.clone().multiplyScalar(t));
+
+            // Convert to pixel coords
+            const pixelX = Math.floor(point.x + width / 2);
+            const pixelY = Math.floor(height / 2 + point.y);
+            const pixelZ = (height - 1 - pixelY) * width + pixelX;
+            const valueZ = this.getImageValue()[pixelZ];
+            console.log(`Pixel coords: (${pixelX}, ${pixelY})`, pixelZ, valueZ);
+            this.setXyzCursorValues((oldValues: any) => {
+                return [pixelX, pixelY, valueZ];
+            })
+        }
+
+
+    }
+
+    zMax: number = 0;
+    zMin: number = 0;
 
     processData = () => {
         const { width, height } = this.getImageDimensions();
@@ -1084,6 +1678,9 @@ export class Image extends BaseWidget {
             minValue = Math.min(...dataRaw);
             maxValue = Math.max(...dataRaw);
         }
+
+        this.zMax = maxValue;
+        this.zMin = minValue;
 
         const currentColorMap = this.getText()["colorMap"];
         let colorMapFunc = this.colorMapFunctions[currentColorMap];
@@ -1664,6 +2261,7 @@ export class Image extends BaseWidget {
             ]
         )
     }
+
 
     coolColorMapArray = [
         0, 255, 255,
@@ -4675,11 +5273,11 @@ export class Image extends BaseWidget {
         const { width, height } = this.getImageDimensions();
 
         if (width === 0 || height === 0) {
-            return -1;
+            return [1, 1];
         }
 
         if (this.camera === undefined || this.scene === undefined || this.renderer === undefined) {
-            return -1;
+            return [1, 1];
         }
         const camera = this.camera;
 
@@ -4688,7 +5286,11 @@ export class Image extends BaseWidget {
 
         const worldPerPixelX = this.renderer?.domElement.clientWidth / viewportWidthInWorld;
         const worldPerPixelY = this.renderer?.domElement.clientHeight / viewportHeightInWorld;
-        return worldPerPixelX;
+        if (worldPerPixelX === undefined || worldPerPixelY === undefined) {
+            return [1, 1];
+        } else {
+            return [worldPerPixelX, worldPerPixelY];
+        }
     }
 
     panImageEventListener = (e: any) => {
@@ -4706,6 +5308,9 @@ export class Image extends BaseWidget {
      * Get 1-D waveform data
      */
     getImageValue = () => {
+        if (this.playing === false) {
+            return this.imageValueBackup;
+        }
         // {index: number, value: number[]}
         const choiceValue = g_widgets1.getChannelValue(this.getChannelNames()[0]) as any;
 
@@ -4715,7 +5320,12 @@ export class Image extends BaseWidget {
         return undefined;
     }
 
+
     getImageDimensions = () => {
+        if (this.playing === false) {
+            return this.imageDimensionsBackup;
+        }
+
         try {
             const channel = g_widgets1.getTcaChannel(this.getChannelNames()[0]);
             const dbrData = channel.getDbrData();
