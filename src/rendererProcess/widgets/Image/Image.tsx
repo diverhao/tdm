@@ -316,21 +316,18 @@ export class Image extends BaseWidget {
                 onDoubleClick={this._handleMouseDoubleClick}
             >
                 <this._ElementImage />
+                <this._ElementXrange></this._ElementXrange>
+                <this._ElementYrange></this._ElementYrange>
+                <this._ElementZrange></this._ElementZrange>
                 <this._ElementZoomInButton />
                 <this._ElementZoomOutButton />
+                <this._ElementResetViewToFullButton />
+                <this._ElementColorMap></this._ElementColorMap>
                 <this._ElementSwitchColorMap></this._ElementSwitchColorMap>
             </div>
         );
     };
 
-    _ElementImage1 = () => {
-        return (
-            <div>
-                {JSON.stringify(this.getImageDimensions())}
-                {JSON.stringify(this.getImageValue())}
-            </div>
-        )
-    }
 
     texture: THREE.DataTexture | undefined = undefined;
     renderer: THREE.WebGLRenderer | undefined = undefined;
@@ -364,9 +361,9 @@ export class Image extends BaseWidget {
 
 
     /**
-     * Reset the view of the image: zoom level = 1; view area. = nominal
+     * Reset the view of the image: zoom level = 1; view area = full
      */
-    resetView = () => {
+    resetViewToFull = () => {
         if (this.camera === undefined || this.scene === undefined || this.renderer === undefined) {
             return;
         }
@@ -423,6 +420,51 @@ export class Image extends BaseWidget {
 
 
     /**
+     * Invoked only when 
+     *  (1) click "reset view" button, or
+     *  (2) startup, or
+     *  (3) manually set range via input box
+     * 
+     * zoom factor is set to 1
+     */
+    setImageXyRange = () => {
+        if (!this.camera) return;
+
+        this.zoomLevel = 1;
+        let xMax = this.getText()["xMax"];
+        let xMin = this.getText()["xMin"];
+        if (xMax < xMin) {
+            const tmp = xMax;
+            xMax = xMin;
+            xMin = tmp;
+        }
+
+        const { width, height } = this.getImageDimensions();
+
+        const cam = this.camera;
+
+        cam.left = -width / 2 + xMin;
+        cam.right = -width / 2 + xMax;
+
+        let yMax = this.getText()["yMax"];
+        let yMin = this.getText()["yMin"];
+        if (yMax < yMin) {
+            const tmp = yMax;
+            yMax = yMin;
+            yMin = tmp;
+        }
+
+        cam.bottom = -height / 2 + yMin;
+        cam.top = -height / 2 + yMax;
+
+
+
+        cam.updateProjectionMatrix();
+        this.forceUpdateImage({});
+    };
+
+
+    /**
      * dx, dy: pixel on screen
      */
     panImage = (dx: number, dy: number) => {
@@ -457,9 +499,31 @@ export class Image extends BaseWidget {
                 onMouseDown={() => {
                     console.log("Zoom In clicked");
                     // this.zoomImage(this.zoomLevel * 1.1, 75, 35)
-                    this.resetView();
+                    this.setImageXyRange();
                 }}>
                 reset
+            </div>
+        );
+    }
+
+    _ElementResetViewToFullButton = () => {
+        return (
+            <div
+                style={{
+                    position: "absolute",
+                    zIndex: 1000,
+                    right: 0,
+                    bottom: 200,
+                    backgroundColor: "rgba(255, 255,0, 0.5)",
+                    width: 100,
+                    height: 100,
+                }}
+                onMouseDown={() => {
+                    console.log("Zoom In clicked");
+                    // this.zoomImage(this.zoomLevel * 1.1, 75, 35)
+                    this.resetViewToFull();
+                }}>
+                see full image
             </div>
         );
     }
@@ -493,6 +557,286 @@ export class Image extends BaseWidget {
             </div>
         );
     }
+
+    generateGradientStops = () => {
+        let colors = [];
+        const colorMapName = this.getText()["colorMap"];
+        let colorMapArray = this.colorMapArrays[colorMapName];
+        if (colorMapArray === undefined) {
+            colorMapArray = this.grayColorMapArray;
+
+        }
+
+        // Convert to array of rgb strings
+        for (let i = 0; i < colorMapArray.length; i += 3) {
+            const r = colorMapArray[i];
+            const g = colorMapArray[i + 1];
+            const b = colorMapArray[i + 2];
+            colors.push(`rgb(${r}, ${g}, ${b})`);
+        }
+        const gradient = `linear-gradient(to top, ${colors.join(',')})`;
+
+        return gradient;
+    }
+
+    _ElementColorMap = () => {
+
+        return (
+            <div style={{
+                background: this.generateGradientStops(),
+                height: "100%",
+                width: 50,
+                position: "absolute",
+                zIndex: 1000,
+                right: 0,
+                bottom: 0,
+                // backgroundColor: "rgba(255, 255,0, 0.5)",
+                // width: 100,
+                // height: 100,
+
+            }}>
+
+            </div>
+        )
+    }
+
+    _ElementZrange = () => {
+        const [zMin, setZmin] = React.useState(`${this.getText()["zMin"]}`);
+        const [zMax, setZmax] = React.useState(`${this.getText()["zMax"]}`);
+        const [autoZ, setAutoZ] = React.useState(this.getText()["autoZ"]);
+        return (
+            <div>
+                <form
+                    onSubmit={
+                        (event: any) => {
+                            event.preventDefault();
+                            let value = parseFloat(zMin);
+                            if (isNaN(value)) {
+                                setZmin(`${this.getText()["zMin"]}`);
+                                return;
+                            }
+                            this.getText()["zMin"] = value;
+                            this.forceUpdateImage({});
+                        }
+                    }
+                >
+                    <input
+                        style={{
+                            width: "5em",
+                        }}
+                        value={zMin}
+                        type={"text"}
+                        onChange={(event: any) => {
+                            const valueStr = event.target.value;
+                            setZmin(valueStr);
+                        }}
+                        onBlur={(event: any) => {
+                            if (`${this.getText()["zMin"]}` !== zMin) {
+                                setZmax(`${this.getText()["zMin"]}`)
+                            }
+                        }}
+
+                    >
+                    </input>
+                </form>
+                <form
+                    onSubmit={
+                        (event: any) => {
+                            event.preventDefault();
+                            let value = parseFloat(zMax);
+                            if (isNaN(value)) {
+                                setZmax(`${this.getText()["zMax"]}`);
+                                return;
+                            }
+                            this.getText()["zMax"] = value;
+                            this.forceUpdateImage({});
+                        }
+                    }
+                >
+                    <input
+                        style={{
+                            width: "5em",
+                        }}
+                        value={zMax}
+                        type={"text"}
+                        onChange={(event: any) => {
+                            const valueStr = event.target.value;
+                            setZmax(valueStr);
+                        }}
+                        onBlur={(event: any) => {
+                            if (`${this.getText()["zMax"]}` !== zMax) {
+                                setZmax(`${this.getText()["zMax"]}`)
+                            }
+                        }}
+                    >
+                    </input>
+                </form>
+                <input
+                    type={"checkbox"}
+                    checked={autoZ}
+                    onChange={(event: any) => {
+                        this.getText()["autoZ"] = !autoZ;
+                        setAutoZ(!autoZ);
+                        this.forceUpdateImage({});
+                    }}
+                >
+                </input>
+            </div>
+        )
+    }
+
+    _ElementXrange = () => {
+        const [xMin, setXmin] = React.useState(`${this.getText()["xMin"]}`);
+        const [xMax, setXmax] = React.useState(`${this.getText()["xMax"]}`);
+        return (
+            <div>
+                <form
+                    onSubmit={
+                        (event: any) => {
+                            event.preventDefault();
+                            let value = parseFloat(xMin);
+                            if (isNaN(value)) {
+                                setXmin(`${this.getText()["xMin"]}`);
+                                return;
+                            }
+                            this.getText()["xMin"] = value;
+                            // this.forceUpdateImage({});
+                            this.setImageXyRange();
+                        }
+                    }
+                >
+                    <input
+                        style={{
+                            width: "5em",
+                        }}
+                        value={xMin}
+                        type={"text"}
+                        onChange={(event: any) => {
+                            const valueStr = event.target.value;
+                            setXmin(valueStr);
+                        }}
+                        onBlur={(event: any) => {
+                            if (`${this.getText()["xMin"]}` !== xMin) {
+                                setXmax(`${this.getText()["xMin"]}`)
+                            }
+                        }}
+
+                    >
+                    </input>
+                </form>
+                <form
+                    onSubmit={
+                        (event: any) => {
+                            event.preventDefault();
+                            let value = parseFloat(xMax);
+                            if (isNaN(value)) {
+                                setXmax(`${this.getText()["xMax"]}`);
+                                return;
+                            }
+                            this.getText()["xMax"] = value;
+                            // this.forceUpdateImage({});
+                            this.setImageXyRange();
+
+                        }
+                    }
+                >
+                    <input
+                        style={{
+                            width: "5em",
+                        }}
+                        value={xMax}
+                        type={"text"}
+                        onChange={(event: any) => {
+                            const valueStr = event.target.value;
+                            setXmax(valueStr);
+                        }}
+                        onBlur={(event: any) => {
+                            if (`${this.getText()["xMax"]}` !== xMax) {
+                                setXmax(`${this.getText()["xMax"]}`)
+                            }
+                        }}
+                    >
+                    </input>
+                </form>
+            </div>
+        )
+    }
+
+
+    _ElementYrange = () => {
+        const [yMin, setYmin] = React.useState(`${this.getText()["yMin"]}`);
+        const [yMax, setYmax] = React.useState(`${this.getText()["yMax"]}`);
+        return (
+            <div>
+                <form
+                    onSubmit={
+                        (event: any) => {
+                            event.preventDefault();
+                            let value = parseFloat(yMin);
+                            if (isNaN(value)) {
+                                setYmin(`${this.getText()["yMin"]}`);
+                                return;
+                            }
+                            this.getText()["yMin"] = value;
+                            this.setImageXyRange()
+                        }
+                    }
+                >
+                    <input
+                        style={{
+                            width: "5em",
+                        }}
+                        value={yMin}
+                        type={"text"}
+                        onChange={(event: any) => {
+                            const valueStr = event.target.value;
+                            setYmin(valueStr);
+                        }}
+                        onBlur={(event: any) => {
+                            if (`${this.getText()["yMin"]}` !== yMin) {
+                                setYmax(`${this.getText()["yMin"]}`)
+                            }
+                        }}
+
+                    >
+                    </input>
+                </form>
+                <form
+                    onSubmit={
+                        (event: any) => {
+                            event.preventDefault();
+                            let value = parseFloat(yMax);
+                            if (isNaN(value)) {
+                                setYmax(`${this.getText()["yMax"]}`);
+                                return;
+                            }
+                            this.getText()["yMax"] = value;
+                            this.setImageXyRange()
+                        }
+                    }
+                >
+                    <input
+                        style={{
+                            width: "5em",
+                        }}
+                        value={yMax}
+                        type={"text"}
+                        onChange={(event: any) => {
+                            const valueStr = event.target.value;
+                            setYmax(valueStr);
+                        }}
+                        onBlur={(event: any) => {
+                            if (`${this.getText()["yMax"]}` !== yMax) {
+                                setYmax(`${this.getText()["yMax"]}`)
+                            }
+                        }}
+                    >
+                    </input>
+                </form>
+            </div>
+        )
+    }
+
 
     _ElementSwitchColorMap = () => {
         const [colorMap, setColorMap] = React.useState(this.getText()["colorMap"]);
@@ -588,12 +932,40 @@ export class Image extends BaseWidget {
             const aspect = width / height;
             const zoom = this.zoomLevel; // adjust zoom level
 
+            // xy view range
+            let xMax = this.getText()["xMax"];
+            let xMin = this.getText()["xMin"];
+            if (xMax < xMin) {
+                const tmp = xMax;
+                xMax = xMin;
+                xMin = tmp;
+            }
+
+
+            const camLeft = -width / 2 + xMin;
+            const camRight = -width / 2 + xMax;
+
+            let yMax = this.getText()["yMax"];
+            let yMin = this.getText()["yMin"];
+            if (yMax < yMin) {
+                const tmp = yMax;
+                yMax = yMin;
+                yMin = tmp;
+            }
+
+            const camBottom = -height / 2 + yMin;
+            const camTop = -height / 2 + yMax;
+
             // OrthographicCamera(left, right, top, bottom, near, far)
             const camera = new THREE.OrthographicCamera(
-                -width / 2 / zoom,
-                width / 2 / zoom,
-                height / 2 / zoom,
-                -height / 2 / zoom,
+                camLeft,
+                camRight,
+                camTop,
+                camBottom,
+                // -width / 2 / zoom,
+                // width / 2 / zoom,
+                // height / 2 / zoom,
+                // -height / 2 / zoom,
                 0.1,
                 10
             );
@@ -705,8 +1077,13 @@ export class Image extends BaseWidget {
             Log.error("Image size does not match image data length");
             return;
         }
-        const minValue = Math.min(...dataRaw);
-        const maxValue = Math.max(...dataRaw);
+
+        let minValue = this.getText()["zMin"];
+        let maxValue = this.getText()["zMax"];
+        if (this.getText()["autoZ"] === true) {
+            minValue = Math.min(...dataRaw);
+            maxValue = Math.max(...dataRaw);
+        }
 
         const currentColorMap = this.getText()["colorMap"];
         let colorMapFunc = this.colorMapFunctions[currentColorMap];
@@ -726,21 +1103,559 @@ export class Image extends BaseWidget {
         }
     };
 
+    // color map arrays are generated by the following python code
+    // import matplotlib.pyplot as plt
+    // import numpy as np
+    // 
+    // cmap = plt.get_cmap("cividis", 256)  # 256 steps
+    // colors = (cmap(np.linspace(0, 1, 256))[:, :3] * 255).astype(int)
+    // 
+    // for r, g, b in colors:
+    //     print(f"{r}, {g}, {b},")  # RGBA format
+
+
+    jetColorMapArray = [
+        0, 0, 127,
+        0, 0, 132,
+        0, 0, 136,
+        0, 0, 141,
+        0, 0, 145,
+        0, 0, 150,
+        0, 0, 154,
+        0, 0, 159,
+        0, 0, 163,
+        0, 0, 168,
+        0, 0, 172,
+        0, 0, 177,
+        0, 0, 182,
+        0, 0, 186,
+        0, 0, 191,
+        0, 0, 195,
+        0, 0, 200,
+        0, 0, 204,
+        0, 0, 209,
+        0, 0, 213,
+        0, 0, 218,
+        0, 0, 222,
+        0, 0, 227,
+        0, 0, 232,
+        0, 0, 236,
+        0, 0, 241,
+        0, 0, 245,
+        0, 0, 250,
+        0, 0, 254,
+        0, 0, 255,
+        0, 0, 255,
+        0, 0, 255,
+        0, 0, 255,
+        0, 4, 255,
+        0, 8, 255,
+        0, 12, 255,
+        0, 16, 255,
+        0, 20, 255,
+        0, 24, 255,
+        0, 28, 255,
+        0, 32, 255,
+        0, 36, 255,
+        0, 40, 255,
+        0, 44, 255,
+        0, 48, 255,
+        0, 52, 255,
+        0, 56, 255,
+        0, 60, 255,
+        0, 64, 255,
+        0, 68, 255,
+        0, 72, 255,
+        0, 76, 255,
+        0, 80, 255,
+        0, 84, 255,
+        0, 88, 255,
+        0, 92, 255,
+        0, 96, 255,
+        0, 100, 255,
+        0, 104, 255,
+        0, 108, 255,
+        0, 112, 255,
+        0, 116, 255,
+        0, 120, 255,
+        0, 124, 255,
+        0, 128, 255,
+        0, 132, 255,
+        0, 136, 255,
+        0, 140, 255,
+        0, 144, 255,
+        0, 148, 255,
+        0, 152, 255,
+        0, 156, 255,
+        0, 160, 255,
+        0, 164, 255,
+        0, 168, 255,
+        0, 172, 255,
+        0, 176, 255,
+        0, 180, 255,
+        0, 184, 255,
+        0, 188, 255,
+        0, 192, 255,
+        0, 196, 255,
+        0, 200, 255,
+        0, 204, 255,
+        0, 208, 255,
+        0, 212, 255,
+        0, 216, 255,
+        0, 220, 254,
+        0, 224, 250,
+        0, 228, 247,
+        2, 232, 244,
+        5, 236, 241,
+        8, 240, 237,
+        12, 244, 234,
+        15, 248, 231,
+        18, 252, 228,
+        21, 255, 225,
+        24, 255, 221,
+        28, 255, 218,
+        31, 255, 215,
+        34, 255, 212,
+        37, 255, 208,
+        41, 255, 205,
+        44, 255, 202,
+        47, 255, 199,
+        50, 255, 195,
+        54, 255, 192,
+        57, 255, 189,
+        60, 255, 186,
+        63, 255, 183,
+        66, 255, 179,
+        70, 255, 176,
+        73, 255, 173,
+        76, 255, 170,
+        79, 255, 166,
+        83, 255, 163,
+        86, 255, 160,
+        89, 255, 157,
+        92, 255, 154,
+        95, 255, 150,
+        99, 255, 147,
+        102, 255, 144,
+        105, 255, 141,
+        108, 255, 137,
+        112, 255, 134,
+        115, 255, 131,
+        118, 255, 128,
+        121, 255, 125,
+        124, 255, 121,
+        128, 255, 118,
+        131, 255, 115,
+        134, 255, 112,
+        137, 255, 108,
+        141, 255, 105,
+        144, 255, 102,
+        147, 255, 99,
+        150, 255, 95,
+        154, 255, 92,
+        157, 255, 89,
+        160, 255, 86,
+        163, 255, 83,
+        166, 255, 79,
+        170, 255, 76,
+        173, 255, 73,
+        176, 255, 70,
+        179, 255, 66,
+        183, 255, 63,
+        186, 255, 60,
+        189, 255, 57,
+        192, 255, 54,
+        195, 255, 50,
+        199, 255, 47,
+        202, 255, 44,
+        205, 255, 41,
+        208, 255, 37,
+        212, 255, 34,
+        215, 255, 31,
+        218, 255, 28,
+        221, 255, 24,
+        224, 255, 21,
+        228, 255, 18,
+        231, 255, 15,
+        234, 255, 12,
+        237, 255, 8,
+        241, 252, 5,
+        244, 248, 2,
+        247, 244, 0,
+        250, 240, 0,
+        254, 237, 0,
+        255, 233, 0,
+        255, 229, 0,
+        255, 226, 0,
+        255, 222, 0,
+        255, 218, 0,
+        255, 215, 0,
+        255, 211, 0,
+        255, 207, 0,
+        255, 203, 0,
+        255, 200, 0,
+        255, 196, 0,
+        255, 192, 0,
+        255, 189, 0,
+        255, 185, 0,
+        255, 181, 0,
+        255, 177, 0,
+        255, 174, 0,
+        255, 170, 0,
+        255, 166, 0,
+        255, 163, 0,
+        255, 159, 0,
+        255, 155, 0,
+        255, 152, 0,
+        255, 148, 0,
+        255, 144, 0,
+        255, 140, 0,
+        255, 137, 0,
+        255, 133, 0,
+        255, 129, 0,
+        255, 126, 0,
+        255, 122, 0,
+        255, 118, 0,
+        255, 115, 0,
+        255, 111, 0,
+        255, 107, 0,
+        255, 103, 0,
+        255, 100, 0,
+        255, 96, 0,
+        255, 92, 0,
+        255, 89, 0,
+        255, 85, 0,
+        255, 81, 0,
+        255, 77, 0,
+        255, 74, 0,
+        255, 70, 0,
+        255, 66, 0,
+        255, 63, 0,
+        255, 59, 0,
+        255, 55, 0,
+        255, 52, 0,
+        255, 48, 0,
+        255, 44, 0,
+        255, 40, 0,
+        255, 37, 0,
+        255, 33, 0,
+        255, 29, 0,
+        255, 26, 0,
+        255, 22, 0,
+        254, 18, 0,
+        250, 15, 0,
+        245, 11, 0,
+        241, 7, 0,
+        236, 3, 0,
+        232, 0, 0,
+        227, 0, 0,
+        222, 0, 0,
+        218, 0, 0,
+        213, 0, 0,
+        209, 0, 0,
+        204, 0, 0,
+        200, 0, 0,
+        195, 0, 0,
+        191, 0, 0,
+        186, 0, 0,
+        182, 0, 0,
+        177, 0, 0,
+        172, 0, 0,
+        168, 0, 0,
+        163, 0, 0,
+        159, 0, 0,
+        154, 0, 0,
+        150, 0, 0,
+        145, 0, 0,
+        141, 0, 0,
+        136, 0, 0,
+        132, 0, 0,
+        127, 0, 0,
+    ];
+
     jetColorMap = (value: number) => {
         // value is 0–255
-        const fourValue = 4 * (value / 255);
-        const r = Math.min(Math.max(Math.min(fourValue - 1.5, -fourValue + 4.5), 0), 1);
-        const g = Math.min(Math.max(Math.min(fourValue - 0.5, -fourValue + 3.5), 0), 1);
-        const b = Math.min(Math.max(Math.min(fourValue + 0.5, -fourValue + 2.5), 0), 1);
-        return [
-            Math.round(r * 255),
-            Math.round(g * 255),
-            Math.round(b * 255)
-        ];
+        // const fourValue = 4 * (value / 255);
+        // const r = Math.min(Math.max(Math.min(fourValue - 1.5, -fourValue + 4.5), 0), 1);
+        // const g = Math.min(Math.max(Math.min(fourValue - 0.5, -fourValue + 3.5), 0), 1);
+        // const b = Math.min(Math.max(Math.min(fourValue + 0.5, -fourValue + 2.5), 0), 1);
+        // return [
+        //     Math.round(r * 255),
+        //     Math.round(g * 255),
+        //     Math.round(b * 255)
+        // ];
+        const idx = Math.round(value) * 3;
+        return (
+            [
+                this.jetColorMapArray[idx],
+                this.jetColorMapArray[idx + 1],
+                this.jetColorMapArray[idx + 2],
+            ]
+        )
+
     }
 
+    hotColorMapArray = [
+        10, 0, 0,
+        13, 0, 0,
+        15, 0, 0,
+        18, 0, 0,
+        21, 0, 0,
+        23, 0, 0,
+        26, 0, 0,
+        28, 0, 0,
+        31, 0, 0,
+        34, 0, 0,
+        36, 0, 0,
+        39, 0, 0,
+        42, 0, 0,
+        44, 0, 0,
+        47, 0, 0,
+        49, 0, 0,
+        52, 0, 0,
+        55, 0, 0,
+        57, 0, 0,
+        60, 0, 0,
+        63, 0, 0,
+        65, 0, 0,
+        68, 0, 0,
+        70, 0, 0,
+        73, 0, 0,
+        76, 0, 0,
+        78, 0, 0,
+        81, 0, 0,
+        84, 0, 0,
+        86, 0, 0,
+        89, 0, 0,
+        91, 0, 0,
+        94, 0, 0,
+        97, 0, 0,
+        99, 0, 0,
+        102, 0, 0,
+        105, 0, 0,
+        107, 0, 0,
+        110, 0, 0,
+        112, 0, 0,
+        115, 0, 0,
+        118, 0, 0,
+        120, 0, 0,
+        123, 0, 0,
+        126, 0, 0,
+        128, 0, 0,
+        131, 0, 0,
+        133, 0, 0,
+        136, 0, 0,
+        139, 0, 0,
+        141, 0, 0,
+        144, 0, 0,
+        147, 0, 0,
+        149, 0, 0,
+        152, 0, 0,
+        154, 0, 0,
+        157, 0, 0,
+        160, 0, 0,
+        162, 0, 0,
+        165, 0, 0,
+        168, 0, 0,
+        170, 0, 0,
+        173, 0, 0,
+        175, 0, 0,
+        178, 0, 0,
+        181, 0, 0,
+        183, 0, 0,
+        186, 0, 0,
+        189, 0, 0,
+        191, 0, 0,
+        194, 0, 0,
+        196, 0, 0,
+        199, 0, 0,
+        202, 0, 0,
+        204, 0, 0,
+        207, 0, 0,
+        210, 0, 0,
+        212, 0, 0,
+        215, 0, 0,
+        217, 0, 0,
+        220, 0, 0,
+        223, 0, 0,
+        225, 0, 0,
+        228, 0, 0,
+        231, 0, 0,
+        233, 0, 0,
+        236, 0, 0,
+        238, 0, 0,
+        241, 0, 0,
+        244, 0, 0,
+        246, 0, 0,
+        249, 0, 0,
+        252, 0, 0,
+        254, 0, 0,
+        255, 2, 0,
+        255, 5, 0,
+        255, 7, 0,
+        255, 10, 0,
+        255, 12, 0,
+        255, 15, 0,
+        255, 18, 0,
+        255, 20, 0,
+        255, 23, 0,
+        255, 26, 0,
+        255, 28, 0,
+        255, 31, 0,
+        255, 33, 0,
+        255, 36, 0,
+        255, 39, 0,
+        255, 41, 0,
+        255, 44, 0,
+        255, 47, 0,
+        255, 49, 0,
+        255, 52, 0,
+        255, 54, 0,
+        255, 57, 0,
+        255, 60, 0,
+        255, 62, 0,
+        255, 65, 0,
+        255, 68, 0,
+        255, 70, 0,
+        255, 73, 0,
+        255, 75, 0,
+        255, 78, 0,
+        255, 81, 0,
+        255, 83, 0,
+        255, 86, 0,
+        255, 89, 0,
+        255, 91, 0,
+        255, 94, 0,
+        255, 96, 0,
+        255, 99, 0,
+        255, 102, 0,
+        255, 104, 0,
+        255, 107, 0,
+        255, 110, 0,
+        255, 112, 0,
+        255, 115, 0,
+        255, 117, 0,
+        255, 120, 0,
+        255, 123, 0,
+        255, 125, 0,
+        255, 128, 0,
+        255, 131, 0,
+        255, 133, 0,
+        255, 136, 0,
+        255, 138, 0,
+        255, 141, 0,
+        255, 144, 0,
+        255, 146, 0,
+        255, 149, 0,
+        255, 151, 0,
+        255, 154, 0,
+        255, 157, 0,
+        255, 159, 0,
+        255, 162, 0,
+        255, 165, 0,
+        255, 167, 0,
+        255, 170, 0,
+        255, 172, 0,
+        255, 175, 0,
+        255, 178, 0,
+        255, 180, 0,
+        255, 183, 0,
+        255, 186, 0,
+        255, 188, 0,
+        255, 191, 0,
+        255, 193, 0,
+        255, 196, 0,
+        255, 199, 0,
+        255, 201, 0,
+        255, 204, 0,
+        255, 207, 0,
+        255, 209, 0,
+        255, 212, 0,
+        255, 214, 0,
+        255, 217, 0,
+        255, 220, 0,
+        255, 222, 0,
+        255, 225, 0,
+        255, 228, 0,
+        255, 230, 0,
+        255, 233, 0,
+        255, 235, 0,
+        255, 238, 0,
+        255, 241, 0,
+        255, 243, 0,
+        255, 246, 0,
+        255, 249, 0,
+        255, 251, 0,
+        255, 254, 0,
+        255, 255, 2,
+        255, 255, 6,
+        255, 255, 10,
+        255, 255, 14,
+        255, 255, 18,
+        255, 255, 22,
+        255, 255, 26,
+        255, 255, 30,
+        255, 255, 34,
+        255, 255, 38,
+        255, 255, 42,
+        255, 255, 46,
+        255, 255, 50,
+        255, 255, 54,
+        255, 255, 58,
+        255, 255, 62,
+        255, 255, 65,
+        255, 255, 69,
+        255, 255, 73,
+        255, 255, 77,
+        255, 255, 81,
+        255, 255, 85,
+        255, 255, 89,
+        255, 255, 93,
+        255, 255, 97,
+        255, 255, 101,
+        255, 255, 105,
+        255, 255, 109,
+        255, 255, 113,
+        255, 255, 117,
+        255, 255, 121,
+        255, 255, 125,
+        255, 255, 128,
+        255, 255, 132,
+        255, 255, 136,
+        255, 255, 140,
+        255, 255, 144,
+        255, 255, 148,
+        255, 255, 152,
+        255, 255, 156,
+        255, 255, 160,
+        255, 255, 164,
+        255, 255, 168,
+        255, 255, 172,
+        255, 255, 176,
+        255, 255, 180,
+        255, 255, 184,
+        255, 255, 188,
+        255, 255, 191,
+        255, 255, 195,
+        255, 255, 199,
+        255, 255, 203,
+        255, 255, 207,
+        255, 255, 211,
+        255, 255, 215,
+        255, 255, 219,
+        255, 255, 223,
+        255, 255, 227,
+        255, 255, 231,
+        255, 255, 235,
+        255, 255, 239,
+        255, 255, 243,
+        255, 255, 247,
+        255, 255, 251,
+        255, 255, 255,
+    ];
+
     hotColorMap = (value: number) => {
-        const idx = Math.floor(value) * 4;
+        const idx = Math.floor(value) * 3;
         return (
             [
                 this.hotColorMapArray[idx],
@@ -750,8 +1665,267 @@ export class Image extends BaseWidget {
         )
     }
 
+    coolColorMapArray = [
+        0, 255, 255,
+        1, 254, 255,
+        2, 253, 255,
+        3, 252, 255,
+        4, 251, 255,
+        5, 250, 255,
+        6, 249, 255,
+        7, 248, 255,
+        8, 247, 255,
+        9, 246, 255,
+        10, 245, 255,
+        11, 244, 255,
+        12, 243, 255,
+        13, 242, 255,
+        14, 241, 255,
+        15, 240, 255,
+        16, 239, 255,
+        17, 238, 255,
+        18, 237, 255,
+        19, 236, 255,
+        20, 235, 255,
+        21, 234, 255,
+        22, 233, 255,
+        23, 232, 255,
+        24, 231, 255,
+        25, 230, 255,
+        26, 229, 255,
+        27, 228, 255,
+        28, 227, 255,
+        29, 226, 255,
+        30, 225, 255,
+        31, 224, 255,
+        32, 223, 255,
+        32, 222, 255,
+        34, 221, 255,
+        35, 220, 255,
+        36, 219, 255,
+        36, 218, 255,
+        38, 217, 255,
+        39, 216, 255,
+        40, 215, 255,
+        40, 214, 255,
+        42, 213, 255,
+        43, 211, 255,
+        44, 211, 255,
+        44, 210, 255,
+        46, 209, 255,
+        47, 208, 255,
+        48, 207, 255,
+        48, 206, 255,
+        50, 205, 255,
+        51, 204, 255,
+        52, 203, 255,
+        52, 202, 255,
+        54, 201, 255,
+        55, 200, 255,
+        56, 199, 255,
+        56, 198, 255,
+        58, 197, 255,
+        59, 195, 255,
+        60, 195, 255,
+        60, 194, 255,
+        62, 193, 255,
+        63, 192, 255,
+        64, 191, 255,
+        65, 190, 255,
+        65, 189, 255,
+        67, 188, 255,
+        68, 187, 255,
+        69, 186, 255,
+        70, 185, 255,
+        71, 184, 255,
+        72, 183, 255,
+        73, 182, 255,
+        73, 181, 255,
+        75, 179, 255,
+        76, 179, 255,
+        77, 178, 255,
+        78, 177, 255,
+        79, 176, 255,
+        80, 175, 255,
+        81, 174, 255,
+        81, 173, 255,
+        83, 172, 255,
+        84, 171, 255,
+        85, 170, 255,
+        86, 169, 255,
+        87, 168, 255,
+        88, 167, 255,
+        89, 166, 255,
+        89, 165, 255,
+        91, 163, 255,
+        92, 163, 255,
+        93, 162, 255,
+        94, 161, 255,
+        95, 160, 255,
+        96, 159, 255,
+        97, 158, 255,
+        97, 157, 255,
+        99, 156, 255,
+        100, 155, 255,
+        101, 154, 255,
+        102, 153, 255,
+        103, 152, 255,
+        104, 151, 255,
+        105, 150, 255,
+        105, 149, 255,
+        107, 147, 255,
+        108, 147, 255,
+        109, 146, 255,
+        110, 145, 255,
+        111, 144, 255,
+        112, 143, 255,
+        113, 142, 255,
+        113, 141, 255,
+        115, 140, 255,
+        116, 139, 255,
+        117, 138, 255,
+        118, 137, 255,
+        119, 136, 255,
+        120, 135, 255,
+        121, 134, 255,
+        121, 133, 255,
+        123, 131, 255,
+        124, 131, 255,
+        125, 130, 255,
+        126, 129, 255,
+        127, 128, 255,
+        128, 127, 255,
+        129, 126, 255,
+        130, 125, 255,
+        131, 124, 255,
+        131, 123, 255,
+        133, 121, 255,
+        134, 121, 255,
+        135, 120, 255,
+        136, 119, 255,
+        137, 118, 255,
+        138, 117, 255,
+        139, 116, 255,
+        140, 114, 255,
+        141, 113, 255,
+        142, 113, 255,
+        143, 112, 255,
+        144, 111, 255,
+        145, 110, 255,
+        146, 109, 255,
+        147, 108, 255,
+        147, 107, 255,
+        149, 105, 255,
+        150, 105, 255,
+        151, 104, 255,
+        152, 103, 255,
+        153, 102, 255,
+        154, 101, 255,
+        155, 100, 255,
+        156, 98, 255,
+        157, 97, 255,
+        158, 97, 255,
+        159, 96, 255,
+        160, 95, 255,
+        161, 94, 255,
+        162, 93, 255,
+        163, 92, 255,
+        163, 91, 255,
+        165, 89, 255,
+        166, 89, 255,
+        167, 88, 255,
+        168, 87, 255,
+        169, 86, 255,
+        170, 85, 255,
+        171, 84, 255,
+        172, 82, 255,
+        173, 81, 255,
+        174, 81, 255,
+        175, 80, 255,
+        176, 79, 255,
+        177, 78, 255,
+        178, 77, 255,
+        179, 76, 255,
+        179, 75, 255,
+        181, 73, 255,
+        182, 73, 255,
+        183, 72, 255,
+        184, 71, 255,
+        185, 70, 255,
+        186, 69, 255,
+        187, 68, 255,
+        188, 66, 255,
+        189, 65, 255,
+        190, 65, 255,
+        191, 64, 255,
+        192, 63, 255,
+        193, 62, 255,
+        194, 61, 255,
+        195, 60, 255,
+        195, 59, 255,
+        197, 57, 255,
+        198, 56, 255,
+        199, 56, 255,
+        200, 55, 255,
+        201, 54, 255,
+        202, 53, 255,
+        203, 52, 255,
+        204, 50, 255,
+        205, 49, 255,
+        206, 48, 255,
+        207, 48, 255,
+        208, 47, 255,
+        209, 46, 255,
+        210, 45, 255,
+        211, 44, 255,
+        211, 43, 255,
+        213, 41, 255,
+        214, 40, 255,
+        215, 40, 255,
+        216, 39, 255,
+        217, 38, 255,
+        218, 37, 255,
+        219, 36, 255,
+        220, 34, 255,
+        221, 33, 255,
+        222, 32, 255,
+        223, 32, 255,
+        224, 31, 255,
+        225, 30, 255,
+        226, 29, 255,
+        227, 28, 255,
+        227, 27, 255,
+        229, 25, 255,
+        230, 24, 255,
+        231, 24, 255,
+        232, 23, 255,
+        233, 22, 255,
+        234, 21, 255,
+        235, 20, 255,
+        236, 18, 255,
+        237, 17, 255,
+        238, 16, 255,
+        239, 16, 255,
+        240, 15, 255,
+        241, 14, 255,
+        242, 13, 255,
+        243, 12, 255,
+        243, 11, 255,
+        245, 9, 255,
+        246, 8, 255,
+        247, 8, 255,
+        248, 7, 255,
+        249, 6, 255,
+        250, 5, 255,
+        251, 4, 255,
+        252, 2, 255,
+        253, 1, 255,
+        254, 0, 255,
+        255, 0, 255,
+    ];
+
     coolColorMap = (value: number) => {
-        const idx = Math.floor(value) * 4;
+        const idx = Math.floor(value) * 3;
         return (
             [
                 this.coolColorMapArray[idx],
@@ -761,333 +1935,548 @@ export class Image extends BaseWidget {
         )
     }
 
-    createHotColormapArray = () => {
-        const lut = [];
-        const steps = 256;
+    grayColorMapArray = [
 
-        for (let i = 0; i < steps; i++) {
-            const t = i / (steps - 1);
-
-            let r, g, b;
-            if (t < 1 / 3) {
-                // black → red
-                r = t * 3;
-                g = 0;
-                b = 0;
-            } else if (t < 2 / 3) {
-                // red → yellow
-                r = 1;
-                g = (t - 1 / 3) * 3;
-                b = 0;
-            } else {
-                // yellow → white
-                r = 1;
-                g = 1;
-                b = (t - 2 / 3) * 3;
-            }
-
-            lut.push(Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255), 255);
-        }
-
-        return lut; // Uint8 array for mapping
-    }
-
-    hotColorMapArray = this.createHotColormapArray();
+        0, 0, 0,
+        1, 1, 1,
+        2, 2, 2,
+        3, 3, 3,
+        4, 4, 4,
+        5, 5, 5,
+        6, 6, 6,
+        7, 7, 7,
+        8, 8, 8,
+        9, 9, 9,
+        10, 10, 10,
+        11, 11, 11,
+        12, 12, 12,
+        13, 13, 13,
+        14, 14, 14,
+        15, 15, 15,
+        16, 16, 16,
+        17, 17, 17,
+        18, 18, 18,
+        19, 19, 19,
+        20, 20, 20,
+        21, 21, 21,
+        22, 22, 22,
+        23, 23, 23,
+        24, 24, 24,
+        25, 25, 25,
+        26, 26, 26,
+        27, 27, 27,
+        28, 28, 28,
+        29, 29, 29,
+        30, 30, 30,
+        31, 31, 31,
+        32, 32, 32,
+        32, 32, 32,
+        34, 34, 34,
+        35, 35, 35,
+        36, 36, 36,
+        36, 36, 36,
+        38, 38, 38,
+        39, 39, 39,
+        40, 40, 40,
+        40, 40, 40,
+        42, 42, 42,
+        43, 43, 43,
+        44, 44, 44,
+        44, 44, 44,
+        46, 46, 46,
+        47, 47, 47,
+        48, 48, 48,
+        48, 48, 48,
+        50, 50, 50,
+        51, 51, 51,
+        52, 52, 52,
+        52, 52, 52,
+        54, 54, 54,
+        55, 55, 55,
+        56, 56, 56,
+        56, 56, 56,
+        58, 58, 58,
+        59, 59, 59,
+        60, 60, 60,
+        60, 60, 60,
+        62, 62, 62,
+        63, 63, 63,
+        64, 64, 64,
+        65, 65, 65,
+        65, 65, 65,
+        67, 67, 67,
+        68, 68, 68,
+        69, 69, 69,
+        70, 70, 70,
+        71, 71, 71,
+        72, 72, 72,
+        73, 73, 73,
+        73, 73, 73,
+        75, 75, 75,
+        76, 76, 76,
+        77, 77, 77,
+        78, 78, 78,
+        79, 79, 79,
+        80, 80, 80,
+        81, 81, 81,
+        81, 81, 81,
+        83, 83, 83,
+        84, 84, 84,
+        85, 85, 85,
+        86, 86, 86,
+        87, 87, 87,
+        88, 88, 88,
+        89, 89, 89,
+        89, 89, 89,
+        91, 91, 91,
+        92, 92, 92,
+        93, 93, 93,
+        94, 94, 94,
+        95, 95, 95,
+        96, 96, 96,
+        97, 97, 97,
+        97, 97, 97,
+        99, 99, 99,
+        100, 100, 100,
+        101, 101, 101,
+        102, 102, 102,
+        103, 103, 103,
+        104, 104, 104,
+        105, 105, 105,
+        105, 105, 105,
+        107, 107, 107,
+        108, 108, 108,
+        109, 109, 109,
+        110, 110, 110,
+        111, 111, 111,
+        112, 112, 112,
+        113, 113, 113,
+        113, 113, 113,
+        115, 115, 115,
+        116, 116, 116,
+        117, 117, 117,
+        118, 118, 118,
+        119, 119, 119,
+        120, 120, 120,
+        121, 121, 121,
+        121, 121, 121,
+        123, 123, 123,
+        124, 124, 124,
+        125, 125, 125,
+        126, 126, 126,
+        127, 127, 127,
+        128, 128, 128,
+        129, 129, 129,
+        130, 130, 130,
+        131, 131, 131,
+        131, 131, 131,
+        133, 133, 133,
+        134, 134, 134,
+        135, 135, 135,
+        136, 136, 136,
+        137, 137, 137,
+        138, 138, 138,
+        139, 139, 139,
+        140, 140, 140,
+        141, 141, 141,
+        142, 142, 142,
+        143, 143, 143,
+        144, 144, 144,
+        145, 145, 145,
+        146, 146, 146,
+        147, 147, 147,
+        147, 147, 147,
+        149, 149, 149,
+        150, 150, 150,
+        151, 151, 151,
+        152, 152, 152,
+        153, 153, 153,
+        154, 154, 154,
+        155, 155, 155,
+        156, 156, 156,
+        157, 157, 157,
+        158, 158, 158,
+        159, 159, 159,
+        160, 160, 160,
+        161, 161, 161,
+        162, 162, 162,
+        163, 163, 163,
+        163, 163, 163,
+        165, 165, 165,
+        166, 166, 166,
+        167, 167, 167,
+        168, 168, 168,
+        169, 169, 169,
+        170, 170, 170,
+        171, 171, 171,
+        172, 172, 172,
+        173, 173, 173,
+        174, 174, 174,
+        175, 175, 175,
+        176, 176, 176,
+        177, 177, 177,
+        178, 178, 178,
+        179, 179, 179,
+        179, 179, 179,
+        181, 181, 181,
+        182, 182, 182,
+        183, 183, 183,
+        184, 184, 184,
+        185, 185, 185,
+        186, 186, 186,
+        187, 187, 187,
+        188, 188, 188,
+        189, 189, 189,
+        190, 190, 190,
+        191, 191, 191,
+        192, 192, 192,
+        193, 193, 193,
+        194, 194, 194,
+        195, 195, 195,
+        195, 195, 195,
+        197, 197, 197,
+        198, 198, 198,
+        199, 199, 199,
+        200, 200, 200,
+        201, 201, 201,
+        202, 202, 202,
+        203, 203, 203,
+        204, 204, 204,
+        205, 205, 205,
+        206, 206, 206,
+        207, 207, 207,
+        208, 208, 208,
+        209, 209, 209,
+        210, 210, 210,
+        211, 211, 211,
+        211, 211, 211,
+        213, 213, 213,
+        214, 214, 214,
+        215, 215, 215,
+        216, 216, 216,
+        217, 217, 217,
+        218, 218, 218,
+        219, 219, 219,
+        220, 220, 220,
+        221, 221, 221,
+        222, 222, 222,
+        223, 223, 223,
+        224, 224, 224,
+        225, 225, 225,
+        226, 226, 226,
+        227, 227, 227,
+        227, 227, 227,
+        229, 229, 229,
+        230, 230, 230,
+        231, 231, 231,
+        232, 232, 232,
+        233, 233, 233,
+        234, 234, 234,
+        235, 235, 235,
+        236, 236, 236,
+        237, 237, 237,
+        238, 238, 238,
+        239, 239, 239,
+        240, 240, 240,
+        241, 241, 241,
+        242, 242, 242,
+        243, 243, 243,
+        243, 243, 243,
+        245, 245, 245,
+        246, 246, 246,
+        247, 247, 247,
+        248, 248, 248,
+        249, 249, 249,
+        250, 250, 250,
+        251, 251, 251,
+        252, 252, 252,
+        253, 253, 253,
+        254, 254, 254,
+        255, 255, 255,
+    ]
 
     grayColorMap = (value: number) => {
         // value is 0–255
+        const idx = Math.floor(value) * 3;
         return (
             [
-                value,
-                value,
-                value
+                this.grayColorMapArray[idx],
+                this.grayColorMapArray[idx + 1],
+                this.grayColorMapArray[idx + 2],
             ]
-        );
+        )
     }
 
-    createCoolColormapArray = () => {
-        const lut = [];
-        const steps = 256;
 
-        for (let i = 0; i < steps; i++) {
-            const t = i / (steps - 1);
+    viridisColorMapArray = [
+        68, 1, 84,
+        68, 2, 85,
+        68, 3, 87,
+        69, 5, 88,
+        69, 6, 90,
+        69, 8, 91,
+        70, 9, 92,
+        70, 11, 94,
+        70, 12, 95,
+        70, 14, 97,
+        71, 15, 98,
+        71, 17, 99,
+        71, 18, 101,
+        71, 20, 102,
+        71, 21, 103,
+        71, 22, 105,
+        71, 24, 106,
+        72, 25, 107,
+        72, 26, 108,
+        72, 28, 110,
+        72, 29, 111,
+        72, 30, 112,
+        72, 32, 113,
+        72, 33, 114,
+        72, 34, 115,
+        72, 35, 116,
+        71, 37, 117,
+        71, 38, 118,
+        71, 39, 119,
+        71, 40, 120,
+        71, 42, 121,
+        71, 43, 122,
+        71, 44, 123,
+        70, 45, 124,
+        70, 47, 124,
+        70, 48, 125,
+        70, 49, 126,
+        69, 50, 127,
+        69, 52, 127,
+        69, 53, 128,
+        69, 54, 129,
+        68, 55, 129,
+        68, 57, 130,
+        67, 58, 131,
+        67, 59, 131,
+        67, 60, 132,
+        66, 61, 132,
+        66, 62, 133,
+        66, 64, 133,
+        65, 65, 134,
+        65, 66, 134,
+        64, 67, 135,
+        64, 68, 135,
+        63, 69, 135,
+        63, 71, 136,
+        62, 72, 136,
+        62, 73, 137,
+        61, 74, 137,
+        61, 75, 137,
+        61, 76, 137,
+        60, 77, 138,
+        60, 78, 138,
+        59, 80, 138,
+        59, 81, 138,
+        58, 82, 139,
+        58, 83, 139,
+        57, 84, 139,
+        57, 85, 139,
+        56, 86, 139,
+        56, 87, 140,
+        55, 88, 140,
+        55, 89, 140,
+        54, 90, 140,
+        54, 91, 140,
+        53, 92, 140,
+        53, 93, 140,
+        52, 94, 141,
+        52, 95, 141,
+        51, 96, 141,
+        51, 97, 141,
+        50, 98, 141,
+        50, 99, 141,
+        49, 100, 141,
+        49, 101, 141,
+        49, 102, 141,
+        48, 103, 141,
+        48, 104, 141,
+        47, 105, 141,
+        47, 106, 141,
+        46, 107, 142,
+        46, 108, 142,
+        46, 109, 142,
+        45, 110, 142,
+        45, 111, 142,
+        44, 112, 142,
+        44, 113, 142,
+        44, 114, 142,
+        43, 115, 142,
+        43, 116, 142,
+        42, 117, 142,
+        42, 118, 142,
+        42, 119, 142,
+        41, 120, 142,
+        41, 121, 142,
+        40, 122, 142,
+        40, 122, 142,
+        40, 123, 142,
+        39, 124, 142,
+        39, 125, 142,
+        39, 126, 142,
+        38, 127, 142,
+        38, 128, 142,
+        38, 129, 142,
+        37, 130, 142,
+        37, 131, 141,
+        36, 132, 141,
+        36, 133, 141,
+        36, 134, 141,
+        35, 135, 141,
+        35, 136, 141,
+        35, 137, 141,
+        34, 137, 141,
+        34, 138, 141,
+        34, 139, 141,
+        33, 140, 141,
+        33, 141, 140,
+        33, 142, 140,
+        32, 143, 140,
+        32, 144, 140,
+        32, 145, 140,
+        31, 146, 140,
+        31, 147, 139,
+        31, 148, 139,
+        31, 149, 139,
+        31, 150, 139,
+        30, 151, 138,
+        30, 152, 138,
+        30, 153, 138,
+        30, 153, 138,
+        30, 154, 137,
+        30, 155, 137,
+        30, 156, 137,
+        30, 157, 136,
+        30, 158, 136,
+        30, 159, 136,
+        30, 160, 135,
+        31, 161, 135,
+        31, 162, 134,
+        31, 163, 134,
+        32, 164, 133,
+        32, 165, 133,
+        33, 166, 133,
+        33, 167, 132,
+        34, 167, 132,
+        35, 168, 131,
+        35, 169, 130,
+        36, 170, 130,
+        37, 171, 129,
+        38, 172, 129,
+        39, 173, 128,
+        40, 174, 127,
+        41, 175, 127,
+        42, 176, 126,
+        43, 177, 125,
+        44, 177, 125,
+        46, 178, 124,
+        47, 179, 123,
+        48, 180, 122,
+        50, 181, 122,
+        51, 182, 121,
+        53, 183, 120,
+        54, 184, 119,
+        56, 185, 118,
+        57, 185, 118,
+        59, 186, 117,
+        61, 187, 116,
+        62, 188, 115,
+        64, 189, 114,
+        66, 190, 113,
+        68, 190, 112,
+        69, 191, 111,
+        71, 192, 110,
+        73, 193, 109,
+        75, 194, 108,
+        77, 194, 107,
+        79, 195, 105,
+        81, 196, 104,
+        83, 197, 103,
+        85, 198, 102,
+        87, 198, 101,
+        89, 199, 100,
+        91, 200, 98,
+        94, 201, 97,
+        96, 201, 96,
+        98, 202, 95,
+        100, 203, 93,
+        103, 204, 92,
+        105, 204, 91,
+        107, 205, 89,
+        109, 206, 88,
+        112, 206, 86,
+        114, 207, 85,
+        116, 208, 84,
+        119, 208, 82,
+        121, 209, 81,
+        124, 210, 79,
+        126, 210, 78,
+        129, 211, 76,
+        131, 211, 75,
+        134, 212, 73,
+        136, 213, 71,
+        139, 213, 70,
+        141, 214, 68,
+        144, 214, 67,
+        146, 215, 65,
+        149, 215, 63,
+        151, 216, 62,
+        154, 216, 60,
+        157, 217, 58,
+        159, 217, 56,
+        162, 218, 55,
+        165, 218, 53,
+        167, 219, 51,
+        170, 219, 50,
+        173, 220, 48,
+        175, 220, 46,
+        178, 221, 44,
+        181, 221, 43,
+        183, 221, 41,
+        186, 222, 39,
+        189, 222, 38,
+        191, 223, 36,
+        194, 223, 34,
+        197, 223, 33,
+        199, 224, 31,
+        202, 224, 30,
+        205, 224, 29,
+        207, 225, 28,
+        210, 225, 27,
+        212, 225, 26,
+        215, 226, 25,
+        218, 226, 24,
+        220, 226, 24,
+        223, 227, 24,
+        225, 227, 24,
+        228, 227, 24,
+        231, 228, 25,
+        233, 228, 25,
+        236, 228, 26,
+        238, 229, 27,
+        241, 229, 28,
+        243, 229, 30,
+        246, 230, 31,
+        248, 230, 33,
+        250, 230, 34,
+        253, 231, 36,
+    ];
 
-            // Cyan to Purple
-            // Cyan RGB = (0, 1, 1)
-            // Purple RGB = (1, 0, 1)
-            // Interpolate linearly for R and G; B stays 1
-
-            const r = t;          // from 0 to 1
-            const g = 1 - t;      // from 1 to 0
-            const b = 1;          // always 1
-
-            lut.push(Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255), 255);
-        }
-
-        return lut;
+    viridisColorMap = (value: number) => {
+        const idx = Math.round(value) * 3;
+        return (
+            [
+                this.viridisColorMapArray[idx],
+                this.viridisColorMapArray[idx + 1],
+                this.viridisColorMapArray[idx + 2],
+            ]
+        )
     }
-
-    coolColorMapArray = this.createCoolColormapArray();
-
-    viridisColorMapArray0 = [[253, 231, 37],
-    [251, 231, 35],
-    [248, 230, 33],
-    [246, 230, 32],
-    [244, 230, 30],
-    [241, 229, 29],
-    [239, 229, 28],
-    [236, 229, 27],
-    [234, 229, 26],
-    [231, 228, 25],
-    [229, 228, 25],
-    [226, 228, 24],
-    [223, 227, 24],
-    [221, 227, 24],
-    [218, 227, 25],
-    [216, 226, 25],
-    [213, 226, 26],
-    [210, 226, 27],
-    [208, 225, 28],
-    [205, 225, 29],
-    [202, 225, 31],
-    [200, 224, 32],
-    [197, 224, 33],
-    [194, 223, 35],
-    [192, 223, 37],
-    [189, 223, 38],
-    [186, 222, 40],
-    [184, 222, 41],
-    [181, 222, 43],
-    [178, 221, 45],
-    [176, 221, 47],
-    [173, 220, 48],
-    [170, 220, 50],
-    [168, 219, 52],
-    [165, 219, 54],
-    [162, 218, 55],
-    [160, 218, 57],
-    [157, 217, 59],
-    [155, 217, 60],
-    [152, 216, 62],
-    [149, 216, 64],
-    [147, 215, 65],
-    [144, 215, 67],
-    [142, 214, 69],
-    [139, 214, 70],
-    [137, 213, 72],
-    [134, 213, 73],
-    [132, 212, 75],
-    [129, 211, 77],
-    [127, 211, 78],
-    [124, 210, 80],
-    [122, 209, 81],
-    [119, 209, 83],
-    [117, 208, 84],
-    [115, 208, 86],
-    [112, 207, 87],
-    [110, 206, 88],
-    [108, 205, 90],
-    [105, 205, 91],
-    [103, 204, 92],
-    [101, 203, 94],
-    [99, 203, 95],
-    [96, 202, 96],
-    [94, 201, 98],
-    [92, 200, 99],
-    [90, 200, 100],
-    [88, 199, 101],
-    [86, 198, 103],
-    [84, 197, 104],
-    [82, 197, 105],
-    [80, 196, 106],
-    [78, 195, 107],
-    [76, 194, 108],
-    [74, 193, 109],
-    [72, 193, 110],
-    [70, 192, 111],
-    [68, 191, 112],
-    [66, 190, 113],
-    [64, 189, 114],
-    [63, 188, 115],
-    [61, 188, 116],
-    [59, 187, 117],
-    [58, 186, 118],
-    [56, 185, 119],
-    [55, 184, 120],
-    [53, 183, 121],
-    [52, 182, 121],
-    [50, 182, 122],
-    [49, 181, 123],
-    [47, 180, 124],
-    [46, 179, 124],
-    [45, 178, 125],
-    [44, 177, 126],
-    [42, 176, 127],
-    [41, 175, 127],
-    [40, 174, 128],
-    [39, 173, 129],
-    [38, 173, 129],
-    [37, 172, 130],
-    [37, 171, 130],
-    [36, 170, 131],
-    [35, 169, 131],
-    [34, 168, 132],
-    [34, 167, 133],
-    [33, 166, 133],
-    [33, 165, 133],
-    [32, 164, 134],
-    [32, 163, 134],
-    [31, 162, 135],
-    [31, 161, 135],
-    [31, 161, 136],
-    [31, 160, 136],
-    [31, 159, 136],
-    [31, 158, 137],
-    [30, 157, 137],
-    [30, 156, 137],
-    [30, 155, 138],
-    [31, 154, 138],
-    [31, 153, 138],
-    [31, 152, 139],
-    [31, 151, 139],
-    [31, 150, 139],
-    [31, 149, 139],
-    [31, 148, 140],
-    [32, 147, 140],
-    [32, 146, 140],
-    [32, 146, 140],
-    [33, 145, 140],
-    [33, 144, 141],
-    [33, 143, 141],
-    [33, 142, 141],
-    [34, 141, 141],
-    [34, 140, 141],
-    [34, 139, 141],
-    [35, 138, 141],
-    [35, 137, 142],
-    [35, 136, 142],
-    [36, 135, 142],
-    [36, 134, 142],
-    [37, 133, 142],
-    [37, 132, 142],
-    [37, 131, 142],
-    [38, 130, 142],
-    [38, 130, 142],
-    [38, 129, 142],
-    [39, 128, 142],
-    [39, 127, 142],
-    [39, 126, 142],
-    [40, 125, 142],
-    [40, 124, 142],
-    [41, 123, 142],
-    [41, 122, 142],
-    [41, 121, 142],
-    [42, 120, 142],
-    [42, 119, 142],
-    [42, 118, 142],
-    [43, 117, 142],
-    [43, 116, 142],
-    [44, 115, 142],
-    [44, 114, 142],
-    [44, 113, 142],
-    [45, 113, 142],
-    [45, 112, 142],
-    [46, 111, 142],
-    [46, 110, 142],
-    [46, 109, 142],
-    [47, 108, 142],
-    [47, 107, 142],
-    [48, 106, 142],
-    [48, 105, 142],
-    [49, 104, 142],
-    [49, 103, 142],
-    [49, 102, 142],
-    [50, 101, 142],
-    [50, 100, 142],
-    [51, 99, 141],
-    [51, 98, 141],
-    [52, 97, 141],
-    [52, 96, 141],
-    [53, 95, 141],
-    [53, 94, 141],
-    [54, 93, 141],
-    [54, 92, 141],
-    [55, 91, 141],
-    [55, 90, 140],
-    [56, 89, 140],
-    [56, 88, 140],
-    [57, 86, 140],
-    [57, 85, 140],
-    [58, 84, 140],
-    [58, 83, 139],
-    [59, 82, 139],
-    [59, 81, 139],
-    [60, 80, 139],
-    [60, 79, 138],
-    [61, 78, 138],
-    [61, 77, 138],
-    [62, 76, 138],
-    [62, 74, 137],
-    [62, 73, 137],
-    [63, 72, 137],
-    [63, 71, 136],
-    [64, 70, 136],
-    [64, 69, 136],
-    [65, 68, 135],
-    [65, 66, 135],
-    [66, 65, 134],
-    [66, 64, 134],
-    [66, 63, 133],
-    [67, 62, 133],
-    [67, 61, 132],
-    [68, 59, 132],
-    [68, 58, 131],
-    [68, 57, 131],
-    [69, 56, 130],
-    [69, 55, 129],
-    [69, 53, 129],
-    [70, 52, 128],
-    [70, 51, 127],
-    [70, 50, 126],
-    [70, 48, 126],
-    [71, 47, 125],
-    [71, 46, 124],
-    [71, 45, 123],
-    [71, 44, 122],
-    [71, 42, 122],
-    [72, 41, 121],
-    [72, 40, 120],
-    [72, 38, 119],
-    [72, 37, 118],
-    [72, 36, 117],
-    [72, 35, 116],
-    [72, 33, 115],
-    [72, 32, 113],
-    [72, 31, 112],
-    [72, 29, 111],
-    [72, 28, 110],
-    [72, 27, 109],
-    [72, 26, 108],
-    [72, 24, 106],
-    [72, 23, 105],
-    [72, 22, 104],
-    [72, 20, 103],
-    [71, 19, 101],
-    [71, 17, 100],
-    [71, 16, 99],
-    [71, 14, 97],
-    [71, 13, 96],
-    [70, 11, 94],
-    [70, 10, 93],
-    [70, 8, 92],
-    [70, 7, 90],
-    [69, 5, 89],
-    [69, 4, 87],
-    [68, 2, 86],
-    [68, 1, 84]];
-
-    viridisColorMapArray = this.viridisColorMapArray0.reverse().flat();
-
     coolWarmColorMapArray = [
         58, 76, 192,
         59, 77, 193,
@@ -1347,16 +2736,6 @@ export class Image extends BaseWidget {
         179, 3, 38,
     ];
 
-    viridisColorMap = (value: number) => {
-        const idx = Math.round(value) * 3;
-        return (
-            [
-                this.viridisColorMapArray[idx],
-                this.viridisColorMapArray[idx + 1],
-                this.viridisColorMapArray[idx + 2],
-            ]
-        )
-    }
 
     coolWarmColorMap = (value: number) => {
         const idx = Math.round(value) * 3;
@@ -2718,18 +4097,576 @@ export class Image extends BaseWidget {
         )
     }
 
+    spectralColorMapArray = [
+        158, 1, 66,
+        160, 3, 66,
+        162, 5, 67,
+        164, 8, 67,
+        166, 10, 68,
+        168, 12, 68,
+        170, 15, 69,
+        173, 17, 69,
+        175, 20, 70,
+        177, 22, 70,
+        179, 24, 71,
+        181, 27, 71,
+        183, 29, 72,
+        186, 32, 72,
+        188, 34, 73,
+        190, 36, 73,
+        192, 39, 74,
+        194, 41, 74,
+        196, 44, 75,
+        198, 46, 75,
+        201, 48, 76,
+        203, 51, 76,
+        205, 53, 77,
+        207, 56, 77,
+        209, 58, 78,
+        211, 60, 78,
+        213, 62, 78,
+        214, 64, 78,
+        216, 66, 77,
+        217, 68, 77,
+        218, 70, 76,
+        219, 72, 76,
+        220, 73, 75,
+        222, 75, 75,
+        223, 77, 75,
+        224, 79, 74,
+        225, 81, 74,
+        226, 83, 73,
+        228, 85, 73,
+        229, 86, 72,
+        230, 88, 72,
+        231, 90, 71,
+        233, 92, 71,
+        234, 94, 70,
+        235, 96, 70,
+        236, 97, 69,
+        237, 99, 69,
+        239, 101, 68,
+        240, 103, 68,
+        241, 105, 67,
+        242, 107, 67,
+        244, 109, 67,
+        244, 111, 68,
+        244, 114, 69,
+        245, 116, 70,
+        245, 119, 71,
+        245, 121, 72,
+        246, 124, 74,
+        246, 126, 75,
+        246, 129, 76,
+        247, 131, 77,
+        247, 134, 78,
+        247, 137, 79,
+        248, 139, 81,
+        248, 142, 82,
+        248, 144, 83,
+        249, 147, 84,
+        249, 149, 85,
+        250, 152, 86,
+        250, 154, 88,
+        250, 157, 89,
+        251, 159, 90,
+        251, 162, 91,
+        251, 165, 92,
+        252, 167, 94,
+        252, 170, 95,
+        252, 172, 96,
+        253, 174, 97,
+        253, 176, 99,
+        253, 178, 101,
+        253, 180, 102,
+        253, 182, 104,
+        253, 184, 106,
+        253, 186, 107,
+        253, 188, 109,
+        253, 190, 110,
+        253, 192, 112,
+        253, 194, 114,
+        253, 196, 115,
+        253, 198, 117,
+        253, 200, 119,
+        253, 202, 120,
+        253, 204, 122,
+        253, 206, 124,
+        253, 208, 125,
+        253, 210, 127,
+        253, 212, 129,
+        253, 214, 130,
+        253, 216, 132,
+        253, 218, 134,
+        253, 220, 135,
+        253, 222, 137,
+        254, 224, 139,
+        254, 225, 141,
+        254, 226, 143,
+        254, 227, 145,
+        254, 228, 147,
+        254, 230, 149,
+        254, 231, 151,
+        254, 232, 153,
+        254, 233, 155,
+        254, 234, 157,
+        254, 236, 159,
+        254, 237, 161,
+        254, 238, 163,
+        254, 239, 165,
+        254, 241, 167,
+        254, 242, 169,
+        254, 243, 171,
+        254, 244, 173,
+        254, 245, 175,
+        254, 247, 177,
+        254, 248, 179,
+        254, 249, 181,
+        254, 250, 183,
+        254, 251, 185,
+        254, 253, 187,
+        254, 254, 189,
+        254, 254, 190,
+        253, 254, 188,
+        252, 254, 187,
+        251, 253, 185,
+        250, 253, 184,
+        249, 252, 182,
+        248, 252, 181,
+        247, 252, 179,
+        246, 251, 178,
+        245, 251, 176,
+        244, 250, 174,
+        243, 250, 173,
+        242, 250, 171,
+        241, 249, 170,
+        240, 249, 168,
+        239, 248, 167,
+        238, 248, 165,
+        237, 248, 164,
+        236, 247, 162,
+        235, 247, 161,
+        234, 246, 159,
+        233, 246, 158,
+        232, 246, 156,
+        231, 245, 155,
+        230, 245, 153,
+        230, 245, 152,
+        227, 244, 152,
+        225, 243, 152,
+        223, 242, 153,
+        220, 241, 153,
+        218, 240, 154,
+        216, 239, 154,
+        213, 238, 155,
+        211, 237, 155,
+        209, 236, 156,
+        206, 235, 156,
+        204, 234, 157,
+        202, 233, 157,
+        199, 232, 158,
+        197, 231, 158,
+        195, 230, 159,
+        192, 229, 159,
+        190, 229, 160,
+        188, 228, 160,
+        186, 227, 160,
+        183, 226, 161,
+        181, 225, 161,
+        179, 224, 162,
+        176, 223, 162,
+        174, 222, 163,
+        172, 221, 163,
+        169, 220, 164,
+        166, 219, 164,
+        164, 218, 164,
+        161, 217, 164,
+        158, 216, 164,
+        156, 215, 164,
+        153, 214, 164,
+        150, 213, 164,
+        148, 212, 164,
+        145, 210, 164,
+        142, 209, 164,
+        139, 208, 164,
+        137, 207, 164,
+        134, 206, 164,
+        131, 205, 164,
+        129, 204, 164,
+        126, 203, 164,
+        123, 202, 164,
+        120, 201, 164,
+        118, 200, 164,
+        115, 199, 164,
+        112, 198, 164,
+        110, 197, 164,
+        107, 196, 164,
+        104, 195, 164,
+        102, 194, 165,
+        99, 191, 165,
+        97, 189, 166,
+        95, 187, 167,
+        93, 184, 168,
+        91, 182, 169,
+        89, 180, 170,
+        87, 178, 171,
+        85, 175, 172,
+        83, 173, 173,
+        81, 171, 174,
+        79, 168, 175,
+        77, 166, 176,
+        75, 164, 177,
+        73, 162, 178,
+        71, 159, 179,
+        69, 157, 180,
+        67, 155, 181,
+        65, 153, 181,
+        63, 150, 182,
+        61, 148, 183,
+        59, 146, 184,
+        57, 143, 185,
+        55, 141, 186,
+        53, 139, 187,
+        51, 137, 188,
+        50, 134, 188,
+        52, 132, 187,
+        54, 130, 186,
+        56, 128, 185,
+        57, 125, 184,
+        59, 123, 183,
+        61, 121, 182,
+        62, 119, 181,
+        64, 117, 180,
+        66, 114, 178,
+        68, 112, 177,
+        69, 110, 176,
+        71, 108, 175,
+        73, 105, 174,
+        75, 103, 173,
+        76, 101, 172,
+        78, 99, 171,
+        80, 96, 170,
+        81, 94, 169,
+        83, 92, 168,
+        85, 90, 167,
+        87, 87, 166,
+        88, 85, 165,
+        90, 83, 164,
+        92, 81, 163,
+        94, 79, 162,];
+
+
+    spectralColorMap = (value: number) => {
+        const idx = Math.round(value) * 3;
+        return (
+            [
+                this.spectralColorMapArray[idx],
+                this.spectralColorMapArray[idx + 1],
+                this.spectralColorMapArray[idx + 2],
+            ]
+        )
+    }
+
+    nipySpectralColorMapArray = [
+        0, 0, 0,
+        9, 0, 10,
+        18, 0, 21,
+        28, 0, 31,
+        37, 0, 42,
+        46, 0, 53,
+        56, 0, 63,
+        65, 0, 74,
+        74, 0, 85,
+        84, 0, 95,
+        93, 0, 106,
+        102, 0, 117,
+        112, 0, 127,
+        119, 0, 136,
+        120, 0, 137,
+        122, 0, 138,
+        123, 0, 140,
+        124, 0, 141,
+        126, 0, 142,
+        127, 0, 144,
+        128, 0, 145,
+        129, 0, 146,
+        131, 0, 148,
+        132, 0, 149,
+        133, 0, 150,
+        135, 0, 152,
+        130, 0, 153,
+        119, 0, 155,
+        109, 0, 156,
+        98, 0, 157,
+        87, 0, 159,
+        77, 0, 160,
+        66, 0, 161,
+        55, 0, 163,
+        45, 0, 164,
+        34, 0, 165,
+        23, 0, 167,
+        13, 0, 168,
+        2, 0, 169,
+        0, 0, 173,
+        0, 0, 177,
+        0, 0, 181,
+        0, 0, 185,
+        0, 0, 189,
+        0, 0, 193,
+        0, 0, 197,
+        0, 0, 201,
+        0, 0, 205,
+        0, 0, 209,
+        0, 0, 213,
+        0, 0, 217,
+        0, 0, 221,
+        0, 9, 221,
+        0, 18, 221,
+        0, 28, 221,
+        0, 37, 221,
+        0, 46, 221,
+        0, 56, 221,
+        0, 65, 221,
+        0, 74, 221,
+        0, 84, 221,
+        0, 93, 221,
+        0, 102, 221,
+        0, 112, 221,
+        0, 119, 221,
+        0, 122, 221,
+        0, 125, 221,
+        0, 127, 221,
+        0, 130, 221,
+        0, 133, 221,
+        0, 135, 221,
+        0, 138, 221,
+        0, 141, 221,
+        0, 143, 221,
+        0, 146, 221,
+        0, 149, 221,
+        0, 151, 221,
+        0, 153, 219,
+        0, 155, 215,
+        0, 156, 211,
+        0, 157, 207,
+        0, 159, 203,
+        0, 160, 199,
+        0, 161, 195,
+        0, 163, 191,
+        0, 164, 187,
+        0, 165, 183,
+        0, 167, 179,
+        0, 168, 175,
+        0, 169, 171,
+        0, 170, 168,
+        0, 170, 165,
+        0, 170, 162,
+        0, 170, 160,
+        0, 170, 157,
+        0, 170, 154,
+        0, 170, 151,
+        0, 170, 149,
+        0, 170, 146,
+        0, 170, 143,
+        0, 170, 141,
+        0, 170, 138,
+        0, 170, 135,
+        0, 168, 125,
+        0, 167, 114,
+        0, 166, 103,
+        0, 164, 93,
+        0, 163, 82,
+        0, 162, 71,
+        0, 160, 61,
+        0, 159, 50,
+        0, 158, 39,
+        0, 156, 29,
+        0, 155, 18,
+        0, 154, 7,
+        0, 153, 0,
+        0, 156, 0,
+        0, 158, 0,
+        0, 161, 0,
+        0, 164, 0,
+        0, 166, 0,
+        0, 169, 0,
+        0, 172, 0,
+        0, 174, 0,
+        0, 177, 0,
+        0, 180, 0,
+        0, 182, 0,
+        0, 185, 0,
+        0, 188, 0,
+        0, 190, 0,
+        0, 193, 0,
+        0, 196, 0,
+        0, 198, 0,
+        0, 201, 0,
+        0, 204, 0,
+        0, 207, 0,
+        0, 209, 0,
+        0, 212, 0,
+        0, 215, 0,
+        0, 217, 0,
+        0, 220, 0,
+        0, 223, 0,
+        0, 225, 0,
+        0, 228, 0,
+        0, 231, 0,
+        0, 233, 0,
+        0, 236, 0,
+        0, 239, 0,
+        0, 241, 0,
+        0, 244, 0,
+        0, 247, 0,
+        0, 249, 0,
+        0, 252, 0,
+        0, 255, 0,
+        14, 255, 0,
+        29, 255, 0,
+        43, 255, 0,
+        58, 255, 0,
+        73, 255, 0,
+        87, 255, 0,
+        102, 255, 0,
+        117, 255, 0,
+        131, 255, 0,
+        146, 255, 0,
+        161, 255, 0,
+        175, 255, 0,
+        187, 254, 0,
+        191, 253, 0,
+        195, 251, 0,
+        199, 250, 0,
+        203, 249, 0,
+        207, 247, 0,
+        211, 246, 0,
+        215, 245, 0,
+        219, 243, 0,
+        223, 242, 0,
+        227, 241, 0,
+        231, 239, 0,
+        235, 238, 0,
+        238, 236, 0,
+        239, 233, 0,
+        241, 231, 0,
+        242, 228, 0,
+        243, 225, 0,
+        245, 223, 0,
+        246, 220, 0,
+        247, 217, 0,
+        249, 215, 0,
+        250, 212, 0,
+        251, 209, 0,
+        253, 207, 0,
+        254, 204, 0,
+        255, 201, 0,
+        255, 197, 0,
+        255, 193, 0,
+        255, 189, 0,
+        255, 185, 0,
+        255, 181, 0,
+        255, 177, 0,
+        255, 173, 0,
+        255, 169, 0,
+        255, 165, 0,
+        255, 161, 0,
+        255, 157, 0,
+        255, 153, 0,
+        255, 141, 0,
+        255, 129, 0,
+        255, 117, 0,
+        255, 105, 0,
+        255, 93, 0,
+        255, 81, 0,
+        255, 69, 0,
+        255, 57, 0,
+        255, 44, 0,
+        255, 32, 0,
+        255, 20, 0,
+        255, 8, 0,
+        254, 0, 0,
+        251, 0, 0,
+        249, 0, 0,
+        246, 0, 0,
+        243, 0, 0,
+        241, 0, 0,
+        238, 0, 0,
+        235, 0, 0,
+        233, 0, 0,
+        230, 0, 0,
+        227, 0, 0,
+        225, 0, 0,
+        222, 0, 0,
+        220, 0, 0,
+        219, 0, 0,
+        217, 0, 0,
+        216, 0, 0,
+        215, 0, 0,
+        213, 0, 0,
+        212, 0, 0,
+        211, 0, 0,
+        209, 0, 0,
+        208, 0, 0,
+        207, 0, 0,
+        205, 0, 0,
+        204, 0, 0,
+        204, 12, 12,
+        204, 27, 27,
+        204, 44, 44,
+        204, 60, 60,
+        204, 76, 76,
+        204, 92, 92,
+        204, 108, 108,
+        204, 124, 124,
+        204, 140, 140,
+        204, 156, 156,
+        204, 172, 172,
+        204, 188, 188,
+        204, 204, 204,
+    ];
+
+    nipySpectralColorMap = (value: number) => {
+        const idx = Math.round(value) * 3;
+        return (
+            [
+                this.nipySpectralColorMapArray[idx],
+                this.nipySpectralColorMapArray[idx + 1],
+                this.nipySpectralColorMapArray[idx + 2],
+            ]
+        )
+    }
+
     colorMapFunctions: Record<string, any> = {
         gray: this.grayColorMap,
-        hot: this.hotColorMap,
-        cool: this.coolColorMap,
         jet: this.jetColorMap,
         viridis: this.viridisColorMap,
-        coolwarm: this.coolWarmColorMap,
         seimsic: this.seimsicColorMap,
+        hot: this.hotColorMap,
+        cool: this.coolColorMap,
+        coolwarm: this.coolWarmColorMap,
         plasma: this.plasmaColorMap,
         inferno: this.infernoColorMap,
         magma: this.magmaColorMap,
         cividis: this.cividisColorMap,
+        spectral: this.spectralColorMap,
+        "nipy spectral": this.nipySpectralColorMap,
+    }
+
+    colorMapArrays: Record<string, any> = {
+        gray: this.grayColorMapArray,
+        jet: this.jetColorMapArray,
+        viridis: this.viridisColorMapArray,
+        seimsic: this.seimsicColorMapArray,
+        hot: this.hotColorMapArray,
+        cool: this.coolColorMapArray,
+        coolwarm: this.coolWarmColorMapArray,
+        plasma: this.plasmaColorMapArray,
+        inferno: this.infernoColorMapArray,
+        magma: this.magmaColorMapArray,
+        cividis: this.cividisColorMapArray,
+        spectral: this.spectralColorMapArray,
+        "nipy spectral": this.nipySpectralColorMapArray,
     }
 
 
@@ -2972,6 +4909,13 @@ export class Image extends BaseWidget {
             alarmBackground: false,
             alarmLevel: "MINOR",
             colorMap: "gray", // "jet", "gray"
+            autoZ: true,
+            zMin: 0,
+            zMax: 255,
+            xMin: 0,
+            xMax: 255,
+            yMin: 0,
+            yMax: 255,
         },
         channelNames: [],
         groupNames: [],
