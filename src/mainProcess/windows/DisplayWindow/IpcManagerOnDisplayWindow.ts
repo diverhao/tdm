@@ -33,6 +33,7 @@ import { Table } from "../../../rendererProcess/widgets/Table/Table";
 import { FileBrowser, type_folder_content } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
 import path from "path";
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
+import { Image } from "../../../rendererProcess/widgets/Image/Image";
 
 
 // var recorder;
@@ -681,7 +682,7 @@ export class IpcManagerOnDisplayWindow {
                                 // do not force update this widget upon new DBR data arrival, use its own mechanism to trigger the update
                                 g_widgets1.removeFromForceUpdateWidgets(widgetKey);
                             }
-                            if (widget instanceof DataViewer || widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph || widget instanceof SeqGraph) {
+                            if (widget instanceof DataViewer || widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph || widget instanceof SeqGraph || widget instanceof Image) {
                                 dbrDataMappedWidgets.push(widget);
                                 dbrDataMappedWidgetKeys.push(widgetKey)
                             }
@@ -694,7 +695,7 @@ export class IpcManagerOnDisplayWindow {
         }
 
         for (const widget of dbrDataMappedWidgets) {
-            if (widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph || widget instanceof SeqGraph) {
+            if (widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph || widget instanceof SeqGraph || widget instanceof Image) {
                 widget.mapDbrDataWitNewData(Object.keys(newDbrData));
             } else if (widget instanceof DataViewer) {
                 // remove force update, use the internal interval to update

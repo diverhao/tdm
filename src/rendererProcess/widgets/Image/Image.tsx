@@ -12,7 +12,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Log } from "../../../mainProcess/log/Log";
 import * as THREE from 'three';
-import { pi } from "mathjs";
+import { pi, re } from "mathjs";
 
 
 export type type_Image_tdl = {
@@ -138,6 +138,8 @@ export class Image extends BaseWidget {
 
     // _rules: TextUpdatRules;
     axisWidth: number = 40;
+    configHeight: number = 20;
+    autoXY: boolean = true;
 
     constructor(widgetTdl: type_Image_tdl) {
         super(widgetTdl);
@@ -256,10 +258,11 @@ export class Image extends BaseWidget {
     };
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    forceUpdate = (input: any) => {};
+    forceUpdate = (input: any) => { };
     _ElementAreaRaw = ({ }: any): JSX.Element => {
         const [, forceUpdate] = React.useState({});
         this.forceUpdate = forceUpdate;
+
         const allStyle = this.getAllStyle();
         const allText = this.getAllText();
         let style: React.CSSProperties = {};
@@ -315,27 +318,21 @@ export class Image extends BaseWidget {
 
         return (
             <div
-                style={style}
-                onMouseDown={this._handleMouseDown}
+                style={{ ...style, alignItems: "flex-end" }}
+                onMouseDown={(event: any) => {
+                    this._handleMouseDown(event);
+                    if (this.showConfigPage === true) {
+                        this.showConfigPage = false;
+                        this.forceUpdate({});
+                    }
+
+                }}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
                 <this._ElementImageContainer />
+                <this._ElementColorMap />
+
                 {this.showConfigPage === true ? <this._ElementConfigPage /> : null}
-                {/* <div
-                    style={{
-                        display: "inline-flex",
-                        flexDirection: "column",
-                    }}
-                >
-                    <this._ElementXrange></this._ElementXrange>
-                    <this._ElementYrange></this._ElementYrange>
-                    <this._ElementZrange></this._ElementZrange>
-                    <this._ElementSwitchColorMap></this._ElementSwitchColorMap>
-                    <this._ElementXyzCursorValues></this._ElementXyzCursorValues>
-                </div>
-                <this._ElementZoomInButton />
-                <this._ElementZoomOutButton />
-                <this._ElementResetViewToFullButton /> */}
             </div>
         );
     };
@@ -345,72 +342,177 @@ export class Image extends BaseWidget {
         return (
             <div style={{
                 position: "absolute",
-                width: "100%",
-                height: "100%",
-                backgroundColor: "white",
-            }}>
+                // width: "100%",
+                // height: "100%",
+                top: 5,
+                left: 5,
+                padding: 20,
+                boxSizing: "border-box",
+                borderRadius: 10,
+                backgroundColor: "rgba(150,150,150,0.5)",
+                backdropFilter: "blur(10px)",
+                border: "1px solid white",
+                outline: "1px solid black",
+                textShadow: `
+      -0.5px -0.5px 0 white,
+       0.5px -0.5px 0 white,
+      -0.5px  0.5px 0 white,
+       0.5px  0.5px 0 white
+    `
+            }}
+                onMouseDown={(event: any) => {
+                    event.stopPropagation();
+                }}
+            >
                 <div
                     style={{
                         display: "inline-flex",
                         flexDirection: "column",
+                        // maxWidth: "20%",
+                        // backgroundColor: "yellow",
                     }}
                 >
-                    <this._ElementXrange></this._ElementXrange>
-                    <this._ElementYrange></this._ElementYrange>
-                    <this._ElementZrange></this._ElementZrange>
-                    <this._ElementSwitchColorMap></this._ElementSwitchColorMap>
-                    <this._ElementXyzCursorValues></this._ElementXyzCursorValues>
+                    <this._ElementXrange />
+                    <this._ElementYrange />
+                    {/* <this._ElementZrange></this._ElementZrange> */}
+                    <this._ElementSwitchColorMap />
+                    {/* <this._ElementXyzCursorValues></this._ElementXyzCursorValues> */}
                 </div>
-                <this._ElementZoomInButton />
-                <this._ElementZoomOutButton />
-                <this._ElementResetViewToFullButton />
-                <div 
-                style={{
-                    width: 20,
-                    height: 20,
-                    backgroundColor: "blue",
-                }}
-                onClick={() => {
-                    this.showConfigPage = false;
-                    this.forceUpdate({});
-                }}
+                {/* <this._ElementZoomInButton /> */}
+                {/* <this._ElementZoomOutButton /> */}
+                {/* <this._ElementResetViewToFullButton /> */}
+                {/* <div
+                    style={{
+                        width: 20,
+                        height: 20,
+                        backgroundColor: "blue",
+                    }}
+                    onClick={() => {
+                        this.showConfigPage = false;
+                        this.forceUpdate({});
+                    }}
                 >
-
-                </div>
+                </div> */}
 
             </div>
         )
     }
 
     colorMapWidth: number = 50;
-    calcImageSize = () => {
-        return Math.min(this.getAllStyle()["width"] - this.colorMapWidth, this.getAllStyle()["height"]) - this.axisWidth;
+    getXmin = () => {
+        const { width, height } = this.getImageDimensions();
+        if (this.autoXY === true) {
+            return 0;
+        } else {
+            return this.getText()["xMin"];
+        }
     }
+
+    getXmax = () => {
+        const { width, height } = this.getImageDimensions();
+        if (this.autoXY === true) {
+            return width;
+        } else {
+            return this.getText()["xMax"];
+        }
+    }
+
+    getYmin = () => {
+        const { width, height } = this.getImageDimensions();
+        if (this.autoXY === true) {
+            return 0;
+        } else {
+            return this.getText()["yMin"];
+        }
+    }
+
+    getYmax = () => {
+        const { width, height } = this.getImageDimensions();
+        if (this.autoXY === true) {
+            return height;
+        } else {
+            return this.getText()["yMax"];
+        }
+    }
+
+    /**
+     * compute the image size in unite of screen pixel
+     */
+    imageSize: [number, number] = [5, 5];
+    getImageSize = () => {
+        return this.imageSize;
+    }
+    calcImageSize = () => {
+        // const { width, height } = this.getImageDimensions();
+        const xMin = this.getXmin();
+        const xMax = this.getXmax();
+        const yMin = this.getYmin();
+        const yMax = this.getYmax();
+        const width = xMax - xMin;
+        const height = yMax - yMin;
+
+        if (width === 0 || height === 0) {
+            // return [5, 5];
+            this.imageSize = [0, 0];
+            return;
+        }
+        const containerWidth = this.getAllStyle()["width"] - this.axisWidth - this.colorMapWidth;
+        const containerHeight = this.getAllStyle()["height"] - this.axisWidth - this.configHeight;
+        if (containerHeight <= 0 || containerWidth <= 0) {
+            // return [5, 5];
+            this.imageSize = [0, 0];
+            return;
+        }
+        let result: [number, number] = [0, 0];
+        if (containerWidth / containerHeight > width / height) {
+            result = [containerHeight * width / height, containerHeight];
+        } else {
+            result = [containerWidth, containerWidth * height / width];
+
+        }
+        // console.log("image width/height", width, height, result)
+        // return result;
+        this.imageSize = result;
+    }
+    mapDbrDataWitNewData = (newDbrData: any) => {
+        // if new data arrives the first time, re-calc image size on screen
+
+        if (this.imageSize[0] === 0 || this.imageSize[1] === 0) {
+            this.processData(true);
+            // this.calcImageSize();
+        } else {
+            this.processData(false);
+        }
+    }
+
 
     forceUpdateImageContainer = (input: any) => { };
 
     /**
-     * x-axis, y-axis, and image
+     * x-axis, y-axis, image, and config
      */
     _ElementImageContainer = () => {
         const [, forceUpdate] = React.useState({});
         this.forceUpdateImageContainer = forceUpdate;
+
         this.forceUpdateImage = forceUpdate;
+        // console.log(this.calcImageSize())
         return (
             <div
                 style={{
-                    width: this.calcImageSize() + this.axisWidth,
-                    height: this.calcImageSize() + this.axisWidth,
+                    width: this.getImageSize()[0] + this.axisWidth,
+                    height: this.getImageSize()[1] + this.axisWidth + this.configHeight,
                     display: "inline-flex",
                     flexDirection: 'column',
                 }}
             >
+                {/* y axis and image */}
                 <div
                     style={{
                         display: "inline-flex",
                         flexDirection: "row",
-                        width: "100%",
-                        height: this.calcImageSize(),
+                        width: this.getImageSize()[0] + this.axisWidth,
+                        height: this.getImageSize()[1],
                     }}
                 >
                     {/* y axis */}
@@ -418,67 +520,142 @@ export class Image extends BaseWidget {
                         style={{
                             // backgroundColor: "blue",
                             width: this.axisWidth,
-                            height: this.calcImageSize(),
+                            height: this.getImageSize()[1],
                         }}
                     >
                         <this._ElementYAxis
-                            totalHeight={this.renderer === undefined ? 20 : this.renderer.domElement.height}
+                        // totalHeight={this.renderer === undefined ? 20 : this.renderer.domElement.height}
                         />
 
                     </div>
+                    {/* image */}
                     <this._ElementImage />
-                    <this._ElementColorMap
-                        totalHeight={this.renderer === undefined ? 20 : this.renderer.domElement.height}
-                    ></this._ElementColorMap>
-
                 </div>
 
+                {/* bottom left corner and x axis */}
                 <div
                     style={{
                         display: "inline-flex",
                         flexDirection: "row",
-                        width: "100%",
-                        height: this.calcImageSize(),
+                        width: this.getImageSize()[0] + this.axisWidth,
+                        height: this.axisWidth,
                     }}
                 >
+                    {/* bottom left corner */}
                     <div
                         style={{
                             // backgroundColor: "green",
                             width: this.axisWidth,
                             height: this.axisWidth,
                         }}
-                        onClick={() => {
-                            this.showConfigPage = true;
-                            this.forceUpdate({});
-                        }}
+                    // onClick={() => {
+                    //     this.showConfigPage = true;
+                    //     this.forceUpdate({});
+                    // }}
                     >
                     </div>
+                    {/* x axis */}
                     <div
                         style={{
                             // backgroundColor: this.renderer !== undefined ? "cyan" : "magenta",
                             // opacity: 1,
-                            width: this.renderer === undefined ? 20 : this.renderer.domElement.width,
+                            // width: this.renderer === undefined ? 20 : this.renderer.domElement.width,
+                            width: this.getImageSize()[0],
                             height: this.axisWidth,
                         }}
                     >
                         <this._ElementXAxis
-                            totalWidth={this.renderer === undefined ? 20 : this.renderer.domElement.width}
+                        // totalWidth={this.renderer === undefined ? 20 : this.renderer.domElement.width}
                         />
                     </div>
+                </div>
+                <div
+                    style={{
+                        height: this.configHeight,
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                    }}
+                >
+                    <div
+                        style={{
+                            height: this.configHeight,
+                            display: "inline-flex",
+                            flexDirection: "row",
+                            justifyContent: "flex-start",
+                            alignItems: "center"
+                        }}
+                    >
+                        {/* <this._ElementXrange></this._ElementXrange>
+                    <this._ElementYrange></this._ElementYrange> */}
+                        {/* config page */}
+                        <img
+                            onMouseDown={(event: any) => {
+                                event.stopPropagation();
+                                if (this.showConfigPage === true) {
+                                    this.showConfigPage = false;
+
+                                } else {
+                                    this.showConfigPage = true;
+
+                                }
+                                this.forceUpdate({});
+                            }}
+                            onMouseOver={() => {
+                                this.setHintText("More options");
+                            }}
+                            onMouseLeave={() => {
+                                this.setHintText("");
+                            }}
+
+                            src={"../../resources/webpages/settings.svg"}
+                            width={this.configHeight}
+                        ></img>
+                        {/* color map range */}
+                        <this._ElementZrange />
+                        <this._ElementZoomInButton />
+                        <this._ElementResetViewToFullButton />
+                        <this._ElementZoomOutButton />
+                        <this._ElementHint />
+                    </div>
+                    {/* cursor coordinate */}
+                    <this._ElementXyzCursorValues />
                 </div>
             </div>
         )
     }
 
+    setHintText = (input: string) => { };
+    _ElementHint = () => {
+        const [hintText, setHintText] = React.useState("");
+        this.setHintText = setHintText;
+        return (
+            <div
+                style={{
+                    color: "rgba(150, 150, 150, 1)"
+                }}
+            >
+                {hintText}
+            </div>
+        )
+    }
 
-    _ElementXAxis = ({ totalWidth }: { totalWidth: number }) => {
+
+    _ElementXAxis = () => {
+        const totalWidth = this.getImageSize()[0];
         const calcTicks = () => {
-            if (this.camera === undefined) {
-                return [];
-            }
+
             const { width, height } = this.getImageDimensions();
-            const min = this.camera.left + width / 2;
-            const max = this.camera.right + width / 2;
+            let max = this.getXmax();
+            let min = this.getXmin();
+            if (this.camera !== undefined) {
+                min = this.camera.left + width / 2;
+                max = this.camera.right + width / 2;
+
+            }
+
+
             let dx = 1;
             if (max - min > 1000) {
                 dx = 200;
@@ -507,8 +684,8 @@ export class Image extends BaseWidget {
             for (let value = xStart; value < max; value = value + dx) {
                 result.push([Math.round(value), slope * (Math.round(value) - min)])
             }
-            console.log(slope, min, max, this.camera.left, this.camera.right)
-            console.log(result)
+            // console.log(slope, min, max, this.camera.left, this.camera.right)
+            // console.log(result)
             return result;
 
         };
@@ -590,15 +767,19 @@ export class Image extends BaseWidget {
         )
     }
 
-    _ElementYAxis = ({ totalHeight }: { totalHeight: number }) => {
-        const calcTicks = () => {
-            if (this.camera === undefined) {
-                return [];
-            }
-            const { width, height } = this.getImageDimensions();
+    _ElementYAxis = () => {
+        const totalHeight = this.getImageSize()[1];
 
-            const min = this.camera.bottom + height / 2;
-            const max = this.camera.top + height / 2;
+        const calcTicks = () => {
+            const { width, height } = this.getImageDimensions();
+            let max = this.getYmax();
+            let min = this.getYmin();
+            if (this.camera !== undefined) {
+                min = this.camera.bottom + height / 2;
+                max = this.camera.top + height / 2;
+                // return [];
+            }
+
             // console.log(min, max)
             let dy = 1;
             if (max - min > 1000) {
@@ -629,10 +810,11 @@ export class Image extends BaseWidget {
                 result.push([Math.round(value), slope * (Math.round(value) - min)])
             }
             // console.log(slope, min, max, this.camera.left, this.camera.right)
-            console.log(result)
+            // console.log(result)
             return result;
 
         };
+        // console.log("y axis ====================", totalHeight, calcTicks())
         return (
             <div style={{
                 width: "100%",
@@ -710,12 +892,11 @@ export class Image extends BaseWidget {
 
     forceUpdateColorMap = (input: any) => { };
 
-    _ElementColorMap = ({ totalHeight }: { totalHeight: number }) => {
+    _ElementColorMap = () => {
+        const [, forceUpdate] = React.useState({});
+
+        this.forceUpdateColorMap = forceUpdate;
         const calcTicks = () => {
-            if (this.camera === undefined) {
-                return [];
-            }
-            const { width, height } = this.getImageDimensions();
 
             const min = this.zMin;
             const max = this.zMax;
@@ -751,7 +932,7 @@ export class Image extends BaseWidget {
 
             let yStart = Math.ceil(min / dy) * dy;
 
-            const slope = totalHeight / (max - min);
+            const slope = this.getImageSize()[1] / (max - min);
 
 
             const result: [number, number][] = [];
@@ -759,7 +940,7 @@ export class Image extends BaseWidget {
                 result.push([Math.round(value), slope * (Math.round(value) - min)])
             }
             // console.log(slope, min, max, this.camera.left, this.camera.right)
-            console.log(result)
+            // console.log(result)
             return result;
 
         };
@@ -767,30 +948,31 @@ export class Image extends BaseWidget {
             <div style={{
                 // position: "absolute",
                 // zIndex: 1000,
-                right: 0,
-                bottom: 0,
+                // right: 0,
+                // bottom: 0,
                 // marginLeft: 20,
                 // paddingLeft: 20,
 
                 // width: "100%",
                 // height: "100%",
-                height: totalHeight,
+                height: this.getImageSize()[1],
                 // backgroundColor: "red",
                 position: "relative",
                 display: "inline-flex",
                 justifyContent: "flex-end",
+                marginBottom: this.axisWidth + this.configHeight,
             }}>
                 {/* long vertical line */}
                 <svg
                     style={{
                         height: "100%",
-                        width: "10px",
-                        left: 50,
+                        width: "25px",
+                        // left: 80,
                     }}
 
                 >
                     <polyline
-                        points={`9,0 9,${totalHeight}`}
+                        points={`200,0 200,${this.getImageSize()[1]}`}
                         strokeWidth={`2px`}
                         stroke={"black"}
                         fill="none"
@@ -803,7 +985,7 @@ export class Image extends BaseWidget {
                                 style={{
                                     position: "absolute",
                                     right: 0 + 15,
-                                    top: totalHeight - y,
+                                    top: this.getImageSize()[1] - y,
                                     width: 7,
                                     height: 3,
                                     display: "inline-flex",
@@ -826,7 +1008,7 @@ export class Image extends BaseWidget {
                                 style={{
                                     position: "absolute",
                                     right: 20 + 10,
-                                    top: totalHeight - y,
+                                    top: this.getImageSize()[1] - y,
                                     transform: "rotate(270deg)",
                                     width: 0,
                                     height: 0,
@@ -866,8 +1048,8 @@ export class Image extends BaseWidget {
     scene: THREE.Scene | undefined = undefined;
     camera: THREE.OrthographicCamera | undefined = undefined;
     textureData: Uint8Array | undefined = undefined;
-    imageWidth: number = 0;
-    imageHeight: number = 0;
+    // imageWidth: number = 0;
+    // imageHeight: number = 0;
     forceUpdateImage = (input: any) => { };
     mountRef: any = undefined;
     zoomLevel: number = 1;
@@ -887,8 +1069,8 @@ export class Image extends BaseWidget {
         this.camera = undefined;
         this.textureData = undefined;
         this.mountRef = undefined;
-        this.imageWidth = 0;
-        this.imageHeight = 0;
+        this.imageSize[0] = 0;
+        this.imageSize[1] = 0;
     }
 
 
@@ -899,19 +1081,11 @@ export class Image extends BaseWidget {
         if (this.camera === undefined || this.scene === undefined || this.renderer === undefined) {
             return;
         }
-
         this.zoomLevel = 1;
-        const zoom = 1;
-        const { width, height } = this.getImageDimensions();
-        const camera = this.camera;
-        // const panX = dx / pixelActualSize;
-        // const panY = dy / pixelActualSize;
-        camera.left = -width / 2 / zoom;
-        camera.right = width / 2 / zoom;
-        camera.top = height / 2 / zoom;
-        camera.bottom = -height / 2 / zoom;
-
-        camera.updateProjectionMatrix();
+        this.autoXY = true;
+        this.resetImage();
+        this.processData(true);
+        // this.calcImageSize();
         this.forceUpdateImage({});
 
     }
@@ -939,7 +1113,9 @@ export class Image extends BaseWidget {
         if (currentColorMap === undefined) {
             currentColorMap = "gray";
         }
+
         this.getText()["colorMap"] = newColorMap;
+        this.processData(false);
         this.forceUpdateImage({});
         this.forceUpdateColorMap({});
     }
@@ -966,46 +1142,19 @@ export class Image extends BaseWidget {
 
 
     /**
-     * Invoked only when 
-     *  (1) click "reset view" button, or
-     *  (2) startup, or
-     *  (3) manually set range via input box
-     * 
+     * set to manual view: both plot region and view region
      * zoom factor is set to 1
      */
     setImageXyRange = () => {
         if (!this.camera) return;
-
         this.zoomLevel = 1;
-        let xMax = this.getText()["xMax"];
-        let xMin = this.getText()["xMin"];
-        if (xMax < xMin) {
-            const tmp = xMax;
-            xMax = xMin;
-            xMin = tmp;
-        }
-
-        const { width, height } = this.getImageDimensions();
-
-        const cam = this.camera;
-
-        cam.left = -width / 2 + xMin;
-        cam.right = -width / 2 + xMax;
-
-        let yMax = this.getText()["yMax"];
-        let yMin = this.getText()["yMin"];
-        if (yMax < yMin) {
-            const tmp = yMax;
-            yMax = yMin;
-            yMin = tmp;
-        }
-
-        cam.bottom = -height / 2 + yMin;
-        cam.top = -height / 2 + yMax;
-
-
-
-        cam.updateProjectionMatrix();
+        this.autoXY = false;
+        // clean up everything
+        this.resetImage();
+        // process data
+        this.processData(true);
+        // compute the image size on screen
+        // this.calcImageSize();
         this.forceUpdateImage({});
     };
 
@@ -1017,6 +1166,7 @@ export class Image extends BaseWidget {
         if (this.camera === undefined || this.scene === undefined || this.renderer === undefined) {
             return;
         }
+        console.log("pan image")
 
         const pixelActualSize = this.calcPixelSize();
         const camera = this.camera;
@@ -1026,28 +1176,43 @@ export class Image extends BaseWidget {
         camera.right = camera.right - panX;
         camera.top = camera.top + panY;
         camera.bottom = camera.bottom + panY;
+
+
         camera.updateProjectionMatrix();
         this.forceUpdateImage({});
     }
 
+    /**
+     * set the view and plot area to the this.getText()["xMin/xMax/yMin/yMax"]
+     */
     _ElementZoomInButton = () => {
         return (
             <div
                 style={{
-                    position: "absolute",
-                    zIndex: 1000,
-                    right: 0,
-                    bottom: 100,
-                    backgroundColor: "rgba(255, 255,0, 0.5)",
-                    width: 100,
-                    height: 100,
+                    // position: "absolute",
+                    // zIndex: 1000,
+                    // right: 0,
+                    // bottom: 100,
+                    // backgroundColor: "rgba(255, 255,0, 0.5)",
+                    // width: 100,
+                    // height: 100,
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
                 }}
+                onMouseOver={() => {
+                    this.setHintText("Set XY to manual range");
+                }}
+                onMouseLeave={() => {
+                    this.setHintText("");
+                }}
+
                 onMouseDown={() => {
-                    console.log("Zoom In clicked");
+                    // console.log("Zoom In clicked");
                     // this.zoomImage(this.zoomLevel * 1.1, 75, 35)
                     this.setImageXyRange();
                 }}>
-                reset
+                <img src={"../../resources/webpages/scale-y.svg"} width={this.configHeight}></img>
             </div>
         );
     }
@@ -1056,20 +1221,32 @@ export class Image extends BaseWidget {
         return (
             <div
                 style={{
-                    position: "absolute",
-                    zIndex: 1000,
-                    right: 0,
-                    bottom: 200,
-                    backgroundColor: "rgba(255, 255,0, 0.5)",
-                    width: 100,
-                    height: 100,
+                    // position: "absolute",
+                    // zIndex: 1000,
+                    // right: 0,
+                    // bottom: 200,
+                    // backgroundColor: "rgba(255, 255,0, 0.5)",
+                    // width: 100,
+                    // height: 100,
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+
                 }}
+                onMouseOver={() => {
+                    this.setHintText("See full image");
+                }}
+                onMouseLeave={() => {
+                    this.setHintText("");
+                }}
+
                 onMouseDown={() => {
-                    console.log("Zoom In clicked");
+                    // console.log("Zoom In clicked");
                     // this.zoomImage(this.zoomLevel * 1.1, 75, 35)
                     this.resetViewToFull();
                 }}>
-                see full image
+                <img src={"../../resources/webpages/scale-2y.svg"} width={this.configHeight}></img>
+
             </div>
         );
     }
@@ -1079,17 +1256,29 @@ export class Image extends BaseWidget {
         return (
             <div
                 style={{
-                    position: "absolute",
-                    zIndex: 1000,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: "rgba(255, 255,0, 0.5)",
-                    width: 100,
-                    height: 100,
+                    // position: "absolute",
+                    // zIndex: 1000,
+                    // right: 0,
+                    // bottom: 0,
+                    // backgroundColor: "rgba(255, 255,0, 0.5)",
+                    // width: 100,
+                    // height: 100,
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+
                 }}
+                onMouseOver={() => {
+                    this.setHintText(playing === true ? "Stop image update" : "Start image update");
+                }}
+                onMouseLeave={() => {
+                    this.setHintText("");
+                }}
+
                 onMouseDown={() => {
-                    console.log("Zoom Out clicked");
+                    // console.log("Zoom Out clicked");
                     // this.zoomImage(this.zoomLevel / 1.1, 75, 35)
+                    this.setHintText(playing === false ? "Stop image update" : "Start image upate");
 
                     this.setPlaying(!playing);
                     setPlaying(!playing);
@@ -1099,7 +1288,9 @@ export class Image extends BaseWidget {
                     }
 
                 }}>
-                {playing === true ? "Pause" : "Play"}
+                <img src={playing === true ? "../../resources/webpages/pause.svg" : "../../resources/webpages/play.svg"} width={this.configHeight}></img>
+
+                {/* {playing === true ? "Pause" : "Play"} */}
             </div>
         );
     }
@@ -1131,9 +1322,11 @@ export class Image extends BaseWidget {
         const [values, setValues] = React.useState([0, 0, 0]);
         this.setXyzCursorValues = setValues;
         return (
-            <div>
-                {values[0]},{values[1]},{values[2]}
-            </div>
+            this.lastMouesPositions[0] === -10000 ?
+                null :
+                <div>
+                    ({values[0]}, {values[1]}, {values[2]})
+                </div>
         )
     }
 
@@ -1142,8 +1335,27 @@ export class Image extends BaseWidget {
         const [zMax, setZmax] = React.useState(`${this.getText()["zMax"]}`);
         const [autoZ, setAutoZ] = React.useState(this.getText()["autoZ"]);
         return (
-            <div>
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+
+                }}
+            >
                 <form
+                    style={{
+                        display: "inline-flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                    onMouseOver={() => {
+                        this.setHintText("Color map lowest value");
+                    }}
+                    onMouseLeave={() => {
+                        this.setHintText("");
+                    }}
                     onSubmit={
                         (event: any) => {
                             event.preventDefault();
@@ -1153,14 +1365,17 @@ export class Image extends BaseWidget {
                                 return;
                             }
                             this.getText()["zMin"] = value;
-                            this.processData();
+                            this.processData(false);
+                            this.forceUpdateColorMap({});
                             this.forceUpdateImage({});
                         }
                     }
                 >
                     <input
                         style={{
-                            width: "5em",
+                            width: "3em",
+                            outline: "none",
+                            border: "solid 1px black"
                         }}
                         value={zMin}
                         type={"text"}
@@ -1177,7 +1392,15 @@ export class Image extends BaseWidget {
                     >
                     </input>
                 </form>
+                &nbsp;
                 <form
+                    onMouseOver={() => {
+                        this.setHintText("Color map highest value");
+                    }}
+                    onMouseLeave={() => {
+                        this.setHintText("");
+                    }}
+
                     onSubmit={
                         (event: any) => {
                             event.preventDefault();
@@ -1187,14 +1410,17 @@ export class Image extends BaseWidget {
                                 return;
                             }
                             this.getText()["zMax"] = value;
-                            this.processData();
+                            this.processData(false);
+                            this.forceUpdateColorMap({});
                             this.forceUpdateImage({});
                         }
                     }
                 >
                     <input
                         style={{
-                            width: "5em",
+                            width: "3em",
+                            outline: "none",
+                            border: "solid 1px black",
                         }}
                         value={zMax}
                         type={"text"}
@@ -1211,12 +1437,20 @@ export class Image extends BaseWidget {
                     </input>
                 </form>
                 <input
+                    onMouseOver={() => {
+                        this.setHintText("Color map value auto range ");
+                    }}
+                    onMouseLeave={() => {
+                        this.setHintText("");
+                    }}
+
                     type={"checkbox"}
                     checked={autoZ}
                     onChange={(event: any) => {
                         this.getText()["autoZ"] = !autoZ;
                         setAutoZ(!autoZ);
-                        this.processData();
+                        this.processData(false);
+                        this.forceUpdateColorMap({});
                         this.forceUpdateImage({});
                     }}
                 >
@@ -1229,75 +1463,107 @@ export class Image extends BaseWidget {
         const [xMin, setXmin] = React.useState(`${this.getText()["xMin"]}`);
         const [xMax, setXmax] = React.useState(`${this.getText()["xMax"]}`);
         return (
-            <div>
-                <form
-                    onSubmit={
-                        (event: any) => {
-                            event.preventDefault();
-                            let value = parseFloat(xMin);
-                            if (isNaN(value)) {
-                                setXmin(`${this.getText()["xMin"]}`);
-                                return;
-                            }
-                            this.getText()["xMin"] = value;
-                            // this.forceUpdateImage({});
-                            this.setImageXyRange();
-                        }
-                    }
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    width: "100%",
+                }}
+            >
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        marginBottom: 3,
+                    }}
                 >
-                    <input
-                        style={{
-                            width: "5em",
-                        }}
-                        value={xMin}
-                        type={"text"}
-                        onChange={(event: any) => {
-                            const valueStr = event.target.value;
-                            setXmin(valueStr);
-                        }}
-                        onBlur={(event: any) => {
-                            if (`${this.getText()["xMin"]}` !== xMin) {
-                                setXmax(`${this.getText()["xMin"]}`)
+                    <div>X min.:</div>
+                    <form
+                        onSubmit={
+                            (event: any) => {
+                                event.preventDefault();
+                                let value = parseFloat(xMin);
+                                if (isNaN(value)) {
+                                    setXmin(`${this.getText()["xMin"]}`);
+                                    return;
+                                }
+                                this.getText()["xMin"] = value;
+                                // this.forceUpdateImage({});
+                                this.setImageXyRange();
                             }
-                        }}
-
-                    >
-                    </input>
-                </form>
-                <form
-                    onSubmit={
-                        (event: any) => {
-                            event.preventDefault();
-                            let value = parseFloat(xMax);
-                            if (isNaN(value)) {
-                                setXmax(`${this.getText()["xMax"]}`);
-                                return;
-                            }
-                            this.getText()["xMax"] = value;
-                            // this.forceUpdateImage({});
-                            this.setImageXyRange();
-
                         }
-                    }
-                >
-                    <input
-                        style={{
-                            width: "5em",
-                        }}
-                        value={xMax}
-                        type={"text"}
-                        onChange={(event: any) => {
-                            const valueStr = event.target.value;
-                            setXmax(valueStr);
-                        }}
-                        onBlur={(event: any) => {
-                            if (`${this.getText()["xMax"]}` !== xMax) {
-                                setXmax(`${this.getText()["xMax"]}`)
-                            }
-                        }}
                     >
-                    </input>
-                </form>
+                        <input
+                            style={{
+                                width: "5em",
+                                outline: "none",
+                                border: "1px solid black",
+                            }}
+                            value={xMin}
+                            type={"text"}
+                            onChange={(event: any) => {
+                                const valueStr = event.target.value;
+                                setXmin(valueStr);
+                            }}
+                            onBlur={(event: any) => {
+                                if (`${this.getText()["xMin"]}` !== xMin) {
+                                    setXmax(`${this.getText()["xMin"]}`)
+                                }
+                            }}
+
+                        >
+                        </input>
+                    </form>
+                </div>
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        marginBottom: 3,
+                    }}
+                >
+                    <div>X max.:</div>
+                    <form
+                        onSubmit={
+                            (event: any) => {
+                                event.preventDefault();
+                                let value = parseFloat(xMax);
+                                if (isNaN(value)) {
+                                    setXmax(`${this.getText()["xMax"]}`);
+                                    return;
+                                }
+                                this.getText()["xMax"] = value;
+                                // this.forceUpdateImage({});
+                                this.setImageXyRange();
+
+                            }
+                        }
+                    >
+                        <input
+                            style={{
+                                width: "5em",
+                                outline: "none",
+                                border: "1px solid black",
+                            }}
+                            value={xMax}
+                            type={"text"}
+                            onChange={(event: any) => {
+                                const valueStr = event.target.value;
+                                setXmax(valueStr);
+                            }}
+                            onBlur={(event: any) => {
+                                if (`${this.getText()["xMax"]}` !== xMax) {
+                                    setXmax(`${this.getText()["xMax"]}`)
+                                }
+                            }}
+                        >
+                        </input>
+                    </form>
+                </div>
             </div>
         )
     }
@@ -1306,73 +1572,122 @@ export class Image extends BaseWidget {
     _ElementYrange = () => {
         const [yMin, setYmin] = React.useState(`${this.getText()["yMin"]}`);
         const [yMax, setYmax] = React.useState(`${this.getText()["yMax"]}`);
+        // const [autoXY, setAutoXY] = React.useState(this.getText()["autoXY"]);
         return (
-            <div>
-                <form
-                    onSubmit={
-                        (event: any) => {
-                            event.preventDefault();
-                            let value = parseFloat(yMin);
-                            if (isNaN(value)) {
-                                setYmin(`${this.getText()["yMin"]}`);
-                                return;
-                            }
-                            this.getText()["yMin"] = value;
-                            this.setImageXyRange()
-                        }
-                    }
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    width: "100%",
+                }}
+            >
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        marginBottom: 3,
+                    }}
                 >
-                    <input
-                        style={{
-                            width: "5em",
-                        }}
-                        value={yMin}
-                        type={"text"}
-                        onChange={(event: any) => {
-                            const valueStr = event.target.value;
-                            setYmin(valueStr);
-                        }}
-                        onBlur={(event: any) => {
-                            if (`${this.getText()["yMin"]}` !== yMin) {
-                                setYmax(`${this.getText()["yMin"]}`)
-                            }
-                        }}
+                    <div>Y min.:</div>
 
-                    >
-                    </input>
-                </form>
-                <form
-                    onSubmit={
-                        (event: any) => {
-                            event.preventDefault();
-                            let value = parseFloat(yMax);
-                            if (isNaN(value)) {
-                                setYmax(`${this.getText()["yMax"]}`);
-                                return;
+                    <form
+                        onSubmit={
+                            (event: any) => {
+                                event.preventDefault();
+                                let value = parseFloat(yMin);
+                                if (isNaN(value)) {
+                                    setYmin(`${this.getText()["yMin"]}`);
+                                    return;
+                                }
+                                this.getText()["yMin"] = value;
+                                this.setImageXyRange()
                             }
-                            this.getText()["yMax"] = value;
-                            this.setImageXyRange()
                         }
-                    }
-                >
-                    <input
-                        style={{
-                            width: "5em",
-                        }}
-                        value={yMax}
-                        type={"text"}
-                        onChange={(event: any) => {
-                            const valueStr = event.target.value;
-                            setYmax(valueStr);
-                        }}
-                        onBlur={(event: any) => {
-                            if (`${this.getText()["yMax"]}` !== yMax) {
-                                setYmax(`${this.getText()["yMax"]}`)
-                            }
-                        }}
                     >
-                    </input>
-                </form>
+                        <input
+                            style={{
+                                width: "5em",
+                                outline: "none",
+                                border: "1px solid black",
+                            }}
+                            value={yMin}
+                            type={"text"}
+                            onChange={(event: any) => {
+                                const valueStr = event.target.value;
+                                setYmin(valueStr);
+                            }}
+                            onBlur={(event: any) => {
+                                if (`${this.getText()["yMin"]}` !== yMin) {
+                                    setYmax(`${this.getText()["yMin"]}`)
+                                }
+                            }}
+
+                        >
+                        </input>
+                    </form>
+                </div>
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        marginBottom: 3,
+                    }}
+                >
+                    <div>Y max.:</div>
+
+
+                    <form
+                        onSubmit={
+                            (event: any) => {
+                                event.preventDefault();
+                                let value = parseFloat(yMax);
+                                if (isNaN(value)) {
+                                    setYmax(`${this.getText()["yMax"]}`);
+                                    return;
+                                }
+                                this.getText()["yMax"] = value;
+                                this.setImageXyRange()
+                            }
+                        }
+                    >
+                        <input
+                            style={{
+                                width: "5em",
+                                outline: "none",
+                                border: "1px solid black",
+                            }}
+                            value={yMax}
+                            type={"text"}
+                            onChange={(event: any) => {
+                                const valueStr = event.target.value;
+                                setYmax(valueStr);
+                            }}
+                            onBlur={(event: any) => {
+                                if (`${this.getText()["yMax"]}` !== yMax) {
+                                    setYmax(`${this.getText()["yMax"]}`)
+                                }
+                            }}
+                        >
+                        </input>
+                    </form>
+                </div>
+                {/* <input
+                    type={"checkbox"}
+                    checked={autoXY}
+                    onChange={(event: any) => {
+                        this.getText()["autoXY"] = !autoXY;
+                        setAutoXY(!autoXY);
+                        // this.processData();
+                        this.resetImage();
+                        this.forceUpdateImage({});
+                    }}
+                >
+                </input> */}
+
             </div>
         )
     }
@@ -1382,21 +1697,48 @@ export class Image extends BaseWidget {
     _ElementSwitchColorMap = () => {
         const [colorMap, setColorMap] = React.useState(this.getText()["colorMap"]);
         return (
-            <div>
-                <select id="myDropdown" value={colorMap} onChange={(event: any) => {
-                    setColorMap(event.target.value);
-                    this.switchColorMap(event.target.value);
-                }}>
-                    {Object.keys(this.colorMapFunctions).map((key, index) => {
-                        return (
-                            <option value={key}>
-                                {key.toUpperCase()}
-                            </option>
-                        )
-                    })}
-                </select>
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    width: "100%",
+                }}
+            >
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        width: "100%",
+                    }}
+                >
+                    <div>Color map: </div>
 
-            </div>
+                    <select
+                        style={{
+                            width: "8em",
+                            outline: "none",
+                            border: "1px solid black",
+                        }}
+                        id="myDropdown"
+                        value={colorMap}
+                        onChange={(event: any) => {
+                            setColorMap(event.target.value);
+                            this.switchColorMap(event.target.value);
+                        }}
+
+                    >
+                        {Object.keys(this.colorMapFunctions).map((key, index) => {
+                            return (
+                                <option value={key}>
+                                    {key.toUpperCase()}
+                                </option>
+                            )
+                        })}
+                    </select>
+                </div>
+
+            </div >
         )
     }
 
@@ -1407,41 +1749,35 @@ export class Image extends BaseWidget {
         const [, forceUpdate] = React.useState({});
         // this.forceUpdateImage = forceUpdate;
 
-
         // let processData = this.processData_GrayMap;
         // if (this.getText()["colorMap"] === "jet") {
-        const processData = this.processData;
+        // const processData = this.processData;
         // }
 
 
         const fun1 = () => {
             // console.log("fun1 running");
             const { width, height } = this.getImageDimensions();
-            // if image width/height changed, reset 
-            if ((this.imageHeight !== height || this.imageWidth !== width) && (this.imageHeight !== 0 && this.imageWidth !== 0)) {
-                console.log("Image size changed, resetting image");
-                this.resetImage();
-                this.forceUpdateImage({});
+            // the image data has not arrived yet
+            if (width === 0 || height === 0) {
                 return;
             }
-            // console.log("fun1 running A");
-            // console.log("fun1 running B");
+
             if (this.scene !== undefined) {
                 return;
             }
 
-            processData();
+            // processData();
             if (this.textureData === undefined) {
                 return;
             }
-            // console.log("fun1 running --- C", this.textureData);
+
             // Create texture from data
             const texture = new THREE.DataTexture(
                 this.textureData,
                 width,
                 height,
-                // this.getText()["colorMap"] === "jet" ? THREE.RGBAFormat : THREE.RedFormat,
-                THREE.RGBAFormat,
+                THREE.RGBAFormat, // always RGBA
                 THREE.UnsignedByteType
             );
             texture.colorSpace = THREE.SRGBColorSpace; // Replaces encoding in newer versions
@@ -1458,20 +1794,10 @@ export class Image extends BaseWidget {
 
 
             const scene = new THREE.Scene();
-            const containerWidth = this.getAllStyle()["width"] as number - this.axisWidth;
-            const containerHeight = this.getAllStyle()["height"] as number - this.axisWidth;
-            // const containerMinSize = Math.min(containerWidth, containerHeight);
-            // a "pixel" is a unit in image, not screen
-            const pixelMaxWidth = containerWidth / width;
-            const pixelMaxHeight = containerHeight / height;
-            const pixelSize = Math.min(pixelMaxWidth, pixelMaxHeight);
-
-            const aspect = width / height;
-            const zoom = this.zoomLevel; // adjust zoom level
 
             // xy view range
-            let xMax = this.getText()["xMax"];
-            let xMin = this.getText()["xMin"];
+            let xMax = this.getXmax();
+            let xMin = this.getXmin();
             if (xMax < xMin) {
                 const tmp = xMax;
                 xMax = xMin;
@@ -1482,8 +1808,8 @@ export class Image extends BaseWidget {
             const camLeft = -width / 2 + xMin;
             const camRight = -width / 2 + xMax;
 
-            let yMax = this.getText()["yMax"];
-            let yMin = this.getText()["yMin"];
+            let yMax = this.getYmax();
+            let yMin = this.getYmin();
             if (yMax < yMin) {
                 const tmp = yMax;
                 yMax = yMin;
@@ -1493,7 +1819,6 @@ export class Image extends BaseWidget {
             const camBottom = -height / 2 + yMin;
             const camTop = -height / 2 + yMax;
 
-            // OrthographicCamera(left, right, top, bottom, near, far)
             const camera = new THREE.OrthographicCamera(
                 camLeft,
                 camRight,
@@ -1512,9 +1837,9 @@ export class Image extends BaseWidget {
 
             const renderer = new THREE.WebGLRenderer({ alpha: true });
 
-            // renderer.setPixelRatio(window.devicePixelRatio);
-            // renderer.setSize(containerMinSize, containerMinSize);
-            renderer.setSize(width * pixelSize, height * pixelSize);
+            // the image area, outside of this area is blank
+            // this.calcImageSize();
+            renderer.setSize(this.getImageSize()[0], this.getImageSize()[1]);
             mountRef.current!.appendChild(renderer.domElement);
 
             const geometry = new THREE.PlaneGeometry(width, height);
@@ -1532,6 +1857,8 @@ export class Image extends BaseWidget {
             this.renderer = renderer;
             this.camera = camera;
             this.scene = scene;
+            this.autoXY = false;
+
         };
 
         const fun2 = () => {
@@ -1542,11 +1869,14 @@ export class Image extends BaseWidget {
             // console.log("fun2 running A");
             const { width, height } = this.getImageDimensions();
             // if (this.playing === true) {
-            processData();
+            // processData();
             // }
 
             // update cursor readout
-            this.handleMouseMoveOnImage(...this.lastMouesPositions);
+            if (this.lastMouesPositions[0] > -10000) {
+                this.handleMouseMoveOnImage(...this.lastMouesPositions);
+            }
+
 
             // console.log("fun2 running B");
             this.texture.needsUpdate = true; // upload changes to GPU
@@ -1565,8 +1895,8 @@ export class Image extends BaseWidget {
             <div
                 ref={mountRef}
                 style={{
-                    width: this.calcImageSize(),
-                    height: this.calcImageSize(),
+                    width: this.getImageSize()[0],
+                    height: this.getImageSize()[1],
                 }}
 
                 onMouseDown={(event: any) => {
@@ -1575,11 +1905,19 @@ export class Image extends BaseWidget {
                 }}
 
                 onMouseMove={(event: any) => {
+                    // event.stopPropagation();
                     if (this.renderer === undefined || this.camera === undefined) {
                         return;
                     }
                     this.lastMouesPositions = [event.clientX, event.clientY];
                     this.handleMouseMoveOnImage(event.clientX, event.clientY);
+                }}
+
+                onMouseLeave={() => {
+                    this.lastMouesPositions = [-10000, -10000];
+                    this.setXyzCursorValues((oldValues: any) => {
+                        return [-10000, -10000, -10000];
+                    })
                 }}
 
                 onWheel={(event: any) => {
@@ -1641,7 +1979,7 @@ export class Image extends BaseWidget {
             const pixelY = Math.floor(height / 2 + point.y);
             const pixelZ = (height - 1 - pixelY) * width + pixelX;
             const valueZ = this.getImageValue()[pixelZ];
-            console.log(`Pixel coords: (${pixelX}, ${pixelY})`, pixelZ, valueZ);
+            // console.log(`Pixel coords: (${pixelX}, ${pixelY})`, pixelZ, valueZ);
             this.setXyzCursorValues((oldValues: any) => {
                 return [pixelX, pixelY, valueZ];
             })
@@ -1653,11 +1991,11 @@ export class Image extends BaseWidget {
     zMax: number = 0;
     zMin: number = 0;
 
-    processData = () => {
+    processData = (changeGeometry: boolean) => {
         const { width, height } = this.getImageDimensions();
         const size = width * height;
-        this.imageHeight = height;
-        this.imageWidth = width;
+        // this.imageHeight = this.calcImageSize()[1];
+        // this.imageWidth = this.calcImageSize()[0];
         if (size === 0) {
             Log.error("Image size is 0");
             return;
@@ -1672,6 +2010,12 @@ export class Image extends BaseWidget {
             return;
         }
 
+        if (changeGeometry) {
+            // image dimension on screen
+            this.calcImageSize();
+        }
+
+        // color
         let minValue = this.getText()["zMin"];
         let maxValue = this.getText()["zMax"];
         if (this.getText()["autoZ"] === true) {
@@ -5519,7 +5863,8 @@ export class Image extends BaseWidget {
             alarmBackground: false,
             alarmLevel: "MINOR",
             colorMap: "gray", // "jet", "gray"
-            autoZ: true,
+            autoZ: false,
+            initialAutoXY: true,
             zMin: 0,
             zMax: 255,
             xMin: 0,
@@ -5591,6 +5936,7 @@ export class Image extends BaseWidget {
 
     jobsAsOperatingModeBegins(): void {
         super.jobsAsOperatingModeBegins();
+        this.autoXY = this.getText()["initialAutoXY"];
         this.resetImage();
     }
 }
