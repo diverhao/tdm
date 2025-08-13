@@ -3,10 +3,34 @@ import { Image } from "./Image";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 import {Log} from "../../../mainProcess/log/Log";
+import { SidebarImageXmin } from "../../helperWidgets/SidebarComponents/SidebarImageXmin";
+import { SidebarImageXmax } from "../../helperWidgets/SidebarComponents/SidebarImageXmax";
+import { SidebarImageYmin } from "../../helperWidgets/SidebarComponents/SidebarImageYmin";
+import { SidebarImageYmax } from "../../helperWidgets/SidebarComponents/SidebarImageYmax";
+import { SidebarImageAutoXY } from "../../helperWidgets/SidebarComponents/SidebarImageAutoXY";
+import { SidebarImageZmin } from "../../helperWidgets/SidebarComponents/SidebarImageZmin";
+import { SidebarImageZmax } from "../../helperWidgets/SidebarComponents/SidebarImageZmax";
+import { SidebarImageAutoZ } from "../../helperWidgets/SidebarComponents/SidebarImageAutoZ";
 
 export class ImageSidebar extends BaseWidgetSidebar {
+    sidebarImageXmin: SidebarImageXmin;
+    sidebarImageXmax: SidebarImageXmax;
+    sidebarImageYmin: SidebarImageYmin;
+    sidebarImageYmax: SidebarImageYmax;
+    sidebarImageAutoXY: SidebarImageAutoXY;
+    sidebarImageZmin: SidebarImageZmin;
+    sidebarImageZmax: SidebarImageZmax;
+    sidebarImageAutoZ: SidebarImageAutoZ;
     constructor(image: Image) {
         super(image);
+        this.sidebarImageXmin = new SidebarImageXmin(this);
+        this.sidebarImageXmax = new SidebarImageXmax(this);
+        this.sidebarImageYmin = new SidebarImageYmin(this);
+        this.sidebarImageYmax = new SidebarImageYmax(this);
+        this.sidebarImageAutoXY = new SidebarImageAutoXY(this);
+        this.sidebarImageZmin = new SidebarImageZmin(this);
+        this.sidebarImageZmax = new SidebarImageZmax(this);
+        this.sidebarImageAutoZ = new SidebarImageAutoZ(this);
     }
 
     // ------------------------------------- elements --------------------------------------
@@ -72,13 +96,30 @@ export class ImageSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarChannelName().getElement()}
-                    {this.getSidebarShowUnit().getElement()}
-                    {this.getSidebarAlarmText().getElement()}
-                    {this.getSidebarAlarmBackground().getElement()}
+                    {/* {this.getSidebarShowUnit().getElement()} */}
+                    {/* {this.getSidebarAlarmText().getElement()} */}
+                    {/* {this.getSidebarAlarmBackground().getElement()} */}
                     {this.getSidebarAlarmBorder().getElement()}
                     {this.getSidebarAlarmLevel().getElement()}
-                    {this.getSidebarNumberScale().getElement()}
-                    {this.getSidebarNumberFormat().getElement()}
+                    {/* {this.getSidebarNumberScale().getElement()} */}
+                    {/* {this.getSidebarNumberFormat().getElement()} */}
+                </this._BlockBody>
+                <this._HorizontalLine />
+                {/* ---------------- image -------------------------- */}
+                <this._BlockTitle>
+                    <b>Image</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {/* color */}
+                    {this.getSidebarImageAutoXY().getElement()}
+                    {this.getSidebarImageXmin().getElement()}
+                    {this.getSidebarImageXmax().getElement()}
+                    {this.getSidebarImageYmin().getElement()}
+                    {this.getSidebarImageYmax().getElement()}
+                    {this.getSidebarImageAutoZ().getElement()}
+                    {this.getSidebarImageZmin().getElement()}
+                    {this.getSidebarImageZmax().getElement()}
+                    
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
@@ -98,9 +139,9 @@ export class ImageSidebar extends BaseWidgetSidebar {
                 <this._BlockBody>
                     {/* color */}
                     {this.getSidebarTextColor().getElement()}
-                    {this.getSidebarXAlign().getElement()}
-                    {this.getSidebarYAlign().getElement()}
-                    {this.getSidebarWrapWord().getElement()}
+                    {/* {this.getSidebarXAlign().getElement()} */}
+                    {/* {this.getSidebarYAlign().getElement()} */}
+                    {/* {this.getSidebarWrapWord().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ----------------------- font --------------------------- */}
@@ -133,6 +174,37 @@ export class ImageSidebar extends BaseWidgetSidebar {
         );
     };
 
+    getSidebarImageXmin = () => {
+        return this.sidebarImageXmin;
+    }
+
+    getSidebarImageXmax = () => {
+        return this.sidebarImageXmax;
+    }
+
+    getSidebarImageYmin = () => {
+        return this.sidebarImageYmin;
+    }
+
+    getSidebarImageYmax = () => {
+        return this.sidebarImageYmax;
+    }
+
+    getSidebarImageAutoXY = () => {
+        return this.sidebarImageAutoXY;
+    }
+
+    getSidebarImageZmin = () => {
+        return this.sidebarImageZmin;
+    }
+
+    getSidebarImageZmax = () => {
+        return this.sidebarImageZmax;
+    }
+
+    getSidebarImageAutoZ = () => {
+        return this.sidebarImageAutoZ;
+    }
     // defined in super class
     // getElement()
     // _HorizontalLine()

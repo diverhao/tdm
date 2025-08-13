@@ -1477,6 +1477,7 @@ export class Image extends BaseWidget {
                         justifyContent: "space-between",
                         width: "100%",
                         marginBottom: 3,
+                        alignItems: "center",
                     }}
                 >
                     <div>X min.:</div>
@@ -1524,6 +1525,7 @@ export class Image extends BaseWidget {
                         justifyContent: "space-between",
                         width: "100%",
                         marginBottom: 3,
+                        alignItems: "center",
                     }}
                 >
                     <div>X max.:</div>
@@ -1588,6 +1590,7 @@ export class Image extends BaseWidget {
                         justifyContent: "space-between",
                         width: "100%",
                         marginBottom: 3,
+                        alignItems: "center",
                     }}
                 >
                     <div>Y min.:</div>
@@ -1635,6 +1638,7 @@ export class Image extends BaseWidget {
                         justifyContent: "space-between",
                         width: "100%",
                         marginBottom: 3,
+                        alignItems: "center",
                     }}
                 >
                     <div>Y max.:</div>
@@ -1709,6 +1713,7 @@ export class Image extends BaseWidget {
                         display: "inline-flex",
                         flexDirection: "row",
                         justifyContent: "space-between",
+                        alignItems: "center",
                         width: "100%",
                     }}
                 >
