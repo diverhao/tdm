@@ -24,9 +24,9 @@ export class SidebarImageZmax extends SidebarComponent {
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, zMax)}
                 style={this.getFormStyle()}
             >
-                <div>Color map max</div>
+                <div style={{whiteSpace: "nowrap"}}>Max.: </div>
                 <input
-                    style={this.getInputStyle()}
+                    style={{...this.getInputStyle(), width: "60%"}}
                     type="text"
                     name="zMax"
                     value={zMax}

@@ -24,9 +24,9 @@ export class SidebarImageYmin extends SidebarComponent {
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, yMin)}
                 style={this.getFormStyle()}
             >
-                <div>Y min</div>
+                <div style={{whiteSpace: "nowrap"}}>Y min.: </div>
                 <input
-                    style={this.getInputStyle()}
+                    style={{...this.getInputStyle(), width: "60%"}}
                     type="text"
                     name="yMin"
                     value={yMin}

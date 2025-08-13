@@ -21,7 +21,7 @@ export class SidebarImageAutoZ extends SidebarComponent {
 
 		return (
 			<form onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, autoZ)} style={this.getFormStyle()}>
-				<div>Color map auto range:</div>
+				<div style={{whiteSpace: "nowrap"}}>Auto range: </div>
 				<input
 					type="checkbox"
 					checked={autoZ}

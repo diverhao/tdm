@@ -24,9 +24,9 @@ export class SidebarImageZmin extends SidebarComponent {
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, zMin)}
                 style={this.getFormStyle()}
             >
-                <div>Color map min</div>
+                <div style={{whiteSpace: "nowrap"}}>Min.: </div>
                 <input
-                    style={this.getInputStyle()}
+                    style={{...this.getInputStyle(), width: "60%"}}
                     type="text"
                     name="zMin"
                     value={zMin}

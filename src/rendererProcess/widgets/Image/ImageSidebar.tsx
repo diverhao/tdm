@@ -11,6 +11,7 @@ import { SidebarImageAutoXY } from "../../helperWidgets/SidebarComponents/Sideba
 import { SidebarImageZmin } from "../../helperWidgets/SidebarComponents/SidebarImageZmin";
 import { SidebarImageZmax } from "../../helperWidgets/SidebarComponents/SidebarImageZmax";
 import { SidebarImageAutoZ } from "../../helperWidgets/SidebarComponents/SidebarImageAutoZ";
+import { SidebarImageColorMap } from "../../helperWidgets/SidebarComponents/SidebarImageColorMap";
 
 export class ImageSidebar extends BaseWidgetSidebar {
     sidebarImageXmin: SidebarImageXmin;
@@ -21,6 +22,7 @@ export class ImageSidebar extends BaseWidgetSidebar {
     sidebarImageZmin: SidebarImageZmin;
     sidebarImageZmax: SidebarImageZmax;
     sidebarImageAutoZ: SidebarImageAutoZ;
+    sidebarImageColorMap: SidebarImageColorMap
     constructor(image: Image) {
         super(image);
         this.sidebarImageXmin = new SidebarImageXmin(this);
@@ -31,6 +33,7 @@ export class ImageSidebar extends BaseWidgetSidebar {
         this.sidebarImageZmin = new SidebarImageZmin(this);
         this.sidebarImageZmax = new SidebarImageZmax(this);
         this.sidebarImageAutoZ = new SidebarImageAutoZ(this);
+        this.sidebarImageColorMap = new SidebarImageColorMap(this);
     }
 
     // ------------------------------------- elements --------------------------------------
@@ -105,9 +108,9 @@ export class ImageSidebar extends BaseWidgetSidebar {
                     {/* {this.getSidebarNumberFormat().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ---------------- image -------------------------- */}
+                {/* ---------------- xy area -------------------------- */}
                 <this._BlockTitle>
-                    <b>Image</b>
+                    <b>XY Area</b>
                 </this._BlockTitle>
                 <this._BlockBody>
                     {/* color */}
@@ -116,6 +119,16 @@ export class ImageSidebar extends BaseWidgetSidebar {
                     {this.getSidebarImageXmax().getElement()}
                     {this.getSidebarImageYmin().getElement()}
                     {this.getSidebarImageYmax().getElement()}
+                    
+                </this._BlockBody>
+                <this._HorizontalLine />
+                {/* ---------------- color map -------------------------- */}
+                <this._BlockTitle>
+                    <b>Color Map</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {/* color */}
+                    {this.getSidebarImageColorMap().getElement()}
                     {this.getSidebarImageAutoZ().getElement()}
                     {this.getSidebarImageZmin().getElement()}
                     {this.getSidebarImageZmax().getElement()}
@@ -204,6 +217,10 @@ export class ImageSidebar extends BaseWidgetSidebar {
 
     getSidebarImageAutoZ = () => {
         return this.sidebarImageAutoZ;
+    }
+
+    getSidebarImageColorMap = () => {
+        return this.sidebarImageColorMap;
     }
     // defined in super class
     // getElement()

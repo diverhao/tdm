@@ -24,9 +24,9 @@ export class SidebarImageXmax extends SidebarComponent {
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, xMax)}
                 style={this.getFormStyle()}
             >
-                <div>X max</div>
+                <div style={{whiteSpace: "nowrap"}}>X max.: </div>
                 <input
-                    style={this.getInputStyle()}
+                    style={{...this.getInputStyle(), width: "60%"}}
                     type="text"
                     name="xMax"
                     value={xMax}
