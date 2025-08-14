@@ -25,9 +25,9 @@ export class SidebarImageColorMap extends SidebarComponent {
                 {hideText === true ? null : <div>Style:</div>}
                 <select
                     style={{
-                        width: "8em",
-                        outline: "none",
-                        border: "1px solid black",
+                        width: "64%",
+                        // outline: "none",
+                        // border: "1px solid black",
                     }}
                     id="myDropdown"
                     value={colorMap}
