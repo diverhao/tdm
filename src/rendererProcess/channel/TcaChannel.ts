@@ -125,7 +125,7 @@ export class TcaChannel {
     // a-z A-Z 0-9 _ - : . ; [ ] < > 
     static regexEpicsChannelName = /^[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+$/;
     // "pva://" + regular EPICS PV name
-    static regexPvaChannelName = /^pva:\/\/[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+$/;
+    static regexPvaChannelName = /^pva:\/\/[a-zA-Z0-9:/\_\-\[\]<>\.;$\{\}\(\)]+$/;
 
 
 
@@ -517,9 +517,11 @@ export class TcaChannel {
         try {
             let message: type_dbrData | type_LocalChannel_data = await this.getIoPromise(ioId);
             this.appendToDbrData(message);
+            console.log("message ================", message)
             return message;
         } catch (e) {
             this.appendToDbrData({ value: undefined });
+            console.log("message ================", e)
             return { value: undefined };
         }
     };
@@ -1362,6 +1364,7 @@ export class TcaChannel {
             if (this.isEnumType() === true) {
                 return Channel_ACCESS_RIGHTS.READ_WRITE;
             }
+            console.log("=============this.getPvaValueDisplayType()", this.getPvaValueDisplayType())
             // regualr channle
             if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_RAW_FIELD || this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
                 return Channel_ACCESS_RIGHTS.READ_WRITE;
@@ -1588,7 +1591,7 @@ export class TcaChannel {
                         fieldType = pvaType["fields"][pvRequestStr];
                     }
                 }
-                if (fieldType["name"].includes("epics:nt/NTEnum")) {
+                if (fieldType !== undefined && fieldType["name"] !== undefined && fieldType["name"].includes("epics:nt/NTEnum")) {
                     return true;
                 } else {
                     return false;

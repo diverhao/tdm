@@ -42,6 +42,10 @@ export class CaChannelAgent {
      */
     private _channel: Channel | undefined = undefined;
 
+    /**
+     * demo:abc, demo:abc.EGU
+     * pva://demo:abc, pva://demo:abc.display.severity, pva://demo:abc/EGU
+     */
     private _channelName: string;
     private _channelAgentsManager: ChannelAgentsManager;
 
@@ -278,15 +282,6 @@ export class CaChannelAgent {
             return result
         } else {
             return undefined;
-        }
-    }
-
-    getFieldName = () => {
-        const fieldName = this.getChannelName().split(".")[1];
-        if (fieldName === undefined) {
-            return "";
-        } else {
-            return fieldName;
         }
     }
 
@@ -578,7 +573,9 @@ export class CaChannelAgent {
      */
     getBareChannelName = (): string => {
         if (this.getProtocol() === "pva") {
-            return this._channelName.replace("pva://", "").split(".")[0];
+            // pva://demo:abc --> demo:abc
+            // pva://demo:abc/EGU --> demo:abc.EGU, one full pv name
+            return this.getChannelName().replace("pva://", "").split(".")[0].replace("/", ".");
         }
         return this.getChannelName();
     };

@@ -1905,11 +1905,14 @@ export class Image extends BaseWidget {
                 }}
 
                 onMouseDown={(event: any) => {
+                    if (event.button !== 0) {
+                        return;
+                    }
                     window.addEventListener("mousemove", this.panImageEventListener);
                     window.addEventListener("mouseup", this.cancelPanImageEventListener);
                 }}
 
-                onMouseMove={(event: any) => {
+                onMouseMove={(event: MouseEvent) => {
                     // event.stopPropagation();
                     if (this.renderer === undefined || this.camera === undefined) {
                         return;
