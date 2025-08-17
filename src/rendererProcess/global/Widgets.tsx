@@ -1728,7 +1728,11 @@ export class Widgets {
                 // the meta data is extracted in TcaChannel constructor
                 tcaChannel.put(displayWindowId, tcaChannel.getDbrData(), 1);
             }
-            tcaChannel.getMeta(undefined);
+            if (TcaChannel.checkChannelName(channelName) === "pva") {
+                tcaChannel.fetchPvaType(undefined);
+            } else {
+                tcaChannel.getMeta(undefined);
+            }
             // (3)
             tcaChannel.monitor();
         }

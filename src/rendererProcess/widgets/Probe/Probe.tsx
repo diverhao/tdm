@@ -77,12 +77,14 @@ export class Probe extends BaseWidget {
         super.processChannelNames();
         this.getChannelNamesLevel5().length = 0;
         const baseChannelName = this.getChannelNamesLevel4()[0];
+        const separator = TcaChannel.checkChannelName(baseChannelName) === "pva" ? "/" : ".";
         if (baseChannelName !== undefined) {
             this.getChannelNamesLevel5().push(baseChannelName);
             for (let fieldName of this.fieldNames) {
-                this.getChannelNamesLevel5().push(`${baseChannelName}.${fieldName}`);
+                this.getChannelNamesLevel5().push(`${baseChannelName}${separator}${fieldName}`);
             }
         }
+        console.log("channel names level 5", this.getChannelNamesLevel5())
     }
 
     getDbrData = () => {
@@ -160,17 +162,23 @@ export class Probe extends BaseWidget {
             return;
         }
 
-        const rtypChannelName = `${channelNameLevel4}.RTYP`;
+        let rtypChannelName = `${channelNameLevel4}.RTYP`;
+        if (TcaChannel.checkChannelName(channelNameLevel4) === "pva") {
+            rtypChannelName = `${channelNameLevel4}/RTYP`;
+        }
         let rtypTcaChannel: TcaChannel | undefined = undefined;
         try {
             rtypTcaChannel = g_widgets1.getTcaChannel(rtypChannelName);
         } catch (e) {
             rtypTcaChannel = g_widgets1.createTcaChannel(rtypChannelName, this.getWidgetKey());
         }
+        console.log("================= aaa")
         if (rtypTcaChannel !== undefined) {
+            console.log("================= bbb")
             this.rtyp = this.rtypWaitingName;
             await rtypTcaChannel.getMeta(this.getWidgetKey());
             const dbrData = await rtypTcaChannel.get(this.getWidgetKey(), undefined, undefined, false);
+            console.log("dbr data =======================", rtypTcaChannel.getDbrData(), rtypTcaChannel.getPvaType())
             if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
                 const rtyp = dbrData["value"];
                 if (rtyp !== undefined && this.rtyp === this.rtypWaitingName) {
@@ -191,6 +199,7 @@ export class Probe extends BaseWidget {
     // (3) update
     connectFieldChannels = () => {
         const recordType = this.getDbdFiles().getRecordTypes()[this.rtyp];
+        console.log("recordType ================", recordType)
         if (recordType !== undefined) {
             this.fieldNames = this.getDbdFiles().getRecordTypeFieldNames(this.rtyp);
             this.fieldMenus = this.getDbdFiles().getRecordTypeFieldMenus(this.rtyp);
@@ -698,7 +707,11 @@ export class Probe extends BaseWidget {
                                 if (!filterMatch) {
                                     return null;
                                 }
-                                const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
+                                let separator = ".";
+                                if (TcaChannel.checkChannelName(this.getChannelNamesLevel4()[0]) === "pva") {
+                                    separator = "/";
+                                }
+                                const channelName = `${this.getChannelNamesLevel4()[0]}${separator}${fieldName}`;
                                 const property = fieldName;
                                 const value = g_widgets1.getChannelValue(channelName);
                                 if (value !== undefined) {
@@ -743,6 +756,7 @@ export class Probe extends BaseWidget {
                             })}
                     </tbody>
                 </table>
+                <this._ElementPvaStructData />
                 <div
                     style={{
                         paddingBottom: 20,
@@ -826,9 +840,20 @@ export class Probe extends BaseWidget {
             result.push("}");
             return result.join("\n");
         }
+    }
 
-
-
+    _ElementPvaStructData = () => {
+        try {
+            const tcaChannel = g_widgets1.getTcaChannel(this.getChannelNamesLevel4()[0]);
+            const pvaData = tcaChannel.getDbrData();
+            return (
+                <div>
+                    {JSON.stringify(pvaData)}
+                </div>
+            )
+        } catch (e) {
+            return null;
+        }
     }
 
     // concretize abstract method
@@ -1152,7 +1177,7 @@ export class Probe extends BaseWidget {
                                     appearance: "none",
                                     cursor: accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? "default" : "not-allowed",
                                 }}
-                                disabled = {accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? false : true}
+                                disabled={accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? false : true}
                                 onChange={(event: any) => {
                                     // do not change the selection until the new data arrives
                                     event.preventDefault();

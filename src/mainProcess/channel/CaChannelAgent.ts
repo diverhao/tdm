@@ -125,12 +125,14 @@ export class CaChannelAgent {
                 }
                 // this._channelCreationPromise = context.createChannel(this._channelName, 5);
                 let channelName = this.getBareChannelName();
+                console.log("channel name ==========++++++++++++", channelName)
                 if (this.getProtocol() === "ca") {
                     this._channelCreationPromise = context.createChannel(channelName, "ca", creationTimeout);
                     channelTmp = await this._channelCreationPromise;
                 } else if (this.getProtocol() === "pva") {
                     this._channelCreationPromise = context.createChannel(channelName, "pva", creationTimeout);
                     channelTmp = await this._channelCreationPromise;
+                    console.log("channel ", this.getChannelName(), "created")
                 }
 
             } else {
@@ -252,10 +254,13 @@ export class CaChannelAgent {
             }
 
             // default ioTimeout = 1 second
+            console.log("==================== step 1");
             if (pvRequest !== undefined) {
                 data = JSON.parse(JSON.stringify(await channel.getPva(ioTimeout, pvRequest)));
+                console.log("==================== step 2");
             } else {
                 data = JSON.parse(JSON.stringify(await channel.getPva(ioTimeout, this.getPvRequest())));
+                console.log("==================== step 3");
             }
 
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
@@ -275,9 +280,16 @@ export class CaChannelAgent {
         }
     };
 
+    /**
+     * Fetch full PVA type of the PV Access channel, the pv request for this particular
+     * channel is ignored
+     */
     fetchPvaType = async () => {
         const channel = this.getChannel();
         if (channel !== undefined) {
+            const pvRequest = this.getPvRequest();
+            console.log("pvrequest =", pvRequest)
+
             const result = await channel.fetchPvaType();
             return result
         } else {
@@ -332,7 +344,7 @@ export class CaChannelAgent {
     putPva = async (displayWindowId: string, dbrData: type_dbrData, ioTimeout: number = 1, pvaValueField: string): Promise<type_pva_status> => {
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.PUT);
         let putStatus: type_pva_status = {
-                type: PVA_STATUS_TYPE["ERROR"],
+            type: PVA_STATUS_TYPE["ERROR"],
         }
         try {
             const channel = this.getChannel();
@@ -432,6 +444,7 @@ export class CaChannelAgent {
             // if 2 pv requests (with or without ".value") are the same, they are considered as a same monitor
             const monitors = channel.getMonitors();
             const pvRequest = this.getPvRequest();
+            console.log("+++++++++++++++++ pv request", pvRequest)
             for (let monitor of monitors) {
                 const pvRequestTmp = monitor.getPvRequest();
                 if ((pvRequest === pvRequestTmp) || (pvRequest === pvRequestTmp + ".value") || (pvRequest + ".value" === pvRequestTmp)) {
@@ -474,9 +487,9 @@ export class CaChannelAgent {
                     return;
                 }
             } else if (protocol === "pva") {
-                console.log("create monitor =============");
+                console.log("create monitor =============", this.getChannelName(), this.getPvRequest());
                 const monitor = await channel.createMonitorPva(undefined, this.getPvRequest(), (channelMonitor: ChannelMonitor) => {
-                    console.log("monitor callback =============");
+                    console.log("monitor callback =============", channelMonitor.getPvaData());
                     const channelAgentsManager = this.getChannelAgentsManager();
                     const mainProcess = channelAgentsManager.getMainProcess();
                     const windowAgentsManager = mainProcess.getWindowAgentsManager();
@@ -574,8 +587,9 @@ export class CaChannelAgent {
     getBareChannelName = (): string => {
         if (this.getProtocol() === "pva") {
             // pva://demo:abc --> demo:abc
-            // pva://demo:abc/EGU --> demo:abc.EGU, one full pv name
-            return this.getChannelName().replace("pva://", "").split(".")[0].replace("/", ".");
+            // pva://demo:abc.EGU --> demo:abc.EGU, one full pv name
+            // pva://demo:abc/timeStamp.nanoseconds --> pva://demo:abc
+            return this.getChannelName().replace("pva://", "").split("/")[0]
         }
         return this.getChannelName();
     };
@@ -775,15 +789,20 @@ export class CaChannelAgent {
         return "ca";
     }
 
+    /**
+     * pva://demo:abc.EGU --> ""
+     * pva://demo:abc/timeStamp.nanoseconds --> "timeStamp.nanoseconds"
+     * pva://demo:abc --> ""
+     */
     getPvRequest = (): string => {
         if (this.getProtocol() === "ca") {
             return "";
         } else {
-            const channelNameArray = this.getChannelName().split(".");
+            const channelNameArray = this.getChannelName().replace("pva://", "").split("/");
             if (channelNameArray.length === 1) {
                 return "";
             } else {
-                return channelNameArray.slice(1).join(".");
+                return channelNameArray[1];
             }
         }
     }

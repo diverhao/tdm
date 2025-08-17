@@ -94,6 +94,7 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("tca-get", this.handleTcaGet);
         // tca get meta
         this.ipcMain.on("tca-get-meta", this.handleTcaGetMeta);
+        this.ipcMain.on("fetch-pva-type", this.handleFetchPvaType);
         // tca put
         this.ipcMain.on("tca-put", this.handleTcaPut);
         // tca put meta
@@ -2013,7 +2014,9 @@ export class IpcManagerOnMainProcess {
         if (displayWindowAgent === undefined) {
             return;
         }
+        console.log("tca get data =========================", channelName)
         let data = await displayWindowAgent.tcaGet(channelName, ioTimeout, dbrType);
+        console.log("tca get data =========================", data)
 
         // (2)
         if (useInterval) {
@@ -2036,27 +2039,47 @@ export class IpcManagerOnMainProcess {
         if (displayWindowAgent === undefined) {
             return;
         }
+        // in pva, meta data is actually pva type, which does not contain data
         let data = await displayWindowAgent.tcaGetMeta(channelName, timeout);
-        // ! attention
-        // send twice: use periodic and the "tca-get-result" to ensure all the widgets in newly created window are updated
-        // in the first place. Otherwise the race condition may happen, the widget key is removed from the forceUpdateWidgets list
-        // after the widget is first rendered, causing this widget cannot update. If there is new dbrData pending for this
-        // widget, this widget has a second chance to refresh.
-        displayWindowAgent.addNewChannelData(channelName, data);
+        if (channelName.startsWith("pva://") === false) {
+            // ! attention
+            // send twice: use periodic and the "tca-get-result" to ensure all the widgets in newly created window are updated
+            // in the first place. Otherwise the race condition may happen, the widget key is removed from the forceUpdateWidgets list
+            // after the widget is first rendered, causing this widget cannot update. If there is new dbrData pending for this
+            // widget, this widget has a second chance to refresh.
+            displayWindowAgent.addNewChannelData(channelName, data);
+        }
         // (2)
         // ioId and widgetKey are bounced back
         Log.debug(this.getMainProcessId(), "tca-get-meta result for", channelName, "is", data);
         if (channelName.startsWith("pva://")) {
-            displayWindowAgent.sendFromMainProcess("tca-get-pva-type-result", channelName, widgetKey, data);
+            displayWindowAgent.sendFromMainProcess("tca-get-pva-type-result", channelName, widgetKey, data, ioId);
         } else {
             displayWindowAgent.sendFromMainProcess("tca-get-result", ioId, widgetKey, data);
         }
+    };
+    handleFetchPvaType = async (event: any, channelName: string, displayWindowId: string, widgetKey: string | undefined, ioId: number, timeout: number | undefined) => {
+        // (1)
+        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
+        const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId) as DisplayWindowAgent;
+        if (displayWindowAgent === undefined) {
+            return;
+        }
+        // in pva, meta data is actually pva type, which does not contain data
+        console.log("handle fetch pva type ============")
+        let data = await displayWindowAgent.fetchPvaType(channelName, timeout);
+        console.log("handle fetch pva type ============", data)
+        // (2)
+        // ioId and widgetKey are bounced back
+        Log.debug(this.getMainProcessId(), "fetch Pva Type for", channelName, "is", data);
+        displayWindowAgent.sendFromMainProcess("fetch-pva-type", channelName, widgetKey, data, ioId);
     };
 
     handleTcaMonitor = (event: any, displayWindowId: string, channelName: string) => {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId) as DisplayWindowAgent;
         // if channel does not exist, create it
+        console.log("creating tca monitor +++++++++++++++")
         displayWindowAgent.tcaMonitor(channelName);
     };
 

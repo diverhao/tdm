@@ -100,7 +100,7 @@ export class IpcManagerOnDisplayWindow {
             const messageBuffer = event.data;
             // const message = JSON.parse(messageBuffer.toString(), (key, value) =>
             //     value === null ? undefined : value);
-            const message= JSON.parse(messageBuffer);
+            const message = JSON.parse(messageBuffer);
             this.replaceNullWithUndefined(message);
             this.parseMessage(message);
         };
@@ -123,7 +123,7 @@ export class IpcManagerOnDisplayWindow {
         const processId = message["processId"];
         const eventName = message["eventName"];
         const windowId = message["windowId"];
-        // console.log("received message from main process via websocket IPC", message)
+        console.log("received message from main process via websocket IPC", message)
 
         // find callback for this event
         const callback = this.eventListeners[eventName];
@@ -186,7 +186,7 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("tca-get-result", this.handleTcaGetResult);
         this.ipcRenderer.on("tca-put-result", this.handleTcaPutResult);
 
-        this.ipcRenderer.on("tca-get-pva-type-result", this.handleTcaGetPvaTypeResult);
+        this.ipcRenderer.on("fetch-pva-type", this.handleFetchPvaType);
         this.ipcRenderer.on("dialog-show-message-box", this.handleDialogShowMessageBox);
         this.ipcRenderer.on("dialog-show-input-box", this.handleDialogShowInputBox);
         this.ipcRenderer.on("tdl-file-saved", this.handleTdlFileSaved);
@@ -615,7 +615,7 @@ export class IpcManagerOnDisplayWindow {
      */
     handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
 
-        Log.debug("received data", JSON.stringify(newDbrData, null, 4));
+        Log.info("received data", JSON.stringify(newDbrData, null, 4));
 
         let channelNames = Object.keys(newDbrData);
 
@@ -644,14 +644,13 @@ export class IpcManagerOnDisplayWindow {
 
 
                 for (let tcaChannel of tcaChannels) {
-
                     if (tcaChannel === undefined) {
                         // in case the channel is destroyed in renderer process but still in main process
                         // does not always happen
                         continue;
                     }
 
-
+                    console.log("D", JSON.stringify(tcaChannel.getDbrData()))
 
                     let data = newDbrData[channelName];
                     if (data === undefined) {
@@ -741,6 +740,7 @@ export class IpcManagerOnDisplayWindow {
         const readWriteIos = g_widgets1.getReadWriteIos();
         // lift the block of GET operation
         readWriteIos.resolveIo(ioId, newDbrData);
+        console.log("tca get result +++++++++++++++++++++++++++++++", newDbrData)
         // if the tca-get operation is initiated by no widget `undefined`,
         // all widgets are flsuhed
         if (widgetKey === undefined) {
@@ -771,11 +771,19 @@ export class IpcManagerOnDisplayWindow {
         readWriteIos.resolveIo(result["ioId"], result);
     };
 
-    handleTcaGetPvaTypeResult = (event: any, channelName: string, widgetKey: string | undefined, pvaType: any) => {
+    handleFetchPvaType = (event: any, channelName: string, widgetKey: string | undefined, fullPvaType: any, ioId: number) => {
         try {
+            const readWriteIos = g_widgets1.getReadWriteIos();
+            // lift the block of GET operation
+            readWriteIos.resolveIo(ioId, fullPvaType);
+
             const channel = g_widgets1.getTcaChannel(channelName);
-            channel.setPvaType(pvaType);
+            console.log("B", channel.getDbrData());
+            channel.setFullPvaType(fullPvaType);
+            console.log("C", channel.getDbrData());
         } catch (e) {
+            const readWriteIos = g_widgets1.getReadWriteIos();
+            readWriteIos.rejectIo(ioId, `${e}`);
             Log.error(`${e}`);
         }
     };

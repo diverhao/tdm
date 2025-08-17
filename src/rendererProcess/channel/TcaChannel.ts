@@ -94,7 +94,7 @@ export class TcaChannel {
     _dbrData: type_dbrData | type_LocalChannel_data = { value: undefined, severity: ChannelSeverity.NOT_CONNECTED };
     autoUpdateInterval: any;
     _pvaValueDisplayType: pvaValueDisplayType = pvaValueDisplayType.NOT_DEFINED;
-    _pvaType: any = undefined;
+    _fullPvaType: any = undefined;
     _enumChoices: string[] = [];
 
     _fieldType: "SEVR" | "" = "";
@@ -125,7 +125,7 @@ export class TcaChannel {
     // a-z A-Z 0-9 _ - : . ; [ ] < > 
     static regexEpicsChannelName = /^[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+$/;
     // "pva://" + regular EPICS PV name
-    static regexPvaChannelName = /^pva:\/\/[a-zA-Z0-9:/\_\-\[\]<>\.;$\{\}\(\)]+$/;
+    static regexPvaChannelName = /^pva:\/\/[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+(\/[a-zA-Z0-9:\_\-\.]+)?$/;
 
 
 
@@ -517,13 +517,31 @@ export class TcaChannel {
         try {
             let message: type_dbrData | type_LocalChannel_data = await this.getIoPromise(ioId);
             this.appendToDbrData(message);
-            console.log("message ================", message)
             return message;
         } catch (e) {
             this.appendToDbrData({ value: undefined });
-            console.log("message ================", e)
             return { value: undefined };
         }
+    };
+
+
+    fetchPvaType = async (widgetKey: string | undefined, timeout: number | undefined = undefined): Promise<void> => {
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const ipcManager = displayWindowClient.getIpcManager();
+        const windowId = displayWindowClient.getWindowId();
+        // never timeout
+        const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["READ"], timeout, undefined);
+
+        // full channel name, pva://demo:abc/timeStamp.nanoseconds
+        ipcManager.sendFromRendererProcess("fetch-pva-type", this.getChannelName(), windowId, widgetKey, ioId, timeout);
+        // try {
+        //     let message: type_dbrData | type_LocalChannel_data = await this.getIoPromise(ioId);
+        //     this.appendToDbrData(message);
+        //     return message;
+        // } catch (e) {
+        //     this.appendToDbrData({ value: undefined });
+        //     return { value: undefined };
+        // }
     };
 
     /**
@@ -709,15 +727,18 @@ export class TcaChannel {
             if (pvaType === undefined) {
                 return undefined;
             }
+            console.log("parse input  data ========= ", dbrData, this.getPvaValueDisplayType())
             let pvRequest = this.getPvRequest();
+            let subRequest = "";
             if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
-                if (pvRequest !== "") {
-                    pvRequest = pvRequest + ".value";
+                subRequest = "value";
+                // if (pvRequest !== "") {
+                //     pvRequest = pvRequest + ".value";
 
-                } else {
-                    pvRequest = pvRequest + "value";
+                // } else {
+                //     pvRequest = pvRequest + "value";
 
-                }
+                // }
             } else if (this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_RAW_FIELD ||
                 (this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_VALUE_FIELD && this.isEnumType() === false) ||
                 this.getPvaValueDisplayType() === pvaValueDisplayType.NOT_DEFINED
@@ -727,7 +748,8 @@ export class TcaChannel {
 
             let valueTypeIndex = "";
 
-            pvaType = this.getPvaTypeAtPvRequest(pvRequest);
+            pvaType = this.getPvaType(subRequest);
+            console.log("pva type", pvaType)
             if (pvaType === undefined) {
                 return undefined;
             }
@@ -1080,16 +1102,19 @@ export class TcaChannel {
      * If the display window is in editing mode, return PV name.
      */
     getValue = (raw: boolean = false): string | number | number[] | string[] | undefined => {
+        console.log("this.getDbrData() A", this.getDbrData())
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+
             this.setPvaValueDisplayType(pvaValueDisplayType.NOT_DEFINED);
             return this.getChannelName();
         }
 
         if (this.getProtocol() === "pva") {
             try {
-                const type = this.getPvaTypeAtPvRequest() as any;
-                const value = this.getPvaValueAtPvRequest() as any;
-                
+                // const type = this.getPvaTypeAtPvRequest() as any;
+                const type = this.getPvaType() as any;
+                const value = this.getPvaValue() as any;
+
 
                 // if the type is struct, try to find the values's .value field
                 if (type["typeIndex"] === "0x80") {
@@ -1364,7 +1389,6 @@ export class TcaChannel {
             if (this.isEnumType() === true) {
                 return Channel_ACCESS_RIGHTS.READ_WRITE;
             }
-            console.log("=============this.getPvaValueDisplayType()", this.getPvaValueDisplayType())
             // regualr channle
             if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_RAW_FIELD || this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
                 return Channel_ACCESS_RIGHTS.READ_WRITE;
@@ -1648,11 +1672,11 @@ export class TcaChannel {
 
     getPvRequest = () => {
         if (this.getProtocol() === "pva") {
-            const channelNameArray = this.getChannelName().split(".");
+            const channelNameArray = this.getChannelName().replace("pva://", "").split("/");
             if (channelNameArray.length === 1) {
                 return "";
             } else {
-                return channelNameArray.slice(1).join(".");
+                return channelNameArray[1];
             }
         } else {
             return "";
@@ -1667,12 +1691,49 @@ export class TcaChannel {
         this._pvaValueDisplayType = newType;
     }
 
-    getPvaType = () => {
-        return this._pvaType;
+    getFullPvaType = () => {
+        return this._fullPvaType;
     }
 
-    setPvaType = (newType: any) => {
-        this._pvaType = newType;
+    /**
+     * Get the type of this channel, it does not show the full path
+     * to this TcaChannel's type. It only shows this current TcaChannel's type.
+     * 
+     * @param subRequest - Optional sub-request path. 
+     *                    If provided, it will be appended to the current pvRequest with a dot separator.
+     *                    If empty string (default), uses only the existing pvRequest.
+     * @returns The PVA type object for the requested path, or undefined if the path is invalid
+     */
+    getPvaType = (subRequest: string = "") => {
+        const fullPvaType = this.getFullPvaType();
+        if (fullPvaType === undefined) {
+            return undefined;
+        }
+        let pvRequest = this.getPvRequest();
+        if (pvRequest === "" && subRequest === "") {
+            return fullPvaType;
+        } else if (pvRequest === "" && subRequest !== "") {
+            pvRequest = subRequest;
+        } else if (pvRequest !== "" && subRequest !== "") {
+            pvRequest = pvRequest + "." + subRequest;
+        }
+
+        const pvRequestArray = pvRequest.split(".");
+        console.log("pv reqeust array", pvRequestArray)
+        let result: Record<string, any> = fullPvaType;
+        for (const pvRequstElement of pvRequestArray) {
+            const fields = result["fields"];
+            if (fields !== undefined) {
+                result = fields[pvRequstElement];
+            } else {
+                return undefined;
+            }
+        }
+        return result;
+    }
+
+    setFullPvaType = (newType: any) => {
+        this._fullPvaType = newType;
     }
 
 
@@ -1680,44 +1741,46 @@ export class TcaChannel {
         this._enumChoices = newChoices;
     }
 
-    getPvaTypeAtPvRequest = (pvRequest: string | undefined = undefined) => {
-        if (pvRequest === undefined) {
-            pvRequest = this.getPvRequest();
-        }
-        let type = this.getPvaType();
-        if (pvRequest === "") {
-            return type;
-        }
+    // getPvaTypeAtPvRequest = (pvRequest: string | undefined = undefined) => {
+    //     console.log("this.getDbrData()", this.getDbrData())
+    //     if (pvRequest === undefined) {
+    //         pvRequest = this.getPvRequest();
+    //     }
+    //     let type = this.getPvaType();
+    //     if (pvRequest === "") {
+    //         return type;
+    //     }
 
-        try {
-            const pvRequestStrs = pvRequest.split(".");
-            for (const pvRequestStr of pvRequestStrs) {
-                type = type["fields"][pvRequestStr];
-            }
-        } catch (e) {
-            return undefined;
-        }
-        return type;
-    }
+    //     try {
+    //         const pvRequestStrs = pvRequest.split(".");
+    //         for (const pvRequestStr of pvRequestStrs) {
+    //             type = type["fields"][pvRequestStr];
+    //         }
+    //     } catch (e) {
+    //         return undefined;
+    //     }
+    //     return type;
+    // }
 
 
-    getPvaValueAtPvRequest = (pvRequest: string | undefined = undefined) => {
+    getPvaValue = () => {
         let data = this.getDbrData();
-        if (pvRequest === undefined) {
-            pvRequest = this.getPvRequest();
-        }
+        const pvRequest = this.getPvRequest();
+        console.log("this.getDbrData() ===================", this.getDbrData(), pvRequest)
         if (pvRequest === "") {
             return data;
         }
 
         try {
             const pvRequestStrs = pvRequest.split(".");
+            console.log("pvRequestStrs ===========", pvRequestStrs)
             for (const pvRequestStr of pvRequestStrs) {
                 data = data[pvRequestStr];
             }
         } catch (e) {
             return undefined;
         }
+        console.log("getPvaValue result:", data)
         return data;
     }
     getFieldType = () => {

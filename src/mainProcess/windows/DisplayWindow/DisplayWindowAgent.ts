@@ -200,7 +200,9 @@ export class DisplayWindowAgent {
             }
         }, 100);
 
+
         this.promises.appendPromise("tca-get-meta", false);
+        this.promises.appendPromise("fetch-pva-type", false);
     }
 
 
@@ -377,6 +379,7 @@ export class DisplayWindowAgent {
             // (1)
             const t0 = Date.now();
             const connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
+            console.log("tcaGet() =============== 2", connectSuccess)
             const t1 = Date.now();
             // timeout
             if (t1 - t0 > ioTimeout * 1000) {
@@ -389,10 +392,13 @@ export class DisplayWindowAgent {
             }
             // (2)
             const channelProtocol = channelAgent.getProtocol();
+            console.log("tcaGet() =============== 3", channelProtocol, dbrType)
             if (channelProtocol === "ca" && (typeof dbrType === "number" || dbrType === undefined)) {
                 result = await channelAgent.get(this.getId(), dbrType, ioTimeout);
-            } else if (channelProtocol === "pva" && typeof dbrType === "string") {
+            } else if (channelProtocol === "pva" /**&& typeof dbrType === "string"**/) {
+                console.log("tcaGet() =============== 4")
                 result = await channelAgent.getPva(this.getId(), ioTimeout);
+                console.log("tcaGet() =============== 5")
             }
         } else {
             // (1)
@@ -486,7 +492,9 @@ export class DisplayWindowAgent {
                     }
                 } else if (channelType === "pva") {
                     // (3)
+                    console.log("trying to fetch pva type =========================")
                     result = await channelAgent.fetchPvaType();
+                    console.log(result)
                     // result = await channelAgent.getPva(this.getId(), undefined, ""); // get the full type
                 }
             }
@@ -517,32 +525,43 @@ export class DisplayWindowAgent {
         return result;
     };
 
-
-
-    tcaGetPvaType = async (channelName: string): Promise<undefined | any> => {
+    fetchPvaType = async (channelName: string, ioTimeout: number | undefined): Promise<Record<string, any> | undefined> => {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
         const channelType = ChannelAgentsManager.determineChannelType(channelName);
-        let pvaType: any = undefined;
+        let result: type_LocalChannel_data | type_dbrData = { value: undefined };
 
         if (channelType !== "pva") {
             return undefined;
         }
+        const t0 = Date.now();
 
         let connectSuccess = false;
-        connectSuccess = await this.addAndConnectChannel(channelName, undefined);
+        connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
+
+        const t1 = Date.now();
+        // timeout
+        if (ioTimeout !== undefined) {
+            if (t1 - t0 > ioTimeout * 1000) {
+                return undefined;
+            }
+        }
 
         let channelAgent = channelAgentsManager.getChannelAgent(channelName);
 
         if (!connectSuccess || channelAgent === undefined) {
             Log.debug(this.getMainProcessId(), `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
-            return { value: undefined };
+            return undefined;
         }
 
+
         if (channelAgent instanceof CaChannelAgent) {
+
             // (3)
-            pvaType = await channelAgent.fetchPvaType();
+            console.log("trying to fetch pva type =========================")
+            result = await channelAgent.fetchPvaType();
+            console.log(result)
         }
 
         // (4)
@@ -551,8 +570,47 @@ export class DisplayWindowAgent {
             // this.removeChannel(channelName);
         }
 
-        return JSON.parse(JSON.stringify(pvaType));
+        this.promises.resolvePromise("fetch-pva-type", "");
+
+        return result;
     };
+
+
+
+    // tcaGetPvaType = async (channelName: string): Promise<undefined | any> => {
+    //     const windowAgentsManager = this.getWindowAgentsManager();
+    //     const mainProcess = windowAgentsManager.getMainProcess();
+    //     const channelAgentsManager = mainProcess.getChannelAgentsManager();
+    //     const channelType = ChannelAgentsManager.determineChannelType(channelName);
+    //     let pvaType: any = undefined;
+
+    //     if (channelType !== "pva") {
+    //         return undefined;
+    //     }
+
+    //     let connectSuccess = false;
+    //     connectSuccess = await this.addAndConnectChannel(channelName, undefined);
+
+    //     let channelAgent = channelAgentsManager.getChannelAgent(channelName);
+
+    //     if (!connectSuccess || channelAgent === undefined) {
+    //         Log.debug(this.getMainProcessId(), `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
+    //         return { value: undefined };
+    //     }
+
+    //     if (channelAgent instanceof CaChannelAgent) {
+    //         // (3)
+    //         pvaType = await channelAgent.fetchPvaType();
+    //     }
+
+    //     // (4)
+    //     if (this.checkChannelOperations(channelName) === false) {
+    //         // ! shall we remove channel after get meta?
+    //         // this.removeChannel(channelName);
+    //     }
+
+    //     return JSON.parse(JSON.stringify(pvaType));
+    // };
 
     /**
      * Write meta data to LocalChannel, not applicable to CaChannel<br>
@@ -604,7 +662,7 @@ export class DisplayWindowAgent {
      *
      * @returns {Promise<undefined | number>} undefined if the CA operation fails, the IO ID for synchronous version (waitNotify = false), the ECA status code for asynchronous version (waitNotify = true). PVA always returns a Status
      */
-    tcaPut = async (channelName: string, dbrData: type_dbrData | type_LocalChannel_data, ioTimeout: number, pvaValueField: string, waitNotify: boolean): Promise< number | undefined | type_pva_status> => {
+    tcaPut = async (channelName: string, dbrData: type_dbrData | type_LocalChannel_data, ioTimeout: number, pvaValueField: string, waitNotify: boolean): Promise<number | undefined | type_pva_status> => {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
@@ -684,9 +742,15 @@ export class DisplayWindowAgent {
      */
     tcaMonitor = async (channelName: string): Promise<boolean> => {
 
+        if (channelName.startsWith("pva://")) {
+            const promiseObj = this.promises.getPromise("fetch-pva-type");
+            await promiseObj;
 
-        const promiseObj = this.promises.getPromise("tca-get-meta");
-        await promiseObj;
+        } else {
+            const promiseObj = this.promises.getPromise("tca-get-meta");
+            await promiseObj;
+
+        }
 
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
