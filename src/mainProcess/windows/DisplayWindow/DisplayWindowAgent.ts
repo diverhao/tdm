@@ -379,7 +379,6 @@ export class DisplayWindowAgent {
             // (1)
             const t0 = Date.now();
             const connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
-            console.log("tcaGet() =============== 2", connectSuccess)
             const t1 = Date.now();
             // timeout
             if (t1 - t0 > ioTimeout * 1000) {
@@ -392,13 +391,10 @@ export class DisplayWindowAgent {
             }
             // (2)
             const channelProtocol = channelAgent.getProtocol();
-            console.log("tcaGet() =============== 3", channelProtocol, dbrType)
             if (channelProtocol === "ca" && (typeof dbrType === "number" || dbrType === undefined)) {
                 result = await channelAgent.get(this.getId(), dbrType, ioTimeout);
             } else if (channelProtocol === "pva" /**&& typeof dbrType === "string"**/) {
-                console.log("tcaGet() =============== 4")
                 result = await channelAgent.getPva(this.getId(), ioTimeout);
-                console.log("tcaGet() =============== 5")
             }
         } else {
             // (1)
@@ -492,9 +488,7 @@ export class DisplayWindowAgent {
                     }
                 } else if (channelType === "pva") {
                     // (3)
-                    console.log("trying to fetch pva type =========================")
                     result = await channelAgent.fetchPvaType();
-                    console.log(result)
                     // result = await channelAgent.getPva(this.getId(), undefined, ""); // get the full type
                 }
             }
@@ -559,9 +553,7 @@ export class DisplayWindowAgent {
         if (channelAgent instanceof CaChannelAgent) {
 
             // (3)
-            console.log("trying to fetch pva type =========================")
             result = await channelAgent.fetchPvaType();
-            console.log(result)
         }
 
         // (4)

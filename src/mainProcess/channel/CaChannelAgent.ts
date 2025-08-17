@@ -125,14 +125,12 @@ export class CaChannelAgent {
                 }
                 // this._channelCreationPromise = context.createChannel(this._channelName, 5);
                 let channelName = this.getBareChannelName();
-                console.log("channel name ==========++++++++++++", channelName)
                 if (this.getProtocol() === "ca") {
                     this._channelCreationPromise = context.createChannel(channelName, "ca", creationTimeout);
                     channelTmp = await this._channelCreationPromise;
                 } else if (this.getProtocol() === "pva") {
                     this._channelCreationPromise = context.createChannel(channelName, "pva", creationTimeout);
                     channelTmp = await this._channelCreationPromise;
-                    console.log("channel ", this.getChannelName(), "created")
                 }
 
             } else {
@@ -254,13 +252,10 @@ export class CaChannelAgent {
             }
 
             // default ioTimeout = 1 second
-            console.log("==================== step 1");
             if (pvRequest !== undefined) {
                 data = JSON.parse(JSON.stringify(await channel.getPva(ioTimeout, pvRequest)));
-                console.log("==================== step 2");
             } else {
                 data = JSON.parse(JSON.stringify(await channel.getPva(ioTimeout, this.getPvRequest())));
-                console.log("==================== step 3");
             }
 
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
@@ -288,8 +283,6 @@ export class CaChannelAgent {
         const channel = this.getChannel();
         if (channel !== undefined) {
             const pvRequest = this.getPvRequest();
-            console.log("pvrequest =", pvRequest)
-
             const result = await channel.fetchPvaType();
             return result
         } else {
@@ -444,7 +437,6 @@ export class CaChannelAgent {
             // if 2 pv requests (with or without ".value") are the same, they are considered as a same monitor
             const monitors = channel.getMonitors();
             const pvRequest = this.getPvRequest();
-            console.log("+++++++++++++++++ pv request", pvRequest)
             for (let monitor of monitors) {
                 const pvRequestTmp = monitor.getPvRequest();
                 if ((pvRequest === pvRequestTmp) || (pvRequest === pvRequestTmp + ".value") || (pvRequest + ".value" === pvRequestTmp)) {
@@ -487,9 +479,7 @@ export class CaChannelAgent {
                     return;
                 }
             } else if (protocol === "pva") {
-                console.log("create monitor =============", this.getChannelName(), this.getPvRequest());
                 const monitor = await channel.createMonitorPva(undefined, this.getPvRequest(), (channelMonitor: ChannelMonitor) => {
-                    console.log("monitor callback =============", channelMonitor.getPvaData());
                     const channelAgentsManager = this.getChannelAgentsManager();
                     const mainProcess = channelAgentsManager.getMainProcess();
                     const windowAgentsManager = mainProcess.getWindowAgentsManager();

@@ -727,18 +727,9 @@ export class TcaChannel {
             if (pvaType === undefined) {
                 return undefined;
             }
-            console.log("parse input  data ========= ", dbrData, this.getPvaValueDisplayType())
-            let pvRequest = this.getPvRequest();
             let subRequest = "";
             if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
                 subRequest = "value";
-                // if (pvRequest !== "") {
-                //     pvRequest = pvRequest + ".value";
-
-                // } else {
-                //     pvRequest = pvRequest + "value";
-
-                // }
             } else if (this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_RAW_FIELD ||
                 (this.getPvaValueDisplayType() === pvaValueDisplayType.OBJECT_VALUE_FIELD && this.isEnumType() === false) ||
                 this.getPvaValueDisplayType() === pvaValueDisplayType.NOT_DEFINED
@@ -749,7 +740,6 @@ export class TcaChannel {
             let valueTypeIndex = "";
 
             pvaType = this.getPvaType(subRequest);
-            console.log("pva type", pvaType)
             if (pvaType === undefined) {
                 return undefined;
             }
@@ -1102,7 +1092,6 @@ export class TcaChannel {
      * If the display window is in editing mode, return PV name.
      */
     getValue = (raw: boolean = false): string | number | number[] | string[] | undefined => {
-        console.log("this.getDbrData() A", this.getDbrData())
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
 
             this.setPvaValueDisplayType(pvaValueDisplayType.NOT_DEFINED);
@@ -1702,6 +1691,7 @@ export class TcaChannel {
      * @param subRequest - Optional sub-request path. 
      *                    If provided, it will be appended to the current pvRequest with a dot separator.
      *                    If empty string (default), uses only the existing pvRequest.
+     * 
      * @returns The PVA type object for the requested path, or undefined if the path is invalid
      */
     getPvaType = (subRequest: string = "") => {
@@ -1719,7 +1709,6 @@ export class TcaChannel {
         }
 
         const pvRequestArray = pvRequest.split(".");
-        console.log("pv reqeust array", pvRequestArray)
         let result: Record<string, any> = fullPvaType;
         for (const pvRequstElement of pvRequestArray) {
             const fields = result["fields"];
@@ -1741,46 +1730,22 @@ export class TcaChannel {
         this._enumChoices = newChoices;
     }
 
-    // getPvaTypeAtPvRequest = (pvRequest: string | undefined = undefined) => {
-    //     console.log("this.getDbrData()", this.getDbrData())
-    //     if (pvRequest === undefined) {
-    //         pvRequest = this.getPvRequest();
-    //     }
-    //     let type = this.getPvaType();
-    //     if (pvRequest === "") {
-    //         return type;
-    //     }
-
-    //     try {
-    //         const pvRequestStrs = pvRequest.split(".");
-    //         for (const pvRequestStr of pvRequestStrs) {
-    //             type = type["fields"][pvRequestStr];
-    //         }
-    //     } catch (e) {
-    //         return undefined;
-    //     }
-    //     return type;
-    // }
-
 
     getPvaValue = () => {
         let data = this.getDbrData();
         const pvRequest = this.getPvRequest();
-        console.log("this.getDbrData() ===================", this.getDbrData(), pvRequest)
         if (pvRequest === "") {
             return data;
         }
 
         try {
             const pvRequestStrs = pvRequest.split(".");
-            console.log("pvRequestStrs ===========", pvRequestStrs)
             for (const pvRequestStr of pvRequestStrs) {
                 data = data[pvRequestStr];
             }
         } catch (e) {
             return undefined;
         }
-        console.log("getPvaValue result:", data)
         return data;
     }
     getFieldType = () => {

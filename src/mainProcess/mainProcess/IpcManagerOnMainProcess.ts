@@ -2014,9 +2014,7 @@ export class IpcManagerOnMainProcess {
         if (displayWindowAgent === undefined) {
             return;
         }
-        console.log("tca get data =========================", channelName)
         let data = await displayWindowAgent.tcaGet(channelName, ioTimeout, dbrType);
-        console.log("tca get data =========================", data)
 
         // (2)
         if (useInterval) {
@@ -2066,9 +2064,7 @@ export class IpcManagerOnMainProcess {
             return;
         }
         // in pva, meta data is actually pva type, which does not contain data
-        console.log("handle fetch pva type ============")
         let data = await displayWindowAgent.fetchPvaType(channelName, timeout);
-        console.log("handle fetch pva type ============", data)
         // (2)
         // ioId and widgetKey are bounced back
         Log.debug(this.getMainProcessId(), "fetch Pva Type for", channelName, "is", data);
@@ -2079,7 +2075,6 @@ export class IpcManagerOnMainProcess {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId) as DisplayWindowAgent;
         // if channel does not exist, create it
-        console.log("creating tca monitor +++++++++++++++")
         displayWindowAgent.tcaMonitor(channelName);
     };
 
@@ -2306,7 +2301,6 @@ export class IpcManagerOnMainProcess {
                 if (options["filterType"] === "file-converter" && os.platform() === "linux") {
                     properties = undefined;
                 }
-                // console.log(fileFilters, properties)
                 fileNames = dialog.showOpenDialogSync({
                     title: "Select a file",
                     filters: fileFilters,
