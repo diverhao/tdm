@@ -14,6 +14,7 @@ import { TcaChannel } from "../../channel/TcaChannel";
 import { v4 as uuidv4 } from "uuid";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor, ElementRectangleButtonDefaultTextColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../mainProcess/log/Log";
+import { ElementJsonViewer } from "../../helperWidgets/SharedElements/JsonViewer";
 
 export type type_Probe_tdl = {
     type: string;
@@ -413,6 +414,13 @@ export class Probe extends BaseWidget {
         const elementGenerateRecord = React.useRef<any>(null);
         const elementGenerateRecordShort = React.useRef<any>(null);
 
+        let tcaChannel: undefined | TcaChannel = undefined;
+        try {
+            tcaChannel = g_widgets1.getTcaChannel(channelName);
+        } catch (e) {
+
+        }
+
         React.useEffect(() => {
             setChannelName(`${this.getChannelNames()[0]}`);
         }, [this.getChannelNames()[0]]);
@@ -547,14 +555,6 @@ export class Probe extends BaseWidget {
                                 return null;
                             }
                         })}
-
-                        {/* basic info from pva data */}
-                        {/* severity, status, alarm message, */}
-
-                        {g_widgets1.getChannelProtocol(channelName) === "pva" ?
-                            <this.TableLine index={index} property={property} value={value}></this.TableLine>
-                            : null
-                        }
 
 
                         {this.rtyp === "" || this.rtyp === this.rtypWaitingName ? null :
@@ -693,6 +693,23 @@ export class Probe extends BaseWidget {
                         }
                     </tbody>
                 </table>
+                {(tcaChannel !== undefined && tcaChannel.getProtocol() === "pva") ?
+                    <div>
+                        <h3>PV Access Raw Data</h3>
+
+                        {g_widgets1.getChannelProtocol(channelName) === "pva" && tcaChannel !== undefined ?
+                            <ElementJsonViewer json={tcaChannel.getDbrData()} topLevel={true}></ElementJsonViewer>
+                            : null
+                        }
+                    </div>
+                    :
+                    null
+                }
+
+                {/* basic info from pva data */}
+                {/* severity, status, alarm message, */}
+
+
                 <div>
                     <h3>Fields</h3>
                 </div>
@@ -835,50 +852,6 @@ export class Probe extends BaseWidget {
         );
     };
 
-    
-
-    _ElementPvStruct = ({ data }: {data: Record<string, any>}) => {
-        const renderValue = (value: any): React.ReactNode => {
-            if (value === null) return <span className="text-gray-500">null</span>;
-            if (typeof value === "string") return <span className="text-blue-600">"{value}"</span>;
-            if (typeof value === "number" || typeof value === "boolean")
-                return <span className="text-purple-600">{String(value)}</span>;
-
-            if (Array.isArray(value)) {
-                return (
-                    <ul className="pl-4 list-disc">
-                        {value.map((item, idx) => (
-                            <li key={idx}>{renderValue(item)}</li>
-                        ))}
-                    </ul>
-                );
-            }
-
-            if (typeof value === "object") {
-                return (
-                    <div className="ml-4 border-l border-gray-300 pl-2">
-                        {Object.entries(value).map(([k, v]) => (
-                            <div key={k}>
-                                <span className="font-semibold">{k}:</span> {renderValue(v)}
-                            </div>
-                        ))}
-                    </div>
-                );
-            }
-
-            return <span>{String(value)}</span>;
-        };
-
-        return (
-            <div>
-                {Object.entries(data).map(([key, value]) => (
-                    <div key={key} className="mb-1">
-                        <span className="font-bold text-gray-800">{key}:</span> {renderValue(value)}
-                    </div>
-                ))}
-            </div>
-        );
-    };
 
 
     generateRecord = (shortVersion: boolean = false) => {
