@@ -77,7 +77,7 @@ export class Probe extends BaseWidget {
         super.processChannelNames();
         this.getChannelNamesLevel5().length = 0;
         const baseChannelName = this.getChannelNamesLevel4()[0];
-        const separator = TcaChannel.checkChannelName(baseChannelName) === "pva" ? "/" : ".";
+        const separator = TcaChannel.checkChannelName(baseChannelName) === "pva" ? "." : ".";
         if (baseChannelName !== undefined) {
             this.getChannelNamesLevel5().push(baseChannelName);
             for (let fieldName of this.fieldNames) {
@@ -157,14 +157,27 @@ export class Probe extends BaseWidget {
         if (channelNameLevel4 === undefined) {
             this.rtyp = "";
             return;
-        } else if (channelNameLevel4.includes(".")) {
+        } else if (channelNameLevel4.includes(".") && TcaChannel.checkChannelName(channelNameLevel4) !== "pva") {
             this.rtyp = "";
+            return;
+        } else if (channelNameLevel4.includes(".") && TcaChannel.checkChannelName(channelNameLevel4) !== "pva") {
+            this.rtyp = "";
+            let pvaTcaChannel = undefined;
+            try {
+                pvaTcaChannel = g_widgets1.getTcaChannel(channelNameLevel4);
+            } catch (e) {
+                pvaTcaChannel = g_widgets1.createTcaChannel(channelNameLevel4, this.getWidgetKey());
+            }
+            if (pvaTcaChannel !== undefined) {
+                await pvaTcaChannel.fetchPvaType(undefined);
+                pvaTcaChannel.monitor();
+            }
             return;
         }
 
         let rtypChannelName = `${channelNameLevel4}.RTYP`;
         if (TcaChannel.checkChannelName(channelNameLevel4) === "pva") {
-            rtypChannelName = `${channelNameLevel4}/RTYP`;
+            rtypChannelName = `${channelNameLevel4}.RTYP`;
         }
         let rtypTcaChannel: TcaChannel | undefined = undefined;
         try {
@@ -174,11 +187,20 @@ export class Probe extends BaseWidget {
         }
         console.log("================= aaa")
         if (rtypTcaChannel !== undefined) {
-            console.log("================= bbb")
+
             this.rtyp = this.rtypWaitingName;
-            await rtypTcaChannel.getMeta(this.getWidgetKey());
+            console.log("================= bbb", this.rtyp)
+            if (TcaChannel.checkChannelName(rtypTcaChannel.getChannelName()) === "pva") {
+                await rtypTcaChannel.fetchPvaType(undefined);
+
+            } else {
+                console.log('get meta')
+                await rtypTcaChannel.getMeta(this.getWidgetKey());
+                console.log('get meta 1')
+
+            }
             const dbrData = await rtypTcaChannel.get(this.getWidgetKey(), undefined, undefined, false);
-            console.log("dbr data =======================", rtypTcaChannel.getDbrData(), rtypTcaChannel.getPvaType())
+            console.log("dbr data =======================", rtypTcaChannel.getDbrData(), rtypTcaChannel.getPvaType(), rtypTcaChannel.getFullPvaType())
             if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
                 const rtyp = dbrData["value"];
                 if (rtyp !== undefined && this.rtyp === this.rtypWaitingName) {
@@ -211,13 +233,23 @@ export class Probe extends BaseWidget {
                 try {
                     const fieldTcaChannel = g_widgets1.getTcaChannel(channelNameLevel5);
                     // trigger the data so that the
-                    fieldTcaChannel.getMeta(this.getWidgetKey());
+                    if (TcaChannel.checkChannelName(channelNameLevel5) !== "pva") {
+                        fieldTcaChannel.getMeta(this.getWidgetKey());
+                    } else {
+                        fieldTcaChannel.fetchPvaType(undefined);
+                    }
                     fieldTcaChannel.get(this.getWidgetKey(), undefined, undefined, true);
                     fieldTcaChannel.monitor();
                 } catch (e) {
                     const fieldTcaChannel = g_widgets1.createTcaChannel(channelNameLevel5, this.getWidgetKey());
+                    console.log("field tca channel", fieldTcaChannel?.getChannelName())
                     if (fieldTcaChannel !== undefined) {
-                        fieldTcaChannel.getMeta(this.getWidgetKey());
+                        if (TcaChannel.checkChannelName(channelNameLevel5) !== "pva") {
+                            fieldTcaChannel.getMeta(this.getWidgetKey());
+                        } else {
+                            fieldTcaChannel.fetchPvaType(undefined);
+                        }
+                        console.log("try to get", channelNameLevel5)
                         fieldTcaChannel.get(this.getWidgetKey(), undefined, undefined, true);
                         // fieldTcaChannel.getMeta(undefined);
                         fieldTcaChannel.monitor();
@@ -282,7 +314,7 @@ export class Probe extends BaseWidget {
                     } else if (key === "Severity") {
                         value = tcaChannel.getSeverityStr();
                     } else if (key === "Alarm Status") {
-                        value = tcaChannel.getAlarmStatusStr();
+                        value = tcaChannel.getStatusStr();
                     } else if (key === "Time") {
                         const us0 = Date.UTC(90, 0, 1, 0, 0, 0, 0);
                         let us = value * 1000 + dbrData["nanoSeconds"] * 1e-6;
@@ -515,6 +547,16 @@ export class Probe extends BaseWidget {
                                 return null;
                             }
                         })}
+
+                        {/* basic info from pva data */}
+                        {/* severity, status, alarm message, */}
+
+                        {g_widgets1.getChannelProtocol(channelName) === "pva" ?
+                            <this.TableLine index={index} property={property} value={value}></this.TableLine>
+                            : null
+                        }
+
+
                         {this.rtyp === "" || this.rtyp === this.rtypWaitingName ? null :
                             <>
                                 <this.TableLine index={-1} property={"RTYP"} value={this.rtyp}></this.TableLine>
@@ -709,11 +751,12 @@ export class Probe extends BaseWidget {
                                 }
                                 let separator = ".";
                                 if (TcaChannel.checkChannelName(this.getChannelNamesLevel4()[0]) === "pva") {
-                                    separator = "/";
+                                    separator = ".";
                                 }
                                 const channelName = `${this.getChannelNamesLevel4()[0]}${separator}${fieldName}`;
                                 const property = fieldName;
                                 const value = g_widgets1.getChannelValue(channelName);
+                                console.log("rendering", fieldName, channelName, value)
                                 if (value !== undefined) {
                                     const fieldMenu = this.fieldMenus[index];
                                     const fieldDefaultValue = this.fieldDefaultValues[index];
@@ -791,6 +834,52 @@ export class Probe extends BaseWidget {
             </div>
         );
     };
+
+    
+
+    _ElementPvStruct = ({ data }: {data: Record<string, any>}) => {
+        const renderValue = (value: any): React.ReactNode => {
+            if (value === null) return <span className="text-gray-500">null</span>;
+            if (typeof value === "string") return <span className="text-blue-600">"{value}"</span>;
+            if (typeof value === "number" || typeof value === "boolean")
+                return <span className="text-purple-600">{String(value)}</span>;
+
+            if (Array.isArray(value)) {
+                return (
+                    <ul className="pl-4 list-disc">
+                        {value.map((item, idx) => (
+                            <li key={idx}>{renderValue(item)}</li>
+                        ))}
+                    </ul>
+                );
+            }
+
+            if (typeof value === "object") {
+                return (
+                    <div className="ml-4 border-l border-gray-300 pl-2">
+                        {Object.entries(value).map(([k, v]) => (
+                            <div key={k}>
+                                <span className="font-semibold">{k}:</span> {renderValue(v)}
+                            </div>
+                        ))}
+                    </div>
+                );
+            }
+
+            return <span>{String(value)}</span>;
+        };
+
+        return (
+            <div>
+                {Object.entries(data).map(([key, value]) => (
+                    <div key={key} className="mb-1">
+                        <span className="font-bold text-gray-800">{key}:</span> {renderValue(value)}
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
 
     generateRecord = (shortVersion: boolean = false) => {
         if (this.rtyp === "" || (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i).test(this.rtyp)) {

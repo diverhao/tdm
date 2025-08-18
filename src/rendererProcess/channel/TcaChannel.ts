@@ -496,7 +496,7 @@ export class TcaChannel {
 
 
     /**
-     * Get meta (GR) data for this channel. Never time out. <br>
+     * Get meta (GR) data for this channel. Never time out. Only valid for CA channel <br>
      *
      * Should be the first operation conducted for an EPICS channel. <br>
      *
@@ -507,6 +507,9 @@ export class TcaChannel {
      * @returns {Promise<type_dbrData>}
      */
     getMeta = async (widgetKey: string | undefined, timeout: number | undefined = undefined): Promise<type_dbrData | type_LocalChannel_data> => {
+        if (this.getProtocol() === "pva") {
+            return { value: undefined };
+        }
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const ipcManager = displayWindowClient.getIpcManager();
         const windowId = displayWindowClient.getWindowId();
@@ -525,23 +528,25 @@ export class TcaChannel {
     };
 
 
+    /**
+     * Fetch PVA channel's type.
+     * 
+     * the main process will fetch the full pva type for channel pva://demo:abc and send it back
+     * in TcaChannel, full type is at ._fullPvaType, we can obtain the pva type for this
+     * particular type using TcaChannel.getPvaType()
+     */
     fetchPvaType = async (widgetKey: string | undefined, timeout: number | undefined = undefined): Promise<void> => {
+        if (this.getProtocol() !== "pva") {
+            return;
+        }
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const ipcManager = displayWindowClient.getIpcManager();
         const windowId = displayWindowClient.getWindowId();
         // never timeout
         const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["READ"], timeout, undefined);
 
-        // full channel name, pva://demo:abc/timeStamp.nanoseconds
+        // channel name, pva://demo:abc/timeStamp.nanoseconds
         ipcManager.sendFromRendererProcess("fetch-pva-type", this.getChannelName(), windowId, widgetKey, ioId, timeout);
-        // try {
-        //     let message: type_dbrData | type_LocalChannel_data = await this.getIoPromise(ioId);
-        //     this.appendToDbrData(message);
-        //     return message;
-        // } catch (e) {
-        //     this.appendToDbrData({ value: undefined });
-        //     return { value: undefined };
-        // }
     };
 
     /**
@@ -1077,11 +1082,12 @@ export class TcaChannel {
     //         upper_warning_limit; lower_warning_limit; lower_alarm_limit;
     // Most of them are in the DBR_GR data structure, which is the first data to be obtained, after
     // that the DBR_TIME is monitored.
+    // they are meant to be used by the channel getters in Widgets, not recommended to invoke directly
 
     /**
      * Get value of this channel from the cache. No network operation performed at here.
      * 
-     * This method should not be used regularly.
+     * This method should only be used for display purpose.
      * 
      * For PVA channel, if the value has a .value field, then return the .value field. If not, return 
      * the raw value. If the returned value is an JSON object, then stringify it. If the returned value
@@ -1091,7 +1097,7 @@ export class TcaChannel {
      * @returns {string | number | number[] | string[] | undefined} If the channel is not connected, return undefined.
      * If the display window is in editing mode, return PV name.
      */
-    getValue = (raw: boolean = false): string | number | number[] | string[] | undefined => {
+    getValueForDisplay = (raw: boolean = false): string | number | number[] | string[] | undefined => {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
 
             this.setPvaValueDisplayType(pvaValueDisplayType.NOT_DEFINED);
@@ -1103,7 +1109,7 @@ export class TcaChannel {
                 // const type = this.getPvaTypeAtPvRequest() as any;
                 const type = this.getPvaType() as any;
                 const value = this.getPvaValue() as any;
-
+                console.log("tcachannel get value", this.getChannelName(), type, value)
 
                 // if the type is struct, try to find the values's .value field
                 if (type["typeIndex"] === "0x80") {
@@ -1208,11 +1214,11 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return ChannelSeverity.NO_ALARM;
         }
-        if (TcaChannel.checkChannelName(this.getChannelName()) === "local" || TcaChannel.checkChannelName(this.getChannelName()) === "global") {
+        if (this.getProtocol() === "local" || this.getProtocol() === "global") {
             return ChannelSeverity.NO_ALARM;
         }
 
-        if (TcaChannel.checkChannelName(this.getChannelName()) === "ca") {
+        if (this.getProtocol() === "ca") {
 
             const value = this.getDbrData()["value"];
             if (value === undefined) {
@@ -1232,10 +1238,10 @@ export class TcaChannel {
                 // any other cases
                 return ChannelSeverity.NOT_CONNECTED;
             }
-        } else if (TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
+        } else if (this.getProtocol() === "pva") {
             // try to get the alarm field
-            const alarm = this.getDbrData()["alarm"];
-
+            const alarm = this.getPvaValue("alarm");
+            console.log(this.getChannelName(), "the alarm is", this.getPvaValue(), alarm)
             if (alarm !== undefined) {
                 const severityNum = alarm["severity"];
                 if (severityNum === 0) {
@@ -1271,7 +1277,7 @@ export class TcaChannel {
      * @returns {ChannelAlarmStatus} Alarm status of the channel. If the channel is not connected, return UDF.
      * If the display window is in editing mode, return NO_ALARM.
      */
-    getAlarmStatus = (): ChannelAlarmStatus => {
+    getStatus = (): ChannelAlarmStatus => {
         // always NO_ALARM in editing mode
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return ChannelAlarmStatus.NO_ALARM;
@@ -1312,13 +1318,14 @@ export class TcaChannel {
         return ChannelAlarmStatus.UDF;
     };
 
-    getAlarmStatusStr = () => {
-        const alarmStatusNum = this.getAlarmStatus();
+    getStatusStr = () => {
+        const alarmStatusNum = this.getStatus();
         return ChannelAlarmStatus[alarmStatusNum];
     }
 
+
     /**
-     * Get record type of this channel.
+     * Get record type of this channel. Valid only for CA channel.
      *
      * @returns {string | undefined} Record type. If the channel is not connected, return undefined.
      * If the display window is in editing mode, return undefined.
@@ -1331,8 +1338,8 @@ export class TcaChannel {
     };
 
     /**
-     * Get dbr type of this channel.
-     *
+     * Get dbr type of this channel. Only for CA channel.
+     * 
      * @returns {Channel_DBR_TYPES | undefined} DBR type. If the channel is not connected, return undefined.
      * If the display window is in editing mode, return undefined.
      */
@@ -1340,7 +1347,10 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
-        return this.getDbrData()["DBR_TYPE"];
+        if (this.getProtocol() === "ca") {
+            return this.getDbrData()["DBR_TYPE"];
+        }
+        return undefined;
     };
 
     /**
@@ -1353,16 +1363,29 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return "";
         }
-        const units = this.getDbrData()["units"];
-        if (units === undefined) {
-            return "";
-        } else {
-            return units;
+        if (this.getProtocol() === "ca") {
+            const units = this.getDbrData()["units"];
+            if (units === undefined) {
+                return "";
+            } else {
+                return `${units}`;
+            }
+        } else if (this.getProtocol() === "pva") {
+            const units = this.getPvaValue("display.units");
+            if (units === undefined) {
+                return ""
+            } else {
+                `${units}`;
+            }
         }
+        return "";
     };
+
 
     /**
      * Get access rights of this channel.
+     * 
+     * ! Note: there is no access right in PV Access yet
      *
      * @returns {Channel_ACCESS_RIGHTS} Unit. If the channel is not connected, return Channel_ACCESS_RIGHTS.NOT_AVAILABLE.
      * If the display window is in editing mode, return "".
@@ -1390,7 +1413,7 @@ export class TcaChannel {
 
 
         // always writable to local channel
-        if (TcaChannel.checkChannelName(this.getChannelName()) === "local" || TcaChannel.checkChannelName(this.getChannelName()) === "global") {
+        if (this.getProtocol() === "local" || this.getProtocol() === "global") {
             return Channel_ACCESS_RIGHTS.READ_WRITE;
         }
 
@@ -1421,7 +1444,13 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
-        return this.getDbrData()["upper_display_limit"];
+        if (this.getProtocol() === "ca") {
+            return this.getDbrData()["upper_display_limit"];
+        } else if (this.getProtocol() === "pva") {
+            return this.getPvaValue("control.limitHigh");
+        }
+        return undefined;
+
     };
 
     /**
@@ -1434,7 +1463,12 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
-        return this.getDbrData()["lower_display_limit"];
+        if (this.getProtocol() === "ca") {
+            return this.getDbrData()["lower_display_limit"];
+        } else if (this.getProtocol() === "pva") {
+            return this.getPvaValue("control.limitLow");
+        }
+        return undefined;
     };
 
     /**
@@ -1447,7 +1481,12 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
-        return this.getDbrData()["upper_warning_limit"];
+        if (this.getProtocol() === "ca") {
+            return this.getDbrData()["upper_warning_limit"];
+        } else if (this.getProtocol() === "pva") {
+            return this.getPvaValue("alarmLimit.highWarningLimit");
+        }
+        return undefined;
     };
 
     /**
@@ -1460,7 +1499,12 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
-        return this.getDbrData()["lower_warning_limit"];
+        if (this.getProtocol() === "ca") {
+            return this.getDbrData()["lower_warning_limit"];
+        } else if (this.getProtocol() === "pva") {
+            return this.getPvaValue("alarmLimit.lowWarningLimit");
+        }
+        return undefined;
     };
 
     /**
@@ -1473,7 +1517,12 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
-        return this.getDbrData()["upper_alarm_limit"];
+        if (this.getProtocol() === "ca") {
+            return this.getDbrData()["upper_alarm_limit"];
+        } else if (this.getProtocol() === "pva") {
+            return this.getPvaValue("alarmLimit.highAlarmLimit");
+        }
+        return undefined;
     };
 
     /**
@@ -1486,11 +1535,56 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
-        return this.getDbrData()["lower_alarm_limit"];
+        if (this.getProtocol() === "ca") {
+            return this.getDbrData()["lower_alarm_limit"];
+        } else if (this.getProtocol() === "pva") {
+            return this.getPvaValue("alarmLimit.lowAlarmLimit");
+        }
+        return undefined;
     };
 
+    getLowerAlarmSeverity = () => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return undefined;
+        }
+        if (this.getProtocol() === "pva") {
+            return this.getPvaValue("alarmLimit.lowAlarmSeverity");
+        }
+        return undefined;
+    }
+
+    getUpperAlarmSeverity = () => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return undefined;
+        }
+        if (this.getProtocol() === "pva") {
+            return this.getPvaValue("alarmLimit.highAlarmSeverity");
+        }
+        return undefined;
+    }
+
+    getLowerWarningSeverity = () => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return undefined;
+        }
+        if (this.getProtocol() === "pva") {
+            return this.getPvaValue("alarmLimit.lowWarningSeverity");
+        }
+        return undefined;
+    }
+
+    getUpperWarningSeverity = () => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return undefined;
+        }
+        if (this.getProtocol() === "pva") {
+            return this.getPvaValue("alarmLimit.highWarningSeverity");
+        }
+        return undefined;
+    }
+
     /**
-     * Get time stamp of this channel.
+     * Get time stamp of this PVA/CA channel.
      *
      * @returns {Date | undefined} A Date object that represents the time stamp. If the channel is not connected, return undefined.
      * If the display window is in editing mode, return undefined.
@@ -1499,29 +1593,88 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
-        const secondsSinceEpoch = this.getDbrData()["secondsSinceEpoch"];
-        const nanoseconds = this.getDbrData()["nanoSeconds"];
-        if (secondsSinceEpoch === undefined || nanoseconds === undefined) {
-            return undefined;
+        if (TcaChannel.checkChannelName(this.getChannelName()) === "ca") {
+            const secondsSinceEpoch = this.getDbrData()["secondsSinceEpoch"];
+            const nanoseconds = this.getDbrData()["nanoSeconds"];
+            if (secondsSinceEpoch === undefined || nanoseconds === undefined) {
+                return undefined;
+            }
+            const msSince1990UTC = 1000 * secondsSinceEpoch + nanoseconds * 1e-6;
+            return new Date(GlobalMethods.converEpicsTimeStampToEpochTime(msSince1990UTC));
+        } else if (TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
+            const timeStampData = this.getPvaValue("timeStamp");
+            if (timeStampData === undefined) {
+                return undefined;
+            }
+            const secondsSinceEpoch = timeStampData["secondsPastEpoch"];
+            const nanoseconds = timeStampData["nanoseconds"];
+            if (typeof nanoseconds === "number" && typeof secondsSinceEpoch === "number") {
+                const msSince1990UTC = 1000 * secondsSinceEpoch + nanoseconds * 1e-6;
+                return new Date(GlobalMethods.converEpicsTimeStampToEpochTime(msSince1990UTC));
+            }
         }
-        const msSince1990UTC = 1000 * secondsSinceEpoch + nanoseconds * 1e-6;
-        return new Date(GlobalMethods.converEpicsTimeStampToEpochTime(msSince1990UTC));
+
+        return undefined;
     };
 
-
-
-    /**
-     * Get status of this channel.
-     *
-     * @returns {number | undefined} Status of the channel (in form of number). If the channel is not connected, return undefined.
-     * If the display window is in editing mode, return undefined.
-     */
-    getStatus = (): number | undefined => {
+    getTimeStampUserTag = () => {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
-        return this.getDbrData()["status"];
-    };
+        if (this.getProtocol() === "pva") {
+            return this.getPvaValue('timeStamp.userTag');
+        }
+        return undefined;
+    }
+
+    getAlarmActive = () => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return undefined;
+        }
+
+        if (this.getProtocol() === "pva") {
+            return this.getPvaValue('alarmLimit.active');
+        }
+        return undefined;
+    }
+
+    getForm = () => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return undefined;
+        }
+
+        if (this.getProtocol() === "pva") {
+            try {
+                const form = this.getPvaValue('display.form');
+                const index = form["index"];
+                const choices = form["choices"];
+                return choices[index];
+            } catch (e) {
+                return "Default";
+            }
+        }
+        return undefined;
+    }
+
+    getMinStep = () => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return undefined;
+        }
+        if (this.getProtocol() === "pva") {
+            return this.getPvaValue('control.minStep');
+        }
+        return undefined;
+    }
+
+    getHysteresis = () => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return undefined;
+        }
+        if (this.getProtocol() === "pva") {
+            return this.getPvaValue('alarmLimit.hysteresis');
+        }
+        return undefined;
+    }
 
     /**
      * Get precision of this channel.
@@ -1533,11 +1686,16 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
-        return this.getDbrData()["precision"];
+        if (this.getProtocol() === "ca") {
+            return this.getDbrData()["precision"];
+        } else if (this.getProtocol() === "pva") {
+            this.getPvaValue("display.precision") as number;
+        }
+        return undefined;
     };
 
     /**
-     * Get enum choices of this channel. Must be a XX_ENUM type data.
+     * Get enum choices of this channel. Must be a XX_ENUM type data. Only for CA channel.
      *
      * @returns {string[] | undefined} Enum choices of this channel. If channel type is not enum, return undefined.
      * If the channel is not connected, return undefined.
@@ -1578,15 +1736,6 @@ export class TcaChannel {
             return this.getEnumChoices().length;
         }
     };
-
-    // getEnumRawValue = (): number | undefined => {
-    //     const rawValue = this.getDbrData()["value"];
-    //     if (this.isEnumType() && typeof rawValue === "number") {
-    //         return rawValue;
-    //     } else {
-    //         return undefined;
-    //     }
-    // };
 
     /**
      * If this channel an enum type data
@@ -1659,6 +1808,9 @@ export class TcaChannel {
         return TcaChannel.checkChannelName(this.getChannelName());
     }
 
+    /**
+     * Get the pv request from channel name
+     */
     getPvRequest = () => {
         if (this.getProtocol() === "pva") {
             const channelNameArray = this.getChannelName().replace("pva://", "").split("/");
@@ -1700,6 +1852,7 @@ export class TcaChannel {
             return undefined;
         }
         let pvRequest = this.getPvRequest();
+        console.log("pvrequest", pvRequest)
         if (pvRequest === "" && subRequest === "") {
             return fullPvaType;
         } else if (pvRequest === "" && subRequest !== "") {
@@ -1709,6 +1862,7 @@ export class TcaChannel {
         }
 
         const pvRequestArray = pvRequest.split(".");
+        console.log("pvrequest array", pvRequestArray)
         let result: Record<string, any> = fullPvaType;
         for (const pvRequstElement of pvRequestArray) {
             const fields = result["fields"];
@@ -1731,12 +1885,30 @@ export class TcaChannel {
     }
 
 
-    getPvaValue = () => {
-        let data = this.getDbrData();
-        const pvRequest = this.getPvRequest();
-        if (pvRequest === "") {
+
+    /**
+     * Get the value of the PVA data at the location of the pv request.
+     * 
+     * e.g. for pva://demo:count/timeStamp.nanoseconds, the dbr data is {timeStamp: {nanoseconds: 33}},
+     *      getPvaValue will return 33
+     * 
+     * e.g. for pva://demo:count, the dbr data is {value: 27, timeStamp: {...}, display: {...}}, the getPvaValue()
+     *      returns the whole dbr data structure
+     */
+    getPvaValue = (subRequest: string = "") => {
+        // dbr data is the full path to the data, e.g. 
+        let data = this.getDbrData() as any;
+
+        let pvRequest = this.getPvRequest();
+
+        if (pvRequest === "" && subRequest === "") {
             return data;
+        } else if (pvRequest === "" && subRequest !== "") {
+            pvRequest = subRequest;
+        } else if (pvRequest !== "" && subRequest !== "") {
+            pvRequest = pvRequest + "." + subRequest;
         }
+
 
         try {
             const pvRequestStrs = pvRequest.split(".");

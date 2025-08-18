@@ -615,7 +615,7 @@ export class IpcManagerOnDisplayWindow {
      */
     handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
 
-        Log.debug("received data", JSON.stringify(newDbrData, null, 4));
+        Log.info("received data", JSON.stringify(newDbrData, null, 4));
 
         let channelNames = Object.keys(newDbrData);
 
@@ -628,7 +628,8 @@ export class IpcManagerOnDisplayWindow {
                 // (1)
                 let tcaChannels: TcaChannel[] = [];
                 if (channelName.startsWith("pva://")) {
-                    tcaChannels = g_widgets1.getTcaSubPvaChannels(channelName);
+                    // tcaChannels = g_widgets1.getTcaSubPvaChannels(channelName);
+                    tcaChannels.push(g_widgets1.getTcaChannel(channelName));
                 } else {
                     try {
                         tcaChannels.push(g_widgets1.getTcaChannel(channelName));

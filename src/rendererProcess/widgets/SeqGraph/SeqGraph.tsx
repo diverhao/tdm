@@ -1478,7 +1478,7 @@ ss volt_check {
         try {
             const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
             const channel = g_widgets1.getTcaChannel(channelName);
-            const channelValue = channel.getValue();
+            const channelValue = channel.getValueForDisplay();
             return channelValue;
         } catch (e) {
             Log.error("Failed to get channel value for", channelName);
@@ -1509,7 +1509,7 @@ ss volt_check {
         try {
             const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
             const channel = g_widgets1.getTcaChannel(channelName);
-            const alarmStatus = channel.getAlarmStatus();
+            const alarmStatus = channel.getStatus();
             return alarmStatus;
         } catch (e) {
             Log.error("Failed to get channel alarm status for", channelName);

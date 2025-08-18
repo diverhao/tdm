@@ -196,6 +196,7 @@ export class DisplayWindowAgent {
             // channel monitor's callback function (in CaChannelAgent.createMonitor())
             if (Object.keys(this._newChannelData).length > 0) {
                 this.sendFromMainProcess("new-channel-data", this._newChannelData);
+                // console.log("sending new channel data", this._newChannelData)
                 this._newChannelData = {};
             }
         }, 100);

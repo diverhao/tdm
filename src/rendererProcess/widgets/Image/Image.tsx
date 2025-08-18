@@ -1379,6 +1379,7 @@ export class Image extends BaseWidget {
                             outline: "none",
                             border: "solid 1px black",
                             color: autoZ === true ? "rgba(180, 180, 180, 1)": "black",
+                            cursor: autoZ === true ? "not-allowed": "auto",
                         }}
                         value={autoZ === true? this.zMin : zMin}
                         type={"text"}
@@ -1426,6 +1427,7 @@ export class Image extends BaseWidget {
                             outline: "none",
                             border: "solid 1px black",
                             color: autoZ === true ? "rgba(180, 180, 180, 1)": "black",
+                            cursor: autoZ === true ? "not-allowed": "auto",
                         }}
                         value={autoZ === true? this.zMax : zMax}
                         type={"text"}

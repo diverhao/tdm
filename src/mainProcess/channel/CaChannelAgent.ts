@@ -396,7 +396,7 @@ export class CaChannelAgent {
      * In this way, if there no other window having MONITOR or outstanding GET/PUT, this channel is destroyed.
      */
     createMonitor = async (displayWindowId: string): Promise<void> => {
-
+        console.log("create monitor=============", this.getChannelName())
         // this.addClientsNum();
         // this.addMonitorOperation();
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.MONITOR);
@@ -491,6 +491,7 @@ export class CaChannelAgent {
                             // let newDbrData = JSON.parse(JSON.stringify(channelMonitor.getChannel().getDbrData()));
                             // let newPvaData = JSON.parse(JSON.stringify(channelMonitor.getPvaData()));
                             let newPvaData = channelMonitor.getPvaData();
+                            console.log("pva monitor", this.getChannelName())
                             displayWindowAgent.addNewChannelData(this.getChannelName(), newPvaData);
                         }
                     }

@@ -1846,27 +1846,6 @@ export class Widgets {
         throw new Error(errMsg);
     };
 
-    getTcaSubPvaChannels = (channelName: string): TcaChannel[] => {
-        const parsedChannelName = TcaChannel.checkChannelName(channelName);
-        // remove ".value"
-        if (channelName.endsWith(".value")) {
-            channelName = channelName.substring(0, channelName.length - 6);
-        }
-        const result: TcaChannel[] = [];
-        if (parsedChannelName === "pva") {
-            for (let tmp of Object.keys(this.getTcaChannels())) {
-                if (tmp.includes(channelName)) {
-                    result.push(this.getTcaChannels()[tmp]);
-                }
-            }
-            if (result.length > 0) {
-                return result;
-            }
-        }
-        const errMsg = `Channel ${channelName} does not exist`;
-        throw new Error(errMsg);
-    };
-
 
     // value, severity, unit, dbr type, record type, time stamp, precision, enum choices
     // limits: upper_display_limit; lower_display_limit; upper_alarm_limit;
@@ -1875,7 +1854,10 @@ export class Widgets {
     // that the DBR_TIME is monitored.
 
     /**
-     * Get TcaChannel's value. <br>
+     * Get TcaChannel's value for **display**. <br>
+     * 
+     * For PVA channel, if the data is structure type, and there is a "value" field, this function
+     * will return the value field.
      *
      * @param {string} channelName
      * @returns {string | number | number[] | string[] | undefined} TcaChannel value.
@@ -1892,13 +1874,12 @@ export class Widgets {
 
         try {
             const tcaChannel = this.getTcaChannel(channelName);
-            let value = tcaChannel.getValue(raw);
+            let value = tcaChannel.getValueForDisplay(raw);
             if (tcaChannel.getFieldType() === "SEVR") {
                 value = tcaChannel.getDbrData()["severity"];
             }
             return value;
         } catch (e) {
-            // Log.error(e);
             return undefined;
         }
     };
@@ -1926,6 +1907,87 @@ export class Widgets {
             return ChannelSeverity.NOT_CONNECTED;
         }
     };
+
+    getChannelProtocol = (channelName: string) => {
+        try {
+            const tcaChannel = this.getTcaChannel(channelName);
+            let protocol = tcaChannel.getProtocol();
+            return protocol;
+        } catch (e) {
+            // Log.error(e);
+            return undefined;
+        }
+    }
+
+    getChannelHysteresis = (channelName: string) => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return ChannelSeverity.NO_ALARM;
+        }
+        try {
+            const tcaChannel = this.getTcaChannel(channelName);
+            let hysteresis = tcaChannel.getHysteresis();
+            return hysteresis;
+        } catch (e) {
+            // Log.error(e);
+            return undefined;
+        }
+    }
+
+    getChannelUpperWarningSeverity = (channelName: string) => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return ChannelSeverity.NO_ALARM;
+        }
+        try {
+            const tcaChannel = this.getTcaChannel(channelName);
+            let severity = tcaChannel.getUpperWarningSeverity();
+            return severity;
+        } catch (e) {
+            // Log.error(e);
+            return undefined;
+        }
+    }
+
+    getChannelLowerWarningSeverity = (channelName: string) => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return ChannelSeverity.NO_ALARM;
+        }
+        try {
+            const tcaChannel = this.getTcaChannel(channelName);
+            let severity = tcaChannel.getLowerWarningSeverity();
+            return severity;
+        } catch (e) {
+            // Log.error(e);
+            return undefined;
+        }
+    }
+
+    getChannelUpperAlarmSeverity = (channelName: string) => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return ChannelSeverity.NO_ALARM;
+        }
+        try {
+            const tcaChannel = this.getTcaChannel(channelName);
+            let severity = tcaChannel.getUpperAlarmSeverity();
+            return severity;
+        } catch (e) {
+            // Log.error(e);
+            return undefined;
+        }
+    }
+
+    getChannelLowerAlarmSeverity = (channelName: string) => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return ChannelSeverity.NO_ALARM;
+        }
+        try {
+            const tcaChannel = this.getTcaChannel(channelName);
+            let severity = tcaChannel.getLowerAlarmSeverity();
+            return severity;
+        } catch (e) {
+            // Log.error(e);
+            return undefined;
+        }
+    }
 
     /**
      * Get TcaChannel's DBR type
@@ -2027,6 +2089,19 @@ export class Widgets {
         }
     };
 
+
+    getChannelTimeStampUserTag = (channelName: string): Date | undefined => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return undefined;
+        }
+        try {
+            const tcaChannel = this.getTcaChannel(channelName);
+            return tcaChannel.getTimeStampUserTag();
+        } catch (e) {
+            Log.error(e);
+            return undefined;
+        }
+    };
     /**
      * Get TcaChannel's upper display limit
      * @param {string} channelName

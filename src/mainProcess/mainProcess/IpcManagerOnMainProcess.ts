@@ -2067,7 +2067,7 @@ export class IpcManagerOnMainProcess {
         let data = await displayWindowAgent.fetchPvaType(channelName, timeout);
         // (2)
         // ioId and widgetKey are bounced back
-        Log.debug(this.getMainProcessId(), "fetch Pva Type for", channelName, "is", data);
+        Log.info(this.getMainProcessId(), "fetch Pva Type for", channelName, "is", data);
         displayWindowAgent.sendFromMainProcess("fetch-pva-type", channelName, widgetKey, data, ioId);
     };
 
