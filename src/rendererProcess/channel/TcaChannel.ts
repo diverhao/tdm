@@ -447,17 +447,25 @@ export class TcaChannel {
 
     // --------------------- channel operations ---------------------
 
-    // get() use cases
-    // (1) When the display window is switched to "operating" mode, get DBR_GR data for all channels
-    //     This data contains units, limits, and more. These data are stored permanently in this object.
-    //     All widgets are re-rendered.
-    // (2) In widget, we clicked something to get the channel value with any type. The data is
-    //     permanently stored (appended) in this object. Only this widget is re-rendered.
-    // always create a new channel (if not exist) and then destroy it in the main process (if nobody else is using it)
-    // the ioTimeout is for CA in main process, if the get() expires in main process, it will send back
-    // { value: undefined } in "tca-get" event
-    // if widgetKey === undefined, all widgets should be re-rendered
-    // if useInterval === true, the data is periodically sent to display window
+    /**
+     * 
+     * get() use cases
+     * 
+     * (1) When the display window is switched to "operating" mode, get DBR_GR data for all channels
+     *     This data contains units, limits, and more. These data are stored permanently in this object.
+     *     All widgets are re-rendered.
+     * 
+     * (2) In widget, we clicked something to get the channel value with any type. The data is
+     *     permanently stored (appended) in this object. Only this widget is re-rendered.
+     * 
+     * always create a new channel (if not exist) and then destroy it in the main process (if nobody else is using it)
+     * the ioTimeout is for CA in main process, if the get() expires in main process, it will send back
+     * { value: undefined } in "tca-get" event
+     * 
+     * if widgetKey === undefined, all widgets should be re-rendered
+     * 
+     * if useInterval === true, the data is periodically sent to display window
+     */
     get = async (
         widgetKey: string | undefined,
         ioTimeout: number | undefined,
@@ -1109,7 +1117,7 @@ export class TcaChannel {
                 // const type = this.getPvaTypeAtPvRequest() as any;
                 const type = this.getPvaType() as any;
                 const value = this.getPvaValue() as any;
-                console.log("tcachannel get value", this.getChannelName(), type, value)
+                // console.log("tcachannel get value", this.getChannelName(), type, value)
 
                 // if the type is struct, try to find the values's .value field
                 if (type["typeIndex"] === "0x80") {
@@ -1241,7 +1249,7 @@ export class TcaChannel {
         } else if (this.getProtocol() === "pva") {
             // try to get the alarm field
             const alarm = this.getPvaValue("alarm");
-            console.log(this.getChannelName(), "the alarm is", this.getPvaValue(), alarm)
+            // console.log(this.getChannelName(), "the alarm is", this.getPvaValue(), alarm)
             if (alarm !== undefined) {
                 const severityNum = alarm["severity"];
                 if (severityNum === 0) {
@@ -1792,6 +1800,23 @@ export class TcaChannel {
         this._dbrData = { value: undefined };
     };
 
+    mergePvaTypeAndData = (type: Record<string, any>, data: Record<string, any>) => {
+        const result: Record<string, any> = {};
+        const typeName = type["name"];
+        const typeFields = type["fields"];
+        for (const [key, value] of Object.entries(data)) {
+            const fieldType = typeFields[key];
+            
+            const typeIndex = fieldType["typeIndex"];
+            if (typeIndex === "0x80") {
+                result[key + " " + typeIndex] = this.mergePvaTypeAndData(fieldType, value);
+            } else {
+                result[key + " " + typeIndex] = value;
+            }
+        }
+        return result;
+    }
+
     // ----------------------- getters ------------------------
 
     getChannelName = (): string => {
@@ -1852,7 +1877,7 @@ export class TcaChannel {
             return undefined;
         }
         let pvRequest = this.getPvRequest();
-        console.log("pvrequest", pvRequest)
+        // console.log("pvrequest", pvRequest)
         if (pvRequest === "" && subRequest === "") {
             return fullPvaType;
         } else if (pvRequest === "" && subRequest !== "") {
@@ -1862,7 +1887,7 @@ export class TcaChannel {
         }
 
         const pvRequestArray = pvRequest.split(".");
-        console.log("pvrequest array", pvRequestArray)
+        // console.log("pvrequest array", pvRequestArray)
         let result: Record<string, any> = fullPvaType;
         for (const pvRequstElement of pvRequestArray) {
             const fields = result["fields"];

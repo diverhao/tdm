@@ -16,7 +16,6 @@ export const ElementJsonViewer = ({ json, topLevel, }: { json: Record<string, an
                 position: "relative",
                 display: "inline-flex",
                 flexDirection: "column",
-                // marginTop: 2,
             }}
         >
             {Object.entries(json).map(([fieldName, value]) => {
@@ -24,6 +23,31 @@ export const ElementJsonViewer = ({ json, topLevel, }: { json: Record<string, an
                     <ElementJsonViewerField fieldName={fieldName} value={value} topLevel={topLevel}></ElementJsonViewerField>
                 )
             })}
+        </div>
+    )
+}
+
+const ElementJsonViewerArray = ({ value }: { value: any[] }) => {
+    return (
+        <div
+            style={{
+                ...style,
+                left: 20,
+            }}
+        >
+            {value.slice(0, 10).map(
+                (element, index) => {
+                    if (Array.isArray(element)) {
+                        return <ElementJsonViewerArray value={element} />
+                    } else if (typeof element === "object") {
+                        return <ElementJsonViewerField fieldName="" value={element} topLevel={false}></ElementJsonViewerField>
+                    } else {
+                        return <div style={{ left: 20 }}>{element}</div>;
+                    }
+                    return (index === value.length - 1 ? `${element}` : `${element}, `)
+                })}
+            {value.length > 10 ? `${value.length - 10} more elements ...` : ""}
+            
         </div>
     )
 }
@@ -41,11 +65,14 @@ const ElementJsonViewerField = ({ fieldName, value, topLevel }: { fieldName: str
             </div>
         )
     } else if (Array.isArray(value)) {
+        // only show first 20 elements
         return (
             <div
-                style={{ ...style, left: topLevel === true ? 0 : 20 }}
+                style={{ ...style, left: topLevel === true ? 0 : 20, flexDirection: "column" }}
             >
-                {fieldName} : [{value.map((element, index) => { return (index === value.length - 1 ? `${element}` : `${element}, `) })}]
+                <div style={{ ...style, left: 0 }}>{fieldName} : [</div>
+                <ElementJsonViewerArray value={value} />
+                <div style={{ ...style, left: 0 }}>]</div>
             </div>
         )
     } else if (typeof value === "object") {
@@ -61,9 +88,9 @@ const ElementJsonViewerField = ({ fieldName, value, topLevel }: { fieldName: str
                         alignItems: "center",
                         cursor: "pointer",
                     }}
-                        onMouseDown={(event: any) => {
-                            setExpanded(!expanded);
-                        }}
+                    onMouseDown={(event: any) => {
+                        setExpanded(!expanded);
+                    }}
                 >
                     {fieldName} {" "}
                     <img src={"../../resources/webpages/arrowDown.svg"} height={"8px"}

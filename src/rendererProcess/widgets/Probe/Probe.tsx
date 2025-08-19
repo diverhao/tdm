@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from "uuid";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor, ElementRectangleButtonDefaultTextColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../mainProcess/log/Log";
 import { ElementJsonViewer } from "../../helperWidgets/SharedElements/JsonViewer";
+import { mergePvaTypeAndData } from "../../global/GlobalMethods";
 
 export type type_Probe_tdl = {
     type: string;
@@ -85,7 +86,7 @@ export class Probe extends BaseWidget {
                 this.getChannelNamesLevel5().push(`${baseChannelName}${separator}${fieldName}`);
             }
         }
-        console.log("channel names level 5", this.getChannelNamesLevel5())
+        // console.log("channel names level 5", this.getChannelNamesLevel5())
     }
 
     getDbrData = () => {
@@ -152,29 +153,41 @@ export class Probe extends BaseWidget {
             Log.debug("RTYP already obtained or waiting");
             return;
         }
+
+
+        // in some cases, we won't even be bothered to obtain the RTYP
+        // channel name === undefined, demo:count.EGU, pva://demo:count.EGU, pva://demo:count/timeStamp, pva://demo:count/timeStamp.nanoseconds
+
         // level-4 channel name
         const channelNameLevel4 = this.getChannelNamesLevel4()[0];
         // if this is an EPICS field channel, e.g. val1.SEVR, no rtype
         if (channelNameLevel4 === undefined) {
+            console.log("AAA ===============")
             this.rtyp = "";
             return;
-        } else if (channelNameLevel4.includes(".") && TcaChannel.checkChannelName(channelNameLevel4) !== "pva") {
+        } else if (channelNameLevel4.includes(".")) {
+            // demo:abc.EGU, no RTYP
+            console.log("BBB ===============")
             this.rtyp = "";
             return;
-        } else if (channelNameLevel4.includes(".") && TcaChannel.checkChannelName(channelNameLevel4) !== "pva") {
+        } else if (channelNameLevel4.replace("pva://", "").includes("/")) {
             this.rtyp = "";
-            let pvaTcaChannel = undefined;
-            try {
-                pvaTcaChannel = g_widgets1.getTcaChannel(channelNameLevel4);
-            } catch (e) {
-                pvaTcaChannel = g_widgets1.createTcaChannel(channelNameLevel4, this.getWidgetKey());
-            }
-            if (pvaTcaChannel !== undefined) {
-                await pvaTcaChannel.fetchPvaType(undefined);
-                pvaTcaChannel.monitor();
-            }
             return;
         }
+        // else if (channelNameLevel4.includes(".") && TcaChannel.checkChannelName(channelNameLevel4) !== "pva") {
+        //     this.rtyp = "";
+        //     let pvaTcaChannel = undefined;
+        //     try {
+        //         pvaTcaChannel = g_widgets1.getTcaChannel(channelNameLevel4);
+        //     } catch (e) {
+        //         pvaTcaChannel = g_widgets1.createTcaChannel(channelNameLevel4, this.getWidgetKey());
+        //     }
+        //     if (pvaTcaChannel !== undefined) {
+        //         await pvaTcaChannel.fetchPvaType(undefined);
+        //         pvaTcaChannel.monitor();
+        //     }
+        //     return;
+        // }
 
         let rtypChannelName = `${channelNameLevel4}.RTYP`;
         if (TcaChannel.checkChannelName(channelNameLevel4) === "pva") {
@@ -191,28 +204,50 @@ export class Probe extends BaseWidget {
 
             this.rtyp = this.rtypWaitingName;
             console.log("================= bbb", this.rtyp)
-            if (TcaChannel.checkChannelName(rtypTcaChannel.getChannelName()) === "pva") {
+            if (rtypTcaChannel.getProtocol() === "pva") {
+                console.log("================= ccc", this.rtyp)
                 await rtypTcaChannel.fetchPvaType(undefined);
+                console.log("================= ddd", this.rtyp, rtypTcaChannel.getFullPvaType())
+                const dbrData = await rtypTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
+                if (dbrData["value"] === undefined) {
+                    console.log("rtyp data ================", undefined)
+                }
+                // const dbrData = undefined;
+                console.log("dbr data =======================", dbrData, rtypTcaChannel.getDbrData(), rtypTcaChannel.getPvaType(), rtypTcaChannel.getFullPvaType())
 
-            } else {
-                console.log('get meta')
-                await rtypTcaChannel.getMeta(this.getWidgetKey());
-                console.log('get meta 1')
-
-            }
-            const dbrData = await rtypTcaChannel.get(this.getWidgetKey(), undefined, undefined, false);
-            console.log("dbr data =======================", rtypTcaChannel.getDbrData(), rtypTcaChannel.getPvaType(), rtypTcaChannel.getFullPvaType())
-            if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
-                const rtyp = dbrData["value"];
-                if (rtyp !== undefined && this.rtyp === this.rtypWaitingName) {
-                    this.rtyp = `${rtyp}`;
-                    this.connectFieldChannels();
-                    return;
+                if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
+                    // this is a PVA V3 channel, it has fields, such as pva://demo:count.EGU
+                    const rtyp = dbrData["value"];
+                    if (rtyp !== undefined && this.rtyp === this.rtypWaitingName) {
+                        this.rtyp = `${rtyp}`;
+                        this.connectFieldChannels();
+                        return;
+                    }
+                } else {
+                    // this is a pure PVA V4 channel, no fields
+                    this.rtyp = "PVA_V4";
+                    // GET timeout, reconnect
+                    // this.rtyp = "";
+                    this.connectPvaV4Channel();
                 }
             } else {
-                // GET timeout, reconnect
-                this.rtyp = "";
-                this.mapDbrData();
+                // console.log('get meta')
+                await rtypTcaChannel.getMeta(this.getWidgetKey());
+                // console.log('get meta 1')
+                const dbrData = await rtypTcaChannel.get(this.getWidgetKey(), undefined, undefined, false);
+                if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
+                    const rtyp = dbrData["value"];
+                    if (rtyp !== undefined && this.rtyp === this.rtypWaitingName) {
+                        this.rtyp = `${rtyp}`;
+                        this.connectFieldChannels();
+                        return;
+                    }
+                } else {
+                    // GET timeout, reconnect
+                    this.rtyp = "";
+                    this.mapDbrData();
+                }
+
             }
         }
     };
@@ -222,7 +257,7 @@ export class Probe extends BaseWidget {
     // (3) update
     connectFieldChannels = () => {
         const recordType = this.getDbdFiles().getRecordTypes()[this.rtyp];
-        console.log("recordType ================", recordType)
+        // console.log("recordType ================", recordType)
         if (recordType !== undefined) {
             this.fieldNames = this.getDbdFiles().getRecordTypeFieldNames(this.rtyp);
             this.fieldMenus = this.getDbdFiles().getRecordTypeFieldMenus(this.rtyp);
@@ -243,19 +278,43 @@ export class Probe extends BaseWidget {
                     fieldTcaChannel.monitor();
                 } catch (e) {
                     const fieldTcaChannel = g_widgets1.createTcaChannel(channelNameLevel5, this.getWidgetKey());
-                    console.log("field tca channel", fieldTcaChannel?.getChannelName())
+                    // console.log("field tca channel", fieldTcaChannel?.getChannelName())
                     if (fieldTcaChannel !== undefined) {
                         if (TcaChannel.checkChannelName(channelNameLevel5) !== "pva") {
                             fieldTcaChannel.getMeta(this.getWidgetKey());
                         } else {
                             fieldTcaChannel.fetchPvaType(undefined);
                         }
-                        console.log("try to get", channelNameLevel5)
+                        // console.log("try to get", channelNameLevel5)
                         fieldTcaChannel.get(this.getWidgetKey(), undefined, undefined, true);
                         // fieldTcaChannel.getMeta(undefined);
                         fieldTcaChannel.monitor();
                     }
                 }
+            }
+        }
+    };
+
+    connectPvaV4Channel = () => {
+        const channelNameLevel4 = this.getChannelNamesLevel4()[0];
+        if (TcaChannel.checkChannelName(channelNameLevel4) !== "pva") {
+            return;
+        }
+        try {
+            const fieldTcaChannel = g_widgets1.getTcaChannel(channelNameLevel4);
+            // trigger the data so that the
+            fieldTcaChannel.fetchPvaType(undefined);
+            fieldTcaChannel.get(this.getWidgetKey(), undefined, undefined, true);
+            fieldTcaChannel.monitor();
+        } catch (e) {
+            const fieldTcaChannel = g_widgets1.createTcaChannel(channelNameLevel4, this.getWidgetKey());
+            // console.log("field tca channel", fieldTcaChannel?.getChannelName())
+            if (fieldTcaChannel !== undefined) {
+                fieldTcaChannel.fetchPvaType(undefined);
+                // console.log("try to get", channelNameLevel5)
+                fieldTcaChannel.get(this.getWidgetKey(), undefined, undefined, true);
+                // fieldTcaChannel.getMeta(undefined);
+                fieldTcaChannel.monitor();
             }
         }
     };
@@ -418,7 +477,21 @@ export class Probe extends BaseWidget {
         try {
             tcaChannel = g_widgets1.getTcaChannel(channelName);
         } catch (e) {
+        }
 
+        const pvaData = tcaChannel?.getDbrData();
+        const pvaType = tcaChannel?.getPvaType();
+        let jsonDataAndType: any = {};
+        let jsonTypeName = "";
+        console.log("pvaData, pvaType", pvaData, pvaType, tcaChannel?.getFullPvaType())
+        if (pvaData !== undefined && pvaType !== undefined) {
+            try {
+                const dataAndTypeFull = mergePvaTypeAndData(pvaType, "", pvaData);
+                jsonTypeName = dataAndTypeFull["key"];
+                jsonDataAndType = dataAndTypeFull["data"];
+            } catch (e) {
+                console.log(e)
+            }
         }
 
         React.useEffect(() => {
@@ -695,10 +768,10 @@ export class Probe extends BaseWidget {
                 </table>
                 {(tcaChannel !== undefined && tcaChannel.getProtocol() === "pva") ?
                     <div>
-                        <h3>PV Access Raw Data</h3>
+                        <h3>PV Access Raw Data {jsonTypeName === "" ? "" : "( " + jsonTypeName + ")"}</h3>
 
                         {g_widgets1.getChannelProtocol(channelName) === "pva" && tcaChannel !== undefined ?
-                            <ElementJsonViewer json={tcaChannel.getDbrData()} topLevel={true}></ElementJsonViewer>
+                            <ElementJsonViewer json={jsonDataAndType} topLevel={true}></ElementJsonViewer>
                             : null
                         }
                     </div>
@@ -708,7 +781,6 @@ export class Probe extends BaseWidget {
 
                 {/* basic info from pva data */}
                 {/* severity, status, alarm message, */}
-
 
                 <div>
                     <h3>Fields</h3>
@@ -773,7 +845,7 @@ export class Probe extends BaseWidget {
                                 const channelName = `${this.getChannelNamesLevel4()[0]}${separator}${fieldName}`;
                                 const property = fieldName;
                                 const value = g_widgets1.getChannelValue(channelName);
-                                console.log("rendering", fieldName, channelName, value)
+                                // console.log("rendering", fieldName, channelName, value)
                                 if (value !== undefined) {
                                     const fieldMenu = this.fieldMenus[index];
                                     const fieldDefaultValue = this.fieldDefaultValues[index];
@@ -908,9 +980,10 @@ export class Probe extends BaseWidget {
         try {
             const tcaChannel = g_widgets1.getTcaChannel(this.getChannelNamesLevel4()[0]);
             const pvaData = tcaChannel.getDbrData();
+            const pvaType = tcaChannel.getPvaType();
             return (
                 <div>
-                    {JSON.stringify(pvaData)}
+                    {JSON.stringify(pvaType)}
                 </div>
             )
         } catch (e) {
