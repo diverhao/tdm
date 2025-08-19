@@ -888,7 +888,7 @@ export class Probe extends BaseWidget {
                             })}
                     </tbody>
                 </table>
-                <this._ElementPvaStructData />
+                
                 <div
                     style={{
                         paddingBottom: 20,
@@ -976,20 +976,6 @@ export class Probe extends BaseWidget {
         }
     }
 
-    _ElementPvaStructData = () => {
-        try {
-            const tcaChannel = g_widgets1.getTcaChannel(this.getChannelNamesLevel4()[0]);
-            const pvaData = tcaChannel.getDbrData();
-            const pvaType = tcaChannel.getPvaType();
-            return (
-                <div>
-                    {JSON.stringify(pvaType)}
-                </div>
-            )
-        } catch (e) {
-            return null;
-        }
-    }
 
     // concretize abstract method
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
