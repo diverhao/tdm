@@ -1835,7 +1835,7 @@ export class Widgets {
         } else if (parsedChannelName === "local" || parsedChannelName === "global") {
             const localChannelNameMeta = TcaChannel.extractNameAndMetaFromLocalChannelName(channelName);
             if (localChannelNameMeta !== undefined) {
-                const locaChannelName = localChannelNameMeta["localChannelName"];
+                let locaChannelName = localChannelNameMeta["localChannelName"];
                 const tcaChannel = this._tcaChannels[locaChannelName];
                 if (tcaChannel !== undefined) {
                     return tcaChannel;

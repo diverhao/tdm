@@ -13,7 +13,15 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Log } from "../../../mainProcess/log/Log";
 import * as THREE from 'three';
 import { pi, re } from "mathjs";
+import { TcaChannel } from "../../channel/TcaChannel";
 
+export type type_Image_roi = {
+    xPv: string;
+    yPv: string;
+    widthPv: string;
+    heightPv: string;
+    color: string;
+}
 
 export type type_Image_tdl = {
     type: string;
@@ -24,6 +32,7 @@ export type type_Image_tdl = {
     channelNames: string[];
     groupNames: string[];
     rules: type_rules_tdl;
+    regionsOfInterest: type_Image_roi[];
 };
 
 // NT ND Array type
@@ -140,6 +149,17 @@ export class Image extends BaseWidget {
     axisWidth: number = 40;
     configHeight: number = 20;
     autoXY: boolean = true;
+    private _regionOfInterest: {
+        xPv: string;
+        yPv: string;
+        widthPv: string;
+        heightPv: string;
+        color: string;
+    }[] = [];
+
+    getRegionsOfInterest = () => {
+        return this._regionOfInterest;
+    };
 
     constructor(widgetTdl: type_Image_tdl) {
         super(widgetTdl);
@@ -147,6 +167,8 @@ export class Image extends BaseWidget {
 
         this.setStyle({ ...Image._defaultTdl.style, ...widgetTdl.style });
         this.setText({ ...Image._defaultTdl.text, ...widgetTdl.text });
+
+        this._regionOfInterest = JSON.parse(JSON.stringify(widgetTdl.regionsOfInterest));
 
         // this._rules = new TextUpdateRules(this, widgetTdl);
 
@@ -513,6 +535,7 @@ export class Image extends BaseWidget {
                         flexDirection: "row",
                         width: this.getImageSize()[0] + this.axisWidth,
                         height: this.getImageSize()[1],
+                        position: "relative",
                     }}
                 >
                     {/* y axis */}
@@ -528,9 +551,22 @@ export class Image extends BaseWidget {
                         />
 
                     </div>
-                    {/* image */}
-                    <this._ElementImage />
+                    {/* image and roi */}
+                    <div
+                        style={{
+                            position: "relative",
+                        }}
+                    >
+                        {/* image */}
+                        <this._ElementImage />
+                        {this.getRegionsOfInterest().map((roi, index) => {
+                            return <this._ElementRoi key={index} index={index} />
+                        })}
+
+                    </div>
+
                 </div>
+
 
                 {/* bottom left corner and x axis */}
                 <div
@@ -1353,7 +1389,7 @@ export class Image extends BaseWidget {
                         alignItems: "center",
                     }}
                     onMouseOver={() => {
-                        this.setHintText("Color map lowest value" + (autoZ === true? " (auto)" : ""));
+                        this.setHintText("Color map lowest value" + (autoZ === true ? " (auto)" : ""));
                     }}
                     onMouseLeave={() => {
                         this.setHintText("");
@@ -1378,10 +1414,10 @@ export class Image extends BaseWidget {
                             width: "3em",
                             outline: "none",
                             border: "solid 1px black",
-                            color: autoZ === true ? "rgba(180, 180, 180, 1)": "black",
-                            cursor: autoZ === true ? "not-allowed": "auto",
+                            color: autoZ === true ? "rgba(180, 180, 180, 1)" : "black",
+                            cursor: autoZ === true ? "not-allowed" : "auto",
                         }}
-                        value={autoZ === true? this.zMin : zMin}
+                        value={autoZ === true ? this.zMin : zMin}
                         type={"text"}
                         readOnly={autoZ}
                         onChange={(event: any) => {
@@ -1400,7 +1436,7 @@ export class Image extends BaseWidget {
                 &nbsp;
                 <form
                     onMouseOver={() => {
-                        this.setHintText("Color map highest value"+ (autoZ === true? " (auto)" : ""));
+                        this.setHintText("Color map highest value" + (autoZ === true ? " (auto)" : ""));
                     }}
                     onMouseLeave={() => {
                         this.setHintText("");
@@ -1426,10 +1462,10 @@ export class Image extends BaseWidget {
                             width: "3em",
                             outline: "none",
                             border: "solid 1px black",
-                            color: autoZ === true ? "rgba(180, 180, 180, 1)": "black",
-                            cursor: autoZ === true ? "not-allowed": "auto",
+                            color: autoZ === true ? "rgba(180, 180, 180, 1)" : "black",
+                            cursor: autoZ === true ? "not-allowed" : "auto",
                         }}
-                        value={autoZ === true? this.zMax : zMax}
+                        value={autoZ === true ? this.zMax : zMax}
                         type={"text"}
                         readOnly={autoZ}
                         onChange={(event: any) => {
@@ -1961,9 +1997,228 @@ export class Image extends BaseWidget {
         );
     };
 
-    handleMouseMoveOnImage = (clientX: number, clientY: number) => {
+    resizeRoiTopHandler = (event: any) => {
+        const dx = event.movementX;
+        const dy = event.movementY;
+        this.setRoiTop((oldTop: number) => {
+            return Math.max(oldTop + dy, 0);
+        });
+        this.setRoiHeight((oldHeight: number) => {
+            return Math.max(10, oldHeight - dy);
+        });
+    };
+
+    resizeRoiTopHandlerMouseUp = (event: any) => {
+        window.removeEventListener("mousemove", this.resizeRoiTopHandler);
+        window.removeEventListener("mouseup", this.resizeRoiTopHandlerMouseUp);
+    };
+
+    resizeRoiBottomHandler = (event: any) => {
+        const dx = event.movementX;
+        const dy = event.movementY;
+        this.setRoiHeight((oldHeight: number) => {
+            return Math.max(oldHeight + dy, 10);
+        });
+    };
+
+    resizeRoiBottomHandlerMouseUp = (event: any) => {
+        window.removeEventListener("mousemove", this.resizeRoiBottomHandler);
+        window.removeEventListener("mouseup", this.resizeRoiBottomHandlerMouseUp);
+    };
+
+    resizeRoiLeftHandler = (event: any) => {
+        const dx = event.movementX;
+        const dy = event.movementY;
+        this.setRoiLeft((oldLeft: number) => {
+            return Math.max(0, oldLeft + dx);
+        });
+        this.setRoiWidth((oldWidth: number) => {
+            return Math.max(10, oldWidth - dx);
+        });
+    };
+
+    resizeRoiLeftHandlerMouseUp = (event: any) => {
+        window.removeEventListener("mousemove", this.resizeRoiLeftHandler);
+        window.removeEventListener("mouseup", this.resizeRoiLeftHandlerMouseUp);
+    };
+
+    resizeRoiRightHandler = (event: any) => {
+        const dx = event.movementX;
+        const dy = event.movementY;
+        this.setRoiWidth((oldWidth: number) => {
+            return Math.max(10, oldWidth + dx);
+        });
+    };
+
+    resizeRoiRightHandlerMouseUp = (event: any) => {
+        window.removeEventListener("mousemove", this.resizeRoiRightHandler);
+        window.removeEventListener("mouseup", this.resizeRoiRightHandlerMouseUp);
+    };
+
+    setRoiTop = (input: any) => { };
+    setRoiLeft = (input: any) => { };
+    setRoiWidth = (input: any) => { };
+    setRoiHeight = (input: any) => { };
+    roiRef: any = undefined;
+
+    _ElementRoi = ({ index }: { index: number }) => {
+
+        const roiData = this.getRegionsOfInterest()[index];
+        if (roiData === undefined) {
+            return null;
+        }
+
+        const [top, setTop] = React.useState(10);
+        const [left, setLeft] = React.useState(10);
+        const [width, setWidth] = React.useState(20);
+        const [height, setHeight] = React.useState(20);
+
+        this.setRoiTop = setTop;
+        this.setRoiLeft = setLeft;
+        this.setRoiWidth = setWidth;
+        this.setRoiHeight = setHeight;
+
+        const elementRef = React.useRef<HTMLDivElement>(null);
+        this.roiRef = elementRef;
+
+        /**
+         * After each rendering, update the roi position and size
+         */
+        React.useEffect(() => {
+            if (elementRef !== undefined && elementRef.current !== null) {
+                if (
+                    (TcaChannel.checkChannelName(roiData["xPv"]) === "global"
+                        || TcaChannel.checkChannelName(roiData["xPv"]) === "local")
+                    &&
+                    (TcaChannel.checkChannelName(roiData["yPv"]) === "global"
+                        || TcaChannel.checkChannelName(roiData["yPv"]) === "local")
+                    &&
+                    (TcaChannel.checkChannelName(roiData["widthPv"]) === "global"
+                        || TcaChannel.checkChannelName(roiData["widthPv"]) === "local")
+                    &&
+                    (TcaChannel.checkChannelName(roiData["heightPv"]) === "global"
+                        || TcaChannel.checkChannelName(roiData["heightPv"]) === "local")
+                ) {
+
+                    const rectRoi = elementRef.current.getBoundingClientRect();
+
+                    const xyzTopLeft = this.calcImageXyzFromPixel(rectRoi.left, rectRoi.top);
+                    // const xyzBottomLeft = this.calcImageXyzFromPixel(rectRoi.left, rectRoi.top + rectRoi.height);
+                    // const xyzTopRight = this.calcImageXyzFromPixel(rectRoi.left + rectRoi.width, rectRoi.top);
+                    const xyzBottomRight = this.calcImageXyzFromPixel(rectRoi.left + rectRoi.width, rectRoi.top + rectRoi.height);
+                    console.log(xyzTopLeft, xyzBottomRight);
+                    try {
+
+                        const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+                        const tcaChannelX = g_widgets1.getTcaChannel(roiData["xPv"] + "@window_" + displayWindowId);
+                        const tcaChannelY = g_widgets1.getTcaChannel(roiData["yPv"] + "@window_" + displayWindowId);
+                        const tcaChannelWidth = g_widgets1.getTcaChannel(roiData["widthPv"] + "@window_" + displayWindowId);
+                        const tcaChannelHeight = g_widgets1.getTcaChannel(roiData["heightPv"] + "@window_" + displayWindowId);
+                        console.log("Display window id:");
+                        tcaChannelX.put(displayWindowId, { value: xyzTopLeft[0] }, 1);
+                        tcaChannelY.put(displayWindowId, { value: xyzTopLeft[1] }, 1);
+                        tcaChannelWidth.put(displayWindowId, { value: xyzBottomRight[0] - xyzTopLeft[0] }, 1);
+                        tcaChannelHeight.put(displayWindowId, { value: xyzBottomRight[1] - xyzTopLeft[1] }, 1);
+
+                    } catch (e) {
+                        console.log(g_widgets1.getTcaChannels());
+                    }
+                }
+
+            }
+
+        })
+
+        return (
+            <div
+                ref={elementRef}
+                style={{
+                    position: "absolute",
+                    top: top,
+                    left: left,
+                    width: width,
+                    height: height,
+                    border: "solid 3px yellow",
+                    boxSizing: "border-box",
+                }}
+            >
+                {/* top */}
+                <div
+                    style={{
+                        position: "absolute",
+                        backgroundColor: "red",
+                        top: -5,
+                        left: 0,
+                        width: "100%",
+                        height: 10,
+                        cursor: "ns-resize",
+                    }}
+                    onMouseDown={(event: any) => {
+                        window.addEventListener("mousemove", this.resizeRoiTopHandler);
+                        window.addEventListener("mouseup", this.resizeRoiTopHandlerMouseUp);
+                    }}
+                >
+                </div>
+                {/* left */}
+                <div
+                    style={{
+                        position: "absolute",
+                        backgroundColor: "blue",
+                        top: 0,
+                        left: -5,
+                        height: "100%",
+                        width: 10,
+                        cursor: "ew-resize",
+
+                    }}
+                    onMouseDown={(event: any) => {
+                        window.addEventListener("mousemove", this.resizeRoiLeftHandler);
+                        window.addEventListener("mouseup", this.resizeRoiLeftHandlerMouseUp);
+                    }}
+                >
+                </div>
+                {/* bottom */}
+                <div
+                    style={{
+                        position: "absolute",
+                        backgroundColor: "red",
+                        bottom: -5,
+                        left: 0,
+                        height: 10,
+                        width: "100%",
+                        cursor: "ns-resize",
+                    }}
+                    onMouseDown={(event: any) => {
+                        window.addEventListener("mousemove", this.resizeRoiBottomHandler);
+                        window.addEventListener("mouseup", this.resizeRoiBottomHandlerMouseUp);
+                    }}
+                >
+                </div>
+                {/* right */}
+                <div
+                    style={{
+                        position: "absolute",
+                        backgroundColor: "cyan",
+                        top: 0,
+                        right: -5,
+                        height: "100%",
+                        width: 10,
+                        cursor: "ew-resize",
+                    }}
+                    onMouseDown={(event: any) => {
+                        window.addEventListener("mousemove", this.resizeRoiRightHandler);
+                        window.addEventListener("mouseup", this.resizeRoiRightHandlerMouseUp);
+                    }}
+                >
+                </div>
+
+            </div>
+        )
+    }
+
+    calcImageXyzFromPixel = (pixelX: number, pixelY: number) => {
         if (this.renderer === undefined || this.camera === undefined) {
-            return;
+            return [-1, -1, -1]; // Invalid pixel coordinates
         }
         const rect = this.renderer.domElement.getBoundingClientRect();
         const { width, height } = this.getImageDimensions();
@@ -1972,8 +2227,8 @@ export class Image extends BaseWidget {
 
 
         // Convert mouse to normalized device coordinates
-        mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+        mouse.x = ((pixelX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((pixelY - rect.top) / rect.height) * 2 + 1;
 
         // Get a ray from the camera
         raycaster.setFromCamera(mouse, this.camera);
@@ -1996,12 +2251,20 @@ export class Image extends BaseWidget {
             const pixelZ = (height - 1 - pixelY) * width + pixelX;
             const valueZ = this.getImageValue()[pixelZ];
             // console.log(`Pixel coords: (${pixelX}, ${pixelY})`, pixelZ, valueZ);
-            this.setXyzCursorValues((oldValues: any) => {
-                return [pixelX, pixelY, valueZ];
-            })
+            // this.setXyzCursorValues((oldValues: any) => {
+            return [pixelX, pixelY, valueZ];
+            // })
+        } else {
+            return [-1, -1, -1]; // Invalid pixel coordinates
         }
+    }
 
+    handleMouseMoveOnImage = (clientX: number, clientY: number) => {
+        const xyz = this.calcImageXyzFromPixel(clientX, clientY);
 
+        this.setXyzCursorValues((oldValues: any) => {
+            return xyz;
+        })
     }
 
     zMax: number = 0;
@@ -6088,6 +6351,20 @@ export class Image extends BaseWidget {
         }
     };
 
+    processChannelNames(widgetMacros: [string, string][] = [], removeDuplicated: boolean = true) {
+        for (const regionOfInterest of this.getRegionsOfInterest()) {
+            this.getChannelNamesLevel0().push(
+                regionOfInterest["xPv"],
+                regionOfInterest["yPv"],
+                regionOfInterest["widthPv"],
+                regionOfInterest["heightPv"],
+            );
+        }
+
+        super.processChannelNames(widgetMacros, removeDuplicated);
+
+    }
+
     // ----------------------- styles -----------------------
 
     // defined in super class
@@ -6148,7 +6425,7 @@ export class Image extends BaseWidget {
             alarmText: false,
             alarmBackground: false,
             alarmLevel: "MINOR",
-            colorMap: "parula", // "jet", "gray"
+            colorMap: "parula", // "jet", "gray", ...
             autoZ: true,
             initialAutoXY: true,
             zMin: 0,
@@ -6157,10 +6434,15 @@ export class Image extends BaseWidget {
             xMax: 255,
             yMin: 0,
             yMax: 255,
+            // roiX1ChannelName: "loc://aaa",
+            // roiX2ChannelName: "loc://bbb",
+            // roiY1ChannelName: "loc://ccc",
+            // roiY2ChannelName: "loc://ddd",
         },
         channelNames: [],
         groupNames: [],
         rules: [],
+        regionsOfInterest: [],
     };
 
     // not getDefaultTdl(), always generate a new key
@@ -6172,6 +6454,12 @@ export class Image extends BaseWidget {
         result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
         return result;
     };
+
+    getTdlCopy(newKey?: boolean): Record<string, any> {
+        const result = super.getTdlCopy(newKey);
+        result["regionsOfInterest"] = JSON.parse(JSON.stringify(this.getRegionsOfInterest()));
+        return result;
+    }
 
     // defined in super class
     // getTdlCopy()

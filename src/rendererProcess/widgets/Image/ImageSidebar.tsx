@@ -12,6 +12,7 @@ import { SidebarImageZmin } from "../../helperWidgets/SidebarComponents/SidebarI
 import { SidebarImageZmax } from "../../helperWidgets/SidebarComponents/SidebarImageZmax";
 import { SidebarImageAutoZ } from "../../helperWidgets/SidebarComponents/SidebarImageAutoZ";
 import { SidebarImageColorMap } from "../../helperWidgets/SidebarComponents/SidebarImageColorMap";
+import {SidebarImageRegionsOfInterest} from "../../helperWidgets/SidebarComponents/SidebarImageRegionsOfInterest";
 
 export class ImageSidebar extends BaseWidgetSidebar {
     sidebarImageXmin: SidebarImageXmin;
@@ -23,6 +24,7 @@ export class ImageSidebar extends BaseWidgetSidebar {
     sidebarImageZmax: SidebarImageZmax;
     sidebarImageAutoZ: SidebarImageAutoZ;
     sidebarImageColorMap: SidebarImageColorMap
+    sidebarImageRegionsOfInterest: SidebarImageRegionsOfInterest;
     constructor(image: Image) {
         super(image);
         this.sidebarImageXmin = new SidebarImageXmin(this);
@@ -34,6 +36,7 @@ export class ImageSidebar extends BaseWidgetSidebar {
         this.sidebarImageZmax = new SidebarImageZmax(this);
         this.sidebarImageAutoZ = new SidebarImageAutoZ(this);
         this.sidebarImageColorMap = new SidebarImageColorMap(this);
+        this.sidebarImageRegionsOfInterest = new SidebarImageRegionsOfInterest(this);
     }
 
     // ------------------------------------- elements --------------------------------------
@@ -127,12 +130,17 @@ export class ImageSidebar extends BaseWidgetSidebar {
                     <b>Color Map</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {/* color */}
+                    {/* color map */}
                     {this.getSidebarImageColorMap().getElement()}
                     {this.getSidebarImageAutoZ().getElement()}
                     {this.getSidebarImageZmin().getElement()}
                     {this.getSidebarImageZmax().getElement()}
                     
+                </this._BlockBody>
+                <this._HorizontalLine />
+                {/* ---------------- regions of interest -------------------------- */}
+                <this._BlockBody>
+                    {this.getSidebarImageRegionsOfInterest().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
@@ -222,6 +230,11 @@ export class ImageSidebar extends BaseWidgetSidebar {
     getSidebarImageColorMap = () => {
         return this.sidebarImageColorMap;
     }
+
+    getSidebarImageRegionsOfInterest = () => {
+        return this.sidebarImageRegionsOfInterest;
+    }
+
     // defined in super class
     // getElement()
     // _HorizontalLine()
