@@ -63,7 +63,7 @@ export class ChannelAgentsManager {
             }
             const epicsCaSettings = this.getProfile().convertToTcaInput()["EPICS CA Settings"];
             const epicsTcaLibSettings = this.getProfile().convertToTcaInput()["epics-tca Settings"];
-            this._context = new Context({...epicsCaSettings, ...epicsTcaLibSettings}, epicsLogLevel);
+            this._context = new Context({ ...epicsCaSettings, ...epicsTcaLibSettings }, epicsLogLevel);
             await this._context.initialize();
         } else {
             Log.info(this.getMainProcessId(), "EPICS CA context already exists");
@@ -83,7 +83,7 @@ export class ChannelAgentsManager {
         if (channelAgent !== undefined) {
             return channelAgent;
         } else {
-            if (ChannelAgentsManager.determineChannelType(channelName) === "ca" || ChannelAgentsManager.determineChannelType(channelName) === "pva") {
+            if (this.determineChannelType(channelName) === "ca" || this.determineChannelType(channelName) === "pva") {
                 channelAgent = new CaChannelAgent(this, channelName);
             } else {
                 channelAgent = new LocalChannelAgent(this, channelName);
@@ -123,15 +123,33 @@ export class ChannelAgentsManager {
     /**
      * Both loc:// and glb:// are considered as local type in main process
      */
-    static determineChannelType = (channelName: string): "ca" | "local" | "pva" | undefined => {
+    determineChannelType = (channelName: string): "ca" | "local" | "pva" | undefined => {
         if (channelName.startsWith("loc://") || channelName.startsWith("glb://")) {
             return "local";
         } else if (channelName.startsWith("pva://")) {
-            return "pva";
-
+            return "pva"
+        } else if (channelName.startsWith("ca://")) {
+            return "ca"
         } else {
-            return "ca";
+            // get default protocol
+            const profile = this.getMainProcess().getProfiles().getSelectedProfile();
+            if (profile !== undefined) {
+                const defaultProtodol = profile.getEntry("EPICS Custom Environment", "Default Protocol");
+                if (defaultProtodol === "PVA") {
+                    return "pva";
+                } else if (defaultProtodol === "CA") {
+                    return "ca";
+                } else {
+                    // if there is no default protocol setting, use CA
+                    return "ca";
+                }
+            } else {
+                // if there is no default protocol setting, use CA
+                return "ca";
+            }
+
         }
+
     };
 
     getContext = (): Context | undefined => {

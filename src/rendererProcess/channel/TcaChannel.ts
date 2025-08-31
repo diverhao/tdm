@@ -165,6 +165,7 @@ export class TcaChannel {
              * 
              */
             const metaData = TcaChannel.extractNameAndMetaFromLocalChannelName(channelName);
+            console.log("meta data ++++++++++++++++++++++++++++++", metaData)
             if (metaData !== undefined) {
                 this._channelName = BaseWidget.channelNameLevel3to4(channelName);
                 this._dbrData = {

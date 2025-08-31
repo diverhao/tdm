@@ -774,10 +774,33 @@ export class CaChannelAgent {
     };
 
     getProtocol = () => {
-        if (this.getChannelName().startsWith("pva://")) {
-            return "pva"
-        }
-        return "ca";
+        const channelName = this.getChannelName();
+        const channelAgentsManager = this.getChannelAgentsManager();
+        return channelAgentsManager.determineChannelType(channelName);
+        // if (this.getChannelName().startsWith("pva://")) {
+        //     return "pva"
+        // } else if (this.getChannelName().startsWith("ca://")) {
+        //     return "ca"
+        // } else {
+        //     // get default protocol
+        //     const profile = this.getChannelAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+        //     if (profile !== undefined) {
+        //         const defaultProtodol = profile.getEntry("EPICS Custom Environment", "Default Protocol");
+        //         if (defaultProtodol === "PVA") {
+        //             console.log("we are using pva protocol =====================", this.getChannelName())
+        //             return "pva";
+        //         } else if (defaultProtodol === "CA") {
+        //             return "ca";
+        //         } else {
+        //             // if there is no default protocol setting, use CA
+        //             return "ca";
+        //         }
+        //     } else {
+        //         // if there is no default protocol setting, use CA
+        //         return "ca";
+        //     }
+
+        // }
     }
 
     /**

@@ -364,6 +364,14 @@ export class Profile {
                         "YES",
                     ]
                 },
+                "Default Protocol": {
+                    "DESCRIPTION": "The default protocol when the channel is created. The PV is created with the default protocol if the protocol is not specified. If the channel name starts with \"pva://\" or\"ca://\", the protocol is determined by the prefix.",
+                    "value": "CA",
+                    "choices": [
+                        "CA",
+                        "PVA",
+                    ]
+                },
                 "File Browser Bookmarks": {
                     "DESCRIPTION": "Bookmarks for File Browser. The first column is the folder/file path. The second column is for Web mode write permission: if YES, the user can create/modify/rename files, if NO, the user can only read the file/folder.",
                     "value": [],

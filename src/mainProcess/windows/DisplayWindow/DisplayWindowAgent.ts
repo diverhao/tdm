@@ -373,7 +373,7 @@ export class DisplayWindowAgent {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelType = ChannelAgentsManager.determineChannelType(channelName);
+        const channelType = channelAgentsManager.determineChannelType(channelName);
         let result: type_LocalChannel_data | type_dbrData = { value: undefined };
 
         if (channelType === "ca" || channelType === "pva") {
@@ -437,7 +437,7 @@ export class DisplayWindowAgent {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelType = ChannelAgentsManager.determineChannelType(channelName);
+        const channelType = channelAgentsManager.determineChannelType(channelName);
         let result: type_LocalChannel_data | type_dbrData = { value: undefined };
 
         if (channelType === "ca" || channelType === "pva") {
@@ -524,7 +524,7 @@ export class DisplayWindowAgent {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelType = ChannelAgentsManager.determineChannelType(channelName);
+        const channelType = channelAgentsManager.determineChannelType(channelName);
         let result: type_LocalChannel_data | type_dbrData = { value: undefined };
 
         if (channelType !== "pva") {
@@ -618,15 +618,13 @@ export class DisplayWindowAgent {
             strings: string[];
         }
     ): void => {
-        const channelType = ChannelAgentsManager.determineChannelType(channelName);
+        const channelAgentsManager = this.getWindowAgentsManager().getMainProcess().getChannelAgentsManager();
+        const channelType = channelAgentsManager.determineChannelType(channelName);
 
         if (channelType !== "local") {
             return;
         }
 
-        const windowAgentsManager = this.getWindowAgentsManager();
-        const mainProcess = windowAgentsManager.getMainProcess();
-        const channelAgentsManager = mainProcess.getChannelAgentsManager();
 
         this.addAndConnectLocalChannel(channelName);
 
@@ -659,7 +657,7 @@ export class DisplayWindowAgent {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelType = ChannelAgentsManager.determineChannelType(channelName);
+        const channelType = channelAgentsManager.determineChannelType(channelName);
         let putStatus: number | undefined | type_pva_status = undefined;
         // (1)
         if (channelType === "ca" || channelType === "pva") {
@@ -748,7 +746,7 @@ export class DisplayWindowAgent {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelType = ChannelAgentsManager.determineChannelType(channelName);
+        const channelType = channelAgentsManager.determineChannelType(channelName);
 
         if (channelType == "ca" || channelType == "pva") {
             // (1)

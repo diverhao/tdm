@@ -464,6 +464,13 @@ export class Image extends BaseWidget {
     getImageSize = () => {
         return this.imageSize;
     }
+
+    /**
+     * Computer the display area size in unit of image pixels
+     *
+     * The result is written to this.imageSize
+     * 
+     */
     calcImageSize = () => {
         // const { width, height } = this.getImageDimensions();
         const xMin = this.getXmin();
@@ -497,14 +504,88 @@ export class Image extends BaseWidget {
         this.imageSize = result;
     }
     mapDbrDataWitNewData = (newDbrData: any) => {
-        // if new data arrives the first time, re-calc image size on screen
 
+        // new image data
+        // if (newDbrData[this.getChannelNames()[0]] !== undefined) {
+        // if new data arrives the first time, re-calc image size on screen
         if (this.imageSize[0] === 0 || this.imageSize[1] === 0) {
             this.processData(true);
             // this.calcImageSize();
         } else {
             this.processData(false);
         }
+        // }
+
+        // the last N * 4 channels are roi pvs
+        // return;
+        // if (this.resizingRoi === false) {
+        const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+
+        for (let index = 0; index < this.getRegionsOfInterest().length; index++) {
+            const roi = this.getRegionsOfInterest()[index];
+            const xPv = roi.xPv.split("=")[0] + "@window_" + displayWindowId;
+            const yPv = roi.yPv.split("=")[0] + "@window_" + displayWindowId;
+            const widthPv = roi.widthPv.split("=")[0] + "@window_" + displayWindowId;
+            const heightPv = roi.heightPv.split("=")[0] + "@window_" + displayWindowId;
+
+            console.log("roi pvs", xPv, yPv, widthPv, heightPv);
+
+            // if (newDbrData.includes(xPv)) {
+            //     const setRoiLeft = this.setRoisLeft[index];
+            //     try {
+            //         const tcaChannel = g_widgets1.getTcaChannel(xPv);
+            //         // pixel value in image coordinate system
+            //         const newValue = tcaChannel.getDbrData()["value"];
+
+            //         if (setRoiLeft !== undefined && typeof newValue === "number") {
+            //             const newValueRaw = this.calcPixelFromImageXyz(newValue, 0, 0)[0];
+            //             console.log("new value raw =====================", newValueRaw, newValue, this.calcImageXyzFromPixel(newValueRaw, 0));
+            //             setRoiLeft(newValueRaw);
+            //         }
+            //     } catch (e) {
+            //         console.log(e);
+            //     }
+            // }
+
+            // if (newDbrData.includes(yPv)) {
+            //     const setRoiTop = this.setRoisTop[index];
+            //     try {
+            //         const tcaChannel = g_widgets1.getTcaChannel(yPv);
+            //         const newValue = tcaChannel.getDbrData()["value"];
+            //         if (setRoiTop !== undefined && typeof newValue === "number") {
+            //             setRoiTop(newValue);
+            //         }
+            //     } catch (e) {
+            //         console.log(e);
+            //     }
+            // }
+            // if (newDbrData.includes(widthPv)) {
+            //     const setRoiWidth = this.setRoisWidth[index];
+            //     try {
+            //         const tcaChannel = g_widgets1.getTcaChannel(widthPv);
+            //         const newValue = tcaChannel.getDbrData()["value"];
+            //         if (setRoiWidth !== undefined && typeof newValue === "number") {
+            //             setRoiWidth(newValue);
+            //         }
+            //     } catch (e) {
+            //         console.log(e);
+            //     }
+            // }
+
+            // if (newDbrData.includes(heightPv)) {
+            //     const setRoiHeight = this.setRoisHeight[index];
+            //     try {
+            //         const tcaChannel = g_widgets1.getTcaChannel(heightPv);
+            //         const newValue = tcaChannel.getDbrData()["value"];
+            //         if (setRoiHeight !== undefined && typeof newValue === "number") {
+            //             setRoiHeight(newValue);
+            //         }
+            //     } catch (e) {
+            //         console.log(e);
+            //     }
+            // }
+        }
+        // }
     }
 
 
@@ -1997,69 +2078,173 @@ export class Image extends BaseWidget {
         );
     };
 
-    resizeRoiTopHandler = (event: any) => {
+    resizeRoiTopHandlers: any[] = [];
+    resizeRoiTopHandlersMouseUp: any[] = [];
+    resizeRoiBottomHandlers: any[] = [];
+    resizeRoiBottomHandlersMouseUp: any[] = [];
+    resizeRoiLeftHandlers: any[] = [];
+    resizeRoiLeftHandlersMouseUp: any[] = [];
+    resizeRoiRightHandlers: any[] = [];
+    resizeRoiRightHandlersMouseUp: any[] = [];
+
+    resizeRoiTopHandler = (event: any, index: number) => {
+        if (event === undefined) {
+            return;
+        }
         const dx = event.movementX;
         const dy = event.movementY;
-        this.setRoiTop((oldTop: number) => {
+        const setRoiTop = this.setRoisTop[index];
+        const setRoiHeight = this.setRoisHeight[index];
+        if (setRoiHeight === undefined || setRoiTop === undefined) {
+            return;
+        }
+        setRoiTop((oldTop: number) => {
             return Math.max(oldTop + dy, 0);
         });
-        this.setRoiHeight((oldHeight: number) => {
+        setRoiHeight((oldHeight: number) => {
             return Math.max(10, oldHeight - dy);
         });
     };
 
-    resizeRoiTopHandlerMouseUp = (event: any) => {
-        window.removeEventListener("mousemove", this.resizeRoiTopHandler);
-        window.removeEventListener("mouseup", this.resizeRoiTopHandlerMouseUp);
+    // resizingRoi = false;
+
+    resizeRoiTopHandlerMouseUp = (event: any, index: number) => {
+        // this.resizingRoi = false;
+        this.updateRoiPvs(index);
+        window.removeEventListener("mousemove", this.resizeRoiTopHandlers[index]);
+        window.removeEventListener("mouseup", this.resizeRoiTopHandlersMouseUp[index]);
     };
 
-    resizeRoiBottomHandler = (event: any) => {
+    resizeRoiBottomHandler = (event: any, index: number) => {
+        if (event === undefined) {
+            return;
+        }
         const dx = event.movementX;
         const dy = event.movementY;
-        this.setRoiHeight((oldHeight: number) => {
+        const setRoiHeight = this.setRoisHeight[index];
+        if (setRoiHeight === undefined) {
+            return;
+        }
+
+        setRoiHeight((oldHeight: number) => {
             return Math.max(oldHeight + dy, 10);
         });
     };
 
-    resizeRoiBottomHandlerMouseUp = (event: any) => {
-        window.removeEventListener("mousemove", this.resizeRoiBottomHandler);
-        window.removeEventListener("mouseup", this.resizeRoiBottomHandlerMouseUp);
+    resizeRoiBottomHandlerMouseUp = (event: any, index: number) => {
+        // this.resizingRoi = false;
+        this.updateRoiPvs(index);
+        window.removeEventListener("mousemove", this.resizeRoiBottomHandlers[index]);
+        window.removeEventListener("mouseup", this.resizeRoiBottomHandlersMouseUp[index]);
     };
 
-    resizeRoiLeftHandler = (event: any) => {
+    resizeRoiLeftHandler = (event: any, index: number) => {
+        if (event === undefined) {
+            return;
+        }
         const dx = event.movementX;
         const dy = event.movementY;
-        this.setRoiLeft((oldLeft: number) => {
+        const setRoiLeft = this.setRoisLeft[index];
+        const setRoiWidth = this.setRoisWidth[index];
+        if (setRoiLeft === undefined || setRoiWidth === undefined) {
+            return;
+        }
+
+        setRoiLeft((oldLeft: number) => {
             return Math.max(0, oldLeft + dx);
         });
-        this.setRoiWidth((oldWidth: number) => {
+        setRoiWidth((oldWidth: number) => {
             return Math.max(10, oldWidth - dx);
         });
     };
 
-    resizeRoiLeftHandlerMouseUp = (event: any) => {
-        window.removeEventListener("mousemove", this.resizeRoiLeftHandler);
-        window.removeEventListener("mouseup", this.resizeRoiLeftHandlerMouseUp);
+    resizeRoiLeftHandlerMouseUp = (event: any, index: number) => {
+        // this.resizingRoi = false;
+        this.updateRoiPvs(index);
+        window.removeEventListener("mousemove", this.resizeRoiLeftHandlers[index]);
+        window.removeEventListener("mouseup", this.resizeRoiLeftHandlersMouseUp[index]);
     };
 
-    resizeRoiRightHandler = (event: any) => {
+    resizeRoiRightHandler = (event: any, index: number) => {
+        if (event === undefined) {
+            return;
+        }
         const dx = event.movementX;
         const dy = event.movementY;
-        this.setRoiWidth((oldWidth: number) => {
+        const setRoiWidth = this.setRoisWidth[index];
+        if (setRoiWidth === undefined) {
+            return;
+        }
+        setRoiWidth((oldWidth: number) => {
             return Math.max(10, oldWidth + dx);
         });
     };
 
-    resizeRoiRightHandlerMouseUp = (event: any) => {
-        window.removeEventListener("mousemove", this.resizeRoiRightHandler);
-        window.removeEventListener("mouseup", this.resizeRoiRightHandlerMouseUp);
+    resizeRoiRightHandlerMouseUp = (event: any, index: number) => {
+        // this.resizingRoi = false;
+        this.updateRoiPvs(index);
+        window.removeEventListener("mousemove", this.resizeRoiRightHandlers[index]);
+        window.removeEventListener("mouseup", this.resizeRoiRightHandlersMouseUp[index]);
     };
 
-    setRoiTop = (input: any) => { };
-    setRoiLeft = (input: any) => { };
-    setRoiWidth = (input: any) => { };
-    setRoiHeight = (input: any) => { };
-    roiRef: any = undefined;
+    setRoisTop: any[] = [];
+    setRoisLeft: any[] = [];
+    setRoisWidth: any[] = [];
+    setRoisHeight: any[] = [];
+    roisRef: any[] = [];
+
+    updateRoiPvs = (index: number) => {
+        const elementRef = this.roisRef[index];
+        const roiData = this.getRegionsOfInterest()[index];
+        if (elementRef !== undefined && elementRef.current !== null) {
+            if (
+                (TcaChannel.checkChannelName(roiData["xPv"]) === "global"
+                    || TcaChannel.checkChannelName(roiData["xPv"]) === "local")
+                &&
+                (TcaChannel.checkChannelName(roiData["yPv"]) === "global"
+                    || TcaChannel.checkChannelName(roiData["yPv"]) === "local")
+                &&
+                (TcaChannel.checkChannelName(roiData["widthPv"]) === "global"
+                    || TcaChannel.checkChannelName(roiData["widthPv"]) === "local")
+                &&
+                (TcaChannel.checkChannelName(roiData["heightPv"]) === "global"
+                    || TcaChannel.checkChannelName(roiData["heightPv"]) === "local")
+            ) {
+
+                const rectRoi = elementRef.current.getBoundingClientRect();
+
+                const xyzTopLeft = this.calcImageXyzFromPixel(rectRoi.left, rectRoi.top);
+                // const xyzBottomLeft = this.calcImageXyzFromPixel(rectRoi.left, rectRoi.top + rectRoi.height);
+                // const xyzTopRight = this.calcImageXyzFromPixel(rectRoi.left + rectRoi.width, rectRoi.top);
+                const xyzBottomRight = this.calcImageXyzFromPixel(rectRoi.left + rectRoi.width, rectRoi.top + rectRoi.height);
+                try {
+
+                    const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+                    const tcaChannelX = g_widgets1.getTcaChannel(roiData["xPv"].split("=")[0] + "@window_" + displayWindowId);
+                    const tcaChannelY = g_widgets1.getTcaChannel(roiData["yPv"].split("=")[0] + "@window_" + displayWindowId);
+                    const tcaChannelWidth = g_widgets1.getTcaChannel(roiData["widthPv"].split("=")[0] + "@window_" + displayWindowId);
+                    const tcaChannelHeight = g_widgets1.getTcaChannel(roiData["heightPv"].split("=")[0] + "@window_" + displayWindowId);
+                    console.log("===> ", xyzTopLeft[0], rectRoi);
+                    if (tcaChannelX.getDbrData()["value"] !== xyzTopLeft[0]) {
+                        tcaChannelX.put(displayWindowId, { value: xyzTopLeft[0] }, 1);
+                    }
+                    if (tcaChannelY.getDbrData()["value"] !== xyzTopLeft[1]) {
+                        tcaChannelY.put(displayWindowId, { value: xyzTopLeft[1] }, 1);
+                    }
+                    if (tcaChannelWidth.getDbrData()["value"] !== (xyzBottomRight[0] - xyzTopLeft[0])) {
+                        tcaChannelWidth.put(displayWindowId, { value: xyzBottomRight[0] - xyzTopLeft[0] }, 1);
+                    }
+                    if (tcaChannelHeight.getDbrData()["value"] !== (xyzBottomRight[1] - xyzTopLeft[1])) {
+                        tcaChannelHeight.put(displayWindowId, { value: xyzBottomRight[1] - xyzTopLeft[1] }, 1);
+                    }
+
+                } catch (e) {
+                    console.log(g_widgets1.getTcaChannels());
+                }
+            }
+        }
+    }
+
 
     _ElementRoi = ({ index }: { index: number }) => {
 
@@ -2068,65 +2253,42 @@ export class Image extends BaseWidget {
             return null;
         }
 
+        if (TcaChannel.checkChannelName(roiData["xPv"]) !== "local") {
+            return null;
+        }
+
+        if (TcaChannel.checkChannelName(roiData["yPv"]) !== "local") {
+            return null;
+        }
+
+        if (TcaChannel.checkChannelName(roiData["widthPv"]) !== "local") {
+            return null;
+        }
+
+        if (TcaChannel.checkChannelName(roiData["heightPv"]) !== "local") {
+            return null;
+        }
+
+        // initialized to a fixed number, after the local channel is created, the value will be updated
         const [top, setTop] = React.useState(10);
         const [left, setLeft] = React.useState(10);
         const [width, setWidth] = React.useState(20);
         const [height, setHeight] = React.useState(20);
 
-        this.setRoiTop = setTop;
-        this.setRoiLeft = setLeft;
-        this.setRoiWidth = setWidth;
-        this.setRoiHeight = setHeight;
+        this.setRoisTop[index] = setTop;
+        this.setRoisLeft[index] = setLeft;
+        this.setRoisWidth[index] = setWidth;
+        this.setRoisHeight[index] = setHeight;
 
         const elementRef = React.useRef<HTMLDivElement>(null);
-        this.roiRef = elementRef;
+        this.roisRef[index] = elementRef;
 
         /**
-         * After each rendering, update the roi position and size
+         * After each rendering, update the local pv values
          */
         React.useEffect(() => {
-            if (elementRef !== undefined && elementRef.current !== null) {
-                if (
-                    (TcaChannel.checkChannelName(roiData["xPv"]) === "global"
-                        || TcaChannel.checkChannelName(roiData["xPv"]) === "local")
-                    &&
-                    (TcaChannel.checkChannelName(roiData["yPv"]) === "global"
-                        || TcaChannel.checkChannelName(roiData["yPv"]) === "local")
-                    &&
-                    (TcaChannel.checkChannelName(roiData["widthPv"]) === "global"
-                        || TcaChannel.checkChannelName(roiData["widthPv"]) === "local")
-                    &&
-                    (TcaChannel.checkChannelName(roiData["heightPv"]) === "global"
-                        || TcaChannel.checkChannelName(roiData["heightPv"]) === "local")
-                ) {
-
-                    const rectRoi = elementRef.current.getBoundingClientRect();
-
-                    const xyzTopLeft = this.calcImageXyzFromPixel(rectRoi.left, rectRoi.top);
-                    // const xyzBottomLeft = this.calcImageXyzFromPixel(rectRoi.left, rectRoi.top + rectRoi.height);
-                    // const xyzTopRight = this.calcImageXyzFromPixel(rectRoi.left + rectRoi.width, rectRoi.top);
-                    const xyzBottomRight = this.calcImageXyzFromPixel(rectRoi.left + rectRoi.width, rectRoi.top + rectRoi.height);
-                    console.log(xyzTopLeft, xyzBottomRight);
-                    try {
-
-                        const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                        const tcaChannelX = g_widgets1.getTcaChannel(roiData["xPv"] + "@window_" + displayWindowId);
-                        const tcaChannelY = g_widgets1.getTcaChannel(roiData["yPv"] + "@window_" + displayWindowId);
-                        const tcaChannelWidth = g_widgets1.getTcaChannel(roiData["widthPv"] + "@window_" + displayWindowId);
-                        const tcaChannelHeight = g_widgets1.getTcaChannel(roiData["heightPv"] + "@window_" + displayWindowId);
-                        console.log("Display window id:");
-                        tcaChannelX.put(displayWindowId, { value: xyzTopLeft[0] }, 1);
-                        tcaChannelY.put(displayWindowId, { value: xyzTopLeft[1] }, 1);
-                        tcaChannelWidth.put(displayWindowId, { value: xyzBottomRight[0] - xyzTopLeft[0] }, 1);
-                        tcaChannelHeight.put(displayWindowId, { value: xyzBottomRight[1] - xyzTopLeft[1] }, 1);
-
-                    } catch (e) {
-                        console.log(g_widgets1.getTcaChannels());
-                    }
-                }
-
-            }
-
+            // ! there is a bug here, loop
+            // this.updateRoiPvs(index);
         })
 
         return (
@@ -2154,8 +2316,9 @@ export class Image extends BaseWidget {
                         cursor: "ns-resize",
                     }}
                     onMouseDown={(event: any) => {
-                        window.addEventListener("mousemove", this.resizeRoiTopHandler);
-                        window.addEventListener("mouseup", this.resizeRoiTopHandlerMouseUp);
+                        // this.resizingRoi = true;
+                        window.addEventListener("mousemove", this.resizeRoiTopHandlers[index]);
+                        window.addEventListener("mouseup", this.resizeRoiTopHandlersMouseUp[index]);
                     }}
                 >
                 </div>
@@ -2172,8 +2335,9 @@ export class Image extends BaseWidget {
 
                     }}
                     onMouseDown={(event: any) => {
-                        window.addEventListener("mousemove", this.resizeRoiLeftHandler);
-                        window.addEventListener("mouseup", this.resizeRoiLeftHandlerMouseUp);
+                        // this.resizingRoi = true;
+                        window.addEventListener("mousemove", this.resizeRoiLeftHandlers[index]);
+                        window.addEventListener("mouseup", this.resizeRoiLeftHandlersMouseUp[index]);
                     }}
                 >
                 </div>
@@ -2189,8 +2353,9 @@ export class Image extends BaseWidget {
                         cursor: "ns-resize",
                     }}
                     onMouseDown={(event: any) => {
-                        window.addEventListener("mousemove", this.resizeRoiBottomHandler);
-                        window.addEventListener("mouseup", this.resizeRoiBottomHandlerMouseUp);
+                        // this.resizingRoi = true;
+                        window.addEventListener("mousemove", this.resizeRoiBottomHandlers[index]);
+                        window.addEventListener("mouseup", this.resizeRoiBottomHandlersMouseUp[index]);
                     }}
                 >
                 </div>
@@ -2206,8 +2371,9 @@ export class Image extends BaseWidget {
                         cursor: "ew-resize",
                     }}
                     onMouseDown={(event: any) => {
-                        window.addEventListener("mousemove", this.resizeRoiRightHandler);
-                        window.addEventListener("mouseup", this.resizeRoiRightHandlerMouseUp);
+                        // this.resizingRoi = true;
+                        window.addEventListener("mousemove", this.resizeRoiRightHandlers[index]);
+                        window.addEventListener("mouseup", this.resizeRoiRightHandlersMouseUp[index]);
                     }}
                 >
                 </div>
@@ -2258,6 +2424,7 @@ export class Image extends BaseWidget {
             return [-1, -1, -1]; // Invalid pixel coordinates
         }
     }
+
 
     handleMouseMoveOnImage = (clientX: number, clientY: number) => {
         const xyz = this.calcImageXyzFromPixel(clientX, clientY);
@@ -2321,6 +2488,8 @@ export class Image extends BaseWidget {
             this.textureData[idx + 3] = 255; // opaque
 
         }
+
+        // 
     };
 
     // color map arrays are generated by the following python code
@@ -6504,6 +6673,14 @@ export class Image extends BaseWidget {
 
     jobsAsEditingModeBegins(): void {
         super.jobsAsEditingModeBegins();
+        this.resizeRoiTopHandlers = [];
+        this.resizeRoiTopHandlersMouseUp = [];
+        this.resizeRoiBottomHandlers = [];
+        this.resizeRoiBottomHandlersMouseUp = [];
+        this.resizeRoiLeftHandlers = [];
+        this.resizeRoiLeftHandlersMouseUp = [];
+        this.resizeRoiRightHandlers = [];
+        this.resizeRoiRightHandlersMouseUp = [];
         this.resetImage();
     }
 
@@ -6511,6 +6688,34 @@ export class Image extends BaseWidget {
     jobsAsOperatingModeBegins(): void {
         super.jobsAsOperatingModeBegins();
         this.autoXY = this.getText()["initialAutoXY"];
+
+        this.getRegionsOfInterest().forEach((roi, index) => {
+            this.resizeRoiTopHandlers[index] = (e: any) => {
+                this.resizeRoiTopHandler(e, index);
+            };
+            this.resizeRoiTopHandlersMouseUp[index] = (e: any) => {
+                this.resizeRoiTopHandlerMouseUp(e, index);
+            };
+            this.resizeRoiBottomHandlers[index] = (e: any) => {
+                this.resizeRoiBottomHandler(e, index);
+            };
+            this.resizeRoiBottomHandlersMouseUp[index] = (e: any) => {
+                this.resizeRoiBottomHandlerMouseUp(e, index);
+            };
+            this.resizeRoiLeftHandlers[index] = (e: any) => {
+                this.resizeRoiLeftHandler(e, index);
+            };
+            this.resizeRoiLeftHandlersMouseUp[index] = (e: any) => {
+                this.resizeRoiLeftHandlerMouseUp(e, index);
+            };
+            this.resizeRoiRightHandlers[index] = (e: any) => {
+                this.resizeRoiRightHandler(e, index);
+            };
+            this.resizeRoiRightHandlersMouseUp[index] = (e: any) => {
+                this.resizeRoiRightHandlerMouseUp(e, index);
+            };
+        })
+
         this.resetImage();
     }
 }

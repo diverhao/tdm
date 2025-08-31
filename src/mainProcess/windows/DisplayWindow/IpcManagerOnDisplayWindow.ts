@@ -612,10 +612,14 @@ export class IpcManagerOnDisplayWindow {
      * (3) if the widget has mapDbrDataWitNewData() method, do it, do it once
      * 
      * (4) flush widgets
+     * 
+     * @param event
+     * 
+     * @param newDbrData a dictionary of channel name and its new dbr data
      */
     handleNewChannelData = (event: any, newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
 
-        Log.info("received data", JSON.stringify(newDbrData, null, 4));
+        Log.debug("received data", JSON.stringify(newDbrData, null, 4));
 
         let channelNames = Object.keys(newDbrData);
 

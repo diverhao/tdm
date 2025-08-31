@@ -31,6 +31,7 @@ export class LocalChannelAgent {
         channelValue: number | string | number[] | string[] = 0,
         channelStrings: string[] = []
     ) {
+        console.log("LocalChannelAgent: constructor +++++++++++++++++++++++++++++++++++", channelName, channelStrings);
         this._channelAgentsManager = channelAgentsManager;
         this._channelName = channelName;
         this._mainProcessId = channelAgentsManager.getMainProcess().getProcessId();

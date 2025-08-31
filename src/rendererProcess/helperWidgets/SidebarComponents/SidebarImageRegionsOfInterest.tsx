@@ -101,10 +101,6 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
                     justifyContent: "space-between",
                     alignItems: "flex-start",
                     width: "100%",
-                    // border: "1px solid gray",
-                    // borderRadius: "5px",
-                    // padding: "2px",
-                    // marginBottom: "5px",
                     whiteSpace: "nowrap",
                 }}
             >
