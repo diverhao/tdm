@@ -196,7 +196,12 @@ export class IpcManagerOnMainWindow {
     };
 
     _handleCmdLineSelectedProfile = (event: any, cmdLineSelectedProfile: string, args: type_args) => {
-        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected", cmdLineSelectedProfile, args);
+        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected", 
+            {
+                selectedProfileName: cmdLineSelectedProfile, 
+                args: args,
+            }
+        );
     };
 
     _handleUpdateWsOpenerPort = (event: any, newPort: number) => {

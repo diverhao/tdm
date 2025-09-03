@@ -1026,11 +1026,22 @@ export class IpcManagerOnMainProcess {
      */
     handleProfileSelected = async (
         event: any,
-        selectedProfileName: string,
-        args: type_args | undefined = undefined,
-        httpResponse: any = undefined,
-        openDefaultDisplayWindows: boolean = true,
+        options: {
+            selectedProfileName: string,
+            args: type_args | undefined,
+            httpResponse: any | undefined,
+            openDefaultDisplayWindows: boolean | undefined,
+        }
+        // selectedProfileName: string,
+        // args: type_args | undefined = undefined,
+        // httpResponse: any = undefined,
+        // openDefaultDisplayWindows: boolean = true,
     ) => {
+        const selectedProfileName = options["selectedProfileName"];
+        const args = options["args"];
+        const httpResponse = options["httpResponse"];
+        const openDefaultDisplayWindows = options["openDefaultDisplayWindows"];
+
         this.getMainProcess().getProfiles().setSelectedProfileName(selectedProfileName);
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         // select to run a new process as ssh-client mode, it can only be started from desktop mode
@@ -1108,6 +1119,7 @@ export class IpcManagerOnMainProcess {
                 } else {
                     tdlFileNames = args["fileNames"];
                 }
+
                 // args["macros"] overrides profile-defined macros
                 macros = [...args["macros"], ...macros];
             }
@@ -1177,7 +1189,9 @@ export class IpcManagerOnMainProcess {
                 await mainWindowAgent.loadURLPromise;
                 // the main window has received all the necessary information to switch to run page
                 await mainWindowAgent.creationPromise2;
-                mainWindowAgent.sendFromMainProcess("after-profile-selected", selectedProfileName);
+                mainWindowAgent.sendFromMainProcess("after-profile-selected", {
+                    selectedProfileName: selectedProfileName,
+                });
                 // create the preview window for file browser
                 windowAgentsManager.createPreviewDisplayWindow();
             }

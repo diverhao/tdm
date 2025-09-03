@@ -4,7 +4,13 @@ import os from "os";
 import { httpServerPort } from "../global/GlobalVariables";
 import { Log } from "../log/Log";
 import { type_log_levels } from "../log/Log";
+import { generateAboutInfo } from "../global/GlobalMethods";
 
+/**
+ * Input argument types for command line.
+ * 
+ * It is the return type of `ArgParser.parseArgs()`.
+ */
 export type type_args = {
     macros: [string, string][];
     settings: string;
@@ -18,24 +24,17 @@ export type type_args = {
     site: string;
 };
 
-// For whatever reason, "npm start" ignores all elements starting with "--" in process.argv, 
-// "--settings ~/.tdm/profiles.json" becomes "~/.tdm/profile.json"
-// In deveopment mode, we cannot pass anything started with "--" to electron
-let dashdash = "--";
-// if (app.isPackaged) {
-//     dashdash = "--";
-// }
 
-const dashdashMacros = `${dashdash}macros`;
-const dashdashSettings = `${dashdash}settings`;
-const dashdashProfile = `${dashdash}profile`;
-const dashdashAlsoOpenDefaults = `${dashdash}also-open-defaults`;
-const dashdashHttpServerPort = `${dashdash}http-server-port`;
-const dashdashAttach = `${dashdash}attach`;
-const dashdashHelp = `${dashdash}help`;
-const dashdashLogLevel = `${dashdash}log-level`;
-const dashdashLogStackTrace = `${dashdash}log-stack-trace`;
-const dashMainProcessMode = `${dashdash}main-process-mode`; // "web" | "desktop"
+const dashdashMacros = `--macros`;
+const dashdashSettings = `--settings`;
+const dashdashProfile = `--profile`;
+const dashdashAlsoOpenDefaults = `--also-open-defaults`;
+const dashdashHttpServerPort = `--http-server-port`;
+const dashdashAttach = `--attach`;
+const dashdashHelp = `--help`;
+const dashdashLogLevel = `--log-level`;
+const dashdashLogStackTrace = `--log-stack-trace`;
+const dashMainProcessMode = `--main-process-mode`; // "web" | "desktop"
 
 export class ArgParser {
     constructor() { }
@@ -51,17 +50,17 @@ Options:
                                           If this option is absent, it will open a new TDM instance
   --attach                                Open the TDL files in the first opened TDM instance. If there is no 
                                           TDL instance running, create a new one.
-  --settings /home/ringop/custom.json     Configuration file for profiles
+  --settings /home/ringop/custom.json     Profiles file
                                           If this option is absent, it will load $HOME/.tdm/profiles.json
   --profile "Control Room"                The profile that will be selected
-                                          If this options is absent, no profile is selected
-  --macros "SYS=ring, SUB_SYS=bpm"        Macros for the TDL files
+                                          If this options is absent, the user needs to select a profile manually in GUI
+  --macros "SYS=ring, SUB_SYS=bpm"        Macros for all the TDL files in this TDM instance
   --log-level level                       Log level in main process, could be fatal, error, warn, info, debug, or trace
   --log-stack-trace                       If the log prints stack trace
   --also-open-defaults                    Open default TDL files for the selected profile
                                           If this option is absent, default TDL files are not opened 
   --main-process-mode web                 Run the web server
-  --http-server-port 3000                 Web server port
+  --http-server-port 3000                 Web server port if the main process mode is web
   navwogif.tdl /home/ringop/main.tdl      TDL file names
 
 -----------------------------------------------
@@ -241,10 +240,16 @@ Options:
         }
     };
 
-    static printTdmBanner = () =>
+    static printTdmBanner = () => {
+        const aboutInfo = generateAboutInfo();
         console.log(`
 -----------------------------------------------
-      Welcome to use TDM Display Manager      
+      Welcome to use TDM Display Manager
+      Version: ${aboutInfo["Version"]}
+      Build Date: ${aboutInfo["Build Date"]}
+      Based on Electron.js ${aboutInfo["Electron"]}, Node.js ${aboutInfo["Node.js"]} and Chromium ${aboutInfo["Chromium"]}
+      License: ${aboutInfo["License"]}
 -----------------------------------------------
-`);
+`)
+    };
 }

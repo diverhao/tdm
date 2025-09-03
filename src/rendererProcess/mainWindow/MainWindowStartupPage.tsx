@@ -372,7 +372,7 @@ export class MainWindowStartupPage {
                             })
                         }}
                     >
-                    here
+                        here
                     </span> {" "}
                     to change it.
                 </div>
@@ -575,19 +575,21 @@ export class MainWindowStartupPage {
                     const tdlFileName = file.path;
                     tdlFileNames.push(tdlFileName);
                 }
-                this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected", profileName,
+                this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected",
                     {
-                        macros: [],
-                        settings: "",
-                        profile: profileName,
-                        alsoOpenDefaults: false,
-                        fileNames: tdlFileNames,
-                        attach: -1,
-                        cwd: "",
-                        mainProcessMode: "desktop", // | "web"; // "ssh-server" or "ssh-client" mode process can only be created inside the program
-                        httpServerPort: 3000,
-
-                    },
+                        profileName: profileName,
+                        args: {
+                            macros: [],
+                            settings: "",
+                            profile: profileName,
+                            alsoOpenDefaults: false,
+                            fileNames: tdlFileNames,
+                            attach: -1,
+                            cwd: "",
+                            mainProcessMode: "desktop", // | "web"; // "ssh-server" or "ssh-client" mode process can only be created inside the program
+                            httpServerPort: 3000,
+                        },
+                    }
                 );
             } else {
                 // profile is already selected, window knows using which profile to open the tdl files

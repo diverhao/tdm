@@ -1,14 +1,23 @@
-import { readFileSync, writeFileSync } from "fs";
+/**
+ * @packageDocumentation
+ * 
+ * This file is responsible for starting the main process of the application.
+ * It handles command-line arguments, initializes logging, manages single instance locks,
+ * and sets up inter-process communication.
+ * 
+ * It is the entry point for the Electron.js main process.
+ */
+
+
+import { readFileSync } from "fs";
 import WebSocket from "ws";
-import net from "net";
-import { ArgParser, type_args } from "./arg/ArgParser";
+import { ArgParser } from "./arg/ArgParser";
 import { MainProcesses } from "./mainProcess/MainProcesses";
 import { app } from "electron";
 import { MainProcess } from "./mainProcess/MainProcess";
 import { MainWindowAgent } from "./windows/MainWindow/MainWindowAgent";
 import { Log } from "./log/Log";
 import path from "path";
-import os from "os";
 import { execSync } from "child_process";
 
 /**
@@ -20,26 +29,26 @@ import { execSync } from "child_process";
  * `Archive` category which defines the EPICS archive for SNS.
  * 
  * Available sites: 
- *  - "" (empty)
+ *  - "" (empty), default site for general purpose of use
  *  - sns-office-engineer
  *  - sns-office-user
  */
 import {site} from "../../package.json";
 
-// true for the first TDM instance 
-// false for the later TDM instances
-// const isTheFirstApp = app.requestSingleInstanceLock();
+/**
+ * `true` for the first TDM instance 
+ * 
+ * `false` for the later TDM instances
+ */
 app.requestSingleInstanceLock();
 
-// Disable error dialogs by overriding
-// dialog.showErrorBox = (title: string, content: string) => {
-//     console.log(`${title}\n${content}`);
-// };
 
-// log for non-MainProcess, id is -1, always output to console
-// it is used in this script, MainProcesses and WsOpenerServer
-// logs.addLog("-1", "trace", undefined, "");
-
+/**
+ * Print TDM banner in command line. 
+ * 
+ * It includes version number, build date, and the commit hash of the current version. It also provides a
+ * help on how to use TDM.
+ */
 ArgParser.printTdmBanner();
 
 // in development mode, process.argv may look like if we run

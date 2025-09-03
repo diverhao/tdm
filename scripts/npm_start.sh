@@ -22,3 +22,7 @@ cp -a ${TDM_ROOT}/src/mainProcess/resources ${TDM_ROOT}/dist/mainProcess/
 cp -a ${TDM_ROOT}/src/mainProcess/wsPv/*.py ${TDM_ROOT}/dist/mainProcess/wsPv/
 cp -a ${TDM_ROOT}/src/test/tdmDemo ${TDM_ROOT}/dist/test
 ln -s ${TDM_ROOT}/dist/mainProcess/resources ${TDM_ROOT}/dist/webpack/
+
+# inject build date to package.json, which could be loaded by GlobalMethods.generateAboutInfo()
+DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+sed -i -E "s/\"buildDate\": \".*\"/\"buildDate\": \"$DATE\"/" ${TDM_ROOT}/package.json

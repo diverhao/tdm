@@ -9,15 +9,16 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
+    "buildDate": "2025-09-03T15:59:42Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
         "web": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron . main-process-mode web",
-        "build-all": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron-builder -mwl",
-        "build-mac": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron-builder --mac",
-        "build-linux": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron-builder --linux",
-        "build-windows": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron-builder --windows",
-        "build-jsdoc": "./node_modules/.bin/jsdoc -r -d ./doc/JSDoc/ ./dist/",
+        "build-all": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; BUILD_DATE=$(date -u +\"%Y-%m-%dT%H:%M:%SZ\") ; electron-builder -mwl",
+        "build-mac": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; BUILD_DATE=$(date -u +\"%Y-%m-%dT%H:%M:%SZ\");  electron-builder --mac",
+        "build-linux": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; BUILD_DATE=$(date -u +\"%Y-%m-%dT%H:%M:%SZ\");  electron-builder --linux",
+        "build-windows": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; BUILD_DATE=$(date -u +\"%Y-%m-%dT%H:%M:%SZ\");  electron-builder --windows",
+        "build-doc": "./node_modules/.bin/typedoc --skipErrorChecking src --out doc/TypeDoc --entryPointStrategy expand",
         "dev": "webpack serve --mode development",
         "build": "webpack --mode production",
         "build-file-converter": "pkg ./dist/webpack/EdlFileConverter.js --targets node18-win-x64,node18-macos-x64,node18-linux-x64,node18-win-arm64,node18-macos-arm64,node18-linux-arm64 --out-path ./out"
@@ -42,11 +43,11 @@
         "css-loader": "^7.1.2",
         "electron": "^31.0.0",
         "electron-builder": "^24.0.0",
-        "jsdoc": "^4.0.2",
         "resolve-url-loader": "^5.0.0",
         "style-loader": "^4.0.0",
         "webpack": "^5.93.0",
         "webpack-cli": "^5.1.4",
+        "typedoc": "^0.28.12",
         "webpack-dev-server": "^5.0.4"
     },
     "dependencies": {
