@@ -72,6 +72,7 @@ import path, { dirname } from "path";
 import { Log } from "../../mainProcess/log/Log";
 import { SidebarWidgetsList } from "../helperWidgets/SidebarComponents/SidebarWidgetsList";
 import { SeqGraph } from "../widgets/SeqGraph/SeqGraph";
+import { type_tdl } from "../../mainProcess/file/FileReader";
 
 /**
  * Widget object types union: 3 special types + BaseWidget.
@@ -2310,7 +2311,12 @@ export class Widgets {
                 this.getRoot()
                     .getDisplayWindowClient()
                     .getIpcManager()
-                    .sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: toBeOpenedChannelNames });
+                    .sendFromRendererProcess("create-utility-display-window",
+                        {
+                            utilityType: "Probe",
+                            utilityOptions: { channelNames: toBeOpenedChannelNames }
+                        }
+                    );
             } else {
                 // web mode
                 const currentSite = `https://${window.location.host}/`;
@@ -2358,7 +2364,12 @@ export class Widgets {
                     this.getRoot()
                         .getDisplayWindowClient()
                         .getIpcManager()
-                        .sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: toBeOpenedChannelNames });
+                        .sendFromRendererProcess("create-utility-display-window",
+                            {
+                                utilityType: "Probe",
+                                utilityOptions: { channelNames: toBeOpenedChannelNames }
+                            }
+                        );
                 } else {
                     const currentSite = `https://${window.location.host}/`;
 
@@ -2391,7 +2402,12 @@ export class Widgets {
                     this.getRoot()
                         .getDisplayWindowClient()
                         .getIpcManager()
-                        .sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: [] });
+                        .sendFromRendererProcess("create-utility-display-window",
+                            {
+                                utilityType: "Probe",
+                                utilityOptions: { channelNames: [] }
+                            }
+                        );
                 } else {
                     const currentSite = `https://${window.location.host}/`;
 
@@ -2440,7 +2456,12 @@ export class Widgets {
                 this.getRoot()
                     .getDisplayWindowClient()
                     .getIpcManager()
-                    .sendFromRendererProcess("create-utility-display-window", "PvMonitor", { channelNames: toBeOpenedChannelNames });
+                    .sendFromRendererProcess("create-utility-display-window",
+                        {
+                            utilityType: "PvMonitor",
+                            utilityOptions: { channelNames: toBeOpenedChannelNames }
+                        }
+                    );
             } else {
                 const currentSite = `https://${window.location.host}/`;
 
@@ -2473,7 +2494,12 @@ export class Widgets {
                 this.getRoot()
                     .getDisplayWindowClient()
                     .getIpcManager()
-                    .sendFromRendererProcess("create-utility-display-window", "PvMonitor", { channelNames: [] });
+                    .sendFromRendererProcess("create-utility-display-window",
+                        {
+                            utilityType: "PvMonitor",
+                            utilityOptions: { channelNames: [] }
+                        }
+                    );
             } else {
                 const currentSite = `https://${window.location.host}/`;
 
@@ -2563,8 +2589,12 @@ export class Widgets {
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
-                .sendFromRendererProcess("create-utility-display-window", "FileBrowser",
-                    { path: openPath, parentDisplayWindowId: this.getRoot().getDisplayWindowClient().getWindowId(), modal: modal });
+                .sendFromRendererProcess("create-utility-display-window",
+                    {
+                        utilityType: "FileBrowser",
+                        utilityOptions: { path: openPath, parentDisplayWindowId: this.getRoot().getDisplayWindowClient().getWindowId(), modal: modal }
+                    }
+                );
         } else {
             const currentSite = `https://${window.location.host}/`;
 
@@ -2633,7 +2663,12 @@ export class Widgets {
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
-                .sendFromRendererProcess("create-utility-display-window", "PvTable", { channelNames: [...new Set(channelNames)] });
+                .sendFromRendererProcess("create-utility-display-window",
+                    {
+                        utilityType: "PvTable",
+                        utilityOptions: { channelNames: [...new Set(channelNames)] }
+                    }
+                );
         } else {
             const currentSite = `https://${window.location.host}/`;
             this.getRoot()
@@ -2693,7 +2728,12 @@ export class Widgets {
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
-                .sendFromRendererProcess("create-utility-display-window", "DataViewer", { channelNames: channelNameArray });
+                .sendFromRendererProcess("create-utility-display-window",
+                    {
+                        utilityType: "DataViewer",
+                        utilityOptions: { channelNames: channelNameArray }
+                    }
+                );
         } else {
             const currentSite = `https://${window.location.host}/`;
             this.getRoot()
@@ -2755,7 +2795,12 @@ export class Widgets {
             this.getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
-                .sendFromRendererProcess("create-utility-display-window", "TextEditor", options);
+                .sendFromRendererProcess("create-utility-display-window",
+                    {
+                        utilityType: "TextEditor",
+                        utilityOptions: options
+                    }
+                );
         }
     };
 
@@ -2763,7 +2808,12 @@ export class Widgets {
         // this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Terminal", {});
 
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Terminal", {});
+            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
+                {
+                    utilityType: "Terminal",
+                    utilityOptions: {}
+                }
+            );
         } else {
             const currentSite = `https://${window.location.host}/`;
             this.getRoot()
@@ -2824,7 +2874,12 @@ export class Widgets {
 
 
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "ChannelGraph", options);
+            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
+                {
+                    utilityType: "ChannelGraph",
+                    utilityOptions: options
+                }
+            );
         } else {
             const currentSite = `https://${window.location.host}/`;
             this.getRoot()
@@ -2850,41 +2905,15 @@ export class Widgets {
 
 
     openSeqGraphWindow = () => {
-        // if (channelName === undefined) {
-        //     channelName = "";
-        // }
-
         let options = {};
 
-        // if (widgetKeys?.length === 0 || widgetKeys === undefined) {
-
-        // } else {
-        //     const widgetKey = widgetKeys[0];
-        //     let widget = undefined;
-        //     try {
-        //         widget = this.getWidget2(widgetKey);
-        //     } catch (e) {
-        //         Log.error(e);
-        //     }
-        //     if (widget !== undefined && widget instanceof BaseWidget) {
-        //         const channelNames = widget.getChannelNames();
-        //         channelName = channelNames[0];
-        //     }
-        // }
-
-        // if (channelName !== "") {
-        //     options = {
-        //         channelNames: [channelName],
-        //     }
-        // } else {
-        //     options = {
-        //         channelNames: [],
-        //     }
-        // }
-
-
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "SeqGraph", options);
+            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
+                {
+                    utilityType: "SeqGraph",
+                    utilityOptions: options
+                }
+            );
         } else {
             const currentSite = `https://${window.location.host}/`;
             this.getRoot()
@@ -2911,7 +2940,12 @@ export class Widgets {
     openCalculatorWindow = () => {
         // this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Calculator", {});
         if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Calculator", {});
+            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
+                {
+                    utilityType: "Calculator",
+                    utilityOptions: {}
+                }
+            );
         } else {
             const currentSite = `https://${window.location.host}/`;
             this.getRoot()
@@ -2936,7 +2970,11 @@ export class Widgets {
 
     openHelpWindow = () => {
         const url = "file://${tdm_root}/dist/webpack/HelpWindow.html";
-        this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("open-webpage", url);
+        this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("open-webpage",
+            {
+                url: url
+            }
+        );
 
         // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
         //     this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Help", {});
@@ -3063,11 +3101,15 @@ export class Widgets {
                     window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
                 });
         } else {
-            ipcManager.sendFromRendererProcess("duplicate-display", {
-                tdl: this.getRoot().getDisplayWindowClient().generateTdl(),
-                mode: this.isEditing() ? "editing" : "operating",
-                externalMacros: this.getRoot().getExternalMacros(),
-            });
+            ipcManager.sendFromRendererProcess("duplicate-display",
+                {
+                    options:
+                    {
+                        tdl: this.getRoot().getDisplayWindowClient().generateTdl() as type_tdl,
+                        mode: this.isEditing() ? "editing" : "operating",
+                        externalMacros: this.getRoot().getExternalMacros(),
+                    }
+                });
         }
     };
 

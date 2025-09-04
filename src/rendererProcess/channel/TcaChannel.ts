@@ -485,7 +485,18 @@ export class TcaChannel {
         // ioId is unique across the display window
         // ioTimeout is for caget in main process, after ioTimeout seconds, the caget obtains "undefined"
         // the main process sends back ioId and data
-        ipcManager.sendFromRendererProcess("tca-get", this.getChannelName(), windowId, widgetKey, ioId, ioTimeout, dbrType, useInterval);
+        ipcManager.sendFromRendererProcess("tca-get",
+            {
+                channelName: this.getChannelName(),
+                displayWindowId: windowId,
+                widgetKey: widgetKey,
+                ioId: ioId,
+                ioTimeout: ioTimeout,
+                dbrType: dbrType,
+                useInterval: useInterval
+            }
+        )
+
         // blocked until reply in "tca-get", the main process always replies with "tca-get" when the ioTimeout expires
         // or when it obtains the data. The main process' get() will hold if we set ioTimeout to undefined and it cannot
         // get data.
@@ -525,7 +536,15 @@ export class TcaChannel {
         // never timeout
         const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["READ"], timeout, undefined);
 
-        ipcManager.sendFromRendererProcess("tca-get-meta", this.getChannelName(), windowId, widgetKey, ioId, timeout);
+        ipcManager.sendFromRendererProcess("tca-get-meta",
+            {
+                channelName: this.getChannelName(),
+                displayWindowId: windowId,
+                widgetKey: widgetKey,
+                ioId: ioId,
+                timeout: timeout
+            }
+        );
         try {
             let message: type_dbrData | type_LocalChannel_data = await this.getIoPromise(ioId);
             this.appendToDbrData(message);
@@ -555,7 +574,16 @@ export class TcaChannel {
         const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["READ"], timeout, undefined);
 
         // channel name, pva://demo:abc/timeStamp.nanoseconds
-        ipcManager.sendFromRendererProcess("fetch-pva-type", this.getChannelName(), windowId, widgetKey, ioId, timeout);
+        ipcManager.sendFromRendererProcess("fetch-pva-type",
+            {
+                channelName: this.getChannelName(),
+                displayWindowId: windowId,
+                widgetKey: widgetKey,
+                ioId: ioId,
+                timeout: timeout,
+
+            }
+        )
     };
 
     /**
@@ -629,8 +657,19 @@ export class TcaChannel {
             .getRoot()
             .getDisplayWindowClient()
             .getIpcManager()
-            .sendFromRendererProcess("tca-put", channelName, displayWindowId, dbrData, ioTimeout, pvaValueField, ioId, waitNotify);
+            .sendFromRendererProcess("tca-put",
+                {
+                    channelName: channelName,
+                    displayWindowId: displayWindowId,
+                    dbrData: dbrData,
+                    ioTimeout: ioTimeout,
+                    pvaValueField: pvaValueField,
+                    ioId: ioId,
+                    waitNotify: waitNotify
 
+                }
+
+            )
         if (waitNotify === true) {
             try {
                 const result = await this.getIoPromise(ioId);
@@ -1073,7 +1112,12 @@ export class TcaChannel {
             this.getReadWriteIos().rejectAllIos(this);
             // (5)
             const windowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-            g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("tca-destroy", windowId, this.getChannelName());
+            g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("tca-destroy", 
+                {
+                    displayWindowId: windowId, 
+                    channelName: this.getChannelName()
+                }
+            );
         }
         clearInterval(this.autoUpdateInterval);
     };
@@ -1081,7 +1125,12 @@ export class TcaChannel {
     // let main process know we want to monitor this channel, only monitor DBR_TIME data
     monitor = () => {
         const windowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-        g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("tca-monitor", windowId, this.getChannelName());
+        g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("tca-monitor", 
+            {
+                displayWindowId: windowId, 
+                channelName: this.getChannelName()
+            }
+        );
     };
 
     // ----------------------- getters of dbr data ------------------------
@@ -1807,7 +1856,7 @@ export class TcaChannel {
         const typeFields = type["fields"];
         for (const [key, value] of Object.entries(data)) {
             const fieldType = typeFields[key];
-            
+
             const typeIndex = fieldType["typeIndex"];
             if (typeIndex === "0x80") {
                 result[key + " " + typeIndex] = this.mergePvaTypeAndData(fieldType, value);

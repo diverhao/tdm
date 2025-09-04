@@ -6,6 +6,7 @@ import { Log } from "../../log/Log";
 import { type_DialogInputBox, type_DialogMessageBox } from "../../../rendererProcess/helperWidgets/Prompt/Prompt";
 import { MainWindowProfileEditPage } from "../../../rendererProcess/mainWindow/MainWindowProfileEditPage";
 import { MainWindowStartupPage } from "../../../rendererProcess/mainWindow/MainWindowStartupPage";
+import { IpcEventArgType } from "../../mainProcess/IpcEventArgType";
 
 /**
  * Manage IPC messages sent from main process for main window. <br>
@@ -105,7 +106,30 @@ export class IpcManagerOnMainWindow {
         return this._mainWindowClient;
     };
 
-    sendFromRendererProcess = (channelName: string, ...args: any[]) => {
+    // sendFromRendererProcess = (channelName: string, ...args: any[]) => {
+    //     Log.debug("send message to IPC server", channelName);
+    //     const processId = this.getMainWindowClient().getProcessId();
+    //     if (processId !== "") {
+    //         if (this.wsClient !== undefined) {
+    //             this.wsClient.send(
+    //                 JSON.stringify({
+    //                     processId: processId,
+    //                     windowId: this.getMainWindowClient().getWindowId(),
+    //                     eventName: channelName,
+    //                     data: args,
+    //                 })
+    //             );
+    //         }
+    //     } else {
+    //         console.log("This display window does not have a process Id yet.");
+    //     }
+    // };
+
+
+    sendFromRendererProcess = <T extends keyof IpcEventArgType>(
+        channelName: T,
+        data: IpcEventArgType[T]
+    ): void => {
         Log.debug("send message to IPC server", channelName);
         const processId = this.getMainWindowClient().getProcessId();
         if (processId !== "") {
@@ -115,12 +139,12 @@ export class IpcManagerOnMainWindow {
                         processId: processId,
                         windowId: this.getMainWindowClient().getWindowId(),
                         eventName: channelName,
-                        data: args,
+                        data: [data], // Wrap in array to match your existing format
                     })
                 );
             }
         } else {
-            console.log("This display window does not have a process Id yet.");
+            console.log("This main window does not have a process Id yet.");
         }
     };
 
@@ -168,15 +192,17 @@ export class IpcManagerOnMainWindow {
                     tdlFileNames.push(tdlFileName);
                 }
                 this.sendFromRendererProcess("open-tdl-file", {
-                    tdlFileNames: tdlFileNames,
-                    mode: "operating",
-                    // manually opened, always editable
-                    editable: true,
-                    // use parent window's macros
-                    macros: [],
-                    replaceMacros: true,
-                    // currentTdlFolder?: string;
-                    windowId: this.getMainWindowClient().getWindowId(),
+                    options: {
+                        tdlFileNames: tdlFileNames,
+                        mode: "operating",
+                        // manually opened, always editable
+                        editable: true,
+                        // use parent window's macros
+                        macros: [],
+                        replaceMacros: true,
+                        // currentTdlFolder?: string;
+                        windowId: this.getMainWindowClient().getWindowId(),
+                    }
                 });
             }
         });
@@ -196,9 +222,10 @@ export class IpcManagerOnMainWindow {
     };
 
     _handleCmdLineSelectedProfile = (event: any, cmdLineSelectedProfile: string, args: type_args) => {
-        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected", 
+        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected",
+
             {
-                selectedProfileName: cmdLineSelectedProfile, 
+                selectedProfileName: cmdLineSelectedProfile,
                 args: args,
             }
         );
@@ -285,7 +312,9 @@ export class IpcManagerOnMainWindow {
             const buttons = info["buttons"];
             if (buttons !== undefined && buttons.length >= 1) {
                 buttons[0]["handleClick"] = () => {
-                    this.sendFromRendererProcess("quit-tdm-process", true);
+                    this.sendFromRendererProcess("quit-tdm-process", {
+                        confirmToQuit: true
+                    });
                 };
             }
         } else if (command === "ssh-connection-waiting") {
@@ -318,7 +347,9 @@ export class IpcManagerOnMainWindow {
                     const fileName = prompt.getDialogInputBoxText();
                     if (fileName !== "") {
                         this.sendFromRendererProcess("open-profiles",
-                            fileName
+                            {
+                                profilesFileName1: fileName
+                            }
                         );
                     }
                 };
@@ -338,7 +369,11 @@ export class IpcManagerOnMainWindow {
                     if (filePath !== "") {
                         attachment["filePath1"] = filePath;
                         this.sendFromRendererProcess("save-profiles-as",
-                            ...Object.values(attachment)
+                            {
+                                modifiedProfiles: attachment["modifiedProfiles"],
+                                filePath1: attachment["filePath1"],
+
+                            }
                         );
                     }
                 };

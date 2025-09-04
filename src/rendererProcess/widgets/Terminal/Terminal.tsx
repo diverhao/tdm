@@ -15,7 +15,7 @@ import * as mathjs from "mathjs";
 // import * as os from "os";
 // import fs from "fs";
 import { TerminalIos } from "./TerminalIos";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 
 export type type_Terminal_tdl = {
@@ -227,7 +227,7 @@ export class Terminal extends BaseWidget {
             widgetKey: this.getWidgetKey(),
             ioId: ioId,
             // command 
-            command: command,
+            command: command as "os.homedir" | "os.userInfo" | "fs.readdir" | "fs.stat" | "fs.isDirectory",
             args: args,
         })
         try {
@@ -300,16 +300,19 @@ export class Terminal extends BaseWidget {
         if (tdlFileName.startsWith("[tdl]")) {
             tdlFileName = tdlFileName.replace("[tdl]", "");
             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-            displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file", {
-                tdlFileNames: [tdlFileName],
-                mode: "operating",
-                editable: false,
-                // external macros: user-provided and parent display macros
-                macros: [],
-                replaceMacros: false,
-                currentTdlFolder: this.currentDir,
-                windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),                
-            });
+            displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file",
+                {
+                    options: {
+                        tdlFileNames: [tdlFileName],
+                        mode: "operating",
+                        editable: false,
+                        // external macros: user-provided and parent display macros
+                        macros: [],
+                        replaceMacros: false,
+                        currentTdlFolder: this.currentDir,
+                        windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                    }
+                });
         } else if (tdlFileName.startsWith("[dir]")) {
             tdlFileName = tdlFileName.replace("[dir]", "");
             this.inputLine = `cd ${tdlFileName}`;
@@ -558,16 +561,19 @@ export class Terminal extends BaseWidget {
                 const fullTdlFileName = displayWindowClient.getTdlFileName();
                 const currentTdlFolder = path.dirname(fullTdlFileName);
                 const ipcManager = displayWindowClient.getIpcManager();
-                ipcManager.sendFromRendererProcess("open-tdl-file", {
-                    tdlFileNames: [tdlFileName],
-                    mode: "operating",
-                    editable: "false",
-                    macros: [],
-                    replaceMacros: false, // not used
-                    currentTdlFolder: currentTdlFolder,
-                    openInSameWindow: false,
-                    windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),                
-                });
+                ipcManager.sendFromRendererProcess("open-tdl-file",
+                    {
+                        options: {
+                            tdlFileNames: [tdlFileName],
+                            mode: "operating",
+                            editable: false,
+                            macros: [],
+                            replaceMacros: false, // not used
+                            currentTdlFolder: currentTdlFolder,
+                            // openInSameWindow: false,
+                            windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                        }
+                    });
             }
             this.commandFinished();
         },

@@ -1069,7 +1069,7 @@ export class ProfilesViewer extends BaseWidget {
                                 displayWindowClient.getIpcManager().sendFromRendererProcess("focus-window", displayWindowId);
                             }
                             else if (type === "Main Window") {
-                                displayWindowClient.getIpcManager().sendFromRendererProcess("bring-up-main-window");
+                                displayWindowClient.getIpcManager().sendFromRendererProcess("bring-up-main-window", {});
                             }
                         }
                     }

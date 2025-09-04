@@ -637,14 +637,16 @@ export class ActionButton extends BaseWidget {
         } else {
             if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
                 ipcManager.sendFromRendererProcess("open-tdl-file", {
-                    tdlFileNames: [tdlFileName],
-                    mode: mode,
-                    editable: editable,
-                    macros: externalMacros,
-                    replaceMacros: replaceMacros, // not used
-                    currentTdlFolder: currentTdlFolder,
-                    openInSameWindow: openInSameWindow,
-                    windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                    options: {
+                        tdlFileNames: [tdlFileName],
+                        mode: mode,
+                        editable: editable,
+                        macros: externalMacros,
+                        replaceMacros: replaceMacros, // not used
+                        currentTdlFolder: currentTdlFolder,
+                        // openInSameWindow: openInSameWindow,
+                        windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                    }
                 });
             } else {
                 // web mode
@@ -707,7 +709,7 @@ export class ActionButton extends BaseWidget {
         const tdl = this.getActions()[index] as type_action_openwebpage_tdl;
         const url = tdl["url"];
         const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-        ipcManager.sendFromRendererProcess("open-webpage", url);
+        ipcManager.sendFromRendererProcess("open-webpage", {url: url});
     };
 
     executeCommand = (index: number) => {
@@ -829,12 +831,12 @@ export class ActionButton extends BaseWidget {
         if (quitTDM === true) {
             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
             const ipcManager = displayWindowClient.getIpcManager();
-            ipcManager.sendFromRendererProcess("quit-tdm-process");
+            ipcManager.sendFromRendererProcess("quit-tdm-process", {});
         } else {
             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
             const ipcManager = displayWindowClient.getIpcManager();
             const displayWindowId = displayWindowClient.getWindowId();
-            ipcManager.sendFromRendererProcess("close-window", displayWindowId);
+            ipcManager.sendFromRendererProcess("close-window", {displayWindowId: displayWindowId});
         }
     };
 

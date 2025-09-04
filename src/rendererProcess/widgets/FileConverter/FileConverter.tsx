@@ -460,11 +460,13 @@ export class FileConverter extends BaseWidget {
                             displayWindowClient.getIpcManager().sendFromRendererProcess("select-a-file",
                                 // they will be bounced back and handled by handleSelectAFile below
                                 {
-                                    displayWindowId: displayWindowId,
-                                    widgetKey: this.getWidgetKey(),
-                                    filterType: "file-converter",
-                                    properties: ["openFile", "openDirectory"],
-                                    inputType: "src",
+                                    options: {
+                                        displayWindowId: displayWindowId,
+                                        widgetKey: this.getWidgetKey(),
+                                        filterType: "file-converter",
+                                        properties: ["openFile", "openDirectory"],
+                                        inputType: "src",
+                                    }
                                 });
 
                         }}
@@ -536,11 +538,13 @@ export class FileConverter extends BaseWidget {
                             displayWindowClient.getIpcManager().sendFromRendererProcess("select-a-file",
                                 // they will be bounced back and handled by handleSelectAFile below
                                 {
-                                    displayWindowId: displayWindowId,
-                                    widgetKey: this.getWidgetKey(),
-                                    filterType: "file-converter",
-                                    properties: ["openDirectory", "createDirectory", "promptToCreate"], // open folder and create directory
-                                    inputType: "dest",
+                                    options: {
+                                        displayWindowId: displayWindowId,
+                                        widgetKey: this.getWidgetKey(),
+                                        filterType: "file-converter",
+                                        properties: ["openDirectory", "createDirectory", "promptToCreate"], // open folder and create directory
+                                        inputType: "dest",
+                                    }
                                 });
 
                         }}
@@ -789,15 +793,17 @@ export class FileConverter extends BaseWidget {
                                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                     const displayWindowId = displayWindowClient.getWindowId();
                                     displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file", {
-                                        // tdl?: type_tdl;
-                                        tdlFileNames: [data["destFileName"]],
-                                        mode: "operating",
-                                        editable: true,
-                                        // external macros: user-provided and parent display macros
-                                        macros: [],
-                                        replaceMacros: false,
-                                        // currentTdlFolder?: string;
-                                        // windowId?: string;
+                                        options: {
+                                            // tdl?: type_tdl;
+                                            tdlFileNames: [data["destFileName"]],
+                                            mode: "operating",
+                                            editable: true,
+                                            // external macros: user-provided and parent display macros
+                                            macros: [],
+                                            replaceMacros: false,
+                                            // currentTdlFolder?: string;
+                                            // windowId?: string;
+                                        }
                                     })
                                 }}
                                     style={{

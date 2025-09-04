@@ -76,7 +76,14 @@ export class ContextMenu {
         const mainProcessMode = this.getDisplayWindowClient().getMainProcessMode();
         if (widgetKey === "Canvas") {
             if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
-                this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("show-context-menu", windowStatus, windowId, ["Canvas"], options);
+                this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("show-context-menu",
+                    {
+                        mode: windowStatus,
+                        displayWindowId: windowId,
+                        widgetKeys: ["Canvas"],
+                        options: options
+                    }
+                );
             } else {
                 this._widgetKeys = ["Canvas"];
                 this.showElement(element, [x, y]);
@@ -88,14 +95,28 @@ export class ContextMenu {
                 if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
                     this.getDisplayWindowClient()
                         .getIpcManager()
-                        .sendFromRendererProcess("show-context-menu", windowStatus, windowId, selectedWidgetKeys, options);
+                        .sendFromRendererProcess("show-context-menu",
+                            {
+                                mode: windowStatus,
+                                displayWindowId: windowId,
+                                widgetKeys: selectedWidgetKeys,
+                                options: options
+                            }
+                        );
                 } else {
                     this._widgetKeys = selectedWidgetKeys;
                     this.showElement(element, [x, y]);
                 }
             } else {
                 if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
-                    this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("show-context-menu", windowStatus, windowId, [widgetKey], options);
+                    this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("show-context-menu",
+                        {
+                            mode: windowStatus,
+                            displayWindowId: windowId,
+                            widgetKeys: [widgetKey],
+                            options: options
+                        }
+                    );
                 } else {
                     this._widgetKeys = [widgetKey];
                     this.showElement(element, [x, y]);

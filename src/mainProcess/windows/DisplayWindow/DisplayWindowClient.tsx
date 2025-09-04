@@ -633,10 +633,20 @@ export class DisplayWindowClient {
 
             if (event.ctrlKey && this.getWindowId() !== "") {
                 if (event.deltaY > 0) {
-                    this.getIpcManager().sendFromRendererProcess("zoom-window", this.getWindowId(), "out");
+                    this.getIpcManager().sendFromRendererProcess("zoom-window",
+                        {
+                            displayWindowId: this.getWindowId(),
+                            zoomDirection: "out"
+                        }
+                    );
                 }
                 else if (event.deltaY < 0) {
-                    this.getIpcManager().sendFromRendererProcess("zoom-window", this.getWindowId(), "in");
+                    this.getIpcManager().sendFromRendererProcess("zoom-window",
+                        {
+                            displayWindowId: this.getWindowId(),
+                            zoomDirection: "in"
+                        }
+                    );
                 }
             }
         })
@@ -1054,11 +1064,16 @@ export class DisplayWindowClient {
         const externalMacros = g_widgets1.getRoot().getExternalMacros();
         const tdlFileName = this.getTdlFileName();
         if (this.getMainProcessMode() === "desktop" || this.getMainProcessMode() === "ssh-client") {
-            this.getIpcManager().sendFromRendererProcess("create-utility-display-window", "TdlViewer", {
-                tdl: tdl,
-                externalMacros: externalMacros,
-                tdlFileName: tdlFileName,
-            });
+            this.getIpcManager().sendFromRendererProcess("create-utility-display-window",
+                {
+                    utilityType: "TdlViewer",
+                    utilityOptions: {
+                        tdl: tdl,
+                        externalMacros: externalMacros,
+                        tdlFileName: tdlFileName,
+                    }
+                }
+            );
         } else {
             // web mode
             const currentSite = `https://${window.location.host}/`;
@@ -1100,22 +1115,46 @@ export class DisplayWindowClient {
             } else {
                 // save to server, the server will make sure the file is allowed to be saved
                 if (this.getActionHistory().getModified() === true) {
-                    this.getIpcManager().sendFromRendererProcess("save-tdl-file", this.getWindowId(), this.generateTdl(), tdlFileName);
+                    this.getIpcManager().sendFromRendererProcess("save-tdl-file",
+                        {
+                            windowId: this.getWindowId(),
+                            tdl: this.generateTdl() as type_tdl,
+                            tdlFileName1: tdlFileName
+                        }
+                    );
                 }
             }
         } else {
             if (this.getActionHistory().getModified() === true) {
                 Log.debug("We are going to save TDL", tdlFileName)
-                this.getIpcManager().sendFromRendererProcess("save-tdl-file", this.getWindowId(), this.generateTdl(), tdlFileName);
+                this.getIpcManager().sendFromRendererProcess("save-tdl-file",
+                    {
+                        windowId: this.getWindowId(),
+                        tdl: this.generateTdl() as type_tdl,
+                        tdlFileName1: tdlFileName
+                    }
+                );
             } else {
                 if (this.getIsUtilityWindow() === true) {
                     // always save utility window (in editing mode)
-                    this.getIpcManager().sendFromRendererProcess("save-tdl-file", this.getWindowId(), this.generateTdl(), tdlFileName);
+                    this.getIpcManager().sendFromRendererProcess("save-tdl-file",
+                        {
+                            windowId: this.getWindowId(),
+                            tdl: this.generateTdl() as type_tdl,
+                            tdlFileName1: tdlFileName
+                        }
+                    );
                     return;
                 }
                 if (tdlFileName === "") {
                     Log.info("We are going to save this new TDL");
-                    this.getIpcManager().sendFromRendererProcess("save-tdl-file", this.getWindowId(), this.generateTdl(), tdlFileName);
+                    this.getIpcManager().sendFromRendererProcess("save-tdl-file",
+                        {
+                            windowId: this.getWindowId(),
+                            tdl: this.generateTdl() as type_tdl,
+                            tdlFileName1: tdlFileName
+                        }
+                    );
                 } else {
                     Log.debug("TDL file", tdlFileName, "is not changed, no need to save");
                 }
@@ -1342,15 +1381,18 @@ export class DisplayWindowClient {
         //     // currentTdlFolder?: string;
         // });
 
-        this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
-            // tdlFileNames?: string[];
-            mode: statusStr, // seems like it is disgarded
-            editable: false, // seems like it is disgarded
-            macros: [],
-            replaceMacros: false,
-            // currentTdlFolder?: string;
-            windowId: this.getWindowId(),
-        });
+        this.getIpcManager().sendFromRendererProcess("open-tdl-file",
+            {
+                options: {
+                    // tdlFileNames?: string[];
+                    mode: statusStr as "operating" | "editing", // seems like it is disgarded
+                    editable: false, // seems like it is disgarded
+                    macros: [],
+                    replaceMacros: false,
+                    // currentTdlFolder?: string;
+                    windowId: this.getWindowId(),
+                }
+            });
 
     };
 
@@ -1410,7 +1452,13 @@ export class DisplayWindowClient {
         titleContents = `${hostname}${titleContents}`
 
         if (this.getMainProcessMode() === "desktop") {
-            this.getIpcManager().sendFromRendererProcess("set-window-title", this.getWindowId(), titleContents, modified);
+            this.getIpcManager().sendFromRendererProcess("set-window-title", 
+                {
+                    windowId: this.getWindowId(), 
+                    newTitle: titleContents, 
+                    modified: modified
+                }
+            );
         } else {
             document.title = titleContents;
         }

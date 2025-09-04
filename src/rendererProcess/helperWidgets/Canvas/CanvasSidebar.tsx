@@ -501,10 +501,12 @@ export class CanvasSidebar {
             const hasSelection = window.getSelection() === null ? false : window.getSelection()?.toString() !== "";
             g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess(
                 "show-context-menu-sidebar",
-                g_widgets1.isEditing() ? "editing" : "operating",
-                g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                [],
-                { hasSelection: hasSelection },
+                {
+                    mode: g_widgets1.isEditing() ? "editing" : "operating",
+                    displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                    widgetKeys: [],
+                    options: { hasSelection: hasSelection },
+                }
             )
         }
     }

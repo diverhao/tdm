@@ -113,7 +113,7 @@ export class ChannelGraph extends BaseWidget {
 
     forceUpdateConfigPage: () => void = () => { };
     forceUpdate: () => void = () => { };
-    setShowConfigPage: any = () => {};
+    setShowConfigPage: any = () => { };
 
     network: undefined | Network = undefined;
 
@@ -534,7 +534,12 @@ export class ChannelGraph extends BaseWidget {
                                                 src={`../../resources/webpages/modify-symbol.svg`}
                                                 onClick={() => {
                                                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                                                    displayWindowClient.getIpcManager().sendFromRendererProcess("create-utility-display-window", "TextEditor", { fileName: dbFileName });
+                                                    displayWindowClient.getIpcManager().sendFromRendererProcess("create-utility-display-window",
+                                                        {
+                                                            utilityType: "TextEditor",
+                                                            utilityOptions: { fileName: dbFileName }
+                                                        }
+                                                    );
                                                 }}
                                             >
                                             </img>
@@ -578,18 +583,20 @@ export class ChannelGraph extends BaseWidget {
         // we are expecting to have a "db-file-contents" message from main process: {db: dbJson}
         displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file",
             {
-                // tdl?: type_tdl;
-                // tdlStr?: string; // for web mode only, the web mode reads contents of the file (.tdl or .db), but it cannot parse the file contents in browser
-                tdlFileNames: dbFileName === undefined ? undefined : [dbFileName],
-                mode: "operating",
-                editable: false,
-                // external macros: user-provided and parent display macros
-                macros: [],
-                replaceMacros: false,
-                // currentTdlFolder?: string;
-                windowId: displayWindowClient.getWindowId(),
-                // postCommand?: string;
-                sendContentsToWindow: true, // whether to send the file contents back to the display window, for Channel Graph window
+                options: {
+                    // tdl?: type_tdl;
+                    // tdlStr?: string; // for web mode only, the web mode reads contents of the file (.tdl or .db), but it cannot parse the file contents in browser
+                    tdlFileNames: dbFileName === undefined ? undefined : [dbFileName],
+                    mode: "operating",
+                    editable: false,
+                    // external macros: user-provided and parent display macros
+                    macros: [],
+                    replaceMacros: false,
+                    // currentTdlFolder?: string;
+                    windowId: displayWindowClient.getWindowId(),
+                    // postCommand?: string;
+                    sendContentsToWindow: true, // whether to send the file contents back to the display window, for Channel Graph window
+                }
             })
     }
 
@@ -652,7 +659,12 @@ export class ChannelGraph extends BaseWidget {
             if (TcaChannel.checkChannelName(channelName) === "ca" || TcaChannel.checkChannelName(channelName) === "pva") {
                 // open Probe
                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                displayWindowClient.getIpcManager().sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: [channelName] });
+                displayWindowClient.getIpcManager().sendFromRendererProcess("create-utility-display-window", 
+                    {
+                        utilityType: "Probe", 
+                        utilityOptions: { channelNames: [channelName] }
+                    }
+                );
 
             }
         }
@@ -1112,7 +1124,7 @@ export class ChannelGraph extends BaseWidget {
             } else {
                 scan = meta[1];
             }
-            
+
             calc = meta[2];
         }
 

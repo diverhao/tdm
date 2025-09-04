@@ -60,9 +60,11 @@ export class SidebarMediaOpenFile extends SidebarComponent {
                                 displayWindowClient
                                     .getIpcManager()
                                     .sendFromRendererProcess("select-a-file", {
-                                        displayWindowId: displayWindowId,
-                                        widgetKey: this.getMainWidget().getWidgetKey(),
-                                        filterType: "media",
+                                        options: {
+                                            displayWindowId: displayWindowId,
+                                            widgetKey: this.getMainWidget().getWidgetKey(),
+                                            filterType: "media",
+                                        }
                                     });
                             }}
                             style={{

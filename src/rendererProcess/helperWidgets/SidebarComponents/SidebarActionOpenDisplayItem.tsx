@@ -84,10 +84,12 @@ export class SidebarActionOpenDisplayItem {
                                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                 const displayWindowId = displayWindowClient.getWindowId();
                                 displayWindowClient.getIpcManager().sendFromRendererProcess("select-a-file", {
-                                    displayWindowId: displayWindowId,
-                                    widgetKey: this.getMainWidget().getWidgetKey(),
-                                    itemIndex: this.getIndex(),
-                                    filterType: "tdl",
+                                    options: {
+                                        displayWindowId: displayWindowId,
+                                        widgetKey: this.getMainWidget().getWidgetKey(),
+                                        itemIndex: this.getIndex(),
+                                        filterType: "tdl",
+                                    }
                                 });
                             }}
                         >{`Open Display`}</b>
@@ -287,14 +289,16 @@ export class SidebarActionOpenDisplayItem {
                     onClick={() => {
                         const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
                         ipcManager.sendFromRendererProcess("open-tdl-file", {
-                            tdlFileNames: [fileName],
-                            mode: "editing",
-                            editable: true,
-                            macros: externalMacros,
-                            replaceMacros: false, // not used
-                            currentTdlFolder: currentTdlFolder,
-                            openInSameWindow: false,
-                            windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                            options: {
+                                tdlFileNames: [fileName],
+                                mode: "editing",
+                                editable: true,
+                                macros: externalMacros,
+                                replaceMacros: false, // not used
+                                currentTdlFolder: currentTdlFolder,
+                                // openInSameWindow: false,
+                                windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                            }
                         });
 
                     }}
@@ -310,7 +314,7 @@ export class SidebarActionOpenDisplayItem {
             </div>
         )
     }
-    
+
     private _ElementExternalMacros = () => {
         return (
             <>

@@ -329,12 +329,13 @@ export class Media extends BaseWidget {
                         g_flushWidgets();
                     });
             } else if ((g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client")) {
-                Log.info("try to obtain file from ssh host")
-                g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("get-ssh-file", {
-                    displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                    widgetKey: this.getWidgetKey(),
-                    fullFileName: fullFileName,
-                })
+                //todo: what is this? get-ssh-file does not exist on main process
+                // Log.info("try to obtain file from ssh host")
+                // g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("get-ssh-file", {
+                //     displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                //     widgetKey: this.getWidgetKey(),
+                //     fullFileName: fullFileName,
+                // })
             }
         }
         // else if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client" && this.mediaFileName !== rawFileName) {
