@@ -86,7 +86,17 @@ export class WsPvServer {
 
                 if (command === "GET") {
                     Log.debug(this.getMainProcessId(), `WebSocket PV server, GET ${message}`);
-                    const dbrData = await this.getIpcManager().handleTcaGet(undefined, channelName, displayWindowId, undefined, -1, 1, undefined, false);
+                    const dbrData = await this.getIpcManager().handleTcaGet(undefined,
+                        {
+                            channelName: channelName,
+                            displayWindowId: displayWindowId,
+                            widgetKey: undefined,
+                            ioId: -1,
+                            ioTimeout: 1,
+                            dbrType: undefined,
+                            useInterval: false
+                        }
+                    );
                     wsClient.send(JSON.stringify({ ...dbrData, ...message, channelName: channelName }));
                 } else if (command === "MONITOR") {
                     // const channelName = message["channelName"];
@@ -98,10 +108,23 @@ export class WsPvServer {
                         }
                     }
                     // if the channel does not exist, create and monitor it
-                    this.getIpcManager().handleTcaMonitor(undefined, displayWindowId, channelName);
+                    this.getIpcManager().handleTcaMonitor(undefined,
+                        {
+                            displayWindowId: displayWindowId,
+                            channelName: channelName,
+                        }
+                    );
                 } else if (command === "PUT") {
                     const value = message["value"];
-                    this.getIpcManager().handleTcaPut(undefined, channelName, displayWindowId, message, 1, "");
+                    this.getIpcManager().handleTcaPut(undefined,
+                        {
+                            channelName: channelName,
+                            displayWindowId: displayWindowId,
+                            dbrData: message,
+                            ioTimeout: 1,
+                            pvaValueField: ""
+                        }
+                    );
                 } else {
                     Log.debug(this.getMainProcessId(), `Unknow command ${command}`);
                 }

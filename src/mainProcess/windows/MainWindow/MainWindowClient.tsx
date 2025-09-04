@@ -103,7 +103,9 @@ export class MainWindowClient {
                 }
             }
             if (menu.length > 0) {
-                this.getIpcManager().sendFromRendererProcess("main-window-show-context-menu", menu);
+                this.getIpcManager().sendFromRendererProcess("main-window-show-context-menu", {
+                    menu: menu as ("copy" | "cut" | "paste")[]
+                });
             } else {
                 // don't show context menu
             }
@@ -181,7 +183,11 @@ export class MainWindowClient {
         this._profileRunPage = newPage;
     };
     saveProfiles = () => {
-        this.getIpcManager().sendFromRendererProcess("save-profiles", this.getProfiles());
+        this.getIpcManager().sendFromRendererProcess("save-profiles", 
+            {
+                modifiedProfiles: this.getProfiles()
+            }
+        );
     };
     getProcessId = () => {
         return this._processId;

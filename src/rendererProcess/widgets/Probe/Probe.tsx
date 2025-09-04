@@ -1221,7 +1221,12 @@ export class Probe extends BaseWidget {
                                     .getRoot()
                                     .getDisplayWindowClient()
                                     .getIpcManager()
-                                    .sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: [channelName] });
+                                    .sendFromRendererProcess("create-utility-display-window", 
+                                        {
+                                            utilityType: "Probe", 
+                                            utilityOptions: { channelNames: [channelName] }
+                                        }
+                                    );
                             }
                         }
                     }}

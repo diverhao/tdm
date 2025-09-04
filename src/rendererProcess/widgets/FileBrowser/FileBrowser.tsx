@@ -706,7 +706,9 @@ export class FileBrowser extends BaseWidget {
                             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                             const ipcManager = displayWindowClient.getIpcManager();
                             const displayWindowId = displayWindowClient.getWindowId();
-                            ipcManager.sendFromRendererProcess("close-window", displayWindowId);
+                            ipcManager.sendFromRendererProcess("close-window", {
+                                displayWindowId: displayWindowId
+                            });
                         }}
                     >
                         Cancel
@@ -1322,14 +1324,16 @@ export class FileBrowser extends BaseWidget {
 
                 if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
                     ipcManager.sendFromRendererProcess("open-tdl-file", {
-                        tdlFileNames: [fullTdlFileName],
-                        mode: mode,
-                        editable: editable,
-                        macros: [],
-                        replaceMacros: false,
-                        currentTdlFolder: this.getFolderPath(),
-                        openInSameWindow: false,
-                        windowId: displayWindowId,
+                        options: {
+                            tdlFileNames: [fullTdlFileName],
+                            mode: mode as "operating" | "editing",
+                            editable: editable,
+                            macros: [],
+                            replaceMacros: false,
+                            currentTdlFolder: this.getFolderPath(),
+                            // openInSameWindow: false,
+                            windowId: displayWindowId,
+                        }
                     })
 
                 } else {
@@ -1366,7 +1370,9 @@ export class FileBrowser extends BaseWidget {
                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                     const ipcManager = displayWindowClient.getIpcManager();
                     const displayWindowId = displayWindowClient.getWindowId();
-                    ipcManager.sendFromRendererProcess("close-window", displayWindowId);
+                    ipcManager.sendFromRendererProcess("close-window", {
+                        displayWindowId: displayWindowId
+                    });
                 }
             }
         }

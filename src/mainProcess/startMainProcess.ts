@@ -24,7 +24,7 @@ import { execSync } from "child_process";
  *  - sns-office-engineer
  *  - sns-office-user
  */
-import {site} from "../../package.json";
+import { site } from "../../package.json";
 
 // true for the first TDM instance 
 // false for the later TDM instances
@@ -159,20 +159,24 @@ if (args["attach"] === -1) {
                         return;
                     } else {
                         // select the first profile, then open the double-clicked tdl file
-                        mainProcess.getIpcManager().handleProfileSelected(undefined, firstProfileName,
+                        mainProcess.getIpcManager().handleProfileSelected(undefined,
                             {
-                                macros: [],
-                                settings: "",
-                                profile: firstProfileName,
-                                alsoOpenDefaults: false,
-                                fileNames: [openFilePath],
-                                attach: -1,
-                                cwd: "",
-                                mainProcessMode: "desktop", // | "web"; // "ssh-server" or "ssh-client" mode process can only be created inside the program
-                                httpServerPort: 3000,
-                                site: site,
-                            },
-                            undefined)
+                                selectedProfileName: firstProfileName,
+                                args: {
+                                    macros: [],
+                                    settings: "",
+                                    profile: firstProfileName,
+                                    alsoOpenDefaults: false,
+                                    fileNames: [openFilePath],
+                                    attach: -1,
+                                    cwd: "",
+                                    mainProcessMode: "desktop", // | "web"; // "ssh-server" or "ssh-client" mode process can only be created inside the program
+                                    httpServerPort: 3000,
+                                    site: site,
+                                },
+                                httpResponse: undefined
+                            }
+                        )
                     }
                 } else {
                     // open this file if a profile is selected
@@ -180,16 +184,18 @@ if (args["attach"] === -1) {
                     mainProcess.getIpcManager().handleOpenTdlFiles(
                         undefined,
                         {
-                            // tdl?: type_tdl;
-                            tdlFileNames: [path],
-                            mode: "operating",
-                            editable: editable,
-                            // external macros: user-provided and parent display macros
-                            macros: [],
-                            replaceMacros: false,
-                            // currentTdlFolder?: string;
-                        },
-                        undefined
+                            options: {
+                                // tdl?: type_tdl;
+                                tdlFileNames: [path],
+                                mode: "operating",
+                                editable: editable,
+                                // external macros: user-provided and parent display macros
+                                macros: [],
+                                replaceMacros: false,
+                                // currentTdlFolder?: string;
+                            },
+                            httpResponse: undefined
+                        }
                     )
                 }
 

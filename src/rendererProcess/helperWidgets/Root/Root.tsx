@@ -114,7 +114,14 @@ export class Root {
                 const windowName = canvas.getWindowName();
                 const tdlFileName = g_widgets1.getTdlFileName();
                 const mode = g_widgets1.isEditing() ? "editing" : "operating";
-                ipcManager.sendFromRendererProcess("new-tdl-rendered", displayWindowId, windowName, tdlFileName, mode);
+                ipcManager.sendFromRendererProcess("new-tdl-rendered", 
+                    {
+                        displayWindowId: displayWindowId, 
+                        windowName: windowName, 
+                        tdlFileName: tdlFileName, 
+                        mode: mode
+                    }
+                );
                 Log.info("New tdl", this.getDisplayWindowClient().getTdlFileName(), "rendered")
                 if (this.getDisplayWindowClient().getMainProcessMode() === "web") {
                     this.getDisplayWindowClient().savePageData();

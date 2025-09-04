@@ -563,7 +563,12 @@ export class Keyboard {
     on_F1_press = () => {
         if (this.noModifierKeyDown()) {
             const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-            ipcManager.sendFromRendererProcess("create-utility-display-window", "Help", {})
+            ipcManager.sendFromRendererProcess("create-utility-display-window", 
+                {
+                    utilityType: "Help", 
+                    utilityOptions: {}
+                }
+            )
         }
     }
 
@@ -573,7 +578,7 @@ export class Keyboard {
     on_F2_press = () => {
         if (this.noModifierKeyDown()) {
             const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-            ipcManager.sendFromRendererProcess("bring-up-main-window")
+            ipcManager.sendFromRendererProcess("bring-up-main-window", {})
         }
     }
 

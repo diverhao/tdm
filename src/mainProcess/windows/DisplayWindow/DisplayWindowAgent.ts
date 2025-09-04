@@ -369,7 +369,7 @@ export class DisplayWindowAgent {
      * @param {number} ioTimeout Time out [second].
      *
      */
-    tcaGet = async (channelName: string, ioTimeout: number, dbrType: Channel_DBR_TYPES | undefined | string): Promise<type_dbrData | { value: undefined }> => {
+    tcaGet = async (channelName: string, ioTimeout: number | undefined, dbrType: Channel_DBR_TYPES | undefined | string): Promise<type_dbrData | { value: undefined }> => {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
@@ -382,7 +382,7 @@ export class DisplayWindowAgent {
             const connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
             const t1 = Date.now();
             // timeout
-            if (t1 - t0 > ioTimeout * 1000) {
+            if (t1 - t0 > (ioTimeout === undefined ? 10000000 : ioTimeout) * 1000) {
                 return { value: undefined };
             }
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
@@ -1215,7 +1215,7 @@ export class DisplayWindowAgent {
                         Log.debug(this.getMainProcessId(), "pdf file not selected.");
                         return;
                     }
-                    fs.writeFile(pdfFileName, pdfContentsBuffer, (err) => {
+                    fs.writeFile(pdfFileName, pdfContentsBuffer as Uint8Array, (err) => {
                         if (err) {
                             this.sendFromMainProcess("dialog-show-message-box",
                                 {
@@ -1250,7 +1250,7 @@ export class DisplayWindowAgent {
                 Log.debug(this.getMainProcessId(), "Image file not selected, image not saved");
                 return;
             }
-            fs.writeFile(imageFileName, image.toPNG(), (err) => {
+            fs.writeFile(imageFileName, image.toPNG() as Uint8Array, (err) => {
                 if (err) {
                     this.sendFromMainProcess("dialog-show-message-box",
                         {
@@ -1291,7 +1291,7 @@ export class DisplayWindowAgent {
             }
 
             const imageFileName = path.join(saveFolder, "TDM-screenshot-" + getCurrentDateTimeStr(true) + ".png");
-            fs.writeFile(imageFileName, image.toPNG(), (err) => {
+            fs.writeFile(imageFileName, image.toPNG() as Uint8Array, (err) => {
                 if (err) {
                     this.sendFromMainProcess("dialog-show-message-box",
                         {

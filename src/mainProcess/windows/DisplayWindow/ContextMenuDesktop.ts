@@ -158,15 +158,19 @@ export class ContextMenuDesktop {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
                 }
                 if (mainProcessMode === "desktop") {
-                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles(undefined, {
-                        tdlFileNames: undefined, // open dialog
-                        mode: editable === true ? "editing" : "operating",
-                        editable: editable,
-                        macros: [],
-                        replaceMacros: false,
-                        // currentTdlFolder?: string;
-                        windowId: this.getDisplayWindowAgent().getId(),
-                    });
+                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
+                        {
+                            options: {
+                                tdlFileNames: undefined, // open dialog
+                                mode: editable === true ? "editing" : "operating",
+                                editable: editable,
+                                macros: [],
+                                replaceMacros: false,
+                                // currentTdlFolder?: string;
+                                windowId: this.getDisplayWindowAgent().getId(),
+                            }
+                        }
+                    );
                 } else if (mainProcessMode === "ssh-client") {
                     const sshClient = this.getWindowAgentsManager().getMainProcess().getSshClient();
                     if (sshClient !== undefined) {
@@ -535,7 +539,7 @@ export class ContextMenuDesktop {
             accelerator: "F2",
             click: () => {
                 // todo: for ssh-client
-                this.getWindowAgentsManager().getMainProcess().getIpcManager().handleBringUpMainWindow();
+                this.getWindowAgentsManager().getMainProcess().getIpcManager().handleBringUpMainWindow(undefined, {});
             },
         },
         {
@@ -883,15 +887,19 @@ export class ContextMenuDesktop {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
                 }
                 if (mainProcessMode === "desktop") {
-                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles(undefined, {
-                        tdlFileNames: undefined, // open dialog
-                        mode: "operating",
-                        editable: editable,
-                        macros: [],
-                        replaceMacros: false,
-                        // currentTdlFolder?: string;
-                        windowId: this.getDisplayWindowAgent().getId(),
-                    });
+                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
+                        {
+                            options: {
+                                tdlFileNames: undefined, // open dialog
+                                mode: "operating",
+                                editable: editable,
+                                macros: [],
+                                replaceMacros: false,
+                                // currentTdlFolder?: string;
+                                windowId: this.getDisplayWindowAgent().getId(),
+                            }
+                        }
+                    );
                 } else if (mainProcessMode === "ssh-client") {
                     // tell display window 
                     const sshClient = this.getWindowAgentsManager().getMainProcess().getSshClient();
@@ -1018,7 +1026,7 @@ export class ContextMenuDesktop {
             accelerator: "F2",
             click: () => {
                 // todo: for ssh-client
-                this.getWindowAgentsManager().getMainProcess().getIpcManager().handleBringUpMainWindow();
+                this.getWindowAgentsManager().getMainProcess().getIpcManager().handleBringUpMainWindow(undefined, {});
             },
         },
         {
@@ -1177,15 +1185,19 @@ export class ContextMenuDesktop {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
                 }
                 if (mainProcessMode === "desktop") {
-                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles(undefined, {
-                        tdlFileNames: undefined, // open dialog
-                        mode: "editing",
-                        editable: editable,
-                        macros: [],
-                        replaceMacros: false,
-                        // currentTdlFolder?: string;
-                        windowId: this.getDisplayWindowAgent().getId(),
-                    });
+                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
+                        {
+                            options: {
+                                tdlFileNames: undefined, // open dialog
+                                mode: "editing",
+                                editable: editable,
+                                macros: [],
+                                replaceMacros: false,
+                                // currentTdlFolder?: string;
+                                windowId: this.getDisplayWindowAgent().getId(),
+                            }
+                        }
+                    );
                 } else if (mainProcessMode === "ssh-client") {
                     const sshClient = this.getWindowAgentsManager().getMainProcess().getSshClient();
                     if (sshClient !== undefined) {
@@ -1312,7 +1324,7 @@ export class ContextMenuDesktop {
             accelerator: "F2",
             click: () => {
                 // todo: for ssh-client
-                this.getWindowAgentsManager().getMainProcess().getIpcManager().handleBringUpMainWindow();
+                this.getWindowAgentsManager().getMainProcess().getIpcManager().handleBringUpMainWindow(undefined, {});
             },
         },
         {
@@ -1618,7 +1630,7 @@ export class ContextMenuDesktop {
                 },
                 { type: "separator" as type_type },
             ]);
-        } else if (widgetKey.includes("Help") || widgetKey.startsWith("TdlViewer") || widgetKey.startsWith("TextEditor") || widgetKey.startsWith("ProfilesViewer") || widgetKey.startsWith("LogViewer") || widgetKey.startsWith("CaSnooper") || widgetKey.startsWith("Casw") || widgetKey.startsWith("Canvas")|| widgetKey.startsWith("SeqGraph")) {
+        } else if (widgetKey.includes("Help") || widgetKey.startsWith("TdlViewer") || widgetKey.startsWith("TextEditor") || widgetKey.startsWith("ProfilesViewer") || widgetKey.startsWith("LogViewer") || widgetKey.startsWith("CaSnooper") || widgetKey.startsWith("Casw") || widgetKey.startsWith("Canvas") || widgetKey.startsWith("SeqGraph")) {
             // non-input area of widgets, we want to copy the selected text
             // it does not conflict with the above Table data if (...), these two if are on different area in the widget
             // show only when there is text selected

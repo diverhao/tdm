@@ -28,7 +28,9 @@ export class MainWindowStartupPage {
     private saveProfile = () => {
         const profiles = this.getMainWindowClient().getProfiles();
         Log.debug("Trying to save profiles to hard drive ...");
-        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("save-profiles", profiles);
+        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("save-profiles", {
+            modifiedProfiles: profiles
+        });
     };
 
     /**
@@ -372,7 +374,7 @@ export class MainWindowStartupPage {
                             })
                         }}
                     >
-                    here
+                        here
                     </span> {" "}
                     to change it.
                 </div>
@@ -398,10 +400,8 @@ export class MainWindowStartupPage {
         try {
             const profiles = this.getMainWindowClient().getProfiles();
             profiles["For All Profiles"]["Log"]["General Log File"]["value"] = newName;
-            console.log("==========XXX OKOKIK")
             return true;
         } catch (e) {
-            console.log("==========XXX")
             return false;
         }
 
@@ -417,9 +417,11 @@ export class MainWindowStartupPage {
             (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") ?
                 <ElementDropDownMenu
                     callbacks={{
-                        "Open profiles file": () => this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-profiles"),
+                        "Open profiles file": () => this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-profiles", {}),
                         "Save profiles as": () => {
-                            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("save-profiles-as", this.getMainWindowClient().getProfiles())
+                            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("save-profiles-as", {
+                                modifiedProfiles: this.getMainWindowClient().getProfiles()
+                            })
                         },
                     }}
                     fontSize={15}
@@ -454,7 +456,9 @@ export class MainWindowStartupPage {
                                     event.preventDefault();
                                     this.getMainWindowClient()
                                         .getIpcManager()
-                                        .sendFromRendererProcess("save-profiles-as", this.getMainWindowClient().getProfiles());
+                                        .sendFromRendererProcess("save-profiles-as", {
+                                            modifiedProfiles: this.getMainWindowClient().getProfiles()
+                                        });
                                 }}
                             >
                                 here
@@ -575,19 +579,23 @@ export class MainWindowStartupPage {
                     const tdlFileName = file.path;
                     tdlFileNames.push(tdlFileName);
                 }
-                this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected", profileName,
+                this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected",
                     {
-                        macros: [],
-                        settings: "",
-                        profile: profileName,
-                        alsoOpenDefaults: false,
-                        fileNames: tdlFileNames,
-                        attach: -1,
-                        cwd: "",
-                        mainProcessMode: "desktop", // | "web"; // "ssh-server" or "ssh-client" mode process can only be created inside the program
-                        httpServerPort: 3000,
+                        selectedProfileName: profileName,
+                        args: {
+                            macros: [],
+                            settings: "",
+                            profile: profileName,
+                            alsoOpenDefaults: false,
+                            fileNames: tdlFileNames,
+                            attach: -1,
+                            cwd: "",
+                            mainProcessMode: "desktop", // | "web"; // "ssh-server" or "ssh-client" mode process can only be created inside the program
+                            httpServerPort: 3000,
+                            site: "",
+                        }
 
-                    },
+                    }
                 );
             } else {
                 // profile is already selected, window knows using which profile to open the tdl files
@@ -607,7 +615,11 @@ export class MainWindowStartupPage {
                 Log.info("Selected profile", profileName);
                 // tell the main process to create the corresponding EPICS CA context
                 // after that, the main process sends back the `after-profile-selected` event
-                this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected", profileName);
+                this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected", 
+                    {
+                        selectedProfileName: profileName
+                    }
+                );
             }
             // web-version
             // in the desktop version, the above "profile-selected" event creates the display windows (BrowserWindow) 

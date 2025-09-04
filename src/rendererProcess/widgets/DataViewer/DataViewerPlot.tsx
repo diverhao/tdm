@@ -3067,7 +3067,18 @@ export class DataViewerPlot {
             const applicationValue = [".json"];
             displayWindowClient.downloadData(blob, suggestedName, description, applicationKey, applicationValue);
         } else {
-            g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("data-viewer-export-data", windowId, result);
+            g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("data-viewer-export-data",
+                {
+                    displayWindowId: windowId,
+                    data: result as Record<
+                        string,
+                        {
+                            Time: string[];
+                            Data: number[];
+                        }
+                    >
+                }
+            );
         }
     };
 

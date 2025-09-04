@@ -148,6 +148,7 @@ export class TextEditor extends BaseWidget {
                 // if the file name is empty, i.e. "", this file can definitely not be opened, then do nothing
                 // if the file name is not empty, try to open the file
                 manualOpen: false,
+                openNewWindow: false,
             })
         }, [])
 
@@ -271,6 +272,7 @@ export class TextEditor extends BaseWidget {
                                         widgetKey: this.getWidgetKey(),
                                         fileName: "",
                                         manualOpen: true,
+                                        openNewWindow: false,
                                     })
                                 }
                             }}>

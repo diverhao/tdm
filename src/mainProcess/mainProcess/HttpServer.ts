@@ -262,7 +262,12 @@ export class HttpServer {
             const profileName = mainProcess.getProfiles().getSelectedProfileName();
             // select the first profile
             // invoke DisplayWidnowAgent.createBrowserWindow() to send a html page to client
-            mainProcess.getIpcManager().handleProfileSelected(undefined, profileName, undefined, response);
+            // mainProcess.getIpcManager().handleProfileSelected(undefined, profileName, undefined, response);
+            mainProcess.getIpcManager().handleProfileSelected(undefined, {
+                selectedProfileName: profileName,
+                args: undefined,
+                httpResponse: response,
+            });
         });
 
 
@@ -314,21 +319,41 @@ export class HttpServer {
                 const data = request.body["data"];
                 if (command === "profile-selected") {
                     const profileName = data;
-                    this.getMainProcesses().getProcess("0")?.getIpcManager().handleProfileSelected(undefined, profileName, undefined, response);
+                    this.getMainProcesses().getProcess("0")?.getIpcManager().handleProfileSelected(undefined, {
+                        selectedProfileName: profileName,
+                        args: undefined,
+                        httpResponse: response,
+                    });
                 } else if (command === "open-tdl-file") {
                     const options = data;
                     options["postCommand"] = command;
                     Log.debug("-1", data);
-                    this.getMainProcesses().getProcess("0")?.getIpcManager().handleOpenTdlFiles(undefined, options, response);
+                    this.getMainProcesses().getProcess("0")?.getIpcManager().handleOpenTdlFiles(undefined,
+                        {
+                            options: options,
+                            httpResponse: response,
+                        }
+                    );
                 } else if (command === "duplicate-display") {
                     const options = data;
                     Log.debug("-1", data);
-                    this.getMainProcesses().getProcess("0")?.getIpcManager().handleDuplicateDisplay(undefined, options, response);
+                    this.getMainProcesses().getProcess("0")?.getIpcManager().handleDuplicateDisplay(undefined,
+                        {
+                            options: options,
+                            httpResponse: response,
+                        }
+                    );
                 } else if (command === "create-utility-display-window") {
                     const utilityType = data["utilityType"];
                     const utilityOptions = data["utilityOptions"];
                     Log.debug("-1", data);
-                    this.getMainProcesses().getProcess("0")?.getIpcManager().createUtilityDisplayWindow(undefined, utilityType, utilityOptions, response);
+                    this.getMainProcesses().getProcess("0")?.getIpcManager().createUtilityDisplayWindow(undefined,
+                        {
+                            utilityType: utilityType,
+                            utilityOptions: utilityOptions,
+                            httpResponse: response,
+                        }
+                    );
                 } else if (command === "create-new-display-in-web-mode") {
                     Log.debug("-1", data);
                     this.getMainProcesses().getProcess("0")?.getWindowAgentsManager().createBlankDisplayWindow(response);

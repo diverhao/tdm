@@ -70,10 +70,12 @@ export class SidebarEmbeddedDisplayItem {
                                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                 const displayWindowId = displayWindowClient.getWindowId();
                                 displayWindowClient.getIpcManager().sendFromRendererProcess("select-a-file", {
-                                    displayWindowId: displayWindowId,
-                                    widgetKey: this.getMainWidget().getWidgetKey(),
-                                    itemIndex: this.getIndex(),
-                                    filterType: "tdl",
+                                    options: {
+                                        displayWindowId: displayWindowId,
+                                        widgetKey: this.getMainWidget().getWidgetKey(),
+                                        itemIndex: this.getIndex(),
+                                        filterType: "tdl",
+                                    }
                                 });
                             }}
                         >
@@ -268,7 +270,7 @@ export class SidebarEmbeddedDisplayItem {
             </form>
         );
     };
-    
+
     private _macroLineStyle: Record<string, any> = {
         display: "inline-flex",
         position: "relative",

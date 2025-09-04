@@ -34,6 +34,7 @@ import { FileBrowser, type_folder_content } from "../../../rendererProcess/widge
 import path from "path";
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 import { Image } from "../../../rendererProcess/widgets/Image/Image";
+import { IpcEventArgType } from "../../mainProcess/IpcEventArgType";
 
 
 // var recorder;
@@ -145,8 +146,11 @@ export class IpcManagerOnDisplayWindow {
         },
     };
 
-    sendFromRendererProcess = (channelName: string, ...args: any[]) => {
-
+    sendFromRendererProcess = <T extends keyof IpcEventArgType>(
+        channelName: T,
+        data: IpcEventArgType[T]
+    ): void => {
+        Log.debug("send message to IPC server", channelName);
         const processId = this.getDisplayWindowClient().getProcessId();
         if (processId !== "") {
             if (this.wsClient !== undefined) {
@@ -155,14 +159,15 @@ export class IpcManagerOnDisplayWindow {
                         processId: processId,
                         windowId: this.getDisplayWindowClient().getWindowId(),
                         eventName: channelName,
-                        data: args,
+                        data: [data], // Wrap in array to match your existing format
                     })
                 );
             }
         } else {
-            Log.error("This display window does not have a process Id yet.");
+            console.log("This display window does not have a process Id yet.");
         }
     };
+
 
     getIpcRenderer = () => {
         return this.ipcRenderer;
@@ -341,17 +346,21 @@ export class IpcManagerOnDisplayWindow {
                             this.getDisplayWindowClient().openTdlFileInWebMode(fileName, fileBlob);
                         }
                     } else {
-                        this.sendFromRendererProcess("open-tdl-file", {
-                            tdlFileNames: tdlFileNames,
-                            mode: mode,
-                            // manually opened, always editable
-                            editable: true,
-                            // use parent window's macros
-                            macros: externalMacros,
-                            replaceMacros: true,
-                            // currentTdlFolder?: string;
-                            windowId: this.getDisplayWindowClient().getWindowId(),
-                        });
+                        this.sendFromRendererProcess("open-tdl-file",
+                            {
+                                options: {
+                                    tdlFileNames: tdlFileNames,
+                                    mode: mode as "editing" | "operating",
+                                    // manually opened, always editable
+                                    editable: true,
+                                    // use parent window's macros
+                                    macros: externalMacros,
+                                    replaceMacros: true,
+                                    // currentTdlFolder?: string;
+                                    windowId: this.getDisplayWindowClient().getWindowId(),
+                                }
+                            }
+                        );
                     }
                 }
             }
@@ -546,7 +555,12 @@ export class IpcManagerOnDisplayWindow {
         Log.debug("TDL file saved to", newTdlFileName);
         this.getDisplayWindowClient().setTdlFileName(newTdlFileName);
         if (this.getDisplayWindowClient().getWindowTitleType() === "file-name") {
-            this.sendFromRendererProcess("set-window-title", this.getDisplayWindowClient().getWindowId(), newTdlFileName);
+            this.sendFromRendererProcess("set-window-title",
+                {
+                    windowId: this.getDisplayWindowClient().getWindowId(),
+                    newTitle: newTdlFileName,
+                }
+            );
         }
         this.getDisplayWindowClient().getActionHistory().setModified(false);
         this.getDisplayWindowClient().updateWindowTitle();
@@ -992,13 +1006,22 @@ export class IpcManagerOnDisplayWindow {
             } else {
                 Log.debug("Window for TDL", tdlFileName, "will be closed", history.getCurrentTdlIndex());
                 // regular window, save it
-                this.sendFromRendererProcess("window-will-be-closed", {
-                    displayWindowId: displayWindowId,
-                    close: !this.getDisplayWindowClient().getActionHistory().getModified(),
-                    tdlFileName: tdlFileName, // if "", the window is an in-memory window
-                    tdl: tdl,
-                });
-                this.sendFromRendererProcess("window-will-be-closed", displayWindowId, tdlFileName, false);
+                this.sendFromRendererProcess("window-will-be-closed",
+                    {
+                        displayWindowId: displayWindowId,
+                        close: !this.getDisplayWindowClient().getActionHistory().getModified(),
+                        tdlFileName: tdlFileName, // if "", the window is an in-memory window
+                        tdl: tdl as type_tdl,
+                    }
+                );
+                // todo: what is this behavior
+                this.sendFromRendererProcess("window-will-be-closed",
+                    {
+                        displayWindowId: displayWindowId,
+                        tdlFileName: tdlFileName,
+                        close: false
+                    }
+                );
             }
         } else {
             // window that has not been modified, close immediately
@@ -1174,7 +1197,9 @@ export class IpcManagerOnDisplayWindow {
             const buttons = info["buttons"];
             if (buttons !== undefined && buttons.length === 2) {
                 buttons[0]["handleClick"] = () => {
-                    this.sendFromRendererProcess("quit-tdm-process", true);
+                    this.sendFromRendererProcess("quit-tdm-process", {
+                        confirmToQuit: true
+                    });
                 };
             }
         } else if (command === "window-will-be-closed-confirm") {
@@ -1247,7 +1272,11 @@ export class IpcManagerOnDisplayWindow {
                     if (tdlFileName !== "") {
                         attachment["tdlFileName1"] = prompt.getDialogInputBoxText();
                         this.sendFromRendererProcess("save-tdl-file",
-                            ...Object.values(attachment)
+                            {
+                                windowId: attachment["windowId"],
+                                tdl: attachment["tdl"],
+                                tdlFileName1: attachment["tdlFileName1"],
+                            }
                         );
                     }
                 };
@@ -1300,7 +1329,11 @@ export class IpcManagerOnDisplayWindow {
                     if (fileName !== "") {
                         attachment["fileName1"] = fileName;
                         this.sendFromRendererProcess("data-viewer-export-data",
-                            ...Object.values(attachment)
+                            {
+                                displayWindowId: attachment["displayWindowId"],
+                                data: attachment["data"],
+                                fileName1: attachment["fileName1"],
+                            }
                         );
                     }
                 };
@@ -1333,8 +1366,10 @@ export class IpcManagerOnDisplayWindow {
                     const fileName = prompt.getDialogInputBoxText();
                     if (fileName !== "") {
                         this.sendFromRendererProcess("select-a-file",
-                            attachment,
-                            fileName
+                            {
+                                options: attachment,
+                                fileName1: fileName,
+                            }
                         );
                     }
                 };

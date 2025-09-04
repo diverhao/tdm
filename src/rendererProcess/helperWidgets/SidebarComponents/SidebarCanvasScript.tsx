@@ -121,9 +121,11 @@ export class SidebarCanvasScript {
                                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                     const displayWindowId = displayWindowClient.getWindowId();
                                     displayWindowClient.getIpcManager().sendFromRendererProcess("select-a-file", {
-                                        displayWindowId: displayWindowId,
-                                        widgetKey: this.getMainWidget().getWidgetKey(),
-                                        filterType: "script",
+                                        options: {
+                                            displayWindowId: displayWindowId,
+                                            widgetKey: this.getMainWidget().getWidgetKey(),
+                                            filterType: "script",
+                                        }
                                     });
                                 }}
                             >

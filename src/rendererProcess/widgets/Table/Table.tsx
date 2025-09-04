@@ -12,6 +12,7 @@ import { Log } from "../../../mainProcess/log/Log";
 import { rendererWindowStatus } from "../../global/Widgets";
 import path from "path";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
+import { type_tdl } from "../../../mainProcess/file/FileReader";
 
 export type type_Table_tdl = {
     type: string;
@@ -635,9 +636,8 @@ export class Table extends BaseWidget {
             displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
             widgetKey: this.getWidgetKey(),
             mode: "operating",
-            tdl: tdl,
-            // tdlFileName: tdlFileName,
-            // macros: macros,
+            tdl: tdl as type_tdl,
+            tdlFileName: "", // no real file, but it is ok
             macros: [],
             currentTdlFolder: "",
             replaceMacros: this.getText()["useParentMacros"]
