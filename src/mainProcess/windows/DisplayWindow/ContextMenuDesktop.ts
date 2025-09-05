@@ -47,7 +47,11 @@ export class ContextMenuDesktop {
                         label: "Edit Display",
                         accelerator: "CmdOrCtrl+e",
                         click: () => {
-                            this._displayWindowAgent.sendFromMainProcess("context-menu-command", "edit-display");
+                            this._displayWindowAgent.sendFromMainProcess("context-menu-command", 
+                                {
+                                    command: "edit-display"
+                                }
+                            );
                         },
                     },
                 );
@@ -56,7 +60,11 @@ export class ContextMenuDesktop {
                         label: "Edit Display",
                         accelerator: "CmdOrCtrl+e",
                         click: () => {
-                            this._displayWindowAgent.sendFromMainProcess("context-menu-command", "edit-display");
+                            this._displayWindowAgent.sendFromMainProcess("context-menu-command", 
+                                {
+                                    command: "edit-display"
+                                }
+                            );
                         },
                     },
                 );
@@ -101,21 +109,33 @@ export class ContextMenuDesktop {
             label: "Execute Display",
             accelerator: "CmdOrCtrl+e",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "execute-display");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                    {
+                        command: "execute-display"
+                    }
+                );
             },
         },
         {
             label: "Save Display",
             accelerator: "CmdOrCtrl+s",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "save-display");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                    {
+                        command: "save-display"
+                    }
+                );
             },
         },
         {
             label: "Save Display As",
             accelerator: "CmdOrCtrl+Shift+s",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "save-display-as");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                    {
+                        command: "save-display-as"
+                    }
+                );
             },
         },
 
@@ -123,20 +143,32 @@ export class ContextMenuDesktop {
             label: "Duplicate Display",
             accelerator: "CmdOrCtrl+d",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "duplicate-display");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                    {
+                        command: "duplicate-display"
+                    }
+                );
             },
         },
         {
             label: "Reload Display",
             accelerator: "CmdOrCtrl+r",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "reload-display");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
+                    {
+                        command:  "reload-display"
+                    }
+                );
             },
         },
         {
             label: "Show Display Contents",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "show-tdl-file-contents");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                    {
+                        command: "show-tdl-file-contents"
+                    }
+                );
             },
         },
         // {
@@ -196,7 +228,12 @@ export class ContextMenuDesktop {
         {
             label: "Open Display with File Browser",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                    {
+                        command: "file-browser", 
+                        subcommand: ["", true]
+                    }
+                );
             },
         },
         {
@@ -214,32 +251,57 @@ export class ContextMenuDesktop {
                 {
                     label: "Label",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "label");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "label"
+                            }
+                        );
                     },
                 },
 
                 {
                     label: "Polyline",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "polyline");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget",
+                                subcommand:  "polyline"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Arc",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "arc");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "arc"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Rectangle",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "rectangle");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "rectangle"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Media",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "media");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "media"
+                            }
+                        );
                     },
                 },
             ],
@@ -250,25 +312,45 @@ export class ContextMenuDesktop {
                 {
                     label: "Text Update",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "text-update");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "text-update"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Meter",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "meter");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "meter"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Tank",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "tank");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
+                            {
+                                command:  "create-widget", 
+                                subcommand: "tank"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Thermometer",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "thermometer");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
+                            {
+                                 command: "create-widget", 
+                                 subcommand: "thermometer"
+                            }
+                        );
                     },
                 },
                 { type: "separator" },
@@ -276,32 +358,57 @@ export class ContextMenuDesktop {
                 {
                     label: "LED",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "led");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "led"
+                            }
+                        );
                     },
                 },
                 {
                     label: "LED (Multi State)",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "led-multi-state");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "led-multi-state"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Byte Monitor",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "byte-monitor");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
+                            {
+                                command:  "create-widget", 
+                                subcommand: "byte-monitor"
+                            }
+                        );
                     },
                 },
                 { type: "separator" },
                 {
                     label: "Symbol",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "symbol");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "symbol"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Text Symbol",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "text-symbol");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
+                            {
+                                command:  "create-widget", 
+                                subcommand: "text-symbol"
+                            }
+                        );
                     },
                 },
             ],
@@ -312,19 +419,34 @@ export class ContextMenuDesktop {
                 {
                     label: "Text Entry",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "text-entry");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
+                            {
+                                command:  "create-widget", 
+                                subcommand: "text-entry"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Scaled Slider",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "scaled-slider");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "scaled-slider"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Spinner",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "spinner");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "spinner"
+                            }
+                        );
                     },
                 },
                 // {
@@ -339,38 +461,68 @@ export class ContextMenuDesktop {
                 {
                     label: "Boolean Button",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "boolean-button");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "boolean-button"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Slide Button",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "slide-button");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "slide-button"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Check Box",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "check-box");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "check-box"
+                            }
+                        );
                     },
                 },
                 { type: "separator" },
                 {
                     label: "Choice Button",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "choice-button");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "choice-button"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Combo Box",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "combo-box");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                            {
+                                command: "create-widget", 
+                                subcommand: "combo-box"
+                            }
+                        );
                     },
                 },
                 {
                     label: "Radio Button",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "radio-button");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
+                            {
+                                command:  "create-widget", 
+                                subcommand: "radio-button"
+                            }
+                        );
                     },
                 },
             ],
@@ -381,38 +533,38 @@ export class ContextMenuDesktop {
                 {
                     label: "Action Button",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "action-button");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "action-button"});
                     },
                 },
 
                 {
                     label: "Embedded Display",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "embedded-display");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "embedded-display"});
                     },
                 },
                 {
                     label: "Table",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "table");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "table"});
                     },
                 },
                 {
                     label: "Group",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "group");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "group"});
                     },
                 },
                 {
                     label: "Binary Image",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "binary-image");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "binary-image"});
                     },
                 },
                 {
                     label: "Image",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "image");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "image"});
                     },
                 },
 
@@ -421,37 +573,37 @@ export class ContextMenuDesktop {
                 {
                     label: "Probe",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "probe");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "probe"});
                     },
                 },
                 {
                     label: "Data Viewer",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "data-viewer");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "data-viewer"});
                     },
                 },
                 {
                     label: "PV Monitor",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "pv-monitor");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "pv-monitor"});
                     },
                 },
                 {
                     label: "File Browser",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "file-browser");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "file-browser"});
                     },
                 },
                 {
                     label: "XY Plot",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "xy-plot");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "xy-plot" });
                     },
                 },
                 {
                     label: "PV Table",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "pv-table");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "pv-table" });
                     },
                 },
                 // {
@@ -463,19 +615,19 @@ export class ContextMenuDesktop {
                 {
                     label: "Calculator",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "calculator");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "calculator" });
                     },
                 },
                 {
                     label: "Channel Graph",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "channel-graph");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "channel-graph" });
                     },
                 },
                 {
                     label: "Seq Graph",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "create-widget", "seq-graph");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "seq-graph" } );
                     },
                 },
                 // do not explicitly create Help widget
@@ -493,28 +645,28 @@ export class ContextMenuDesktop {
             label: "Undo",
             accelerator: "CmdOrCtrl+z",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "undo");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "undo" });
             },
         },
         {
             label: "Redo",
             accelerator: "CmdOrCtrl+y",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "redo");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "redo" });
             },
         },
         {
             label: "Paste Widgets",
             accelerator: "CmdOrCtrl+v",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "paste-widgets");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "paste-widgets"});
             },
         },
         {
             label: "Select All Widgets",
             accelerator: "CmdOrCtrl+a",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "select-all-widgets");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "select-all-widgets" });
             },
         },
         // {
@@ -531,7 +683,7 @@ export class ContextMenuDesktop {
             label: "Toggle Title",
             accelerator: "CmdOrCtrl+t",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "toggle-title");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",{ command: "toggle-title"});
             },
         },
         {
@@ -639,7 +791,7 @@ export class ContextMenuDesktop {
             label: "Help",
             accelerator: "F1",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "help");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "help"});
             },
         },
 
@@ -649,48 +801,48 @@ export class ContextMenuDesktop {
             label: "Copy Widgets",
             accelerator: "CmdOrCtrl+c",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "copy-widgets");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "copy-widgets"});
             },
         },
         {
             label: "Cut Widgets",
             accelerator: "CmdOrCtrl+x",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "cut-widgets");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "cut-widgets" } );
             },
         },
         {
             label: "Paste Widgets",
             accelerator: "CmdOrCtrl+v",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "paste-widgets");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "paste-widgets"});
             },
         },
         {
             label: "Delete Widgets",
             accelerator: "delete",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "delete-widgets");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "delete-widgets" });
             },
         },
         {
             label: "Duplicate Widgets",
             accelerator: "CmdOrCtrl+d",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "duplicate-widgets");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "duplicate-widgets" });
             },
         },
         { type: "separator" },
         {
             label: "Group Widgets",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "group-widgets");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "group-widgets" });
             },
         },
         {
             label: "Ungroup Widgets",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "ungroup-widgets");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "ungroup-widgets" });
             },
         },
         { type: "separator" },
@@ -700,25 +852,25 @@ export class ContextMenuDesktop {
                 {
                     label: "Bring to Front",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "bring-widgets-to", "front");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "bring-widgets-to", subcommand: "front" });
                     },
                 },
                 {
                     label: "Send to Back",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "bring-widgets-to", "back");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "bring-widgets-to", subcommand: "back" });
                     },
                 },
                 {
                     label: "Bring Forward",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "bring-widgets-to", "forward");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "bring-widgets-to", subcommand: "forward" });
                     },
                 },
                 {
                     label: "Send Backward",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "bring-widgets-to", "backward");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "bring-widgets-to", subcommand: "backward" });
                     },
                 },
             ],
@@ -730,37 +882,37 @@ export class ContextMenuDesktop {
                 {
                     label: "Left",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "align-widgets", "left");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "align-widgets", subcommand: "left" });
                     },
                 },
                 {
                     label: "Center",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "align-widgets", "center");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "align-widgets", subcommand: "center" });
                     },
                 },
                 {
                     label: "Right",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "align-widgets", "right");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "align-widgets", subcommand: "right" });
                     },
                 },
                 {
                     label: "Top",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "align-widgets", "top");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "align-widgets", subcommand: "top" });
                     },
                 },
                 {
                     label: "Middle",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "align-widgets", "middle");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "align-widgets", subcommand: "middle" } );
                     },
                 },
                 {
                     label: "Bottom",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "align-widgets", "bottom");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "align-widgets", subcommand: "bottom"});
                     },
                 },
             ],
@@ -771,37 +923,37 @@ export class ContextMenuDesktop {
                 {
                     label: "according to Left",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "distribute-widgets", "left");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "distribute-widgets", subcommand: "left" });
                     },
                 },
                 {
                     label: "according to Center",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "distribute-widgets", "center");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "distribute-widgets", subcommand: "center" });
                     },
                 },
                 {
                     label: "according to Right",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "distribute-widgets", "right");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "distribute-widgets", subcommand: "right" });
                     },
                 },
                 {
                     label: "according to Top",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "distribute-widgets", "top");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "distribute-widgets", subcommand: "top" });
                     },
                 },
                 {
                     label: "according to Middle",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "distribute-widgets", "middle");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "distribute-widgets", subcommand: "middle" });
                     },
                 },
                 {
                     label: "according to Bottom",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "distribute-widgets", "bottom");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "distribute-widgets", subcommand: "bottom" });
                     },
                 },
             ],
@@ -812,13 +964,13 @@ export class ContextMenuDesktop {
                 {
                     label: "to Average Width",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "match-widgets-size", "width");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "match-widgets-size", subcommand: "width" });
                     },
                 },
                 {
                     label: "to Average Height",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "match-widgets-size", "height");
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "match-widgets-size", subcommand: "height" });
                     },
                 },
             ],
@@ -828,7 +980,7 @@ export class ContextMenuDesktop {
             label: "Help",
             accelerator: "F1",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "help");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "help" });
             },
         },
     ];
@@ -838,34 +990,34 @@ export class ContextMenuDesktop {
             label: "Edit Display",
             accelerator: "CmdOrCtrl+e",
             click: () => {
-                this._displayWindowAgent.sendFromMainProcess("context-menu-command", "edit-display");
+                this._displayWindowAgent.sendFromMainProcess("context-menu-command", { command: "edit-display" });
             },
         },
         {
             label: "Save Display As",
             accelerator: "CmdOrCtrl+Shift+s",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "save-display-as");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "save-display-as" });
             },
         },
         {
             label: "Duplicate Display",
             accelerator: "CmdOrCtrl+d",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "duplicate-display");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "duplicate-display" });
             },
         },
         {
             label: "Reload Display",
             accelerator: "CmdOrCtrl+r",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "reload-display");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "reload-display" });
             },
         },
         {
             label: "Show Display Contents",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "show-tdl-file-contents");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "show-tdl-file-contents" });
             },
         },
         // {
@@ -940,7 +1092,7 @@ export class ContextMenuDesktop {
         {
             label: "Open Display with File Browser",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "file-browser", subcommand: ["", true] });
             },
         },
         {
@@ -955,38 +1107,38 @@ export class ContextMenuDesktop {
         {
             label: "Copy All PV Names",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "copy-all-pv-names");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "copy-all-pv-names" });
             },
         },
         {
             label: "Copy All PV Values",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "copy-all-pv-values");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "copy-all-pv-values" });
             },
         },
         { type: "separator" },
         {
             label: "Probe",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "probe", [""]);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "probe", subcommand: [""] });
             },
         },
         {
             label: "PV Table",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "pv-table", undefined);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "pv-table", subcommand: undefined });
             },
         },
         {
             label: "PV Monitor",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "pv-monitor", [""]);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "pv-monitor", subcommand: [""] });
             },
         },
         {
             label: "Data Viewer",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "data-viewer", []);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "data-viewer", subcommand: [] });
             },
         },
         // {
@@ -998,19 +1150,19 @@ export class ContextMenuDesktop {
         {
             label: "Calculator",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "calculator");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "calculator" });
             },
         },
         {
             label: "Channel Graph",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "channel-graph", [""]);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "channel-graph", subcommand: [""] });
             },
         },
         {
             label: "Seq Graph",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "seq-graph");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "seq-graph" });
             },
         },
         { type: "separator" },
@@ -1018,11 +1170,11 @@ export class ContextMenuDesktop {
             label: "Toggle Title",
             accelerator: "CmdOrCtrl+t",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "toggle-title");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "toggle-title" });
             },
         },
         {
-            label: "Bring Up Main Winodw",
+            label: "Bring Up Main Window",
             accelerator: "F2",
             click: () => {
                 // todo: for ssh-client
@@ -1126,7 +1278,7 @@ export class ContextMenuDesktop {
             label: "Help",
             accelerator: "F1",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "help");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "help" } );
             },
         },
     ];
@@ -1136,34 +1288,34 @@ export class ContextMenuDesktop {
             label: "Edit Display",
             accelerator: "CmdOrCtrl+e",
             click: () => {
-                this._displayWindowAgent.sendFromMainProcess("context-menu-command", "edit-display");
+                this._displayWindowAgent.sendFromMainProcess("context-menu-command", { command: "edit-display" });
             },
         },
         {
             label: "Save Display As",
             accelerator: "CmdOrCtrl+Shift+s",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "save-display-as");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "save-display-as" });
             },
         },
         {
             label: "Duplicate Display",
             accelerator: "CmdOrCtrl+d",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "duplicate-display");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "duplicate-display" });
             },
         },
         {
             label: "Reload Display",
             accelerator: "CmdOrCtrl+r",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "reload-display");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "reload-display" });
             },
         },
         {
             label: "Show Display Contents",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "show-tdl-file-contents");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "show-tdl-file-contents" });
             },
         },
         // {
@@ -1237,7 +1389,7 @@ export class ContextMenuDesktop {
         {
             label: "Open Display with File Browser",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "file-browser", subcommand: ["", true] });
             },
         },
         {
@@ -1252,38 +1404,38 @@ export class ContextMenuDesktop {
         {
             label: "Copy PV Names",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "copy-widget-pv-names", this._widgetKeys);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "copy-widget-pv-names", subcommand: this._widgetKeys });
             },
         },
         {
             label: "Copy PV Values",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "copy-widget-pv-values", this._widgetKeys);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "copy-widget-pv-values", subcommand: this._widgetKeys });
             },
         },
         { type: "separator" },
         {
             label: "Probe",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "probe", this._widgetKeys);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "probe", subcommand: this._widgetKeys });
             },
         },
         {
             label: "PV Table",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "pv-table", this._widgetKeys);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "pv-table", subcommand: this._widgetKeys });
             },
         },
         {
             label: "PV Monitor",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "pv-monitor", [""]);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "pv-monitor", subcommand: [""] });
             },
         },
         {
             label: "Data Viewer",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "data-viewer", this._widgetKeys);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "data-viewer", subcommand: this._widgetKeys });
             },
         },
         // {
@@ -1295,19 +1447,19 @@ export class ContextMenuDesktop {
         {
             label: "Calculator",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "calculator");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "calculator" });
             },
         },
         {
             label: "Channel Graph",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "channel-graph", this._widgetKeys);
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "channel-graph", subcommand: this._widgetKeys });
             },
         },
         {
             label: "Seq Graph",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "seq-graph");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "seq-graph" });
             },
         },
 
@@ -1316,7 +1468,7 @@ export class ContextMenuDesktop {
             label: "Toggle Title",
             accelerator: "CmdOrCtrl+t",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "toggle-title");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "toggle-title" });
             },
         },
         {
@@ -1425,7 +1577,7 @@ export class ContextMenuDesktop {
             label: "Help",
             accelerator: "F1",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "help");
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "help"});
             },
         },
     ];
@@ -1522,7 +1674,7 @@ export class ContextMenuDesktop {
                         label: "Save Display",
                         accelerator: "CmdOrCtrl+s",
                         click: () => {
-                            this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "save-display");
+                            this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "save-display" });
                         },
                     },
                 );
@@ -1595,7 +1747,7 @@ export class ContextMenuDesktop {
                 {
                     label: "Settings",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("widget-specific-action", widgetKey, "open-settings");
+                        this.getDisplayWindowAgent().sendFromMainProcess("widget-specific-action",{ widgetKey: widgetKey, actionName: "open-settings"});
                     },
                 },
                 { type: "separator" as type_type },
@@ -1608,7 +1760,7 @@ export class ContextMenuDesktop {
                     result.push({
                         label: text,
                         click: () => {
-                            this.getDisplayWindowAgent().sendFromMainProcess("widget-specific-action", widgetKey, text);
+                            this.getDisplayWindowAgent().sendFromMainProcess("widget-specific-action", { widgetKey: widgetKey, actionName: text });
                         }
                     })
                 }
@@ -1619,13 +1771,13 @@ export class ContextMenuDesktop {
                 {
                     label: "Copy",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("widget-specific-action", widgetKey, "copy-terminal-text");
+                        this.getDisplayWindowAgent().sendFromMainProcess("widget-specific-action", { widgetKey: widgetKey, actionName: "copy-terminal-text" });
                     },
                 },
                 {
                     label: "Paste",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("widget-specific-action", widgetKey, "paste-terminal-text");
+                        this.getDisplayWindowAgent().sendFromMainProcess("widget-specific-action", { widgetKey: widgetKey, actionName: "paste-terminal-text" });
                     },
                 },
                 { type: "separator" as type_type },
@@ -1655,13 +1807,13 @@ export class ContextMenuDesktop {
                     {
                         label: "Clear graph",
                         click: () => {
-                            this._displayWindowAgent.sendFromMainProcess("widget-specific-action", widgetKey, "clear-graph");
+                            this._displayWindowAgent.sendFromMainProcess("widget-specific-action", { widgetKey: widgetKey, actionName: "clear-graph" });
                         },
                     },
                     {
                         label: "Graph settings",
                         click: () => {
-                            this._displayWindowAgent.sendFromMainProcess("widget-specific-action", widgetKey, "show-settings");
+                            this._displayWindowAgent.sendFromMainProcess("widget-specific-action", { widgetKey: widgetKey, actionName: "show-settings" });
                         },
                     },
                     { type: "separator" as type_type },

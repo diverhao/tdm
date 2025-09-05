@@ -20,6 +20,7 @@ import pidusage from "pidusage";
 import * as os from "os";
 import { getCurrentDateTimeStr } from "../../global/GlobalMethods";
 import { Promises, PVA_STATUS_TYPE, type_pva_status } from "epics-tca";
+import { IpcEventArgType2 } from "../../mainProcess/IpcEventArgType";
 
 /**
  * The main process side representation of a display window. <br>
@@ -195,7 +196,9 @@ export class DisplayWindowAgent {
             // this._newChannelData is modified in this.addNewChannelData() which is invoked in
             // channel monitor's callback function (in CaChannelAgent.createMonitor())
             if (Object.keys(this._newChannelData).length > 0) {
-                this.sendFromMainProcess("new-channel-data", this._newChannelData);
+                this.sendFromMainProcess("new-channel-data", {
+                    newDbrData: this._newChannelData
+                });
                 // console.log("sending new channel data", this._newChannelData)
                 this._newChannelData = {};
             }
@@ -238,12 +241,14 @@ export class DisplayWindowAgent {
         if (!(script.endsWith(".py") || script.endsWith(".js"))) {
             Log.debug(this.getMainProcessId(), `Script ${script} won't run for window ${this.getId()}.`);
             this.sendFromMainProcess("dialog-show-message-box", {
-                // command?: string | undefined,
-                messageType: "error", // | "warning" | "info", // symbol
-                humanReadableMessages: [`Failed to execute command "${script} from from this window".`, `We can only run python or node.js scripts.`], // each string has a new line
-                rawMessages: [``], // computer generated messages
-                // buttons?: type_DialogMessageBoxButton[] | undefined,
-                // attachment?: any,
+                info: {
+                    // command?: string | undefined,
+                    messageType: "error", // | "warning" | "info", // symbol
+                    humanReadableMessages: [`Failed to execute command "${script} from from this window".`, `We can only run python or node.js scripts.`], // each string has a new line
+                    rawMessages: [``], // computer generated messages
+                    // buttons?: type_DialogMessageBoxButton[] | undefined,
+                    // attachment?: any,
+                }
             })
             return;
         }
@@ -306,12 +311,14 @@ export class DisplayWindowAgent {
         this.webSocketClientThread?.on("error", (err: Error) => {
             Log.error(this.getMainProcessId(), err);
             this.sendFromMainProcess("dialog-show-message-box", {
-                // command?: string | undefined,
-                messageType: "error", // | "warning" | "info", // symbol
-                humanReadableMessages: [`Failed to execute command "${script}"`], // each string has a new line
-                rawMessages: [`${err}`], // computer generated messages
-                // buttons?: type_DialogMessageBoxButton[] | undefined,
-                // attachment?: any,
+                info: {
+                    // command?: string | undefined,
+                    messageType: "error", // | "warning" | "info", // symbol
+                    humanReadableMessages: [`Failed to execute command "${script}"`], // each string has a new line
+                    rawMessages: [`${err}`], // computer generated messages
+                    // buttons?: type_DialogMessageBoxButton[] | undefined,
+                    // attachment?: any,
+                }
             })
         });
     };
@@ -1219,9 +1226,11 @@ export class DisplayWindowAgent {
                         if (err) {
                             this.sendFromMainProcess("dialog-show-message-box",
                                 {
-                                    messageType: "error",
-                                    humanReadableMessages: [`Failed saving pdf as ${pdfFileName}`],
-                                    rawMessages: [err.toString()]
+                                    info: {
+                                        messageType: "error",
+                                        humanReadableMessages: [`Failed saving pdf as ${pdfFileName}`],
+                                        rawMessages: [err.toString()]
+                                    }
                                 }
                             )
                         }
@@ -1254,9 +1263,11 @@ export class DisplayWindowAgent {
                 if (err) {
                     this.sendFromMainProcess("dialog-show-message-box",
                         {
+                            info: {
                             messageType: "error",
                             humanReadableMessages: [`Failed saving screenshot to folder ${imageFileName}`],
                             rawMessages: [err.toString()]
+                            }
                         }
                     );
                 }
@@ -1295,9 +1306,11 @@ export class DisplayWindowAgent {
                 if (err) {
                     this.sendFromMainProcess("dialog-show-message-box",
                         {
+                            info: {
                             messageType: "error",
                             humanReadableMessages: [`Failed saving screenshot to folder ${saveFolder}`],
                             rawMessages: [err.toString()]
+                            }
                         }
                     )
                 } else {
@@ -1308,9 +1321,11 @@ export class DisplayWindowAgent {
             Log.error(this.getMainProcessId(), err)
             this.sendFromMainProcess("dialog-show-message-box",
                 {
+                    info: {
                     messageType: "error",
                     humanReadableMessages: [`Failed saving screenshot to folder ${saveFolder}`],
                     rawMessages: [err.toString()]
+                    }
                 }
             )
         });
@@ -1341,7 +1356,7 @@ export class DisplayWindowAgent {
                 image: string;
                 windowName?: string;
                 tdlFileName?: string;
-            } | null
+            } | undefined
         > = {};
         if (imageBase64 !== undefined) {
             this.thumbnail = imageBase64;
@@ -1359,10 +1374,14 @@ export class DisplayWindowAgent {
             }
         } else {
             this.thumbnail = "";
-            result[displayWindowId] = null;
+            result[displayWindowId] = undefined;
         }
         if (mainWindowAgent !== undefined && this.hiddenWindow === false) {
-            mainWindowAgent.sendFromMainProcess("new-thumbnail", result);
+            mainWindowAgent.sendFromMainProcess("new-thumbnail", 
+                {
+                    data: result
+                }
+            );
         } else {
             Log.error(this.getMainProcessId(), "Main window not ready");
         }
@@ -1447,10 +1466,11 @@ export class DisplayWindowAgent {
      * It is invoked by Logs.sendToLogViewers(), we have to temporarily disable the log mechanism 
      * to avoid stack overflow. In this case, we only send the message out to the renderer process.
      */
-    sendFromMainProcess(channel: string, ...args: any[]) {
-        if (args[args.length - 1] === "temporarily-disable-log-mechanism") {
-            args.splice(args.length - 1, 1);
-        }
+
+    sendFromMainProcess = <T extends keyof IpcEventArgType2>(channel: T, arg: IpcEventArgType2[T]): void => {
+        // if (args[args.length - 1] === "temporarily-disable-log-mechanism") {
+        //     args.splice(args.length - 1, 1);
+        // }
 
         const processId = this.getWindowAgentsManager().getMainProcess().getProcessId();
         const ipcManager = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager();
@@ -1462,6 +1482,7 @@ export class DisplayWindowAgent {
             const ipcManagerOnMainProcesses = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager();
             const sshServer = ipcManagerOnMainProcesses.getSshServer();
             if (sshServer !== undefined) {
+                const args = Object.values(arg);
                 sshServer.sendToTcpClient(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: args }));
             }
         } else {
@@ -1478,19 +1499,23 @@ export class DisplayWindowAgent {
                 // add processId
                 // this._browserWindow?.webContents.send(channel, processId, ...args);
                 // wsClient.send(channel, ...[processId, ...args]);
-                Log.debug(this.getMainProcessId(), "send from main process:", { processId: processId, windowId: this.getId(), eventName: channel, data: args })
+                Log.debug(this.getMainProcessId(), "send from main process:", { processId: processId, windowId: this.getId(), eventName: channel, data: [arg] })
                 if (typeof wsClient !== "string") {
-                    wsClient.send(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: args }));
+                    wsClient.send(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: [arg] }));
                 }
 
                 if (channel === "new-channel-data") {
                     const webSocketMonitorClient = this.getWebSocketMonitorClient();
 
                     const webSocketMonitorData: Record<string, any> = {};
+                    const dbrData = (arg as any)["newDbrData"];
+                    if (dbrData === undefined) {
+                        return;
+                    }
                     if (webSocketMonitorClient !== undefined) {
-                        for (let channelName of Object.keys(args[0])) {
+                        for (let channelName of Object.keys(dbrData)) {
                             if (this.getWebSocketMonitorChannelNames().includes(channelName)) {
-                                webSocketMonitorData[channelName] = { ...args[0][channelName], channelName: channelName };
+                                webSocketMonitorData[channelName] = { ...dbrData[channelName], channelName: channelName };
                             }
                         }
                         if (Object.keys(webSocketMonitorData).length > 0) {
@@ -1503,6 +1528,63 @@ export class DisplayWindowAgent {
             }
         }
     }
+
+    // sendFromMainProcess(channel: string, ...args: any[]) {
+    //     if (args[args.length - 1] === "temporarily-disable-log-mechanism") {
+    //         args.splice(args.length - 1, 1);
+    //     }
+
+    //     const processId = this.getWindowAgentsManager().getMainProcess().getProcessId();
+    //     const ipcManager = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager();
+
+    //     const mainProcessMode = this.getWindowAgentsManager().getMainProcess().getMainProcessMode();
+
+    //     if (mainProcessMode === "ssh-server") {
+    //         // forward all messages to tcp client in ssh-server mode
+    //         const ipcManagerOnMainProcesses = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager();
+    //         const sshServer = ipcManagerOnMainProcesses.getSshServer();
+    //         if (sshServer !== undefined) {
+    //             sshServer.sendToTcpClient(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: args }));
+    //         }
+    //     } else {
+
+    //         const wsClient = ipcManager.getClients()[this.getId()];
+
+    //         if (wsClient === undefined) {
+    //             // temporarily disable writing the LogViewer to avoid stack overflow
+    //             Log.debug(this.getMainProcessId(), "Cannot find WebSocket IPC client for window", this.getId());
+    //             return;
+    //         }
+
+    //         try {
+    //             // add processId
+    //             // this._browserWindow?.webContents.send(channel, processId, ...args);
+    //             // wsClient.send(channel, ...[processId, ...args]);
+    //             Log.debug(this.getMainProcessId(), "send from main process:", { processId: processId, windowId: this.getId(), eventName: channel, data: args })
+    //             if (typeof wsClient !== "string") {
+    //                 wsClient.send(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: args }));
+    //             }
+
+    //             if (channel === "new-channel-data") {
+    //                 const webSocketMonitorClient = this.getWebSocketMonitorClient();
+
+    //                 const webSocketMonitorData: Record<string, any> = {};
+    //                 if (webSocketMonitorClient !== undefined) {
+    //                     for (let channelName of Object.keys(args[0])) {
+    //                         if (this.getWebSocketMonitorChannelNames().includes(channelName)) {
+    //                             webSocketMonitorData[channelName] = { ...args[0][channelName], channelName: channelName };
+    //                         }
+    //                     }
+    //                     if (Object.keys(webSocketMonitorData).length > 0) {
+    //                         webSocketMonitorClient.send(JSON.stringify({ command: "MONITOR", dbrDataObj: webSocketMonitorData }));
+    //                     }
+    //                 }
+    //             }
+    //         } catch (e) {
+    //             Log.error(this.getMainProcessId(), e);
+    //         }
+    //     }
+    // }
 
     // --------------------- window --------------------
 
@@ -1534,7 +1616,12 @@ export class DisplayWindowAgent {
                     // first one will be picked. This one is the one that
                     // we initiate the context menu
                     if (source.name === windowTitle) {
-                        this.sendFromMainProcess("start-record-video", source.id, saveFolder);
+                        this.sendFromMainProcess("start-record-video", 
+                            {
+                                sourceId: source.id, 
+                                folder: saveFolder
+                            }
+                        );
                         break;
                     }
                 }
@@ -1753,7 +1840,9 @@ export class DisplayWindowAgent {
         if (this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop") {
             // Record<string, string[]>
             this.sendFromMainProcess("show-about-tdm",
-                generateAboutInfo()
+                {
+                    info: generateAboutInfo()
+                }
             )
         }
     }
@@ -1777,7 +1866,7 @@ export class DisplayWindowAgent {
             Log.error(this.getMainProcessId(), `You are trying to close a preloaded display window or preloaded embedded display`);
             return;
         }
-        this.sendFromMainProcess("window-will-be-closed");
+        this.sendFromMainProcess("window-will-be-closed", {});
     };
 
     getZoomFactor = (): number => {

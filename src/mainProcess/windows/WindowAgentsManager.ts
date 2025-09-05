@@ -231,11 +231,16 @@ export class WindowAgentsManager {
                     Log.error(this.getMainProcessId(), "Profile not selected!");
                     return undefined;
                 }
-                displayWindowAgent.sendFromMainProcess("selected-profile-contents", selectedProfile.getContents());
+                displayWindowAgent.sendFromMainProcess("selected-profile-contents",
+                    {
+                        contents: selectedProfile.getContents()
+                    }
+                );
                 const site = this.getMainProcess().getMainProcesses().getSite();
-                displayWindowAgent.sendFromMainProcess("site-info", {site: site});
+                displayWindowAgent.sendFromMainProcess("site-info", { site: site });
 
                 // (5)
+
                 displayWindowAgent.sendFromMainProcess("new-tdl", {
                     newTdl: tdl,
                     tdlFileName: tdlFileName,
@@ -243,7 +248,7 @@ export class WindowAgentsManager {
                     editable: editable,
                     externalMacros: macros,
                     useExternalMacros: replaceMacros,
-                    utilityType: options["utilityType"],
+                    utilityType: options["utilityType"] as any,
                     utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
                 });
 
@@ -316,11 +321,14 @@ export class WindowAgentsManager {
                 // block lifted when the websocket connection is established
                 const parentDisplayWindowAgent = this.getAgent(parentDisplayWindowId);
                 if (parentDisplayWindowAgent instanceof DisplayWindowAgent) {
-                    parentDisplayWindowAgent.sendFromMainProcess("obtained-iframe-uuid", {
-                        widgetKey: widgetKey,
-                        iframeDisplayId: displayWindowId,
-                        tdlBackgroundColor: tdl["Canvas"]["style"]["backgroundColor"],
-                    });
+                    const backgroundColor = tdl["Canvas"]["style"]["backgroundColor"];
+                    if (typeof backgroundColor === "string") {
+                        parentDisplayWindowAgent.sendFromMainProcess("obtained-iframe-uuid", {
+                            widgetKey: widgetKey,
+                            iframeDisplayId: displayWindowId,
+                            tdlBackgroundColor: backgroundColor,
+                        });
+                    }
                 }
                 const mainProcessMode = this.getMainProcess().getMainProcessMode()
 
@@ -347,7 +355,9 @@ export class WindowAgentsManager {
                     Log.error(this.getMainProcessId(), "Profile not selected!");
                     return undefined;
                 }
-                displayWindowAgent.sendFromMainProcess("selected-profile-contents", selectedProfile.getContents());
+                displayWindowAgent.sendFromMainProcess("selected-profile-contents",
+                    { contents: selectedProfile.getContents() }
+                );
 
 
                 // (5)
@@ -358,7 +368,7 @@ export class WindowAgentsManager {
                     editable: editable,
                     externalMacros: macros,
                     useExternalMacros: replaceMacros,
-                    utilityType: options["utilityType"],
+                    utilityType: options["utilityType"] as any,
                     utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
                 });
 
@@ -432,7 +442,7 @@ export class WindowAgentsManager {
             editable: editable,
             externalMacros: macros,
             useExternalMacros: replaceMacros,
-            utilityType: options["utilityType"],
+            utilityType: options["utilityType"] as any,
             utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
         });
         Log.info(this.getMainProcessId(), `Replaced preloaded display window ${displayWindowAgent.getId()} with new TDL: ${options["tdlFileName"]}`);
@@ -720,23 +730,32 @@ export class WindowAgentsManager {
             // ws opener server port
             const wsOpenerServer = this.getMainProcess().getMainProcesses().getWsOpenerServer();
             const wsOpenerPort = wsOpenerServer.getPort();
-            mainWindowAgent.sendFromMainProcess("update-ws-opener-port", wsOpenerPort);
+            mainWindowAgent.sendFromMainProcess("update-ws-opener-port", { newPort: wsOpenerPort });
 
             // read default and OS-defined EPICS environment variables
             // in main window editing page, we need env default and env os
             const env = Environment.getTempInstance();
-            const envDefault = env.getEnvDefault();
-            const envOs = env.getEnvOs();
+            let envDefault = env.getEnvDefault();
+            let envOs = env.getEnvOs();
+
+            if (typeof envDefault !== "object") {
+                envDefault = {};
+            }
+            if (typeof envOs !== "object") {
+                envOs = {};
+            }
 
             const site = this.getMainProcess().getMainProcesses().getSite();
             mainWindowAgent.sendFromMainProcess(
                 "after-main-window-gui-created",
-                this.getMainProcess().getProfiles().serialize(),
-                this.getMainProcess().getProfilesFileName(),
-                envDefault,
-                envOs,
-                this.getMainProcess().getMainProcesses().writingToLog,
-                site,
+                {
+                    profiles: this.getMainProcess().getProfiles().serialize(),
+                    profilesFileName: this.getMainProcess().getProfilesFileName(),
+                    envDefault: envDefault,
+                    envOs: envOs,
+                    logFileName: this.getMainProcess().getMainProcesses().writingToLog,
+                    site: site,
+                }
             );
 
             // "Emitted when the application is activated"
@@ -746,15 +765,17 @@ export class WindowAgentsManager {
                 if (BrowserWindow.getAllWindows().length === 0) {
                     // must be async
                     await mainWindowAgent.createBrowserWindow();
-                    mainWindowAgent.sendFromMainProcess("uuid", processId);
+                    // mainWindowAgent.sendFromMainProcess("uuid", processId);
                     mainWindowAgent.sendFromMainProcess(
                         "after-main-window-gui-created",
-                        this._mainProcess.getProfiles().serialize(),
-                        this._mainProcess.getProfilesFileName(),
-                        envDefault,
-                        envOs,
-                        this.getMainProcess().getMainProcesses().writingToLog,
-                        site,
+                        {
+                            profiles: this._mainProcess.getProfiles().serialize(),
+                            profilesFileName: this._mainProcess.getProfilesFileName(),
+                            envDefault: envDefault,
+                            envOs: envOs,
+                            logFileName: this.getMainProcess().getMainProcesses().writingToLog,
+                            site,
+                        }
                     );
 
                     // if (cmdLineSelectedProfile !== "") {

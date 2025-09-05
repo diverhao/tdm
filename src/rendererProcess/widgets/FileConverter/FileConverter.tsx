@@ -629,7 +629,7 @@ export class FileConverter extends BaseWidget {
         widgetKey: string,
         srcFileName?: string,
         destFileName?: string,
-        status: "success" | "converting",
+        status: "success" | "converting" | "failed",
         timeDurationMs?: number, // ms
         numWidgetsOrig?: number, // number of widgets in edl file
         numWidgetsTdl?: number, // number of widgets in tdl file

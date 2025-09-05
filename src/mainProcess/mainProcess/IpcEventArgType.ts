@@ -1,10 +1,94 @@
+/**
+ * This file can be imported by both main and renderer process.
+ */
+
 import { Channel_DBR_TYPES, type_dbrData } from "../../rendererProcess/global/GlobalVariables";
+
 import { type_args } from "../arg/ArgParser";
 import { type_LocalChannel_data } from "../channel/LocalChannelAgent";
 import { type_tdl } from "../file/FileReader";
 
+export type type_about_info = {
+    "Authors": string[],
+    "Organizations": string[],
+    "Electron": string[],
+    "Version": string[],
+    "Operating System": string[],
+    "License": string[],
+    "Chromium": string[],
+    "Node.js": string[],
+    "V8": string[],
+    "Build Date": string[],
+}
+
+export type type_folder_content = type_single_file_folder[];
 
 
+export type type_single_file_folder = {
+    name: string, // only the name for regular file/folder, absolute path for bookmark
+    type: "file" | "folder",
+    size: number,
+    timeModified: number,
+};
+
+export type type_logData = {
+    widgetKey: string,
+    timeMsSinceEpoch: number,
+    profileName: string,
+    type: "fatal" | "error" | "warn" | "info" | "debug" | "trace",
+    args: any[],
+}
+
+
+export enum PVA_STATUS_TYPE {
+    OK = 0,
+    WARNING = 1,
+    ERROR = 2,
+    FATAL = 3,
+    OKOK = 255
+}
+
+export type type_pva_status = {
+    type: PVA_STATUS_TYPE;
+    message?: string;
+    callTree?: string;
+};
+
+
+export type type_DialogMessageBoxButton = { text: string, handleClick?: undefined | ((dialogInputText?: string) => void) };
+export type type_DialogInputBoxButton = type_DialogMessageBoxButton;
+
+export type type_DialogMessageBox = {
+    command?: string,
+    messageType: "error" | "warning" | "info", // symbol
+    humanReadableMessages: string[], // each string has a new line
+    rawMessages: string[], // computer generated messages
+    buttons?: type_DialogMessageBoxButton[],
+    attachment?: any,
+};
+
+export type type_DialogInputBox = {
+    command: string,
+    // messageType: "save" | "warning" | "info", // symbol
+    humanReadableMessages: string[], // each string has a new line
+    buttons?: type_DialogInputBoxButton[],
+    defaultInputText: string,
+    attachment?: any,
+};
+
+
+/**
+ * Input argument types for IPC listener callbacks in main process
+ * 
+ * For the event handler in main process, it is used like
+ * `handlerWebSocketIpcConnected(event: any, options: IpcEventArgType["websocket-ipc-connected])`
+ * 
+ * For event sender in renderer process, it is used like
+ * `sendFromRendererProcess("websocket-ipc-connected", {processId: "0", windowId: "0-1"})`
+ * where the `options` argument is checked and enforced by TypeScript. 
+ * The `sendFromRendererProcess()` function uses the `IpcEventArgType` for type check.
+ * 
+ */
 export type IpcEventArgType = {
 
     "new-tdm-process": {
@@ -414,8 +498,7 @@ export type IpcEventArgType = {
         fileContents?: string, // if undefined, open the above file, if a string, show the string
     },
 
-    "save-text-file":
-    {
+    "save-text-file": {
         displayWindowId: string,
         widgetKey: string,
         fileName: string, // if "", it is "save as"
@@ -424,3 +507,299 @@ export type IpcEventArgType = {
 
 };
 
+
+/**
+ * The counter part of above
+ */
+
+
+export type IpcEventArgType2 = {
+    "context-menu-command": {
+        command: string,
+        subcommand?: string | string[] | [string, boolean]
+    },
+
+    "new-channel-data": {
+        newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>
+    },
+
+    "new-archive-data": {
+        displayWindowId: string,
+        widgetKey: string,
+        channelName: string,
+        startTime: number, // ms since epoch // "2024-01-01 01:23:45", no ms
+        endTime: number,
+        archiveData: [number[], number[]],
+    },
+
+    "new-tdl": {
+        newTdl: type_tdl;
+        tdlFileName: string; // full name, or ""
+        initialModeStr: "editing" | "operating";
+        editable: boolean;
+        externalMacros: [string, string][];
+        useExternalMacros: boolean;
+        utilityType?: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "Casw" | "PvMonitor" | "CaSnooper" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph";
+        utilityOptions?: Record<string, any>;
+    },
+
+    "selected-profile-contents": {
+        contents: Record<string, any>
+    },
+
+    "tca-get-result": {
+        ioId: number,
+        widgetKey?: string,
+        newDbrData: type_dbrData
+    },
+
+    "tca-put-result": {
+        channelName: string,
+        displayWindowId: string,
+        ioId: number,
+        waitNotify: boolean,
+        status?: number | type_pva_status, // undefined if the CA operation fails, the IO ID for synchronous version (waitNotify = false), the ECA status code for asynchronous version (waitNotify = true). PVA always returns a Status
+    },
+
+    "fetch-pva-type": {
+        channelName: string,
+        widgetKey?: string,
+        fullPvaType: any,
+        ioId: number
+    },
+
+    "dialog-show-message-box": {
+        info: type_DialogMessageBox
+    },
+
+
+    "dialog-show-input-box": {
+        info: type_DialogInputBox,
+    },
+
+    "tdl-file-saved": {
+        newTdlFileName: string
+    },
+
+    "select-a-file": {
+        options: Record<string, any>,
+        fileName: string
+    },
+
+    "widget-specific-action": {
+        widgetKey: string,
+        actionName: string
+    },
+
+    "local-font-names": {
+        localFontNames: string[]
+    },
+
+    "db-file-contents": {
+        displayWindowId: string,
+        fileName: string,
+        db: Record<string, any>[]
+    },
+
+    "start-record-video": {
+        sourceId: string,
+        folder: string
+    },
+
+    "window-will-be-closed": {
+
+    },
+
+    "obtained-iframe-uuid": {
+        widgetKey: string;
+        iframeDisplayId: string;
+        tdlBackgroundColor: string;
+    },
+
+    "request-epics-dbd": {
+        widgetKey: string;
+        menus: Record<string, any>,
+        recordTypes: Record<string, any>,
+    },
+
+    "ssh-file-contents": {
+        displayWindowId: string,
+        widgetKey: string,
+        fullFileName: string,
+        fileContents: string,
+    },
+
+    "show-about-tdm": {
+        info: type_about_info
+    },
+
+    "terminal-command-result": {
+        widgetKey: string,
+        ioId: number,
+        command: string,
+        result: any[],
+    },
+
+    "processes-info": {
+        widgetKey: string,
+        processesInfo: {
+            "Type": string;
+            "Window ID": string;
+            "Visible": string;
+            "TDL file name": string;
+            "Window name": string;
+            "Editable": string;
+            "Uptime [second]": number;
+            "Process ID": number;
+            "CPU usage [%]": number;
+            "Memory usage [MB]": number;
+            "Thumbnail": string;
+        }[];
+    },
+
+    "epics-stats": {
+        widgetKey: string,
+        epicsStats: {
+            udp: Record<string, any>,
+            tcp: Record<string, Record<string, any>>,
+        };
+    },
+
+    "ca-snooper-data": {
+        data: {
+            msSinceEpoch: number,
+            channelName: string,
+            ip: string, // source IP address
+            port: number, // source port
+        }[],
+    },
+
+    "ca-sw-data": {
+        data: {
+            msSinceEpoch: number,
+            channelName: string,
+            ip: string, // source IP address
+            port: number, // source port
+        }[],
+    },
+
+    "text-file-contents": {
+        displayWindowId: string,
+        widgetKey: string
+        fileName: string,
+        fileContents: string,
+        readable: boolean,
+        writable: boolean,
+    },
+
+    "save-text-file-status": {
+        displayWindowId: string,
+        widgetKey: string,
+        status: "success" | "fail",
+        fileName: string
+    },
+
+    "new-log": {
+        data: type_logData
+    },
+
+    "file-converter-command": {
+        type: "one-file-conversion-started" | "one-file-conversion-finished" | "all-file-conversion-finished",
+        widgetKey: string,
+        srcFileName?: string,
+        destFileName?: string,
+        status: "success" | "converting" | "failed",
+        timeDurationMs?: number, // ms
+        numWidgetsOrig?: number, // number of widgets in edl file
+        numWidgetsTdl?: number, // number of widgets in tdl file
+    },
+
+    "fetch-folder-content": {
+        widgetKey: string,
+        folderContent: type_folder_content,
+        success?: boolean, // false if failed, otherwise success
+    },
+
+    "file-browser-command": {
+        displayWindowId: string,
+        widgetKey: string,
+        command: "change-item-name" | "create-tdl-file" | "create-folder",
+        folder?: string,
+        oldName?: string,
+        newName?: string,
+        fullFileName?: string,
+        success: boolean,
+    },
+
+    "fetch-thumbnail": {
+        widgetKey: string,
+        tdlFileName: string,
+        image: string,
+    },
+
+    "site-info": {
+        site: string
+    }
+}
+
+
+export type IpcEventArgType3 = {
+    "after-main-window-gui-created": {
+        profiles: Record<string, any>,
+        profilesFileName: string,
+        envDefault: Record<string, any>,
+        envOs: Record<string, any>,
+        logFileName: string,
+        site: string
+    },
+
+    "after-profile-selected": {
+        profileName: string
+    },
+
+    "new-thumbnail": {
+        data: Record<
+            string,
+            {
+                image: string;
+                windowName?: string;
+                tdlFileName?: string;
+            } | undefined
+        >
+    },
+
+    "update-ws-opener-port": {
+        newPort: number
+    },
+
+    "cmd-line-selected-profile": {
+        cmdLineSelectedProfile: string,
+        args: type_args
+    },
+
+    "show-prompt": {
+        data: {
+            type: "ssh-password-input" | "ssh-connection-waiting",
+        } & Record<string, any>
+    },
+
+    "show-about-tdm": {
+        info: type_about_info
+    },
+    "dialog-show-message-box": {
+        info: type_DialogMessageBox
+    },
+
+    "dialog-show-input-box": {
+        info: type_DialogInputBox,
+    },
+
+    "window-will-be-closed": {
+
+    },
+
+    "log-file-name": {
+        logFileName: string
+    }
+
+}

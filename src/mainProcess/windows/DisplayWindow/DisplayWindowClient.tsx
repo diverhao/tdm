@@ -679,8 +679,8 @@ export class DisplayWindowClient {
         editable: boolean,
         externalMacros: [string, string][],
         useExternalMacros: boolean,
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph" | undefined,
-        utilityOptions: Record<string, any>
+        utilityType?: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph" | undefined,
+        utilityOptions?: Record<string, any>
     ) => {
         Log.info("new tdl ", newTdl, utilityType, editable)
         this.setTdlFileName(tdlFileName);
@@ -712,8 +712,10 @@ export class DisplayWindowClient {
             utilityType === "Talhk" ||
             utilityType === "SeqGraph"
         ) {
-            this._appendUtilityWidgetTdl(newTdl, utilityType, utilityOptions);
-            initialMode = rendererWindowStatus.operating;
+            if (utilityOptions !== undefined) {
+                this._appendUtilityWidgetTdl(newTdl, utilityType, utilityOptions);
+                initialMode = rendererWindowStatus.operating;
+            }
         }
         // (2)
         const rootElement = new Root(newTdl, this, initialMode, editable, externalMacros, useExternalMacros);
@@ -1195,13 +1197,15 @@ export class DisplayWindowClient {
                 document.body.removeChild(downloadLink);
                 this.getIpcManager().handleDialogShowMessageBox(undefined,
                     {
-                        messageType: "info",
-                        humanReadableMessages: ["You have successfully downloaded the data or file.",
-                            "However, this web browser does not support naming this file.",
-                            `According to the context, you may want to rename the file to ${suggestedName}.`,
-                            "Using Chromium-based web browser can help to solve this issue."
-                        ],
-                        rawMessages: [],
+                        info: {
+                            messageType: "info",
+                            humanReadableMessages: ["You have successfully downloaded the data or file.",
+                                "However, this web browser does not support naming this file.",
+                                `According to the context, you may want to rename the file to ${suggestedName}.`,
+                                "Using Chromium-based web browser can help to solve this issue."
+                            ],
+                            rawMessages: [],
+                        }
                     }
                 )
             }
@@ -1213,9 +1217,11 @@ export class DisplayWindowClient {
             Log.error("Error on saving data file", e);
             this.getIpcManager().handleDialogShowMessageBox(undefined,
                 {
-                    messageType: "error",
-                    humanReadableMessages: ["Failed to save data or file."],
-                    rawMessages: [`${e}`],
+                    info: {
+                        messageType: "error",
+                        humanReadableMessages: ["Failed to save data or file."],
+                        rawMessages: [`${e}`],
+                    }
                 }
             )
         }
@@ -1452,10 +1458,10 @@ export class DisplayWindowClient {
         titleContents = `${hostname}${titleContents}`
 
         if (this.getMainProcessMode() === "desktop") {
-            this.getIpcManager().sendFromRendererProcess("set-window-title", 
+            this.getIpcManager().sendFromRendererProcess("set-window-title",
                 {
-                    windowId: this.getWindowId(), 
-                    newTitle: titleContents, 
+                    windowId: this.getWindowId(),
+                    newTitle: titleContents,
                     modified: modified
                 }
             );

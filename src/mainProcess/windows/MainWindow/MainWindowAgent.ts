@@ -6,6 +6,7 @@ import { Log } from "../../log/Log";
 import { generateAboutInfo } from "../../global/GlobalMethods";
 import pidusage from "pidusage";
 import { writeFileSync } from "fs";
+import { IpcEventArgType2, IpcEventArgType3 } from "../../mainProcess/IpcEventArgType";
 
 /**
  * Represents the main window on main process. <br>
@@ -307,7 +308,7 @@ export class MainWindowAgent {
             }
             event.preventDefault();
             this.readyToClose = true;
-            this.sendFromMainProcess("window-will-be-closed");
+            this.sendFromMainProcess("window-will-be-closed", {});
         }
     };
 
@@ -376,7 +377,8 @@ export class MainWindowAgent {
      * @param {string} channel Event name
      * @param {any[]} args Data
      */
-    sendFromMainProcess(channel: string, ...args: any[]) {
+    // sendFromMainProcess(channel: string, ...args: any[]) {
+    sendFromMainProcess = <T extends keyof IpcEventArgType3>(channel: T, arg: IpcEventArgType3[T]): void => {
 
         const processId = this._windowAgentsManager.getMainProcess().getProcessId();
         const ipcManagerOnMainProcesses = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager();
@@ -386,7 +388,7 @@ export class MainWindowAgent {
             const sshServer = ipcManagerOnMainProcesses.getSshServer();
             if (sshServer !== undefined) {
                 // writeFileSync("/Users/haohao/tdm.log", `send from main process for Main Window ===================== ${JSON.stringify(args)}\n`, {flag: "a"});
-
+                const args = Object.values(arg);
                 sshServer.sendToTcpClient(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: args }));
             }
         } else {
@@ -401,7 +403,7 @@ export class MainWindowAgent {
                 // add processId
                 // this._browserWindow?.webContents.send(channel, processId, ...args);
                 if (typeof wsClient !== "string") {
-                    wsClient.send(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: args }));
+                    wsClient.send(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: [arg] }));
                 }
             } catch (e) {
                 Log.error(this.getMainProcessId(), e);
@@ -454,7 +456,9 @@ export class MainWindowAgent {
         if (this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop") {
             // Record<string, string[]>
             this.sendFromMainProcess("show-about-tdm",
-                generateAboutInfo()
+                {
+                    info: generateAboutInfo()
+                }
             )
         }
     }

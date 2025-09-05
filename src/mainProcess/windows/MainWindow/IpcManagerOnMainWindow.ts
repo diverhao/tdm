@@ -3,10 +3,9 @@ import { MainWindowClient, mainWindowState } from "./MainWindowClient";
 import { type_args } from "../../arg/ArgParser";
 import { MainWindowProfileRunPage } from "../../../rendererProcess/mainWindow/MainWindowProfileRunPage";
 import { Log } from "../../log/Log";
-import { type_DialogInputBox, type_DialogMessageBox } from "../../../rendererProcess/helperWidgets/Prompt/Prompt";
 import { MainWindowProfileEditPage } from "../../../rendererProcess/mainWindow/MainWindowProfileEditPage";
 import { MainWindowStartupPage } from "../../../rendererProcess/mainWindow/MainWindowStartupPage";
-import { IpcEventArgType } from "../../mainProcess/IpcEventArgType";
+import { IpcEventArgType, IpcEventArgType3, type_DialogInputBox, type_DialogMessageBox } from "../../mainProcess/IpcEventArgType";
 
 /**
  * Manage IPC messages sent from main process for main window. <br>
@@ -106,25 +105,6 @@ export class IpcManagerOnMainWindow {
         return this._mainWindowClient;
     };
 
-    // sendFromRendererProcess = (channelName: string, ...args: any[]) => {
-    //     Log.debug("send message to IPC server", channelName);
-    //     const processId = this.getMainWindowClient().getProcessId();
-    //     if (processId !== "") {
-    //         if (this.wsClient !== undefined) {
-    //             this.wsClient.send(
-    //                 JSON.stringify({
-    //                     processId: processId,
-    //                     windowId: this.getMainWindowClient().getWindowId(),
-    //                     eventName: channelName,
-    //                     data: args,
-    //                 })
-    //             );
-    //         }
-    //     } else {
-    //         console.log("This display window does not have a process Id yet.");
-    //     }
-    // };
-
 
     sendFromRendererProcess = <T extends keyof IpcEventArgType>(
         channelName: T,
@@ -221,7 +201,8 @@ export class IpcManagerOnMainWindow {
         });
     };
 
-    _handleCmdLineSelectedProfile = (event: any, cmdLineSelectedProfile: string, args: type_args) => {
+    _handleCmdLineSelectedProfile = (event: any, data: IpcEventArgType3["cmd-line-selected-profile"]) => {
+        const { cmdLineSelectedProfile, args } = data;
         this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected",
 
             {
@@ -231,22 +212,14 @@ export class IpcManagerOnMainWindow {
         );
     };
 
-    _handleUpdateWsOpenerPort = (event: any, newPort: number) => {
+    _handleUpdateWsOpenerPort = (event: any, data: IpcEventArgType3["update-ws-opener-port"]) => {
+        const { newPort } = data;
         this.getMainWindowClient().setWsOpenerPort(newPort);
         this.getMainWindowClient().getProfileRunPage()?.forceUpdateWsOpenerPort();
     };
 
-    _handleNewThumbnail = (
-        event: any,
-        data: Record<
-            string,
-            {
-                image: string;
-                windowName?: string;
-                tdlFileName?: string;
-            }
-        >
-    ) => {
+    _handleNewThumbnail = (event: any, info: IpcEventArgType3["new-thumbnail"]) => {
+        const { data } = info;
         Log.debug("handle new thumbnail=========", data)
         const profileRunPage = this.getMainWindowClient().getProfileRunPage();
         if (profileRunPage !== undefined) {
@@ -258,7 +231,9 @@ export class IpcManagerOnMainWindow {
      * After the main window GUI is created, the profiles and its file name are sent from main process. This function
      * is also invoked when the Profiles is changed. <br>
      */
-    private _handleAfterMainWindowGuiCreated = (event: any, profiles: Record<string, any>, profilesFileName: string, envDefault: Record<string, any>, envOs: Record<string, any>, logFileName: string, site: string) => {
+    private _handleAfterMainWindowGuiCreated = (event: any, data: IpcEventArgType3["after-main-window-gui-created"]) => {
+        const { envDefault, envOs, profiles, profilesFileName, logFileName, site } = data;
+
         const mainWindowClient = this.getMainWindowClient();
         // in editing page, we need the env default and env os
         mainWindowClient.setEnvDefault(envDefault);
@@ -277,7 +252,8 @@ export class IpcManagerOnMainWindow {
     /**
      * After the profile selected. The main process already prepared the EPICS context.
      */
-    private _handleAfterProfileSelected = (event: any, profileName: string) => {
+    private _handleAfterProfileSelected = (event: any, data: IpcEventArgType3["after-profile-selected"]) => {
+        const { profileName } = data;
         this.getMainWindowClient().setSelectedProfileName(profileName);
         this.getMainWindowClient().setProfileRunPage(new MainWindowProfileRunPage(this.getMainWindowClient()));
         this.getMainWindowClient().setState(mainWindowState.run);
@@ -291,9 +267,8 @@ export class IpcManagerOnMainWindow {
      * 
      * error, info, and warning are handled by diag-show-message-box event
      */
-    private _handleShowPrompt = (event: any, data: {
-        type: "ssh-password-input" | "ssh-connection-waiting",
-    } & Record<string, any>) => {
+    private _handleShowPrompt = (event: any, info: IpcEventArgType3["show-prompt"]) => {
+        const { data } = info;
         Log.debug("Show prompt of", data);
         const startupPage = this.getMainWindowClient().getStartupPage();
         if (startupPage !== undefined) {
@@ -303,7 +278,8 @@ export class IpcManagerOnMainWindow {
         }
     }
 
-    handleDialogShowMessageBox = (event: any, info: type_DialogMessageBox) => {
+    handleDialogShowMessageBox = (event: any, data: IpcEventArgType3["dialog-show-message-box"]) => {
+        const { info } = data;
         const command = info["command"];
         if (command === undefined) {
         } else if (command === "hide") {
@@ -336,7 +312,8 @@ export class IpcManagerOnMainWindow {
         Log.debug("dialog-message-box, info", info);
     };
 
-    handleDialogShowInputBox = (event: any, info: type_DialogInputBox) => {
+    handleDialogShowInputBox = (event: any, data: IpcEventArgType3["dialog-show-input-box"]) => {
+        const { info } = data;
         const command = info["command"];
         const prompt = this.getMainWindowClient().getPrompt();
         if (command === "open-profiles") {
@@ -415,13 +392,11 @@ export class IpcManagerOnMainWindow {
     };
 
 
-    handleShowAboutTdm = (event: any, info: {
-        authors: string[],
-    }) => {
+    handleShowAboutTdm = (event: any, info: IpcEventArgType3["show-about-tdm"]) => {
         this.getMainWindowClient().getPrompt().createElement("about-tdm", info);
     }
 
-    handleWindowWillBeClosed = (event: any) => {
+    handleWindowWillBeClosed = (event: any, option: {}) => {
         const mainWindowId = this.getMainWindowClient().getWindowId();
         this.sendFromRendererProcess("main-window-will-be-closed", {
             mainWindowId: mainWindowId,
@@ -435,7 +410,8 @@ export class IpcManagerOnMainWindow {
      * 
      * If the log file defined in profiles is not writable, then the logFileName is ""
      */
-    handleLogFileName = (event: any, logFileName: string) => {
+    handleLogFileName = (event: any, data: IpcEventArgType3["log-file-name"]) => {
+        const { logFileName } = data;
         this.getMainWindowClient().setLogFileName(logFileName);
         // force update startup page, it contains the log file name
         if (this.getMainWindowClient().getState() === mainWindowState.start) {

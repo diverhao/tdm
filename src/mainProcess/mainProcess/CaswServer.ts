@@ -78,7 +78,7 @@ export class CaswServer {
             const context = this.getMainProcess().getChannelAgentsManager().getContext();
             if (context !== undefined) {
                 const port = context.getEnv("EPICS_CA_REPEATER_PORT");
-                if (typeof port === "number" ) {
+                if (typeof port === "number") {
                     this.epicsCaRepeaterPort = port;
                     this.addDisplayWindowId(displayWindowId);
                     return;
@@ -98,13 +98,14 @@ export class CaswServer {
         if (displayWindowAgent instanceof DisplayWindowAgent) {
 
             displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                // command?: string | undefined,
-                messageType: "error", // | "warning" | "info", // symbol
-                humanReadableMessages: [`Failed to start CA snooper service`], // each string has a new line
-                rawMessages: [errMsg], // computer generated messages
-                // buttons?: type_DialogMessageBoxButton[] | undefined,
-                // attachment?: any,
-
+                info: {
+                    // command?: string | undefined,
+                    messageType: "error", // | "warning" | "info", // symbol
+                    humanReadableMessages: [`Failed to start CA snooper service`], // each string has a new line
+                    rawMessages: [errMsg], // computer generated messages
+                    // buttons?: type_DialogMessageBoxButton[] | undefined,
+                    // attachment?: any,
+                }
             })
         }
 
@@ -211,7 +212,7 @@ export class CaswServer {
             }
             // register to CA repeater
             const message = Buffer.from([0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7f, 0x00, 0x00, 0x01]);
-            this.udpServer?.send(message, this.epicsCaRepeaterPort, "127.0.0.1");
+            this.udpServer?.send(message as Uint8Array, this.epicsCaRepeaterPort, "127.0.0.1");
         });
         // this.udpServer.bind(this.epicsCaRepeaterPort);
         // bind to any port

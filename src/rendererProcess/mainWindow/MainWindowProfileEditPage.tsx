@@ -472,13 +472,14 @@ export class MainWindowProfileEditPage {
                     //     );
                     const ipcManager = this.getMainWindowClient().getIpcManager();
                     ipcManager.handleDialogShowMessageBox(undefined, {
-                        // command: string | undefined,
-                        messageType: "error", // | "warning" | "info", // symbol
-                        humanReadableMessages: [`New profile name ${localProfileName} conflicts with an existing profile name.`], // each string has a new line
-                        rawMessages: [], // string[], // computer generated messages
-                        // buttons: type_DialogMessageBoxButton[] | undefined,
-                        // attachment: any,
-
+                        info: {
+                            // command: string | undefined,
+                            messageType: "error", // | "warning" | "info", // symbol
+                            humanReadableMessages: [`New profile name ${localProfileName} conflicts with an existing profile name.`], // each string has a new line
+                            rawMessages: [], // string[], // computer generated messages
+                            // buttons: type_DialogMessageBoxButton[] | undefined,
+                            // attachment: any,
+                        }
                     })
 
                     return;
@@ -502,27 +503,29 @@ export class MainWindowProfileEditPage {
             const ipcManager = this.getMainWindowClient().getIpcManager()
             const prompt = this.getMainWindowClient().getPrompt();
             ipcManager.handleDialogShowMessageBox(undefined, {
-                // command?: string | undefined,
-                messageType: "warning", // | "info", // symbol
-                humanReadableMessages: [`This action will permanently delete profile ${profileName}. It cannot be undone`, `Are you ABSOLUTELY sure to delete this it?`], // each string has a new line
-                rawMessages: [], // computer generated messages
-                buttons: [
-                    {
-                        text: "Delete",
-                        handleClick: () => {
-                            doDeleteThisProfile();
-                            prompt.startEventListeners();
-                            prompt.removeElement();
+                info: {
+                    // command?: string | undefined,
+                    messageType: "warning", // | "info", // symbol
+                    humanReadableMessages: [`This action will permanently delete profile ${profileName}. It cannot be undone`, `Are you ABSOLUTELY sure to delete this it?`], // each string has a new line
+                    rawMessages: [], // computer generated messages
+                    buttons: [
+                        {
+                            text: "Delete",
+                            handleClick: () => {
+                                doDeleteThisProfile();
+                                prompt.startEventListeners();
+                                prompt.removeElement();
+                            }
+                        },
+                        {
+                            text: "Do Not Delete",
+                            handleClick: () => {
+                                prompt.startEventListeners();
+                                prompt.removeElement();
+                            }
                         }
-                    },
-                    {
-                        text: "Do Not Delete",
-                        handleClick: () => {
-                            prompt.startEventListeners();
-                            prompt.removeElement();
-                        }
-                    }
-                ],
+                    ],
+                }
             })
         }
 
@@ -787,7 +790,7 @@ export class MainWindowProfileEditPage {
             paddingRight: 7,
             paddingTop: 5,
             paddingBottom: 5,
-            marginBottom:3,
+            marginBottom: 3,
         } as React.CSSProperties;
 
         return (
@@ -904,12 +907,14 @@ export class MainWindowProfileEditPage {
             if (categoryNames.includes(categoryName)) {
                 const ipcManager = this.getMainWindowClient().getIpcManager();
                 ipcManager.handleDialogShowMessageBox(undefined, {
-                    // command: string | undefined,
-                    messageType: "error", // | "warning" | "info", // symbol
-                    humanReadableMessages: [`${categoryName} conflicts with an existing category name.`], // each string has a new line
-                    rawMessages: [], // string[], // computer generated messages
-                    // buttons: type_DialogMessageBoxButton[] | undefined,
-                    // attachment: any,
+                    info: {
+                        // command: string | undefined,
+                        messageType: "error", // | "warning" | "info", // symbol
+                        humanReadableMessages: [`${categoryName} conflicts with an existing category name.`], // each string has a new line
+                        rawMessages: [], // string[], // computer generated messages
+                        // buttons: type_DialogMessageBoxButton[] | undefined,
+                        // attachment: any,
+                    }
                 })
                 return;
             }
@@ -1119,13 +1124,14 @@ export class MainWindowProfileEditPage {
             if (propertyNames.includes(localPropertyName)) {
                 const ipcManager = this.getMainWindowClient().getIpcManager();
                 ipcManager.handleDialogShowMessageBox(undefined, {
-                    // command: string | undefined,
-                    messageType: "error", // | "warning" | "info", // symbol
-                    humanReadableMessages: [`${localPropertyName} conflicts with an existing property name.`], // each string has a new line
-                    rawMessages: [], // string[], // computer generated messages
-                    // buttons: type_DialogMessageBoxButton[] | undefined,
-                    // attachment: any,
-
+                    info: {
+                        // command: string | undefined,
+                        messageType: "error", // | "warning" | "info", // symbol
+                        humanReadableMessages: [`${localPropertyName} conflicts with an existing property name.`], // each string has a new line
+                        rawMessages: [], // string[], // computer generated messages
+                        // buttons: type_DialogMessageBoxButton[] | undefined,
+                        // attachment: any,
+                    }
                 })
                 return;
             }
@@ -1829,7 +1835,7 @@ export class MainWindowProfileEditPage {
     // propertyValue is a string array
     private _ElementArrayPropertyValueItem = ({ propertyName, propertyValue, index }: any) => {
         const [localItemValue, setLocalItemValue] = React.useState(propertyValue[index]);
-        
+
         const [isEditing, setIsEditing] = React.useState(false);
         const refSubElement = React.useRef<any>(null);
 

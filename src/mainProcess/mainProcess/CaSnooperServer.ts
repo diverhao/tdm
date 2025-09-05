@@ -90,13 +90,14 @@ export class CaSnooperServer {
         if (displayWindowAgent instanceof DisplayWindowAgent) {
 
             displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                info: {
                 // command?: string | undefined,
                 messageType: "error", // | "warning" | "info", // symbol
                 humanReadableMessages: [`Failed to start CA snooper service`], // each string has a new line
                 rawMessages: [errMsg], // computer generated messages
                 // buttons?: type_DialogMessageBoxButton[] | undefined,
                 // attachment?: any,
-
+                }
             })
         }
 

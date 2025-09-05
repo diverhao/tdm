@@ -108,20 +108,22 @@ export class SshClient {
     connectSsh = async () => {
         // show waiting prompt
         this.getCallingMainProcess()?.getWindowAgentsManager().getMainWindowAgent()?.sendFromMainProcess("dialog-show-message-box", {
-            command: "ssh-connection-waiting",
-            messageType: "info", // symbol
-            rawMessages: [], // computer generated messages
-            buttons: [
-                {
-                    text: "Cancel",
+            info: {
+                command: "ssh-connection-waiting",
+                messageType: "info", // symbol
+                rawMessages: [], // computer generated messages
+                buttons: [
+                    {
+                        text: "Cancel",
+                    }
+                ],
+                // attachment?: any,
+                // [ssh main process ID, username, host name, host ssh port]
+                // humanReadableMessages: [this.getMainProcess().getProcessId(), this.getUserName(), this.getServerIP(), this.getServerSshPort()],
+                humanReadableMessages: [`Connecting to ${this.getUserName()}@${this.getServerIP()}:${this.getServerSshPort()}`],
+                attachment: {
+                    sshMainProcessId: this.getMainProcess().getProcessId(),
                 }
-            ],
-            // attachment?: any,
-            // [ssh main process ID, username, host name, host ssh port]
-            // humanReadableMessages: [this.getMainProcess().getProcessId(), this.getUserName(), this.getServerIP(), this.getServerSshPort()],
-            humanReadableMessages: [`Connecting to ${this.getUserName()}@${this.getServerIP()}:${this.getServerSshPort()}`],
-            attachment: {
-                sshMainProcessId: this.getMainProcess().getProcessId(),
             }
         });
 
@@ -160,9 +162,11 @@ export class SshClient {
                 } else {
                     this.startTdmResolve(`Failed to run TDM in ssh-server mode on ${this.getServerIP()}, ${err?.message}`);
                     this.getCallingMainProcess()?.getWindowAgentsManager().getMainWindowAgent()?.sendFromMainProcess("dialog-show-message-box", {
-                        messageType: "error",
-                        humanReadableMessages: [`Failed to run TDM in ssh-server mode on ${this.getServerIP()}`, `command: ${this.tdmCmd}`],
-                        rawMessages: [err?.message],
+                        info: {
+                            messageType: "error",
+                            humanReadableMessages: [`Failed to run TDM in ssh-server mode on ${this.getServerIP()}`, `command: ${this.tdmCmd}`],
+                            rawMessages: [err?.message],
+                        }
                     });
                 }
             }
@@ -269,24 +273,28 @@ export class SshClient {
             if (mainWindowAgent instanceof MainWindowAgent) {
                 if (status === "success") {
                     mainWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        // command?: string | undefined;
-                        messageType: "info",
-                        humanReadableMessages: [`Successfully connected to ${this.getServerIP()}:${this.getServerSshPort()}`,
-                            "It is running on a different process with a new main window.",
-                            "You can keep on running or quit this process."
-                        ],
-                        rawMessages: [],
-                        // buttons?: type_DialogMessageBoxButton[] | undefined;
-                        // attachment?: any;
+                        info: {
+                            // command?: string | undefined;
+                            messageType: "info",
+                            humanReadableMessages: [`Successfully connected to ${this.getServerIP()}:${this.getServerSshPort()}`,
+                                "It is running on a different process with a new main window.",
+                                "You can keep on running or quit this process."
+                            ],
+                            rawMessages: [],
+                            // buttons?: type_DialogMessageBoxButton[] | undefined;
+                            // attachment?: any;
+                        }
                     })
                 } else {
                     mainWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        // command?: string | undefined;
-                        messageType: "error",
-                        humanReadableMessages: [`Failed to connect ${this.getServerIP()}:${this.getServerSshPort()}`],
-                        rawMessages: [],
-                        // buttons?: type_DialogMessageBoxButton[] | undefined;
-                        // attachment?: any;
+                        info: {
+                            // command?: string | undefined;
+                            messageType: "error",
+                            humanReadableMessages: [`Failed to connect ${this.getServerIP()}:${this.getServerSshPort()}`],
+                            rawMessages: [],
+                            // buttons?: type_DialogMessageBoxButton[] | undefined;
+                            // attachment?: any;
+                        }
                     })
                 }
             }
@@ -496,9 +504,11 @@ export class SshClient {
         Log.error(this.getMainProcessId(), `SshClient connection error:`, err);
 
         this.getCallingMainProcess()?.getWindowAgentsManager().getMainWindowAgent()?.sendFromMainProcess("dialog-show-message-box", {
-            messageType: "error",
-            humanReadableMessages: [message1, message2, message3],
-            rawMessages: [],
+            info: {
+                messageType: "error",
+                humanReadableMessages: [message1, message2, message3],
+                rawMessages: [],
+            }
         });
 
         // no retry
@@ -533,9 +543,11 @@ export class SshClient {
             // 
             // show error message on calling main process' main window
             this.getCallingMainProcess()?.getWindowAgentsManager().getMainWindowAgent()?.sendFromMainProcess("dialog-show-message-box", {
-                messageType: "error",
-                humanReadableMessages: [`Wrong password for SSH host ${this.getUserName()}@${this.getServerIP()}`],
-                rawMessages: [],
+                info: {
+                    messageType: "error",
+                    humanReadableMessages: [`Wrong password for SSH host ${this.getUserName()}@${this.getServerIP()}`],
+                    rawMessages: [],
+                }
             });
 
             Log.info(this.getMainProcessId(), "quit connecting tries ---> quit this main process");
@@ -572,30 +584,34 @@ export class SshClient {
 
     loginWithPassword = (callback: any) => {
         this.getCallingMainProcess()?.getWindowAgentsManager().getMainWindowAgent()?.sendFromMainProcess("show-prompt", {
-            type: "ssh-password-input",
-            callingMainProcessId: this.getMainProcess().getProcessId(),
-            username: this.getUserName(),
-            hostname: this.getServerIP(),
+            data: {
+                type: "ssh-password-input",
+                callingMainProcessId: this.getMainProcess().getProcessId(),
+                username: this.getUserName(),
+                hostname: this.getServerIP(),
+            }
         });
         // wait for the password comes back
         this._passwordPromptPromise.then((result: { password: string }) => {
             // on the calling process' main window, the password input is finished, show waiting prompt
             // the password-based authentication may be long
             this.getCallingMainProcess()?.getWindowAgentsManager().getMainWindowAgent()?.sendFromMainProcess("dialog-show-message-box", {
-                command: "ssh-connection-waiting",
-                messageType: "info", // symbol
-                rawMessages: [], // computer generated messages
-                buttons: [
-                    {
-                        text: "Cancel",
+                info: {
+                    command: "ssh-connection-waiting",
+                    messageType: "info", // symbol
+                    rawMessages: [], // computer generated messages
+                    buttons: [
+                        {
+                            text: "Cancel",
+                        }
+                    ],
+                    // attachment?: any,
+                    // [ssh main process ID, username, host name, host ssh port]
+                    // humanReadableMessages: [this.getMainProcess().getProcessId(), this.getUserName(), this.getServerIP(), this.getServerSshPort()],
+                    humanReadableMessages: [`Connecting to ${this.getUserName()}@${this.getServerIP()}:${this.getServerSshPort()}`],
+                    attachment: {
+                        sshMainProcessId: this.getMainProcess().getProcessId(),
                     }
-                ],
-                // attachment?: any,
-                // [ssh main process ID, username, host name, host ssh port]
-                // humanReadableMessages: [this.getMainProcess().getProcessId(), this.getUserName(), this.getServerIP(), this.getServerSshPort()],
-                humanReadableMessages: [`Connecting to ${this.getUserName()}@${this.getServerIP()}:${this.getServerSshPort()}`],
-                attachment: {
-                    sshMainProcessId: this.getMainProcess().getProcessId(),
                 }
             });
 
@@ -779,6 +795,21 @@ export class SshClient {
                 if (windowAgent instanceof DisplayWindowAgent) {
                     if (!windowAgent.hiddenWindow && !windowAgent.isWebpage()) {
                         windowAgent.sendFromMainProcess("dialog-show-message-box", {
+                            info: {
+                                // command?: string | undefined;
+                                messageType: "error",
+                                humanReadableMessages: [`Connection broken with ${this.getServerIP()}:${this.getServerSshPort()}`,
+                                    "The connection cannot be re-established.", "Please consider to quit this process."
+                                ],
+                                rawMessages: [],
+                                // buttons?: type_DialogMessageBoxButton[] | undefined;
+                                // attachment?: any;
+                            }
+                        })
+                    }
+                } else if (windowAgent instanceof MainWindowAgent) {
+                    windowAgent.sendFromMainProcess("dialog-show-message-box", {
+                        info: {
                             // command?: string | undefined;
                             messageType: "error",
                             humanReadableMessages: [`Connection broken with ${this.getServerIP()}:${this.getServerSshPort()}`,
@@ -787,18 +818,7 @@ export class SshClient {
                             rawMessages: [],
                             // buttons?: type_DialogMessageBoxButton[] | undefined;
                             // attachment?: any;
-                        })
-                    }
-                } else if (windowAgent instanceof MainWindowAgent) {
-                    windowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        // command?: string | undefined;
-                        messageType: "error",
-                        humanReadableMessages: [`Connection broken with ${this.getServerIP()}:${this.getServerSshPort()}`,
-                            "The connection cannot be re-established.", "Please consider to quit this process."
-                        ],
-                        rawMessages: [],
-                        // buttons?: type_DialogMessageBoxButton[] | undefined;
-                        // attachment?: any;
+                        }
                     })
                 }
             }

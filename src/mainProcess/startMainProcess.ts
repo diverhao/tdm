@@ -281,7 +281,12 @@ if (args["attach"] === -1) {
                             break;
                         }
                     }
-                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", firstProfileName, args);
+                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", 
+                        {
+                            cmdLineSelectedProfile: firstProfileName, 
+                            args
+                        }
+                    );
                 } else {
                     // do nothing
                     Log.info('-1', "User did not provided a profile, show main window.");
@@ -291,14 +296,22 @@ if (args["attach"] === -1) {
                 // do nothing
             } else if (cmdLineSelectedProfile !== "" && cmdLineOpenFileNames.length === 0) {
                 if (profileNames.includes(cmdLineSelectedProfile)) {
-                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", cmdLineSelectedProfile, args);
+                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", 
+                        {
+                            cmdLineSelectedProfile, args
+                        }
+                    );
                 } else {
                     // do nothing
                     Log.error('-1', "The profile name provided in command line does not exist. You can select a profile from the main window.");
                 }
             } else if (cmdLineSelectedProfile !== "" && cmdLineOpenFileNames.length > 0) {
                 if (profileNames.includes(cmdLineSelectedProfile)) {
-                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", cmdLineSelectedProfile, args);
+                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", 
+                        {
+                            cmdLineSelectedProfile, args
+                        }
+                    );
                 } else {
                     // do nothing
                     Log.error('-1', "The profile name provided in command line does not exist. You can select a profile from the main window.");

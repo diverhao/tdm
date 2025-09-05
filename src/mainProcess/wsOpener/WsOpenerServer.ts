@@ -110,7 +110,12 @@ export class WsOpenerServer {
                 const profileNames = mainProcess.getProfiles().getProfileNames();
                 const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
                 if (profileNames.includes(args["profile"])) {
-                    mainWindowAgent?.sendFromMainProcess("cmd-line-selected-profile", args["profile"], args);
+                    mainWindowAgent?.sendFromMainProcess("cmd-line-selected-profile", 
+                        {
+                            cmdLineSelectedProfile: args["profile"], 
+                            args
+                        }
+                    );
                 } else {
                     // do nothing
                 }
@@ -151,7 +156,12 @@ export class WsOpenerServer {
                 const windowAgentsManager = mainProcess.getWindowAgentsManager();
                 const profileNames = mainProcess.getProfiles().getProfileNames();
                 const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
-                mainWindowAgent?.sendFromMainProcess("cmd-line-selected-profile", profileNames[0], args);
+                mainWindowAgent?.sendFromMainProcess("cmd-line-selected-profile", 
+                    {
+                        cmdLineSelectedProfile: profileNames[0], 
+                        args
+                    }
+                );
             });
         }
     };

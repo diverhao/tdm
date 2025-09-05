@@ -8,6 +8,7 @@ import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Table } from "../../helperWidgets/Table/Table";
 import { convertEpochTimeToString } from "../../global/GlobalMethods";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
+import { type_logData } from "../../../mainProcess/mainProcess/IpcEventArgType";
 
 export type type_LogViewer_tdl = {
     type: string;
@@ -19,14 +20,6 @@ export type type_LogViewer_tdl = {
     groupNames: string[];
     rules: type_rules_tdl;
 };
-
-export type type_logData = {
-    widgetKey: string,
-    timeMsSinceEpoch: number,
-    profileName: string,
-    type: "fatal" | "error" | "warn" | "info" | "debug" | "trace",
-    args: any[],
-}
 
 export class LogViewer extends BaseWidget {
     showProcessInfo = false;

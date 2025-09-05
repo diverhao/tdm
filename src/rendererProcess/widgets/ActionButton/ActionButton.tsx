@@ -709,7 +709,7 @@ export class ActionButton extends BaseWidget {
         const tdl = this.getActions()[index] as type_action_openwebpage_tdl;
         const url = tdl["url"];
         const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-        ipcManager.sendFromRendererProcess("open-webpage", {url: url});
+        ipcManager.sendFromRendererProcess("open-webpage", { url: url });
     };
 
     executeCommand = (index: number) => {
@@ -735,45 +735,49 @@ export class ActionButton extends BaseWidget {
                 const password = text["confirmOnWritePassword"];
                 ipcManager.handleDialogShowInputBox(undefined,
                     {
-                        command: "write-pv-confirmation-with-password",
-                        humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
-                        buttons: [
-                            {
-                                text: "OK",
-                                handleClick: (dialogInputText?: string) => {
-                                    console.log("pass word is ", dialogInputText, "...")
-                                    if (dialogInputText !== password) {
-                                        // password does not match
-                                        console.log("pass word does notmatch")
-                                        ipcManager.handleDialogShowMessageBox(undefined,
-                                            {
-                                                command: "write-pv-confirmation-wit-password-failed",
-                                                humanReadableMessages: ["Wrong password."],
-                                                buttons: [
-                                                    {
-                                                        text: "OK",
-                                                        handleClick: () => {
-                                                        },
-                                                    },
-                                                ],
-                                                messageType: "error",
-                                                rawMessages: [],
-                                                attachment: undefined,
-                                            }
-                                        )
+                        info: {
+                            command: "write-pv-confirmation-with-password",
+                            humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
+                            buttons: [
+                                {
+                                    text: "OK",
+                                    handleClick: (dialogInputText?: string) => {
+                                        console.log("pass word is ", dialogInputText, "...")
+                                        if (dialogInputText !== password) {
+                                            // password does not match
+                                            console.log("pass word does notmatch")
+                                            ipcManager.handleDialogShowMessageBox(undefined,
+                                                {
+                                                    info: {
+                                                        command: "write-pv-confirmation-wit-password-failed",
+                                                        humanReadableMessages: ["Wrong password."],
+                                                        buttons: [
+                                                            {
+                                                                text: "OK",
+                                                                handleClick: () => {
+                                                                },
+                                                            },
+                                                        ],
+                                                        messageType: "error",
+                                                        rawMessages: [],
+                                                        attachment: undefined,
+                                                    }
+                                                }
+                                            )
 
-                                        return;
-                                    }
-                                    // password is correct, execute the command
-                                    ipcManager.sendFromRendererProcess("execute-command", {
-                                        displayWindowId: displayWindowId,
-                                        command: command,
-                                    })
-                                },
-                            }
-                        ],
-                        defaultInputText: "",
-                        attachment: undefined,
+                                            return;
+                                        }
+                                        // password is correct, execute the command
+                                        ipcManager.sendFromRendererProcess("execute-command", {
+                                            displayWindowId: displayWindowId,
+                                            command: command,
+                                        })
+                                    },
+                                }
+                            ],
+                            defaultInputText: "",
+                            attachment: undefined,
+                        }
                     }
                 )
             } else {
@@ -781,28 +785,30 @@ export class ActionButton extends BaseWidget {
                 const humanReadableMessage2 = "Are you sure to continue?"
                 ipcManager.handleDialogShowMessageBox(undefined,
                     {
-                        command: "write-pv-confirmation-without-password",
-                        humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
-                        buttons: [
-                            {
-                                text: "Yes",
-                                handleClick: () => {
+                        info: {
+                            command: "write-pv-confirmation-without-password",
+                            humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
+                            buttons: [
+                                {
+                                    text: "Yes",
+                                    handleClick: () => {
 
-                                    ipcManager.sendFromRendererProcess("execute-command", {
-                                        displayWindowId: displayWindowId,
-                                        command: command,
-                                    })
+                                        ipcManager.sendFromRendererProcess("execute-command", {
+                                            displayWindowId: displayWindowId,
+                                            command: command,
+                                        })
+                                    },
                                 },
-                            },
-                            {
-                                text: "No",
-                                handleClick: () => {
-                                },
-                            }
-                        ],
-                        messageType: "info",
-                        rawMessages: [],
-                        attachment: undefined,
+                                {
+                                    text: "No",
+                                    handleClick: () => {
+                                    },
+                                }
+                            ],
+                            messageType: "info",
+                            rawMessages: [],
+                            attachment: undefined,
+                        }
                     }
                 )
 
@@ -836,7 +842,7 @@ export class ActionButton extends BaseWidget {
             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
             const ipcManager = displayWindowClient.getIpcManager();
             const displayWindowId = displayWindowClient.getWindowId();
-            ipcManager.sendFromRendererProcess("close-window", {displayWindowId: displayWindowId});
+            ipcManager.sendFromRendererProcess("close-window", { displayWindowId: displayWindowId });
         }
     };
 

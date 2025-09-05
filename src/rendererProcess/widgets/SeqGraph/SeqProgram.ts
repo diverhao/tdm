@@ -422,9 +422,11 @@ export class SeqState {
                     this.getStateSet().getProgram().getMainWidget().stopSeqProgram();
                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                     displayWindowClient.getIpcManager().handleDialogShowMessageBox(undefined, {
-                        messageType: "error",
-                        humanReadableMessages: ["There are more than 300 state switches in last 10 seconds. The program is stopped. Please check your program."],
-                        rawMessages: [],
+                        info: {
+                            messageType: "error",
+                            humanReadableMessages: ["There are more than 300 state switches in last 10 seconds. The program is stopped. Please check your program."],
+                            rawMessages: [],
+                        }
                     })
                     // return immediately
                     return;

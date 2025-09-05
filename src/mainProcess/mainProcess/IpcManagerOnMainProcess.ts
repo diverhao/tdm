@@ -22,7 +22,7 @@ import pidusage from "pidusage";
 import { spawn } from "child_process";
 import { SqlState } from "../archive/Sql";
 import { Environment, type_network_stats } from "epics-tca";
-import { IpcEventArgType } from "./IpcEventArgType";
+import { IpcEventArgType, type_DialogMessageBox } from "./IpcEventArgType";
 
 /**
  * Manage IPC messages sent from renderer process.
@@ -190,20 +190,21 @@ export class IpcManagerOnMainProcess {
             }
             message = message + "\n" + `Do you want to continue to exit?`;
             mainWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                // the callback fro buttons is added according to the command
-                command: "quit-tdm-process-confirm",
-                messageType: "warning",
-                humanReadableMessages: [message],
-                rawMessages: [],
-                buttons: [
-                    {
-                        text: "OK",
-                    },
-                    {
-                        text: "Cancel",
-                    }
-                ]
-
+                info: {
+                    // the callback fro buttons is added according to the command
+                    command: "quit-tdm-process-confirm",
+                    messageType: "warning",
+                    humanReadableMessages: [message],
+                    rawMessages: [],
+                    buttons: [
+                        {
+                            text: "OK",
+                        },
+                        {
+                            text: "Cancel",
+                        }
+                    ]
+                }
             });
             return;
             // }
@@ -292,9 +293,11 @@ export class IpcManagerOnMainProcess {
                     if (profilesFileNames.length !== 1) {
                         mainWindowAgent.sendFromMainProcess("dialog-show-message-box",
                             {
-                                messageType: "error",
-                                humanReadableMessages: ["Only one file can be selected"],
-                                rawMessages: [],
+                                info: {
+                                    messageType: "error",
+                                    humanReadableMessages: ["Only one file can be selected"],
+                                    rawMessages: [],
+                                }
                             }
                         )
                     } else {
@@ -303,9 +306,11 @@ export class IpcManagerOnMainProcess {
                 } catch (e) {
                     mainWindowAgent.sendFromMainProcess("dialog-show-message-box",
                         {
-                            messageType: "error",
-                            humanReadableMessages: [`${e}`],
-                            rawMessages: [],
+                            info: {
+                                messageType: "error",
+                                humanReadableMessages: [`${e}`],
+                                rawMessages: [],
+                            }
                         }
                     )
                     return;
@@ -313,18 +318,20 @@ export class IpcManagerOnMainProcess {
             } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
                 mainWindowAgent.sendFromMainProcess("dialog-show-input-box",
                     {
-                        command: "open-profiles",
-                        humanReadableMessages: ["Open profiles file"], // each string has a new line
-                        buttons: [
-                            {
-                                text: "OK",
-                            },
-                            {
-                                text: "Cancel",
-                            }
-                        ],
-                        defaultInputText: "",
-                        // attachment: {}
+                        info: {
+                            command: "open-profiles",
+                            humanReadableMessages: ["Open profiles file"], // each string has a new line
+                            buttons: [
+                                {
+                                    text: "OK",
+                                },
+                                {
+                                    text: "Cancel",
+                                }
+                            ],
+                            defaultInputText: "",
+                            // attachment: {}
+                        }
                     })
                 return;
             }
@@ -339,17 +346,37 @@ export class IpcManagerOnMainProcess {
             // read default and OS-defined EPICS environment variables
             // in main window editing page, we need env default and env os
             const env = Environment.getTempInstance();
-            const envDefault = env.getEnvDefault();
-            const envOs = env.getEnvOs();
+            let envDefault = env.getEnvDefault();
+            let envOs = env.getEnvOs();
+            if (typeof envOs !== "object") {
+                envOs = {};
+            }
+
+            if (typeof envDefault !== "object") {
+                envDefault = {};
+            }
+
+            const site = this.getMainProcess().getMainProcesses().getSite();
 
             // tell main window to update
-            mainWindowAgent.sendFromMainProcess("after-main-window-gui-created", newProfiles.serialize(), profilesFileName, envDefault, envOs, this.getMainProcess().getMainProcesses().writingToLog);
+            mainWindowAgent.sendFromMainProcess("after-main-window-gui-created",
+                {
+                    profiles: newProfiles.serialize(),
+                    profilesFileName: profilesFileName,
+                    envDefault: envDefault,
+                    envOs: envOs,
+                    logFileName: this.getMainProcess().getMainProcesses().writingToLog,
+                    site: site,
+                }
+            );
         } catch (e) {
             mainWindowAgent.sendFromMainProcess("dialog-show-message-box",
                 {
-                    messageType: "error",
-                    humanReadableMessages: [`${profilesFileName} is not a valid TDM profiles file, or it cannot be opened or created.`],
-                    rawMessages: [],
+                    info: {
+                        messageType: "error",
+                        humanReadableMessages: [`${profilesFileName} is not a valid TDM profiles file, or it cannot be opened or created.`],
+                        rawMessages: [],
+                    }
                 }
             )
         }
@@ -398,20 +425,22 @@ export class IpcManagerOnMainProcess {
 
                 mainWindowAgent.sendFromMainProcess("dialog-show-input-box",
                     {
-                        command: "save-profiles",
-                        humanReadableMessages: ["Save profiles to"], // each string has a new line
-                        buttons: [
-                            {
-                                text: "OK",
-                            },
-                            {
-                                text: "Cancel",
+                        info: {
+                            command: "save-profiles",
+                            humanReadableMessages: ["Save profiles to"], // each string has a new line
+                            buttons: [
+                                {
+                                    text: "OK",
+                                },
+                                {
+                                    text: "Cancel",
+                                }
+                            ],
+                            defaultInputText: "",
+                            attachment: {
+                                modifiedProfiles: modifiedProfiles,
+                                filePath1: filePath1,
                             }
-                        ],
-                        defaultInputText: "",
-                        attachment: {
-                            modifiedProfiles: modifiedProfiles,
-                            filePath1: filePath1,
                         }
                     }
                 );
@@ -430,14 +459,20 @@ export class IpcManagerOnMainProcess {
             // update log
             this.getMainProcess().getMainProcesses().enableLogToFile();
             // always tell main window the log file name, if the log file is not accessible, it is ""
-            mainWindowAgent.sendFromMainProcess("log-file-name", this.getMainProcess().getMainProcesses().readLogFileName());
+            mainWindowAgent.sendFromMainProcess("log-file-name",
+                {
+                    logFileName: this.getMainProcess().getMainProcesses().readLogFileName()
+                }
+            );
         } catch (e) {
             Log.error(this.getMainProcessId(), e);
             mainWindowAgent.sendFromMainProcess("dialog-show-message-box",
                 {
-                    messageType: "error",
-                    humanReadableMessages: [`Error save file to ${filePath}.`],
-                    rawMessages: [],
+                    info: {
+                        messageType: "error",
+                        humanReadableMessages: [`Error save file to ${filePath}.`],
+                        rawMessages: [],
+                    }
                 }
             )
 
@@ -476,20 +511,22 @@ export class IpcManagerOnMainProcess {
 
                 mainWindowAgent.sendFromMainProcess("dialog-show-input-box",
                     {
-                        command: "save-profiles-as",
-                        humanReadableMessages: ["Save profiles to"], // each string has a new line
-                        buttons: [
-                            {
-                                text: "OK",
-                            },
-                            {
-                                text: "Cancel",
+                        info: {
+                            command: "save-profiles-as",
+                            humanReadableMessages: ["Save profiles to"], // each string has a new line
+                            buttons: [
+                                {
+                                    text: "OK",
+                                },
+                                {
+                                    text: "Cancel",
+                                }
+                            ],
+                            defaultInputText: "",
+                            attachment: {
+                                modifiedProfiles: modifiedProfiles,
+                                filePath1: filePath1,
                             }
-                        ],
-                        defaultInputText: "",
-                        attachment: {
-                            modifiedProfiles: modifiedProfiles,
-                            filePath1: filePath1,
                         }
                     }
                 );
@@ -502,7 +539,11 @@ export class IpcManagerOnMainProcess {
         // update log
         this.getMainProcess().getMainProcesses().enableLogToFile();
         // always tell main window the log file name, if the log file is not accessible, it is ""
-        mainWindowAgent.sendFromMainProcess("log-file-name", this.getMainProcess().getMainProcesses().readLogFileName());
+        mainWindowAgent.sendFromMainProcess("log-file-name",
+            {
+                logFileName: this.getMainProcess().getMainProcesses().readLogFileName()
+            }
+        );
 
         try {
             // save first
@@ -512,9 +553,11 @@ export class IpcManagerOnMainProcess {
             Log.error(this.getMainProcessId(), e);
             mainWindowAgent.sendFromMainProcess("dialog-show-message-box",
                 {
-                    messageType: "error",
-                    humanReadableMessages: [`Error save file to ${filePath}.`],
-                    rawMessages: [],
+                    info: {
+                        messageType: "error",
+                        humanReadableMessages: [`Error save file to ${filePath}.`],
+                        rawMessages: [],
+                    }
                 }
             )
 
@@ -553,7 +596,9 @@ export class IpcManagerOnMainProcess {
                 mainWindowAgent = windowAgentsManager.getMainWindowAgent();
                 if (mainWindowAgent instanceof MainWindowAgent) {
                     const selectedProfileName = this.getMainProcess().getProfiles().getSelectedProfileName();
-                    mainWindowAgent.sendFromMainProcess("after-profile-selected", selectedProfileName);
+                    mainWindowAgent.sendFromMainProcess("after-profile-selected", {
+                        profileName: selectedProfileName
+                    });
 
                     if (this.getMainProcess().getMainProcessMode() === "desktop") {
                         // update thumbnails immediately for desktop
@@ -811,18 +856,21 @@ export class IpcManagerOnMainProcess {
                                 } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
                                     displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
                                         {
-                                            command: "window-will-be-closed",
-                                            humanReadableMessages: ["Save diaplay to"], // each string has a new line
-                                            buttons: [
-                                                {
-                                                    text: "OK",
-                                                },
-                                                {
-                                                    text: "Cancel",
-                                                }
-                                            ],
-                                            defaultInputText: "",
-                                            attachment: data,
+                                            info:
+                                            {
+                                                command: "window-will-be-closed",
+                                                humanReadableMessages: ["Save diaplay to"], // each string has a new line
+                                                buttons: [
+                                                    {
+                                                        text: "OK",
+                                                    },
+                                                    {
+                                                        text: "Cancel",
+                                                    }
+                                                ],
+                                                defaultInputText: "",
+                                                attachment: data,
+                                            }
                                         }
                                     );
                                     return;
@@ -835,18 +883,23 @@ export class IpcManagerOnMainProcess {
                                         // error when saving file, do not close the window
                                         Log.error(this.getMainProcessId(), err);
                                         displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                                            // command?: string | undefined,
-                                            messageType: "error", // | "warning" | "info", // symbol
-                                            humanReadableMessages: [`Error saving file ${tdlFileName}`], // each string has a new line
-                                            rawMessages: [`${err}`], // computer generated messages
-                                            // buttons?: type_DialogMessageBoxButton[] | undefined,
-                                            // attachment?: any,
-
+                                            info: {
+                                                // command?: string | undefined,
+                                                messageType: "error", // | "warning" | "info", // symbol
+                                                humanReadableMessages: [`Error saving file ${tdlFileName}`], // each string has a new line
+                                                rawMessages: [`${err}`], // computer generated messages
+                                                // buttons?: type_DialogMessageBoxButton[] | undefined,
+                                                // attachment?: any,
+                                            }
                                         })
                                         displayWindowAgent.readyToClose = false;
                                     } else {
                                         // update tdlFileName on client side, absolute path
-                                        displayWindowAgent.sendFromMainProcess("tdl-file-saved", tdlFileName);
+                                        displayWindowAgent.sendFromMainProcess("tdl-file-saved",
+                                            {
+                                                newTdlFileName: tdlFileName
+                                            }
+                                        );
                                         closeBrowserWindow();
 
                                     }
@@ -867,29 +920,32 @@ export class IpcManagerOnMainProcess {
                     } else {
                         displayWindowAgent.sendFromMainProcess("dialog-show-message-box",
                             {
-                                command: "window-will-be-closed-confirm",
-                                messageType: "warning",
-                                humanReadableMessages:
-                                    data["widgetKey"] !== undefined && data["widgetKey"].startsWith("DataViewer_") ?
-                                        [`Do you want to save the data? They will be lost if you don't save them.`]
-                                        :
-                                        [`Do you want to save the changes you made? Your changes will be lost if you don't save them.`],
-                                rawMessages: [],
-                                buttons: [
-                                    {
-                                        text: "Save",
-                                    },
-                                    {
-                                        text: "Don't Save",
-                                    },
-                                    {
-                                        text: "Cancel",
-                                    }
-                                ],
-                                // on render window, this is modified and sent back
-                                // the saveConfirmation is changed from undefined to 
-                                // "Save", "Don't Save", or "Cancel"
-                                attachment: data,
+                                info:
+                                {
+                                    command: "window-will-be-closed-confirm",
+                                    messageType: "warning",
+                                    humanReadableMessages:
+                                        data["widgetKey"] !== undefined && data["widgetKey"].startsWith("DataViewer_") ?
+                                            [`Do you want to save the data? They will be lost if you don't save them.`]
+                                            :
+                                            [`Do you want to save the changes you made? Your changes will be lost if you don't save them.`],
+                                    rawMessages: [],
+                                    buttons: [
+                                        {
+                                            text: "Save",
+                                        },
+                                        {
+                                            text: "Don't Save",
+                                        },
+                                        {
+                                            text: "Cancel",
+                                        }
+                                    ],
+                                    // on render window, this is modified and sent back
+                                    // the saveConfirmation is changed from undefined to 
+                                    // "Save", "Don't Save", or "Cancel"
+                                    attachment: data,
+                                }
                             }
                         );
                         return;
@@ -1141,7 +1197,7 @@ export class IpcManagerOnMainProcess {
                 // the main window has received all the necessary information to switch to run page
                 await mainWindowAgent.creationPromise2;
                 mainWindowAgent.sendFromMainProcess("after-profile-selected", {
-                    selectedProfileName: selectedProfileName,
+                    profileName: selectedProfileName,
                 });
                 // create the preview window for file browser
                 windowAgentsManager.createPreviewDisplayWindow();
@@ -1358,20 +1414,27 @@ export class IpcManagerOnMainProcess {
 
                     if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
 
-                        windowAgent.sendFromMainProcess("dialog-show-input-box", {
-                            command: "open-tdl-file",
-                            humanReadableMessages: ["Open TDL file"], // each string has a new line
-                            buttons: [
-                                {
-                                    text: "OK",
-                                },
-                                {
-                                    text: "Cancel",
-                                }
-                            ],
-                            defaultInputText: "",
-                            attachment: options,
-                        });
+                        const dialogInfo = {
+                            info: {
+                                command: "open-tdl-file",
+                                humanReadableMessages: ["Open TDL file"], // each string has a new line
+                                buttons: [
+                                    {
+                                        text: "OK",
+                                    },
+                                    {
+                                        text: "Cancel",
+                                    }
+                                ],
+                                defaultInputText: "",
+                                attachment: options,
+                            }
+                        };
+                        if (windowAgent instanceof MainWindowAgent) {
+                            windowAgent.sendFromMainProcess("dialog-show-input-box", dialogInfo);
+                        } else if (windowAgent instanceof DisplayWindowAgent) {
+                            windowAgent.sendFromMainProcess("dialog-show-input-box", dialogInfo);
+                        }
                         return;
                     }
 
@@ -1430,14 +1493,22 @@ export class IpcManagerOnMainProcess {
                             } else {
                                 Log.error(this.getMainProcessId(), `Cannot read tdl file ${tdlFileName}`);
                                 if (windowAgent !== undefined) {
-                                    windowAgent.sendFromMainProcess("dialog-show-message-box", {
-                                        // command?: string | undefined;
-                                        messageType: "error", // | "warning" | "info";
-                                        humanReadableMessages: [`Failed to open file ${tdlFileName}`],
-                                        rawMessages: [],
-                                        // buttons?: type_DialogMessageBoxButton[] | undefined;
-                                        // attachment?: any;
-                                    })
+                                    const dialogInfo: { info: type_DialogMessageBox } = {
+                                        info: {
+                                            // command?: string | undefined;
+                                            messageType: "error", // | "warning" | "info";
+                                            humanReadableMessages: [`Failed to open file ${tdlFileName}`],
+                                            rawMessages: [],
+                                            // buttons?: type_DialogMessageBoxButton[] | undefined;
+                                            // attachment?: any;
+                                        }
+                                    };
+                                    if (windowAgent instanceof MainWindowAgent) {
+                                        windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
+                                    } else if (windowAgent instanceof DisplayWindowAgent) {
+                                        windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
+                                    }
+
                                 }
                             }
                         });
@@ -1446,11 +1517,12 @@ export class IpcManagerOnMainProcess {
                         if (options["sendContentsToWindow"] === true) {
                             // for ChannelGraph
                             const displayWindowId = options["windowId"];
-                            if (displayWindowId !== undefined) {
+
+                            if (displayWindowId !== undefined && db !== undefined) {
                                 const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
                                 if (displayWindowAgent instanceof DisplayWindowAgent) {
                                     displayWindowAgent.sendFromMainProcess("db-file-contents", {
-                                        displayWindowId: options["windowId"],
+                                        displayWindowId: displayWindowId,
                                         fileName: tdlFileName,
                                         db: db, // array of objects, each object is a channel, e.g. channel name is NAME entry
                                     })
@@ -1474,14 +1546,22 @@ export class IpcManagerOnMainProcess {
                         }
                     } else {
                         if (windowAgent !== undefined) {
-                            windowAgent.sendFromMainProcess("dialog-show-message-box", {
-                                // command?: string | undefined;
-                                messageType: "error", // | "warning" | "info";
-                                humanReadableMessages: [`${tdlFileName} is not a .tdl, .edl .stp .db, or .template file`],
-                                rawMessages: [],
-                                // buttons?: type_DialogMessageBoxButton[] | undefined;
-                                // attachment?: any;
-                            })
+                            const dialogInfo: { info: type_DialogMessageBox } = {
+                                info: {
+                                    // command?: string | undefined;
+                                    messageType: "error", // | "warning" | "info";
+                                    humanReadableMessages: [`${tdlFileName} is not a .tdl, .edl .stp .db, or .template file`],
+                                    rawMessages: [],
+                                    // buttons?: type_DialogMessageBoxButton[] | undefined;
+                                    // attachment?: any;
+                                }
+                            };
+                            if (windowAgent instanceof MainWindowAgent) {
+                                windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
+                            } else if (windowAgent instanceof DisplayWindowAgent) {
+                                windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
+                            }
+
                         }
 
                     }
@@ -1496,15 +1576,22 @@ export class IpcManagerOnMainProcess {
         } catch (e) {
             Log.error(this.getMainProcessId(), e);
             if (windowAgent !== undefined) {
-                windowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    // command?: string | undefined;
-                    messageType: "error", // | "warning" | "info";
-                    humanReadableMessages: [`Failed to open file ${tdlFileNames}`],
-                    rawMessages: [`${e}`],
-                    // buttons?: type_DialogMessageBoxButton[] | undefined;
-                    // attachment?: any;
+                const dialogInfo: { info: type_DialogMessageBox } = {
+                    info: {
+                        // command?: string | undefined;
+                        messageType: "error", // | "warning" | "info";
+                        humanReadableMessages: [`Failed to open file ${tdlFileNames}`],
+                        rawMessages: [`${e}`],
+                        // buttons?: type_DialogMessageBoxButton[] | undefined;
+                        // attachment?: any;
+                    }
+                };
+                if (windowAgent instanceof MainWindowAgent) {
+                    windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
+                } else if (windowAgent instanceof DisplayWindowAgent) {
+                    windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
+                }
 
-                })
             }
         }
     };
@@ -1542,7 +1629,7 @@ export class IpcManagerOnMainProcess {
         }
         try {
             const displayWindowAgent = windowAgentsManager.getAgent(windowId);
-            if (displayWindowAgent === undefined) {
+            if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
                 const errMsg = `Display window ${windowId} does not exists`;
                 throw new Error(errMsg);
             }
@@ -1611,12 +1698,14 @@ export class IpcManagerOnMainProcess {
                 const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(windowId);
                 if (displayWindowAgent instanceof DisplayWindowAgent) {
                     displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        // command?: string | undefined;
-                        messageType: "error", // | "warning" | "info";
-                        humanReadableMessages: [`You are not allowed to visit ${tdlFileName1}.`],
-                        rawMessages: [],
-                        // buttons?: type_DialogMessageBoxButton[] | undefined;
-                        // attachment?: any;
+                        info: {
+                            // command?: string | undefined;
+                            messageType: "error", // | "warning" | "info";
+                            humanReadableMessages: [`You are not allowed to visit ${tdlFileName1}.`],
+                            rawMessages: [],
+                            // buttons?: type_DialogMessageBoxButton[] | undefined;
+                            // attachment?: any;
+                        }
                     })
                 }
                 return;
@@ -1639,21 +1728,24 @@ export class IpcManagerOnMainProcess {
                 } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
                     displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
                         {
-                            command: "save-tdl-file",
-                            humanReadableMessages: ["Save display to"], // each string has a new line
-                            buttons: [
-                                {
-                                    text: "OK",
-                                },
-                                {
-                                    text: "Cancel",
+                            info:
+                            {
+                                command: "save-tdl-file",
+                                humanReadableMessages: ["Save display to"], // each string has a new line
+                                buttons: [
+                                    {
+                                        text: "OK",
+                                    },
+                                    {
+                                        text: "Cancel",
+                                    }
+                                ],
+                                defaultInputText: "",
+                                attachment: {
+                                    windowId: windowId,
+                                    tdl: tdl,
+                                    tdlFileName1: "",
                                 }
-                            ],
-                            defaultInputText: "",
-                            attachment: {
-                                windowId: windowId,
-                                tdl: tdl,
-                                tdlFileName1: "",
                             }
                         }
                     );
@@ -1670,17 +1762,23 @@ export class IpcManagerOnMainProcess {
                 if (err) {
                     Log.error(this.getMainProcessId(), err);
                     displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        // messageType: "error" | "warning" | "info",
-                        // humanReadableMessages: string[],
-                        // rawMessages: string[],
-                        messageType: "error",
-                        humanReadableMessages: [`Failed to save ${tdlFileName}`, "Please check the file permission."],
-                        rawMessages: ["Below is the raw message:", `${err}`],
+                        info: {
+                            // messageType: "error" | "warning" | "info",
+                            // humanReadableMessages: string[],
+                            // rawMessages: string[],
+                            messageType: "error",
+                            humanReadableMessages: [`Failed to save ${tdlFileName}`, "Please check the file permission."],
+                            rawMessages: ["Below is the raw message:", `${err}`],
+                        }
                     })
 
                 } else {
                     Log.info(this.getMainProcessId(), `Saved tdl to file ${tdlFileName}`);
-                    displayWindowAgent.sendFromMainProcess("tdl-file-saved", tdlFileName);
+                    if (tdlFileName !== undefined) {
+                        displayWindowAgent.sendFromMainProcess("tdl-file-saved", {
+                            newTdlFileName: tdlFileName
+                        });
+                    }
                 }
             });
         } catch (e) {
@@ -1714,18 +1812,21 @@ export class IpcManagerOnMainProcess {
                 } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
                     displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
                         {
-                            command: "save-data-to-file",
-                            humanReadableMessages: ["Save file to"], // each string has a new line
-                            buttons: [
-                                {
-                                    text: "OK",
-                                },
-                                {
-                                    text: "Cancel",
-                                }
-                            ],
-                            defaultInputText: "",
-                            attachment: options
+                            info:
+                            {
+                                command: "save-data-to-file",
+                                humanReadableMessages: ["Save file to"], // each string has a new line
+                                buttons: [
+                                    {
+                                        text: "OK",
+                                    },
+                                    {
+                                        text: "Cancel",
+                                    }
+                                ],
+                                defaultInputText: "",
+                                attachment: options
+                            }
                         }
                     );
                     return;
@@ -1734,9 +1835,11 @@ export class IpcManagerOnMainProcess {
 
             if (fileName === undefined) {
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    messageType: "error", // | "warning" | "info",
-                    humanReadableMessages: [`Failed to save file: file not selected`],
-                    // rawMessages: ["Below is the raw message:", `${err}`],
+                    info: {
+                        messageType: "error", // | "warning" | "info",
+                        humanReadableMessages: [`Failed to save file: file not selected`],
+                        rawMessages: [""],
+                    }
                 });
                 return;
             }
@@ -1745,12 +1848,14 @@ export class IpcManagerOnMainProcess {
                 if (err) {
                     Log.error(this.getMainProcessId(), err);
                     displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        // messageType: "error" | "warning" | "info",
-                        // humanReadableMessages: string[],
-                        // rawMessages: string[],
-                        messageType: "error",
-                        humanReadableMessages: [`Failed to save ${fileName}`, "Please check the file permission."],
-                        rawMessages: ["Below is the raw message:", `${err}`],
+                        info: {
+                            // messageType: "error" | "warning" | "info",
+                            // humanReadableMessages: string[],
+                            // rawMessages: string[],
+                            messageType: "error",
+                            humanReadableMessages: [`Failed to save ${fileName}`, "Please check the file permission."],
+                            rawMessages: ["Below is the raw message:", `${err}`],
+                        }
                     })
 
                 } else {
@@ -1799,7 +1904,11 @@ export class IpcManagerOnMainProcess {
                     displayWindowAgent.takeThumbnail(windowName, tdlFileName);
                 }, 3000);
                 // send local font names to display window
-                displayWindowAgent.sendFromMainProcess("local-font-names", this.getMainProcess().getMainProcesses().getLocalFontNames());
+                displayWindowAgent.sendFromMainProcess("local-font-names",
+                    {
+                        localFontNames: this.getMainProcess().getMainProcesses().getLocalFontNames()
+                    }
+                );
 
                 this.getMainProcess().getWindowAgentsManager().setDockMenu();
             } else if (displayWindowAgent === windowAgentsManager.previewDisplayWindowAgent) {
@@ -1937,11 +2046,11 @@ export class IpcManagerOnMainProcess {
 
         // (1)
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-        const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId) as DisplayWindowAgent;
-        if (displayWindowAgent === undefined) {
+        const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
+        if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
             return;
         }
-        
+
         let data = await displayWindowAgent.tcaGet(channelName, ioTimeout, dbrType);
 
         // (2)
@@ -1951,7 +2060,13 @@ export class IpcManagerOnMainProcess {
             }
         }
         // ioId and widgetKey are bounced back
-        displayWindowAgent.sendFromMainProcess("tca-get-result", ioId, widgetKey, data);
+        displayWindowAgent.sendFromMainProcess("tca-get-result",
+            {
+                ioId: ioId,
+                widgetKey: widgetKey,
+                newDbrData: data
+            }
+        );
         return data;
     };
 
@@ -1984,9 +2099,22 @@ export class IpcManagerOnMainProcess {
         // ioId and widgetKey are bounced back
         Log.debug(this.getMainProcessId(), "tca-get-meta result for", channelName, "is", data);
         if (channelName.startsWith("pva://")) {
-            displayWindowAgent.sendFromMainProcess("tca-get-pva-type-result", channelName, widgetKey, data, ioId);
+            displayWindowAgent.sendFromMainProcess("fetch-pva-type",
+                {
+                    channelName: channelName,
+                    widgetKey: widgetKey,
+                    fullPvaType: data,
+                    ioId: ioId,
+                }
+            );
         } else {
-            displayWindowAgent.sendFromMainProcess("tca-get-result", ioId, widgetKey, data);
+            displayWindowAgent.sendFromMainProcess("tca-get-result",
+                {
+                    ioId: ioId,
+                    widgetKey: widgetKey,
+                    newDbrData: data
+                }
+            );
         }
     };
 
@@ -2007,7 +2135,11 @@ export class IpcManagerOnMainProcess {
         // (2)
         // ioId and widgetKey are bounced back
         Log.info(this.getMainProcessId(), "fetch Pva Type for", channelName, "is", data);
-        displayWindowAgent.sendFromMainProcess("fetch-pva-type", channelName, widgetKey, data, ioId);
+        displayWindowAgent.sendFromMainProcess("fetch-pva-type",
+            {
+                channelName, widgetKey, fullPvaType: data, ioId
+            }
+        );
     };
 
     handleTcaMonitor = (event: any, options: IpcEventArgType["tca-monitor"]) => {
@@ -2263,18 +2395,20 @@ export class IpcManagerOnMainProcess {
                 });
             } else if (this.getMainProcess().getMainProcessMode() === "ssh-server" || this.getMainProcess().getMainProcessMode() === "web") {
                 displayWindowAgent.sendFromMainProcess("dialog-show-input-box", {
-                    command: "select-a-file",
-                    humanReadableMessages: ["Select a file"], // each string has a new line
-                    buttons: [
-                        {
-                            text: "OK",
-                        },
-                        {
-                            text: "Cancel",
-                        }
-                    ],
-                    defaultInputText: "",
-                    attachment: options
+                    info: {
+                        command: "select-a-file",
+                        humanReadableMessages: ["Select a file"], // each string has a new line
+                        buttons: [
+                            {
+                                text: "OK",
+                            },
+                            {
+                                text: "Cancel",
+                            }
+                        ],
+                        defaultInputText: "",
+                        attachment: options
+                    }
                 })
                 return;
             }
@@ -2283,7 +2417,9 @@ export class IpcManagerOnMainProcess {
             const fileName = fileNames[0];
             if (fileName !== undefined) {
                 // bounce back options
-                displayWindowAgent.sendFromMainProcess("select-a-file", options, fileName);
+                displayWindowAgent.sendFromMainProcess("select-a-file", {
+                    options, fileName
+                });
             }
         }
     };
@@ -2428,12 +2564,14 @@ export class IpcManagerOnMainProcess {
                     const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
                     if (displayWindowAgent instanceof DisplayWindowAgent) {
                         displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                            // command?: string | undefined,
-                            messageType: "error", // | "warning" | "info", // symbol
-                            humanReadableMessages: [`Failed to execute command "${data["command"]}"`], // each string has a new line
-                            rawMessages: [`${err}`], // computer generated messages
-                            // buttons?: type_DialogMessageBoxButton[] | undefined,
-                            // attachment?: any,
+                            info: {
+                                // command?: string | undefined,
+                                messageType: "error", // | "warning" | "info", // symbol
+                                humanReadableMessages: [`Failed to execute command "${data["command"]}"`], // each string has a new line
+                                rawMessages: [`${err}`], // computer generated messages
+                                // buttons?: type_DialogMessageBoxButton[] | undefined,
+                                // attachment?: any,
+                            }
                         })
                     }
                 });
@@ -2444,12 +2582,14 @@ export class IpcManagerOnMainProcess {
             const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
             if (displayWindowAgent instanceof DisplayWindowAgent) {
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    // command?: string | undefined,
-                    messageType: "error", // | "warning" | "info", // symbol
-                    humanReadableMessages: [`Failed to execute command "${data["command"]}"`], // each string has a new line
-                    rawMessages: [`${e}`], // computer generated messages
-                    // buttons?: type_DialogMessageBoxButton[] | undefined,
-                    // attachment?: any,
+                    info: {
+                        // command?: string | undefined,
+                        messageType: "error", // | "warning" | "info", // symbol
+                        humanReadableMessages: [`Failed to execute command "${data["command"]}"`], // each string has a new line
+                        rawMessages: [`${e}`], // computer generated messages
+                        // buttons?: type_DialogMessageBoxButton[] | undefined,
+                        // attachment?: any,
+                    }
                 })
             }
         }
@@ -2485,21 +2625,23 @@ export class IpcManagerOnMainProcess {
                     } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
                         displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
                             {
-                                command: "data-viewer-export-data",
-                                humanReadableMessages: ["Save file to"], // each string has a new line
-                                buttons: [
-                                    {
-                                        text: "OK",
-                                    },
-                                    {
-                                        text: "Cancel",
+                                info: {
+                                    command: "data-viewer-export-data",
+                                    humanReadableMessages: ["Save file to"], // each string has a new line
+                                    buttons: [
+                                        {
+                                            text: "OK",
+                                        },
+                                        {
+                                            text: "Cancel",
+                                        }
+                                    ],
+                                    defaultInputText: "",
+                                    attachment: {
+                                        displayWindowId: displayWindowId,
+                                        data: data,
+                                        fileName1: fileName1,
                                     }
-                                ],
-                                defaultInputText: "",
-                                attachment: {
-                                    displayWindowId: displayWindowId,
-                                    data: data,
-                                    fileName1: fileName1,
                                 }
                             }
                         );
@@ -2512,12 +2654,14 @@ export class IpcManagerOnMainProcess {
                 } catch (e) {
                     Log.error(this.getMainProcessId(), `Cannot save DataViewer data to file ${fileName}`);
                     displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        // command?: string | undefined,
-                        messageType: "error", // | "warning" | "info", // symbol
-                        humanReadableMessages: [`Cannot save DataViewer data to file ${fileName}`], // each string has a new line
-                        rawMessages: [`${e}`], // computer generated messages
-                        // buttons?: type_DialogMessageBoxButton[] | undefined,
-                        // attachment?: any,
+                        info: {
+                            // command?: string | undefined,
+                            messageType: "error", // | "warning" | "info", // symbol
+                            humanReadableMessages: [`Cannot save DataViewer data to file ${fileName}`], // each string has a new line
+                            rawMessages: [`${e}`], // computer generated messages
+                            // buttons?: type_DialogMessageBoxButton[] | undefined,
+                            // attachment?: any,
+                        }
                     })
                 }
             }
@@ -2621,7 +2765,7 @@ export class IpcManagerOnMainProcess {
             if (displayWindowAgent instanceof DisplayWindowAgent) {
                 displayWindowAgent.sendFromMainProcess("epics-stats", {
                     widgetKey: data["widgetKey"],
-                    epicsStats: epicsStats,
+                    epicsStats: epicsStats as any,
                 });
             }
 
@@ -2694,12 +2838,14 @@ export class IpcManagerOnMainProcess {
                 const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
                 if (displayWindowAgent instanceof DisplayWindowAgent) {
                     displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        // command?: string | undefined;
-                        messageType: "error", // | "warning" | "info";
-                        humanReadableMessages: [`You are not allowed to visit ${folderPath}.`],
-                        rawMessages: [],
-                        // buttons?: type_DialogMessageBoxButton[] | undefined;
-                        // attachment?: any;
+                        info: {
+                            // command?: string | undefined;
+                            messageType: "error", // | "warning" | "info";
+                            humanReadableMessages: [`You are not allowed to visit ${folderPath}.`],
+                            rawMessages: [],
+                            // buttons?: type_DialogMessageBoxButton[] | undefined;
+                            // attachment?: any;
+                        }
                     })
                 }
                 return;
@@ -2743,17 +2889,19 @@ export class IpcManagerOnMainProcess {
             const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
             if (displayWindowAgent instanceof DisplayWindowAgent) {
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    // command?: string | undefined;
-                    messageType: "error", // | "warning" | "info";
-                    humanReadableMessages: [`Failed to read folder ${options["folderPath"]}.`],
-                    rawMessages: [],
-                    // buttons?: type_DialogMessageBoxButton[] | undefined;
-                    // attachment?: any;
+                    info: {
+                        // command?: string | undefined;
+                        messageType: "error", // | "warning" | "info";
+                        humanReadableMessages: [`Failed to read folder ${options["folderPath"]}.`],
+                        rawMessages: [],
+                        // buttons?: type_DialogMessageBoxButton[] | undefined;
+                        // attachment?: any;
+                    }
                 })
                 // let 
                 displayWindowAgent.sendFromMainProcess("fetch-folder-content", {
                     widgetKey: options["widgetKey"],
-                    folderContent: {},
+                    folderContent: [],
                     success: false,
                 })
             }
@@ -2790,12 +2938,14 @@ export class IpcManagerOnMainProcess {
                 const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(message["displayWindowId"]);
                 if (displayWindowAgent instanceof DisplayWindowAgent) {
                     displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        // command?: string | undefined;
-                        messageType: "error", // | "warning" | "info";
-                        humanReadableMessages: [`You are not allowed to ${message["command"].replaceAll("-", " ")} for ${folderPath}.`],
-                        rawMessages: [],
-                        // buttons?: type_DialogMessageBoxButton[] | undefined;
-                        // attachment?: any;
+                        info: {
+                            // command?: string | undefined;
+                            messageType: "error", // | "warning" | "info";
+                            humanReadableMessages: [`You are not allowed to ${message["command"].replaceAll("-", " ")} for ${folderPath}.`],
+                            rawMessages: [],
+                            // buttons?: type_DialogMessageBoxButton[] | undefined;
+                            // attachment?: any;
+                        }
                     })
                 }
                 return;
@@ -2829,12 +2979,14 @@ export class IpcManagerOnMainProcess {
                     Log.error('Error renaming file:', err);
                     // send error message to renderer process
                     displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        // command?: string | undefined;
-                        messageType: "error", // | "warning" | "info";
-                        humanReadableMessages: [`Failed to change file name from ${oldName} to ${newName}`, `Reason: ${err}`],
-                        rawMessages: [],
-                        // buttons?: type_DialogMessageBoxButton[] | undefined;
-                        // attachment?: any;
+                        info: {
+                            // command?: string | undefined;
+                            messageType: "error", // | "warning" | "info";
+                            humanReadableMessages: [`Failed to change file name from ${oldName} to ${newName}`, `Reason: ${err}`],
+                            rawMessages: [],
+                            // buttons?: type_DialogMessageBoxButton[] | undefined;
+                            // attachment?: any;
+                        }
                     })
 
                     displayWindowAgent.sendFromMainProcess("file-browser-command", {
@@ -2859,12 +3011,14 @@ export class IpcManagerOnMainProcess {
 
             } catch (e) {
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    // command?: string | undefined;
-                    messageType: "error", // | "warning" | "info";
-                    humanReadableMessages: [`Failed to create file ${fullFileName}`, `Reason ${e}`],
-                    rawMessages: [],
-                    // buttons?: type_DialogMessageBoxButton[] | undefined;
-                    // attachment?: any;
+                    info: {
+                        // command?: string | undefined;
+                        messageType: "error", // | "warning" | "info";
+                        humanReadableMessages: [`Failed to create file ${fullFileName}`, `Reason ${e}`],
+                        rawMessages: [],
+                        // buttons?: type_DialogMessageBoxButton[] | undefined;
+                        // attachment?: any;
+                    }
                 })
                 displayWindowAgent.sendFromMainProcess("file-browser-command", {
                     ...message,
@@ -2886,12 +3040,14 @@ export class IpcManagerOnMainProcess {
 
             } catch (e) {
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    // command?: string | undefined;
-                    messageType: "error", // | "warning" | "info";
-                    humanReadableMessages: [`Failed to create file ${fullFolderName}`, `Reason: ${e}`],
-                    rawMessages: [],
-                    // buttons?: type_DialogMessageBoxButton[] | undefined;
-                    // attachment?: any;
+                    info: {
+                        // command?: string | undefined;
+                        messageType: "error", // | "warning" | "info";
+                        humanReadableMessages: [`Failed to create file ${fullFolderName}`, `Reason: ${e}`],
+                        rawMessages: [],
+                        // buttons?: type_DialogMessageBoxButton[] | undefined;
+                        // attachment?: any;
+                    }
                 })
                 displayWindowAgent.sendFromMainProcess("file-browser-command", {
                     ...message,
@@ -2945,27 +3101,31 @@ export class IpcManagerOnMainProcess {
                     });
                 } else {
                     Log.error(this.getMainProcessId(), `Cannot read tdl file ${tdlFileName}`);
-                    if (fileBrowserDisplayWindowAgent !== undefined) {
+                    if (fileBrowserDisplayWindowAgent instanceof DisplayWindowAgent) {
                         fileBrowserDisplayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                            // command?: string | undefined;
-                            messageType: "error", // | "warning" | "info";
-                            humanReadableMessages: [`The hidden preview display is not ready.`],
-                            rawMessages: [],
-                            // buttons?: type_DialogMessageBoxButton[] | undefined;
-                            // attachment?: any;
+                            info: {
+                                // command?: string | undefined;
+                                messageType: "error", // | "warning" | "info";
+                                humanReadableMessages: [`The hidden preview display is not ready.`],
+                                rawMessages: [],
+                                // buttons?: type_DialogMessageBoxButton[] | undefined;
+                                // attachment?: any;
+                            }
                         })
                     }
                 }
             } else {
                 Log.error(this.getMainProcessId(), `Cannot read tdl file ${tdlFileName}`);
-                if (fileBrowserDisplayWindowAgent !== undefined) {
+                if (fileBrowserDisplayWindowAgent instanceof DisplayWindowAgent) {
                     fileBrowserDisplayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        // command?: string | undefined;
-                        messageType: "error", // | "warning" | "info";
-                        humanReadableMessages: [`Failed to open file ${tdlFileName}`],
-                        rawMessages: [],
-                        // buttons?: type_DialogMessageBoxButton[] | undefined;
-                        // attachment?: any;
+                        info: {
+                            // command?: string | undefined;
+                            messageType: "error", // | "warning" | "info";
+                            humanReadableMessages: [`Failed to open file ${tdlFileName}`],
+                            rawMessages: [],
+                            // buttons?: type_DialogMessageBoxButton[] | undefined;
+                            // attachment?: any;
+                        }
                     })
                 }
             }
@@ -3106,7 +3266,7 @@ export class IpcManagerOnMainProcess {
 
     handleRequestArchiveData = async (event: any, options: IpcEventArgType["request-archive-data"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
-        if (displayWindowAgent === undefined) {
+        if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
             return;
         }
         let result: [number[], number[]] | undefined = undefined;
@@ -3206,18 +3366,20 @@ export class IpcManagerOnMainProcess {
 
                                 displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
                                     {
-                                        command: "open-text-file",
-                                        humanReadableMessages: ["Open a file"], // each string has a new line
-                                        buttons: [
-                                            {
-                                                text: "OK",
-                                            },
-                                            {
-                                                text: "Cancel",
-                                            }
-                                        ],
-                                        defaultInputText: "",
-                                        attachment: options,
+                                        info: {
+                                            command: "open-text-file",
+                                            humanReadableMessages: ["Open a file"], // each string has a new line
+                                            buttons: [
+                                                {
+                                                    text: "OK",
+                                                },
+                                                {
+                                                    text: "Cancel",
+                                                }
+                                            ],
+                                            defaultInputText: "",
+                                            attachment: options,
+                                        }
                                     }
                                 )
                                 return;
@@ -3254,12 +3416,14 @@ export class IpcManagerOnMainProcess {
                         } else {
                             // ask user to determine if open or not
                             displayWindowAgent.sendFromMainProcess('dialog-show-message-box', {
-                                command: "open-text-file-large-confirm",
-                                messageType: "warning",
-                                humanReadableMessages: [`This file is large (` + `${Math.round(fileSize / 1024 / 1024)}` + ` MB). You will not be able to edit it. And it may be slow to open. Do you still want to open it?`],
-                                rawMessages: [],
-                                buttons: [{ text: "Yes" }, { text: "No" }],
-                                attachment: { ...options, fileName: fileName },
+                                info: {
+                                    command: "open-text-file-large-confirm",
+                                    messageType: "warning",
+                                    humanReadableMessages: [`This file is large (` + `${Math.round(fileSize / 1024 / 1024)}` + ` MB). You will not be able to edit it. And it may be slow to open. Do you still want to open it?`],
+                                    rawMessages: [],
+                                    buttons: [{ text: "Yes" }, { text: "No" }],
+                                    attachment: { ...options, fileName: fileName },
+                                }
                             });
                             return;
                         }
@@ -3268,10 +3432,12 @@ export class IpcManagerOnMainProcess {
                     const browserWindow = displayWindowAgent.getBrowserWindow();
                     if (browserWindow !== undefined) {
                         displayWindowAgent.sendFromMainProcess('dialog-show-message-box', {
-                            messageType: "error",
-                            humanReadableMessages: [`This file is too large (` + `${Math.round(fileSize / 1024 / 1024)}` + ` MB) to open. Please select a smaller file.`],
-                            rawMessages: [],
-                            buttons: [{ text: "OK" }],
+                            info: {
+                                messageType: "error",
+                                humanReadableMessages: [`This file is too large (` + `${Math.round(fileSize / 1024 / 1024)}` + ` MB) to open. Please select a smaller file.`],
+                                rawMessages: [],
+                                buttons: [{ text: "OK" }],
+                            }
                         })
                         return;
                     }
@@ -3289,9 +3455,11 @@ export class IpcManagerOnMainProcess {
 
             } catch (e) {
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    messageType: "error",
-                    humanReadableMessages: [`Error opening file ${fileName}`],
-                    rawMessages: [`${e}`],
+                    info: {
+                        messageType: "error",
+                        humanReadableMessages: [`Error opening file ${fileName}`],
+                        rawMessages: [`${e}`],
+                    }
                 })
             }
         }
@@ -3324,18 +3492,20 @@ export class IpcManagerOnMainProcess {
                     } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
                         displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
                             {
-                                command: "save-text-file",
-                                humanReadableMessages: ["Save file to"], // each string has a new line
-                                buttons: [
-                                    {
-                                        text: "OK",
-                                    },
-                                    {
-                                        text: "Cancel",
-                                    }
-                                ],
-                                defaultInputText: "",
-                                attachment: data,
+                                info: {
+                                    command: "save-text-file",
+                                    humanReadableMessages: ["Save file to"], // each string has a new line
+                                    buttons: [
+                                        {
+                                            text: "OK",
+                                        },
+                                        {
+                                            text: "Cancel",
+                                        }
+                                    ],
+                                    defaultInputText: "",
+                                    attachment: data,
+                                }
                             }
                         );
 
@@ -3354,9 +3524,11 @@ export class IpcManagerOnMainProcess {
                 return true;
             } catch (e) {
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    messageType: "error",
-                    humanReadableMessages: [`Error saving file ${fileName}`],
-                    rawMessages: [`${e}`],
+                    info: {
+                        messageType: "error",
+                        humanReadableMessages: [`Error saving file ${fileName}`],
+                        rawMessages: [`${e}`],
+                    }
                 })
                 Log.error(this.getMainProcessId(), e);
                 return false;
@@ -3382,9 +3554,11 @@ export class IpcManagerOnMainProcess {
 
             if (!fs.existsSync(options["src"])) {
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    messageType: "error",
-                    humanReadableMessages: [`Source folder/file does not exist.`],
-                    rawMessages: [],
+                    info: {
+                        messageType: "error",
+                        humanReadableMessages: [`Source folder/file does not exist.`],
+                        rawMessages: [],
+                    }
                 }
                 );
                 displayWindowAgent.sendFromMainProcess("file-converter-command", {
@@ -3396,9 +3570,11 @@ export class IpcManagerOnMainProcess {
             }
             if (!fs.existsSync(options["dest"])) {
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    messageType: "error",
-                    humanReadableMessages: [`Destination folder/file does not exist.`],
-                    rawMessages: [],
+                    info: {
+                        messageType: "error",
+                        humanReadableMessages: [`Destination folder/file does not exist.`],
+                        rawMessages: [],
+                    }
                 }
                 );
                 displayWindowAgent.sendFromMainProcess("file-converter-command", {
@@ -3410,9 +3586,11 @@ export class IpcManagerOnMainProcess {
             }
             if (options["depth"] > 50 || options["depth"] < 1) {
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    messageType: "error",
-                    humanReadableMessages: [`File search depath wrong: should be between 1 and 50 (both inclusive).`],
-                    rawMessages: [],
+                    info: {
+                        messageType: "error",
+                        humanReadableMessages: [`File search depath wrong: should be between 1 and 50 (both inclusive).`],
+                        rawMessages: [],
+                    }
                 }
                 );
                 displayWindowAgent.sendFromMainProcess("file-converter-command", {
@@ -3440,17 +3618,21 @@ export class IpcManagerOnMainProcess {
                 if (err) {
                     displayWindowAgent.sendFromMainProcess("dialog-show-message-box",
                         {
-                            messageType: "error",
-                            humanReadableMessages: [`Failed to save video to ${data["fileName"]}`],
-                            rawMessages: [err.toString()]
+                            info: {
+                                messageType: "error",
+                                humanReadableMessages: [`Failed to save video to ${data["fileName"]}`],
+                                rawMessages: [err.toString()]
+                            }
                         }
                     )
                 } else {
                     displayWindowAgent.sendFromMainProcess("dialog-show-message-box",
                         {
-                            messageType: "info",
-                            humanReadableMessages: [`Video file saved to ${data["fileName"]}`],
-                            rawMessages: []
+                            info: {
+                                messageType: "info",
+                                humanReadableMessages: [`Video file saved to ${data["fileName"]}`],
+                                rawMessages: []
+                            }
                         }
                     )
                 }

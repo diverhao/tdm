@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import * as os from "os";
 import path from "path";
 import { Log } from "../log/Log";
+import { type_about_info } from "../mainProcess/IpcEventArgType";
 
 /**
  * @packageDocumentation
@@ -19,7 +20,7 @@ import { Log } from "../log/Log";
  * 
  * @returns An object containing the "About" information.
  */
-export const generateAboutInfo = () => {
+export const generateAboutInfo = (): type_about_info => {
     const authors = ["Hao Hao (haoh@ornl.gov)", "Bixiao Zhao (zhao.bixiao@gmail.com)"];
     const organizations = ["Oak Ridge National Laboratory", "Knox County Schools"];
     // "process" is a electron.js specfic function

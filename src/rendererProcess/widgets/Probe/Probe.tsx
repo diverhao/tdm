@@ -686,13 +686,14 @@ export class Probe extends BaseWidget {
                                                 if (record.startsWith("# failed to")) {
                                                     const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
                                                     ipcManager.handleDialogShowMessageBox(undefined, {
-                                                        // command?: string | undefined,
-                                                        messageType: "error", // | "warning" | "info", // symbol
-                                                        humanReadableMessages: [`Failed to generate record for channel ${this.getChannelNames()[0]}`], // each string has a new line
-                                                        rawMessages: ["Did not find the record type"], // computer generated messages
-                                                        // buttons?: type_DialogMessageBoxButton[] | undefined,
-                                                        // attachment?: any,
-
+                                                        info: {
+                                                            // command?: string | undefined,
+                                                            messageType: "error", // | "warning" | "info", // symbol
+                                                            humanReadableMessages: [`Failed to generate record for channel ${this.getChannelNames()[0]}`], // each string has a new line
+                                                            rawMessages: ["Did not find the record type"], // computer generated messages
+                                                            // buttons?: type_DialogMessageBoxButton[] | undefined,
+                                                            // attachment?: any,
+                                                        }
                                                     })
                                                     return;
                                                 }
@@ -727,13 +728,14 @@ export class Probe extends BaseWidget {
                                                 if (record.startsWith("# failed to")) {
                                                     const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
                                                     ipcManager.handleDialogShowMessageBox(undefined, {
-                                                        // command?: string | undefined,
-                                                        messageType: "error", // | "warning" | "info", // symbol
-                                                        humanReadableMessages: [`Failed to generate record for channel ${this.getChannelNames()[0]}`], // each string has a new line
-                                                        rawMessages: ["Did not find the record type"], // computer generated messages
-                                                        // buttons?: type_DialogMessageBoxButton[] | undefined,
-                                                        // attachment?: any,
-
+                                                        info: {
+                                                            // command?: string | undefined,
+                                                            messageType: "error", // | "warning" | "info", // symbol
+                                                            humanReadableMessages: [`Failed to generate record for channel ${this.getChannelNames()[0]}`], // each string has a new line
+                                                            rawMessages: ["Did not find the record type"], // computer generated messages
+                                                            // buttons?: type_DialogMessageBoxButton[] | undefined,
+                                                            // attachment?: any,
+                                                        }
                                                     })
                                                     return;
                                                 }
@@ -888,7 +890,7 @@ export class Probe extends BaseWidget {
                             })}
                     </tbody>
                 </table>
-                
+
                 <div
                     style={{
                         paddingBottom: 20,
@@ -1221,9 +1223,9 @@ export class Probe extends BaseWidget {
                                     .getRoot()
                                     .getDisplayWindowClient()
                                     .getIpcManager()
-                                    .sendFromRendererProcess("create-utility-display-window", 
+                                    .sendFromRendererProcess("create-utility-display-window",
                                         {
-                                            utilityType: "Probe", 
+                                            utilityType: "Probe",
                                             utilityOptions: { channelNames: [channelName] }
                                         }
                                     );

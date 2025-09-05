@@ -3,28 +3,8 @@ import * as React from "react";
 import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 import { Log } from "../../../mainProcess/log/Log";
+import { type_DialogInputBox, type_DialogMessageBox, type_DialogMessageBoxButton } from "../../../mainProcess/mainProcess/IpcEventArgType";
 
-
-type type_DialogMessageBoxButton = { text: string, handleClick?: undefined | ((dialogInputText?: string) => void) };
-type type_DialogInputBoxButton = type_DialogMessageBoxButton;
-
-export type type_DialogMessageBox = {
-    command?: string | undefined,
-    messageType: "error" | "warning" | "info", // symbol
-    humanReadableMessages: string[], // each string has a new line
-    rawMessages: string[], // computer generated messages
-    buttons?: type_DialogMessageBoxButton[] | undefined,
-    attachment?: any,
-};
-
-export type type_DialogInputBox = {
-    command: string,
-    // messageType: "save" | "warning" | "info", // symbol
-    humanReadableMessages: string[], // each string has a new line
-    buttons: type_DialogInputBoxButton[],
-    defaultInputText: string,
-    attachment?: any,
-};
 
 
 /**
@@ -177,7 +157,7 @@ export abstract class Prompt {
 
     // args: array of input arguments, Record<string, string | string[]>
     _ElementAboutTdm = ({ args }: any) => {
-        const info = args[0];
+        const info = args[0]["info"];
 
         return (<this._ElementBackground>
             <div style={{

@@ -335,7 +335,11 @@ export class MainProcess {
     updateWsOpenerPort = (newPort: number) => {
         const mainWindowAgent = this.getWindowAgentsManager().getMainWindowAgent();
         if (mainWindowAgent !== undefined) {
-            mainWindowAgent.sendFromMainProcess("update-ws-opener-port", newPort);
+            mainWindowAgent.sendFromMainProcess("update-ws-opener-port", 
+                {
+                    newPort: newPort
+                }
+            );
         } else {
             Log.error(this.getProcessId(), "Main window agent does not exist");
         }
@@ -488,9 +492,11 @@ export class MainProcess {
                 });
 
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    messageType: "error",
-                    humanReadableMessages: [`There is already a file converter session running.`, "TDM can only run one file converter at a time"],
-                    rawMessages: [],
+                    info: {
+                        messageType: "error",
+                        humanReadableMessages: [`There is already a file converter session running.`, "TDM can only run one file converter at a time"],
+                        rawMessages: [],
+                    }
                 })
             }
             return;
@@ -548,9 +554,11 @@ export class MainProcess {
                     widgetKey: options["widgetKey"],
                 });
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                    info: {
                     messageType: "info",
                     humanReadableMessages: [`All files successfully converted.`],
                     rawMessages: [],
+                    }
                 })
             } else {
             }
@@ -572,9 +580,11 @@ export class MainProcess {
             });
 
             displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                info: {
                 messageType: "error",
                 humanReadableMessages: [`File converter tool quits unexpectedly.`],
                 rawMessages: [`${error}`],
+                }
             })
         });
 
@@ -595,15 +605,17 @@ export class MainProcess {
                     widgetKey: options["widgetKey"],
                 });
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                    info: {
                     messageType: "info",
                     humanReadableMessages: [`All files successfully converted.`],
                     rawMessages: [],
+                    }
                 })
             } else {
                 // externally terminated, code === 1, i.e. the Stop button is clicked
                 this.stopEdlFileConverterThread("User request to quit file converter thread");
                 displayWindowAgent.sendFromMainProcess("file-converter-command", {
-                    type: "allfile-conversion-finished",
+                    type: "all-file-conversion-finished",
                     status: "failed",
                     widgetKey: options["widgetKey"],
                 });

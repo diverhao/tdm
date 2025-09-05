@@ -667,43 +667,49 @@ export class BooleanButton extends BaseWidget {
                     const password = this.getAllText()["confirmOnWritePassword"];
                     ipcManager.handleDialogShowInputBox(undefined,
                         {
-                            command: "write-pv-confirmation-with-password",
-                            humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
-                            buttons: [
-                                {
-                                    text: "OK",
-                                    handleClick: (dialogInputText?: string) => {
-                                        if (dialogInputText !== password) {
-                                            // password does not match
-                                            ipcManager.handleDialogShowMessageBox(undefined,
-                                                {
-                                                    command: "write-pv-confirmation-wit-password-failed",
-                                                    humanReadableMessages: ["Wrong password."],
-                                                    buttons: [
+                            info:
+                            {
+                                command: "write-pv-confirmation-with-password",
+                                humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
+                                buttons: [
+                                    {
+                                        text: "OK",
+                                        handleClick: (dialogInputText?: string) => {
+                                            if (dialogInputText !== password) {
+                                                // password does not match
+                                                ipcManager.handleDialogShowMessageBox(undefined,
+                                                    {
+                                                        info:
                                                         {
-                                                            text: "OK",
-                                                            handleClick: () => {
-                                                            },
-                                                        },
-                                                    ],
-                                                    messageType: "error",
-                                                    rawMessages: [],
-                                                    attachment: undefined,
-                                                }
-                                            )
+                                                            command: "write-pv-confirmation-wit-password-failed",
+                                                            humanReadableMessages: ["Wrong password."],
+                                                            buttons: [
+                                                                {
+                                                                    text: "OK",
+                                                                    handleClick: () => {
+                                                                    },
+                                                                },
+                                                            ],
+                                                            messageType: "error",
+                                                            rawMessages: [],
+                                                            attachment: undefined,
+                                                        }
+                                                    }
+                                                )
 
-                                            return;
-                                        }
-                                        try {
-                                            tcaChannel.put(displayWindowId, { value: value }, 1);
-                                        } catch (e) {
-                                            Log.error(e);
-                                        }
-                                    },
-                                }
-                            ],
-                            defaultInputText: "",
-                            attachment: undefined,
+                                                return;
+                                            }
+                                            try {
+                                                tcaChannel.put(displayWindowId, { value: value }, 1);
+                                            } catch (e) {
+                                                Log.error(e);
+                                            }
+                                        },
+                                    }
+                                ],
+                                defaultInputText: "",
+                                attachment: undefined,
+                            }
                         }
                     )
                 } else {
@@ -711,28 +717,31 @@ export class BooleanButton extends BaseWidget {
                     const humanReadableMessage2 = "Are you sure to continue?"
                     ipcManager.handleDialogShowMessageBox(undefined,
                         {
-                            command: "write-pv-confirmation-without-password",
-                            humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
-                            buttons: [
-                                {
-                                    text: "Yes",
-                                    handleClick: () => {
-                                        try {
-                                            tcaChannel.put(displayWindowId, { value: value }, 1);
-                                        } catch (e) {
-                                            Log.error(e);
-                                        }
+                            info:
+                            {
+                                command: "write-pv-confirmation-without-password",
+                                humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
+                                buttons: [
+                                    {
+                                        text: "Yes",
+                                        handleClick: () => {
+                                            try {
+                                                tcaChannel.put(displayWindowId, { value: value }, 1);
+                                            } catch (e) {
+                                                Log.error(e);
+                                            }
+                                        },
                                     },
-                                },
-                                {
-                                    text: "No",
-                                    handleClick: () => {
-                                    },
-                                }
-                            ],
-                            messageType: "info",
-                            rawMessages: [],
-                            attachment: undefined,
+                                    {
+                                        text: "No",
+                                        handleClick: () => {
+                                        },
+                                    }
+                                ],
+                                messageType: "info",
+                                rawMessages: [],
+                                attachment: undefined,
+                            }
                         }
                     )
 

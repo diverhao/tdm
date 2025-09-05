@@ -13,6 +13,7 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Log } from "../../../mainProcess/log/Log";
 import path from "path";
 import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
+import { type_folder_content, type_single_file_folder } from "../../../mainProcess/mainProcess/IpcEventArgType";
 
 
 export type type_FileBrowser_tdl = {
@@ -26,15 +27,6 @@ export type type_FileBrowser_tdl = {
     rules: type_rules_tdl;
 };
 
-export type type_folder_content = type_single_file_folder[];
-
-
-export type type_single_file_folder = {
-    name: string, // only the name for regular file/folder, absolute path for bookmark
-    type: "file" | "folder",
-    size: number,
-    timeModified: number,
-};
 
 enum type_sorting_method {
     time_ascending,
@@ -1468,9 +1460,12 @@ export class FileBrowser extends BaseWidget {
             if (allowToVisit === false) {
                 displayWindowClient.getIpcManager().handleDialogShowMessageBox(undefined,
                     {
-                        messageType: "error", // | "warning" | "info";
-                        humanReadableMessages: [`You are not allowed to visit ${folderPath}.`],
-                        rawMessages: [],
+                        info:                        {
+                            messageType: "error", // | "warning" | "info";
+                            humanReadableMessages: [`You are not allowed to visit ${folderPath}.`],
+                            rawMessages: [],
+                            buttons: [],
+                        }
                     }
                 );
                 // change folderPath back

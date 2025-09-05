@@ -1444,9 +1444,11 @@ ss volt_check {
             Log.error(e);
             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
             displayWindowClient.getIpcManager().handleDialogShowMessageBox(undefined, {
-                messageType: "error",
-                humanReadableMessages: ["Error building the seq program.", `${e}`],
-                rawMessages: [],
+                info: {
+                    messageType: "error",
+                    humanReadableMessages: ["Error building the seq program.", `${e}`],
+                    rawMessages: [],
+                }
             })
 
         }

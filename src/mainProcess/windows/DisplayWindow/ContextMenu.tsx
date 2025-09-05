@@ -510,7 +510,7 @@ export class ContextMenu {
                 {
                     label: "Settings",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, widgetKey, "open-settings");
+                        this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, { widgetKey: widgetKey, actionName: "open-settings" });
                     },
                 },
                 { type: "separator" },
@@ -523,7 +523,7 @@ export class ContextMenu {
                     result.push({
                         label: text,
                         click: () => {
-                            this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, widgetKey, text);
+                            this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, { widgetKey: widgetKey, actionName: text });
                         }
                     })
                 }
@@ -534,13 +534,13 @@ export class ContextMenu {
                 {
                     label: "Copy",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, widgetKey, "copy-terminal-text");
+                        this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, { widgetKey: widgetKey, actionName: "copy-terminal-text" });
                     },
                 },
                 {
                     label: "Paste",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, widgetKey, "paste-terminal-text");
+                        this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, { widgetKey: widgetKey, actionName: "paste-terminal-text" });
                     },
                 },
                 { type: "separator" },
@@ -576,13 +576,13 @@ export class ContextMenu {
                     {
                         label: "Clear graph",
                         click: () => {
-                            this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, widgetKey, "clear-graph");
+                            this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, { widgetKey: widgetKey, actionName: "clear-graph" });
                         },
                     },
                     {
                         label: "Graph settings",
                         click: () => {
-                            this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, widgetKey, "show-settings");
+                            this.getDisplayWindowClient().getIpcManager().handleWidgetSpecificAction(undefined, { widgetKey: widgetKey, actionName: "open-graph-settings" });
                         },
                     },
                     { type: "separator" },
@@ -601,21 +601,21 @@ export class ContextMenu {
             label: "Execute Display",
             accelerator: "CmdOrCtrl+e",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "execute-display", undefined)
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "execute-display", subcommand: undefined});
             },
         },
         {
             label: "Save Display on Server",
             accelerator: "CmdOrCtrl+s",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "save-display", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "save-display", subcommand: undefined});
             },
         },
         {
             label: "Download Display",
             accelerator: "CmdOrCtrl+Shift+s",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "save-display-as", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "save-display-as", subcommand: undefined});
             },
         },
 
@@ -623,7 +623,7 @@ export class ContextMenu {
             label: "Duplicate Display",
             accelerator: "CmdOrCtrl+d",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "duplicate-display", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "duplicate-display", subcommand: undefined});
             },
         },
         {
@@ -637,7 +637,7 @@ export class ContextMenu {
         {
             label: "Show Display Contents",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "show-tdl-file-contents", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "show-tdl-file-contents", subcommand: undefined});
             },
         },
         // {
@@ -659,14 +659,14 @@ export class ContextMenu {
             label: "Browse Display on Server",
             click: () => {
                 // this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "file-browser", ["", false]);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "file-browser", subcommand: ["", false]});
             },
         },
         {
             label: "Create New Display",
             accelerator: "CmdOrCtrl+n",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-new-display-in-web-mode", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-new-display-in-web-mode", subcommand: undefined});
             },
         },
 
@@ -677,32 +677,32 @@ export class ContextMenu {
                 {
                     label: "Label",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "label");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "label"});
                     },
                 },
 
                 {
                     label: "Polyline",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "polyline");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "polyline"});
                     },
                 },
                 {
                     label: "Arc",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "arc");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "arc"});
                     },
                 },
                 {
                     label: "Rectangle",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "rectangle");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "rectangle"});
                     },
                 },
                 {
                     label: "Media",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "media");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "media"});
                     },
                 },
             ],
@@ -713,25 +713,25 @@ export class ContextMenu {
                 {
                     label: "Text Update",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "text-update");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "text-update"});
                     },
                 },
                 {
                     label: "Meter",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "meter");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "meter"});
                     },
                 },
                 {
                     label: "Tank",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "tank");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "tank"});
                     },
                 },
                 {
                     label: "Thermometer",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "thermometer");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "thermometer"});
                     },
                 },
                 { type: "separator" },
@@ -739,32 +739,32 @@ export class ContextMenu {
                 {
                     label: "LED",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "led");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "led"});
                     },
                 },
                 {
                     label: "LED (Multi State)",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "led-multiple-state");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "led-multi-state"});
                     },
                 },
                 {
                     label: "Byte Monitor",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "byte-monitor");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "byte-monitor"});
                     },
                 },
                 { type: "separator" },
                 {
                     label: "Symbol",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "symbol");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "symbol"});
                     },
                 },
                 {
                     label: "Text Symbol",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "text-symbol");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "text-symbol"});
                     },
                 },
             ],
@@ -775,19 +775,19 @@ export class ContextMenu {
                 {
                     label: "Text Entry",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "text-entry");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "text-entry"});
                     },
                 },
                 {
                     label: "Scaled Slider",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "scaled-slider");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "scaled-slider"});
                     },
                 },
                 {
                     label: "Spinner",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "spinner");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "spinner"});
                     },
                 },
                 // {
@@ -802,38 +802,38 @@ export class ContextMenu {
                 {
                     label: "Boolean Button",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "boolean-button");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "boolean-button"});
                     },
                 },
                 {
                     label: "Slide Button",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "slide-button");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "slide-button"});
                     },
                 },
                 {
                     label: "Check Box",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "check-box");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "check-box"});
                     },
                 },
                 { type: "separator" },
                 {
                     label: "Choice Button",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "choice-button");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "choice-button"});
                     },
                 },
                 {
                     label: "Combo Box",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "combo-box");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "combo-box"});
                     },
                 },
                 {
                     label: "Radio Button",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "radio-button");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "radio-button"});
                     },
                 },
             ],
@@ -844,38 +844,38 @@ export class ContextMenu {
                 {
                     label: "Action Button",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "action-button");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "action-button"});
                     },
                 },
 
                 {
                     label: "Embedded Display",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "embedded-display");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "embedded-display"});
                     },
                 },
                 {
                     label: "Table",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "table");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "table"});
                     },
                 },
                 {
                     label: "Group",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "group");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "group"});
                     },
                 },
                 {
                     label: "Binary Image",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "binary-image");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "binary-image"});
                     },
                 },
                 {
                     label: "Image",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "image");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "image"});
                     },
                 },
 
@@ -884,49 +884,49 @@ export class ContextMenu {
                 {
                     label: "Probe",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "probe");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "probe"});
                     },
                 },
                 {
                     label: "PV Monitor",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "pv-monitor");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "pv-monitor"});
                     },
                 },
                 {
                     label: "Data Viewer",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "data-viewer");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "data-viewer"});
                     },
                 },
                 {
                     label: "XY Plot",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "xy-plot");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "xy-plot"});
                     },
                 },
                 {
                     label: "PV Table",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "pv-table");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "pv-table"});
                     },
                 },
                 {
                     label: "PV Monitor",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "pv-monitor");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "pv-monitor"});
                     },
                 },
                 {
                     label: "Calculator",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "calculator");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "calculator"});
                     },
                 },
                 {
                     label: "Channel Graph",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-widget", "channel-graph");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-widget", subcommand: "channel-graph"});
                     },
                 },
                 // do not explicitly create Help widget
@@ -944,28 +944,28 @@ export class ContextMenu {
             label: "Undo",
             accelerator: "CmdOrCtrl+z",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "undo", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "undo", subcommand: undefined});
             },
         },
         {
             label: "Redo",
             accelerator: "CmdOrCtrl+y",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "redo", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "redo", subcommand: undefined});
             },
         },
         {
             label: "Paste Widgets",
             accelerator: "CmdOrCtrl+v",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "paste-widgets", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "paste-widgets", subcommand: undefined});
             },
         },
         {
             label: "Select All Widgets",
             accelerator: "CmdOrCtrl+a",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "select-all-widgets", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "select-all-widgets", subcommand: undefined});
             },
         },
         // {
@@ -982,7 +982,7 @@ export class ContextMenu {
             label: "Toggle Title",
             accelerator: "CmdOrCtrl+t",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "toggle-title", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "toggle-title", subcommand: undefined});
             },
         },
         // {
@@ -1093,7 +1093,7 @@ export class ContextMenu {
             label: "Help",
             accelerator: "F1",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "help", []);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "help", subcommand: []});
             },
         },
 
@@ -1103,48 +1103,48 @@ export class ContextMenu {
             label: "Copy Widgets",
             accelerator: "CmdOrCtrl+c",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "copy-widgets", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "copy-widgets", subcommand: undefined});
             },
         },
         {
             label: "Cut Widgets",
             accelerator: "CmdOrCtrl+x",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "cut-widgets", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "cut-widgets", subcommand: undefined});
             },
         },
         {
             label: "Paste Widgets",
             accelerator: "CmdOrCtrl+v",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "paste-widgets", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "paste-widgets", subcommand: undefined});
             },
         },
         {
             label: "Delete Widgets",
             accelerator: "delete",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "delete-widgets", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "delete-widgets", subcommand: undefined});
             },
         },
         {
             label: "Duplicate Widgets",
             accelerator: "CmdOrCtrl+d",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "duplicate-widgets", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "duplicate-widgets", subcommand: undefined});
             },
         },
         { type: "separator" },
         {
             label: "Group Widgets",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "group-widgets", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "group-widgets", subcommand: undefined});
             },
         },
         {
             label: "Ungroup Widgets",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "ungroup-widgets", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "ungroup-widgets", subcommand: undefined});
             },
         },
         { type: "separator" },
@@ -1154,25 +1154,25 @@ export class ContextMenu {
                 {
                     label: "Bring to Front",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "bring-widget-to", "front");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "bring-widget-to", subcommand: "front"});
                     },
                 },
                 {
                     label: "Send to Back",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "bring-widget-to", "back");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "bring-widget-to", subcommand: "back"});
                     },
                 },
                 {
                     label: "Bring Forward",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "bring-widget-to", "forward");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "bring-widget-to", subcommand: "forward"});
                     },
                 },
                 {
                     label: "Send Backward",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "bring-widget-to", "backward");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "bring-widget-to", subcommand: "backward"});
                     },
                 },
             ],
@@ -1184,37 +1184,37 @@ export class ContextMenu {
                 {
                     label: "Left",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "align-widgets", "left");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "align-widgets", subcommand: "left"});
                     },
                 },
                 {
                     label: "Center",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "align-widgets", "center");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "align-widgets", subcommand: "center"});
                     },
                 },
                 {
                     label: "Right",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "align-widgets", "right");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "align-widgets", subcommand: "right"});
                     },
                 },
                 {
                     label: "Top",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "align-widgets", "top");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "align-widgets", subcommand: "top"});
                     },
                 },
                 {
                     label: "Middle",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "align-widgets", "middle");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "align-widgets", subcommand: "middle"});
                     },
                 },
                 {
                     label: "Bottom",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "align-widgets", "bottom");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "align-widgets", subcommand: "bottom"});
                     },
                 },
             ],
@@ -1225,37 +1225,37 @@ export class ContextMenu {
                 {
                     label: "according to Left",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "distribute-widgets", "left");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "distribute-widgets", subcommand: "left"});
                     },
                 },
                 {
                     label: "according to Center",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "distribute-widgets", "center");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "distribute-widgets", subcommand: "center"});
                     },
                 },
                 {
                     label: "according to Right",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "distribute-widgets", "right");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "distribute-widgets", subcommand: "right"});
                     },
                 },
                 {
                     label: "according to Top",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "distribute-widgets", "top");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "distribute-widgets", subcommand: "top"});
                     },
                 },
                 {
                     label: "according to Middle",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "distribute-widgets", "middle");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "distribute-widgets", subcommand: "middle"});
                     },
                 },
                 {
                     label: "according to Bottom",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "distribute-widgets", "bottom");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "distribute-widgets", subcommand: "bottom"});
                     },
                 },
             ],
@@ -1266,13 +1266,13 @@ export class ContextMenu {
                 {
                     label: "to Average Width",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "match-widgets-size", "width");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "match-widgets-size", subcommand: "width"});
                     },
                 },
                 {
                     label: "to Average Height",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "match-widgets-size", "height");
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "match-widgets-size", subcommand: "height"});
                     },
                 },
             ],
@@ -1282,7 +1282,7 @@ export class ContextMenu {
             label: "Help",
             accelerator: "F1",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "help", []);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "help", subcommand: []});
             },
         },
     ];
@@ -1292,21 +1292,21 @@ export class ContextMenu {
             label: "Edit Display",
             accelerator: "CmdOrCtrl+e",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "edit-display", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "edit-display", subcommand: undefined});
             },
         },
         {
             label: "Download Display",
             accelerator: "CmdOrCtrl+Shift+s",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "save-display-as", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "save-display-as", subcommand: undefined});
             },
         },
         {
             label: "Duplicate Display",
             accelerator: "CmdOrCtrl+d",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "duplicate-display", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "duplicate-display", subcommand: undefined});
             },
         },
         {
@@ -1320,7 +1320,7 @@ export class ContextMenu {
         {
             label: "Show Display Contents",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "show-tdl-file-contents", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "show-tdl-file-contents", subcommand: undefined});
             },
         },
         // {
@@ -1355,7 +1355,7 @@ export class ContextMenu {
             label: "Browse Displays on Server",
             click: () => {
                 // this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "file-browser", ["", false]);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "file-browser", subcommand: ["", false]});
             },
         },
 
@@ -1363,7 +1363,7 @@ export class ContextMenu {
             label: "Create New Display",
             accelerator: "CmdOrCtrl+n",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-new-display-in-web-mode", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-new-display-in-web-mode", subcommand: undefined});
             },
         },
 
@@ -1371,38 +1371,38 @@ export class ContextMenu {
         {
             label: "Copy All PV Names",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "copy-all-pv-names", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "copy-all-pv-names", subcommand: undefined});
             },
         },
         {
             label: "Copy All PV Values",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "copy-all-pv-values", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "copy-all-pv-values", subcommand: undefined});
             },
         },
         { type: "separator" },
         {
             label: "Probe",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "probe", [""]);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "probe", subcommand: [""]});
             },
         },
         {
             label: "PV Table",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "pv-table", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "pv-table", subcommand: undefined});
             },
         },
         {
             label: "PV Monitor",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "pv-monitor", [""]);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "pv-monitor", subcommand: [""]});
             },
         },
         {
             label: "Data Viewer",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "data-viewer", []);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "data-viewer", subcommand: []});
             },
         },
         // {
@@ -1414,13 +1414,13 @@ export class ContextMenu {
         {
             label: "Calculator",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "calculator", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "calculator", subcommand: undefined});
             },
         },
         {
             label: "Channel Graph",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "channel-graph", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "channel-graph", subcommand: undefined});
             },
         },
         { type: "separator" },
@@ -1428,7 +1428,7 @@ export class ContextMenu {
             label: "Toggle Title",
             accelerator: "CmdOrCtrl+t",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "toggle-title", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "toggle-title", subcommand: undefined});
             },
         },
         // {
@@ -1539,7 +1539,7 @@ export class ContextMenu {
             label: "Help",
             accelerator: "F1",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "help", []);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "help", subcommand: []});
             },
         },
     ];
@@ -1549,21 +1549,21 @@ export class ContextMenu {
             label: "Edit Display",
             accelerator: "CmdOrCtrl+e",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "edit-display", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "edit-display", subcommand: undefined});
             },
         },
         {
             label: "Download Display",
             accelerator: "CmdOrCtrl+Shift+s",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "save-display-as", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "save-display-as", subcommand: undefined});
             },
         },
         {
             label: "Duplicate Display",
             accelerator: "CmdOrCtrl+d",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "duplicate-display", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "duplicate-display", subcommand: undefined});
             },
         },
         {
@@ -1577,7 +1577,7 @@ export class ContextMenu {
         {
             label: "Show Display Contents",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "show-tdl-file-contents", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "show-tdl-file-contents", subcommand: undefined});
             },
         },
         // {
@@ -1613,14 +1613,14 @@ export class ContextMenu {
             label: "Browse Displays on Server",
             click: () => {
                 // this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "file-browser", ["", true]);
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "file-browser", ["", false]);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "file-browser", subcommand: ["", false]});
             },
         },
         {
             label: "Create New Display",
             accelerator: "CmdOrCtrl+n",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "create-new-display-in-web-mode", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "create-new-display-in-web-mode", subcommand: undefined});
             },
         },
 
@@ -1628,38 +1628,38 @@ export class ContextMenu {
         {
             label: "Copy PV Names",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "copy-widget-pv-names", this._widgetKeys);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "copy-widget-pv-names", subcommand: this._widgetKeys});
             },
         },
         {
             label: "Copy PV Values",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "copy-widget-pv-values", this._widgetKeys);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "copy-widget-pv-values", subcommand: this._widgetKeys});
             },
         },
         { type: "separator" },
         {
             label: "Probe",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "probe", this._widgetKeys);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "probe", subcommand: this._widgetKeys});
             },
         },
         {
             label: "PV Table",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "pv-table", this._widgetKeys);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "pv-table", subcommand: this._widgetKeys});
             },
         },
         {
             label: "PV Monitor",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "pv-monitor", this._widgetKeys);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, { command: "pv-monitor", subcommand: this._widgetKeys});
             },
         },
         {
             label: "Data Viewer",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "data-viewer", this._widgetKeys);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "data-viewer", subcommand: this._widgetKeys});
             },
         },
         // {
@@ -1671,7 +1671,7 @@ export class ContextMenu {
         {
             label: "Calculator",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "calculator", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "calculator", subcommand: undefined});
             },
         },
         // {
@@ -1686,7 +1686,7 @@ export class ContextMenu {
             label: "Toggle Title",
             accelerator: "CmdOrCtrl+t",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "toggle-title", undefined);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "toggle-title", subcommand: undefined});
             },
         },
         // {
@@ -1798,7 +1798,7 @@ export class ContextMenu {
             label: "Help",
             accelerator: "F1",
             click: () => {
-                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "help", []);
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, {command: "help", subcommand: []});
             },
         },
     ];
