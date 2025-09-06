@@ -2162,19 +2162,9 @@ export abstract class BaseWidget {
     }
 
     clearSchedule = () => {
-        // const Timeout = setTimeout(function () { }, 0).constructor;
-        // const Timer = setInterval(function () { }, 0).constructor;
-
         for (let schedule of this.getSchedules()) {
             clearTimeout(schedule as any);
             clearInterval(schedule as any);
-            // if (schedule instanceof Timeout) {
-            //     clearTimeout(schedule);
-            // } else if (schedule instanceof NodeJS.Timeout) {
-            //     clearInterval(schedule);
-            // } else {
-            //     Log.error("Error in clearSchedule()");
-            // }
         }
     }
 }

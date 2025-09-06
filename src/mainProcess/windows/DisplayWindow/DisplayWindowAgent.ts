@@ -1264,9 +1264,9 @@ export class DisplayWindowAgent {
                     this.sendFromMainProcess("dialog-show-message-box",
                         {
                             info: {
-                            messageType: "error",
-                            humanReadableMessages: [`Failed saving screenshot to folder ${imageFileName}`],
-                            rawMessages: [err.toString()]
+                                messageType: "error",
+                                humanReadableMessages: [`Failed saving screenshot to folder ${imageFileName}`],
+                                rawMessages: [err.toString()]
                             }
                         }
                     );
@@ -1307,9 +1307,9 @@ export class DisplayWindowAgent {
                     this.sendFromMainProcess("dialog-show-message-box",
                         {
                             info: {
-                            messageType: "error",
-                            humanReadableMessages: [`Failed saving screenshot to folder ${saveFolder}`],
-                            rawMessages: [err.toString()]
+                                messageType: "error",
+                                humanReadableMessages: [`Failed saving screenshot to folder ${saveFolder}`],
+                                rawMessages: [err.toString()]
                             }
                         }
                     )
@@ -1322,9 +1322,9 @@ export class DisplayWindowAgent {
             this.sendFromMainProcess("dialog-show-message-box",
                 {
                     info: {
-                    messageType: "error",
-                    humanReadableMessages: [`Failed saving screenshot to folder ${saveFolder}`],
-                    rawMessages: [err.toString()]
+                        messageType: "error",
+                        humanReadableMessages: [`Failed saving screenshot to folder ${saveFolder}`],
+                        rawMessages: [err.toString()]
                     }
                 }
             )
@@ -1377,7 +1377,7 @@ export class DisplayWindowAgent {
             result[displayWindowId] = null;
         }
         if (mainWindowAgent !== undefined && this.hiddenWindow === false) {
-            mainWindowAgent.sendFromMainProcess("new-thumbnail", 
+            mainWindowAgent.sendFromMainProcess("new-thumbnail",
                 {
                     data: result
                 }
@@ -1616,9 +1616,9 @@ export class DisplayWindowAgent {
                     // first one will be picked. This one is the one that
                     // we initiate the context menu
                     if (source.name === windowTitle) {
-                        this.sendFromMainProcess("start-record-video", 
+                        this.sendFromMainProcess("start-record-video",
                             {
-                                sourceId: source.id, 
+                                sourceId: source.id,
                                 folder: saveFolder
                             }
                         );
@@ -1671,7 +1671,6 @@ export class DisplayWindowAgent {
                         }
                     }
                 }
-
                 const windowOptions: Electron.BrowserWindowConstructorOptions = {
                     width: 800,
                     height: 500,
@@ -1689,8 +1688,9 @@ export class DisplayWindowAgent {
 
                     icon: path.join(__dirname, '../../../webpack/resources/webpages/tdm-logo.png'),
                     webPreferences: {
+                        preload: path.join(__dirname, 'preload.js'), // <-- preload script here
                         nodeIntegration: true, // use node.js
-                        contextIsolation: false,
+                        contextIsolation: true, // to use preload, must be true
                         nodeIntegrationInWorker: true,
                         sandbox: false,
                         webviewTag: true,

@@ -314,10 +314,15 @@ export class IpcManagerOnDisplayWindow {
             } else {
                 // regular display window
                 const tdlFileNames: string[] = [];
+
                 for (const file of event.dataTransfer.files) {
                     // full name
-                    const tdlFileName = file.path;
-                    tdlFileNames.push(tdlFileName);
+                    // must use preload.js to resolve the full file path
+                    const electronAPI = (window as any).electronAPI;
+                    if (electronAPI !== undefined && electronAPI.getFilePath !== undefined) {
+                        const tdlFileName = electronAPI.getFilePath(file);
+                        tdlFileNames.push(tdlFileName);
+                    }
                 }
                 if (g_widgets1 !== undefined) {
                     Log.debug("File Path of dragged files: ", tdlFileNames);
@@ -337,6 +342,7 @@ export class IpcManagerOnDisplayWindow {
                             this.getDisplayWindowClient().openTdlFileInWebMode(fileName, fileBlob);
                         }
                     } else {
+                        console.log("tdlFileNames ========================", tdlFileNames)
                         this.sendFromRendererProcess("open-tdl-file",
                             {
                                 options: {
@@ -1062,7 +1068,7 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleFetchFolderContent = (event: any, message:IpcEventArgType2["fetch-folder-content"]) => {
+    handleFetchFolderContent = (event: any, message: IpcEventArgType2["fetch-folder-content"]) => {
         const widget = g_widgets1.getWidget(message["widgetKey"]);
         if (widget instanceof FileBrowser) {
             if (message["success"] !== false) {
@@ -1468,7 +1474,7 @@ export class IpcManagerOnDisplayWindow {
     }
 
     handleNewLog = (event: any, result: IpcEventArgType2["new-log"]) => {
-        const {data} = result;
+        const { data } = result;
         const widgetKey = data["widgetKey"];
         const widget = g_widgets1.getWidget(widgetKey);
         if (widget instanceof LogViewer) {
