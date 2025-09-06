@@ -17,7 +17,7 @@ import { FontsData } from "../../global/FontsData";
 export type type_article = {
     articleName: string,
     linkPath: string,
-    element: (widget: Help, linkPath: string) => JSX.Element,
+    element: (widget: Help, linkPath: string) => React.JSX.Element,
 }
 
 export type type_chapter = {
@@ -467,14 +467,14 @@ export class Help {
     }
 
 
-    _ElementBody = (): JSX.Element => {
+    _ElementBody = (): React.JSX.Element => {
         return (
             <this._ElementArea></this._ElementArea>
         );
     };
 
 
-    _ElementArea = ({ }: any): JSX.Element => {
+    _ElementArea = ({ }: any): React.JSX.Element => {
 
         return (<this._ElementHelp></this._ElementHelp>);
     };

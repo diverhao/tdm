@@ -223,7 +223,7 @@ export class PvTable extends BaseWidget {
         )
     }
 
-    _ElementBodyRaw = (): JSX.Element => {
+    _ElementBodyRaw = (): React.JSX.Element => {
         return (
             <div style={{ ...this.getElementBodyRawStyle(), overflow: "scroll" }}>
                 <this._ElementArea></this._ElementArea>
@@ -237,7 +237,7 @@ export class PvTable extends BaseWidget {
     // toBeUpdatedIndex: number[] = [];
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): JSX.Element => {
+    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         return (
             <div
                 style={{

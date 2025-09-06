@@ -1,6 +1,5 @@
 import ReactDOM from "react-dom/client";
 import { MainWindowClient, mainWindowState } from "./MainWindowClient";
-import { type_args } from "../../arg/ArgParser";
 import { MainWindowProfileRunPage } from "../../../rendererProcess/mainWindow/MainWindowProfileRunPage";
 import { Log } from "../../log/Log";
 import { MainWindowProfileEditPage } from "../../../rendererProcess/mainWindow/MainWindowProfileEditPage";
@@ -60,11 +59,8 @@ export class IpcManagerOnMainWindow {
 
         client.onmessage = (event: any) => {
             const messageBuffer = event.data;
-            const message = JSON.parse(messageBuffer.toString(),
-                // (key, value) =>
-                //     value === null ? undefined : value
-            );
-
+            const message = JSON.parse(messageBuffer.toString());
+            this.replaceNullWithUndefined(message);
             Log.debug("received IPC message", messageBuffer.toString(), message);
             this.handleMessage(message);
         };
@@ -74,6 +70,19 @@ export class IpcManagerOnMainWindow {
             Log.debug("IPC error happens", message);
         };
     };
+
+
+    replaceNullWithUndefined = (obj: Record<string, any>) => {
+        if (obj && typeof obj === "object" && !Array.isArray(obj)) {
+            for (const key in obj) {
+                if (obj[key] === null) {
+                    obj[key] = undefined;
+                } else if (typeof obj[key] === "object") {
+                    this.replaceNullWithUndefined(obj[key]);
+                }
+            }
+        }
+    }
 
     handleMessage = (message: { processId: number; windowId: string; eventName: string; data: any[] }) => {
         const processId = message["processId"];
@@ -220,7 +229,7 @@ export class IpcManagerOnMainWindow {
 
     _handleNewThumbnail = (event: any, info: IpcEventArgType3["new-thumbnail"]) => {
         const { data } = info;
-        Log.debug("handle new thumbnail=========", data)
+        Log.info("handle new thumbnail=========", data)
         const profileRunPage = this.getMainWindowClient().getProfileRunPage();
         if (profileRunPage !== undefined) {
             profileRunPage.updateThumbnailGallery(data);

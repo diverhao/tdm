@@ -183,7 +183,7 @@ export class Root {
         return this._editable;
     };
 
-    getElement = (): JSX.Element => {
+    getElement = (): React.JSX.Element => {
         return <this._Element></this._Element>;
     };
 

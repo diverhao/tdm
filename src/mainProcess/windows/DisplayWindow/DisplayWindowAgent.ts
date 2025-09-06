@@ -1356,7 +1356,7 @@ export class DisplayWindowAgent {
                 image: string;
                 windowName?: string;
                 tdlFileName?: string;
-            } | undefined
+            } | null
         > = {};
         if (imageBase64 !== undefined) {
             this.thumbnail = imageBase64;
@@ -1374,7 +1374,7 @@ export class DisplayWindowAgent {
             }
         } else {
             this.thumbnail = "";
-            result[displayWindowId] = undefined;
+            result[displayWindowId] = null;
         }
         if (mainWindowAgent !== undefined && this.hiddenWindow === false) {
             mainWindowAgent.sendFromMainProcess("new-thumbnail", 

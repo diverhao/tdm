@@ -923,7 +923,7 @@ export abstract class BaseWidgetRule {
         return this._rules;
     };
 
-    getElement = (): JSX.Element => {
+    getElement = (): React.JSX.Element => {
         return <this._Element key={`${this.getPropertyName()}-${this.getIndex()}`}></this._Element>;
     };
 

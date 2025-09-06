@@ -1,40 +1,18 @@
 import * as React from "react";
 import { MouseEvent } from "react";
 import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
-import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
-
-import * as GlobalMethods from "../../global/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-// import { TextUpdateRules } from "./TextUpdateRules";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-// import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-// import * as d3 from "d3";
-// const d3 = require("d3");
 import { v4 as uuidv4 } from "uuid";
-// import vis from "vis-network";
-import { Network } from "vis-network/standalone/esm/vis-network";
-import { VisData } from "vis-network/declarations/network/gephiParser";
-import { DataSet } from "vis-network/standalone/esm/vis-network";
+import { Network, DataSet } from "vis-network";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { ChannelAlarmStatus, ChannelSeverity, menuScan, TcaChannel } from "../../channel/TcaChannel";
 import { Log } from "../../../mainProcess/log/Log";
-import { DbdFiles } from "../../channel/DbdFiles";
 import { SeqGraphSidebar } from "./SeqGraphSidebar";
 import { Condition, SeqProgram, SeqState, SeqStateSet } from "./SeqProgram";
 import { ElementMacrosTable } from "../../helperWidgets/SharedElements/MacrosTable";
 import { parseSeq } from "./SeqParser";
-import { content } from "html2canvas/dist/types/css/property-descriptors/content";
-// import { parseSeq } from "./SeqParser";
-
-
-enum type_channelSource {
-    dbFile,
-    ioc,
-};
-
-
 
 export type type_SeqGraph_tdl = {
     type: string;
@@ -49,15 +27,6 @@ export type type_SeqGraph_tdl = {
     // recordTypes: Record<string, any>;
     // menus: Record<string, any>;
 };
-
-enum type_nodeStatus {
-    expaneded,
-    not_expanded,
-    cannot_expand,
-}
-
-const borderWidth = 2;
-
 
 export enum colors {
     NO_ALARM = "rgba(25, 218, 0, 0)",
@@ -304,7 +273,7 @@ export class SeqGraph extends BaseWidget {
     };
 
     // Text area and resizers
-    _ElementBodyRaw = (): JSX.Element => {
+    _ElementBodyRaw = (): React.JSX.Element => {
         return (
             // always update the div below no matter the TextUpdateBody is .memo or not
             // TextUpdateResizer does not update if it is .memo
@@ -316,7 +285,7 @@ export class SeqGraph extends BaseWidget {
     };
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): JSX.Element => {
+    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         const allStyle = this.getAllStyle();
         const allText = this.getAllText();
         const [, forceUpdate] = React.useState({});

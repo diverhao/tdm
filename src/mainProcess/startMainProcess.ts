@@ -6,10 +6,17 @@
  * and sets up inter-process communication.
  * 
  * It is the entry point for the Electron.js main process.
+ * 
+ * About opening a file:
+ *  - In command line, run `./tdm abc.tdl` or `./tdm --attach -1 abc.tdl`
+ *    create a new TDM instance to open the file
+ *  - In command line, run `./tdm --attach abc.tdl` or `./tdm --attach -2 abc.tdl`
+ *    try to attach file to an existing TDM instance, if there is no existing instance, create a new one
+ *  - Double click the tdl file
+ *    same as above
  */
 
 
-import { readFileSync } from "fs";
 import WebSocket from "ws";
 import { ArgParser } from "./arg/ArgParser";
 import { MainProcesses } from "./mainProcess/MainProcesses";
@@ -18,7 +25,6 @@ import { MainProcess } from "./mainProcess/MainProcess";
 import { MainWindowAgent } from "./windows/MainWindow/MainWindowAgent";
 import { Log } from "./log/Log";
 import path from "path";
-import { execSync } from "child_process";
 
 /**
  * "site" is defined in package.json. We can use this variable to add
@@ -34,6 +40,8 @@ import { execSync } from "child_process";
  *  - sns-office-user
  */
 import { site } from "../../package.json";
+import { type_args } from "./mainProcess/IpcEventArgType";
+import { isStartedFromShell, openTdlInExistingInstance, processArgsAttach } from "./global/GlobalMethods";
 
 /**
  * `true` for the first TDM instance 
@@ -51,92 +59,46 @@ app.requestSingleInstanceLock();
  */
 ArgParser.printTdmBanner();
 
-// in development mode, process.argv may look like if we run
-// npm start --settings abcd
-// [
-//   '/Users/1h7/projects/tdm/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron',
-//   '.',
-//   'abcd'
-// ]
-// 
-// in packaged TDM, process.argv may look like this if we run
-// ./TDM --settings abcd
-// [ 
-//     '/Applications/TDM.app/Contents/MacOS/TDM', 
-//     '--settings', 
-//     'abcd' 
-// ]
-// console.log("process.argv:", process.argv);
-const args = ArgParser.parseArgs(process.argv, site);
-
-if (site === "sns-office-user") {
-    args["settings"] = path.join(__dirname, "resources/profiles/profiles-sns-office-user.json");
-}
-
-// if (args["mainProcessMode"] === "ssh-server") {
-// app.commandLine.appendSwitch("disable-gpu");
-// }
-
-console.error = console.log;
-
-Log.info('-1', "Input arguments:", args);
-
-// let continueInThisInstance = true;
+/**
+ * load command line arguments
+ */
+const args: type_args = ArgParser.parseArgs(process.argv, site);
 
 /**
- * When we double-click a TDL file in file manager, TDM will first try to open this file
- * in the existing instance. If it cannot find one, then create a new TDM instance.
- * 
- *  - on MacOS, it is handled by "open-file" event listener
- *  - on Linux or Windows, it is handled by "second-instance" event listener
+ * Here is the site-specific profile file
  */
-if (process.platform === "linux" || process.platform === "win32") {
-    if (isStartedFromShell() === false) {
-        Log.info("This TDM process is invoked by opening a file from file manager.")
-        args["attach"] = -2;
-    }
-}
+if (site === "sns-office-user") {
+    args["settings"] = path.join(__dirname, "resources/profiles/profiles-sns-office-user.json");
+} // add more site-specific profiles here
 
-if (args["attach"] === -2) {
-    Log.info("Try to open files in the 1st TDM instance")
-    if (app.requestSingleInstanceLock() === true) {
-        Log.info("This is the first instance, we open the files here")
-        args["attach"] = -1;
-    } else if (app.requestSingleInstanceLock() === false) {
-        // there is already at least one TDM instances running, open files in the first instance
-        // quit this instance
-        Log.info("TDL files are goning to be opened in another instance. We will terminate this instance.")
-        const cwd = args["cwd"];
-        const fileNames: string[] = [];
-        for (let fileName of args["fileNames"]) {
-            if (path.isAbsolute(fileName) === false) {
-                fileNames.push(path.join(cwd, fileName));
-            } else {
-                fileNames.push(fileName);
-            }
-        }
-        app.requestSingleInstanceLock({
-            attach: -2,
-            fileNames: fileNames,
-        });
-        app.exit()
-    }
-}
 
-// create a new instance
+console.error = console.log;
+Log.info('-1', "Input arguments:", args);
+
+
+processArgsAttach(args);
+
+/**
+ * if `--attach -1`, keep running this TDM instance
+ * 
+ * if `--attach 9527`, try to attach to a TDM instance listening to port 9527 and quit this one
+ */
 if (args["attach"] === -1) {
     Log.info('-1', "Creating TDM main processes.");
     const mainProcesses = new MainProcesses(args);
 
     mainProcesses.enableLogToFile();
-    /**
-     * In ssh-server mode, the createProcess() is invoked after we receive the process Id from ssh client
-     */
-    if (args["mainProcessMode"] !== "ssh-server") {
-
+    const mainProcesMode = args["mainProcessMode"];
+    if (mainProcesMode === "ssh-server") {
+        /**
+         * In ssh-server mode, the invocation of createProcess() is deferred 
+         * to after we receive the process Id from ssh client
+         */
+    } else {
+        // desktop and web mode
         const handleOpenFile = (path: string) => {
 
-            // do the job after the app is ready
+            // "blocks" until the app is ready
             app.whenReady().then(() => {
                 const processes = mainProcesses.getProcesses();
                 // we use the process that is created at last
@@ -217,9 +179,10 @@ if (args["attach"] === -1) {
          * 
          * This event is emitted only when we double click the TDL file, i.e. "open abc.tdl" in command line
          * 
-         * This file is opened in TDM's first instance
+         * The tdl file is opened in TDM's first instance
          */
         app.on("open-file", (event: any, filePath: string) => {
+            console.log("open --------------------------- file", filePath)
             event.preventDefault();
             if (app.requestSingleInstanceLock() === true) {
                 handleOpenFile(filePath);
@@ -227,6 +190,9 @@ if (args["attach"] === -1) {
         })
 
         /** 
+         * This event is emitted when a second/third/... TDM instance is being opened 
+         * and that instance is calling app.requestSingleInstanceLock()
+         * 
          * this event is emitted when we run another "TDM ..." from command line
          * 
          * double-click TDL file in MacOS does not emit this event
@@ -281,9 +247,9 @@ if (args["attach"] === -1) {
                             break;
                         }
                     }
-                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", 
+                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile",
                         {
-                            cmdLineSelectedProfile: firstProfileName, 
+                            cmdLineSelectedProfile: firstProfileName,
                             args
                         }
                     );
@@ -296,7 +262,7 @@ if (args["attach"] === -1) {
                 // do nothing
             } else if (cmdLineSelectedProfile !== "" && cmdLineOpenFileNames.length === 0) {
                 if (profileNames.includes(cmdLineSelectedProfile)) {
-                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", 
+                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile",
                         {
                             cmdLineSelectedProfile, args
                         }
@@ -307,7 +273,7 @@ if (args["attach"] === -1) {
                 }
             } else if (cmdLineSelectedProfile !== "" && cmdLineOpenFileNames.length > 0) {
                 if (profileNames.includes(cmdLineSelectedProfile)) {
-                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", 
+                    mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile",
                         {
                             cmdLineSelectedProfile, args
                         }
@@ -323,7 +289,7 @@ if (args["attach"] === -1) {
         mainProcesses.createProcess(
             // this callback won't be invoked if the main process is in "web" mode
             cmdLineCallback,
-            args["mainProcessMode"],
+            mainProcesMode,
             undefined, // main process id, automatically assign
             undefined, // default one is always desktop or web mode
         );
@@ -362,66 +328,3 @@ if (args["attach"] === -1) {
 }
 
 
-
-
-function getParentProcessName() {
-    if (process.platform === "win32") {
-        try {
-            const pid = process.ppid; // Get Parent Process ID
-            const output = execSync(`powershell -Command "(Get-CimInstance Win32_Process | Where-Object { $_.ProcessId -eq ${pid} }).CommandLine"`).toString().trim();
-            return output; // Extract the parent process name
-        } catch (err) {
-            return null;
-        }
-    } else if (process.platform === "linux") {
-        try {
-            const ppid = process.ppid; // Get Parent Process ID
-            const cmdline = readFileSync(`/proc/${ppid}/cmdline`, 'utf-8');
-            return cmdline.split('\0')[0]; // Extract the executable name
-        } catch (err) {
-            return null; // If there's an error, return null
-        }
-    } else {
-        return null;
-    }
-}
-function isStartedFromShell() {
-    // bash, zsh, caja, ...
-    const parentProcess = getParentProcessName();
-    if (process.platform === "win32") {
-        if (parentProcess?.toLowerCase().includes("explorer.exe")) {
-            return false;
-        } else {
-            return true;
-        }
-    } else if (process.platform === "linux") {
-
-        // const hasTerm = !!process.env.TERM;
-        const isTTY = process.stdin.isTTY;
-        // console.log("Linux", parentProcess, hasTerm, isTTY)
-        // try {
-        //     writeFileSync("/home/1h7/tdmlog.log", JSON.stringify({
-        //         parentProcess: parentProcess,
-        //         // hasTerm: hasTerm,
-        //         isTTY: isTTY,
-        //     }, null, 4), {
-
-        //     })
-        // } catch (e) {
-
-        // }
-
-        if (parentProcess !== null) {
-            if (/bash|zsh|fish|sh|dash|tcsh|csh/.test(parentProcess) || isTTY) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    } else {
-        return false;
-    }
-
-}

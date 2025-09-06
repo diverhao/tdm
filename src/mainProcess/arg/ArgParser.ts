@@ -5,24 +5,7 @@ import { httpServerPort } from "../global/GlobalVariables";
 import { Log } from "../log/Log";
 import { type_log_levels } from "../log/Log";
 import { generateAboutInfo } from "../global/GlobalMethods";
-
-/**
- * Input argument types for command line.
- * 
- * It is the return type of `ArgParser.parseArgs()`.
- */
-export type type_args = {
-    macros: [string, string][];
-    settings: string;
-    profile: string;
-    alsoOpenDefaults: boolean;
-    fileNames: string[];
-    attach: number;
-    cwd: string;
-    mainProcessMode: "desktop" | "web" | "ssh-server"; // "ssh-client" mode process can only be created inside the program
-    httpServerPort: number;
-    site: string;
-};
+import { type_args } from "../mainProcess/IpcEventArgType";
 
 
 const dashdashMacros = `--macros`;
@@ -224,7 +207,6 @@ Options:
     static parseAttach = (portRawStr: string) => {
 
         if (portRawStr.trim().startsWith("--") || portRawStr.trim().endsWith(".tdl") || portRawStr.trim().endsWith(".edl") || portRawStr.trim().endsWith(".bob")) {
-            // throw new Error("Error at --attach");
             // try to attach to an existing TDM instance
             // "--xxx --attach --xxx --xxx
             return -2;
@@ -247,7 +229,9 @@ Options:
       Welcome to use TDM Display Manager
       Version: ${aboutInfo["Version"]}
       Build Date: ${aboutInfo["Build Date"]}
-      Based on Electron.js ${aboutInfo["Electron"]}, Node.js ${aboutInfo["Node.js"]} and Chromium ${aboutInfo["Chromium"]}
+      Based on Electron.js ${aboutInfo["Electron"]}, 
+               Node.js ${aboutInfo["Node.js"]} and 
+               Chromium ${aboutInfo["Chromium"]}
       License: ${aboutInfo["License"]}
 -----------------------------------------------
 `)

@@ -1,6 +1,5 @@
 import { MainProcess } from "./MainProcess";
 import { WsOpenerServer } from "../wsOpener/WsOpenerServer";
-import { type_args } from "../arg/ArgParser";
 import { sshTcpServerPort, httpServerPort } from "../global/GlobalVariables";
 import { Log } from "../log/Log";
 import { app, BrowserWindow, Menu } from "electron";
@@ -14,6 +13,7 @@ import * as fs from "fs";
 import { Profiles } from "../profile/Profiles";
 import { FileReader } from "../file/FileReader";
 import path from "path";
+import { type_args } from "./IpcEventArgType";
 
 export class MainProcesses {
     _processes: MainProcess[] = [];

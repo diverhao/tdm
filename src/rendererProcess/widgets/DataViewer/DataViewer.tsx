@@ -233,7 +233,7 @@ export class DataViewer extends BaseWidget {
         );
     };
 
-    _ElementBodyRaw = (): JSX.Element => {
+    _ElementBodyRaw = (): React.JSX.Element => {
         return (
             <div
                 style={
@@ -249,7 +249,7 @@ export class DataViewer extends BaseWidget {
     };
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): JSX.Element => {
+    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
 
         React.useEffect(() => {
             const plot = this.getPlot();

@@ -192,9 +192,9 @@ export abstract class BaseWidgetSidebar {
 
     // ------------------------------------- elements --------------------------------------
 
-    abstract _Element: () => JSX.Element;
+    abstract _Element: () => React.JSX.Element;
 
-    getElement = (): JSX.Element | null => {
+    getElement = (): React.JSX.Element | null => {
         return <this._Element key={this._widgetKey}></this._Element>;
     };
 

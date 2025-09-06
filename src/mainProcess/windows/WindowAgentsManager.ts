@@ -896,7 +896,7 @@ export class WindowAgentsManager {
                 }
             })
 
-            app.dock.setMenu(Menu.buildFromTemplate(menuItems));
+            app.dock?.setMenu(Menu.buildFromTemplate(menuItems));
         }
     }
 }

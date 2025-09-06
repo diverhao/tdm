@@ -3,10 +3,34 @@
  */
 
 import { Channel_DBR_TYPES, type_dbrData } from "../../rendererProcess/global/GlobalVariables";
-
-import { type_args } from "../arg/ArgParser";
 import { type_LocalChannel_data } from "../channel/LocalChannelAgent";
 import { type_tdl } from "../file/FileReader";
+
+
+/**
+ * Input argument types for command line.
+ * 
+ * It is the return type of `ArgParser.parseArgs()`.
+ * 
+ * For "--attach" option, nominally it is port number of opener websocket, > 0
+ * 
+ */
+export type type_args = {
+    macros: [string, string][];
+    settings: string;
+    profile: string;
+    alsoOpenDefaults: boolean;
+    fileNames: string[];
+    // internal use only:
+    // -1 means open in a new TDM instance
+    // -2 means we are trying to open a tdl file from file manager
+    attach: number;
+    cwd: string;
+    mainProcessMode: "desktop" | "web" | "ssh-server"; // "ssh-client" mode process can only be created inside the program
+    httpServerPort: number;
+    site: string;
+};
+
 
 export type type_about_info = {
     "Authors": string[],
@@ -78,7 +102,7 @@ export type type_DialogInputBox = {
 
 
 /**
- * Input argument types for IPC listener callbacks in main process
+ * Input argument types for IPC event handlers in main process
  * 
  * For the event handler in main process, it is used like
  * `handlerWebSocketIpcConnected(event: any, options: IpcEventArgType["websocket-ipc-connected])`
@@ -509,10 +533,8 @@ export type IpcEventArgType = {
 
 
 /**
- * The counter part of above
+ * Input argument types for IPC event handlers in DisplayWindow
  */
-
-
 export type IpcEventArgType2 = {
     "context-menu-command": {
         command: string,
@@ -742,6 +764,9 @@ export type IpcEventArgType2 = {
     }
 }
 
+/**
+ * Input argument types for IPC event handlers in MainWindow
+ */
 
 export type IpcEventArgType3 = {
     "after-main-window-gui-created": {
@@ -764,7 +789,7 @@ export type IpcEventArgType3 = {
                 image: string;
                 windowName?: string;
                 tdlFileName?: string;
-            } | undefined
+            } | undefined | null
         >
     },
 

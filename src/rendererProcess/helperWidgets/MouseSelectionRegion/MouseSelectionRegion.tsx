@@ -90,7 +90,7 @@ export class MouseSelectionRegion {
 		return <div style={{ ...this._style }}></div>;
 	};
 
-	getElement = (): JSX.Element => {
+	getElement = (): React.JSX.Element => {
 		return <this._Element key={this.getWidgetKey()}></this._Element>;
 	};
 

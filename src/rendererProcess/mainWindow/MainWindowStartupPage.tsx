@@ -165,7 +165,7 @@ export class MainWindowStartupPage {
         );
     };
 
-    getElement = (): JSX.Element => {
+    getElement = (): React.JSX.Element => {
         return <this._Element></this._Element>;
     };
 

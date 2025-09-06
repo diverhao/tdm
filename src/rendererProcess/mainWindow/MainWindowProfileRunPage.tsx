@@ -587,7 +587,7 @@ export class MainWindowProfileRunPage {
                 windowName?: string;
                 tdlFileName?: string;
             }
-            | undefined
+            | undefined | null
         >
     ) => {
         for (let displayWindowId of Object.keys(data)) {

@@ -92,7 +92,7 @@ export class TdlViewer extends BaseWidget {
         );
     };
 
-    _ElementBodyRaw = (): JSX.Element => {
+    _ElementBodyRaw = (): React.JSX.Element => {
         return (
             <div
                 style={{
@@ -107,7 +107,7 @@ export class TdlViewer extends BaseWidget {
 
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): JSX.Element => {
+    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         // "macros", "script", "tdl-file-contents"
         const [selection, setSelection] = React.useState("tdl-file-contents");
         return (

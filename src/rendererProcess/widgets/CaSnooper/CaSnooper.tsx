@@ -331,7 +331,7 @@ export class CaSnooper extends BaseWidget {
         );
     }; // ----------------------------------------
 
-    _ElementBodyRaw = (): JSX.Element => {
+    _ElementBodyRaw = (): React.JSX.Element => {
         return (
             <div style={{ ...this.getElementBodyRawStyle() }}>
                 <this._ElementArea></this._ElementArea>
@@ -341,7 +341,7 @@ export class CaSnooper extends BaseWidget {
     };
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): JSX.Element => {
+    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         return (
             <div
                 style={{

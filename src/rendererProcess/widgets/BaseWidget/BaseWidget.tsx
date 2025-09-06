@@ -789,13 +789,13 @@ export abstract class BaseWidget {
     // element = <> body (area + resizer) + sidebar </>
 
     // Body + sidebar
-    abstract _ElementRaw: () => JSX.Element;
-    abstract _Element: React.MemoExoticComponent<() => JSX.Element>;
+    abstract _ElementRaw: () => React.JSX.Element;
+    abstract _Element: React.MemoExoticComponent<() => React.JSX.Element>;
 
     // resizers are available for all widgets
     // 8 resizers, consumes a lot of resources when rendering
-    // abstract _ElementResizerRaw: () => JSX.Element;
-    _ElementResizerRaw = (): JSX.Element => {
+    // abstract _ElementResizerRaw: () => React.JSX.Element;
+    _ElementResizerRaw = (): React.JSX.Element => {
         return (
             <>
                 {/* order is important: BDFH -> ACEG */}
@@ -2162,17 +2162,19 @@ export abstract class BaseWidget {
     }
 
     clearSchedule = () => {
-        const Timeout = setTimeout(function () { }, 0).constructor;
-        const Timer = setInterval(function () { }, 0).constructor;
+        // const Timeout = setTimeout(function () { }, 0).constructor;
+        // const Timer = setInterval(function () { }, 0).constructor;
 
         for (let schedule of this.getSchedules()) {
-            if (schedule instanceof NodeJS.Timeout) {
-                clearTimeout(schedule);
-            } else if (schedule instanceof NodeJS.Timeout) {
-                clearInterval(schedule);
-            } else {
-                Log.error("Error in clearSchedule()");
-            }
+            clearTimeout(schedule as any);
+            clearInterval(schedule as any);
+            // if (schedule instanceof Timeout) {
+            //     clearTimeout(schedule);
+            // } else if (schedule instanceof NodeJS.Timeout) {
+            //     clearInterval(schedule);
+            // } else {
+            //     Log.error("Error in clearSchedule()");
+            // }
         }
     }
 }

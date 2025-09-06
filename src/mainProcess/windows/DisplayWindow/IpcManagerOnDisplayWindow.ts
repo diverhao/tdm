@@ -102,7 +102,7 @@ export class IpcManagerOnDisplayWindow {
             //     value === null ? undefined : value);
             const message = JSON.parse(messageBuffer);
             this.replaceNullWithUndefined(message);
-            this.parseMessage(message);
+            this.handleMessage(message);
         };
     };
 
@@ -119,7 +119,7 @@ export class IpcManagerOnDisplayWindow {
     }
 
 
-    parseMessage = (message: { processId: number; windowId: string; eventName: string; data: any[] }) => {
+    handleMessage = (message: { processId: number; windowId: string; eventName: string; data: any[] }) => {
         const processId = message["processId"];
         const eventName = message["eventName"];
         const windowId = message["windowId"];

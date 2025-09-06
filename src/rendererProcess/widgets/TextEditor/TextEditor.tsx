@@ -115,7 +115,7 @@ export class TextEditor extends BaseWidget {
         );
     };
 
-    _ElementBodyRaw = (): JSX.Element => {
+    _ElementBodyRaw = (): React.JSX.Element => {
         return (
             <div
                 style={{
@@ -131,7 +131,7 @@ export class TextEditor extends BaseWidget {
 
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): JSX.Element => {
+    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         // run once when the display window is first created
         React.useEffect(() => {
             if (this.getFileName() === "" && this.getText()["initialFileContents"] !== undefined) {

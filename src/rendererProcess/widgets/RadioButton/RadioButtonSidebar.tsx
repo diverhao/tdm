@@ -117,7 +117,7 @@ export class RadioButtonSidebar extends BaseWidgetSidebar {
     updateFromWidget = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => { };
 
     // override
-    _Element = (): JSX.Element => {
+    _Element = (): React.JSX.Element => {
         // when we move the widget out of vertical range, the sidebar width is not calculated correctly due to the asynchronous 
         // calculation of window size, 
         // check the window vertical scrollbar width one more time to have a correct sidebar width

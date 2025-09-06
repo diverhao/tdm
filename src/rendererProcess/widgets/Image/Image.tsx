@@ -265,7 +265,7 @@ export class Image extends BaseWidget {
     }
 
     // Text area and resizers
-    _ElementBodyRaw = (): JSX.Element => {
+    _ElementBodyRaw = (): React.JSX.Element => {
         return (
             // always update the div below no matter the TextUpdateBody is .memo or not
             // TextUpdateResizer does not update if it is .memo
@@ -281,7 +281,7 @@ export class Image extends BaseWidget {
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     forceUpdate = (input: any) => { };
-    _ElementAreaRaw = ({ }: any): JSX.Element => {
+    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         const [, forceUpdate] = React.useState({});
         this.forceUpdate = forceUpdate;
 

@@ -457,7 +457,7 @@ export class CanvasSidebar {
         );
     };
 
-    getElement = (): JSX.Element => {
+    getElement = (): React.JSX.Element => {
         return <this._Element key={this._widgetKey}></this._Element>;
     };
 

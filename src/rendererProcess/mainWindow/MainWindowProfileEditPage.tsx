@@ -266,7 +266,7 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    getElement = (profileName: string): JSX.Element => {
+    getElement = (profileName: string): React.JSX.Element => {
         return <this._Element profileName={profileName}></this._Element>;
     };
 

@@ -2,9 +2,9 @@ import { IncomingMessage } from "http";
 import { MainProcesses } from "../mainProcess/MainProcesses";
 import { WebSocket, WebSocketServer, RawData } from "ws";
 import { FileReader } from "../file/FileReader";
-import { type_args } from "../arg/ArgParser";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { Log } from "../log/Log";
+import { type_args } from "../mainProcess/IpcEventArgType";
 
 // this class is part of MainProcesses, it has nothing to do with the runtime MainProcess
 // it runs before any MainProcess or profile selection

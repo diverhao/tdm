@@ -1,5 +1,4 @@
 import { Widgets } from "./Widgets";
-import * as React from "react";
 
 /**
  * This file is only for Display Window. The Main Window should not load this file, instead, it should load the GlobalVariables.ts in its own folder.

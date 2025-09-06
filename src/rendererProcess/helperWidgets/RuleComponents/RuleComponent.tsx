@@ -55,7 +55,7 @@ export abstract class RuleComponent {
 
     // ------------------------ property value JSX element  -------------------
 
-    abstract ElementPropertyValue: () => JSX.Element;
+    abstract ElementPropertyValue: () => React.JSX.Element;
 
     getElementPropertyValue = () => {
         return <this.ElementPropertyValue></this.ElementPropertyValue>;

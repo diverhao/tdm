@@ -121,7 +121,7 @@ export class XYPlot extends BaseWidget {
         );
     };
 
-    _ElementBodyRaw = (): JSX.Element => {
+    _ElementBodyRaw = (): React.JSX.Element => {
         return (
             <div
                 id="XYPlot"
@@ -139,7 +139,7 @@ export class XYPlot extends BaseWidget {
     showSettings: boolean = false;
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): JSX.Element => {
+    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         const xData = [-0.8, -0.4, 0.0, 0.4, 0.8];
         const yData = [-0.5, 0.5, 0.0, -0.5, 0.5];
 
