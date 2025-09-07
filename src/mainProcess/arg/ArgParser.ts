@@ -58,6 +58,7 @@ Options:
             alsoOpenDefaults: false,
             fileNames: [],
             attach: -1,
+            flexibleAttach: true,
             cwd: process.cwd(),
             mainProcessMode: "desktop",
             httpServerPort: httpServerPort,
@@ -93,16 +94,23 @@ Options:
                 } else if (arg === dashdashLogStackTrace) {
                     this.parseLogStackTrace();
                 } else if (arg === dashdashAttach) {
-                    const port = this.parseAttach(argv[ii + 1]);
-                    if (port === -2) {
+                    let port = this.parseAttach(argv[ii + 1]);
+                    if (port === -3) {
+                        port = -2;
+                    } else if (port === -2) {
                         // try to attach to the existing instance
+                        ii++;
                     } else if (port === -1) {
                         // do not attach, open this is instance
+                        ii++;
                     } else {
                         // attach to a specific instance
                         ii++;
                     }
                     result["attach"] = port;
+                    if (port > 0) {
+                        result["flexibleAttach"] = false;
+                    }
                 } else if (arg === dashdashAlsoOpenDefaults) {
                     result["alsoOpenDefaults"] = true;
                 } else if (arg === dashdashHttpServerPort) {
@@ -134,6 +142,7 @@ Options:
                 alsoOpenDefaults: false,
                 fileNames: [],
                 attach: -1,
+                flexibleAttach: true,
                 cwd: process.cwd(),
                 mainProcessMode: "desktop",
                 httpServerPort: 3000,
@@ -204,22 +213,31 @@ Options:
         return result;
     };
 
+    /**
+     * port can only be -1, -2, or a number between 1 and 65535
+     * 
+     * otherwise, quit the application
+     */
     static parseAttach = (portRawStr: string) => {
 
         if (portRawStr.trim().startsWith("--") || portRawStr.trim().endsWith(".tdl") || portRawStr.trim().endsWith(".edl") || portRawStr.trim().endsWith(".bob")) {
             // try to attach to an existing TDM instance
             // "--xxx --attach --xxx --xxx
-            return -2;
+            return -3; // will be changed to -2
         }
         const port = parseInt(portRawStr);
         if (!isNaN(port)) {
-            // "--attach 9527"
-            return port;
-        } else {
-            // wrong format
-            // "--attach abcd"
-            return -1;
+            if ((port > 0 && port < 65536) || port === -1 || port === -2) {
+                // "--attach 9527"
+                return port;
+            }
         }
+        // wrong format
+        // "--attach abcd"
+        // return -1;
+        Log.fatal("-1", `Wrong --attach argument ${portRawStr}, quit TDM.`);
+        app.quit();
+        return -1;
     };
 
     static printTdmBanner = () => {

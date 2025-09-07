@@ -57,7 +57,7 @@ export class IpcManagerOnMainProcesses {
 
         this.server.on("error", (err: Error) => {
             if (err["message"].includes("EADDRINUSE")) {
-                Log.info('-1', `Port ${this.getPort()} is occupied, try port ${this.getPort() + 1} for websocket IPC server`);
+                Log.info('-1', `IPC: Port ${this.getPort()} is occupied, try port ${this.getPort() + 1} for websocket IPC server`);
                 let newPort = this.getPort() + 1;
                 this.setPort(newPort);
                 this.createServer(httpsServer);

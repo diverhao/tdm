@@ -16,6 +16,7 @@ import { Sql } from "../archive/Sql";
 import * as fs from "fs";
 import { Worker } from 'worker_threads';
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
+import { type_args } from "./IpcEventArgType";
 const path = require('path');
 
 /**
@@ -51,7 +52,7 @@ export class MainProcess {
         mainProcesses: MainProcesses,
         processId: string,
         profilesFileName: string,
-        callback: ((mainProcess: MainProcess) => any) | undefined = undefined,
+        callback: ((mainProcess: MainProcess, args: type_args) => any) | undefined = undefined,
         mainProcessMode: "web" | "desktop" | "ssh-server" | "ssh-client" = "desktop",
         sshServerConfig?: type_sshServerConfig & { callingProcessId: string }
     ) {
@@ -87,7 +88,8 @@ export class MainProcess {
                     if (this.getMainProcessMode() === "desktop") {
                         await this.getWindowAgentsManager().createMainWindow();
                         if (callback !== undefined) {
-                            callback(this);
+                            const rawArgs = this.getMainProcesses().getRawArgs();
+                            callback(this, rawArgs);
                         }
                     } else if (this.getMainProcessMode() === "web") {
                         // do not open main window in web mode
@@ -135,7 +137,6 @@ export class MainProcess {
         // SshClient
         if (this.getMainProcessMode() === "ssh-client") {
             const sshClient = this.getSshClient();
-            console.log("I'm going to quit main process????? 1");
             if (sshClient !== undefined) {
                 sshClient.quit();
             }

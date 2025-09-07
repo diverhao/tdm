@@ -32,7 +32,7 @@ export class WsPvServer {
 
         this.server.on("error", (err: Error) => {
             if (err["message"].includes("EADDRINUSE")) {
-                Log.debug(this.getMainProcessId(), `Port ${this.port} is occupied, try port ${this.port + 1}`);
+                Log.debug(this.getMainProcessId(), `Port ${this.port} is occupied aaa, try port ${this.port + 1}`);
                 this.port = this.port + 1;
                 this.createServer();
             }

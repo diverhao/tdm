@@ -5,6 +5,8 @@ import { FileReader } from "../file/FileReader";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { Log } from "../log/Log";
 import { type_args } from "../mainProcess/IpcEventArgType";
+import { app } from "electron";
+import { openTdlFileAsRequestedByAnotherInstance } from "../global/GlobalMethods";
 
 // this class is part of MainProcesses, it has nothing to do with the runtime MainProcess
 // it runs before any MainProcess or profile selection
@@ -14,10 +16,12 @@ export class WsOpenerServer {
     server: WebSocketServer | undefined;
     _mainProcesses: MainProcesses;
     _port: number;
+    _flexibleAttach: boolean; // if true, when the port is occupied, try the next port  
 
-    constructor(mainProcesses: MainProcesses, port: number) {
+    constructor(mainProcesses: MainProcesses, port: number, flexibleAttach: boolean) {
         this._mainProcesses = mainProcesses;
         this._port = port;
+        this._flexibleAttach = flexibleAttach;
 
         this.createServer();
     }
@@ -37,11 +41,16 @@ export class WsOpenerServer {
 
         this.server.on("error", (err: Error) => {
             if (err["message"].includes("EADDRINUSE")) {
-                Log.info("-1", `Port ${this.getPort()} is occupied, try port ${this.getPort() + 1}`);
-                let newPort = this.getPort() + 1;
-                this.setPort(newPort);
-                this.updatePort();
-                this.createServer();
+                if (this._flexibleAttach === true) {
+                    Log.info("-1", `Port ${this.getPort()} is occupied abc, try port ${this.getPort() + 1}`);
+                    let newPort = this.getPort() + 1;
+                    this.setPort(newPort);
+                    this.updatePort();
+                    this.createServer();
+                } else {
+                    Log.info("-1", `Port ${this.getPort()} is occupied def, and flexibleAttach is false, quit TDM.`);
+                    app.quit();
+                }
             }
         });
 
@@ -50,7 +59,23 @@ export class WsOpenerServer {
             Log.info("-1", `WebSocket Opener Server got a connection`);
             wsClient.on("message", async (messageBuffer: RawData) => {
                 const message = JSON.parse(messageBuffer.toString());
-                this.parseMessage(message);
+                this.handleMessage(message);
+                // if the mesage is of type_args, then tell the other instance that 
+                // you have successfully delivered the message, then you can quit
+                if (message["attach"] !== undefined &&
+                    message["macros"] !== undefined &&
+                    message["settings"] !== undefined &&
+                    message["profile"] !== undefined &&
+                    message["alsoOpenDefaults"] !== undefined &&
+                    message["fileNames"] !== undefined &&
+                    message["attach"] !== undefined &&
+                    message["cwd"] !== undefined &&
+                    message["mainProcessMode"] !== undefined &&
+                    message["httpServerPort"] !== undefined &&
+                    message["site"] !== undefined
+                ) {
+                    wsClient.send(JSON.stringify({ messageDelivered: "success" }));
+                }
             });
 
             // when the websocket client quits, un-MONITOR
@@ -69,101 +94,9 @@ export class WsOpenerServer {
     };
 
     // the argv must have contained "--attach" option
-    parseMessage = (args: type_args) => {
-        const currentFolder = args["cwd"] === "" ? undefined : args["cwd"];
-        const tdlFileNames = args["fileNames"];
-
-        // if command line did not provide a profile
-        // (1) try to find an already opened profile, and open command line tdl files in it
-        // (2) if the above step failed, create a new MainProcess opening this profile
-        if (args["profile"] !== "") {
-            // (1)
-            const mainProcesses = this.getMainProcesses().getProcesses();
-            for (let mainProcess of mainProcesses) {
-                const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
-                if (selectedProfile !== undefined && selectedProfile.getName() === args["profile"]) {
-                    const macros = selectedProfile.getMacros();
-                    for (const tdlFileName of args["fileNames"]) {
-                        const fullTdlFileName = FileReader.resolveTdlFileName(tdlFileName, selectedProfile, currentFolder);
-                        // open the file
-                        if (fullTdlFileName !== undefined) {
-                            mainProcess.getIpcManager().handleOpenTdlFiles(undefined,
-                                {
-                                    options: {
-                                        tdlFileNames: [fullTdlFileName],
-                                        mode: "operating",
-                                        editable: true,
-                                        macros: [...args["macros"], ...macros],
-                                        replaceMacros: false,
-                                        currentTdlFolder: currentFolder,
-                                    }
-                                }
-                            );
-                        }
-                    }
-                    return;
-                }
-            }
-            // (2)
-            const mainProcess = this.getMainProcesses().createProcess((mainProcess: MainProcess) => {
-                const windowAgentsManager = mainProcess.getWindowAgentsManager();
-                const profileNames = mainProcess.getProfiles().getProfileNames();
-                const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
-                if (profileNames.includes(args["profile"])) {
-                    mainWindowAgent?.sendFromMainProcess("cmd-line-selected-profile", 
-                        {
-                            cmdLineSelectedProfile: args["profile"], 
-                            args
-                        }
-                    );
-                } else {
-                    // do nothing
-                }
-            });
-        } else {
-            // command line does not provide a profile name
-            // (1) try to find a MainProcess that already opens this this profile
-            // (2) if not found, open a new MainProcess for the first profile
-            const mainProcesses = this.getMainProcesses().getProcesses();
-            // (1)
-            for (let mainProcess of mainProcesses) {
-                const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
-                if (selectedProfile !== undefined) {
-                    for (const tdlFileName of tdlFileNames) {
-                        const fullTdlFileName = FileReader.resolveTdlFileName(tdlFileName, selectedProfile, currentFolder);
-                        // open the file
-                        if (fullTdlFileName !== undefined) {
-                            mainProcess.getIpcManager().handleOpenTdlFiles(undefined,
-                                {
-                                    options: {
-                                        tdlFileNames: [fullTdlFileName],
-                                        mode: "operating",
-                                        editable: true,
-                                        macros: args["macros"],
-                                        replaceMacros: false,
-                                        currentTdlFolder: currentFolder,
-                                    }
-                                }
-                            );
-                        }
-                    }
-                    return;
-                }
-            }
-            // (2)
-            // the callback is executed after the main window GUI is created
-            const mainProcess = this.getMainProcesses().createProcess((mainProcess: MainProcess) => {
-                const windowAgentsManager = mainProcess.getWindowAgentsManager();
-                const profileNames = mainProcess.getProfiles().getProfileNames();
-                const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
-                mainWindowAgent?.sendFromMainProcess("cmd-line-selected-profile", 
-                    {
-                        cmdLineSelectedProfile: profileNames[0], 
-                        args
-                    }
-                );
-            });
-        }
+    handleMessage = (args: type_args) => {
+        // file names in args will be used 
+        openTdlFileAsRequestedByAnotherInstance("", this.getMainProcesses(), args);
     };
 
     getMainProcesses = () => {

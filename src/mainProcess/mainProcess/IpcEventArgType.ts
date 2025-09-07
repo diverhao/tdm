@@ -25,6 +25,7 @@ export type type_args = {
     // -1 means open in a new TDM instance
     // -2 means we are trying to open a tdl file from file manager
     attach: number;
+    flexibleAttach: boolean;
     cwd: string;
     mainProcessMode: "desktop" | "web" | "ssh-server"; // "ssh-client" mode process can only be created inside the program
     httpServerPort: number;

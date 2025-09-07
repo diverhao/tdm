@@ -589,6 +589,7 @@ export class MainWindowStartupPage {
                             alsoOpenDefaults: false,
                             fileNames: tdlFileNames,
                             attach: -1,
+                            flexibleAttach: true,
                             cwd: "",
                             mainProcessMode: "desktop", // | "web"; // "ssh-server" or "ssh-client" mode process can only be created inside the program
                             httpServerPort: 3000,

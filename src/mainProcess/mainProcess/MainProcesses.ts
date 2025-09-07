@@ -25,16 +25,20 @@ export class MainProcesses {
     _localFontNames: string[] = [];
     _sshServerSelfDestructionCountDown: NodeJS.Timeout | undefined = undefined;
     readonly _site: string;
+    _rawArgs: type_args;
 
     writingToLog: string = "";
     logStream: undefined | fs.WriteStream = undefined;
 
     constructor(args: type_args) {
+        this._rawArgs = args;
         this._site = args["site"];
         this._profilesFileName = args["settings"];
         // if this profile is not found, show profile-selection page
         // 9527 is the starting port for opener server, if this port is being used, increase it until there is an available one
-        this._wsOpenerServer = new WsOpenerServer(this, websocketOpenerServerPort);
+        const wsOpenerPort = args["attach"] > 0? args["attach"]:websocketOpenerServerPort;
+        const flexibleAttach = args["flexibleAttach"] === true;
+        this._wsOpenerServer = new WsOpenerServer(this, wsOpenerPort, flexibleAttach);
         // menubar on top of the window or top of the screen
         this._applicationMenu = new ApplicationMenu(this);
 
@@ -98,7 +102,7 @@ export class MainProcesses {
      * The callback is not invoked in web mode <br>
      */
     createProcess = (
-        callback: ((mainProcess: MainProcess) => any) | undefined = undefined,
+        callback: ((mainProcess: MainProcess, args: type_args) => any) | undefined = undefined,
         mainProcessMode: "desktop" | "web" | "ssh-server" | "ssh-client" = "desktop",
         mainProcessId: string | undefined = undefined,
         sshServerConfig?: type_sshServerConfig & { callingProcessId: string }
@@ -331,6 +335,10 @@ export class MainProcesses {
 
     getSite = () => {
         return this._site;
+    }
+
+    getRawArgs = () => {
+        return this._rawArgs;
     }
 
 }

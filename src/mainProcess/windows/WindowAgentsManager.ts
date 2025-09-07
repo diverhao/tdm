@@ -170,7 +170,6 @@ export class WindowAgentsManager {
             // check if the window already exist for desktop mode
             if (this.getMainProcess().getMainProcessMode() === "desktop") {
                 const exisitedDisplayWindow = this.checkExistedDisplayWindow(tdlFileName, macros);
-                // writeFileSync("/Users/haohao/tdm.log", `--------------------- createDisplayWindow() A0.5 ${exisitedDisplayWindow}\n`, {flag: "a"});
                 if (exisitedDisplayWindow !== undefined) {
                     Log.debug(this.getMainProcessId(), `File ${tdlFileName} is already opened.`);
                     // bring up this window if in desktop mode

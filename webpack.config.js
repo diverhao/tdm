@@ -28,7 +28,7 @@ const windowClientsConfig = {
 	//HH  - dist/index.html contains the webpack generated main.js file
 	plugins: [
 		new webpack.ProvidePlugin({
-			process: "process/browser",
+			process: "process/browser.js",
 		}),
 		new webpack.HotModuleReplacementPlugin(),
 		// new BundleAnalyzerPlugin()
@@ -41,7 +41,7 @@ const windowClientsConfig = {
 	entry: {
 		DisplayWindowClient: "./src/mainProcess/windows/DisplayWindow/DisplayWindowClient.tsx",
 		MainWindowClient: "./src/mainProcess/windows/MainWindow/MainWindowClient.tsx",
-        HelpWindowClient: "./src/mainProcess/windows/HelpWindow/HelpWindowClient.tsx",
+		HelpWindowClient: "./src/mainProcess/windows/HelpWindow/HelpWindowClient.tsx",
 	},
 
 	output: {
@@ -85,7 +85,7 @@ const windowClientsConfig = {
 					{
 						loader: "css-loader",
 						options: {
-                            url: false,
+							url: false,
 							sourceMap: true, // This ensures that URLs in CSS are treated relative
 						},
 					},
@@ -150,8 +150,8 @@ const windowClientsConfig = {
 	},
 };
 
-const edlFileConverterConfig =  {
-    target: "node",
+const edlFileConverterConfig = {
+	target: "node",
 	//HH ------------ html -----------------
 	//HH html-webpack-plugin, convert src/index.html --> dist/index.html
 	//HH  - src/index.html does not need to contain any <script />
@@ -169,7 +169,7 @@ const edlFileConverterConfig =  {
 	//HH to "dist/main.js", which is loaded by `dist/index.html`
 
 	entry: {
-        EdlFileConverter: "./src/mainProcess/helpers/EdlFileConverter.ts",
+		EdlFileConverter: "./src/mainProcess/helpers/EdlFileConverter.ts",
 	},
 
 	output: {
@@ -213,7 +213,7 @@ const edlFileConverterConfig =  {
 					{
 						loader: "css-loader",
 						options: {
-                            url: false,
+							url: false,
 							sourceMap: true, // This ensures that URLs in CSS are treated relative
 						},
 					},
@@ -230,11 +230,12 @@ const edlFileConverterConfig =  {
 		],
 	},
 	resolve: {
-		extensions: [".tsx", ".ts", ".js"],
+		extensions: [".tsx", ".ts", ".js", ".mjs"],
 		fallback: {
 			// fs: require.resolve("browserify-fs"),
 			// os: require.resolve("os-browserify/browser"),
 			path: require.resolve("path-browserify"),
+			process: require.resolve("process/browser"),
 			fs: false,
 			os: false,
 			// path: false,

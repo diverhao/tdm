@@ -1,3 +1,4 @@
+import WebSocket from "ws";
 import { app } from "electron";
 import { readFileSync } from "fs";
 import * as os from "os";
@@ -5,6 +6,10 @@ import path from "path";
 import { Log } from "../log/Log";
 import { type_about_info, type_args } from "../mainProcess/IpcEventArgType";
 import { execSync } from "child_process";
+import { MainProcess } from "../mainProcess/MainProcess";
+import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
+import { MainProcesses } from "../mainProcess/MainProcesses";
+import { arg } from "mathjs";
 
 /**
  * @packageDocumentation
@@ -90,19 +95,22 @@ export const getCurrentDateTimeStr = (useAsFileName: boolean = false) => {
 /**
  * open the file in existing TDM instance, invoked only when `args["attach"] === -2`
  * 
- * (1) if there is no existing TDM instance running, open it in a new instance
- *     `args["attach"]` is changed to 1
+ * (1) if there is no existing TDM instance running, 
  * 
  * (2) if there is already one or more TDM instance running, 
  *     open files in the 1st TDM instance that is already running,
  *     and quit this current TDM
+ * 
+ * @returns `true` if the file is opened in another instance and this instance is quit; 
+ *          `false` if there is no existing TDM instance running
  */
-export const openTdlInExistingInstance = (args: type_args) => {
-    if (app.requestSingleInstanceLock() === true) {
+export const openTdlInFirstExistingInstance = (args: type_args): boolean => {
+    const isFirstInstance = app.requestSingleInstanceLock();
+    if (isFirstInstance === true) {
         // (1)
-        Log.info("This is the only TDM instance running on this computer, we open the files here")
-        args["attach"] = -1;
-    } else if (app.requestSingleInstanceLock() === false) {
+        Log.info("This was no exisiting instance running. Actually this is the first instance. We will open the files in here.")
+        return false;
+    } else {
         // (2)
         Log.info("TDL files are goning to be opened in another instance. We will terminate this instance.")
         const cwd = args["cwd"];
@@ -115,12 +123,126 @@ export const openTdlInExistingInstance = (args: type_args) => {
             }
         }
         app.requestSingleInstanceLock({
-            attach: -2,
             fileNames: fileNames,
         });
-        app.exit()
+        return true;
     }
 }
+
+
+export const openTdlInSpecificExistingInstance = async (args: type_args): Promise<boolean> => {
+    const port = args["attach"];
+
+    let setSuccess: any = undefined;;
+    let promise = new Promise<boolean>((resolve, reject) => {
+        setSuccess = resolve;
+    })
+
+    // (1) connect to the websocket port
+    // it is a temporary websocket client, telling another TDM process
+    // that I want to do something on your process, then I'll close and quit after
+    // sending out the message.
+    const ws = new WebSocket(`ws://localhost:${port}`);
+    ws.on("open", () => {
+        // (2) send process.argv
+        ws.send(JSON.stringify(args));
+        // (3) quit
+        Log.info('-1', `Send data to WebSocket Opener Sever port ${port}`);
+    });
+    ws.on("close", () => {
+        Log.error('-1', "Socket closed by server");
+        setSuccess(false);
+    });
+    ws.on("error", (err: Error) => {
+        Log.error('-1', err);
+        setSuccess(false);
+    });
+
+    ws.on("message", (data: WebSocket.RawData) => {
+        try {
+            const message = JSON.parse(data.toString());
+            if (message !== undefined && message["messageDelivered"] !== undefined && message["messageDelivered"] === "success") {
+                Log.info('-1', `The message is successfully delivered to the TDM instance listening on port ${port}. This instance is going to quit.`);
+                // success = true;
+                setSuccess(true);
+            }
+        } catch (e) {
+            // do nothing
+            setSuccess(false);
+        }
+    })
+
+    // timeout after 1 second
+    setTimeout(() => {
+        setSuccess(false);
+    }, 1000);
+
+    const success = await promise;
+    return success;
+
+}
+
+
+export const openTdlInNewInstance = (args: type_args) => {
+
+    /**
+     * Only emitted on MacOS when double click the TDL file in Finder
+     *
+     * The tdl file is opened in TDM's first instance
+     * 
+     * @param filePath the path of the TDL file to be opened in another TDM instance.
+     *                 It is passed in by MacOS Finder, it is always an absolute path.
+     */
+    app.on("open-file", (event: any, filePath: string) => {
+        event.preventDefault();
+        // this instance is the first instance of TDM
+        if (app.requestSingleInstanceLock() === true) {
+            openTdlFileAsRequestedByAnotherInstance(filePath, mainProcesses);
+        }
+    })
+
+
+    /** 
+     * This event will be emitted inside the primary TDM instance
+     * when a second/third/... TDM instance is being opened from command line or file manager,
+     * and that instance is calling app.requestSingleInstanceLock()
+     * 
+     * (1) if the file is opened in command line, it should always sends null out,
+     *     then this TDM instance does nothing
+     * 
+     * (2) if the file is opened in GUI file browser, it sends the file names being clicked,
+     *     this TDM instance will open the first file
+     */
+    app.on('second-instance', (event: any, argv: any, workingDirectory: any, argsFrom2ndInstance: any) => {
+        // 
+        // so, this process does nothing
+        if (argsFrom2ndInstance === null) {
+            return;
+        }
+
+        // 
+        const filePath = argsFrom2ndInstance["fileNames"][0];
+        if (typeof filePath === "string") {
+            openTdlFileAsRequestedByAnotherInstance(filePath, mainProcesses);
+        } else {
+            Log.error(-1, "The file path provided by the 2nd instance is not valid.");
+        }
+    });
+
+    const mainProcesses = new MainProcesses(args);
+    mainProcesses.enableLogToFile();
+    const mainProcesMode = args["mainProcessMode"];
+
+    mainProcesses.createProcess(
+        // this callback won't be invoked if the main process is in "web" mode
+        cmdLineCallback,
+        mainProcesMode,
+        undefined, // main process id, automatically assign
+        undefined, // default one is always desktop or web mode
+    );
+}
+
+
 
 
 function getParentProcessName() {
@@ -187,12 +309,7 @@ export function isStartedFromShell() {
 }
 
 /**
- * read and process `args["attach"]`
- *  - -1: create a new instance
- *  - -2: try to attach to an existing TDM instance, if there is no instance running, create a new one
- *    value of `args["attach"]` is changed to -1 if there is no instance running
- *  - 9527: try to attach to the existing TDM instance, if it does not exist, create a new one
- *    value of `args["attach"]` is changed to -1 if there is no instance running
+ * if the TDL file is opened in GUI file manager in Linux or Windows, modify `args["attach"]` to -2
  */
 export const processArgsAttach = (args: type_args) => {
 
@@ -210,15 +327,153 @@ export const processArgsAttach = (args: type_args) => {
         }
     }
 
-    /**
-     * try to open the tdl file from existing TDM instance
-     * 
-     * if there exists a TDM instance, open the file in that one and quit this
-     * 
-     * if there is no TDM instance running, continue and open files in this instance
-     * the args["attach"] is modified to -1
-     */
-    if (args["attach"] === -2) {
-        openTdlInExistingInstance(args);
-    }
 }
+
+/**
+ * open tdl file as requested by another TDM instance
+ * 
+ * (1) the path must be absolute path if it is provided by other than args
+ * 
+ * (2) it will open the file in the last created MainProcess
+ * 
+ * (3) if the current TDM instance has not selected a profile, then honor the requested profile
+ * 
+ * (4) if already selected a profile, then ignore the requested profile
+ */
+export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainProcesses: MainProcesses, args?: type_args) => {
+
+    // (1)
+    if (path.isAbsolute(filePath) === false && args === undefined) {
+        Log.error("-1", `The file path ${filePath} is not an absolute path. Cannot open it.`);
+        return;
+    }
+
+    // "blocks" until the app is ready
+    app.whenReady().then(() => {
+        // (2)
+        const processes = mainProcesses.getProcesses();
+        const mainProcess = processes[processes.length - 1];
+        if (mainProcess === undefined) {
+            return;
+        }
+
+        const profiles = mainProcess.getProfiles();
+        const selectedProfile = profiles.getSelectedProfile();
+
+        const cwd = args === undefined ? "" : args["cwd"];
+        const macros = args === undefined ? [] : args["macros"];
+        const fileNames = args === undefined ? [filePath] : args["fileNames"];
+
+        if (selectedProfile === undefined) {
+            // (3)
+            const firstProfileName = profiles.getFirstProfileName();
+            const passedProfileName = args === undefined ? undefined : args["profile"];
+            const profileName = passedProfileName === undefined || profiles.getProfile(passedProfileName) === undefined ? firstProfileName : passedProfileName;
+            if (profileName === undefined) {
+                // there is no profile available, stop
+                return;
+            }
+            
+            mainProcess.getIpcManager().handleProfileSelected(undefined,
+                {
+                    selectedProfileName: profileName,
+                    args: {
+                        macros: macros,
+                        cwd: cwd,
+                        fileNames: fileNames,
+                        settings: "", // ignored
+                        profile: profileName, // ignored, will use the above selectedProfileName
+                        alsoOpenDefaults: false, // ignored
+                        attach: -1, // ignored as the attach port is set when the MainProcesses is created
+                        flexibleAttach: true, // ignored, same reason as above
+                        httpServerPort: 3000, // ignored, same reason as above
+                        site: "", // ignored
+                        mainProcessMode: "desktop", // this function is called only in desktop mode
+                    },
+                    httpResponse: undefined
+                }
+            )
+            return;
+
+        } else {
+            // (4)
+            const editable = `${selectedProfile.getEntry("EPICS Custom Environment", "Manually Opened TDL Editable")}`.toUpperCase() === "YES" ? true : false;
+            mainProcess.getIpcManager().handleOpenTdlFiles(
+                undefined,
+                {
+                    options: {
+                        // tdl?: type_tdl;
+                        tdlFileNames: fileNames,
+                        mode: "operating", // always operating
+                        editable: editable,
+                        // external macros: user-provided and parent display macros
+                        macros: macros,
+                        replaceMacros: false,
+                        // currentTdlFolder?: string;
+                    },
+                    httpResponse: undefined
+                }
+            )
+        }
+
+    }
+    )
+}
+
+export const cmdLineCallback = (mainProcess: MainProcess, args: type_args) => {
+    // command line selected profile and command line tdl files
+    const windowAgentsManager = mainProcess.getWindowAgentsManager();
+    const cmdLineSelectedProfile = args["profile"];
+    const cmdLineOpenFileNames = args["fileNames"];
+    const profileNames = mainProcess.getProfiles().getProfileNames();
+    const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
+    if (!(mainWindowAgent instanceof MainWindowAgent)) {
+        return;
+    }
+    // ensure that the command line selected profile is in the profiles
+    if (cmdLineSelectedProfile === "" && cmdLineOpenFileNames.length > 0) {
+        if (profileNames.length > 0) {
+            let firstProfileName = ""
+            for (const profileName of profileNames) {
+                if (profileName !== "For All Profiles") {
+                    firstProfileName = profileName;
+                    break;
+                }
+            }
+            mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile",
+                {
+                    cmdLineSelectedProfile: firstProfileName,
+                    args
+                }
+            );
+        } else {
+            // do nothing
+            Log.info('-1', "User did not provided a profile, show main window.");
+        }
+    } else if (cmdLineSelectedProfile === "" && cmdLineOpenFileNames.length === 0) {
+        Log.info('-1', "User did not provided a profile, show main window.");
+        // do nothing
+    } else if (cmdLineSelectedProfile !== "" && cmdLineOpenFileNames.length === 0) {
+        if (profileNames.includes(cmdLineSelectedProfile)) {
+            mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile",
+                {
+                    cmdLineSelectedProfile, args
+                }
+            );
+        } else {
+            // do nothing
+            Log.error('-1', "The profile name provided in command line does not exist. You can select a profile from the main window.");
+        }
+    } else if (cmdLineSelectedProfile !== "" && cmdLineOpenFileNames.length > 0) {
+        if (profileNames.includes(cmdLineSelectedProfile)) {
+            mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile",
+                {
+                    cmdLineSelectedProfile, args
+                }
+            );
+        } else {
+            // do nothing
+            Log.error('-1', "The profile name provided in command line does not exist. You can select a profile from the main window.");
+        }
+    }
+};

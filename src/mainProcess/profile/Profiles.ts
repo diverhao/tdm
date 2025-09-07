@@ -209,6 +209,26 @@ export class Profiles {
         return this._profiles[name];
     };
 
+    getFirstProfile = (): Profile | undefined => {
+        const profileNames = Object.keys(this._profiles);
+        if (profileNames.length >= 2) {
+            // the first "profile" is 
+            return this._profiles[profileNames[1]];
+        } else {
+            return undefined;
+        }
+    };
+
+    getFirstProfileName = (): string => {
+        const profileNames = Object.keys(this._profiles);
+        if (profileNames.length >= 2) {
+            // the first "profile" is
+            return profileNames[1];
+        } else {
+            return "";
+        }
+    };
+
     /**
      * Get the selected profile name
      *
