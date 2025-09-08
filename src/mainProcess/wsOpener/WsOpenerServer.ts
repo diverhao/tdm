@@ -42,13 +42,13 @@ export class WsOpenerServer {
         this.server.on("error", (err: Error) => {
             if (err["message"].includes("EADDRINUSE")) {
                 if (this._flexibleAttach === true) {
-                    Log.info("-1", `Port ${this.getPort()} is occupied abc, try port ${this.getPort() + 1}`);
+                    Log.info("-1", `WebSocket opener port ${this.getPort()} is occupied, try port ${this.getPort() + 1}`);
                     let newPort = this.getPort() + 1;
                     this.setPort(newPort);
                     this.updatePort();
                     this.createServer();
                 } else {
-                    Log.info("-1", `Port ${this.getPort()} is occupied def, and flexibleAttach is false, quit TDM.`);
+                    Log.fatal("-1", `WebSocket opener port ${this.getPort()} is occupied, and flexibleAttach is false, quit TDM.`);
                     app.quit();
                 }
             }

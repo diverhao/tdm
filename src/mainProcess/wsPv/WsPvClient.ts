@@ -47,7 +47,7 @@ export class WsPvClient {
         this.displayWindowId = workerData["displayWindowId"];
 
         // create WebSocket client object, it causes "connection" event on server
-        this.ws = new WebSocket(`ws://localhost:${workerData["port"]}`);
+        this.ws = new WebSocket(`ws://127.0.0.1:${workerData["port"]}`);
         this.ws.on("close", () => {
             this.log("info", "Closing WebSocket PV server socket");
         });

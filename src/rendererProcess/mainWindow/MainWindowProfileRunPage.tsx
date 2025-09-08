@@ -302,7 +302,7 @@ export class MainWindowProfileRunPage {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "Talhk",
-                    utilityOptions: { serverAddress: "http://localhost:4000" }
+                    utilityOptions: { serverAddress: "http://127.0.0.1:4000" }
                 }
             );
         }

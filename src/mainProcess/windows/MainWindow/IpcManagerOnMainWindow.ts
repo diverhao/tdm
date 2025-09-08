@@ -32,7 +32,7 @@ export class IpcManagerOnMainWindow {
             return;
         }
 
-        let serverAddress = `ws://localhost:${this.getIpcServerPort()}`
+        let serverAddress = `ws://127.0.0.1:${this.getIpcServerPort()}`
         if (this.getMainWindowClient().getMainProcessMode() === "web") {
             const host = window.location.host.split(":")[0];
             serverAddress = `ws://${host}:${this.getIpcServerPort()}`;

@@ -95,7 +95,8 @@ export const getCurrentDateTimeStr = (useAsFileName: boolean = false) => {
 /**
  * open the file in existing TDM instance, invoked only when `args["attach"] === -2`
  * 
- * (1) if there is no existing TDM instance running, 
+ * (1) if there is no existing TDM instance running, simply return
+ *     `args["attach"]` will be changed to -1 and the file will be opened in a new TDM instance
  * 
  * (2) if there is already one or more TDM instance running, 
  *     open files in the 1st TDM instance that is already running,
@@ -129,7 +130,15 @@ export const openTdlInFirstExistingInstance = (args: type_args): boolean => {
     }
 }
 
-
+/**
+ * Open TDL files in a specific TDM instance which is identified by the WebSocket opener port.
+ * 
+ * @param args The command line arguments containing the `attach` port number.
+ * 
+ * @returns A promise that resolves to `true` if the file is opened in another instance, then this instance quits;
+ *         `false` if there is no existing TDM instance running on the specified port.
+ * 
+ */
 export const openTdlInSpecificExistingInstance = async (args: type_args): Promise<boolean> => {
     const port = args["attach"];
 
@@ -142,7 +151,7 @@ export const openTdlInSpecificExistingInstance = async (args: type_args): Promis
     // it is a temporary websocket client, telling another TDM process
     // that I want to do something on your process, then I'll close and quit after
     // sending out the message.
-    const ws = new WebSocket(`ws://localhost:${port}`);
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
     ws.on("open", () => {
         // (2) send process.argv
         ws.send(JSON.stringify(args));
@@ -182,7 +191,15 @@ export const openTdlInSpecificExistingInstance = async (args: type_args): Promis
 
 }
 
-
+/**
+ * Open tdl files in a new TDM instance
+ * 
+ * For this newly created instance, it listens to the "open-file" for TDL files
+ * opened in MacOS file manager, and to "second-instance" for TDL files opened in
+ * Linux and Windows file managers.
+ * 
+ * @param args The command line arguments for the new TDM instance.
+ */
 export const openTdlInNewInstance = (args: type_args) => {
 
     /**
@@ -207,20 +224,29 @@ export const openTdlInNewInstance = (args: type_args) => {
      * when a second/third/... TDM instance is being opened from command line or file manager,
      * and that instance is calling app.requestSingleInstanceLock()
      * 
+     * If `requestSingleInstanceLock()` contains no argument, this event listener will ignore the event
+     * 
+     * If `requestSingleInstanceLock()` contains an argument, it will be passed to this event listener as 
+     * `argsFrom2ndInstance`.
+     * 
      * (1) if the file is opened in command line, it should always sends null out,
      *     then this TDM instance does nothing
      * 
      * (2) if the file is opened in GUI file browser, it sends the file names being clicked,
      *     this TDM instance will open the first file
+     * 
+     * @param argsFrom2ndInstance `{fileNames: string[]}` The arguments passed from the second TDM instance.
      */
     app.on('second-instance', (event: any, argv: any, workingDirectory: any, argsFrom2ndInstance: any) => {
-        // 
-        // so, this process does nothing
+
+        console.log("\n\n second instance requests: \n\n", argsFrom2ndInstance)
+
+        // (1)
         if (argsFrom2ndInstance === null) {
             return;
         }
 
-        // 
+        // (2)
         const filePath = argsFrom2ndInstance["fileNames"][0];
         if (typeof filePath === "string") {
             openTdlFileAsRequestedByAnotherInstance(filePath, mainProcesses);
@@ -312,7 +338,6 @@ export function isStartedFromShell() {
  * if the TDL file is opened in GUI file manager in Linux or Windows, modify `args["attach"]` to -2
  */
 export const processArgsAttach = (args: type_args) => {
-
     /**
      * When we double-click a TDL file in file manager, TDM will first try to open this file
      * in the existing instance. If it cannot find one, then create a new TDM instance.
@@ -326,7 +351,6 @@ export const processArgsAttach = (args: type_args) => {
             args["attach"] = -2; // -2 means we are trying to open file from file manager
         }
     }
-
 }
 
 /**
@@ -367,12 +391,14 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
         if (selectedProfile === undefined) {
             // (3)
             const firstProfileName = profiles.getFirstProfileName();
-            const passedProfileName = args === undefined ? undefined : args["profile"];
+            const passedProfileName = args === undefined ? "" : args["profile"];
             const profileName = passedProfileName === undefined || profiles.getProfile(passedProfileName) === undefined ? firstProfileName : passedProfileName;
             if (profileName === undefined) {
                 // there is no profile available, stop
                 return;
             }
+
+            console.log("profile names:", profileName, passedProfileName, firstProfileName)
             
             mainProcess.getIpcManager().handleProfileSelected(undefined,
                 {

@@ -53,7 +53,7 @@ export class MainWindowClient {
 
     private _state: mainWindowState = mainWindowState.start;
 
-    private _hostname: string = "localhost";
+    private _hostname: string = "127.0.0.1";
 
     private _prompt: PromptOnMainWindow;
 
@@ -228,13 +228,13 @@ export class MainWindowClient {
      * 
      * if we are running in electron.js, it is desktop or ssh-client. 
      * 
-     * if the host name is "localhost", then we are running in desktop mode, otherwise ssh-client mode
+     * if the host name is "127.0.0.1", then we are running in desktop mode, otherwise ssh-client mode
      */
     getMainProcessMode = (): "desktop" | "web" | "ssh-client" => {
         const userAgent = navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
             // electron.js based
-            if (this.getHostname() === "localhost") {
+            if (this.getHostname() === "127.0.0.1") {
                 return "desktop"
             } else {
                 return "ssh-client";

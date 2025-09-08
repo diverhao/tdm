@@ -204,7 +204,7 @@ export class MainWindowAgent {
 
                 const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager().getPort();
                 const hostname = this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" ?
-                    "localhost"
+                    "127.0.0.1"
                     : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
 
 

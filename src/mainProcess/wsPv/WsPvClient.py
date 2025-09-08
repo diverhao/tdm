@@ -20,7 +20,7 @@ class WsPvClient:
             self.connected = False
             websocket.enableTrace(False)
             self.ws = websocket.WebSocketApp(
-                "ws://localhost:" + str(self.port),
+                "ws://127.0.0.1:" + str(self.port),
                 on_message=lambda ws, msg: self.on_message(ws, msg),
                 on_error=lambda ws, msg: self.on_error(ws, msg),
                 on_close=lambda ws: self.on_close(ws),

@@ -25,9 +25,7 @@
  */
 
 
-import WebSocket from "ws";
 import { ArgParser } from "./arg/ArgParser";
-import { MainProcesses } from "./mainProcess/MainProcesses";
 import { app } from "electron";
 import { Log } from "./log/Log";
 import path from "path";
@@ -84,19 +82,12 @@ Log.info('-1', "Input arguments:", args);
 
 processArgsAttach(args);
 
-/**
- * try to open the tdl file from existing TDM instance
- *  - if there exists a TDM instance, open the file in that one and quit this
- *  - if there is no TDM instance running, continue and open files in this instance
- *    the args["attach"] is modified to -1
- */
-
 if (args["attach"] === -1) {
     openTdlInNewInstance(args);
 } else if (args["attach"] === -2) {
     const success = openTdlInFirstExistingInstance(args);
     if (success === true) {
-        // do nothing, the file is opened in another instance, this instance is quit
+        // do nothing, the file is opened in another instance, this instance quits
         app.exit()
     } else {
         // there was no existing instance, open a new instance

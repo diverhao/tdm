@@ -88,7 +88,7 @@ export class DisplayWindowClient {
 
     private _contextMenu: ContextMenu;
 
-    private _hostname: string = "localhost";
+    private _hostname: string = "127.0.0.1";
 
     private _prompt: PromptOnDisplayWindow;
 
@@ -166,7 +166,7 @@ export class DisplayWindowClient {
         this._prompt = new PromptOnDisplayWindow(this);
 
         if (hostname === undefined) {
-            this._hostname = "localhost";
+            this._hostname = "127.0.0.1";
         } else {
             this._hostname = hostname;
         }
@@ -1412,7 +1412,7 @@ export class DisplayWindowClient {
     updateWindowTitle = () => {
 
         let hostname = this.getHostname();
-        if (hostname === "localhost") {
+        if (hostname === "127.0.0.1") {
             hostname = "";
         } else {
             hostname = `${hostname}:`;
@@ -1628,7 +1628,7 @@ export class DisplayWindowClient {
     getMainProcessMode = (): "desktop" | "web" | "ssh-client" => {
         const userAgent = navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
-            if (this.getHostname() === "localhost") {
+            if (this.getHostname() === "127.0.0.1") {
                 return "desktop"
             } else {
                 return "ssh-client";
