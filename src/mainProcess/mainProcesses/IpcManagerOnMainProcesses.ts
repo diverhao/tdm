@@ -4,7 +4,7 @@ import { MainProcesses } from "./MainProcesses";
 import { IncomingMessage } from "http";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
-import { MainProcess } from "./MainProcess";
+import { MainProcess } from "../mainProcess/MainProcess";
 import { SshServer } from "./SshServer";
 import { writeFileSync } from "fs";
 import { HttpServer } from "./HttpServer";

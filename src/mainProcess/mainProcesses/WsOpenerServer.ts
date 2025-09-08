@@ -1,5 +1,5 @@
 import { IncomingMessage } from "http";
-import { MainProcesses } from "../mainProcess/MainProcesses";
+import { MainProcesses } from "../mainProcesses/MainProcesses";
 import { WebSocket, WebSocketServer, RawData } from "ws";
 import { FileReader } from "../file/FileReader";
 import { MainProcess } from "../mainProcess/MainProcess";

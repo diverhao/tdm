@@ -1,6 +1,6 @@
 // @ts-ignore
 
-import { WsPvClient } from "/Users/1h7/projects/tdm/dist/mainProcess/wsPv/WsPvClient";
+import { WsPvClient } from "/Users/1h7/projects/tdm/dist/mainProcess/mainProcess/WsPvClient";
 import { workerData } from "worker_threads";
 import * as fs from "fs";
 

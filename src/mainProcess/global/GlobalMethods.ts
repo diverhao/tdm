@@ -8,7 +8,7 @@ import { type_about_info, type_args } from "../mainProcess/IpcEventArgType";
 import { execSync } from "child_process";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
-import { MainProcesses } from "../mainProcess/MainProcesses";
+import { MainProcesses } from "../mainProcesses/MainProcesses";
 import { arg } from "mathjs";
 
 /**

@@ -5,7 +5,7 @@ import numpy as np
 # import schedule
 # import time
 # replace the path with
-sys.path.append(os.path.abspath("/Users/1h7/projects/tdm/src/mainProcess/wsPv"))
+sys.path.append(os.path.abspath("/Users/1h7/projects/tdm/src/mainProcess/mainProcess"))
 import WsPvClient
 wsPvClient = WsPvClient.WsPvClient()
 # ------------------------------------------------

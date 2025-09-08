@@ -93,8 +93,8 @@
         "copyright": "",
         "asar": true,
         "asarUnpack": [
-            "dist/mainProcess/wsPv/WsPvClient.js",
-            "dist/mainProcess/wsPv/WsPvClient.py",
+            "dist/mainProcess/mainProcess/WsPvClient.js",
+            "dist/mainProcess/mainProcess/WsPvClient.py",
             "dist/test/tdmDemo/**",
             "dist/mainProcess/resources/webpages/tdm.png",
             "dist/mainProcess/resources/webpages/tdm.svg"

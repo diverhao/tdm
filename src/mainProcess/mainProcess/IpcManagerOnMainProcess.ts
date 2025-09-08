@@ -9,7 +9,7 @@ import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent"
 import { FileReader } from "../file/FileReader";
 import path from "path";
 import { Log } from "../log/Log";
-import { type_sshServerConfig } from "./SshClient";
+import { type_sshServerConfig } from "../mainProcesses/SshClient";
 import * as os from "os";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import pidusage from "pidusage";
