@@ -269,7 +269,7 @@ export class DisplayWindowAgent {
         try {
             if (script.endsWith(".py")) {
                 Log.info(this.getMainProcessId(), `Create new Python thread for display window ${this.getId()}`);
-                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
                 if (selectedProfile !== undefined) {
                     const pythonCommand = selectedProfile.getEntry("EPICS Custom Environment", "Python Command");
                     if (pythonCommand !== undefined) {
@@ -682,7 +682,7 @@ export class DisplayWindowAgent {
                 return putStatus;
             }
             // (2)
-            const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+            const selectedProfile = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
             if (selectedProfile === undefined) {
                 Log.error(-1, "No profile selected, quit PUT operation.")
                 return putStatus;
@@ -1285,7 +1285,7 @@ export class DisplayWindowAgent {
         const webContents = browserWindow.webContents;
         webContents.capturePage().then((image: Electron.NativeImage) => {
 
-            const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+            const selectedProfile = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
             if (selectedProfile !== undefined) {
                 try {
                     const saveFolderTmp = selectedProfile.getEntry("EPICS Custom Environment", "Video Saving Folder");
@@ -1590,7 +1590,7 @@ export class DisplayWindowAgent {
 
     startRecordVideo = () => {
         let saveFolder = homedir();
-        const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+        const selectedProfile = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
         if (selectedProfile !== undefined) {
             try {
                 const saveFolderTmp = selectedProfile.getEntry("EPICS Custom Environment", "Video Saving Folder");

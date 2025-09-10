@@ -2,65 +2,80 @@ import { Log } from "../log/Log";
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import { MainProcesses } from "./MainProcesses";
 import { IncomingMessage } from "http";
-import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
-import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { SshServer } from "./SshServer";
-import { writeFileSync } from "fs";
-import { HttpServer } from "./HttpServer";
 import https from "https";
+import { generateKeyAndCert } from "../global/GlobalMethods";
 
 /**
- * Inter-process communication server. <br>
+ * Inter-process communication server.
  *
- * It is intended to replace the IPC mechanism in electron.js. <br>
+ * It is intended to replace the IPC mechanism in electron.js.
+ * 
+ * @param mainProcesses MainProcesses object
+ * @param port Port number for the websocket server
+ * @param httpsServer If in web mode, use the same https server as web server
  */
 export class IpcManagerOnMainProcesses {
     server: WebSocketServer | undefined;
     _mainProcesses: MainProcesses;
-    _port: number;
+    // select a random port between 4000 and 4999
+    _port: number = 4000 + Math.floor(Math.random() * 1000);
     _sshServer: SshServer | undefined = undefined;
+    private keyAndCert = generateKeyAndCert();
 
-    constructor(mainProcesses: MainProcesses, port: number, httpsServer: https.Server | undefined = undefined) {
+    constructor(mainProcesses: MainProcesses) {
         this._mainProcesses = mainProcesses;
-        this._port = port;
-        this.createServer(httpsServer);
+        this.createServer();
     }
 
     createSshServer = () => {
         this._sshServer = new SshServer(this);
+        this._sshServer.createTcpServer();
     }
 
-    createServer = (httpsServer: https.Server | undefined) => {
+    createServer = () => {
         Log.info('-1', `Creating WebSocket IPC server on port ${this.getPort()}`);
-
+        // create a https server
+        const httpsServer = https.createServer({
+            key: this.keyAndCert.private,
+            cert: this.keyAndCert.cert
+        });
         // if the main process mode is desktop, ssh-server, or ssh-client, websocket uses a unique port
-        if (httpsServer === undefined) {
-            this.server = new WebSocketServer({
-                host: "127.0.0.1",
-                port: this.getPort(),
-                maxPayload: 50 * 1024 * 1024,
-                perMessageDeflate: {
-                    zlibDeflateOptions: {
-                        // See zlib defaults.
-                        chunkSize: 1024,
-                        memLevel: 7,
-                        level: 3
-                    },
-                    threshold: 10 * 1024 // Only compress messages > 10 KB
-                }
-            });
-        } else {
-            // if in web mode, use the same port as https server
-            this.server = new WebSocketServer({ server: httpsServer });
-        }
+        // if (httpsServer === undefined) {
+        //     this.server = new WebSocketServer({
+        //         host: "127.0.0.1",
+        //         port: this.getPort(),
+        //         maxPayload: 50 * 1024 * 1024,
+        //         perMessageDeflate: {
+        //             zlibDeflateOptions: {
+        //                 // See zlib defaults.
+        //                 chunkSize: 1024,
+        //                 memLevel: 7,
+        //                 level: 3
+        //             },
+        //             threshold: 10 * 1024 // Only compress messages > 10 KB
+        //         }
+        //     });
+        // } else {
+        //     // if in web mode, use the same port as https server
+        this.server = new WebSocketServer({ server: httpsServer });
+        // }
+
+        /**
+         * listen to localhost ipv4 only
+         */
+        httpsServer.listen(this.getPort(), "127.0.0.1", () => {
+            Log.info('-1', `IPC: WebSocket server is listening on port ${this.getPort()}`);
+        });
 
         this.server.on("error", (err: Error) => {
             if (err["message"].includes("EADDRINUSE")) {
                 Log.info('-1', `IPC: Port ${this.getPort()} is occupied, try port ${this.getPort() + 1} for websocket IPC server`);
+                httpsServer.close();
                 let newPort = this.getPort() + 1;
                 this.setPort(newPort);
-                this.createServer(httpsServer);
+                this.createServer();
             }
         });
 

@@ -64,7 +64,7 @@ export class CaSnooperServer {
 
     constructor(mainProcess: MainProcess, displayWindowId: string) {
         this._mainProcess = mainProcess;
-        const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
+        const selectedProfile = mainProcess.getMainProcesses().getProfiles().getSelectedProfile();
         let errMsg = "";
         if (selectedProfile !== undefined) {
             const context = this.getMainProcess().getChannelAgentsManager().getContext();

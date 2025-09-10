@@ -15,10 +15,18 @@ export class SshServer {
     private _heartbeatInterval: NodeJS.Timeout | undefined = undefined;
     private _mainProcessId: string = "-1";
 
+    // self destruction count down timer for ssh server mode
+    // the TDM instance will live for 15 seconds unless the clients connects
+    private _selfDestructionCountDown: NodeJS.Timeout | undefined = undefined;
+
+    // randomly assigned port between 4000 and 4999
+    private _port: number = 4000 + Math.floor(Math.random() * 1000);
+
     dataChunk: string = "";
 
     constructor(ipcManager: IpcManagerOnMainProcesses) {
         this._ipcManager = ipcManager;
+        this.startSelfDestructionCountDown();
     }
     // ------------------------ tcp server -------------------------
 
@@ -66,9 +74,10 @@ export class SshServer {
     handlForwardtoWebsocketIpc = (data: any) => {
         this.forwardToMainProcesses(data);
     }
-    createTcpServer = (port0: number) => {
+    createTcpServer = () => {
         // writeFileSync("/Users/haohao/tdm.log", `Creating TCP server on port ${port0}\n`, { flag: "a" });
-        let port = port0;
+        this.setPort(this.getPort() + 1);
+        let port = this.getPort();
 
         console.log("Creating TCP server on port", port);
 
@@ -89,7 +98,7 @@ export class SshServer {
                     this.sendToTcpClient(JSON.stringify({ command: "tcp-server-heartbeat" }), false);
                 }, 1000)
                 // clear the self destruction countdown of the insance
-                this.getIpcManager().getMainProcesses().clearSshServerSelfDestructionCountDown();
+                this.clearSelfDestructionCountDown();
                 Log.debug("-1", "SSH TCP server got a client:", socket.remoteAddress, socket.remotePort)
                 this.startTcpEventListeners();
 
@@ -143,9 +152,8 @@ export class SshServer {
             // writeFileSync(path.join(os.homedir(), "tdm.log"), `tcp server error ${err.message}\n`, { flag: 'a' });
             // writeFileSync("/Users/haohao/tdm.log", `\nServer error --------------------------------------: ${err.message}, ${port}\n`, { flag: 'a' });
             // if the port is being used, find a new one
-            if (err.message.includes("EADDRINUSE") && port < 3100) {
-                port = port + 1;
-                this.createTcpServer(port)
+            if (err.message.includes("EADDRINUSE") && this.getPort() < 4100) {
+                this.createTcpServer()
             } else {
                 this.handleQuitMainProcess();
             }
@@ -328,4 +336,24 @@ export class SshServer {
         }
         return result;
     }
+
+    getPort = () => {
+        return this._port;
+    }
+
+    setPort = (newPort: number) => {
+        this._port = newPort;
+    }
+
+
+    startSelfDestructionCountDown = () => {
+        // self destruct after 15 seconds unless it is cleared by http 
+        this._selfDestructionCountDown = setTimeout(() => {
+            this.quit();
+        }, 15 * 1000);
+    }
+    clearSelfDestructionCountDown = () => {
+        clearTimeout(this._selfDestructionCountDown);
+    }
+
 }

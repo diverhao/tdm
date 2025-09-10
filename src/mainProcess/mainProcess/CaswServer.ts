@@ -64,7 +64,7 @@ export class CaswServer {
 
     constructor(mainProcess: MainProcess, displayWindowId: string) {
         this._mainProcess = mainProcess;
-        const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
+        const selectedProfile = mainProcess.getMainProcesses().getProfiles().getSelectedProfile();
         // if (selectedProfile !== undefined) {
         //     const epicsCaRepeaterPort = selectedProfile.getEntry("EPICS CA Settings", "EPICS_CA_REPEATER_PORT");
         //     if (epicsCaRepeaterPort !== undefined) {

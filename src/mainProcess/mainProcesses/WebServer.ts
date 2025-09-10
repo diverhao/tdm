@@ -13,7 +13,7 @@ import * as fs from "fs";
 import { Log } from "../log/Log";
 import path from "path";
 
-export class HttpServer {
+export class WebServer {
     _server: Express | undefined;
     _mainProcesses: MainProcesses;
     _port: number;
@@ -24,8 +24,8 @@ export class HttpServer {
     constructor(mainProcesses: MainProcesses, port: number) {
         this._port = port;
         this._mainProcesses = mainProcesses;
-        // this.createServer();
         this.obtainLdapOptions()
+        this.createServer();
     }
 
     // ------------------------ authentication ----------------------------
@@ -62,7 +62,10 @@ export class HttpServer {
         // read profiles file for https certificate and key file names
         // this is done before creating the Profiles object
         // then create the HttpServer object
-        const profilesJson = this.getMainProcesses().readProfilesJsonFromFileSync();
+        const profilesJson = this.getMainProcesses().readProfilesJsonSync();
+        if (profilesJson === undefined) {
+            throw new Error("Web mode: failed to read profiles file. Quit");
+        }
         let firstProfileJson = Object.values(profilesJson)[0];
         if (Object.keys(profilesJson)[0] === "For All Profiles") {
             firstProfileJson = Object.values(profilesJson)[1];
@@ -238,7 +241,7 @@ export class HttpServer {
                     Log.error("-1", "Cannot find main process 0 in web mode. Quit.")
                     return;
                 }
-                const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
+                const selectedProfile = mainProcess.getMainProcesses().getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
                     Log.error("-1", "Profile not selected in web mode. Quit.")
                     return;
@@ -259,7 +262,7 @@ export class HttpServer {
                 Log.error("Main process not running");
                 return;
             }
-            const profileName = mainProcess.getProfiles().getSelectedProfileName();
+            const profileName = mainProcess.getMainProcesses().getProfiles().getSelectedProfileName();
             // select the first profile
             // invoke DisplayWidnowAgent.createBrowserWindow() to send a html page to client
             // mainProcess.getIpcManager().handleProfileSelected(undefined, profileName, undefined, response);
@@ -299,7 +302,7 @@ export class HttpServer {
                     Log.error("-1", "Cannot find main process 0 in web mode. Quit.")
                     return;
                 }
-                const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
+                const selectedProfile = mainProcess.getMainProcesses().getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
                     Log.error("-1", "Profile not selected in web mode. Quit.")
                     return;

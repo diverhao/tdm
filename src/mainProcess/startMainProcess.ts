@@ -46,6 +46,7 @@ import path from "path";
 import { site } from "../../package.json";
 import { type_args } from "./mainProcess/IpcEventArgType";
 import { openTdlInFirstExistingInstance, openTdlInNewInstance, openTdlInSpecificExistingInstance, processArgsAttach } from "./global/GlobalMethods";
+import { defaultWebsocketOpenerServerPort } from "./global/GlobalVariables";
 
 /**
  * `true` for the first TDM instance 
@@ -83,6 +84,8 @@ Log.info('-1', "Input arguments:", args);
 processArgsAttach(args);
 
 if (args["attach"] === -1) {
+    // `--attach`'s role ends, use a real port
+    args["attach"] = defaultWebsocketOpenerServerPort;
     openTdlInNewInstance(args);
 } else if (args["attach"] === -2) {
     const success = openTdlInFirstExistingInstance(args);
@@ -91,7 +94,8 @@ if (args["attach"] === -1) {
         app.exit()
     } else {
         // there was no existing instance, open a new instance
-        args["attach"] = -1;
+        // `--attach`'s role ends, use a real port
+        args["attach"] = defaultWebsocketOpenerServerPort;
         openTdlInNewInstance(args);
     }
 } else if (args["attach"] > 0 && args["attach"] < 65536) {

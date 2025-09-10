@@ -132,7 +132,7 @@ export class ChannelAgentsManager {
             return "ca"
         } else {
             // get default protocol
-            const profile = this.getMainProcess().getProfiles().getSelectedProfile();
+            const profile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
             if (profile !== undefined) {
                 const defaultProtodol = profile.getEntry("EPICS Custom Environment", "Default Protocol");
                 if (defaultProtodol === "PVA") {

@@ -184,7 +184,7 @@ export class ContextMenuDesktop {
             accelerator: "CmdOrCtrl+o",
             click: () => {
                 const mainProcessMode = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getMainProcessMode();
-                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
                 let editable = true;
                 if (selectedProfile !== undefined) {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
@@ -1033,7 +1033,7 @@ export class ContextMenuDesktop {
             accelerator: "CmdOrCtrl+o",
             click: () => {
                 const mainProcessMode = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getMainProcessMode();
-                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
                 let editable = true;
                 if (selectedProfile !== undefined) {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
@@ -1331,7 +1331,7 @@ export class ContextMenuDesktop {
             accelerator: "CmdOrCtrl+o",
             click: () => {
                 const mainProcessMode = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getMainProcessMode();
-                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
                 let editable = true;
                 if (selectedProfile !== undefined) {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()

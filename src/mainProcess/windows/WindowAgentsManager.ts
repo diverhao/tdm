@@ -225,7 +225,7 @@ export class WindowAgentsManager {
                 await displayWindowAgent.creationPromise;
 
                 // (4)
-                const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+                const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
                     Log.error(this.getMainProcessId(), "Profile not selected!");
                     return undefined;
@@ -349,7 +349,7 @@ export class WindowAgentsManager {
                 Log.debug(this.getMainProcessId(), "lifted", displayWindowAgent.getId());
 
                 // (4)
-                const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+                const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
                     Log.error(this.getMainProcessId(), "Profile not selected!");
                     return undefined;
@@ -748,11 +748,11 @@ export class WindowAgentsManager {
             mainWindowAgent.sendFromMainProcess(
                 "after-main-window-gui-created",
                 {
-                    profiles: this.getMainProcess().getProfiles().serialize(),
-                    profilesFileName: this.getMainProcess().getProfilesFileName(),
+                    profiles: this.getMainProcess().getMainProcesses().getProfiles().serialize(),
+                    profilesFileName: this.getMainProcess().getMainProcesses().getProfiles().getFilePath(),
                     envDefault: envDefault,
                     envOs: envOs,
-                    logFileName: this.getMainProcess().getMainProcesses().writingToLog,
+                    logFileName: this.getMainProcess().getMainProcesses().getLogFileName(),
                     site: site,
                 }
             );
@@ -768,11 +768,11 @@ export class WindowAgentsManager {
                     mainWindowAgent.sendFromMainProcess(
                         "after-main-window-gui-created",
                         {
-                            profiles: this._mainProcess.getProfiles().serialize(),
-                            profilesFileName: this._mainProcess.getProfilesFileName(),
+                            profiles: this.getMainProcess().getMainProcesses().getProfiles().serialize(),
+                            profilesFileName: this.getMainProcess().getMainProcesses().getProfiles().getFilePath(),
                             envDefault: envDefault,
                             envOs: envOs,
-                            logFileName: this.getMainProcess().getMainProcesses().writingToLog,
+                            logFileName: this.getMainProcess().getMainProcesses().getLogFileName(),
                             site,
                         }
                     );

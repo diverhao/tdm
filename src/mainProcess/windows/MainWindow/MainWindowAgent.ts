@@ -56,7 +56,7 @@ export class MainWindowAgent {
 
         windowTitle = hostname + windowTitle;
 
-        const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+        const selectedProfile = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
         if (selectedProfile !== undefined) {
             windowTitle = windowTitle + " -- " + selectedProfile.getName();
         }

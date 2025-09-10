@@ -331,8 +331,8 @@ export class IpcManagerOnMainProcess {
             }
         }
         try {
-            // read file
-            const newProfiles = await this.getMainProcess().createProfilesFromFile(profilesFileName);
+            const profiles = this.getMainProcess().getMainProcesses().getProfiles();
+            this.getMainProcess().getMainProcesses().createProfiles(profilesFileName);
 
             // we are manually loading a profiles file, so we need to update the log file
             this.getMainProcess().getMainProcesses().enableLogToFile();
@@ -355,11 +355,11 @@ export class IpcManagerOnMainProcess {
             // tell main window to update
             mainWindowAgent.sendFromMainProcess("after-main-window-gui-created",
                 {
-                    profiles: newProfiles.serialize(),
+                    profiles: profiles.serialize(),
                     profilesFileName: profilesFileName,
                     envDefault: envDefault,
                     envOs: envOs,
-                    logFileName: this.getMainProcess().getMainProcesses().writingToLog,
+                    logFileName: this.getMainProcess().getMainProcesses().getLogFileName(),
                     site: site,
                 }
             );
@@ -386,6 +386,7 @@ export class IpcManagerOnMainProcess {
      * @returns {boolean} `true` if successfully save; `false` if failed.
      */
     handleSaveProfiles = (event: any, options: IpcEventArgType["save-profiles"]): boolean => {
+        const profiles = this.getMainProcess().getMainProcesses().getProfiles();
         let { filePath1, modifiedProfiles } = options;
         if (filePath1 === undefined) {
             filePath1 = "";
@@ -396,7 +397,7 @@ export class IpcManagerOnMainProcess {
             return false;
         }
 
-        let filePath: string | undefined = this.getMainProcess().getProfilesFileName();
+        let filePath: string | undefined = profiles.getFilePath();
         if (filePath === "") {
             // try the external file path
             filePath = filePath1;
@@ -442,13 +443,12 @@ export class IpcManagerOnMainProcess {
             }
         }
 
-        const newProfiles = new Profiles(modifiedProfiles);
-        newProfiles.setFilePath(filePath);
 
         try {
             // save first
-            newProfiles.save();
-            this.getMainProcess().setProfiles(newProfiles);
+            const profiles = this.getMainProcess().getMainProcesses().getProfiles();
+            profiles.updateProfiles(filePath, modifiedProfiles);
+            profiles.save();
 
             // update log
             this.getMainProcess().getMainProcesses().enableLogToFile();
@@ -527,11 +527,7 @@ export class IpcManagerOnMainProcess {
                 return false;
             }
         }
-        const newProfiles = new Profiles(modifiedProfiles);
-        newProfiles.setFilePath(filePath);
 
-        // update log
-        this.getMainProcess().getMainProcesses().enableLogToFile();
         // always tell main window the log file name, if the log file is not accessible, it is ""
         mainWindowAgent.sendFromMainProcess("log-file-name",
             {
@@ -541,8 +537,12 @@ export class IpcManagerOnMainProcess {
 
         try {
             // save first
-            newProfiles.save();
-            this.getMainProcess().setProfiles(newProfiles);
+            const profiles = this.getMainProcess().getMainProcesses().getProfiles();
+            profiles.updateProfiles(filePath, modifiedProfiles);
+            profiles.save();
+
+            // update log
+            this.getMainProcess().getMainProcesses().enableLogToFile();
         } catch (e) {
             Log.error(this.getMainProcessId(), e);
             mainWindowAgent.sendFromMainProcess("dialog-show-message-box",
@@ -589,7 +589,7 @@ export class IpcManagerOnMainProcess {
                 await windowAgentsManager.createMainWindow();
                 mainWindowAgent = windowAgentsManager.getMainWindowAgent();
                 if (mainWindowAgent instanceof MainWindowAgent) {
-                    const selectedProfileName = this.getMainProcess().getProfiles().getSelectedProfileName();
+                    const selectedProfileName = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfileName();
                     mainWindowAgent.sendFromMainProcess("after-profile-selected", {
                         profileName: selectedProfileName
                     });
@@ -1040,8 +1040,8 @@ export class IpcManagerOnMainProcess {
     handleProfileSelected = async (event: any, option: IpcEventArgType["profile-selected"]) => {
         const { selectedProfileName, args, httpResponse, openDefaultDisplayWindows } = option;
 
-        this.getMainProcess().getProfiles().setSelectedProfileName(selectedProfileName);
-        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        this.getMainProcess().getMainProcesses().getProfiles().setSelectedProfileName(selectedProfileName);
+        const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
         // select to run a new process as ssh-client mode, it can only be started from desktop mode
         if (this.getMainProcess().getMainProcessMode() === "desktop" && selectedProfile !== undefined && selectedProfile.isSshConfig()) {
 
@@ -1075,9 +1075,9 @@ export class IpcManagerOnMainProcess {
         {
             if (httpResponse === undefined) { // non-web mode
                 // (1)
-                this.getMainProcess().getProfiles().setSelectedProfileName(selectedProfileName);
+                this.getMainProcess().getMainProcesses().getProfiles().setSelectedProfileName(selectedProfileName);
                 // (2)
-                const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+                const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
                     Log.error(this.getMainProcessId(), `Profile ${selectedProfileName} does not exist`);
                     return;
@@ -1094,7 +1094,7 @@ export class IpcManagerOnMainProcess {
                     mainWindowAgent.setTitle(newTitle);
                 }
             }
-            const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+            const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
             if (selectedProfile === undefined) {
                 Log.error(this.getMainProcessId(), `Profile ${selectedProfileName} does not exist`);
                 return;
@@ -1204,7 +1204,7 @@ export class IpcManagerOnMainProcess {
      * Basically the same as profile-selected handler <br>
      */
     handleOpenDefaultDisplayWindows = (event: any, options: IpcEventArgType["open-default-display-windows"]) => {
-        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
             Log.error(this.getMainProcessId(), `Profile not selected yet`);
             return;
@@ -1293,7 +1293,7 @@ export class IpcManagerOnMainProcess {
     handleOpenTdlFiles = (event: any, data: IpcEventArgType["open-tdl-file"]) => {
         const { options, httpResponse } = data;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
             Log.error(this.getMainProcessId(), "Profile not selected!");
             return;
@@ -1616,7 +1616,7 @@ export class IpcManagerOnMainProcess {
         const currentTdlFolder = options["currentTdlFolder"];
 
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
             Log.error(this.getMainProcessId(), "Profile not selected.");
             return;
@@ -1676,7 +1676,7 @@ export class IpcManagerOnMainProcess {
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
         if (mainProcessMode === "web") {
             // make sure the file is allowed to save
-            const bookmarks = this.getMainProcess().getProfiles().getSelectedProfile()?.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
+            const bookmarks = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile()?.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
             let allowToSave = false;
             if (Array.isArray(bookmarks)) {
                 for (const bookmark of bookmarks) {
@@ -2216,7 +2216,7 @@ export class IpcManagerOnMainProcess {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         if (utilityType === "ProfilesViewer") {
             utilityOptions = {};
-            utilityOptions["profiles"] = this.getMainProcess().getProfiles().serialize();
+            utilityOptions["profiles"] = this.getMainProcess().getMainProcesses().getProfiles().serialize();
             utilityOptions["profilesFileName"] = this.getMainProcess().getMainProcesses().getProfilesFileName();
             const context = this.getMainProcess().getChannelAgentsManager().getContext();
             if (context === undefined) {
@@ -2235,9 +2235,9 @@ export class IpcManagerOnMainProcess {
                     utilityOptions["epics-ca-env"] = {};
                 }
             }
-            utilityOptions["selected-profile-name"] = { "Selected profile": this.getMainProcess().getProfiles().getSelectedProfileName() };
-            utilityOptions["log-file-name"] = this.getMainProcess().getMainProcesses().writingToLog;
-            utilityOptions["log-file-name-in-profiles"] = this.getMainProcess().getProfiles().getLogFile();
+            utilityOptions["selected-profile-name"] = { "Selected profile": this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfileName() };
+            utilityOptions["log-file-name"] = this.getMainProcess().getMainProcesses().getLogFileName();
+            utilityOptions["log-file-name-in-profiles"] = this.getMainProcess().getMainProcesses().getProfiles().getLogFile();
         } else if (utilityType === "TdlViewer") {
             // read script
             // options:
@@ -2276,7 +2276,7 @@ export class IpcManagerOnMainProcess {
         } else if (utilityType === "CaSnooper") {
             let port = -1;
             utilityOptions = {};
-            utilityOptions["profiles"] = this.getMainProcess().getProfiles().serialize();
+            utilityOptions["profiles"] = this.getMainProcess().getMainProcesses().getProfiles().serialize();
             utilityOptions["profilesFileName"] = this.getMainProcess().getMainProcesses().getProfilesFileName();
             const context = this.getMainProcess().getChannelAgentsManager().getContext();
             if (context !== undefined) {
@@ -2295,7 +2295,7 @@ export class IpcManagerOnMainProcess {
         } else if (utilityType === "Casw") {
             let port = -1;
             utilityOptions = {};
-            utilityOptions["profiles"] = this.getMainProcess().getProfiles().serialize();
+            utilityOptions["profiles"] = this.getMainProcess().getMainProcesses().getProfiles().serialize();
             utilityOptions["profilesFileName"] = this.getMainProcess().getMainProcesses().getProfilesFileName();
             const context = this.getMainProcess().getChannelAgentsManager().getContext();
             if (context !== undefined) {
@@ -2425,7 +2425,7 @@ export class IpcManagerOnMainProcess {
      */
     handleObtainIframeUuid = (event: any, options: IpcEventArgType["obtain-iframe-uuid"],) => {
 
-        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
 
         if (options["tdl"] === undefined) {
 
@@ -2473,7 +2473,7 @@ export class IpcManagerOnMainProcess {
 
     handleSwitchIframeDisplayTab = (event: any, options: IpcEventArgType["switch-iframe-display-tab"],) => {
         Log.debug(this.getMainProcessId(), "try to obtain iframe uuid");
-        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
         FileReader.readTdlFile(options["tdlFileName"], selectedProfile, options["currentTdlFolder"])
             .then((tdlFileResult) => {
                 if (tdlFileResult !== undefined) {
@@ -2813,7 +2813,7 @@ export class IpcManagerOnMainProcess {
         if (this.getMainProcess().getMainProcessMode() === "web") {
             const folderPath = options["folderPath"];
             let allowToRead = false;
-            const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+            const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
             if (selectedProfile !== undefined) {
                 const bookmarks = selectedProfile.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
                 if (bookmarks !== undefined) {
@@ -2912,7 +2912,7 @@ export class IpcManagerOnMainProcess {
         if (this.getMainProcess().getMainProcessMode() === "web") {
             const folderPath = typeof message["folder"] === "string" ? message["folder"] : typeof message["fullFileName"] === "string" ? message["fullFileName"] : typeof message["fullFolderName"] === "string" ? message["fullFolderName"] : "";
             let allowToWrite = false;
-            const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+            const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
             if (selectedProfile !== undefined) {
                 const bookmarks = selectedProfile.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
                 if (bookmarks !== undefined) {
@@ -3058,7 +3058,7 @@ export class IpcManagerOnMainProcess {
         }
 
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
             Log.error(this.getMainProcessId(), "Profile not selected!");
             return;

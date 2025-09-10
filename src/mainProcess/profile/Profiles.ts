@@ -14,18 +14,17 @@ export class Profiles {
     private _filePath: string = "";
     private _selectedProfileName: string = "";
 
-    constructor(profilesFileContents: Record<string, any>) {
-        for (let profileName in profilesFileContents) {
-            this._profiles[profileName] = new Profile(profileName, profilesFileContents[profileName]);
-        }
+    constructor(filePath: string, profilesJson: Record<string, any>) {
+        
+        this.updateProfiles(filePath, profilesJson);
     }
 
-    setFilePath = (newFilePath: string) => {
-        this._filePath = newFilePath;
-    };
-    getFilePath = () => {
-        return this._filePath;
-    };
+    updateProfiles = (filePath: string, profilesJson: Record<string, any>) => {
+        this._filePath = filePath;
+        for (let profileName in profilesJson) {
+            this._profiles[profileName] = new Profile(profileName, profilesJson[profileName]);
+        }
+    }
 
     // --------------------- read file -----------------------------------
 
@@ -331,5 +330,9 @@ export class Profiles {
 
         // make a hard copy
         return JSON.parse(JSON.stringify(profilesObj));
+    };
+
+    getFilePath = () => {
+        return this._filePath;
     };
 }

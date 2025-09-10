@@ -524,7 +524,12 @@ export class MainWindowProfileRunPage {
         );
     };
 
-    _ElementThumbnail = ({ displayWindowId, imageBase64, setWindowName, setTdlFileName }: any) => {
+    _ElementThumbnail = ({ displayWindowId, imageBase64, setWindowName, setTdlFileName }: {
+        displayWindowId: string;
+        imageBase64: string;
+        setWindowName: (newName: string) => void;
+        setTdlFileName: (newName: string) => void;
+    }) => {
         const elementRef = React.useRef<any>(null);
         return (
             <div
@@ -541,14 +546,14 @@ export class MainWindowProfileRunPage {
                 onMouseDown={(event: React.MouseEvent) => {
                     event.preventDefault();
                     if (event.button === 0) {
-                        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("focus-window", displayWindowId);
+                        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("focus-window", {displayWindowId: displayWindowId});
                     }
                 }}
                 // mid click, onClick is only for left button
                 onAuxClick={(event: React.MouseEvent) => {
                     event.preventDefault();
                     if (event.button === 1) {
-                        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("close-window", displayWindowId);
+                        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("close-window", {displayWindowId: displayWindowId});
                         setWindowName("");
                         setTdlFileName("");
                     }

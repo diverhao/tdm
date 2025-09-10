@@ -44,6 +44,8 @@ import { IpcEventArgType, IpcEventArgType2 } from "../../mainProcess/IpcEventArg
  * Manage IPC messages sent from main process for main window. <br>
  *
  * This IPC manager is for `MainWindowClient` object
+ * 
+ * It uses a random port between 4000 and 4999
  */
 export class IpcManagerOnDisplayWindow {
     private _displayWindowClient: DisplayWindowClient;
@@ -63,7 +65,7 @@ export class IpcManagerOnDisplayWindow {
             return;
         }
 
-        let serverAddress = `ws://localhost:${this.getIpcServerPort()}`;
+        let serverAddress = `wss://127.0.0.1:${this.getIpcServerPort()}`;
         if (this.getDisplayWindowClient().getMainProcessMode() === "web") {
             const host = window.location.host.split(":")[0];
             Log.info("Web mode host:", host);

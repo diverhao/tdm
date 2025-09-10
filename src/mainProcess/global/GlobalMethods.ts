@@ -10,6 +10,7 @@ import { MainProcess } from "../mainProcess/MainProcess";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import { MainProcesses } from "../mainProcesses/MainProcesses";
 import { arg } from "mathjs";
+import * as selfsigned from "selfsigned";
 
 /**
  * @packageDocumentation
@@ -381,7 +382,7 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
             return;
         }
 
-        const profiles = mainProcess.getProfiles();
+        const profiles = mainProcess.getMainProcesses().getProfiles();
         const selectedProfile = profiles.getSelectedProfile();
 
         const cwd = args === undefined ? "" : args["cwd"];
@@ -399,7 +400,7 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
             }
 
             console.log("profile names:", profileName, passedProfileName, firstProfileName)
-            
+
             mainProcess.getIpcManager().handleProfileSelected(undefined,
                 {
                     selectedProfileName: profileName,
@@ -451,7 +452,7 @@ export const cmdLineCallback = (mainProcess: MainProcess, args: type_args) => {
     const windowAgentsManager = mainProcess.getWindowAgentsManager();
     const cmdLineSelectedProfile = args["profile"];
     const cmdLineOpenFileNames = args["fileNames"];
-    const profileNames = mainProcess.getProfiles().getProfileNames();
+    const profileNames = mainProcess.getMainProcesses().getProfiles().getProfileNames();
     const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
     if (!(mainWindowAgent instanceof MainWindowAgent)) {
         return;
@@ -503,3 +504,13 @@ export const cmdLineCallback = (mainProcess: MainProcess, args: type_args) => {
         }
     }
 };
+
+export const generateKeyAndCert = () => {
+    // generate self-signed certificate for https server
+
+    const attrs = [{ name: "commonName", value: "localhost" }];
+    const pems = selfsigned.generate(attrs, { days: 1 });
+
+    return pems;
+}
+

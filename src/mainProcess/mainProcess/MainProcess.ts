@@ -24,7 +24,6 @@ const path = require('path');
  *
  */
 export class MainProcess {
-    private _profiles: Profiles = new Profiles({});
     private _windowAgentsManager: WindowAgentsManager;
     // dummy to silent TypeScript
     private _channelAgentsManager: ChannelAgentsManager;
@@ -51,7 +50,6 @@ export class MainProcess {
     constructor(
         mainProcesses: MainProcesses,
         processId: string,
-        profilesFileName: string,
         callback: ((mainProcess: MainProcess, args: type_args) => any) | undefined = undefined,
         mainProcessMode: "web" | "desktop" | "ssh-server" | "ssh-client" = "desktop",
         sshServerConfig?: type_sshServerConfig & { callingProcessId: string }
@@ -83,47 +81,48 @@ export class MainProcess {
             }
         } else {
             this.setWindowAgentsManager(this._windowAgentsManager);
-            this.createProfilesFromFile(profilesFileName).then(() => {
-                app.whenReady().then(async () => {
-                    if (this.getMainProcessMode() === "desktop") {
-                        await this.getWindowAgentsManager().createMainWindow();
-                        if (callback !== undefined) {
-                            const rawArgs = this.getMainProcesses().getRawArgs();
-                            callback(this, rawArgs);
-                        }
-                    } else if (this.getMainProcessMode() === "web") {
-                        // do not open main window in web mode
+            // this.createProfilesFromFile();
+            app.whenReady().then(async () => {
+                if (this.getMainProcessMode() === "desktop") {
+                    await this.getWindowAgentsManager().createMainWindow();
+                    if (callback !== undefined) {
+                        const rawArgs = this.getMainProcesses().getRawArgs();
+                        callback(this, rawArgs);
+                    }
+                } else if (this.getMainProcessMode() === "web") {
+                    // do not open main window in web mode
 
-                        // the 1st, not the 0th, profile should be selected
-                        const profileNames = this.getProfiles().getProfileNames();
-                        let profileName = "";
-                        for (const profileNameTmp of profileNames) {
-                            if (profileNameTmp !== "For All Profiles") {
-                                profileName = profileNameTmp;
-                                break;
-                            }
+                    // the 1st, not the 0th, profile should be selected
+                    const profiles = this.getMainProcesses().getProfiles();
+                    const profileNames = profiles.getProfileNames();
+                    let profileName = "";
+                    for (const profileNameTmp of profileNames) {
+                        if (profileNameTmp !== "For All Profiles") {
+                            profileName = profileNameTmp;
+                            break;
                         }
-
-                        // only prepare the server-side stuff: update selected profile name, create Channel Access Context
-                        // copied from this.getIpcManager().handleProfileSelected()
-                        this.getProfiles().setSelectedProfileName(profileName);
-                        const selectedProfile = this.getProfiles().getSelectedProfile();
-                        if (selectedProfile === undefined) {
-                            Log.error(this.getProcessId(), `Profile ${profileName} does not exist`);
-                            return;
-                        }
-
-                        const channelAgentsManager = new ChannelAgentsManager(selectedProfile, this);
-                        await channelAgentsManager.createAndInitContext();
-                        this.setChannelAgentsManager(channelAgentsManager);
-                        Log.debug(this.getProcessId(), "Main process for web mode started. Profile is", profileName);
-                    } else if (this.getMainProcessMode() === "ssh-server") {
-                        await this.getWindowAgentsManager().createMainWindow();
-                        // no need to run callback in ssh-server mode, it is about the manually select profile
                     }
 
-                });
-            })
+                    // only prepare the server-side stuff: update selected profile name, create Channel Access Context
+                    // copied from this.getIpcManager().handleProfileSelected()
+                    profiles.setSelectedProfileName(profileName);
+                    const selectedProfile = profiles.getSelectedProfile();
+                    if (selectedProfile === undefined) {
+                        Log.error(this.getProcessId(), `Profile ${profileName} does not exist`);
+                        return;
+                    }
+
+                    const channelAgentsManager = new ChannelAgentsManager(selectedProfile, this);
+                    await channelAgentsManager.createAndInitContext();
+                    this.setChannelAgentsManager(channelAgentsManager);
+                    Log.debug(this.getProcessId(), "Main process for web mode started. Profile is", profileName);
+                } else if (this.getMainProcessMode() === "ssh-server") {
+                    await this.getWindowAgentsManager().createMainWindow();
+                    // no need to run callback in ssh-server mode, it is about the manually select profile
+                }
+
+            });
+
         }
     }
 
@@ -184,7 +183,7 @@ export class MainProcess {
         // quit Websocket PV Server
         this.getWsPvServer().quit();
         // remove this MainProcess object
-        this.getMainProcesses().removeProcess(this.getProcessId());
+        this.getMainProcesses().removeProcessFromList(this.getProcessId());
         // if there is no MainProcess running
         if (this.getMainProcesses().getProcesses().length === 0) {
             this.getMainProcesses().quit();
@@ -197,98 +196,7 @@ export class MainProcess {
             this.getMainProcesses().quit();
         }
     };
-
-    // -------------------- profiles ----------------------------
-    createProfilesFromObj = (profilesObj: Record<string, any>) => {
-        const newProfiles = new Profiles(profilesObj);
-        newProfiles.setFilePath("");
-        this.setProfiles(newProfiles);
-        return newProfiles;
-    };
-
-    /**
-     * Create Profiles object by reading a JSON file. If the file does not exist, create it; if the file cannot be
-     * created, use in-memory profiles. The JSON contents are validated.
-     * 
-     * (1) the file exists and a valid profiles file --> continue
-     * 
-     * (2) the file exist but not a valid profiles file, --> throw an exception
-     * 
-     * (3) the file does not exist, we can create, read and write this file --> create this file, and continue
-     * 
-     * (4) the file does tno exit, we cannot create this file --> throw an exception
-     */
-    createProfilesFromFile = async (filePath: string): Promise<Profiles> => {
-        // test if file exists
-
-        const fileExists = fs.existsSync(filePath);
-        if (fileExists) {
-            try {
-                // (1)
-                let profilesFileContents: Record<string, any> = await FileReader.readJSON(filePath, false);
-                // throws an exception, re-throw below
-                Profiles.validateProfiles(profilesFileContents);
-
-                if (this.getMainProcessMode() === "desktop" || this.getMainProcessMode() === "ssh-server" || this.getMainProcessMode() === "web") {
-                    const newProfiles = new Profiles(profilesFileContents);
-                    newProfiles.setFilePath(filePath);
-                    this.setProfiles(newProfiles);
-                    return newProfiles;
-                } else {
-                    // // web mode
-                    // // use the first profile
-                    // const key = Object.keys(profilesFileContents)[0];
-                    // const value = Object.values(profilesFileContents)[0];
-                    // const singleProfileFileContents: Record<string, any> = {};
-                    // singleProfileFileContents[key] = value;
-
-                    // const newProfiles = new Profiles(singleProfileFileContents);
-                    // newProfiles.setFilePath(filePath);
-                    // this.setProfiles(newProfiles);
-
-                    // return newProfiles;
-                    throw new Error("Unknown mode");
-                }
-            } catch (e) {
-                // (2)
-                throw new Error("This is not a valid profiles file");
-            }
-        } else {
-            // file does not exist
-            // test if file can be created 
-            try {
-                // (3)
-                fs.mkdirSync(path.dirname(filePath), { recursive: true });
-                fs.openSync(filePath, "wx");
-                const newProfiles = new Profiles({});
-                newProfiles.setFilePath(filePath);
-                newProfiles.save();
-                this.setProfiles(newProfiles);
-                return newProfiles;
-            } catch (e) {
-                // (4)
-                // re-throw
-                throw new Error("File does not exist and cannot be created.");
-            }
-        }
-
-    };
-
-
-
-
-    getProfiles = () => {
-        return this._profiles;
-    };
-
-    getProfilesFileName = () => {
-        return this.getProfiles().getFilePath();
-    };
-
-    setProfiles = (newProfiles: Profiles) => {
-        this._profiles = newProfiles;
-    };
-
+    
     // ------------------------ windows --------------------------
 
     getWindowAgentsManager = () => {
@@ -336,7 +244,7 @@ export class MainProcess {
     updateWsOpenerPort = (newPort: number) => {
         const mainWindowAgent = this.getWindowAgentsManager().getMainWindowAgent();
         if (mainWindowAgent !== undefined) {
-            mainWindowAgent.sendFromMainProcess("update-ws-opener-port", 
+            mainWindowAgent.sendFromMainProcess("update-ws-opener-port",
                 {
                     newPort: newPort
                 }
@@ -437,7 +345,7 @@ export class MainProcess {
      * todo: use config from file
      */
     createSql = () => {
-        const profile = this.getProfiles().getSelectedProfile();
+        const profile = this.getMainProcesses().getProfiles().getSelectedProfile();
         if (profile !== undefined) {
             const password = profile.getEntry("Archive", "Oracle database password")
             const userName = profile.getEntry("Archive", "Oracle database username");
@@ -556,9 +464,9 @@ export class MainProcess {
                 });
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
                     info: {
-                    messageType: "info",
-                    humanReadableMessages: [`All files successfully converted.`],
-                    rawMessages: [],
+                        messageType: "info",
+                        humanReadableMessages: [`All files successfully converted.`],
+                        rawMessages: [],
                     }
                 })
             } else {
@@ -582,9 +490,9 @@ export class MainProcess {
 
             displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
                 info: {
-                messageType: "error",
-                humanReadableMessages: [`File converter tool quits unexpectedly.`],
-                rawMessages: [`${error}`],
+                    messageType: "error",
+                    humanReadableMessages: [`File converter tool quits unexpectedly.`],
+                    rawMessages: [`${error}`],
                 }
             })
         });
@@ -607,9 +515,9 @@ export class MainProcess {
                 });
                 displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
                     info: {
-                    messageType: "info",
-                    humanReadableMessages: [`All files successfully converted.`],
-                    rawMessages: [],
+                        messageType: "info",
+                        humanReadableMessages: [`All files successfully converted.`],
+                        rawMessages: [],
                     }
                 })
             } else {

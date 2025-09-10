@@ -1,7 +1,7 @@
 import { app } from "electron";
 import path from "path";
 import os from "os";
-import { httpServerPort } from "../global/GlobalVariables";
+import { defaultWebServerPort } from "../global/GlobalVariables";
 import { Log } from "../log/Log";
 import { type_log_levels } from "../log/Log";
 import { generateAboutInfo } from "../global/GlobalMethods";
@@ -61,7 +61,7 @@ Options:
             flexibleAttach: true,
             cwd: process.cwd(),
             mainProcessMode: "desktop",
-            httpServerPort: httpServerPort,
+            httpServerPort: defaultWebServerPort,
             site: site,
         };
 
