@@ -12,6 +12,8 @@ import { MainProcesses } from "./MainProcesses";
 import * as fs from "fs";
 import { Log } from "../log/Log";
 import path from "path";
+import { Profile } from "../profile/Profile";
+import { Profiles } from "../profile/Profiles";
 
 export class WebServer {
     _server: Express | undefined;
@@ -62,7 +64,8 @@ export class WebServer {
         // read profiles file for https certificate and key file names
         // this is done before creating the Profiles object
         // then create the HttpServer object
-        const profilesJson = this.getMainProcesses().readProfilesJsonSync();
+        const profilesFileName = this.getMainProcesses().getProfiles().getFilePath();
+        const profilesJson = Profiles.readProfilesJsonSync(profilesFileName);
         if (profilesJson === undefined) {
             throw new Error("Web mode: failed to read profiles file. Quit");
         }

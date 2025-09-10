@@ -1,7 +1,7 @@
 import { MainProcess } from "../mainProcess/MainProcess";
 import { WsOpenerServer } from "./WsOpenerServer";
 import { Log } from "../log/Log";
-import { app, BrowserWindow, Menu } from "electron";
+import { app } from "electron";
 import { IpcManagerOnMainProcesses } from "./IpcManagerOnMainProcesses";
 import { WebServer } from "./WebServer";
 import { type_sshServerConfig } from "./SshClient";
@@ -9,16 +9,17 @@ import { ApplicationMenu } from "./ApplicationMenu";
 import { LocalFontsReader } from "../file/LocalFontsReader";
 import * as fs from "fs";
 import { Profiles } from "../profile/Profiles";
-import { FileReader } from "../file/FileReader";
 import path from "path";
 import { type_args } from "../mainProcess/IpcEventArgType";
 
 /**
  * MainProcesses creates and manages 
  *  - all main processes, 
- *  - the websocket opener server, for opening new processes in this TDM instance from external
+ *  - the websocket opener server, for opening new process in this TDM instance from external
  *  - the websocket based ipc manager, for communication between main process and renderer process
+ *  - profiles, which stores all profiles read from the profiles file
  *  - the http server (if in web mode)
+ *  - the log file
  *
  * This is the very first class being created in TDM.
  *
@@ -52,10 +53,8 @@ export class MainProcesses {
     private readonly _profiles: Profiles;
 
     // log
-    // "" means no log file to write to, otherwise it is the log file name
-    private _logFileName: string = "";
     // log stream for writing to file
-    logStream: undefined | fs.WriteStream = undefined;
+    private _logStream: undefined | fs.WriteStream = undefined;
 
     constructor(args: type_args) {
         this._rawArgs = args;
@@ -70,8 +69,9 @@ export class MainProcesses {
         this._applicationMenu = new ApplicationMenu(this);
 
         // profiles
+        // create an empty first, then read the profiles file and update the profiles
         this._profiles = new Profiles(args["settings"], {});
-        this.createProfiles(args["settings"]);
+        this._profiles.createProfiles(args["settings"]);
 
         // main-process-mode specific initialization
         if (args["mainProcessMode"] === "web") {
@@ -161,29 +161,6 @@ export class MainProcesses {
     };
 
 
-    createProfiles = (filePath: string) => {        
-        const profilesJson = this.readProfilesJsonSync();
-        const profiles = this.getProfiles();
-        if (profilesJson !== undefined) {
-            profiles.updateProfiles(filePath, profilesJson);
-        } else {
-            // file does not exist
-            // test if file can be created 
-            try {
-                // (3)
-                fs.mkdirSync(path.dirname(filePath), { recursive: true });
-                fs.openSync(filePath, "wx");
-                profiles.updateProfiles(filePath, {});
-                profiles.save();
-            } catch (e) {
-                // (4)
-                // re-throw
-                throw new Error("File does not exist and cannot be created.");
-            }
-
-        }
-    }
-
     /**
      * Scan over local fonts and read their names
      * 
@@ -211,7 +188,7 @@ export class MainProcesses {
 
 
     /**
-     * quit the TDM application
+     * quit the TDM application in both graceful and brutal forces
      */
     quit = () => {
         Log.info("-1", "------------------------ quit main processes ------------------------------");
@@ -223,92 +200,29 @@ export class MainProcesses {
         process.exit();
     };
 
-    // ---------------- getters and setters ----------------------
-
-    getProcesses = () => {
-        return this._processes;
-    };
-
-    getProfilesFileName = () => {
-        return this.getRawArgs()["settings"];
-    };
-
-    getWsOpenerServer = () => {
-        return this._wsOpenerServer;
-    };
-
-    getProcess = (processId: string): MainProcess | undefined => {
-        for (let process of this._processes) {
-            if (processId === process.getProcessId()) {
-                return process;
-            }
-        }
-        return undefined;
-    };
-
-    getIpcManager = () => {
-        return this._ipcManager;
-    };
-
-    getWebServer = () => {
-        return this._webServer;
-    };
-
-    getApplicationMenu = () => {
-        return this._applicationMenu;
-    }
-
-    getLocalFontNames = () => {
-        return this._localFontNames;
-    }
-
-    setLocalFontNames = (fontNames: string[]) => {
-        this._localFontNames = fontNames;
-    }
-
-    setWebServer = (webServer: WebServer) => {
-        this._webServer = webServer;
-    }
-
-
-    /**
-     * Read profiles file in synchronous manner. The profile is validated.
-     * 
-     * @returns the profiles json object if the file exists and is valid, otherwise `undefined`
-     */
-    readProfilesJsonSync = (): Record<string, any> | undefined => {
-        // test if file exists
-        const filePath = this.getProfilesFileName();
-        const fileExists = fs.existsSync(filePath);
-        if (fileExists) {
-            try {
-                // (1)
-                let profilesJson: Record<string, any> = FileReader.readJSONsync(filePath, false);
-                // throws an exception, re-throw below
-                Profiles.validateProfiles(profilesJson);
-                return profilesJson
-            } catch (e) {
-                // (2)
-                return undefined;
-            }
-        } else {
-            return undefined;
-        }
-    };
-
     // ------------------------- log ----------------------------
 
-    readLogFileName = (): string => {
+    /**
+     * Get the log file name defined in TDM settings file. The TDM settings file
+     * is the only place where the log file name is defined.
+     * 
+     * The log is started before the user selects the profile to use. 
+     * So the log file name must be defined at the level higher than the profile.
+     * 
+     * @returns the log file name defined in TDM settings file, or "" if not defined or not accessible
+     */
+    getLogFileName = (): string => {
         // try to read TDM setting first, and make sure it is a legitimate file name
         try {
-            const profilesFileContents = this.readProfilesJsonSync();
+            const profilesFileName = this.getProfiles().getFilePath();
+            const profilesJson = Profiles.readProfilesJsonSync(profilesFileName);
 
-            if (profilesFileContents === undefined) {
+            if (profilesJson === undefined) {
                 return "";
             }
 
-            const logFileNameInTdm = profilesFileContents["For All Profiles"]["Log"]["General Log File"]["value"];
-            if (this.logFileOkToUse(`${logFileNameInTdm}`)) {
+            const logFileNameInTdm = profilesJson["For All Profiles"]["Log"]["General Log File"]["value"];
+            if (this.verifyLogFile(`${logFileNameInTdm}`)) {
                 return logFileNameInTdm;
             }
         } catch (e) {
@@ -317,7 +231,12 @@ export class MainProcesses {
         return "";
     }
 
-    private logFileOkToUse = (logFile: string): boolean => {
+    /**
+     * Verify if the log file is accessible, i.e., it is an absolute path and the directory is writable.
+     * 
+     * @returns true if the log file is accessible, false otherwise
+     */
+    private verifyLogFile = (logFile: string): boolean => {
 
         let ok = path.isAbsolute(logFile) && fs.existsSync(path.dirname(logFile));
         if (ok === false) {
@@ -331,40 +250,24 @@ export class MainProcesses {
         }
     }
 
-
-    getLogFileName = () => {
-        return this._logFileName;
-    }
-
-    setLogFileName = (fileName: string) => {
-        this._logFileName = fileName;
-    }
-
     /**
-     * The log is written to TDM_LOG system environment by default. If the "Log file" is defined
-     * in the profile, it will write to this file after the profile is started.
+     * Create or replace the log file stream, and override `process.stdout.write` to write to both standard output and the log file.
      * 
-     * Write log to the log file if it is accessible.
+     * If the log file is not defined or not accessible, do nothing.
      * 
      * This should be done as early as possible.
      */
     enableLogToFile = () => {
-        const logFile = this.readLogFileName();
+        const logFileName = this.getLogFileName();
 
-        // no change
-        if (logFile === this.getLogFileName() && this.getLogFileName() !== "") {
-            return;
-        }
-
-        if (logFile !== "") {
+        if (logFileName !== "") {
             // continue
         } else {
-            Log.info("Log file is not accessible. Log will only be shown in standard output.");
-            this.setLogFileName("");
+            Log.info(`Log file is not defined or not accessible. Log will only be shown in standard output.`);
             return;
         }
 
-        const oldLogStream = this.logStream;
+        const oldLogStream = this.getLogStream();
 
         const originalStdoutWrite = process.stdout.write.bind(process.stdout);
         try {
@@ -375,32 +278,72 @@ export class MainProcesses {
             }
 
             // create a stream writing to file, remove excessive spaces
-            const logStream = fs.createWriteStream(logFile.trim(), { flags: 'a' });
+            const logStream = fs.createWriteStream(logFileName.trim(), { flags: 'a' });
 
             logStream.on("error", (err: any) => {
                 Log.error(err);
                 // do nothing
             })
-            this.logStream = logStream;
+            this.setLogStream(logStream);
 
             // overriding `process.stdout.write`, so that we can both printout and write to log file
             process.stdout.write = ((chunk: string | Uint8Array, encoding: BufferEncoding, callback: (err: Error | null | undefined) => void): boolean => {
                 logStream.write(chunk, encoding, callback); // Write to file
                 return originalStdoutWrite(chunk, encoding, callback); // Return boolean
             }) as typeof process.stdout.write;
-            this.setLogFileName(logFile);
-            Log.info("Log is being written to file", logFile);
+            Log.info("Log is being written to file", logFileName);
             return;
         } catch (e) {
-            Log.error("Error logging to log file", logFile);
+            Log.error("Error logging to log file", logFileName);
             Log.error(e);
-            this.setLogFileName("");
             return;
         }
     }
 
-    getSite = () => {
-        return this.getRawArgs()["site"];
+
+    // ---------------- getters and setters ----------------------
+
+    getProcesses = () => {
+        return this._processes;
+    };
+
+    getWsOpenerServer = () => {
+        return this._wsOpenerServer;
+    };
+
+    getIpcManager = () => {
+        return this._ipcManager;
+    };
+
+
+    getWebServer = () => {
+        return this._webServer;
+    };
+
+    getApplicationMenu = () => {
+        return this._applicationMenu;
+    }
+
+    /**
+     * Get MainProcess by ID
+     * 
+     * @returns when not found, return undefined; when found, return the MainProcess
+     */
+    getProcess = (processId: string): MainProcess | undefined => {
+        for (let process of this._processes) {
+            if (processId === process.getProcessId()) {
+                return process;
+            }
+        }
+        return undefined;
+    };
+
+    getLocalFontNames = () => {
+        return this._localFontNames;
+    }
+
+    setLocalFontNames = (fontNames: string[]) => {
+        this._localFontNames = fontNames;
     }
 
     getRawArgs = () => {
@@ -411,8 +354,30 @@ export class MainProcesses {
         return this._profiles;
     }
 
+    /**
+     * Get site for this TDM 
+     * 
+     * Since the "site" is never changed, it is safe to directly read from the raw args.
+     */
+    getSite = () => {
+        return this.getRawArgs()["site"];
+    }
+
+    /**
+     * Get main process mode for this TDM
+     * 
+     * Since the "mainProcessMode" is never changed for a TDM instance, it is safe to directly read from the raw args.
+     */
     getMainProcessMode = () => {
         return this.getRawArgs()["mainProcessMode"];
+    }
+
+    getLogStream = () => {
+        return this._logStream;
+    }
+
+    setLogStream = (logStream: fs.WriteStream | undefined) => {
+        this._logStream = logStream;
     }
 
 }

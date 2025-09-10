@@ -4,6 +4,7 @@ import { Profile } from "./Profile";
 import { v4 as uuidv4, validate as uuidValidate } from "uuid";
 const fetch = (...args: any[]) => import("node-fetch").then(({ default: fetch }: any) => fetch(...(args as any)));
 import { Log } from "../log/Log";
+import { FileReader } from "../file/FileReader";
 
 /**
  * Represents the profiles contained in the JSON-style file. If the file cannot be read/written, the profiles are always
@@ -15,7 +16,6 @@ export class Profiles {
     private _selectedProfileName: string = "";
 
     constructor(filePath: string, profilesJson: Record<string, any>) {
-        
         this.updateProfiles(filePath, profilesJson);
     }
 
@@ -26,8 +26,55 @@ export class Profiles {
         }
     }
 
+
+    createProfiles = (filePath: string) => {
+        const profilesJson = Profiles.readProfilesJsonSync(filePath);
+        if (profilesJson !== undefined) {
+            this.updateProfiles(filePath, profilesJson);
+        } else {
+            // file does not exist
+            // test if file can be created 
+            try {
+                // (3)
+                fs.mkdirSync(path.dirname(filePath), { recursive: true });
+                fs.openSync(filePath, "wx");
+                this.updateProfiles(filePath, {});
+                this.save();
+            } catch (e) {
+                // (4)
+                // re-throw
+                throw new Error("File does not exist and cannot be created.");
+            }
+        }
+    }
+
+
     // --------------------- read file -----------------------------------
 
+
+    /**
+     * Read profiles file in synchronous manner. The profile is validated.
+     * 
+     * @returns the profiles json object if the file exists and is valid, otherwise `undefined`
+     */
+    static readProfilesJsonSync = (filePath: string): Record<string, any> | undefined => {
+        // test if file exists
+        const fileExists = fs.existsSync(filePath);
+        if (fileExists) {
+            try {
+                // (1)
+                let profilesJson: Record<string, any> = FileReader.readJSONsync(filePath, false);
+                // throws an exception, re-throw below
+                Profiles.validateProfiles(profilesJson);
+                return profilesJson
+            } catch (e) {
+                // (2)
+                return undefined;
+            }
+        } else {
+            return undefined;
+        }
+    };
 
 
     /**

@@ -332,7 +332,7 @@ export class IpcManagerOnMainProcess {
         }
         try {
             const profiles = this.getMainProcess().getMainProcesses().getProfiles();
-            this.getMainProcess().getMainProcesses().createProfiles(profilesFileName);
+            profiles.createProfiles(profilesFileName);
 
             // we are manually loading a profiles file, so we need to update the log file
             this.getMainProcess().getMainProcesses().enableLogToFile();
@@ -455,7 +455,7 @@ export class IpcManagerOnMainProcess {
             // always tell main window the log file name, if the log file is not accessible, it is ""
             mainWindowAgent.sendFromMainProcess("log-file-name",
                 {
-                    logFileName: this.getMainProcess().getMainProcesses().readLogFileName()
+                    logFileName: this.getMainProcess().getMainProcesses().getLogFileName()
                 }
             );
         } catch (e) {
@@ -531,7 +531,7 @@ export class IpcManagerOnMainProcess {
         // always tell main window the log file name, if the log file is not accessible, it is ""
         mainWindowAgent.sendFromMainProcess("log-file-name",
             {
-                logFileName: this.getMainProcess().getMainProcesses().readLogFileName()
+                logFileName: this.getMainProcess().getMainProcesses().getLogFileName()
             }
         );
 
@@ -2217,7 +2217,7 @@ export class IpcManagerOnMainProcess {
         if (utilityType === "ProfilesViewer") {
             utilityOptions = {};
             utilityOptions["profiles"] = this.getMainProcess().getMainProcesses().getProfiles().serialize();
-            utilityOptions["profilesFileName"] = this.getMainProcess().getMainProcesses().getProfilesFileName();
+            utilityOptions["profilesFileName"] = this.getMainProcess().getMainProcesses().getProfiles().getFilePath();
             const context = this.getMainProcess().getChannelAgentsManager().getContext();
             if (context === undefined) {
                 utilityOptions["epics-ca-env"] = {};
@@ -2277,7 +2277,7 @@ export class IpcManagerOnMainProcess {
             let port = -1;
             utilityOptions = {};
             utilityOptions["profiles"] = this.getMainProcess().getMainProcesses().getProfiles().serialize();
-            utilityOptions["profilesFileName"] = this.getMainProcess().getMainProcesses().getProfilesFileName();
+            utilityOptions["profilesFileName"] = this.getMainProcess().getMainProcesses().getProfiles().getFilePath();
             const context = this.getMainProcess().getChannelAgentsManager().getContext();
             if (context !== undefined) {
                 const envInstance = context.getEnvInstance();
@@ -2296,7 +2296,7 @@ export class IpcManagerOnMainProcess {
             let port = -1;
             utilityOptions = {};
             utilityOptions["profiles"] = this.getMainProcess().getMainProcesses().getProfiles().serialize();
-            utilityOptions["profilesFileName"] = this.getMainProcess().getMainProcesses().getProfilesFileName();
+            utilityOptions["profilesFileName"] = this.getMainProcess().getMainProcesses().getProfiles().getFilePath();
             const context = this.getMainProcess().getChannelAgentsManager().getContext();
             if (context !== undefined) {
                 const envInstance = context.getEnvInstance();

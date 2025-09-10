@@ -1,7 +1,5 @@
 import { app, Menu } from "electron";
-import { FileReader } from "../file/FileReader";
 import { WindowAgentsManager } from "../windows/WindowAgentsManager";
-import { Profiles } from "../profile/Profiles";
 import { IpcManagerOnMainProcess } from "./IpcManagerOnMainProcess";
 import { ChannelAgentsManager } from "../channel/ChannelAgentsManager";
 import { Profile } from "../profile/Profile";
@@ -13,40 +11,72 @@ import { SshClient, type_sshServerConfig } from "../mainProcesses/SshClient";
 import { CaSnooperServer } from "./CaSnooperServer";
 import { CaswServer } from "./CaswServer";
 import { Sql } from "../archive/Sql";
-import * as fs from "fs";
 import { Worker } from 'worker_threads';
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { type_args } from "./IpcEventArgType";
-const path = require('path');
+import * as path from "path";
 
 /**
- * Represents the main process <br>
+ * Represents a main process.
+ * 
+ * Each main process is an independently running TDM environment with 
+ *  - main window
+ *  - display windows
+ *  - channel and PV access management system that bridges the GUI and the CA/PVA client
+ *  - websocket PV server for PV read/write via websocket protocol
+ *  - CA snooper service
+ *  - CA server watcher service
+ *  - SQL client for communicating to archive
+ *
+ * @param mainProcesses The MainProcesses object that manages all main processes
+ * 
+ * @param processId The id of this MainProcess, it is assigned by MainProcesses, a string of "0", "1", ...
+ * 
+ * @param callback The callback function after the main window is created
+ * 
+ * @param mainProcessMode The mode of this main process, it is mostly the same as the mode of MainProcesses, but
+ *                        with one more mode: "ssh-client"
+ * 
+ * @param sshServerConfig The ssh server configuration, only needed in "ssh-server" mode
  *
  */
 export class MainProcess {
-    private _windowAgentsManager: WindowAgentsManager;
-    // dummy to silent TypeScript
-    private _channelAgentsManager: ChannelAgentsManager;
-    private _ipcManager;
-    private _wsPvServer: WsPvServer;
-    private readonly _processId: string;
     private _mainProcesses: MainProcesses;
+
+    // manages all windows
+    private _windowAgentsManager: WindowAgentsManager;
+
+    // manages all channels, including CA, PVA, and virtual channels
+    private _channelAgentsManager: ChannelAgentsManager;
+
+    // manages all messages from GUI windows via websocket
+    private _ipcManager;
+
+    // a websocket server that can do PV read/write
+    private _wsPvServer: WsPvServer;
+
+    // main process id, a string of "0", "1", ...
+    private readonly _processId: string;
+
+    // is is mostly like the main process mode defined in MainProcesses, but
+    // with one more mode: "ssh-client"
     private _mainProcessMode: "desktop" | "web" | "ssh-server" | "ssh-client";
+
+    // the ssh client
     private _sshClient: SshClient | undefined = undefined;
+
+    // CA snooper service
     private _caSnooperServer: CaSnooperServer | undefined = undefined;
+
+    // CA server watcher service
     private _caswServer: CaswServer | undefined = undefined;
+
+    // SQL client for communicating to archive
     private _sql: Sql | undefined = undefined;
 
+    // EDL file converter thread, may be 
+    private _edlFileConverterThread: Worker | undefined = undefined;
 
-    /**
-     * Config this main process by providing a file containing multiple profiles
-     *
-     * @param {sring} profilesFileName JSON file name that contains profiles. On local disk or network. <br/>
-     *
-     * @param {number} processId The id number in MainProcesses object <br/>
-     *
-     * @param {((mainProcess: MainProcess) => any) | undefined } callback The callback function after the main window is created
-     */
     constructor(
         mainProcesses: MainProcesses,
         processId: string,
@@ -57,6 +87,8 @@ export class MainProcess {
         this._mainProcesses = mainProcesses;
         this._mainProcessMode = mainProcessMode;
         this._ipcManager = new IpcManagerOnMainProcess(this);
+
+        // dummy to silent TypeScript
         this._channelAgentsManager = new ChannelAgentsManager(new Profile("tmp", {}), this);
         this._ipcManager.startToListen();
         this._wsPvServer = new WsPvServer(this, websocketPvServerPort);
@@ -196,15 +228,9 @@ export class MainProcess {
             this.getMainProcesses().quit();
         }
     };
-    
+
     // ------------------------ windows --------------------------
 
-    getWindowAgentsManager = () => {
-        return this._windowAgentsManager;
-    };
-    setWindowAgentsManager = (newManager: WindowAgentsManager) => {
-        this._windowAgentsManager = newManager;
-    };
 
     hideMenubar = () => {
         Menu.setApplicationMenu(Menu.buildFromTemplate([]));
@@ -295,6 +321,8 @@ export class MainProcess {
         }
     };
 
+    // ------------------- getters and setters --------------------
+
     getMainProcessMode = () => {
         return this._mainProcessMode;
     };
@@ -362,7 +390,6 @@ export class MainProcess {
         }
     }
 
-    _edlFileConverterThread: Worker | undefined = undefined;
 
     getEdlFileConverterThread = () => {
         return this._edlFileConverterThread;
@@ -381,6 +408,12 @@ export class MainProcess {
         }
     }
 
+    getWindowAgentsManager = () => {
+        return this._windowAgentsManager;
+    };
+    setWindowAgentsManager = (newManager: WindowAgentsManager) => {
+        this._windowAgentsManager = newManager;
+    };
     startEdlFileConverterThread = (options: {
         command: "start",
         src: string,
