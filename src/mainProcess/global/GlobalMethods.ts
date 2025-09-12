@@ -447,6 +447,11 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
     )
 }
 
+/**
+ * todo: try to eliminate it!
+ * 
+ * It takes the command line arguments to run in main process.
+ */
 export const cmdLineCallback = (mainProcess: MainProcess, args: type_args) => {
     // command line selected profile and command line tdl files
     const windowAgentsManager = mainProcess.getWindowAgentsManager();

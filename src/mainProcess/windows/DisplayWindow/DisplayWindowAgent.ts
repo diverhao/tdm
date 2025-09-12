@@ -808,7 +808,7 @@ export class DisplayWindowAgent {
     handleWindowClosed = () => {
         Log.info(this.getMainProcessId(), "close display window", this.getId())
         // (7)
-        this.getWindowAgentsManager().getMainProcess().releaseDisplayWindowHtmlIndex(this.getId());
+        // this.getWindowAgentsManager().getMainProcess().releaseDisplayWindowHtmlIndex(this.getId());
         // (1)
         this.removeAllChannels();
         // (2)

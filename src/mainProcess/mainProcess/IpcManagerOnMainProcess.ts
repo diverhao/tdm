@@ -28,6 +28,7 @@ export class IpcManagerOnMainProcess {
 
     constructor(mainProcess: MainProcess) {
         this._mainProcess = mainProcess;
+        this.startToListen();
     }
 
     eventListeners: Record<string, (event: any, ...args: any) => any> = {};
@@ -1082,9 +1083,9 @@ export class IpcManagerOnMainProcess {
                     Log.error(this.getMainProcessId(), `Profile ${selectedProfileName} does not exist`);
                     return;
                 }
-                const channelAgentsManager = new ChannelAgentsManager(selectedProfile, this.getMainProcess());
-                await channelAgentsManager.createAndInitContext();
-                this.getMainProcess().setChannelAgentsManager(channelAgentsManager);
+                
+                await this.getMainProcess().getChannelAgentsManager().createAndInitContext();
+                
 
                 // change main window title
                 const mainWindowAgent = this.getMainProcess().getWindowAgentsManager().getMainWindowAgent();
@@ -3594,9 +3595,9 @@ export class IpcManagerOnMainProcess {
                 });
                 return;
             }
-            this.getMainProcess().startEdlFileConverterThread(options);
+            this.getMainProcess().getEdlFileConverterThread().startThread(options);
         } else if (options["command"] === "stop") {
-            this.getMainProcess().stopEdlFileConverterThread();
+            this.getMainProcess().getEdlFileConverterThread().stopThread();
         }
     }
 

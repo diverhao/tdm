@@ -89,7 +89,16 @@ export class WsOpenerServer {
     updatePort = () => {
         const mainProcesses = this.getMainProcesses().getProcesses();
         for (let mainProcess of mainProcesses) {
-            mainProcess.updateWsOpenerPort(this.getPort());
+            const mainWindowAgent = mainProcess.getWindowAgentsManager().getMainWindowAgent();
+            if (mainWindowAgent !== undefined) {
+                mainWindowAgent.sendFromMainProcess("update-ws-opener-port",
+                    {
+                        newPort: this.getPort(),
+                    }
+                );
+            } else {
+                Log.error(mainProcess.getProcessId(), "Main window agent does not exist");
+            }
         }
     };
 

@@ -12,7 +12,7 @@ import { Log } from "../log/Log";
 type ChannelAgent = CaChannelAgent | LocalChannelAgent;
 
 export class ChannelAgentsManager {
-    private _profile: Profile;
+    // private _profile: Profile;
     private _context: Context | undefined = undefined;
     private _mainProcess: MainProcess;
 
@@ -24,21 +24,22 @@ export class ChannelAgentsManager {
     private _mainProcessId: string;
 
     constructor(profile: Profile, mainProcess: MainProcess) {
-        this._profile = profile;
+        // this._profile = profile;
         this._mainProcess = mainProcess;
         this._mainProcessId = mainProcess.getProcessId();
 
         // all dbd files are read and parsed
         this._dbdFiles = new DbdFiles();
-
-        // setInterval(() => {
-        //     console.log(Object.keys(this.getChannelAgents()).length)
-        // }, 2000)
     }
 
-    getProfile = () => {
-        return this._profile;
-    };
+    // updateProfileAndReInitContext = async (newProfile: Profile) => {
+    // this._profile = newProfile;
+    // await this.createAndInitContext();
+    // };
+
+    // getProfile = () => {
+    //     return this._profile;
+    // };
 
 
     getMainProcessId = () => {
@@ -46,23 +47,24 @@ export class ChannelAgentsManager {
     }
 
     /**
-     * Create and initialize the epics-tca context from profile. <br>
-     *
-     * It is invoked when the profile is selected. <br>
+     * Create and initialize the epics-tca context.
      * 
+     * It is invoked only once for each main process. This method is called after the profile is selected.
+     *
      * The "DO NOT SET" values in EPICS_CA_ADDR_LIST, EPICS_PVA_ADDR_LIST, EPICS_CA_NAME_SERVERS, and EPICS_PVA_NAME_SERVERS 
      * are converted to an invalid IP address 0.0.0.0.0 so that the user-defined value is ignored
      */
     createAndInitContext = async () => {
-        if (this._context === undefined) {
+        const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
+        if (this._context === undefined && selectedProfile !== undefined) {
             Log.info(this.getMainProcessId(), "Creating EPICS CA context");
             let epicsLogLevel: type_log_levels = type_log_levels.error;
-            const epicsLogLevelEntryValue = this.getProfile().getEpicsLogLevel();
+            const epicsLogLevelEntryValue = selectedProfile.getEpicsLogLevel();
             if (epicsLogLevelEntryValue !== undefined) {
                 epicsLogLevel = type_log_levels[epicsLogLevelEntryValue as keyof typeof type_log_levels];
             }
-            const epicsCaSettings = this.getProfile().convertToTcaInput()["EPICS CA Settings"];
-            const epicsTcaLibSettings = this.getProfile().convertToTcaInput()["epics-tca Settings"];
+            const epicsCaSettings = selectedProfile.convertToTcaInput()["EPICS CA Settings"];
+            const epicsTcaLibSettings = selectedProfile.convertToTcaInput()["epics-tca Settings"];
             this._context = new Context({ ...epicsCaSettings, ...epicsTcaLibSettings }, epicsLogLevel);
             await this._context.initialize();
         } else {

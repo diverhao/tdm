@@ -158,7 +158,7 @@ export class WindowAgentsManager {
                 return;
             }
 
-            const displayWindowId = this.getMainProcess().obtainDisplayWindowHtmlIndex();
+            const displayWindowId = this.obtainDisplayWindowId();
 
             const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
             // only the browser window is managed by ssh-client, all others are managed by ssh-server
@@ -209,7 +209,7 @@ export class WindowAgentsManager {
 
             try {
                 // (1)
-                const displayWindowId = this.getMainProcess().obtainDisplayWindowHtmlIndex();
+                const displayWindowId = this.obtainDisplayWindowId();
                 const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
                 // (2)
 
@@ -285,7 +285,7 @@ export class WindowAgentsManager {
         if (this.getMainProcess().getMainProcessMode() === "ssh-client") {
             // a simple place holder for context menu and lifecycle management
             // there is no BrowserWindow in iframe display, it is an iframe in web browser
-            const displayWindowId = this.getMainProcess().obtainDisplayWindowHtmlIndex();
+            const displayWindowId = this.obtainDisplayWindowId();
             const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
             return undefined;
         } else {
@@ -308,7 +308,7 @@ export class WindowAgentsManager {
             // }
             try {
                 // (1)
-                const displayWindowId = this.getMainProcess().obtainDisplayWindowHtmlIndex();
+                const displayWindowId = this.obtainDisplayWindowId();
 
                 const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
                 // (2) do it on client side
@@ -684,7 +684,7 @@ export class WindowAgentsManager {
                 replaceMacros: false,
                 hide: false,
             };
-            const displayWindowId = this.getMainProcess().obtainDisplayWindowHtmlIndex();
+            const displayWindowId = this.obtainDisplayWindowId();
 
             const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
             await displayWindowAgent.createWebBrowserWindow(url);
@@ -898,4 +898,44 @@ export class WindowAgentsManager {
             app.dock?.setMenu(Menu.buildFromTemplate(menuItems));
         }
     }
+
+
+    /**
+     * Obtain a display window ID, in form of `${mainProcessId}-${index}`, like `1-3`.
+     * 
+     * Maximum index is 500 for desktop mode, and 100000 for web mode.
+     * 
+     * The main window always has the window ID `0`
+     *
+     * @returns {string} The display window ID if we can obtain one. Otherwise, return "".
+     */
+    obtainDisplayWindowId = (): string => {
+
+        const maxWindowId = this.getMainProcess().getMainProcessMode() === "web" ? 100000 : 500;
+        const mainProcessId = this.getMainProcess().getProcessId();
+        const ids: number[] = [];
+        for (const agent of Object.values(this.getAgents())) {
+            if (agent instanceof DisplayWindowAgent) {
+                const displayWindowId = agent.getId();
+                const displayWindowIdNum = parseInt(displayWindowId.split("-")[1]);
+                if (!isNaN(displayWindowIdNum)) {
+                    ids.push(displayWindowIdNum);
+                }
+            }
+        }
+        ids.sort((a, b) => a - b);
+
+
+        for (let ii = 0; ii < maxWindowId; ii++) {
+            if (!ids.includes(ii)) {
+                return `${mainProcessId}-${ii}`;
+            }
+        }
+        Log.error(
+            mainProcessId,
+            `You have used up indices in DisplayWindow-index.html. There are 500 of them, are you opening 500 display windows?`
+        );
+        return "";
+    };
+
 }
