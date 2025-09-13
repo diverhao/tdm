@@ -47,7 +47,6 @@ import { site } from "../../package.json";
 import { type_args } from "./mainProcess/IpcEventArgType";
 import { openTdlInFirstExistingInstance, openTdlInNewInstance, openTdlInSpecificExistingInstance, processArgsAttach } from "./global/GlobalMethods";
 import { defaultWebsocketOpenerServerPort } from "./global/GlobalVariables";
-import { type_sshServerConfig } from "./mainProcesses/SshClient";
 
 /**
  * `true` for the first TDM instance 

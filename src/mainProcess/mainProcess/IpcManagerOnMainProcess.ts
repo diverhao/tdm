@@ -9,7 +9,7 @@ import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent"
 import { FileReader } from "../file/FileReader";
 import path from "path";
 import { Log } from "../log/Log";
-import { type_sshServerConfig } from "../mainProcesses/SshClient";
+import { type_sshServerConfig } from "./SshClient";
 import * as os from "os";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import pidusage from "pidusage";
@@ -18,7 +18,7 @@ import { SqlState } from "../archive/Sql";
 import { Environment, type_network_stats } from "epics-tca";
 import { IpcEventArgType, type_DialogMessageBox } from "./IpcEventArgType";
 import { generateKeyAndCert } from "../global/GlobalMethods";
-import { SshServer } from "../mainProcesses/SshServer";
+import { SshServer } from "./SshServer";
 import https from "https";
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import { IncomingMessage } from "http";
