@@ -1,14 +1,16 @@
 // import { writeFileSync } from "fs";
-import { IpcManagerOnMainProcesses } from "./IpcManagerOnMainProcesses";
+// import { IpcManagerOnMainProcesses } from "./IpcManagerOnMainProcesses";
 import net from "net";
 import { Log } from "../log/Log";
+import { IpcManagerOnMainProcess } from "../mainProcess/IpcManagerOnMainProcess";
+import { MainProcess } from "../mainProcess/MainProcess";
 
 /**
  * 
  */
 export class SshServer {
 
-    private _ipcManager: IpcManagerOnMainProcesses
+    private _ipcManager: IpcManagerOnMainProcess;
     private _tcpServer: net.Server | undefined = undefined;
     private _tcpSockets: net.Socket[] = [];
     private _lastHeartbeatTime = Date.now();
@@ -24,7 +26,7 @@ export class SshServer {
 
     dataChunk: string = "";
 
-    constructor(ipcManager: IpcManagerOnMainProcesses) {
+    constructor(ipcManager: IpcManagerOnMainProcess) {
         this._ipcManager = ipcManager;
         this.startSelfDestructionCountDown();
     }
@@ -44,27 +46,27 @@ export class SshServer {
 
     handleMainProcessId = (data: { id: string }) => {
         // create main process using this process ID
-        const mainProcessId = data["id"];
-        console.log("I got main process ID:", mainProcessId, ". Then I will create the main process");
-        this.getIpcManager().getMainProcesses().createProcess(undefined, "ssh-server", mainProcessId);
-        this.setMainProcessId(mainProcessId);
+        // todo: refactor
+        // const mainProcessId = data["id"];
+        // console.log("I got main process ID:", mainProcessId, ". Then I will create the main process");
+        // this.getIpcManager().getMainProcesses().createProcess(undefined, "ssh-server", mainProcessId);
+        // new MainProcess();
+        // this.setMainProcessId(mainProcessId);
     }
     /**
      * quit the whole thing
      */
     handleQuitMainProcess = () => {
         // this.getIpcManager().getMainProcesses().quit();
-        const mainProcesses = this.getIpcManager().getMainProcesses();
+        // const mainProcesses = this.getIpcManager().getMainProcesses();
         // writeFileSync("/Users/haohao/tdm.log", `\nquit main process.......${mainProcesses.getProcesses().length}\n`, { flag: "a" });
         // this.quit();
-        const mainProcess = mainProcesses.getProcesses()[0];
-        if (mainProcess !== undefined) {
-            // writeFileSync("/Users/haohao/tdm.log", "quit main process ABCDEFG\n", { flag: 'a' });
-            console.log("quit main process .........................");
-            mainProcess.quit();
-            process.kill(process.pid, 9);
-        }
-
+        // const mainProcess = mainProcesses.getProcesses()[0];
+        const mainProcess = this.getIpcManager().getMainProcess();
+        // writeFileSync("/Users/haohao/tdm.log", "quit main process ABCDEFG\n", { flag: 'a' });
+        console.log("quit main process .........................");
+        mainProcess.quit();
+        process.kill(process.pid, 9);
     }
 
     handleTcpClientHeartBeat = () => {
@@ -177,10 +179,10 @@ export class SshServer {
     // let the ipc manager parse the message
     // it is invoked when the TCP server receives a message from TCP client
     forwardToMainProcesses = (message: { processId: string; windowId: string; eventName: string; data: any[] }) => {
-        const ipcManagerOnMainProcesses = this.getIpcManager();
+        const ipcManagerOnMainProcess = this.getIpcManager();
         const windowId = message["windowId"];
         console.log("-------------------------------->>>>>>>>>>>>", message);
-        ipcManagerOnMainProcesses.parseMessage(windowId, message)
+        ipcManagerOnMainProcess.handleMessage(windowId, message)
     }
 
     handleTcpData = (data: Buffer) => {

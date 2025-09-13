@@ -8,9 +8,10 @@ import { type_about_info, type_args } from "../mainProcess/IpcEventArgType";
 import { execSync } from "child_process";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
-import { MainProcesses } from "../mainProcesses/MainProcesses";
-import { arg } from "mathjs";
+// import { MainProcesses } from "../mainProcesses/MainProcesses";
+// import { arg } from "mathjs";
 import * as selfsigned from "selfsigned";
+// import Main from "electron/main";
 
 /**
  * @packageDocumentation
@@ -215,7 +216,7 @@ export const openTdlInNewInstance = (args: type_args) => {
         event.preventDefault();
         // this instance is the first instance of TDM
         if (app.requestSingleInstanceLock() === true) {
-            openTdlFileAsRequestedByAnotherInstance(filePath, mainProcesses);
+            openTdlFileAsRequestedByAnotherInstance(filePath, mainProcess);
         }
     })
 
@@ -250,23 +251,14 @@ export const openTdlInNewInstance = (args: type_args) => {
         // (2)
         const filePath = argsFrom2ndInstance["fileNames"][0];
         if (typeof filePath === "string") {
-            openTdlFileAsRequestedByAnotherInstance(filePath, mainProcesses);
+            openTdlFileAsRequestedByAnotherInstance(filePath, mainProcess);
         } else {
             Log.error(-1, "The file path provided by the 2nd instance is not valid.");
         }
     });
 
-    const mainProcesses = new MainProcesses(args);
-    mainProcesses.enableLogToFile();
     const mainProcesMode = args["mainProcessMode"];
-
-    mainProcesses.createProcess(
-        // this callback won't be invoked if the main process is in "web" mode
-        cmdLineCallback,
-        mainProcesMode,
-        undefined, // main process id, automatically assign
-        undefined, // default one is always desktop or web mode
-    );
+    const mainProcess = new MainProcess(args, cmdLineCallback, mainProcesMode, undefined);
 }
 
 
@@ -365,7 +357,7 @@ export const processArgsAttach = (args: type_args) => {
  * 
  * (4) if already selected a profile, then ignore the requested profile
  */
-export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainProcesses: MainProcesses, args?: type_args) => {
+export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainProcess: MainProcess, args?: type_args) => {
 
     // (1)
     if (path.isAbsolute(filePath) === false && args === undefined) {
@@ -376,13 +368,14 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
     // "blocks" until the app is ready
     app.whenReady().then(() => {
         // (2)
-        const processes = mainProcesses.getProcesses();
-        const mainProcess = processes[processes.length - 1];
-        if (mainProcess === undefined) {
-            return;
-        }
+        // const processes = mainProcesses.getProcesses();
+        // const mainProcess = processes[processes.length - 1];
+        // if (mainProcess === undefined) {
+        // return;
+        // }
 
-        const profiles = mainProcess.getMainProcesses().getProfiles();
+        // const profiles = mainProcess.getMainProcesses().getProfiles();
+        const profiles = mainProcess.getProfiles();
         const selectedProfile = profiles.getSelectedProfile();
 
         const cwd = args === undefined ? "" : args["cwd"];
@@ -457,7 +450,8 @@ export const cmdLineCallback = (mainProcess: MainProcess, args: type_args) => {
     const windowAgentsManager = mainProcess.getWindowAgentsManager();
     const cmdLineSelectedProfile = args["profile"];
     const cmdLineOpenFileNames = args["fileNames"];
-    const profileNames = mainProcess.getMainProcesses().getProfiles().getProfileNames();
+    // const profileNames = mainProcess.getMainProcesses().getProfiles().getProfileNames();
+    const profileNames = mainProcess.getProfiles().getProfileNames();
     const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
     if (!(mainWindowAgent instanceof MainWindowAgent)) {
         return;

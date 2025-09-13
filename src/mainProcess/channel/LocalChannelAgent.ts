@@ -22,7 +22,7 @@ export class LocalChannelAgent {
      * The display windows that contain this channel. Pair of window ID and DisplayWindowAgent object.
      */
     private _displayWindowsOperations: Record<string, [number, number, number]> = {};
-    private _mainProcessId: string;
+    // private _mainProcessId: string;
 
     constructor(
         channelAgentsManager: ChannelAgentsManager,
@@ -34,7 +34,7 @@ export class LocalChannelAgent {
         console.log("LocalChannelAgent: constructor +++++++++++++++++++++++++++++++++++", channelName, channelStrings);
         this._channelAgentsManager = channelAgentsManager;
         this._channelName = channelName;
-        this._mainProcessId = channelAgentsManager.getMainProcess().getProcessId();
+        // this._mainProcessId = channelAgentsManager.getMainProcess().getProcessId();
         this._dbrData = {
             // the only property that should be changed after initialization
             value: channelValue,
@@ -307,7 +307,7 @@ export class LocalChannelAgent {
     getDisplayWindowsOperations = () => {
         return this._displayWindowsOperations;
     };
-    getMainProcessId = () => {
-        return this._mainProcessId;
-    };
+    // getMainProcessId = () => {
+    //     return this._mainProcessId;
+    // };
 }

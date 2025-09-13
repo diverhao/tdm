@@ -19,12 +19,12 @@ export class WsPvServer {
     }
 
     quit = () => {
-        Log.info(this.getMainProcessId(), "Close WebSocket PV Server");
+        Log.info("0", "Close WebSocket PV Server");
         this.server?.close();
     };
 
     createServer = () => {
-        Log.info(this.getMainProcessId(), `Creating WebSocket PV server on port ${this.getPort()}`);
+        Log.info("0", `Creating WebSocket PV server on port ${this.getPort()}`);
         this.server = new WebSocket.Server({
             host: "127.0.0.1",
             port: this.getPort(),
@@ -32,7 +32,7 @@ export class WsPvServer {
 
         this.server.on("error", (err: Error) => {
             if (err["message"].includes("EADDRINUSE")) {
-                Log.debug(this.getMainProcessId(), `Port ${this.port} is occupied aaa, try port ${this.port + 1}`);
+                Log.debug("0", `Port ${this.port} is occupied aaa, try port ${this.port + 1}`);
                 this.port = this.port + 1;
                 this.createServer();
             }
@@ -46,19 +46,19 @@ export class WsPvServer {
                     const type = message["type"];
                     const args = message["args"];
                     if (type === "fatal") {
-                        Log.fatal(this.getMainProcessId(), args);
+                        Log.fatal("0", args);
                     } else if (type === "error") {
-                        Log.error(this.getMainProcessId(), args);
+                        Log.error("0", args);
                     } else if (type === "warn") {
-                        Log.warn(this.getMainProcessId(), args);
+                        Log.warn("0", args);
                     } else if (type === "info") {
-                        Log.info(this.getMainProcessId(), args);
+                        Log.info("0", args);
                     } else if (type === "debug") {
-                        Log.debug(this.getMainProcessId(), args);
+                        Log.debug("0", args);
                     } else if (type === "trace") {
-                        Log.trace(this.getMainProcessId(), args);
+                        Log.trace("0", args);
                     } else {
-                        Log.error(this.getMainProcessId(), "Received the following WS PV log message, but it is in wrong format");
+                        Log.error("0", "Received the following WS PV log message, but it is in wrong format");
                     }
                     return;
                 }
@@ -68,7 +68,7 @@ export class WsPvServer {
                 const displayWindowId = message["displayWindowId"];
 
                 if (channelName === undefined || command === undefined || displayWindowId === undefined) {
-                    Log.debug(this.getMainProcessId(), "Message does not have channelName, command, or displayWindowId");
+                    Log.debug("0", "Message does not have channelName, command, or displayWindowId");
                     return;
                 }
                 if ((channelName as string).startsWith("loc://") && !(channelName as string).includes("@window_")) {
@@ -78,14 +78,14 @@ export class WsPvServer {
                 const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
                 const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
                 if (displayWindowAgent === undefined || displayWindowAgent instanceof MainWindowAgent) {
-                    Log.debug(this.getMainProcessId(), `Cannot find display window ${displayWindowId}`);
+                    Log.debug("0", `Cannot find display window ${displayWindowId}`);
                     // the incoming request looks suspacious, do not reply
                     return;
                 }
 
 
                 if (command === "GET") {
-                    Log.debug(this.getMainProcessId(), `WebSocket PV server, GET ${message}`);
+                    Log.debug("0", `WebSocket PV server, GET ${message}`);
                     const dbrData = await this.getIpcManager().handleTcaGet(undefined,
                         {
                             channelName: channelName,
@@ -126,7 +126,7 @@ export class WsPvServer {
                         }
                     );
                 } else {
-                    Log.debug(this.getMainProcessId(), `Unknow command ${command}`);
+                    Log.debug("0", `Unknow command ${command}`);
                 }
             });
 
@@ -137,7 +137,7 @@ export class WsPvServer {
                 for (const displayWindowAgent of Object.values(displayWindowAgents)) {
                     if (displayWindowAgent instanceof DisplayWindowAgent) {
                         if (wsClient === displayWindowAgent.getWebSocketMonitorClient()) {
-                            Log.debug(this.getMainProcessId(), `Remove WebSocket PV for display window ${displayWindowAgent.getId()}`);
+                            Log.debug("0", `Remove WebSocket PV for display window ${displayWindowAgent.getId()}`);
                             displayWindowAgent.setWebSocketMonitorClient(undefined);
                             displayWindowAgent.setWebSocketMonitorChannelNames([]);
                         }
@@ -157,7 +157,7 @@ export class WsPvServer {
     getPort = () => {
         return this.port;
     };
-    getMainProcessId = () => {
-        return this.getMainProcess().getProcessId();
-    };
+    // getMainProcessId = () => {
+    //     return this.getMainProcess().getProcessId();
+    // };
 }

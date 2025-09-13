@@ -96,7 +96,7 @@ export class SshClient {
      */
     configSshClient = () => {
         this.getSshClient().on("ready", () => {
-            Log.info(this.getMainProcessId(), "SSH tunnel has been digged through, we are ready to establish TCP connection with", `${this.getServerIP()}:${this.getTcpServerPort()}`);
+            Log.info("0", "SSH tunnel has been digged through, we are ready to establish TCP connection with", `${this.getServerIP()}:${this.getTcpServerPort()}`);
             this.connectSshResolve();
         }
         );
@@ -122,7 +122,7 @@ export class SshClient {
                 // humanReadableMessages: [this.getMainProcess().getProcessId(), this.getUserName(), this.getServerIP(), this.getServerSshPort()],
                 humanReadableMessages: [`Connecting to ${this.getUserName()}@${this.getServerIP()}:${this.getServerSshPort()}`],
                 attachment: {
-                    sshMainProcessId: this.getMainProcess().getProcessId(),
+                    sshMainProcessId: "0",
                 }
             }
         });
@@ -180,7 +180,7 @@ export class SshClient {
             // the "data" event is the "console.log()" from remote TDM
             tdmStream.on("data", (data: Buffer) => {
                 const dataStr = data.toString();
-                Log.debug(this.getMainProcessId(), "[ssh server]", dataStr);
+                Log.debug("0", "[ssh server]", dataStr);
                 // when the Tcp server is successfully created and starts to listen in remote TDM
                 // the remote TDM console.log() a stdout that looks like ... we have successfully created on port 3000 ...
                 if (dataStr.includes("we have successfully created TCP server on port")) {
@@ -195,7 +195,7 @@ export class SshClient {
             })
             // error message
             tdmStream.stderr.on("data", (data: Buffer) => {
-                Log.error(this.getMainProcessId(), "[ssh server]", data.toString());
+                Log.error("0", "[ssh server]", data.toString());
             })
         }
         return tdmStream;
@@ -251,7 +251,7 @@ export class SshClient {
         // when the stream is ended
         tcpStream.on("end", () => {
             const msg = "Forwardout tcp stream ended. Quit program";
-            Log.debug(this.getMainProcessId(), msg)
+            Log.debug("0", msg)
             // this.getSshClient().end();
             this.handleConnectionError("tcp", new Error(msg));
         })
@@ -382,7 +382,7 @@ export class SshClient {
             const command = dataJSON["command"];
             if (command !== undefined) {
                 if (command !== "tcp-server-heartbeat") {
-                    Log.debug(this.getMainProcessId(), "recevied data from TCP server:", data.toString())
+                    Log.debug("0", "recevied data from TCP server:", data.toString())
                 }
                 const callback = this.tcpEventListeners[command];
                 if (callback !== undefined) {
@@ -422,7 +422,7 @@ export class SshClient {
         this.sendToTcpServer({
             command: "main-process-id",
             data: {
-                id: this.getMainProcess().getProcessId(),
+                id: "0",
             }
         })
     }
@@ -501,7 +501,7 @@ export class SshClient {
         const message2 = `${err}`;
         const message3 = "Disconnect";
 
-        Log.error(this.getMainProcessId(), `SshClient connection error:`, err);
+        Log.error("0", `SshClient connection error:`, err);
 
         this.getCallingMainProcess()?.getWindowAgentsManager().getMainWindowAgent()?.sendFromMainProcess("dialog-show-message-box", {
             info: {
@@ -512,7 +512,7 @@ export class SshClient {
         });
 
         // no retry
-        Log.error(this.getMainProcessId(), "-----------> quit main process")
+        Log.error("0", "-----------> quit main process")
         // this.getMainProcess().quit()
     }
 
@@ -529,13 +529,13 @@ export class SshClient {
     authHandler = (methodsLeft: string[], partialSuccess: boolean, callback: any) => {
         // first try: public key, use the user name provided by the profiles
         if (this._loginTries === 0) {
-            Log.debug(this.getMainProcessId(), "try to use key to login ssh")
+            Log.debug("0", "try to use key to login ssh")
             this._loginTries++;
             this.loginWithKey(callback);
         }
         // second try: password, user can input both username and password from GUI
         else if (this._loginTries === 1) {
-            Log.debug(this.getMainProcessId(), "try password");
+            Log.debug("0", "try password");
             this._loginTries++;
             this.loginWithPassword(callback);
         }
@@ -550,7 +550,7 @@ export class SshClient {
                 }
             });
 
-            Log.info(this.getMainProcessId(), "quit connecting tries ---> quit this main process");
+            Log.info("0", "quit connecting tries ---> quit this main process");
             this.getMainProcess().quit()
         }
     };
@@ -573,7 +573,7 @@ export class SshClient {
             // if the key file cannot be read or the key file is not defined, 
             // use a mock key so that authHandler() is called again and we can proceed to password authentication
             // todo: show error message on calling process' main window if the 
-            Log.error(this.getMainProcessId(), e);
+            Log.error("0", e);
             callback({
                 type: "publickey",
                 username: this.getUserName(),
@@ -586,7 +586,7 @@ export class SshClient {
         this.getCallingMainProcess()?.getWindowAgentsManager().getMainWindowAgent()?.sendFromMainProcess("show-prompt", {
             data: {
                 type: "ssh-password-input",
-                callingMainProcessId: this.getMainProcess().getProcessId(),
+                callingMainProcessId: "0",
                 username: this.getUserName(),
                 hostname: this.getServerIP(),
             }
@@ -610,7 +610,7 @@ export class SshClient {
                     // humanReadableMessages: [this.getMainProcess().getProcessId(), this.getUserName(), this.getServerIP(), this.getServerSshPort()],
                     humanReadableMessages: [`Connecting to ${this.getUserName()}@${this.getServerIP()}:${this.getServerSshPort()}`],
                     attachment: {
-                        sshMainProcessId: this.getMainProcess().getProcessId(),
+                        sshMainProcessId: "0",
                     }
                 }
             });
@@ -636,12 +636,12 @@ export class SshClient {
         const tcpStream = this.getTcpStream();
         if (tcpStream !== undefined) {
             if (message["command"] !== "tcp-client-heartbeat") {
-                Log.debug(this.getMainProcessId(), "send to tcp server:", message)
+                Log.debug("0", "send to tcp server:", message)
             }
             // if error, caught in this.getForwardOutStream().on("error") , handled by handleConnectionError()
             tcpStream.write(JSON.stringify(message));
         } else {
-            Log.error(this.getMainProcessId(), "SSH WebSocket error: there is no forward out stream");
+            Log.error("0", "SSH WebSocket error: there is no forward out stream");
         }
         // }
     }
@@ -651,9 +651,9 @@ export class SshClient {
         eventName: string,
         data: any[],
     }) => {
-        const processId = this.getMainProcess().getProcessId();
+        // const processId = this.getMainProcess().getProcessId();
         const message = {
-            processId: processId,
+            processId: "0",
             windowId: options["windowId"],
             eventName: options["eventName"],
             data: options["data"],
@@ -670,7 +670,7 @@ export class SshClient {
     sendToRendererProcess = (message: Record<string, any>) => {
         const windowId = message["windowId"];
         if (typeof windowId === "string") {
-            const webSocketClient = this.getMainProcesses().getIpcManager().getClients()[windowId];
+            const webSocketClient = this.getMainProcess().getIpcManager().getClients()[windowId];
             if (webSocketClient !== undefined && typeof webSocketClient !== "string") {
                 webSocketClient.send(JSON.stringify(message));
             }
@@ -683,9 +683,9 @@ export class SshClient {
         return this._mainProcess;
     };
 
-    getMainProcesses = () => {
-        return this.getMainProcess().getMainProcesses();
-    };
+    // getMainProcesses = () => {
+    //     return this.getMainProcess().getMainProcesses();
+    // };
 
     getServerIP = () => {
         return this._serverIP;
@@ -723,7 +723,8 @@ export class SshClient {
         this._tcpStream = newStream;
     }
     getCallingMainProcess = () => {
-        return this.getMainProcess().getMainProcesses().getProcess(this._callingMainProcessId);
+        // return this.getMainProcess().getProcess(this._callingMainProcessId);
+        return this.getMainProcess();
     }
 
     getTdmStream = () => {
@@ -829,7 +830,7 @@ export class SshClient {
     checkLastHeartbeatTime = () => {
         const tDiff = Date.now() - this.getLastHeartbeatTime();
         if (tDiff > 15 * 1000) {
-            Log.error(this.getMainProcessId(), `SSH client heartbeat expires.`)
+            Log.error("0", `SSH client heartbeat expires.`)
             // show error messages on all visible windows
             this.showDisconnectMessage();
             // quit the heartbeat
@@ -856,13 +857,15 @@ export class SshClient {
         this.getTcpStream()?.destroy();
     }
 
-    getMainProcessId = () => {
-        return this.getMainProcess().getProcessId();
-    }
+    // getMainProcessId = () => {
+    //     // return this.getMainProcess().getProcessId();
+    //     return "0";
+    // }
 
     getCallingProcess = () => {
-        const mainProcesses = this.getMainProcess().getMainProcesses();
-        const callingProcess = mainProcesses.getProcess(this._callingMainProcessId);
-        return callingProcess;
+        // const mainProcesses = this.getMainProcess().getMainProcesses();
+        // const callingProcess = mainProcesses.getProcess(this._callingMainProcessId);
+        // return callingProcess;
+        return this.getMainProcess();
     }
 }

@@ -8,24 +8,24 @@ import LdapStrategy from "passport-ldapauth";
 import session from "express-session";
 
 import { IncomingMessage, ServerResponse } from "http";
-import { MainProcesses } from "./MainProcesses";
 import * as fs from "fs";
 import { Log } from "../log/Log";
 import path from "path";
 import { Profile } from "../profile/Profile";
 import { Profiles } from "../profile/Profiles";
+import { MainProcess } from "../mainProcess/MainProcess";
 
 export class WebServer {
     _server: Express | undefined;
-    _mainProcesses: MainProcesses;
+    _mainProcess: MainProcess;
     _port: number;
     _httpsOptions: { key: Buffer, cert: Buffer } | undefined = undefined;
     _httpsServer: https.Server | undefined = undefined;
     _authenticationMethod: "No authentication" | "LDAP" = "No authentication";
 
-    constructor(mainProcesses: MainProcesses, port: number) {
+    constructor(mainProcess: MainProcess, port: number) {
         this._port = port;
-        this._mainProcesses = mainProcesses;
+        this._mainProcess = mainProcess;
         this.obtainLdapOptions()
         this.createServer();
     }
@@ -64,7 +64,7 @@ export class WebServer {
         // read profiles file for https certificate and key file names
         // this is done before creating the Profiles object
         // then create the HttpServer object
-        const profilesFileName = this.getMainProcesses().getProfiles().getFilePath();
+        const profilesFileName = this.getMainProcess().getProfiles().getFilePath();
         const profilesJson = Profiles.readProfilesJsonSync(profilesFileName);
         if (profilesJson === undefined) {
             throw new Error("Web mode: failed to read profiles file. Quit");
@@ -239,12 +239,12 @@ export class WebServer {
                 res.sendFile(path.join(__dirname, "../../webpack/resources/webpages/login.html"))
             } else if (this._authenticationMethod === "No authentication") {
                 // same as the "/login" POST request
-                const mainProcess = this.getMainProcesses().getProcess("0");
+                const mainProcess = this.getMainProcess();
                 if (mainProcess === undefined) {
                     Log.error("-1", "Cannot find main process 0 in web mode. Quit.")
                     return;
                 }
-                const selectedProfile = mainProcess.getMainProcesses().getProfiles().getSelectedProfile();
+                const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
                     Log.error("-1", "Profile not selected in web mode. Quit.")
                     return;
@@ -260,12 +260,12 @@ export class WebServer {
         this._server.get("/main", (request: IncomingMessage, response: any, next: any) => {
             Log.info("0", "New https connection coming in from", request.socket.address());
             // there shoul have been a main process with id = "0" running
-            const mainProcess = this.getMainProcesses().getProcess("0");
+            const mainProcess = this.getMainProcess();
             if (mainProcess === undefined) {
                 Log.error("Main process not running");
                 return;
             }
-            const profileName = mainProcess.getMainProcesses().getProfiles().getSelectedProfileName();
+            const profileName = mainProcess.getProfiles().getSelectedProfileName();
             // select the first profile
             // invoke DisplayWidnowAgent.createBrowserWindow() to send a html page to client
             // mainProcess.getIpcManager().handleProfileSelected(undefined, profileName, undefined, response);
@@ -300,12 +300,12 @@ export class WebServer {
 
             // invoked only when the authentication midware calls next()
             (req: any, res: any, next: any) => {
-                const mainProcess = this.getMainProcesses().getProcess("0");
+                const mainProcess = this.getMainProcess();
                 if (mainProcess === undefined) {
                     Log.error("-1", "Cannot find main process 0 in web mode. Quit.")
                     return;
                 }
-                const selectedProfile = mainProcess.getMainProcesses().getProfiles().getSelectedProfile();
+                const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
                     Log.error("-1", "Profile not selected in web mode. Quit.")
                     return;
@@ -325,7 +325,7 @@ export class WebServer {
                 const data = request.body["data"];
                 if (command === "profile-selected") {
                     const profileName = data;
-                    this.getMainProcesses().getProcess("0")?.getIpcManager().handleProfileSelected(undefined, {
+                    this.getMainProcess().getIpcManager().handleProfileSelected(undefined, {
                         selectedProfileName: profileName,
                         args: undefined,
                         httpResponse: response,
@@ -334,7 +334,7 @@ export class WebServer {
                     const options = data;
                     options["postCommand"] = command;
                     Log.debug("-1", data);
-                    this.getMainProcesses().getProcess("0")?.getIpcManager().handleOpenTdlFiles(undefined,
+                    this.getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
                         {
                             options: options,
                             httpResponse: response,
@@ -343,7 +343,7 @@ export class WebServer {
                 } else if (command === "duplicate-display") {
                     const options = data;
                     Log.debug("-1", data);
-                    this.getMainProcesses().getProcess("0")?.getIpcManager().handleDuplicateDisplay(undefined,
+                    this.getMainProcess().getIpcManager().handleDuplicateDisplay(undefined,
                         {
                             options: options,
                             httpResponse: response,
@@ -353,7 +353,7 @@ export class WebServer {
                     const utilityType = data["utilityType"];
                     const utilityOptions = data["utilityOptions"];
                     Log.debug("-1", data);
-                    this.getMainProcesses().getProcess("0")?.getIpcManager().createUtilityDisplayWindow(undefined,
+                    this.getMainProcess().getIpcManager().createUtilityDisplayWindow(undefined,
                         {
                             utilityType: utilityType,
                             utilityOptions: utilityOptions,
@@ -362,7 +362,7 @@ export class WebServer {
                     );
                 } else if (command === "create-new-display-in-web-mode") {
                     Log.debug("-1", data);
-                    this.getMainProcesses().getProcess("0")?.getWindowAgentsManager().createBlankDisplayWindow(response);
+                    this.getMainProcess().getWindowAgentsManager().createBlankDisplayWindow(response);
                 } else if (command === "media") {
                     Log.debug("-1", data);
                     try {
@@ -400,8 +400,8 @@ export class WebServer {
         this._port = newPort;
     };
 
-    getMainProcesses = () => {
-        return this._mainProcesses;
+    getMainProcess = () => {
+        return this._mainProcess;
     };
 
     getHttpsServer = () => {

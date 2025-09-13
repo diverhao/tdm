@@ -58,17 +58,17 @@ export class CaChannelAgent {
 
     _channelCreationPromise: Promise<Channel | undefined> | undefined;
 
-    private _mainProcessId: string;
+    // private _mainProcessId: string;
 
     constructor(channelAgentsManager: ChannelAgentsManager, channelName: string) {
         this._channelName = channelName;
         this._channelAgentsManager = channelAgentsManager;
-        this._mainProcessId = channelAgentsManager.getMainProcess().getProcessId();
+        // this._mainProcessId = channelAgentsManager.getMainProcess().getProcessId();
     }
 
-    getMainProcessId = () => {
-        return this._mainProcessId;
-    }
+    // getMainProcessId = () => {
+    //     return this._mainProcessId;
+    // }
 
     /**
      * Check channel's life cycle. If it has no "client", then <br>
@@ -119,7 +119,7 @@ export class CaChannelAgent {
             if (this._channelCreationPromise === undefined) {
                 const context = this.getChannelAgentsManager().getContext();
                 if (context === undefined) {
-                    Log.error(this.getMainProcessId(), "Context not initialized");
+                    Log.error("0", "Context not initialized");
                     this.connecting = false;
                     return false;
                 }
@@ -224,7 +224,7 @@ export class CaChannelAgent {
             return data;
 
         } catch (e) {
-            Log.error(this.getMainProcessId(), e);
+            Log.error("0", e);
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
             return { value: undefined };
@@ -268,7 +268,7 @@ export class CaChannelAgent {
             }
         } catch (e) {
 
-            Log.error(this.getMainProcessId(), e);
+            Log.error("0", e);
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
             return { value: undefined };
@@ -323,7 +323,7 @@ export class CaChannelAgent {
             }
             putStatus = await channel.put(newValue, ioTimeout, waitNotify);
         } catch (e) {
-            Log.error(this.getMainProcessId(), e);
+            Log.error("0", e);
             putStatus = undefined;
         }
         // this.reduceClientsNum();
@@ -369,7 +369,7 @@ export class CaChannelAgent {
             // console.log(`Run command await channel.putPva("${pvRequest}", [${[newValue]}], ${ioTimeout})`)
             putStatus = await channel.putPva(pvRequest, [newValue], ioTimeout);
         } catch (e) {
-            Log.error(this.getMainProcessId(), e);
+            Log.error("0", e);
         }
         // this.reduceClientsNum();
         // this.addPutOperation();
@@ -535,7 +535,7 @@ export class CaChannelAgent {
                 }
             }
         } catch (e) {
-            Log.error(this.getMainProcessId(), e);
+            Log.error("0", e);
         }
         // (2)
         this.getChannelAgentsManager().removeChannelAgent(this.getChannelName());

@@ -55,16 +55,16 @@ export class CaswServer {
             this.getDisplayWindowIds().splice(index, 1);
         }
         if (this.getDisplayWindowIds().length === 0 || forceClose === true) {
-            Log.info(this.getMainProcess().getProcessId(), "------------------- close CASW server ---------------------------- ")
+            Log.info("0", "------------------- close CASW server ---------------------------- ")
             this.closeServer();
         } else {
-            Log.info(this.getMainProcess().getProcessId(), "-------------------- not close CASW server ---------------------------- ")
+            Log.info("0", "-------------------- not close CASW server ---------------------------- ")
         }
     }
 
     constructor(mainProcess: MainProcess, displayWindowId: string) {
         this._mainProcess = mainProcess;
-        const selectedProfile = mainProcess.getMainProcesses().getProfiles().getSelectedProfile();
+        const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
         // if (selectedProfile !== undefined) {
         //     const epicsCaRepeaterPort = selectedProfile.getEntry("EPICS CA Settings", "EPICS_CA_REPEATER_PORT");
         //     if (epicsCaRepeaterPort !== undefined) {

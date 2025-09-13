@@ -44,11 +44,24 @@ export class IpcManagerOnMainWindow {
             Log.info("Connected to IPC server on port", this.getIpcServerPort());
             this.wsClient = client;
 
+            console.log(JSON.stringify({
+                processId: this.getMainWindowClient().getProcessId(),
+                windowId: this.getMainWindowClient().getWindowId(),
+                eventName: "websocket-ipc-connected",
+                data: [{
+                    processId: this.getMainWindowClient().getProcessId(),
+                    windowId: this.getMainWindowClient().getWindowId(),
+                }],
+            })
+            );
+
             this.wsClient.send(
                 JSON.stringify({
+                    // additional info
                     processId: this.getMainWindowClient().getProcessId(),
                     windowId: this.getMainWindowClient().getWindowId(),
                     eventName: "websocket-ipc-connected",
+                    // the real data
                     data: [{
                         processId: this.getMainWindowClient().getProcessId(),
                         windowId: this.getMainWindowClient().getWindowId(),

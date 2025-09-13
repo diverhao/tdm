@@ -21,12 +21,12 @@ export class ChannelAgentsManager {
     // <channelName, CaChannelAgent>
     private _channelAgents: Record<string, CaChannelAgent | LocalChannelAgent> = {};
 
-    private _mainProcessId: string;
+    // private _mainProcessId: string;
 
     constructor(profile: Profile, mainProcess: MainProcess) {
         // this._profile = profile;
         this._mainProcess = mainProcess;
-        this._mainProcessId = mainProcess.getProcessId();
+        // this._mainProcessId = mainProcess.getProcessId();
 
         // all dbd files are read and parsed
         this._dbdFiles = new DbdFiles();
@@ -42,9 +42,9 @@ export class ChannelAgentsManager {
     // };
 
 
-    getMainProcessId = () => {
-        return this._mainProcessId;
-    }
+    // getMainProcessId = () => {
+    //     return this._mainProcessId;
+    // }
 
     /**
      * Create and initialize the epics-tca context.
@@ -55,9 +55,9 @@ export class ChannelAgentsManager {
      * are converted to an invalid IP address 0.0.0.0.0 so that the user-defined value is ignored
      */
     createAndInitContext = async () => {
-        const selectedProfile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
+        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (this._context === undefined && selectedProfile !== undefined) {
-            Log.info(this.getMainProcessId(), "Creating EPICS CA context");
+            Log.info("0", "Creating EPICS CA context");
             let epicsLogLevel: type_log_levels = type_log_levels.error;
             const epicsLogLevelEntryValue = selectedProfile.getEpicsLogLevel();
             if (epicsLogLevelEntryValue !== undefined) {
@@ -68,7 +68,7 @@ export class ChannelAgentsManager {
             this._context = new Context({ ...epicsCaSettings, ...epicsTcaLibSettings }, epicsLogLevel);
             await this._context.initialize();
         } else {
-            Log.info(this.getMainProcessId(), "EPICS CA context already exists");
+            Log.info("0", "EPICS CA context already exists");
         }
     };
 
@@ -134,7 +134,7 @@ export class ChannelAgentsManager {
             return "ca"
         } else {
             // get default protocol
-            const profile = this.getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
+            const profile = this.getMainProcess().getProfiles().getSelectedProfile();
             if (profile !== undefined) {
                 const defaultProtodol = profile.getEntry("EPICS Custom Environment", "Default Protocol");
                 if (defaultProtodol === "PVA") {

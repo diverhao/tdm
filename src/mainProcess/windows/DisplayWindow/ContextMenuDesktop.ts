@@ -184,7 +184,7 @@ export class ContextMenuDesktop {
             accelerator: "CmdOrCtrl+o",
             click: () => {
                 const mainProcessMode = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getMainProcessMode();
-                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
+                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
                 let editable = true;
                 if (selectedProfile !== undefined) {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
@@ -221,7 +221,7 @@ export class ContextMenuDesktop {
                         })
                     }
                 } else {
-                    Log.error(this.getMainProcessId(), "main process mode must be desktop or ssh-client");
+                    Log.error("0", "main process mode must be desktop or ssh-client");
                 }
             },
         },
@@ -1033,7 +1033,7 @@ export class ContextMenuDesktop {
             accelerator: "CmdOrCtrl+o",
             click: () => {
                 const mainProcessMode = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getMainProcessMode();
-                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
+                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
                 let editable = true;
                 if (selectedProfile !== undefined) {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
@@ -1072,7 +1072,7 @@ export class ContextMenuDesktop {
                     }
 
                 } else {
-                    Log.error(this.getMainProcessId(), "main process mode must be desktop or ssh-client");
+                    Log.error("0", "main process mode must be desktop or ssh-client");
                 }
             },
 
@@ -1331,7 +1331,7 @@ export class ContextMenuDesktop {
             accelerator: "CmdOrCtrl+o",
             click: () => {
                 const mainProcessMode = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getMainProcessMode();
-                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
+                const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
                 let editable = true;
                 if (selectedProfile !== undefined) {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
@@ -1368,7 +1368,7 @@ export class ContextMenuDesktop {
                         })
                     }
                 } else {
-                    Log.error(this.getMainProcessId(), "main process mode must be desktop or ssh-client");
+                    Log.error("0", "main process mode must be desktop or ssh-client");
                 }
             },
 
@@ -1824,9 +1824,9 @@ export class ContextMenuDesktop {
         return result;
     };
 
-    getMainProcessId = () => {
-        return this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getProcessId();
-    }
+    // getMainProcessId = () => {
+    //     return this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getProcessId();
+    // }
 
     getWidgetKeys = () => {
         return this._widgetKeys;

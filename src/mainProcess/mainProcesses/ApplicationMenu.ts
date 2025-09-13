@@ -1,4 +1,4 @@
-import { MainProcesses } from "./MainProcesses";
+import { MainProcess } from "../mainProcess/MainProcess";
 import { BrowserWindow, Menu, systemPreferences } from "electron";
 
 /**
@@ -6,9 +6,9 @@ import { BrowserWindow, Menu, systemPreferences } from "electron";
  */
 
 export class ApplicationMenu {
-    _mainProcesses: MainProcesses;
-    constructor(mainProcesses: MainProcesses) {
-        this._mainProcesses = mainProcesses;
+    _mainProcess: MainProcess;
+    constructor(mainProcess: MainProcess) {
+        this._mainProcess = mainProcess;
         // remove annoying emoji menus in macos
         try {
             if (process.platform === "darwin") {
@@ -55,16 +55,16 @@ export class ApplicationMenu {
                             // console.log('Custom Item Clicked');
                             // get focused display/main window
                             const focusedBrowserWindow = BrowserWindow.getFocusedWindow();
-                            for (let mainProcess of this.getMainProcesses().getProcesses()) {
-                                const windowAgentsManager = mainProcess.getWindowAgentsManager();
-                                for (let windowAgent of Object.values(windowAgentsManager.getAgents())) {
-                                    const browserWindow = windowAgent.getBrowserWindow();
-                                    if (browserWindow === focusedBrowserWindow) {
-                                        // show about
-                                        windowAgent.showAboutTdm();
-                                    }
+                            const mainProcess = this.getMainProcess();
+                            const windowAgentsManager = mainProcess.getWindowAgentsManager();
+                            for (let windowAgent of Object.values(windowAgentsManager.getAgents())) {
+                                const browserWindow = windowAgent.getBrowserWindow();
+                                if (browserWindow === focusedBrowserWindow) {
+                                    // show about
+                                    windowAgent.showAboutTdm();
                                 }
                             }
+
                         },
                     },
                     { role: 'toggleDevTools' }
@@ -77,7 +77,7 @@ export class ApplicationMenu {
         Menu.setApplicationMenu(menu);
     }
 
-    getMainProcesses = () => {
-        return this._mainProcesses;
+    getMainProcess = () => {
+        return this._mainProcess;
     }
 }

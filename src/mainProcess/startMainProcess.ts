@@ -47,6 +47,7 @@ import { site } from "../../package.json";
 import { type_args } from "./mainProcess/IpcEventArgType";
 import { openTdlInFirstExistingInstance, openTdlInNewInstance, openTdlInSpecificExistingInstance, processArgsAttach } from "./global/GlobalMethods";
 import { defaultWebsocketOpenerServerPort } from "./global/GlobalVariables";
+import { type_sshServerConfig } from "./mainProcesses/SshClient";
 
 /**
  * `true` for the first TDM instance 
@@ -117,3 +118,45 @@ if (args["attach"] === -1) {
 }
 
 
+
+
+// const createProcess = (
+//     // callback: ((mainProcess: MainProcess, args: type_args) => any) | undefined = undefined,
+//     mainProcessMode: "desktop" | "web" | "ssh-server" | "ssh-client" = "desktop",
+//     mainProcessId?: string | undefined,
+//     sshServerConfig?: type_sshServerConfig & { callingProcessId: string }
+// ) => {
+//     // there should be only one main process in "web" mode
+//     // if (mainProcessMode === "web") {
+//     //     if (this.getProcesses().length >= 1) {
+//     //         Log.info('-1', "The web mode only host one process");
+//     //         return this.getProcesses()[0];
+//     //     }
+//     // }
+
+//     // assign process ID
+//     // let processIds: string[] = [];
+//     // for (let ii = 0; ii < this.getProcesses().length; ii++) {
+//     //     const process = this.getProcesses()[ii];
+//     //     processIds.push(process.getProcessId());
+//     // }
+//     // let newProcessId = "0";
+//     // if (mainProcessId === undefined) {
+//     //     // automatically assign
+//     //     let maxId = -1;
+//     //     for (let existingProcessId of processIds) {
+//     //         maxId = Math.max(maxId, parseInt(existingProcessId));
+//     //     }
+//     //     newProcessId = `${maxId + 1}`;
+//     // } else {
+//     //     // todo: id collission, occurs in ssh client mode
+//     //     newProcessId = mainProcessId;
+//     // }
+//     // Log.info('-1', `Creating TDM process #${newProcessId} in ${mainProcessMode} mode`);
+
+//     this.readLocalFontNames();
+
+//     const newProcess = new MainProcess(this, newProcessId, callback, mainProcessMode, sshServerConfig);
+//     // this.getProcesses().push(newProcess);
+//     return newProcess;
+// };

@@ -55,16 +55,16 @@ export class CaSnooperServer {
             this.getDisplayWindowIds().splice(index, 1);
         }
         if (this.getDisplayWindowIds().length === 0 || forceClose === true) {
-            Log.info(this.getMainProcess().getProcessId(), "close snooper server ---------------------------- ")
+            Log.info("0", "close snooper server ---------------------------- ")
             this.closeServer();
         } else {
-            Log.error(this.getMainProcessId(), "not close snooper server ---------------------------- ")
+            Log.error("0", "not close snooper server ---------------------------- ")
         }
     }
 
     constructor(mainProcess: MainProcess, displayWindowId: string) {
         this._mainProcess = mainProcess;
-        const selectedProfile = mainProcess.getMainProcesses().getProfiles().getSelectedProfile();
+        const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
         let errMsg = "";
         if (selectedProfile !== undefined) {
             const context = this.getMainProcess().getChannelAgentsManager().getContext();
@@ -157,17 +157,17 @@ export class CaSnooperServer {
         this.udpServer = dgram.createSocket({ type: 'udp4', reuseAddr: true });
 
         this.udpServer.on('error', (err) => {
-            Log.error(this.getMainProcessId(), `Server error:\n${err.stack}`);
+            Log.error("0", `Server error:\n${err.stack}`);
             this.udpServer?.close();
         });
 
         this.udpServer.on("close", () => {
-            Log.info(this.getMainProcessId(), "udp server closed");
+            Log.info("0", "udp server closed");
         })
 
         this.udpServer.on('message', (msg: Buffer, rinfo: dgram.RemoteInfo) => {
-            Log.debug(this.getMainProcessId(), `Server received: ${msg} from ${rinfo.address}:${rinfo.port}`);
-            Log.debug(this.getMainProcessId(), "raw message", msg, rinfo)
+            Log.debug("0", `Server received: ${msg} from ${rinfo.address}:${rinfo.port}`);
+            Log.debug("0", "raw message", msg, rinfo)
             const data = this.decodeCaUdpMessage(msg, rinfo);
             for (let displayWindowId of this.getDisplayWindowIds()) {
                 const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
@@ -185,7 +185,7 @@ export class CaSnooperServer {
         this.udpServer.on('listening', () => {
             const address = this.udpServer?.address();
             if (address !== undefined) {
-                Log.info(this.getMainProcessId(), `Server listening ${address.address}:${address.port}`);
+                Log.info("0", `Server listening ${address.address}:${address.port}`);
             }
         });
         this.udpServer.bind(this.epicsCaServerPort);
@@ -194,12 +194,12 @@ export class CaSnooperServer {
         try {
             this.udpServer?.close();
         } catch (e) {
-            Log.error(this.getMainProcessId(), e);
+            Log.error("0", e);
         }
     }
 
-    getMainProcessId = () => {
-        return this.getMainProcess().getProcessId();
-    }
+    // getMainProcessId = () => {
+    //     return this.getMainProcess().getProcessId();
+    // }
 
 }

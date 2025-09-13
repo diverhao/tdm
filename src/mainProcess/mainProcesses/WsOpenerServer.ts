@@ -1,5 +1,4 @@
 import { IncomingMessage } from "http";
-import { MainProcesses } from "../mainProcesses/MainProcesses";
 import { WebSocket, WebSocketServer, RawData } from "ws";
 import { FileReader } from "../file/FileReader";
 import { MainProcess } from "../mainProcess/MainProcess";
@@ -14,12 +13,12 @@ import { openTdlFileAsRequestedByAnotherInstance } from "../global/GlobalMethods
 // in this process.
 export class WsOpenerServer {
     server: WebSocketServer | undefined;
-    _mainProcesses: MainProcesses;
+    _mainProcess: MainProcess;
     _port: number;
     _flexibleAttach: boolean; // if true, when the port is occupied, try the next port  
 
-    constructor(mainProcesses: MainProcesses, port: number, flexibleAttach: boolean) {
-        this._mainProcesses = mainProcesses;
+    constructor(mainProcess: MainProcess, port: number, flexibleAttach: boolean) {
+        this._mainProcess = mainProcess;
         this._port = port;
         this._flexibleAttach = flexibleAttach;
 
@@ -87,29 +86,29 @@ export class WsOpenerServer {
 
     // tell all MainProcess the new WS opener port
     updatePort = () => {
-        const mainProcesses = this.getMainProcesses().getProcesses();
-        for (let mainProcess of mainProcesses) {
-            const mainWindowAgent = mainProcess.getWindowAgentsManager().getMainWindowAgent();
-            if (mainWindowAgent !== undefined) {
-                mainWindowAgent.sendFromMainProcess("update-ws-opener-port",
-                    {
-                        newPort: this.getPort(),
-                    }
-                );
-            } else {
-                Log.error(mainProcess.getProcessId(), "Main window agent does not exist");
-            }
+        const mainProcess = this.getMainProcess();
+
+        const mainWindowAgent = mainProcess.getWindowAgentsManager().getMainWindowAgent();
+        if (mainWindowAgent !== undefined) {
+            mainWindowAgent.sendFromMainProcess("update-ws-opener-port",
+                {
+                    newPort: this.getPort(),
+                }
+            );
+        } else {
+            Log.error(0, "Main window agent does not exist");
         }
+
     };
 
     // the argv must have contained "--attach" option
     handleMessage = (args: type_args) => {
         // file names in args will be used 
-        openTdlFileAsRequestedByAnotherInstance("", this.getMainProcesses(), args);
+        openTdlFileAsRequestedByAnotherInstance("", this.getMainProcess(), args);
     };
 
-    getMainProcesses = () => {
-        return this._mainProcesses;
+    getMainProcess = () => {
+        return this._mainProcess;
     };
 
     getPort = () => {

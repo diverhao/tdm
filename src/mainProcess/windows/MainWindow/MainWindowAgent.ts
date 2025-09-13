@@ -17,7 +17,7 @@ export class MainWindowAgent {
     private _id: string = "";
     private _windowAgentsManager: WindowAgentsManager;
     private _browserWindow: BrowserWindow | undefined;
-    private _mainProcessId: string;
+    // private _mainProcessId: string;
     readyToClose: boolean = false;
     // a Promise that is resolved when the main window successfully loads the URL
     loadURLPromise: undefined | Promise<void>;
@@ -38,8 +38,9 @@ export class MainWindowAgent {
 
     constructor(windowAgentsManager: WindowAgentsManager) {
         this._windowAgentsManager = windowAgentsManager;
-        this._mainProcessId = windowAgentsManager.getMainProcess().getProcessId();
-        this._id = `${this._mainProcessId}`;
+        // this._mainProcessId = windowAgentsManager.getMainProcess().getProcessId();
+        // this._id = `${this._mainProcessId}`;
+        this._id = "0";
     }
 
     // ---------------------- GUI (BrowserWindow) ---------------------------
@@ -56,7 +57,7 @@ export class MainWindowAgent {
 
         windowTitle = hostname + windowTitle;
 
-        const selectedProfile = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getProfiles().getSelectedProfile();
+        const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile !== undefined) {
             windowTitle = windowTitle + " -- " + selectedProfile.getName();
         }
@@ -74,7 +75,7 @@ export class MainWindowAgent {
 
         if (mainProcesMode === "ssh-server") {
             // tell client to create a GUI window
-            const sshServer = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager().getSshServer();
+            const sshServer = this.getWindowAgentsManager().getMainProcess().getIpcManager().getSshServer();
             if (sshServer !== undefined) {
                 sshServer.sendToTcpClient(JSON.stringify({ command: "create-main-window-step-2" }))
             }
@@ -196,13 +197,13 @@ export class MainWindowAgent {
 
                 // await window.loadURL(
                 // 	url.format({
-                // 		pathname: path.join(__dirname, `MainWindow-${this.getMainProcessId()}.html`),
+                // 		pathname: path.join(__dirname, `MainWindow-${"0"}.html`),
                 // 		protocol: "file:",
                 // 		slashes: true,
                 // 	})
                 // );
 
-                const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager().getPort();
+                const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
                 const hostname = this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" ?
                     "127.0.0.1"
                     : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
@@ -223,7 +224,7 @@ export class MainWindowAgent {
                 await this.loadURLPromise;
             } else {
                 // web mode
-                const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager().getPort();
+                const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
 
                 httpResponse.send(
                     `
@@ -272,7 +273,7 @@ export class MainWindowAgent {
      */
     handleWindowClosed = () => {
         // writeFileSync("/Users/haohao/tdm.log", `main window closed ===================== cleaning up stuff\n`, {flag: "a"});
-        Log.info(this.getMainProcessId(), "close main window", this.getId())
+        Log.info("0", "close main window", this.getId())
         this.getWindowAgentsManager().removeAgent(this._id);
 
         // check if there is any other BrowserWindow,
@@ -288,9 +289,10 @@ export class MainWindowAgent {
         }
 
         // (6) destroy client object on the WebSocket IPC server
-        const mainProcesses = this.getWindowAgentsManager().getMainProcess().getMainProcesses();
-        const webSocketIpcManager = mainProcesses.getIpcManager();
-        webSocketIpcManager.removeClient(this.getId());
+        // const mainProcesses = this.getWindowAgentsManager().getMainProcess().getMainProcesses();
+        // const webSocketIpcManager = mainProcesses.getIpcManager();
+        const ipcManager = this.getWindowAgentsManager().getMainProcess().getIpcManager();
+        ipcManager.removeClient(this.getId());
 
         this.getWindowAgentsManager().setDockMenu();
 
@@ -318,7 +320,7 @@ export class MainWindowAgent {
     show = () => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow === undefined) {
-            Log.error(this.getMainProcessId(), "Main window does not exist, nothing to pop up");
+            Log.error("0", "Main window does not exist, nothing to pop up");
         } else {
             browserWindow.show();
         }
@@ -332,7 +334,7 @@ export class MainWindowAgent {
             }
             browserWindow.focus();
         } else {
-            Log.error(this.getMainProcessId(), `Main window does not exist, nothing to pop up`);
+            Log.error("0", `Main window does not exist, nothing to pop up`);
         }
     };
 
@@ -380,8 +382,8 @@ export class MainWindowAgent {
     // sendFromMainProcess(channel: string, ...args: any[]) {
     sendFromMainProcess = <T extends keyof IpcEventArgType3>(channel: T, arg: IpcEventArgType3[T]): void => {
 
-        const processId = this._windowAgentsManager.getMainProcess().getProcessId();
-        const ipcManagerOnMainProcesses = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager();
+        // const processId = this._windowAgentsManager.getMainProcess().getProcessId();
+        const ipcManagerOnMainProcesses = this.getWindowAgentsManager().getMainProcess().getIpcManager();
         const mainProcessMode = this.getWindowAgentsManager().getMainProcess().getMainProcessMode();
 
         if (mainProcessMode === "ssh-server") {
@@ -389,24 +391,24 @@ export class MainWindowAgent {
             if (sshServer !== undefined) {
                 // writeFileSync("/Users/haohao/tdm.log", `send from main process for Main Window ===================== ${JSON.stringify(args)}\n`, {flag: "a"});
                 const args = Object.values(arg);
-                sshServer.sendToTcpClient(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: args }));
+                sshServer.sendToTcpClient(JSON.stringify({ processId: "0", windowId: this.getId(), eventName: channel, data: args }));
             }
         } else {
             // the main window must come with a process ID
             const wsClient = ipcManagerOnMainProcesses.getClients()[this.getId()];
 
             if (wsClient === undefined) {
-                Log.error(this.getMainProcessId(), "Cannot find WebSocket IPC client for window", this.getId());
+                Log.error("0", "Cannot find WebSocket IPC client for window", this.getId());
                 return;
             }
             try {
                 // add processId
                 // this._browserWindow?.webContents.send(channel, processId, ...args);
                 if (typeof wsClient !== "string") {
-                    wsClient.send(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: [arg] }));
+                    wsClient.send(JSON.stringify({ processId: "0", windowId: this.getId(), eventName: channel, data: [arg] }));
                 }
             } catch (e) {
-                Log.error(this.getMainProcessId(), e);
+                Log.error("0", e);
             }
         }
     }
@@ -428,9 +430,9 @@ export class MainWindowAgent {
         return this._browserWindow;
     };
 
-    getMainProcessId = () => {
-        return this._mainProcessId;
-    };
+    // getMainProcessId = () => {
+    //     return this._mainProcessId;
+    // };
 
     // getRendererWindowStatus = (): "editing" | "operating" => {
     // 	return "editing";
@@ -521,7 +523,7 @@ export class MainWindowAgent {
         } catch (e) {
             // ! When the app quits, it may cause an unexpected error that pops up in GUI.
             // ! The worst part is I cannot catch it, as it happens in the worker thread.
-            // Log.error(this.getMainProcessId(), e);
+            // Log.error("0", e);
         }
         return thumbnail
     };
@@ -594,7 +596,7 @@ export class MainWindowAgent {
         if (browserWindow instanceof BrowserWindow) {
             browserWindow.close();
         } else {
-            Log.error(this.getMainProcessId(), `Error: cannot close window ${this.getId()}`);
+            Log.error("0", `Error: cannot close window ${this.getId()}`);
         }
     };
 
