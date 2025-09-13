@@ -666,9 +666,7 @@ export class ActionButton extends BaseWidget {
                     // decode string
                     return response.json()
                 }).then(data => {
-                    const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    // const href = `${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`;
                     const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
                     // open in new tab
                     // ! important: avoid shared sessionStorage

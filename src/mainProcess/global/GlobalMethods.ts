@@ -508,7 +508,7 @@ export const generateKeyAndCert = () => {
     // generate self-signed certificate for https server
 
     const attrs = [{ name: "commonName", value: "localhost" }];
-    const pems = selfsigned.generate(attrs, { days: 1 });
+    const pems = selfsigned.generate(attrs, { days: 1000 });
 
     return pems;
 }

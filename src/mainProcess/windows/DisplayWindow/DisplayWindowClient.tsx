@@ -1281,9 +1281,8 @@ export class DisplayWindowClient {
                 }).then(data => {
                     const ipcServerPort = data["ipcServerPort"];
                     const displayWindowId = data["displayWindowId"];
-                    window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`)
-                })
-                    ;
+                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`)
+                });
             };
             reader.readAsText(fileBlob);
 
@@ -1467,6 +1466,13 @@ export class DisplayWindowClient {
             );
         } else {
             document.title = titleContents;
+        }
+
+        // update url by adding file name in browser address bar
+        if (this.getMainProcessMode() === "web") {
+            const currentSite = `https://${window.location.host}/`;
+            const newUrl = `${currentSite}DisplayWindow.html?displayWindowId=${this.getWindowId()}&file=${this.getTdlFileName()}`;
+            window.history.replaceState({}, '', newUrl);
         }
     };
 

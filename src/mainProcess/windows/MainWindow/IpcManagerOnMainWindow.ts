@@ -31,7 +31,7 @@ export class IpcManagerOnMainWindow {
         if (this.getIpcServerPort() === -1) {
             return;
         }
-
+        console.log("Connecting to IPC server on port", this.getIpcServerPort());
         let serverAddress = `wss://127.0.0.1:${this.getIpcServerPort()}`
         if (this.getMainWindowClient().getMainProcessMode() === "web") {
             const host = window.location.host.split(":")[0];

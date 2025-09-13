@@ -1,17 +1,13 @@
 <!DOCTYPE html>
 
 <html>
-	<head>
-	</head>
+	<head> </head>
 
-	<body style="-webkit-print-color-adjust: exact;">
-		<div id="root"></div>
+	<body style="-webkit-print-color-adjust: exact">
+		<div id="root">aaabbb</div>
 		<!-- one solution for Electron's "exports is not defined" error -->
 		<!-- We must also change "nodeIntegration" and "contextIsolation" in "app.js" -->
 		<!-- https://stackoverflow.com/questions/54619111/typescript-electron-exports-is-not-defined -->
-		<!-- <script> -->
-		<!-- require("./main.js"); -->
-		<!-- </script> -->
 		<!-- another solution for Electron's "exports is not defined" error -->
 		<!-- manually define a global variable "exports" -->
 		<script>
@@ -29,15 +25,6 @@
 		<!-- it is recommended to use for production -->
 		<script type="module" src="../../../webpack/DisplayWindowClient.js"></script>
 
-		<!-- load from local package -->
-		<!-- the below javascript file uses CommonJS module type (require), it can only be  -->
-		<!-- loaded in electron.js with "nodeIntegration" option enabled in BrowserWindow -->
-		<!-- the web browser can only use ESM module, we cannot load tdl file in web browser -->
-		<!-- the embedded display (iframe) cannot be shown in this way either -->
-		<!-- the advantage is we do not need to bundle the package, which consumes tens of seconds -->
-		<!-- it is recommended to use for development -->
-		<!-- <script type="module" src="./DisplayWindowClient.js"></script> -->
-
 		<script type="module">
 			const urlParams = new URLSearchParams(window.location.search);
 			const ipcServerPort = urlParams.get("ipcServerPort");
@@ -45,8 +32,8 @@
 			const hostnameRaw = urlParams.get("hostname"); // might be null
 			const hostname = hostnameRaw === null ? undefined : hostnameRaw;
 			console.log(window.DisplayWindowClientClass);
+            console.log("ipcServerPort", ipcServerPort, "displayWindowAgentId", displayWindowId);
 			new window.DisplayWindowClientClass(displayWindowId, parseInt(ipcServerPort), hostname);
-			const rand = Math.random();
 		</script>
 	</body>
 </html>

@@ -519,7 +519,7 @@ export const mergePvaTypeAndData = (type: Record<string, any>, key: string | und
             data: data
         };
     }
-    
+
     const typeIndex = type["typeIndex"];
 
     if (

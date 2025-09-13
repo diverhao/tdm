@@ -333,7 +333,7 @@ export class WebServer {
                 } else if (command === "open-tdl-file") {
                     const options = data;
                     options["postCommand"] = command;
-                    Log.debug("-1", data);
+                    Log.info("-1", data);
                     this.getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
                         {
                             options: options,
@@ -374,6 +374,11 @@ export class WebServer {
                         Log.error("-1", "Cannot read file", data["imageFileName"])
                         response.send(JSON.stringify({ image: "" }));
                     }
+                } else if (command === "get-ipc-server-port") {
+                    response.json({ 
+                        ipcServerPort: this.getMainProcess().getIpcManager().getPort(),
+                    });
+
                 }
             });
 

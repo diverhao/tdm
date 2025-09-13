@@ -11,8 +11,6 @@ import { SshClient, type_sshServerConfig } from "./SshClient";
 import { CaSnooperServer } from "./CaSnooperServer";
 import { CaswServer } from "./CaswServer";
 import { Sql } from "../archive/Sql";
-import { Worker } from 'worker_threads';
-import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { type_args } from "./IpcEventArgType";
 import * as path from "path";
 import { EdlFileConverterThread } from "../file/EdlFileConverterThread";
@@ -75,12 +73,10 @@ export class MainProcess {
 
     // CA snooper service
     // it listens to the search messages from CA client
-    // todo: make it permanent
     private _caSnooperServer: CaSnooperServer | undefined = undefined;
 
     // CA server watcher service
     // it listens to the beacon messages from CA server
-    // todo: make it permanent
     private _caswServer: CaswServer | undefined = undefined;
 
     // SQL client for communicating to archive
@@ -109,7 +105,6 @@ export class MainProcess {
     // profiles
     private readonly _profiles: Profiles;
 
-    // log
     // log stream for writing to file
     private _logStream: undefined | fs.WriteStream = undefined;
 

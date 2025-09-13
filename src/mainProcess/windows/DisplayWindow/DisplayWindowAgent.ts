@@ -1638,176 +1638,204 @@ export class DisplayWindowAgent {
         const mainProcesMode = this.getWindowAgentsManager().getMainProcess().getMainProcessMode();
         if (mainProcesMode === "ssh-server") {
             // tell client to create a GUI window
-            const sshServer = this.getWindowAgentsManager().getMainProcess().getIpcManager().getSshServer();
-            if (sshServer !== undefined) {
-                sshServer.sendToTcpClient(JSON.stringify({ command: "create-display-window-step-2", data: this._options }))
+            this.createBrowserWindowInSshSeverMode();
+        } else if (mainProcesMode === "ssh-client" || mainProcesMode === "desktop") {
+            this.createBrowserWindowInDesktopMode(options);
+        } else if (mainProcesMode === "web") {
+            // web mode
+            this.createBrowserWindowInWebMode(httpResponse, options);
+        }
+    };
+
+    private createBrowserWindowInDesktopMode = async (options: any) => {
+        const canvasWidgetTdl = this.getTdl().Canvas;
+        let windowName = canvasWidgetTdl?.windowName;
+        let title = windowName;
+        if (title === undefined || title.trim() === "") {
+            if (this.getTdlFileName().trim() !== "") {
+                title = this.getTdlFileName();
+            } else {
+                title = this.getId();
             }
         }
-        else {
-            if (httpResponse === undefined) { // "desktop", "ssh-client" mode
-                const canvasWidgetTdl = this.getTdl().Canvas;
-                let windowName = canvasWidgetTdl?.windowName;
-                let title = windowName;
-                if (title === undefined || title.trim() === "") {
-                    if (this.getTdlFileName().trim() !== "") {
-                        title = this.getTdlFileName();
-                    } else {
-                        title = this.getId();
-                    }
+
+        let modal = false;
+
+        // FileBrowser modal window
+        let parent: undefined | BrowserWindow = undefined;
+        const utilityOptions = options["utilityOptions"];
+        const utilityType = options["utilityType"];
+        if (utilityOptions !== undefined && utilityType === "FileBrowser") {
+            if (utilityOptions["parentDisplayWindowId"] !== undefined) {
+                const parentDisplayWindowAgent = this.getWindowAgentsManager().getAgent(utilityOptions["parentDisplayWindowId"]);
+                if (parentDisplayWindowAgent instanceof DisplayWindowAgent) {
+                    parent = parentDisplayWindowAgent.getBrowserWindow();
+                    modal = true;
                 }
+            }
+        }
+        const windowOptions: Electron.BrowserWindowConstructorOptions = {
+            width: 800,
+            height: 500,
+            backgroundColor: `rgb(255, 255, 255)`,
+            title: `${title}`,
+            resizable: true,
+            autoHideMenuBar: true,
+            minWidth: 100,
+            minHeight: 100,
+            // modal window: for file browser, this may not work on Linux
+            modal: modal,
+            parent: parent,
+            frame: true,
+            show: !this.hiddenWindow, // hide preloaded window
 
-                let modal = false;
+            icon: path.join(__dirname, '../../../webpack/resources/webpages/tdm-logo.png'),
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js'), // <-- preload script here
+                nodeIntegration: true, // use node.js
+                contextIsolation: true, // to use preload, must be true
+                nodeIntegrationInWorker: true,
+                sandbox: false,
+                webviewTag: true,
+                backgroundThrottling: false,
+                webSecurity: false,
+                defaultFontFamily: {
+                    standard: "Arial",
+                },
+            },
+        };
+        try {
+            await app.whenReady();
+            app.focus({ steal: true });
+            const window = new BrowserWindow(windowOptions);
+            this._browserWindow = window;
+            this._browserWindow.webContents.setWindowOpenHandler(({ url }) => {
+                Log.debug("0", `open new window ${url}`);
+                return { action: "allow" };
+            });
 
-                // FileBrowser modal window
-                let parent: undefined | BrowserWindow = undefined;
-                const utilityOptions = options["utilityOptions"];
-                const utilityType = options["utilityType"];
-                if (utilityOptions !== undefined && utilityType === "FileBrowser") {
-                    if (utilityOptions["parentDisplayWindowId"] !== undefined) {
-                        const parentDisplayWindowAgent = this.getWindowAgentsManager().getAgent(utilityOptions["parentDisplayWindowId"]);
-                        if (parentDisplayWindowAgent instanceof DisplayWindowAgent) {
-                            parent = parentDisplayWindowAgent.getBrowserWindow();
-                            modal = true;
-                        }
-                    }
+            // events
+            // ! in ssh-client mode, once the window is asked to close, close it immeidately
+            // ! otherwise the window-will-be-closed message from main process may never arrive at
+            // ! the renderer process, causing the window hanging 
+            // if (mainProcesMode !== "ssh-client") {
+            this._browserWindow.on("closed", this.handleWindowClosed);
+            this._browserWindow.on("close", (event: Electron.Event) => {
+                // if the window close button is pressed for the first time, or it is not ready to close,
+                // e.g. the file is not saved, do not close the window immediately, instead, call handler
+                if (this.readyToClose === false) {
+                    // set the readyToClose to true in case the communication between the 
+                    // renderer process and main process is broken.
+                    // If we choose to not close the window immediately, it is set back to false in this.handleWindowClose()
+                    this.readyToClose = true;
+                    event.preventDefault();
+                    this.handleWindowClose();
+                } else {
+                    // do not do anything
                 }
-                const windowOptions: Electron.BrowserWindowConstructorOptions = {
-                    width: 800,
-                    height: 500,
-                    backgroundColor: `rgb(255, 255, 255)`,
-                    title: `${title}`,
-                    resizable: true,
-                    autoHideMenuBar: true,
-                    minWidth: 100,
-                    minHeight: 100,
-                    // modal window: for file browser, this may not work on Linux
-                    modal: modal,
-                    parent: parent,
-                    frame: true,
-                    show: !this.hiddenWindow, // hide preloaded window
+            });
+            // }
 
-                    icon: path.join(__dirname, '../../../webpack/resources/webpages/tdm-logo.png'),
-                    webPreferences: {
-                        preload: path.join(__dirname, 'preload.js'), // <-- preload script here
-                        nodeIntegration: true, // use node.js
-                        contextIsolation: true, // to use preload, must be true
-                        nodeIntegrationInWorker: true,
-                        sandbox: false,
-                        webviewTag: true,
-                        backgroundThrottling: false,
-                        webSecurity: false,
-                        defaultFontFamily: {
-                            standard: "Arial",
-                        },
+            // context menu for editable element, e.g. input box, to show cut/copy/paste options
+            // see https://www.electronjs.org/docs/latest/api/menu-item
+            // this is the the 2nd place that listens to events from renderer process other than the IpcManagerOnMainProcess
+            this._browserWindow.webContents.on("context-menu", (_, props) => {
+                const menu = new Menu();
+                if (props.isEditable) {
+                    menu.append(new MenuItem({ label: "Cut", role: "cut" }));
+                    menu.append(new MenuItem({ label: "Copy", role: "copy" }));
+                    menu.append(new MenuItem({ label: "Paste", role: "paste" }));
+                    menu.append(new MenuItem({ label: "mergeAllWindows", role: "mergeAllWindows" }));
+                    menu.popup();
+                }
+            });
+            window.once("ready-to-show", () => {
+                // Chrome caches the zoom level of an html
+                // reset the zoom level to 1 each time when a window is opened
+                window.webContents.setZoomFactor(1);
+            });
+
+            // open development tools
+            // this._window.webContents.openDevTools({ mode: "right" });
+
+            // the Promise resolves when there is no blocking function running
+            // on webpage, i.e. when all modules in DisplayWindowClient.js are loaded
+            // and DisplayWindowClient object is created
+
+            // the data URL is used for passing the IPC server port and display window ID to client
+            // in this way, the webContents.send() is no longer used between the renderer process and main process
+            const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
+            const hostname = this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" ?
+                "localhost"
+                : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
+
+            await window.loadURL(
+                url.format({
+                    pathname: path.join(__dirname, `DisplayWindow.html`),
+                    protocol: "file:",
+                    slashes: true,
+                    query: {
+                        ipcServerPort: `${ipcServerPort}`,
+                        displayWindowId: `${this.getId()}`,
+                        hostname: `${hostname}`,
                     },
+                })
+            );
+        } catch (e) {
+        }
+    }
+
+    private createBrowserWindowInSshSeverMode = () => {
+        // tell client to create a GUI window
+        const sshServer = this.getWindowAgentsManager().getMainProcess().getIpcManager().getSshServer();
+        if (sshServer !== undefined) {
+            sshServer.sendToTcpClient(JSON.stringify({ command: "create-display-window-step-2", data: this._options }))
+        }
+    }
+
+    /**
+     * create a new window in web browser when the main process in web mode
+     * 
+     * This is initiated by sendPostRequestCommand("open-tdl-file") in renderer process, 
+     * not by sendFromRendererProcess("open-tdl-file"). On the main process, the 
+     * web server (not the websocket IPC server) handles this request, and invokes handleOpenTdlFile() 
+     * in main process IpcManager.
+     * 
+     * @param httpResponse http request object, the request method could be POST or GET
+     */
+    private createBrowserWindowInWebMode = (httpResponse: any = undefined, options: any = undefined) => {
+
+        const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
+
+        const displayWindowId = this.getId();
+
+        const requestMethod = httpResponse.req.method;
+        if (requestMethod === "POST") {
+            // when we want to open a new window or refresh a window in web mode, the client sends a POST request
+            // to server, this request eventually arrives at here
+            // the server allocates the resources (basically create this object), 
+            // then reply with the ipc server port and this display window id. 
+            // after received these information, the client will GET the DisplayWindow.html with 
+            // the port and window id.
+            const command = options["postCommand"];
+
+            Log.info("-1", "IPC websocket: reply for", command);
+            if (command === "open-tdl-file") {
+                const msg = {
+                    ipcServerPort: ipcServerPort,
+                    displayWindowId: displayWindowId,
                 };
-                try {
-                    await app.whenReady();
-                    app.focus({ steal: true });
-                    const window = new BrowserWindow(windowOptions);
-                    this._browserWindow = window;
-                    this._browserWindow.webContents.setWindowOpenHandler(({ url }) => {
-                        Log.debug("0", `open new window ${url}`);
-                        return { action: "allow" };
-                    });
-
-                    // events
-                    // ! in ssh-client mode, once the window is asked to close, close it immeidately
-                    // ! otherwise the window-will-be-closed message from main process may never arrive at
-                    // ! the renderer process, causing the window hanging 
-                    // if (mainProcesMode !== "ssh-client") {
-                    this._browserWindow.on("closed", this.handleWindowClosed);
-                    this._browserWindow.on("close", (event: Electron.Event) => {
-                        // if the window close button is pressed for the first time, or it is not ready to close,
-                        // e.g. the file is not saved, do not close the window immediately, instead, call handler
-                        if (this.readyToClose === false) {
-                            // set the readyToClose to true in case the communication between the 
-                            // renderer process and main process is broken.
-                            // If we choose to not close the window immediately, it is set back to false in this.handleWindowClose()
-                            this.readyToClose = true;
-                            event.preventDefault();
-                            this.handleWindowClose();
-                        } else {
-                            // do not do anything
-                        }
-                    });
-                    // }
-
-                    // context menu for editable element, e.g. input box, to show cut/copy/paste options
-                    // see https://www.electronjs.org/docs/latest/api/menu-item
-                    // this is the the 2nd place that listens to events from renderer process other than the IpcManagerOnMainProcess
-                    this._browserWindow.webContents.on("context-menu", (_, props) => {
-                        const menu = new Menu();
-                        if (props.isEditable) {
-                            menu.append(new MenuItem({ label: "Cut", role: "cut" }));
-                            menu.append(new MenuItem({ label: "Copy", role: "copy" }));
-                            menu.append(new MenuItem({ label: "Paste", role: "paste" }));
-                            menu.append(new MenuItem({ label: "mergeAllWindows", role: "mergeAllWindows" }));
-                            menu.popup();
-                        }
-                    });
-                    window.once("ready-to-show", () => {
-                        // Chrome caches the zoom level of an html
-                        // reset the zoom level to 1 each time when a window is opened
-                        window.webContents.setZoomFactor(1);
-                    });
-
-                    // open development tools
-                    // this._window.webContents.openDevTools({ mode: "right" });
-
-                    // the Promise resolves when there is no blocking function running
-                    // on webpage, i.e. when all modules in DisplayWindowClient.js are loaded
-                    // and DisplayWindowClient object is created
-
-                    // the data URL is used for passing the IPC server port and display window ID to client
-                    // in this way, the webContents.send() is no longer used between the renderer process and main process
-                    const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
-                    const hostname = this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" ?
-                        "localhost"
-                        : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
-
-                    await window.loadURL(
-                        url.format({
-                            pathname: path.join(__dirname, `DisplayWindow.html`),
-                            protocol: "file:",
-                            slashes: true,
-                            query: {
-                                ipcServerPort: `${ipcServerPort}`,
-                                displayWindowId: `${this.getId()}`,
-                                hostname: `${hostname}`,
-                            },
-                        })
-                    );
-                } catch (e) {
-                }
-            } else {
-                // web mode
-                const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
-                const displayWindowId = this.getId();
-
-                const requestMethod = httpResponse.req.method;
-                if (requestMethod === "POST") {
-                    // when we want to open a new window or refresh a window in web mode, the client sends a POST request
-                    // to server, this request eventually arrives at here
-                    // the server allocates the resources (basically create this object), 
-                    // then reply with the ipc server port and this display window id. 
-                    // after received these information, the client will GET the DisplayWindow.html with 
-                    // the port and window id.
-                    const command = options["postCommand"];
-                    const msg = {
-                        ipcServerPort: ipcServerPort,
-                        displayWindowId: displayWindowId,
-                    };
-                    Log.info("-1", "IPC websocket: reply for", command, msg);
-                    httpResponse.json(msg);
-                } else if (requestMethod === "GET") {
-
-                    // this is from "/" GET request
-                    // it is a special way to open a display window, it happens only when we visit the website 
-                    // for the first time with "/" path. After that the newly opened window should have a
-                    // path like "/DisplayWindow.html?ipcServerPort=7527&displayWindowId=0-5"
-                    httpResponse.send(
-                        `
+                httpResponse.json(msg);
+            }
+        } else if (requestMethod === "GET") {
+            // this is from "/" GET request, which then calls handleProfileSelected() in WebServer.ts
+            // this is a special way to open a display window, it happens only when we visit the website 
+            // for the first time with "/" path. After that the newly opened window should have a
+            // path like "/DisplayWindow.html?ipcServerPort=7527&displayWindowId=0-5"
+            const reqPath = httpResponse.req.path;
+            if (reqPath === "/" || reqPath === "/main") {
+                httpResponse.send(
+                    `
                     <!DOCTYPE html>
                     <html>
                     	<head>
@@ -1820,18 +1848,16 @@ export class DisplayWindowAgent {
                     		</script>
                     		<script type="module" src="/DisplayWindowClient.js"></script>
                             <script type="module">
-                    			const urlParams = new URLSearchParams(window.location.search);
-                    			const ipcServerPort = urlParams.get("ipcServerPort");
-                    			const displayWindowId = urlParams.get("displayWindowId");
-                                console.log(window.DisplayWindowClientClass)
-                                // new window.DisplayWindowClientClass("${displayWindowId}", ${ipcServerPort})
-                                new window.DisplayWindowClientClass("${displayWindowId}", -1)
+                    			// const urlParams = new URLSearchParams(window.location.search);
+                    			// const ipcServerPort = urlParams.get("ipcServerPort");
+                    			// const displayWindowId = urlParams.get("displayWindowId");
+                                console.log(window.DisplayWindowClientClass, ${ipcServerPort})
+                                new window.DisplayWindowClientClass("${displayWindowId}",  ${ipcServerPort})
                     		</script>
                     	</body>
                     </html>
                     `
-                    )
-                }
+                )
             }
         }
     };

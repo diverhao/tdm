@@ -49,10 +49,14 @@ export class IpcManagerOnMainProcess {
     createWsServer = () => {
         Log.info('-1', `Creating WebSocket IPC server on port ${this.getPort()}`);
 
+        const key = fs.readFileSync("/Users/1h7/projects2/javascript/test89-https-express/server.key");
+        const cert = fs.readFileSync("/Users/1h7/projects2/javascript/test89-https-express/server.cert");
         // create a https server for the websocket server to attach to
         const httpsServer = https.createServer({
-            key: this.keyAndCert.private,
-            cert: this.keyAndCert.cert
+            // key: this.keyAndCert.private,
+            // cert: this.keyAndCert.cert
+            key: key,
+            cert: cert,
         });
         this._wsServer = new WebSocketServer({ server: httpsServer });
 

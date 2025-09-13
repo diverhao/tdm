@@ -64,7 +64,6 @@ export class IpcManagerOnDisplayWindow {
         if (this.getIpcServerPort() === -1) {
             return;
         }
-
         let serverAddress = `wss://127.0.0.1:${this.getIpcServerPort()}`;
         if (this.getDisplayWindowClient().getMainProcessMode() === "web") {
             const host = window.location.host.split(":")[0];
@@ -95,7 +94,8 @@ export class IpcManagerOnDisplayWindow {
         }
 
         client.onclose = (ev: CloseEvent) => {
-            Log.error("IPC websocket connection closed", ev);
+            Log.error("IPC websocket connection closed", ev, ev.code, ev.reason);
+
         }
 
         client.onmessage = (event: any) => {
@@ -344,7 +344,6 @@ export class IpcManagerOnDisplayWindow {
                             this.getDisplayWindowClient().openTdlFileInWebMode(fileName, fileBlob);
                         }
                     } else {
-                        console.log("tdlFileNames ========================", tdlFileNames)
                         this.sendFromRendererProcess("open-tdl-file",
                             {
                                 options: {
