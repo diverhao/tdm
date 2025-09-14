@@ -440,7 +440,7 @@ export class SshClient {
     }
 
     handleCreateDisplayWindowStep2 = (options: any) => {
-        this.getMainProcess().getWindowAgentsManager().createDisplayWindow(options, undefined);
+        this.getMainProcess().getWindowAgentsManager().createDisplayWindow(options);
     }
 
     handleCreateWebDisplayWindowStep2 = (url: string) => {

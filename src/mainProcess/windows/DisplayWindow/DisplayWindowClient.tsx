@@ -1256,6 +1256,8 @@ export class DisplayWindowClient {
         if (this.getMainProcessMode() !== "web") {
             return;
         }
+
+        
         if (fileName !== undefined && fileBlob !== undefined) {
             const tdlFileName = fileName;
             // we supply the file blob
@@ -1265,42 +1267,9 @@ export class DisplayWindowClient {
                 const fileContents = event.target.result;
                 const currentSite = `https://${window.location.host}/`;
                 const tdlStr = event.target.result;
-                this.getIpcManager().sendPostRequestCommand("open-tdl-file", {
-                    tdlStr: tdlStr,
-                    tdlFileNames: [tdlFileName],
-                    mode: g_widgets1.isEditing() ? "editing" : "operating",
-                    editable: true,
-                    // external macros: user-provided and parent display macros
-                    macros: [],
-                    replaceMacros: true,
-                    currentTdlFolder: undefined,
-                },
-                ).then((response: any) => {
-                    // decode string
-                    return response.json()
-                }).then(data => {
-                    const ipcServerPort = data["ipcServerPort"];
-                    const displayWindowId = data["displayWindowId"];
-                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`)
-                });
-            };
-            reader.readAsText(fileBlob);
-
-        } else {
-            // manually select the file
-            const inputElement = document.createElement("input");
-            inputElement.type = "file";
-            inputElement.style.display = "none";
-            inputElement.addEventListener("change", (event: any) => {
-                const tdlFileNameBlob = event.target.files[0];
-                const tdlFileName = tdlFileNameBlob["name"];
-                const reader = new FileReader();
-                reader.onload = (event: any) => {
-                    const currentSite = `https://${window.location.host}/`;
-                    // may be tdl or db file
-                    const tdlStr = event.target.result;
-                    this.getIpcManager().sendPostRequestCommand("open-tdl-file", {
-                        tdlStr: tdlStr,
+                this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
+                    options: {
+                        tdlStr: tdlStr as string,
                         tdlFileNames: [tdlFileName],
                         mode: g_widgets1.isEditing() ? "editing" : "operating",
                         editable: true,
@@ -1308,22 +1277,92 @@ export class DisplayWindowClient {
                         macros: [],
                         replaceMacros: true,
                         currentTdlFolder: undefined,
-                    },
-                    ).then((response: any) => {
-                        // decode string
-                        return response.json()
-                    }).then(data => {
-                        const ipcServerPort = data["ipcServerPort"];
-                        const displayWindowId = data["displayWindowId"];
-                        window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`)
-                    })
-                        ;
-                };
-                reader.readAsText(tdlFileNameBlob);
-                event.target.remove();
+                        initiatedByWindowId: this.getWindowId(),
+                    }
+                });
+                // ).then((response: any) => {
+                //     // decode string
+                //     return response.json()
+                // }).then(data => {
+                //     const ipcServerPort = data["ipcServerPort"];
+                //     const displayWindowId = data["displayWindowId"];
+                //     window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`)
+                // });
+                // this.getIpcManager().sendPostRequestCommand("open-tdl-file", {
+                //     tdlStr: tdlStr,
+                //     tdlFileNames: [tdlFileName],
+                //     mode: g_widgets1.isEditing() ? "editing" : "operating",
+                //     editable: true,
+                //     // external macros: user-provided and parent display macros
+                //     macros: [],
+                //     replaceMacros: true,
+                //     currentTdlFolder: undefined,
+                // },
+                // ).then((response: any) => {
+                //     // decode string
+                //     return response.json()
+                // }).then(data => {
+                //     const ipcServerPort = data["ipcServerPort"];
+                //     const displayWindowId = data["displayWindowId"];
+                //     window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`)
+                // });
+            };
+            reader.readAsText(fileBlob);
+
+        } else {
+            // manually select the file in web browser file prompt or read file on server (ActionButton open)
+
+
+            this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
+                options: {
+                    tdlStr: undefined,
+                    tdlFileNames: [fileName as string],
+                    mode: g_widgets1.isEditing() ? "editing" : "operating",
+                    editable: true,
+                    // external macros: user-provided and parent display macros
+                    macros: [],
+                    replaceMacros: true,
+                    currentTdlFolder: undefined,
+                    initiatedByWindowId: this.getWindowId(),
+                }
             })
-            document.body.appendChild(inputElement);
-            inputElement.click();
+
+            // const inputElement = document.createElement("input");
+            // inputElement.type = "file";
+            // inputElement.style.display = "none";
+            // inputElement.addEventListener("change", (event: any) => {
+            //     const tdlFileNameBlob = event.target.files[0];
+            //     const tdlFileName = tdlFileNameBlob["name"];
+            //     const reader = new FileReader();
+            //     reader.onload = (event: any) => {
+            //         const currentSite = `https://${window.location.host}/`;
+            //         // may be tdl or db file
+            //         const tdlStr = event.target.result;
+            //         this.getIpcManager().sendPostRequestCommand("open-tdl-file", {
+            //             tdlStr: tdlStr,
+            //             tdlFileNames: [tdlFileName],
+            //             mode: g_widgets1.isEditing() ? "editing" : "operating",
+            //             editable: true,
+            //             // external macros: user-provided and parent display macros
+            //             macros: [],
+            //             replaceMacros: true,
+            //             currentTdlFolder: undefined,
+            //         },
+            //         ).then((response: any) => {
+            //             // decode string
+            //             return response.json()
+            //         }).then(data => {
+            //             const ipcServerPort = data["ipcServerPort"];
+            //             const displayWindowId = data["displayWindowId"];
+            //             window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`)
+            //         })
+            //             ;
+            //     };
+            //     reader.readAsText(tdlFileNameBlob);
+            //     event.target.remove();
+            // })
+            // // document.body.appendChild(inputElement);
+            // // inputElement.click();
         }
     }
 

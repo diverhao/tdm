@@ -410,7 +410,6 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
                         site: "", // ignored
                         mainProcessMode: "desktop", // this function is called only in desktop mode
                     },
-                    httpResponse: undefined
                 }
             )
             return;

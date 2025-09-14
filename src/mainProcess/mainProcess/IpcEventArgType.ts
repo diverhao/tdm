@@ -124,7 +124,12 @@ export type IpcEventArgType = {
         confirmToQuit?: boolean
     }
 
-    "websocket-ipc-connected": {
+    "websocket-ipc-connected-on-display-window": {
+        processId: string,
+        windowId: string,
+    },
+
+    "websocket-ipc-connected-on-main-window": {
         processId: string,
         windowId: string,
     },
@@ -132,7 +137,6 @@ export type IpcEventArgType = {
     "profile-selected": {
         selectedProfileName: string;
         args?: type_args;
-        httpResponse?: any;
         openDefaultDisplayWindows?: boolean;
     };
 
@@ -220,6 +224,7 @@ export type IpcEventArgType = {
             windowId?: string;
             postCommand?: string;
             sendContentsToWindow?: boolean; // whether to send the file contents back to the display window, for Channel Graph window
+            initiatedByWindowId?: string;
         },
         httpResponse?: any
     },
@@ -528,7 +533,8 @@ export type IpcEventArgType = {
         widgetKey: string,
         fileName: string, // if "", it is "save as"
         fileContents: string,
-    }
+    },
+
 
 };
 
@@ -762,6 +768,10 @@ export type IpcEventArgType2 = {
 
     "site-info": {
         site: string
+    },
+
+    "display-window-id-for-open-tdl-file": {
+        displayWindowId: string,
     }
 }
 

@@ -651,29 +651,31 @@ export class ActionButton extends BaseWidget {
             } else {
                 // web mode
                 const currentSite = `https://${window.location.host}/`;
+                console.log("action button, ---------------------<><><>")
+                displayWindowClient.openTdlFileInWebMode(tdlFileName);
 
-                g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendPostRequestCommand(
-                    "open-tdl-file", {
-                    tdlFileNames: [tdlFileName],
-                    mode: mode,
-                    editable: editable,
-                    macros: externalMacros,
-                    replaceMacros: replaceMacros, // not used
-                    currentTdlFolder: currentTdlFolder,
-                    openInSameWindow: openInSameWindow,
-                    windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                }).then((response: any) => {
-                    // decode string
-                    return response.json()
-                }).then(data => {
-                    const displayWindowId = data["displayWindowId"];
-                    const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
-                    // open in new tab
-                    // ! important: avoid shared sessionStorage
-                    window.open(href, "_blank", "noopener, noreferrer")
-                    // open in current tab
-                    // window.location.href = href;
-                })
+                // g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendPostRequestCommand(
+                //     "open-tdl-file", {
+                //     tdlFileNames: [tdlFileName],
+                //     mode: mode,
+                //     editable: editable,
+                //     macros: externalMacros,
+                //     replaceMacros: replaceMacros, // not used
+                //     currentTdlFolder: currentTdlFolder,
+                //     openInSameWindow: openInSameWindow,
+                //     windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                // }).then((response: any) => {
+                //     // decode string
+                //     return response.json()
+                // }).then(data => {
+                //     const displayWindowId = data["displayWindowId"];
+                //     const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
+                //     // open in new tab
+                //     // ! important: avoid shared sessionStorage
+                //     window.open(href, "_blank", "noopener, noreferrer")
+                //     // open in current tab
+                //     // window.location.href = href;
+                // })
 
             }
         }

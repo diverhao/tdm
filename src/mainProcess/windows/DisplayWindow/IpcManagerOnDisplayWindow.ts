@@ -79,7 +79,7 @@ export class IpcManagerOnDisplayWindow {
                 JSON.stringify({
                     processId: this.getDisplayWindowClient().getProcessId(),
                     windowId: this.getDisplayWindowClient().getWindowId(),
-                    eventName: "websocket-ipc-connected",
+                    eventName: "websocket-ipc-connected-on-display-window",
                     data: [{
                         processId: this.getDisplayWindowClient().getProcessId(),
                         windowId: this.getDisplayWindowClient().getWindowId(),
@@ -231,6 +231,7 @@ export class IpcManagerOnDisplayWindow {
 
         // site info
         this.ipcRenderer.on("site-info", this.handleSiteInfo)
+        this.ipcRenderer.on("display-window-id-for-open-tdl-file", this.handleDisplayWindowIdForOpenTdlFile)
     };
 
     handleObtainedIframeUuid = (
@@ -1481,5 +1482,14 @@ export class IpcManagerOnDisplayWindow {
         if (widget instanceof LogViewer) {
             widget.addNewLogData(data);
         }
+    }
+
+    handleDisplayWindowIdForOpenTdlFile = (event: any, data: IpcEventArgType2["display-window-id-for-open-tdl-file"]) => {
+        console.log("---------------------------------->>>>>")
+        const { displayWindowId } = data;
+        console.log("try to open display window ->>>>>>>>>>>>>>>>>>>>>>>>", displayWindowId);
+        const currentSite = `https://${window.location.host}/`;
+        const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
+        window.open(href, "_blank", "noopener, noreferrer")
     }
 }

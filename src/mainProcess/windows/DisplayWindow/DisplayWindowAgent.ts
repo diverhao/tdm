@@ -160,10 +160,52 @@ export class DisplayWindowAgent {
     promises: Promises = new Promises();
 
 
+    //     tdl: type_tdl;
+    // mode: "editing" | "operating";
+    // editable: boolean;
+    // tdlFileName: string;
+    // macros: [string, string][];
+    // replaceMacros: boolean;
+    // hide: boolean;
+    // utilityType?: string;
+    // utilityOptions?: Record<string, any>;
+    // postCommand?: string;
+    // isPreviewDisplayWindow?: boolean;
+    // initiatedByWindowId?: string;
+
+    _initialMode: "operating" | "editing";
+    _replaceMacros: boolean;
+    _utilityType: string | undefined;
+    _utilityOptions: Record<string, any> | undefined;
+
+    getInitialMode = () => {
+        return this._initialMode;
+    }
+
+    getReplaceMacros = () => {
+        return this._replaceMacros;
+    }
+
+    getUtilityType = () => {
+        return this._utilityType;
+    }
+
+    getUtilityOptions = () => {
+        return this._utilityOptions;
+    }
+
+    
+
     constructor(windowAgentsManager: WindowAgentsManager, options: type_options_createDisplayWindow, id: string) {
         this._windowAgentsManager = windowAgentsManager;
         this._tdl = JSON.parse(JSON.stringify(options))["tdl"];
         this._isUtilityWindow = this._tdl["Canvas"]["isUtilityWindow"] === undefined ? false : this._tdl["Canvas"]["isUtilityWindow"];
+
+        this._initialMode = options["mode"];
+        this._replaceMacros = options["replaceMacros"];
+        this._utilityType = options["utilityType"];
+        this._utilityOptions = options["utilityOptions"];
+
 
         this._tdlFileName = JSON.parse(JSON.stringify(options))["tdlFileName"];
         this._macros = JSON.parse(JSON.stringify(options["macros"]));
@@ -1634,16 +1676,15 @@ export class DisplayWindowAgent {
      *
      * Create
      */
-    createBrowserWindow = async (httpResponse: any = undefined, options: any = undefined) => {
+    createBrowserWindow = async (options: any = undefined) => {
         const mainProcesMode = this.getWindowAgentsManager().getMainProcess().getMainProcessMode();
         if (mainProcesMode === "ssh-server") {
             // tell client to create a GUI window
-            this.createBrowserWindowInSshSeverMode();
+            await this.createBrowserWindowInSshSeverMode();
         } else if (mainProcesMode === "ssh-client" || mainProcesMode === "desktop") {
-            this.createBrowserWindowInDesktopMode(options);
+            await this.createBrowserWindowInDesktopMode(options);
         } else if (mainProcesMode === "web") {
-            // web mode
-            this.createBrowserWindowInWebMode(httpResponse, options);
+            await this.createBrowserWindowInWebMode(options);
         }
     };
 
@@ -1803,62 +1844,20 @@ export class DisplayWindowAgent {
      * 
      * @param httpResponse http request object, the request method could be POST or GET
      */
-    private createBrowserWindowInWebMode = (httpResponse: any = undefined, options: any = undefined) => {
+    private createBrowserWindowInWebMode = (options: any = undefined) => {
 
-        const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
-
-        const displayWindowId = this.getId();
-
-        const requestMethod = httpResponse.req.method;
-        if (requestMethod === "POST") {
-            // when we want to open a new window or refresh a window in web mode, the client sends a POST request
-            // to server, this request eventually arrives at here
-            // the server allocates the resources (basically create this object), 
-            // then reply with the ipc server port and this display window id. 
-            // after received these information, the client will GET the DisplayWindow.html with 
-            // the port and window id.
-            const command = options["postCommand"];
-
-            Log.info("-1", "IPC websocket: reply for", command);
-            if (command === "open-tdl-file") {
-                const msg = {
-                    ipcServerPort: ipcServerPort,
-                    displayWindowId: displayWindowId,
-                };
-                httpResponse.json(msg);
+        // httpResponse is undefined 
+        console.log("options: ", options["initiatedByWindowId"]);
+        if (options["initiatedByWindowId"] !== undefined) {
+            // if (httpResponse === undefined) {
+            const initiatedByWindowAgent = this.getWindowAgentsManager().getAgent(options["initiatedByWindowId"])
+            if (initiatedByWindowAgent instanceof DisplayWindowAgent) {
+                console.log("AAA", options["initiatedByWindowId"])
+                initiatedByWindowAgent.sendFromMainProcess("display-window-id-for-open-tdl-file", {
+                    displayWindowId: this.getId(),
+                });
             }
-        } else if (requestMethod === "GET") {
-            // this is from "/" GET request, which then calls handleProfileSelected() in WebServer.ts
-            // this is a special way to open a display window, it happens only when we visit the website 
-            // for the first time with "/" path. After that the newly opened window should have a
-            // path like "/DisplayWindow.html?ipcServerPort=7527&displayWindowId=0-5"
-            const reqPath = httpResponse.req.path;
-            if (reqPath === "/" || reqPath === "/main") {
-                httpResponse.send(
-                    `
-                    <!DOCTYPE html>
-                    <html>
-                    	<head>
-                    	</head>
-
-                    	<body style="-webkit-print-color-adjust: exact">
-                    		<div id="root"></div>
-                    		<script>
-                    			var exports = {};
-                    		</script>
-                    		<script type="module" src="/DisplayWindowClient.js"></script>
-                            <script type="module">
-                    			// const urlParams = new URLSearchParams(window.location.search);
-                    			// const ipcServerPort = urlParams.get("ipcServerPort");
-                    			// const displayWindowId = urlParams.get("displayWindowId");
-                                console.log(window.DisplayWindowClientClass, ${ipcServerPort})
-                                new window.DisplayWindowClientClass("${displayWindowId}",  ${ipcServerPort})
-                    		</script>
-                    	</body>
-                    </html>
-                    `
-                )
-            }
+            return;
         }
     };
 

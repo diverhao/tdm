@@ -19,16 +19,23 @@ export class MainWindowAgent {
     private _browserWindow: BrowserWindow | undefined;
     // private _mainProcessId: string;
     readyToClose: boolean = false;
+
     // a Promise that is resolved when the main window successfully loads the URL
+    // it blocks the IpcManagerOnMainProcess.handleProfileSelected()
+    // after it is resolved, the user can select the profile
     loadURLPromise: undefined | Promise<void>;
 
-    creationResolve: any;
-    creationReject: any;
-    creationPromise: Promise<string> = new Promise((resolve, reject) => {
-        this.creationResolve = resolve;
-        this.creationReject = reject;
-    });
+    // creationResolve: any;
+    // creationReject: any;
+    // creationPromise: Promise<string> = new Promise((resolve, reject) => {
+    //     this.creationResolve = resolve;
+    //     this.creationReject = reject;
+    // });
 
+    // the promise blocks the IpcManagerOnMainProcess.handleProfileSelected()
+    // resolved after the websocket IPC is established between Main Window and main process
+    // resolved at IpcManagerOnMainProcess.handleWebsocketIpcConnectedOnMainWindow()
+    // after this one is resolved, the user can select the profile
     creationResolve2: any;
     creationReject2: any;
     creationPromise2: Promise<string> = new Promise((resolve, reject) => {

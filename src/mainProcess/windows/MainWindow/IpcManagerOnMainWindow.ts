@@ -47,7 +47,7 @@ export class IpcManagerOnMainWindow {
             console.log(JSON.stringify({
                 processId: this.getMainWindowClient().getProcessId(),
                 windowId: this.getMainWindowClient().getWindowId(),
-                eventName: "websocket-ipc-connected",
+                eventName: "websocket-ipc-connected-on-main-window",
                 data: [{
                     processId: this.getMainWindowClient().getProcessId(),
                     windowId: this.getMainWindowClient().getWindowId(),
@@ -60,7 +60,7 @@ export class IpcManagerOnMainWindow {
                     // additional info
                     processId: this.getMainWindowClient().getProcessId(),
                     windowId: this.getMainWindowClient().getWindowId(),
-                    eventName: "websocket-ipc-connected",
+                    eventName: "websocket-ipc-connected-on-main-window",
                     // the real data
                     data: [{
                         processId: this.getMainWindowClient().getProcessId(),

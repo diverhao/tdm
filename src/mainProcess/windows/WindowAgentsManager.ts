@@ -23,6 +23,7 @@ export type type_options_createDisplayWindow = {
     utilityOptions?: Record<string, any>;
     postCommand?: string;
     isPreviewDisplayWindow?: boolean;
+    initiatedByWindowId?: string;
 };
 
 export class WindowAgentsManager {
@@ -142,8 +143,8 @@ export class WindowAgentsManager {
      * (5) send the tdl, macros, mode, tdl file name, and other info to display window, so that it can displays the TDL <br>
      *
      */
-    createDisplayWindow = async (options: type_options_createDisplayWindow, httpResponse: any = undefined) => {
-        let { tdl, mode, editable, tdlFileName, macros, replaceMacros, hide } = options;
+    createDisplayWindow = async (options: type_options_createDisplayWindow) => {
+        let { tdl, mode, editable, tdlFileName, macros, replaceMacros, hide, initiatedByWindowId } = options;
         if (this.getMainProcess().getMainProcessMode() === "ssh-client") {
 
             // todo: test it
@@ -152,9 +153,9 @@ export class WindowAgentsManager {
             if (exisitedDisplayWindow !== undefined) {
                 Log.debug("0", `File ${tdlFileName} is already opened.`);
                 // bring up this window if in desktop mode
-                if (httpResponse === undefined) {
+                // if (this.get) {
                     exisitedDisplayWindow.show();
-                }
+                // }
                 return;
             }
 
@@ -162,7 +163,7 @@ export class WindowAgentsManager {
 
             const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
             // only the browser window is managed by ssh-client, all others are managed by ssh-server
-            displayWindowAgent.createBrowserWindow(httpResponse);
+            displayWindowAgent.createBrowserWindow();
             return undefined;
         } else {
             // web, desktop, or ssh-server mode
@@ -173,21 +174,21 @@ export class WindowAgentsManager {
                 if (exisitedDisplayWindow !== undefined) {
                     Log.debug("0", `File ${tdlFileName} is already opened.`);
                     // bring up this window if in desktop mode
-                    if (httpResponse === undefined) {
+                    // if (httpResponse === undefined) {
                         exisitedDisplayWindow.show();
-                    }
+                    // }
                     return;
                 }
             }
             // writeFileSync("/Users/haohao/tdm.log", `--------------------- createDisplayWindow() A1 ${tdlFileName}\n`, {flag: "a"});
             Log.debug(
                 "0",
-                `Try to create a new display window for ${tdlFileName === "" ? "<blank string>" : tdlFileName} in ${httpResponse === undefined ? "desktop" : "web"
-                } mode`
+                `Try to create a new display window for ${tdlFileName === "" ? "<blank string>" : tdlFileName} in  mode`
             );
             // (0)
             // preloaded window only for desktop mode, always create a new display if modal === true
-            if ((httpResponse === undefined && options["isPreviewDisplayWindow"] !== true) && !(options["utilityOptions"] !== undefined && options["utilityOptions"]["modal"] === true)) {
+            if ((this.getMainProcess().getMainProcessMode() !== "web" && options["isPreviewDisplayWindow"] !== true) && !(options["utilityOptions"] !== undefined && options["utilityOptions"]["modal"] === true)) {
+                console.log("????")
                 // ssh-server does not have preloaded display window
                 if (this.getMainProcess().getMainProcessMode() !== "ssh-server") {
                     let displayWindowAgent = this.replacePreloadedDisplayWindow(options);
@@ -212,8 +213,9 @@ export class WindowAgentsManager {
                 const displayWindowId = this.obtainDisplayWindowId();
                 const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
                 // (2)
-
-                await displayWindowAgent.createBrowserWindow(httpResponse, options);
+                console.log("options part 2", options["initiatedByWindowId"])
+                await displayWindowAgent.createBrowserWindow(options);
+                return displayWindowAgent;
                 // (3)
                 // GUI is created
                 // the uuid and process ID on client side are obtained from the html file name, e.g. "DisplayWindow-1-22.html"
@@ -222,42 +224,42 @@ export class WindowAgentsManager {
                 // block lifted when the websocket connection is established
                 // for ssh-server, resolved when websocket-ipc-connected is received in IpcManagerOnMainProcess
                 // it means the ssh-client's display window has connected to its own websocket IPC
-                await displayWindowAgent.creationPromise;
+                // await displayWindowAgent.creationPromise;
 
-                // (4)
-                const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-                if (selectedProfile === undefined) {
-                    Log.error("0", "Profile not selected!");
-                    return undefined;
-                }
-                displayWindowAgent.sendFromMainProcess("selected-profile-contents",
-                    {
-                        contents: selectedProfile.getContents()
-                    }
-                );
-                const site = this.getMainProcess().getSite();
-                displayWindowAgent.sendFromMainProcess("site-info", { site: site });
+                // // (4)
+                // const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+                // if (selectedProfile === undefined) {
+                //     Log.error("0", "Profile not selected!");
+                //     return undefined;
+                // }
+                // displayWindowAgent.sendFromMainProcess("selected-profile-contents",
+                //     {
+                //         contents: selectedProfile.getContents()
+                //     }
+                // );
+                // const site = this.getMainProcess().getSite();
+                // displayWindowAgent.sendFromMainProcess("site-info", { site: site });
 
-                // (5)
+                // // (5)
 
-                displayWindowAgent.sendFromMainProcess("new-tdl", {
-                    newTdl: tdl,
-                    tdlFileName: tdlFileName,
-                    initialModeStr: mode,
-                    editable: editable,
-                    externalMacros: macros,
-                    useExternalMacros: replaceMacros,
-                    utilityType: options["utilityType"] as any,
-                    utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
-                });
+                // displayWindowAgent.sendFromMainProcess("new-tdl", {
+                //     newTdl: tdl,
+                //     tdlFileName: tdlFileName,
+                //     initialModeStr: mode,
+                //     editable: editable,
+                //     externalMacros: macros,
+                //     useExternalMacros: replaceMacros,
+                //     utilityType: options["utilityType"] as any,
+                //     utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
+                // });
 
-                // displayWindowAgent.sendFromMainProcess("preset-colors", selectedProfile.getCategory("Preset Colors"));
+                // // displayWindowAgent.sendFromMainProcess("preset-colors", selectedProfile.getCategory("Preset Colors"));
 
-                Log.debug(
-                    "0",
-                    `Created display window ${displayWindowAgent.getId()} for ${tdlFileName === "" ? "<blank string>" : tdlFileName}`
-                );
-                return displayWindowAgent;
+                // Log.debug(
+                //     "0",
+                //     `Created display window ${displayWindowAgent.getId()} for ${tdlFileName === "" ? "<blank string>" : tdlFileName}`
+                // );
+                // return displayWindowAgent;
             } catch (e) {
                 Log.error("0", e);
                 return undefined;
@@ -534,7 +536,7 @@ export class WindowAgentsManager {
     /**
      * Create a blank display window.
      */
-    createBlankDisplayWindow = async (httpResponse: any = undefined, windowAgent?: DisplayWindowAgent) => {
+    createBlankDisplayWindow = async (windowAgent?: DisplayWindowAgent) => {
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
         if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-server") {
             const tdl: type_tdl = FileReader.getBlankWhiteTdl();
@@ -548,7 +550,7 @@ export class WindowAgentsManager {
                 replaceMacros: false,
                 hide: false,
             };
-            await this.createDisplayWindow(options, httpResponse);
+            await this.createDisplayWindow(options);
         } else if (mainProcessMode === "ssh-client") {
             if (windowAgent !== undefined) {
                 const windowId = windowAgent.getId();
@@ -610,7 +612,7 @@ export class WindowAgentsManager {
                 utilityOptions: utilityOptions,
             };
 
-            const displayWindowAgent = await this.createDisplayWindow(windowOptions, httpResponse);
+            const displayWindowAgent = await this.createDisplayWindow(windowOptions);
 
             if (displayWindowAgent === undefined) {
                 Log.error("0", `Cannot create display window for utility ${utilityType}`);
@@ -699,17 +701,18 @@ export class WindowAgentsManager {
      * Create main window, including the frontend and backend. Then send the
      * profiles to the GUI window so that it can render according to the profiles. <br>
      */
-    createMainWindow = async (httpResponse: any = undefined) => {
+    createMainWindow = async () => {
 
         if (this.getMainProcess().getMainProcessMode() === "ssh-client") {
             const mainWindowAgent = this.createMainWindowAgent();
             // create the real browser window
-            mainWindowAgent.createBrowserWindow(httpResponse);
+            mainWindowAgent.createBrowserWindow();
+            return mainWindowAgent;
         } else {
 
             const mainWindowAgent = this.createMainWindowAgent();
 
-            await mainWindowAgent.createBrowserWindow(httpResponse);
+            await mainWindowAgent.createBrowserWindow();
 
 
             // the uuid of the main window is the `${processId}-mainWindow",
@@ -719,69 +722,69 @@ export class WindowAgentsManager {
             //! in the TDM web version, the ipc server port is a fixed number
             // const ipcServerPort = this.getMainProcess().getMainProcesses().getIpcManager().getPort();
             // mainWindowAgent.getWebContents()?.send("websocket-ipc-server-port", ipcServerPort);
-
+            return mainWindowAgent;
             // block lifted when we receive "websocket-ipc-connected" message
-            await mainWindowAgent.creationPromise;
-            // writeFileSync("/Users/haohao/tdm.log", `createMainWindow ===================== lifted\n`, {flag: "a"});
+            // await mainWindowAgent.creationPromise;
+            // // writeFileSync("/Users/haohao/tdm.log", `createMainWindow ===================== lifted\n`, {flag: "a"});
 
-            // ws opener server port
-            const wsOpenerServer = this.getMainProcess().getWsOpenerServer();
-            const wsOpenerPort = wsOpenerServer.getPort();
-            mainWindowAgent.sendFromMainProcess("update-ws-opener-port", { newPort: wsOpenerPort });
+            // // ws opener server port
+            // const wsOpenerServer = this.getMainProcess().getWsOpenerServer();
+            // const wsOpenerPort = wsOpenerServer.getPort();
+            // mainWindowAgent.sendFromMainProcess("update-ws-opener-port", { newPort: wsOpenerPort });
 
-            // read default and OS-defined EPICS environment variables
-            // in main window editing page, we need env default and env os
-            const env = Environment.getTempInstance();
-            let envDefault = env.getEnvDefault();
-            let envOs = env.getEnvOs();
+            // // read default and OS-defined EPICS environment variables
+            // // in main window editing page, we need env default and env os
+            // const env = Environment.getTempInstance();
+            // let envDefault = env.getEnvDefault();
+            // let envOs = env.getEnvOs();
 
-            if (typeof envDefault !== "object") {
-                envDefault = {};
-            }
-            if (typeof envOs !== "object") {
-                envOs = {};
-            }
+            // if (typeof envDefault !== "object") {
+            //     envDefault = {};
+            // }
+            // if (typeof envOs !== "object") {
+            //     envOs = {};
+            // }
 
-            const site = this.getMainProcess().getSite();
-            mainWindowAgent.sendFromMainProcess(
-                "after-main-window-gui-created",
-                {
-                    profiles: this.getMainProcess().getProfiles().serialize(),
-                    profilesFileName: this.getMainProcess().getProfiles().getFilePath(),
-                    envDefault: envDefault,
-                    envOs: envOs,
-                    logFileName: this.getMainProcess().getLogFileName(),
-                    site: site,
-                }
-            );
+            // const site = this.getMainProcess().getSite();
+            // mainWindowAgent.sendFromMainProcess(
+            //     "after-main-window-gui-created",
+            //     {
+            //         profiles: this.getMainProcess().getProfiles().serialize(),
+            //         profilesFileName: this.getMainProcess().getProfiles().getFilePath(),
+            //         envDefault: envDefault,
+            //         envOs: envOs,
+            //         logFileName: this.getMainProcess().getLogFileName(),
+            //         site: site,
+            //     }
+            // );
 
-            // "Emitted when the application is activated"
-            app.on("activate", async () => {
-                // On macOS it's common to re-create a window in the app when the
-                // dock icon is clicked and there are no other windows open.
-                if (BrowserWindow.getAllWindows().length === 0) {
-                    // must be async
-                    await mainWindowAgent.createBrowserWindow();
-                    // mainWindowAgent.sendFromMainProcess("uuid", processId);
-                    mainWindowAgent.sendFromMainProcess(
-                        "after-main-window-gui-created",
-                        {
-                            profiles: this.getMainProcess().getProfiles().serialize(),
-                            profilesFileName: this.getMainProcess().getProfiles().getFilePath(),
-                            envDefault: envDefault,
-                            envOs: envOs,
-                            logFileName: this.getMainProcess().getLogFileName(),
-                            site,
-                        }
-                    );
+            // // "Emitted when the application is activated"
+            // app.on("activate", async () => {
+            //     // On macOS it's common to re-create a window in the app when the
+            //     // dock icon is clicked and there are no other windows open.
+            //     if (BrowserWindow.getAllWindows().length === 0) {
+            //         // must be async
+            //         await mainWindowAgent.createBrowserWindow();
+            //         // mainWindowAgent.sendFromMainProcess("uuid", processId);
+            //         mainWindowAgent.sendFromMainProcess(
+            //             "after-main-window-gui-created",
+            //             {
+            //                 profiles: this.getMainProcess().getProfiles().serialize(),
+            //                 profilesFileName: this.getMainProcess().getProfiles().getFilePath(),
+            //                 envDefault: envDefault,
+            //                 envOs: envOs,
+            //                 logFileName: this.getMainProcess().getLogFileName(),
+            //                 site,
+            //             }
+            //         );
 
-                    // if (cmdLineSelectedProfile !== "") {
-                    // 	mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", cmdLineSelectedProfile);
-                    // }
-                }
-            });
-            // at this moment the main window is ready for selecting profile
-            mainWindowAgent.creationResolve2();
+            //         // if (cmdLineSelectedProfile !== "") {
+            //         // 	mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", cmdLineSelectedProfile);
+            //         // }
+            //     }
+            // });
+            // // at this moment the main window is ready for selecting profile
+            // mainWindowAgent.creationResolve2();
         }
     };
 

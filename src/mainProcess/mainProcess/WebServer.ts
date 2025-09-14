@@ -14,6 +14,7 @@ import path from "path";
 import { Profile } from "../profile/Profile";
 import { Profiles } from "../profile/Profiles";
 import { MainProcess } from "../mainProcess/MainProcess";
+import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 
 export class WebServer {
     _server: Express | undefined;
@@ -257,7 +258,7 @@ export class WebServer {
         });
 
         // start http server
-        this._server.get("/main", (request: IncomingMessage, response: any, next: any) => {
+        this._server.get("/main", async (request: IncomingMessage, response: any, next: any) => {
             Log.info("0", "New https connection coming in from", request.socket.address());
             // there shoul have been a main process with id = "0" running
             const mainProcess = this.getMainProcess();
@@ -265,15 +266,20 @@ export class WebServer {
                 Log.error("Main process not running");
                 return;
             }
+            // the selected profile name is set when MainProcess is created
             const profileName = mainProcess.getProfiles().getSelectedProfileName();
             // select the first profile
             // invoke DisplayWidnowAgent.createBrowserWindow() to send a html page to client
             // mainProcess.getIpcManager().handleProfileSelected(undefined, profileName, undefined, response);
-            mainProcess.getIpcManager().handleProfileSelected(undefined, {
+            const displayWindowAgent = await mainProcess.getIpcManager().handleProfileSelected(undefined, {
                 selectedProfileName: profileName,
                 args: undefined,
-                httpResponse: response,
             });
+            if (displayWindowAgent instanceof DisplayWindowAgent) {
+                response.redirect(`/DisplayWindow.html?displayWindowId=${displayWindowAgent.getId()}`)
+            }
+
+
         });
 
 
@@ -324,22 +330,23 @@ export class WebServer {
                 Log.debug("-1", "Received POST request from", request.socket.address(), "command =", command);
                 const data = request.body["data"];
                 if (command === "profile-selected") {
-                    const profileName = data;
-                    this.getMainProcess().getIpcManager().handleProfileSelected(undefined, {
-                        selectedProfileName: profileName,
-                        args: undefined,
-                        httpResponse: response,
-                    });
+                    // const profileName = data;
+                    // this.getMainProcess().getIpcManager().handleProfileSelected(undefined, {
+                    //     selectedProfileName: profileName,
+                    //     args: undefined,
+                    //     httpResponse: response,
+                    // });
                 } else if (command === "open-tdl-file") {
-                    const options = data;
-                    options["postCommand"] = command;
-                    Log.info("-1", data);
-                    this.getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
-                        {
-                            options: options,
-                            httpResponse: response,
-                        }
-                    );
+                    console.log("command open tdl file ============================= 1")
+                    // const options = data;
+                    // options["postCommand"] = command;
+                    // Log.info("-1", data);
+                    // this.getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
+                    //     {
+                    //         options: options,
+                    //         httpResponse: response,
+                    //     }
+                    // );
                 } else if (command === "duplicate-display") {
                     const options = data;
                     Log.debug("-1", data);
@@ -375,7 +382,7 @@ export class WebServer {
                         response.send(JSON.stringify({ image: "" }));
                     }
                 } else if (command === "get-ipc-server-port") {
-                    response.json({ 
+                    response.json({
                         ipcServerPort: this.getMainProcess().getIpcManager().getPort(),
                     });
 
