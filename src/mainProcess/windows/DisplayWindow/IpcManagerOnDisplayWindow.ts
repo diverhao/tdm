@@ -507,8 +507,8 @@ export class IpcManagerOnDisplayWindow {
             g_widgets1.matchWidgetsSize(subcommand as "width" | "height", true);
         } else if (command === "show-tdl-file-contents") {
             this.getDisplayWindowClient().showTdlFileContents();
-        } else if (command === "create-new-display-in-web-mode") {
-            this.handleCreateNewDisplayInWebMode();
+        // } else if (command === "create-new-display-in-web-mode") {
+        //     this.handleCreateNewDisplayInWebMode();
         } else if (command === "open-display-in-ssh-mode") {
             this.handleOpenDisplayInSshMode();
         }
@@ -569,18 +569,9 @@ export class IpcManagerOnDisplayWindow {
 
     // only in display mode
     handleCreateNewDisplayInWebMode = () => {
-        const currentSite = `https://${window.location.host}/`;
-
-        this.sendPostRequestCommand("create-new-display-in-web-mode", {})
-            .then((response: any) => {
-                // decode string
-                return response.json();
-            })
-            .then((data) => {
-                const ipcServerPort = data["ipcServerPort"];
-                const displayWindowId = data["displayWindowId"];
-                window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
-            });
+        this.sendFromRendererProcess("create-blank-display-window", {
+            displayWindowId: this.getDisplayWindowClient().getWindowId(),
+        })
     };
 
 

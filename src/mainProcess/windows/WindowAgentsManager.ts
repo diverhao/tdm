@@ -7,9 +7,8 @@ import { UtilityWindow } from "./UtilityWindow/UtilityWindow";
 import { type_tdl } from "../file/FileReader";
 import { FileReader } from "../file/FileReader";
 import { Log } from "../log/Log";
-import { write, writeFileSync } from "fs";
-import { Environment } from "epics-tca";
 import { spawn } from "child_process";
+import path from "path";
 
 export type type_options_createDisplayWindow = {
     tdl: type_tdl;
@@ -21,9 +20,9 @@ export type type_options_createDisplayWindow = {
     hide: boolean;
     utilityType?: string;
     utilityOptions?: Record<string, any>;
-    postCommand?: string;
+    // postCommand?: string;
     isPreviewDisplayWindow?: boolean;
-    initiatedByWindowId?: string;
+    windowId?: string;
 };
 
 export class WindowAgentsManager {
@@ -143,9 +142,11 @@ export class WindowAgentsManager {
      * (5) send the tdl, macros, mode, tdl file name, and other info to display window, so that it can displays the TDL <br>
      *
      */
-    createDisplayWindow = async (options: type_options_createDisplayWindow) => {
-        let { tdl, mode, editable, tdlFileName, macros, replaceMacros, hide, initiatedByWindowId } = options;
-        if (this.getMainProcess().getMainProcessMode() === "ssh-client") {
+    createDisplayWindow = async (options: type_options_createDisplayWindow): Promise<undefined | DisplayWindowAgent> => {
+        let { tdl, mode, editable, tdlFileName, macros, replaceMacros, hide, windowId } = options;
+        console.log("create display window ==========================", options)
+        const mainProcessMode = this.getMainProcess().getMainProcessMode();
+        if (mainProcessMode === "ssh-client") {
 
             // todo: test it
             // check if the window already exist
@@ -154,7 +155,7 @@ export class WindowAgentsManager {
                 Log.debug("0", `File ${tdlFileName} is already opened.`);
                 // bring up this window if in desktop mode
                 // if (this.get) {
-                    exisitedDisplayWindow.show();
+                exisitedDisplayWindow.show();
                 // }
                 return;
             }
@@ -169,28 +170,24 @@ export class WindowAgentsManager {
             // web, desktop, or ssh-server mode
 
             // check if the window already exist for desktop mode
-            if (this.getMainProcess().getMainProcessMode() === "desktop") {
+            if (mainProcessMode === "desktop") {
                 const exisitedDisplayWindow = this.checkExistedDisplayWindow(tdlFileName, macros);
                 if (exisitedDisplayWindow !== undefined) {
                     Log.debug("0", `File ${tdlFileName} is already opened.`);
                     // bring up this window if in desktop mode
-                    // if (httpResponse === undefined) {
-                        exisitedDisplayWindow.show();
-                    // }
-                    return;
+                    exisitedDisplayWindow.show();
+                    return undefined;
                 }
             }
-            // writeFileSync("/Users/haohao/tdm.log", `--------------------- createDisplayWindow() A1 ${tdlFileName}\n`, {flag: "a"});
             Log.debug(
                 "0",
                 `Try to create a new display window for ${tdlFileName === "" ? "<blank string>" : tdlFileName} in  mode`
             );
             // (0)
             // preloaded window only for desktop mode, always create a new display if modal === true
-            if ((this.getMainProcess().getMainProcessMode() !== "web" && options["isPreviewDisplayWindow"] !== true) && !(options["utilityOptions"] !== undefined && options["utilityOptions"]["modal"] === true)) {
-                console.log("????")
+            if ((mainProcessMode !== "web" && options["isPreviewDisplayWindow"] !== true) && !(options["utilityOptions"] !== undefined && options["utilityOptions"]["modal"] === true)) {
                 // ssh-server does not have preloaded display window
-                if (this.getMainProcess().getMainProcessMode() !== "ssh-server") {
+                if (mainProcessMode !== "ssh-server") {
                     let displayWindowAgent = this.replacePreloadedDisplayWindow(options);
                     if (displayWindowAgent !== undefined) {
                         Log.debug("0", `Preloaded display window is consumed, created a new one.`);
@@ -206,60 +203,14 @@ export class WindowAgentsManager {
                     }
                 }
             }
-            // writeFileSync("/Users/haohao/tdm.log", `--------------------- createDisplayWindow() B ${tdlFileName}\n`, {flag: "a"});
 
             try {
                 // (1)
                 const displayWindowId = this.obtainDisplayWindowId();
                 const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
                 // (2)
-                console.log("options part 2", options["initiatedByWindowId"])
                 await displayWindowAgent.createBrowserWindow(options);
                 return displayWindowAgent;
-                // (3)
-                // GUI is created
-                // the uuid and process ID on client side are obtained from the html file name, e.g. "DisplayWindow-1-22.html"
-                // writeFileSync("/Users/haohao/tdm.log", `--------------------- createDisplayWindow() C ${tdlFileName} ${displayWindowAgent.getId()}\n`, {flag: "a"});
-
-                // block lifted when the websocket connection is established
-                // for ssh-server, resolved when websocket-ipc-connected is received in IpcManagerOnMainProcess
-                // it means the ssh-client's display window has connected to its own websocket IPC
-                // await displayWindowAgent.creationPromise;
-
-                // // (4)
-                // const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-                // if (selectedProfile === undefined) {
-                //     Log.error("0", "Profile not selected!");
-                //     return undefined;
-                // }
-                // displayWindowAgent.sendFromMainProcess("selected-profile-contents",
-                //     {
-                //         contents: selectedProfile.getContents()
-                //     }
-                // );
-                // const site = this.getMainProcess().getSite();
-                // displayWindowAgent.sendFromMainProcess("site-info", { site: site });
-
-                // // (5)
-
-                // displayWindowAgent.sendFromMainProcess("new-tdl", {
-                //     newTdl: tdl,
-                //     tdlFileName: tdlFileName,
-                //     initialModeStr: mode,
-                //     editable: editable,
-                //     externalMacros: macros,
-                //     useExternalMacros: replaceMacros,
-                //     utilityType: options["utilityType"] as any,
-                //     utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
-                // });
-
-                // // displayWindowAgent.sendFromMainProcess("preset-colors", selectedProfile.getCategory("Preset Colors"));
-
-                // Log.debug(
-                //     "0",
-                //     `Created display window ${displayWindowAgent.getId()} for ${tdlFileName === "" ? "<blank string>" : tdlFileName}`
-                // );
-                // return displayWindowAgent;
             } catch (e) {
                 Log.error("0", e);
                 return undefined;
@@ -384,6 +335,82 @@ export class WindowAgentsManager {
             }
         }
     };
+
+    /**
+     * Create one or more display windows based on file names.
+     * 
+     * Note: in web mode, this method only works if the 
+     * 
+     * @param {string[]} tdlFileNames The tdl file names. They can be .tdl, .edl, .bob, .db, or .template files. Must be non-empty string array.
+     * 
+     * @param {"operating" | "editing"} mode The initial mode for the display windows.
+     * 
+     * @param {boolean} editable If the display windows are editable.
+     * 
+     * @param {[string, string][]} macros The macros provided for the display windows from outside.
+     * 
+     * @param {string | undefined} currentTdlFolder The current tdl folder. It is used to resolve relative path of the tdl files.
+     * 
+     */
+    createDisplayWindows = async (tdlFileNames: string[], mode: "operating" | "editing", editable: boolean, macros: [string, string][], currentTdlFolder: string | undefined, windowId: string | undefined) => {
+        if (tdlFileNames.length === 0) {
+            return;
+        }
+
+        const profiles = this.getMainProcess().getProfiles();
+        const selectedProfile = profiles.getSelectedProfile();
+        const ipcManager = this.getMainProcess().getIpcManager();
+        const mainProcessMode = this.getMainProcess().getMainProcessMode();
+
+        for (let tdlFileName of tdlFileNames) {
+
+            if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp") {
+                // regular display window, .tdl, .edl, or .bob
+
+                const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder)
+                if (tdlResult !== undefined) {
+                    const tdl = tdlResult["tdl"];
+                    const fullTdlFileName = tdlResult["fullTdlFileName"];
+                    const options: type_options_createDisplayWindow = {
+                        tdl: tdl,
+                        mode: mode,
+                        editable: editable,
+                        tdlFileName: fullTdlFileName,
+                        macros: macros,
+                        replaceMacros: false,
+                        hide: false,
+                        windowId: windowId,
+                    };
+                    await this.createDisplayWindow(options);
+                } else {
+                    Log.error("0", `Cannot read file ${tdlFileName}`);
+                }
+
+            } else if (path.extname(tdlFileName) === ".db" || path.extname(tdlFileName) === ".template") {
+                // utility window
+                if (windowId === undefined) {
+                    // utility window must have a initiate window
+                    return;
+                }
+                const db = FileReader.readDb(tdlFileName, selectedProfile, currentTdlFolder);
+                const channelNames: string[] = [];
+                if (db !== undefined) {
+                    for (let ii = 0; ii < db.length; ii++) {
+                        const channelName = db[ii]["NAME"];
+                        if (channelName !== undefined) {
+                            channelNames.push(channelName);
+                        }
+                    }
+                }
+                ipcManager.createUtilityDisplayWindow(undefined, {
+                    utilityType: "PvTable",
+                    utilityOptions: { channelNames: channelNames },
+                    windowId: windowId,
+                });
+            }
+        }
+
+    }
 
     /**
      * Replace the preloaded display window. If the preloaded display window doest not exist, return undefined. <br>
@@ -535,25 +562,34 @@ export class WindowAgentsManager {
 
     /**
      * Create a blank display window.
+     * 
+     * The window will be in editing mode and editable.
+     * 
+     * It will inherit the profile's macros. The caller won't be able to provide any macros.
      */
-    createBlankDisplayWindow = async (windowAgent?: DisplayWindowAgent) => {
+    createBlankDisplayWindow = async (windowId: string) => {
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
         if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-server") {
             const tdl: type_tdl = FileReader.getBlankWhiteTdl();
+            const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+            const macros = selectedProfile?.getMacros();
             const options: type_options_createDisplayWindow = {
                 tdl: tdl,
                 mode: "editing" as "operating" | "editing",
                 editable: true,
                 // empty tdl file name, means it is not saved
                 tdlFileName: "",
-                macros: [],
-                replaceMacros: false,
+                macros: macros === undefined ? [] : macros,
+                replaceMacros: true,
                 hide: false,
+                windowId: windowId,
             };
             await this.createDisplayWindow(options);
         } else if (mainProcessMode === "ssh-client") {
+            // todo: verify if it is correct
+            const windowAgent = this.getAgent(windowId);
             if (windowAgent !== undefined) {
-                const windowId = windowAgent.getId();
+                // const windowId = windowAgent.getId();
                 const sshClient = this.getMainProcess().getSshClient();
                 if (sshClient !== undefined) {
                     sshClient.routeToRemoteWebsocketIpcServer({
@@ -581,7 +617,7 @@ export class WindowAgentsManager {
     createUtilityDisplayWindow = async (
         utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "PvMonitor" | "Help" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph",
         utilityOptions: Record<string, any>,
-        httpResponse: any = undefined,
+        windowId: string,
     ) => {
         try {
             if (utilityType === "Probe" || utilityType === "ChannelGraph") {
@@ -610,6 +646,7 @@ export class WindowAgentsManager {
                 hide: false,
                 utilityType: utilityType,
                 utilityOptions: utilityOptions,
+                windowId: windowId,
             };
 
             const displayWindowAgent = await this.createDisplayWindow(windowOptions);
@@ -618,37 +655,6 @@ export class WindowAgentsManager {
                 Log.error("0", `Cannot create display window for utility ${utilityType}`);
                 return;
             }
-
-            // const displayWindowAgent = await this.createDisplayWindowAgent(windowOptions);
-            // (2)
-            // await displayWindowAgent.createBrowserWindow();
-            // (3)
-            // const processId = this.getMainProcess().getProcessId();
-            // displayWindowAgent.sendFromMainProcess("uuid", processId, displayWindowAgent.getId());
-            // (4)
-            // if (utilityType === "Probe") {
-            // 	// utilityOptions["recordTypesFieldNames"] = this.getMainProcess().getDbdFiles().getAllRecordTypeFieldNames();
-            // 	// utilityOptions["recordTypesMenus"] = this.getMainProcess().getDbdFiles().getAllMenusChoices();
-            // 	utilityOptions["recordTypes"] = this.getMainProcess().getChannelAgentsManager().getDbdFiles().getRecordTypes();
-            // 	utilityOptions["menus"] = this.getMainProcess().getChannelAgentsManager().getDbdFiles().getMenus();
-            // }
-            // displayWindowAgent.sendFromMainProcess("new-tdl", {
-            // 	newTdl: tdl,
-            // 	tdlFileName: "",
-            // 	initialModeStr: "operating",
-            // 	editable: false,
-            // 	externalMacros: [],
-            // 	useExternalMacros: false,
-            // 	utilityType: utilityType,
-            // 	utilityOptions: utilityOptions,
-            // });
-            // (5)
-            // const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-            // if (selectedProfile === undefined) {
-            // 	return;
-            // }
-
-            // displayWindowAgent.sendFromMainProcess("preset-colors", selectedProfile.getCategory("Preset Colors"));
         } catch (e) {
             Log.error("0", e);
         }

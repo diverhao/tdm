@@ -802,7 +802,7 @@ export class FileConverter extends BaseWidget {
                                             macros: [],
                                             replaceMacros: false,
                                             // currentTdlFolder?: string;
-                                            // windowId?: string;
+                                            windowId: displayWindowId,
                                         }
                                     })
                                 }}

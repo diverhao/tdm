@@ -159,20 +159,6 @@ export class DisplayWindowAgent {
 
     promises: Promises = new Promises();
 
-
-    //     tdl: type_tdl;
-    // mode: "editing" | "operating";
-    // editable: boolean;
-    // tdlFileName: string;
-    // macros: [string, string][];
-    // replaceMacros: boolean;
-    // hide: boolean;
-    // utilityType?: string;
-    // utilityOptions?: Record<string, any>;
-    // postCommand?: string;
-    // isPreviewDisplayWindow?: boolean;
-    // initiatedByWindowId?: string;
-
     _initialMode: "operating" | "editing";
     _replaceMacros: boolean;
     _utilityType: string | undefined;
@@ -1847,12 +1833,12 @@ export class DisplayWindowAgent {
     private createBrowserWindowInWebMode = (options: any = undefined) => {
 
         // httpResponse is undefined 
-        console.log("options: ", options["initiatedByWindowId"]);
-        if (options["initiatedByWindowId"] !== undefined) {
+        console.log("options: ", options["windowId"]);
+        if (options["windowId"] !== undefined) {
             // if (httpResponse === undefined) {
-            const initiatedByWindowAgent = this.getWindowAgentsManager().getAgent(options["initiatedByWindowId"])
+            const initiatedByWindowAgent = this.getWindowAgentsManager().getAgent(options["windowId"])
             if (initiatedByWindowAgent instanceof DisplayWindowAgent) {
-                console.log("AAA", options["initiatedByWindowId"])
+                console.log("AAA", options["windowId"])
                 initiatedByWindowAgent.sendFromMainProcess("display-window-id-for-open-tdl-file", {
                     displayWindowId: this.getId(),
                 });

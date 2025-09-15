@@ -15,6 +15,8 @@ import { Profile } from "../profile/Profile";
 import { Profiles } from "../profile/Profiles";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
+import { FileReader } from "../file/FileReader";
+import { type_options_createDisplayWindow } from "../windows/WindowAgentsManager";
 
 export class WebServer {
     _server: Express | undefined;
@@ -260,21 +262,43 @@ export class WebServer {
         // start http server
         this._server.get("/main", async (request: IncomingMessage, response: any, next: any) => {
             Log.info("0", "New https connection coming in from", request.socket.address());
-            // there shoul have been a main process with id = "0" running
             const mainProcess = this.getMainProcess();
-            if (mainProcess === undefined) {
-                Log.error("Main process not running");
+            const profiles = mainProcess.getProfiles();
+            const windowAgentsManager = mainProcess.getWindowAgentsManager();
+            const selectedProfile = profiles.getSelectedProfile();
+            if (selectedProfile === undefined) {
                 return;
             }
-            // the selected profile name is set when MainProcess is created
-            const profileName = mainProcess.getProfiles().getSelectedProfileName();
-            // select the first profile
-            // invoke DisplayWidnowAgent.createBrowserWindow() to send a html page to client
-            // mainProcess.getIpcManager().handleProfileSelected(undefined, profileName, undefined, response);
-            const displayWindowAgent = await mainProcess.getIpcManager().handleProfileSelected(undefined, {
-                selectedProfileName: profileName,
-                args: undefined,
-            });
+
+            let tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
+            let tdlFileName = tdlFileNames[0];
+            if (typeof tdlFileName !== "string") {
+                return;
+            }
+            let macros = selectedProfile.getMacros();
+            let currentTdlFolder: undefined | string = undefined;
+            const mode = selectedProfile.getMode() as "editing" | "operating";
+            const editable = selectedProfile.getEditable();
+
+            const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder)
+            if (tdlResult === undefined) {
+                return;
+            }
+            const tdl = tdlResult["tdl"];
+            const fullTdlFileName = tdlResult["fullTdlFileName"];
+            const options: type_options_createDisplayWindow = {
+                tdl: tdl,
+                mode: mode,
+                editable: editable,
+                tdlFileName: fullTdlFileName,
+                macros: macros,
+                replaceMacros: false,
+                hide: false,
+            };
+            const displayWindowId = windowAgentsManager.obtainDisplayWindowId();
+            const displayWindowAgent = await windowAgentsManager.createDisplayWindowAgent(options, displayWindowId);
+
+
             if (displayWindowAgent instanceof DisplayWindowAgent) {
                 response.redirect(`/DisplayWindow.html?displayWindowId=${displayWindowAgent.getId()}`)
             }
@@ -357,19 +381,19 @@ export class WebServer {
                         }
                     );
                 } else if (command === "create-utility-display-window") {
-                    const utilityType = data["utilityType"];
-                    const utilityOptions = data["utilityOptions"];
-                    Log.debug("-1", data);
-                    this.getMainProcess().getIpcManager().createUtilityDisplayWindow(undefined,
-                        {
-                            utilityType: utilityType,
-                            utilityOptions: utilityOptions,
-                            httpResponse: response,
-                        }
-                    );
+                    // const utilityType = data["utilityType"];
+                    // const utilityOptions = data["utilityOptions"];
+                    // Log.debug("-1", data);
+                    // this.getMainProcess().getIpcManager().createUtilityDisplayWindow(undefined,
+                    //     {
+                    //         utilityType: utilityType,
+                    //         utilityOptions: utilityOptions,
+                    //         httpResponse: response,
+                    //     }
+                    // );
                 } else if (command === "create-new-display-in-web-mode") {
-                    Log.debug("-1", data);
-                    this.getMainProcess().getWindowAgentsManager().createBlankDisplayWindow(response);
+                    // Log.debug("-1", data);
+                    // this.getMainProcess().getWindowAgentsManager().createBlankDisplayWindow(response);
                 } else if (command === "media") {
                     Log.debug("-1", data);
                     try {

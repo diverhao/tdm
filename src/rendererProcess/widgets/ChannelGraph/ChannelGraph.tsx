@@ -514,10 +514,12 @@ export class ChannelGraph extends BaseWidget {
                                                 src={`../../resources/webpages/modify-symbol.svg`}
                                                 onClick={() => {
                                                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                                    const displayWindowId = displayWindowClient.getWindowId();
                                                     displayWindowClient.getIpcManager().sendFromRendererProcess("create-utility-display-window",
                                                         {
                                                             utilityType: "TextEditor",
-                                                            utilityOptions: { fileName: dbFileName }
+                                                            utilityOptions: { fileName: dbFileName },
+                                                            windowId: displayWindowId,
                                                         }
                                                     );
                                                 }}
@@ -564,17 +566,12 @@ export class ChannelGraph extends BaseWidget {
         displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file",
             {
                 options: {
-                    // tdl?: type_tdl;
-                    // tdlStr?: string; // for web mode only, the web mode reads contents of the file (.tdl or .db), but it cannot parse the file contents in browser
                     tdlFileNames: dbFileName === undefined ? undefined : [dbFileName],
                     mode: "operating",
                     editable: false,
-                    // external macros: user-provided and parent display macros
                     macros: [],
                     replaceMacros: false,
-                    // currentTdlFolder?: string;
                     windowId: displayWindowClient.getWindowId(),
-                    // postCommand?: string;
                     sendContentsToWindow: true, // whether to send the file contents back to the display window, for Channel Graph window
                 }
             })
@@ -639,10 +636,12 @@ export class ChannelGraph extends BaseWidget {
             if (TcaChannel.checkChannelName(channelName) === "ca" || TcaChannel.checkChannelName(channelName) === "pva") {
                 // open Probe
                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                const displayWindowId = displayWindowClient.getWindowId();
                 displayWindowClient.getIpcManager().sendFromRendererProcess("create-utility-display-window", 
                     {
                         utilityType: "Probe", 
-                        utilityOptions: { channelNames: [channelName] }
+                        utilityOptions: { channelNames: [channelName] },
+                        windowId: displayWindowId,
                     }
                 );
 

@@ -210,18 +210,10 @@ export class MainProcess {
              */
             // (1)
             app.whenReady().then(async () => {
-                // (2)
-                const profiles = this.getProfiles();
-                const firstProfile = profiles.getFirstProfile();
-                if (firstProfile === undefined) {
-                    Log.error(0, "No profile is defined, cannot start TDM in web mode");
-                    app.quit();
-                    return;
-                }
-                profiles.setSelectedProfileName(firstProfile.getName());
-                // (3)
-                await this.getChannelAgentsManager().createAndInitContext();
-                Log.info(0, "Main process for web mode started. Profile is", firstProfile.getName());
+                const firstProfileName = this.getProfiles().getFirstProfileName();
+                this.getIpcManager().handleProfileSelected(undefined, {
+                    selectedProfileName: firstProfileName,
+                })
             })
         } else if (this.getMainProcessMode() === "ssh-server") {
             /**

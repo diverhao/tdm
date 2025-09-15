@@ -99,6 +99,15 @@ export class Profile {
         }
     }
 
+    getManuallyOpenedTdlMode = () => {
+        const mode = this._contents["EPICS Custom Environment"]["Manually Opened TDL Mode"];
+        if (mode === undefined) {
+            return "operating";
+        } else {
+            return mode["value"];
+        }
+    }
+
     getEditable = () => {
         const editable = this._contents["EPICS Custom Environment"]["Editable"];
         if (editable === undefined) {

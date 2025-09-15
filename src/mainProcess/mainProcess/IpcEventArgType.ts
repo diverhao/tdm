@@ -177,7 +177,7 @@ export type IpcEventArgType = {
     },
 
     "open-default-display-windows": {
-
+        windowId: string,
     },
 
 
@@ -213,7 +213,7 @@ export type IpcEventArgType = {
     "open-tdl-file": {
         options: {
             tdl?: type_tdl;
-            tdlStr?: string; // for web mode only, the web mode reads contents of the file (.tdl or .db), but it cannot parse the file contents in browser
+            // tdlStr?: string; // for web mode only, the web mode reads contents of the file (.tdl or .db), but it cannot parse the file contents in browser
             tdlFileNames?: string[];
             mode: "editing" | "operating";
             editable: boolean;
@@ -221,12 +221,9 @@ export type IpcEventArgType = {
             macros: [string, string][];
             replaceMacros: boolean;
             currentTdlFolder?: string;
-            windowId?: string;
-            postCommand?: string;
+            windowId: string;
             sendContentsToWindow?: boolean; // whether to send the file contents back to the display window, for Channel Graph window
-            initiatedByWindowId?: string;
         },
-        httpResponse?: any
     },
 
     "load-tdl-file": {
@@ -333,7 +330,7 @@ export type IpcEventArgType = {
     "create-utility-display-window": {
         utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "Help" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph",
         utilityOptions: Record<string, any>,
-        httpResponse?: any
+        windowId: string
     },
 
 

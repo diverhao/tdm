@@ -240,7 +240,7 @@ export class ContextMenuDesktop {
             label: "Create New Display",
             accelerator: "CmdOrCtrl+n",
             click: () => {
-                this.getDisplayWindowAgent().getWindowAgentsManager().createBlankDisplayWindow(this.getDisplayWindowAgent());
+                this.getDisplayWindowAgent().getWindowAgentsManager().createBlankDisplayWindow(this.getDisplayWindowAgent().getId());
             },
         },
 
@@ -1099,7 +1099,7 @@ export class ContextMenuDesktop {
             label: "Create New Display",
             accelerator: "CmdOrCtrl+n",
             click: () => {
-                this.getDisplayWindowAgent().getWindowAgentsManager().createBlankDisplayWindow(this.getDisplayWindowAgent());
+                this.getDisplayWindowAgent().getWindowAgentsManager().createBlankDisplayWindow(this.getDisplayWindowAgent().getId());
             },
         },
 
@@ -1396,7 +1396,7 @@ export class ContextMenuDesktop {
             label: "Create New Display",
             accelerator: "CmdOrCtrl+n",
             click: () => {
-                this.getDisplayWindowAgent().getWindowAgentsManager().createBlankDisplayWindow(this.getDisplayWindowAgent());
+                this.getDisplayWindowAgent().getWindowAgentsManager().createBlankDisplayWindow(this.getDisplayWindowAgent().getId());
             },
         },
 

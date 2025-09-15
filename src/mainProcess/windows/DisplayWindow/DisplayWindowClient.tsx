@@ -1073,7 +1073,8 @@ export class DisplayWindowClient {
                         tdl: tdl,
                         externalMacros: externalMacros,
                         tdlFileName: tdlFileName,
-                    }
+                    },
+                    windowId: this.getWindowId(),
                 }
             );
         } else {
@@ -1267,9 +1268,11 @@ export class DisplayWindowClient {
                 const fileContents = event.target.result;
                 const currentSite = `https://${window.location.host}/`;
                 const tdlStr = event.target.result;
+                const tdl = JSON.parse(tdlStr);
                 this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
                     options: {
-                        tdlStr: tdlStr as string,
+                        // tdlStr: tdlStr ,
+                        tdl: tdl,
                         tdlFileNames: [tdlFileName],
                         mode: g_widgets1.isEditing() ? "editing" : "operating",
                         editable: true,
@@ -1277,35 +1280,9 @@ export class DisplayWindowClient {
                         macros: [],
                         replaceMacros: true,
                         currentTdlFolder: undefined,
-                        initiatedByWindowId: this.getWindowId(),
+                        windowId: this.getWindowId(),
                     }
                 });
-                // ).then((response: any) => {
-                //     // decode string
-                //     return response.json()
-                // }).then(data => {
-                //     const ipcServerPort = data["ipcServerPort"];
-                //     const displayWindowId = data["displayWindowId"];
-                //     window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`)
-                // });
-                // this.getIpcManager().sendPostRequestCommand("open-tdl-file", {
-                //     tdlStr: tdlStr,
-                //     tdlFileNames: [tdlFileName],
-                //     mode: g_widgets1.isEditing() ? "editing" : "operating",
-                //     editable: true,
-                //     // external macros: user-provided and parent display macros
-                //     macros: [],
-                //     replaceMacros: true,
-                //     currentTdlFolder: undefined,
-                // },
-                // ).then((response: any) => {
-                //     // decode string
-                //     return response.json()
-                // }).then(data => {
-                //     const ipcServerPort = data["ipcServerPort"];
-                //     const displayWindowId = data["displayWindowId"];
-                //     window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`)
-                // });
             };
             reader.readAsText(fileBlob);
 
@@ -1315,7 +1292,7 @@ export class DisplayWindowClient {
 
             this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
                 options: {
-                    tdlStr: undefined,
+                    // tdlStr: undefined,
                     tdlFileNames: [fileName as string],
                     mode: g_widgets1.isEditing() ? "editing" : "operating",
                     editable: true,
@@ -1323,7 +1300,7 @@ export class DisplayWindowClient {
                     macros: [],
                     replaceMacros: true,
                     currentTdlFolder: undefined,
-                    initiatedByWindowId: this.getWindowId(),
+                    windowId: this.getWindowId(),
                 }
             })
 

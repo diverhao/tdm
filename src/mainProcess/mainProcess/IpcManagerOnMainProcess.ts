@@ -38,15 +38,17 @@ export class IpcManagerOnMainProcess {
 
     constructor(mainProcess: MainProcess) {
         this._mainProcess = mainProcess;
-        this.createWsServer();
+        this.createWebSocketIpcServer();
         this.startToListen();
     }
 
 
     /**
-     * Create the secure websocket server. This websocket is attached to a https server.
+     * Create the websocket IPC server. 
+     * 
+     * This websocket server is attached to a https server, which has no role in anywhere.
      */
-    createWsServer = () => {
+    createWebSocketIpcServer = () => {
         Log.info('-1', `Creating WebSocket IPC server on port ${this.getPort()}`);
 
         const key = fs.readFileSync("/Users/1h7/projects2/javascript/test89-https-express/server.key");
@@ -74,7 +76,7 @@ export class IpcManagerOnMainProcess {
                 httpsServer.close();
                 let newPort = this.getPort() + 1;
                 this.setPort(newPort);
-                this.createWsServer();
+                this.createWebSocketIpcServer();
             }
         });
 
@@ -171,7 +173,6 @@ export class IpcManagerOnMainProcess {
          * 4 possible modes: "desktop", "web", "ssh-server", "ssh-client"
          */
         if (mainProcessMode === "ssh-client") {
-            // todo: not tested yet
             // messages that must be on client side
             // do not call callbacks, forward message to tcp server
             // add one more layer:
@@ -252,7 +253,6 @@ export class IpcManagerOnMainProcess {
 
 
     /**
-     * "1-22"
      *
      * (1) terminate the connection with the client, do not use close() as the client may have been closed <br>
      *
@@ -308,11 +308,8 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("duplicate-display", this.handleDuplicateDisplay);
 
         // ------------------ tdl file ----------------------
-        // open a tdl file, which creates a new display window
-        this.ipcMain.on("open-tdl-file", this.handleOpenTdlFiles);
-        // load tdl file, which does not create display window
-        this.ipcMain.on("load-tdl-file", this.handleLoadTdlFile);
-        // save tdl
+        this.ipcMain.on("open-tdl-file", this.handleOpenTdlFiles); // done
+        this.ipcMain.on("load-tdl-file", this.handleLoadTdlFile); // done
         this.ipcMain.on("save-tdl-file", this.handleSaveTdlFile);
         // save serialized data to a file, e.g. .json data
         this.ipcMain.on("save-data-to-file", this.handleSaveDataToFile);
@@ -634,7 +631,7 @@ export class IpcManagerOnMainProcess {
                 // }
             }
         });
-        windowAgent.creationResolve2();
+        windowAgent.websocketIpcConnectedResolve();
 
         // await windowAgent.loadURLPromise;
         // // at this moment the main window is ready for selecting profile
@@ -1439,10 +1436,22 @@ export class IpcManagerOnMainProcess {
     handleProfileSelected = async (event: any, option: IpcEventArgType["profile-selected"]): Promise<any> => {
         const { selectedProfileName, args, openDefaultDisplayWindows } = option;
 
-        this.getMainProcess().getProfiles().setSelectedProfileName(selectedProfileName);
-        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        const mainProcess = this.getMainProcess();
+        const mainProcessMode = mainProcess.getMainProcessMode();
+        const profiles = mainProcess.getProfiles();
+        const windowAgentsManager = mainProcess.getWindowAgentsManager();
+
+        profiles.setSelectedProfileName(selectedProfileName);
+        const selectedProfile = profiles.getSelectedProfile();
+        if (selectedProfile === undefined) {
+            return;
+        }
+        Log.info(0, "Main process for", mainProcessMode, "mode started. Profile is", selectedProfileName);
+
+
+        // todo: what is this?
         // select to run a new process as ssh-client mode, it can only be started from desktop mode
-        if (this.getMainProcess().getMainProcessMode() === "desktop" && selectedProfile !== undefined && selectedProfile.isSshConfig()) {
+        if (mainProcessMode === "desktop" && selectedProfile !== undefined && selectedProfile.isSshConfig()) {
 
             // connect to remote
             // const mainProcesses = this.getMainProcess().getMainProcesses();
@@ -1473,45 +1482,33 @@ export class IpcManagerOnMainProcess {
             } else {
                 Log.error("0", "Profiles file error: Cannot create main process for ssh config", selectedProfileName);
             }
-        } else  // regular profile
-        {
-            if (this.getMainProcess().getMainProcessMode() !== "web") { // non-web mode
-                // (1)
-                this.getMainProcess().getProfiles().setSelectedProfileName(selectedProfileName);
-                // (2)
-                const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-                if (selectedProfile === undefined) {
-                    Log.error("0", `Profile ${selectedProfileName} does not exist`);
-                    return;
-                }
+        } else if (mainProcessMode === "web") {
 
-                await this.getMainProcess().getChannelAgentsManager().createAndInitContext();
+            // create epcis-tca CA and PVA context
+            // do not open default wind
+            await mainProcess.getChannelAgentsManager().createAndInitContext();
 
+        } else if (mainProcessMode === "desktop") {
 
-                // change main window title
-                const mainWindowAgent = this.getMainProcess().getWindowAgentsManager().getMainWindowAgent();
-                if (mainWindowAgent !== undefined) {
-                    const oldTitle = mainWindowAgent.getTitle();
-                    const newTitle = oldTitle + " -- " + selectedProfile.getName();
-                    mainWindowAgent.setTitle(newTitle);
-                }
-            }
-            const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-            if (selectedProfile === undefined) {
-                Log.error("0", `Profile ${selectedProfileName} does not exist`);
-                return;
-            }
-            // create SQL to talk to archive
+            /**
+             * (1) create epics-tca CA and PVA context 
+             * 
+             * (2) create SQL
+             * 
+             * (3) open default TDL files
+             * 
+             * (4) prepare main window, i.e. change title, telling main window to switch to run mode, etc
+             */
+
+            // (1)
+            await this.getMainProcess().getChannelAgentsManager().createAndInitContext();
+            // (2)
             this.getMainProcess().createSql();
 
             // (3)
-            const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-            // get default tdls
             let tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
             let macros = selectedProfile.getMacros();
             let currentTdlFolder: undefined | string = undefined;
-
-            // command line args
             if (args !== undefined) {
                 currentTdlFolder = args["cwd"] === "" ? undefined : args["cwd"];
                 if (args["alsoOpenDefaults"]) {
@@ -1523,81 +1520,43 @@ export class IpcManagerOnMainProcess {
                 // args["macros"] overrides profile-defined macros
                 macros = [...args["macros"], ...macros];
             }
-            // end command line
 
-            const mode = selectedProfile.getMode();
+            const mode = selectedProfile.getMode() as "editing" | "operating";
             const editable = selectedProfile.getEditable();
+            windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, currentTdlFolder, undefined);
 
-            for (let tdlFileName of tdlFileNames) {
-                // .tdl, .edl, or .bob
-                if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp") {
-                    if (path.extname(tdlFileName) !== ".tdl") {
-                        // we are able to edit ".edl" files, however, when we save them, the saving dialog is shown to "save as"
-                        // editable = false;
-                    }
 
-                    // only read the first tdl file in web mode
-                    if (this.getMainProcess().getMainProcessMode() === "web" && tdlFileName !== tdlFileNames[0]) {
-                        break;
-                    }
-
-                    const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder)
-                    // (tdlResult) => {
-                    if (tdlResult !== undefined) {
-                        const tdl = tdlResult["tdl"];
-                        const fullTdlFileName = tdlResult["fullTdlFileName"];
-                        const options: type_options_createDisplayWindow = {
-                            tdl: tdl,
-                            mode: mode as "editing" | "operating",
-                            editable: editable,
-                            tdlFileName: fullTdlFileName,
-                            macros: macros,
-                            replaceMacros: false,
-                            hide: false,
-                        };
-                        const windowAgent = await windowAgentsManager.createDisplayWindow(options);
-                        if (this.getMainProcess().getMainProcessMode() === "web") {
-                            return windowAgent;
-                        }
-                    } else {
-                        Log.error("0", `Cannot read file ${tdlFileName}`);
-                    }
-                    // }
-                    // )
-
-                } else if (path.extname(tdlFileName) === ".db" || path.extname(tdlFileName) === ".template") {
-                    const db = FileReader.readDb(tdlFileName, selectedProfile, currentTdlFolder);
-                    const channelNames: string[] = [];
-                    if (db !== undefined) {
-                        for (let ii = 0; ii < db.length; ii++) {
-                            const channelName = db[ii]["NAME"];
-                            if (channelName !== undefined) {
-                                channelNames.push(channelName);
-                            }
-                        }
-                    }
-                    this.createUtilityDisplayWindow(undefined, {
-                        utilityType: "PvTable",
-                        utilityOptions: { channelNames: channelNames }
-                    });
-                }
-            }
-
-            // (4)
-            // windowAgentsManager.createPreloadedDisplayWindow();
-            // (5)
+            /**
+             * (4) For Main Window in desktop mode:
+             * 
+             * (a) wait for the main window URL to be loaded
+             *     the event is emitted when the .loadURL() is done when creating the BrowserWindow in MainWindowAgent
+             * 
+             * (b) wait for the main window's websocket IPC established
+             *     the event is emitted when the websocket-ipc-connected is received in main process from main window
+             * 
+             * (c) change main window title with selected profile name
+             * 
+             * (d) tell main window to switch to run mode by sending "after-profile-selected" to main window
+             * 
+             * (e) create preview Display Window for File Browser, it is an invisible Display Window dedicated
+             *     for the File Browser utility window
+             */
             const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
-
             if (mainWindowAgent instanceof MainWindowAgent) {
-                // this event is emitted when the .loadURL() is done when creating the BrowserWindow 
-                // in MainWindowAgent
+                // (a)
                 await mainWindowAgent.loadURLPromise;
-                // the main window has received all the necessary information to switch to run page
-                await mainWindowAgent.creationPromise2;
+                // (b)
+                await mainWindowAgent.websocketIpcConnectedPromise;
+                // (c)
+                const oldTitle = mainWindowAgent.getTitle();
+                const newTitle = oldTitle + " -- " + selectedProfileName;
+                mainWindowAgent.setTitle(newTitle);
+                // (d)
                 mainWindowAgent.sendFromMainProcess("after-profile-selected", {
                     profileName: selectedProfileName,
                 });
-                // create the preview window for file browser
+                // (e)
                 windowAgentsManager.createPreviewDisplayWindow();
             }
         }
@@ -1663,7 +1622,8 @@ export class IpcManagerOnMainProcess {
                 }
                 this.createUtilityDisplayWindow(undefined, {
                     utilityType: "PvTable",
-                    utilityOptions: { channelNames: channelNames }
+                    utilityOptions: { channelNames: channelNames },
+                    windowId: options["windowId"],
                 });
             }
         }
@@ -1671,30 +1631,56 @@ export class IpcManagerOnMainProcess {
 
     handleCreateBlankDisplayWindow = (event: any, options: IpcEventArgType["create-blank-display-window"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
-        if (displayWindowAgent instanceof DisplayWindowAgent) {
-            displayWindowAgent.getWindowAgentsManager().createBlankDisplayWindow();
+        if ((displayWindowAgent instanceof DisplayWindowAgent) || displayWindowAgent instanceof MainWindowAgent) {
+            displayWindowAgent.getWindowAgentsManager().createBlankDisplayWindow(options["displayWindowId"]);
         }
     }
 
     // ---------------------- tdl file ---------------------
-    // There is no standalone tdl file class, the basic operations to tdl files are defined here.
 
     /**
-     * Open a TDL file.
+     * Open one or more TDL files, create Display Window for each TDL file.
      * 
-     * This function ingests information provided by other functions, basically the TDL info, either the TDL
-     * json content, or the TDL file name. Then it processes these information and create the DisplayWindowAgent
-     * object. This object is uniquely identified by the "display window ID", and contains all the information above. 
-     * Then, this function determines the next step depending on the mode:
+     * A TDL file may be .tdl, .db, .bob, .edl, .stp, and .template
+     * 
      *  - for desktop mode, it create an electron.js BrowserWindow (or replace the preloaded BrowserWindow)
-     *    and let this 
+     *  - for web mode, it opens new tab for the first tdl file
      * 
-     *
+     * There are 4 cases depending on parameters `tdl` and `tdlFileNames`
+     * 
+     *  (1) if `tdl` is defined, open the new display window with this tdl content
+     * 
+     *  (2) if `tdlFileNames` is undefined, show file open prompt, let the user select one or more
+     *    TDL files to open
+     * 
+     *  (3) if `tdlFileNames` is an empty array, create a blank display window, with editing mode
+     * 
+     *  (4) if `tdlFileNames` is a non-empty string array, the strings are considered as TDL file names
+     *    open each one in separate Display Window
+     * 
+     * @param tdl the JSON object that represents the TDL
+     * 
+     * @param tdlFileNames undefined or string array, TDL file names, can be absolute or relative
+     * 
+     * @param mode editing or operating
+     * 
+     * @param editable if the display is editable
+     * 
+     * @param macros the externally provided macros, it will append to the profile-provided macros
+     *               but it may be overridden by the TDL-provided macros
+     * 
+     * @param replaceMacros whether to replace the macros 
+     * 
+     * @param currentTdlFolder a folder that is used for resolving the TDL file absolute path
+     *                         it has the highest priority in TDL path resolution
+     * 
+     * @param windowId the window ID that initiated this TDL file open
+     * 
+     * @param sendContentsToWindow whether to send file back to display window, only used by .db 
      */
     handleOpenTdlFiles = (event: any, data: IpcEventArgType["open-tdl-file"]) => {
-        const { options, httpResponse } = data;
-        let { tdlStr, tdlFileNames } = options;
-        console.log("handleOpenTdlFiles options", options);
+        const { options } = data;
+        let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
@@ -1702,124 +1688,56 @@ export class IpcManagerOnMainProcess {
             return;
         }
 
-        let editable = options["editable"];
-        let mode = options["mode"];
-        const windowId = options["windowId"];
         let windowAgent: MainWindowAgent | DisplayWindowAgent | undefined = undefined;
         if (windowId !== undefined) {
             windowAgent = windowAgentsManager.getAgent(windowId);
         }
 
-        // open a local tdl file from web page, the "tdl" field is not empty
-        // if (options["tdlStr"] !== undefined && options["tdlFileNames"]?.length === 1 && httpResponse !== undefined) {
-        //     const tdlFileName = options["tdlFileNames"][0];
-        //     const tdlStr = options["tdlStr"];
-        //     // let editable = selectedProfile.getManuallyOpenedTdlEditable();
-
-        //     if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp") {
-        //         if (path.extname(tdlFileName) !== ".tdl") {
-        //             // we are able to edit ".edl" files, however, when we save them, the saving dialog is shown to "save as"
-        //             // editable = false;
-        //         }
-
-        //         const editableForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Editable"];
-        //         if (editableForManuallyOpenedFiles !== undefined) {
-        //             if (editableForManuallyOpenedFiles["value"] === "Yes") {
-        //                 editable = true;
-        //             } else {
-        //                 editable = false;
-        //             }
-        //         }
-
-        //         const modeForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Mode"];
-        //         if (modeForManuallyOpenedFiles !== undefined) {
-        //             if (modeForManuallyOpenedFiles["value"] === "operating") {
-        //                 mode = "operating";
-        //             } else {
-        //                 mode = "editing";
-        //                 // "editing" mode overrides "editable"
-        //                 editable = true;
-        //             }
-        //         }
-        //         // parse file contents
-        //         const tdl = JSON.parse(tdlStr);
-        //         windowAgentsManager.createDisplayWindow(
-        //             {
-        //                 tdl: tdl,
-        //                 mode: mode,
-        //                 editable: editable,
-        //                 tdlFileName: options["tdlFileNames"][0],
-        //                 macros: options["macros"],
-        //                 replaceMacros: options["replaceMacros"],
-        //                 hide: false,
-        //                 postCommand: options["postCommand"],
-        //             },
-        //             httpResponse
-        //         );
-        //     } else if (path.extname(tdlFileName) === ".db" || path.extname(tdlFileName) === ".template") {
-        //         const db = FileReader.parseDb(tdlStr);
-        //         // const db = FileReader.readDb(tdlFileName, selectedProfile, options["currentTdlFolder"]);
-        //         const channelNames: string[] = [];
-        //         if (db !== undefined) {
-        //             for (let ii = 0; ii < db.length; ii++) {
-        //                 const channelName = db[ii]["NAME"];
-        //                 if (channelName !== undefined) {
-        //                     channelNames.push(channelName);
-        //                 }
-        //             }
-        //         }
-        //         this.createUtilityDisplayWindow(undefined, {
-        //             utilityType: "PvTable",
-        //             utilityOptions: { channelNames: channelNames },
-        //             httpResponse: httpResponse
-        //         });
-        //     } else {
-
-        //     }
-
-        //     return;
-        // }
-
         try {
-            if (tdlStr !== undefined) { // the tdl content is provided, skip reading files from hard drive, available in all modes
+            if (tdl !== undefined) { // the tdl content is provided, skip reading files from hard drive, available in all modes
+                // (1)
+                const tdlFileName = tdlFileNames === undefined ? "" : tdlFileNames[0];
                 windowAgentsManager.createDisplayWindow(
                     {
-                        tdl: JSON.parse(tdlStr),
+                        tdl: tdl,
                         mode: mode,
                         editable: editable,
-                        tdlFileName: tdlFileNames === undefined ? "" : tdlFileNames[0],
-                        macros: options["macros"],
-                        replaceMacros: options["replaceMacros"],
+                        tdlFileName: tdlFileName,
+                        macros: macros,
+                        replaceMacros: replaceMacros,
                         hide: false,
-                        postCommand: options["postCommand"],
-                        initiatedByWindowId: options["initiatedByWindowId"],
+                        windowId: windowId,
                     },
-
                 );
             } else if (tdlFileNames === undefined) { // manually select the file, only available in desktop mode
+                // (2)
                 let defaultPath = "";
-                if (options["currentTdlFolder"] !== undefined && fs.existsSync(options["currentTdlFolder"])) {
-                    defaultPath = options["currentTdlFolder"];
+                if (currentTdlFolder !== undefined && fs.existsSync(currentTdlFolder)) {
+                    defaultPath = currentTdlFolder;
                 }
-                if (this.getMainProcess().getMainProcessMode() === "desktop") {
-                    tdlFileNames = dialog.showOpenDialogSync({
-                        title: "open tdl file",
-                        filters: [{ name: "tdl", extensions: ["tdl", "json", "bob", "edl", "stp", "db", "template"] }],
-                        defaultPath: defaultPath,
-                        // properties: ["openFile", "openDirectory","multiSelections"],
-                        properties: ["openFile", "multiSelections"],
-                    });
-                }
+                // modify tdlFileNames to a string array
+                tdlFileNames = dialog.showOpenDialogSync({
+                    title: "open tdl file",
+                    filters: [{ name: "tdl", extensions: ["tdl", "json", "bob", "edl", "stp", "db", "template"] }],
+                    defaultPath: defaultPath,
+                    // properties: ["openFile", "openDirectory","multiSelections"],
+                    properties: ["openFile", "multiSelections"],
+                });
 
-                if (windowId === undefined) {
-                    return;
-                }
-                if (windowAgent === undefined) {
+                // at this point, the tdlFileNames must not be empty
+                if (!(Array.isArray(tdlFileNames) === true && tdlFileNames.length > 0)) {
                     return;
                 }
 
-
+                // todo: ssh server mode, how to handle this situation
                 if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
+
+                    if (windowId === undefined) {
+                        return;
+                    }
+                    if (windowAgent === undefined) {
+                        return;
+                    }
 
                     const dialogInfo = {
                         info: {
@@ -1845,344 +1763,22 @@ export class IpcManagerOnMainProcess {
                     return;
                 }
 
-                if (tdlFileNames === undefined) {
-                    return;
-                }
-
                 // the manually opened TDL file's editing permission and its mode are determined by Profile
-
-                // this file's editable is determined by the profile setting
-                const editableForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Editable"];
-                if (editableForManuallyOpenedFiles !== undefined) {
-                    if (editableForManuallyOpenedFiles["value"] === "Yes") {
-                        editable = true;
-                    } else {
-                        editable = false;
-                    }
+                editable = selectedProfile.getEditable();
+                mode = selectedProfile.getManuallyOpenedTdlMode();
+                if (mode === "editing") {
+                    editable = true;
                 }
 
-                const modeForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Mode"];
-                if (modeForManuallyOpenedFiles !== undefined) {
-                    if (modeForManuallyOpenedFiles["value"] === "operating") {
-                        mode = "operating";
-                    } else {
-                        mode = "editing";
-                        // "editing" mode overrides "editable"
-                        editable = true;
-                    }
-                }
+                windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, options["macros"], options["currentTdlFolder"], windowId);
 
             } else if (tdlFileNames.length === 0) { // create a blank window, available in all modes
-                windowAgentsManager.createBlankDisplayWindow();
+                // (3)
+                windowAgentsManager.createBlankDisplayWindow(options["windowId"]);
             } else if (tdlFileNames.length > 0) { // open all the files, available in all modes
-                for (let tdlFileName of tdlFileNames) {
-                    // .tdl, .edl, or .bob
-                    if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp") {
-
-                        FileReader.readTdlFile(tdlFileName, selectedProfile, options["currentTdlFolder"]).then((tdlFileResult) => {
-                            if (tdlFileResult !== undefined) {
-                                const tdl = tdlFileResult["tdl"];
-                                console.log("create browser window in web mode <<<<<<<<<<<<<<<<<<<<<<<<", options["initiatedByWindowId"])
-                                windowAgentsManager.createDisplayWindow(
-                                    {
-                                        tdl: tdl,
-                                        mode: mode,
-                                        editable: editable,
-                                        tdlFileName: tdlFileResult["fullTdlFileName"],
-                                        macros: options["macros"],
-                                        replaceMacros: options["replaceMacros"],
-                                        hide: false,
-                                        postCommand: options["postCommand"],
-                                        initiatedByWindowId: options["initiatedByWindowId"],
-                                    },
-
-                                );
-                                return;
-                            } else {
-                                Log.error("0", `Cannot read tdl file ${tdlFileName}`);
-                                if (windowAgent !== undefined) {
-                                    const dialogInfo: { info: type_DialogMessageBox } = {
-                                        info: {
-                                            // command?: string | undefined;
-                                            messageType: "error", // | "warning" | "info";
-                                            humanReadableMessages: [`Failed to open file ${tdlFileName}`],
-                                            rawMessages: [],
-                                            // buttons?: type_DialogMessageBoxButton[] | undefined;
-                                            // attachment?: any;
-                                        }
-                                    };
-                                    if (windowAgent instanceof MainWindowAgent) {
-                                        windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-                                    } else if (windowAgent instanceof DisplayWindowAgent) {
-                                        windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-                                    }
-
-                                }
-                            }
-                        });
-                    } else if (path.extname(tdlFileName) === ".db" || path.extname(tdlFileName) === ".template") {
-                        const db = FileReader.readDb(tdlFileName, selectedProfile, options["currentTdlFolder"]);
-                        if (options["sendContentsToWindow"] === true) {
-                            // for ChannelGraph
-                            const displayWindowId = options["windowId"];
-
-                            if (displayWindowId !== undefined && db !== undefined) {
-                                const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
-                                if (displayWindowAgent instanceof DisplayWindowAgent) {
-                                    displayWindowAgent.sendFromMainProcess("db-file-contents", {
-                                        displayWindowId: displayWindowId,
-                                        fileName: tdlFileName,
-                                        db: db, // array of objects, each object is a channel, e.g. channel name is NAME entry
-                                    })
-                                }
-                            }
-                        } else {
-                            // for PvTable
-                            const channelNames: string[] = [];
-                            if (db !== undefined) {
-                                for (let ii = 0; ii < db.length; ii++) {
-                                    const channelName = db[ii]["NAME"];
-                                    if (channelName !== undefined) {
-                                        channelNames.push(channelName);
-                                    }
-                                }
-                            }
-                            this.createUtilityDisplayWindow(undefined, {
-                                utilityType: "PvTable",
-                                utilityOptions: { channelNames: channelNames }
-                            });
-                        }
-                    } else {
-                        if (windowAgent !== undefined) {
-                            const dialogInfo: { info: type_DialogMessageBox } = {
-                                info: {
-                                    // command?: string | undefined;
-                                    messageType: "error", // | "warning" | "info";
-                                    humanReadableMessages: [`${tdlFileName} is not a .tdl, .edl .stp .db, or .template file`],
-                                    rawMessages: [],
-                                    // buttons?: type_DialogMessageBoxButton[] | undefined;
-                                    // attachment?: any;
-                                }
-                            };
-                            if (windowAgent instanceof MainWindowAgent) {
-                                windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-                            } else if (windowAgent instanceof DisplayWindowAgent) {
-                                windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-                            }
-
-                        }
-
-                    }
-                }
-
+                // (4)
+                windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, options["macros"], options["currentTdlFolder"], windowId);
             }
-
-            // if (tdlFileNames === undefined || tdlFileNames.length > 0) {
-
-            //     // open dialog to select tdl files
-            //     // in this case, the file is manually opened
-            //     if (tdlFileNames === undefined && tdlStr === undefined) {
-            //         let defaultPath = "";
-            //         if (options["currentTdlFolder"] !== undefined && fs.existsSync(options["currentTdlFolder"])) {
-            //             defaultPath = options["currentTdlFolder"];
-            //         }
-            //         if (this.getMainProcess().getMainProcessMode() === "desktop") {
-            //             tdlFileNames = dialog.showOpenDialogSync({
-            //                 title: "open tdl file",
-            //                 filters: [{ name: "tdl", extensions: ["tdl", "json", "bob", "edl", "stp", "db", "template"] }],
-            //                 defaultPath: defaultPath,
-            //                 // properties: ["openFile", "openDirectory","multiSelections"],
-            //                 properties: ["openFile", "multiSelections"],
-            //             });
-            //         }
-
-            //         if (windowId === undefined) {
-            //             return;
-            //         }
-            //         if (windowAgent === undefined) {
-            //             return;
-            //         }
-
-            //         if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
-
-            //             const dialogInfo = {
-            //                 info: {
-            //                     command: "open-tdl-file",
-            //                     humanReadableMessages: ["Open TDL file"], // each string has a new line
-            //                     buttons: [
-            //                         {
-            //                             text: "OK",
-            //                         },
-            //                         {
-            //                             text: "Cancel",
-            //                         }
-            //                     ],
-            //                     defaultInputText: "",
-            //                     attachment: options,
-            //                 }
-            //             };
-            //             if (windowAgent instanceof MainWindowAgent) {
-            //                 windowAgent.sendFromMainProcess("dialog-show-input-box", dialogInfo);
-            //             } else if (windowAgent instanceof DisplayWindowAgent) {
-            //                 windowAgent.sendFromMainProcess("dialog-show-input-box", dialogInfo);
-            //             }
-            //             return;
-            //         }
-
-            //         if (tdlFileNames === undefined) {
-            //             return;
-            //         }
-
-            //         // the manually opened TDL file's editing permission and its mode are determined by Profile
-
-            //         // this file's editable is determined by the profile setting
-            //         const editableForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Editable"];
-            //         if (editableForManuallyOpenedFiles !== undefined) {
-            //             if (editableForManuallyOpenedFiles["value"] === "Yes") {
-            //                 editable = true;
-            //             } else {
-            //                 editable = false;
-            //             }
-            //         }
-
-            //         const modeForManuallyOpenedFiles = selectedProfile.getCategory("EPICS Custom Environment")["Manually Opened TDL Mode"];
-            //         if (modeForManuallyOpenedFiles !== undefined) {
-            //             if (modeForManuallyOpenedFiles["value"] === "operating") {
-            //                 mode = "operating";
-            //             } else {
-            //                 mode = "editing";
-            //                 // "editing" mode overrides "editable"
-            //                 editable = true;
-            //             }
-            //         }
-            //     } else if (tdlStr !== undefined) {
-            //         windowAgentsManager.createDisplayWindow(
-            //             {
-            //                 tdl: JSON.parse(tdlStr),
-            //                 mode: mode,
-            //                 editable: editable,
-            //                 tdlFileName: tdlFileNames === undefined ? "" : tdlFileNames[0],
-            //                 macros: options["macros"],
-            //                 replaceMacros: options["replaceMacros"],
-            //                 hide: false,
-            //                 postCommand: options["postCommand"],
-            //                 initiatedByWindowId: options["initiatedByWindowId"],
-            //             },
-            //             httpResponse
-            //         );
-
-            //     } else if (tdlFileNames !== undefined && tdlStr === undefined) {
-            //         for (let tdlFileName of tdlFileNames) {
-            //             // .tdl, .edl, or .bob
-            //             if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp") {
-            //                 if (path.extname(tdlFileName) !== ".tdl") {
-            //                     // we are able to edit ".edl" files, however, when we save them, the saving dialog is shown to "save as"
-            //                     // editable = false;
-            //                 }
-
-            //                 FileReader.readTdlFile(tdlFileName, selectedProfile, options["currentTdlFolder"]).then((tdlFileResult) => {
-            //                     if (tdlFileResult !== undefined) {
-            //                         const tdl = tdlFileResult["tdl"];
-            //                         console.log("create browser window in web mode <<<<<<<<<<<<<<<<<<<<<<<<", options["initiatedByWindowId"])
-            //                         windowAgentsManager.createDisplayWindow(
-            //                             {
-            //                                 tdl: tdl,
-            //                                 mode: mode,
-            //                                 editable: editable,
-            //                                 tdlFileName: tdlFileResult["fullTdlFileName"],
-            //                                 macros: options["macros"],
-            //                                 replaceMacros: options["replaceMacros"],
-            //                                 hide: false,
-            //                                 postCommand: options["postCommand"],
-            //                                 initiatedByWindowId: options["initiatedByWindowId"],
-            //                             },
-            //                             httpResponse
-            //                         );
-            //                         return;
-            //                     } else {
-            //                         Log.error("0", `Cannot read tdl file ${tdlFileName}`);
-            //                         if (windowAgent !== undefined) {
-            //                             const dialogInfo: { info: type_DialogMessageBox } = {
-            //                                 info: {
-            //                                     // command?: string | undefined;
-            //                                     messageType: "error", // | "warning" | "info";
-            //                                     humanReadableMessages: [`Failed to open file ${tdlFileName}`],
-            //                                     rawMessages: [],
-            //                                     // buttons?: type_DialogMessageBoxButton[] | undefined;
-            //                                     // attachment?: any;
-            //                                 }
-            //                             };
-            //                             if (windowAgent instanceof MainWindowAgent) {
-            //                                 windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-            //                             } else if (windowAgent instanceof DisplayWindowAgent) {
-            //                                 windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-            //                             }
-
-            //                         }
-            //                     }
-            //                 });
-            //             } else if (path.extname(tdlFileName) === ".db" || path.extname(tdlFileName) === ".template") {
-            //                 const db = FileReader.readDb(tdlFileName, selectedProfile, options["currentTdlFolder"]);
-            //                 if (options["sendContentsToWindow"] === true) {
-            //                     // for ChannelGraph
-            //                     const displayWindowId = options["windowId"];
-
-            //                     if (displayWindowId !== undefined && db !== undefined) {
-            //                         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
-            //                         if (displayWindowAgent instanceof DisplayWindowAgent) {
-            //                             displayWindowAgent.sendFromMainProcess("db-file-contents", {
-            //                                 displayWindowId: displayWindowId,
-            //                                 fileName: tdlFileName,
-            //                                 db: db, // array of objects, each object is a channel, e.g. channel name is NAME entry
-            //                             })
-            //                         }
-            //                     }
-            //                 } else {
-            //                     // for PvTable
-            //                     const channelNames: string[] = [];
-            //                     if (db !== undefined) {
-            //                         for (let ii = 0; ii < db.length; ii++) {
-            //                             const channelName = db[ii]["NAME"];
-            //                             if (channelName !== undefined) {
-            //                                 channelNames.push(channelName);
-            //                             }
-            //                         }
-            //                     }
-            //                     this.createUtilityDisplayWindow(undefined, {
-            //                         utilityType: "PvTable",
-            //                         utilityOptions: { channelNames: channelNames }
-            //                     });
-            //                 }
-            //             } else {
-            //                 if (windowAgent !== undefined) {
-            //                     const dialogInfo: { info: type_DialogMessageBox } = {
-            //                         info: {
-            //                             // command?: string | undefined;
-            //                             messageType: "error", // | "warning" | "info";
-            //                             humanReadableMessages: [`${tdlFileName} is not a .tdl, .edl .stp .db, or .template file`],
-            //                             rawMessages: [],
-            //                             // buttons?: type_DialogMessageBoxButton[] | undefined;
-            //                             // attachment?: any;
-            //                         }
-            //                     };
-            //                     if (windowAgent instanceof MainWindowAgent) {
-            //                         windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-            //                     } else if (windowAgent instanceof DisplayWindowAgent) {
-            //                         windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-            //                     }
-
-            //                 }
-
-            //             }
-            //         }
-            //     }
-            //     // windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, replaceMacros, currentTdlFolder);
-            // } else if (tdlFileNames.length === 0) {
-            //     windowAgentsManager.createBlankDisplayWindow();
-            // }
-            // // else {
-            // // 	windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, replaceMacros, currentTdlFolder);
-            // // }
         } catch (e) {
             Log.error("0", e);
             if (windowAgent !== undefined) {
@@ -2208,28 +1804,26 @@ export class IpcManagerOnMainProcess {
 
 
     /**
-     * Re-read or read a tdl file and update display window. <br>
-     *
-     * We only provide the tdl file name. The tdl contents are read from this file. <br>
-     *
-     * The display window is not closed.
-     *
-     * @param {string} windowId Display window ID, this display window will be updated
-     * @param {string} tdlFileName The tdl file that will be read/re-read
+     * Re-read or read a tdl file and update the existing display window with the new TDL file. 
+     * It is similar to `open-tdl-file`, but it does not create a new Display Window.
+     * 
+     * This method does not accept TDL json as input argument.
+     * 
+     * @param {string} displayWindowId Display window ID, this display window will be updated.
+     * 
+     * @param {string} tdlFileName The absolute tdl file name that will be read/re-read. Can be an absolute
+     *                             file path or an empty string. If the empty string, we will load an blank TDL.
+     * 
      * @param {"editing" | "operating"} mode The display window status (mode) of this display window
+     * 
      * @param {boolean} editable If this display window is editable
-     * @param {Array<Array<string, string>>} macros Externally provided macros
+     * 
+     * @param {[string, string][]} macros Externally provided macros
+     * 
      * @param {boolean} replaceMacros If the externally provided macros should replace internally defined macros
      */
-    // actually handle(Re)LoadTdlFile()
-    handleLoadTdlFile = (event: any, options: IpcEventArgType["load-tdl-file"],) => {
-        const windowId = options["displayWindowId"];
-        const tdlFileName = options["tdlFileName"];
-        const mode = options["mode"];
-        const editable = options["editable"];
-        const macros = options["externalMacros"];
-        const replaceMacros = options["replaceMacros"];
-        const currentTdlFolder = options["currentTdlFolder"];
+    handleLoadTdlFile = async (event: any, options: IpcEventArgType["load-tdl-file"],) => {
+        const {displayWindowId, tdlFileName, mode, editable, externalMacros, replaceMacros, currentTdlFolder} = options;
 
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
@@ -2238,9 +1832,9 @@ export class IpcManagerOnMainProcess {
             return;
         }
         try {
-            const displayWindowAgent = windowAgentsManager.getAgent(windowId);
+            const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
             if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
-                const errMsg = `Display window ${windowId} does not exists`;
+                const errMsg = `Display window ${displayWindowId} does not exists`;
                 throw new Error(errMsg);
             }
             if (tdlFileName === "") {
@@ -2250,28 +1844,26 @@ export class IpcManagerOnMainProcess {
                     tdlFileName: "",
                     initialModeStr: mode,
                     editable: editable,
-                    externalMacros: macros,
+                    externalMacros: externalMacros,
                     useExternalMacros: replaceMacros,
                     utilityType: undefined,
                     utilityOptions: {},
                 });
             } else {
                 // non-blocking, expand macros
-                FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder).then((result) => {
-                    if (result !== undefined) {
-                        displayWindowAgent.sendFromMainProcess("new-tdl", {
-                            newTdl: result["tdl"],
-                            tdlFileName: result["fullTdlFileName"],
-                            initialModeStr: mode,
-                            editable: editable,
-                            externalMacros: macros,
-                            useExternalMacros: replaceMacros,
-                            utilityType: undefined,
-                            utilityOptions: {},
-                        });
-                    } else {
-                        Log.error("0", "tdl cannot be read");
-                    }
+                const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder)
+                if (tdlResult === undefined) {
+                    return;
+                }
+                displayWindowAgent.sendFromMainProcess("new-tdl", {
+                    newTdl: tdlResult["tdl"],
+                    tdlFileName: tdlResult["fullTdlFileName"],
+                    initialModeStr: mode,
+                    editable: editable,
+                    externalMacros: externalMacros,
+                    useExternalMacros: replaceMacros,
+                    utilityType: undefined,
+                    utilityOptions: {},
                 });
             }
         } catch (e) {
@@ -2827,7 +2419,8 @@ export class IpcManagerOnMainProcess {
     // ------------------------------------------------------------
 
     createUtilityDisplayWindow = (event: any, options: IpcEventArgType["create-utility-display-window"]) => {
-        let { utilityType, utilityOptions, httpResponse } = options;
+        let { utilityType, utilityOptions, windowId } = options;
+        console.log("create utility display window <-----------------", options);
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         if (utilityType === "ProfilesViewer") {
             utilityOptions = {};
@@ -2936,7 +2529,7 @@ export class IpcManagerOnMainProcess {
             }
         }
 
-        windowAgentsManager.createUtilityDisplayWindow(utilityType, utilityOptions, httpResponse);
+        windowAgentsManager.createUtilityDisplayWindow(utilityType, utilityOptions, windowId);
     };
 
     // ----------------------- context menu -----------------
@@ -3908,10 +3501,7 @@ export class IpcManagerOnMainProcess {
      * It is for opening a new TextEditor window, which is done in create-utility-display-window event
      */
     handleOpenTextFileInTextEditor = async (event: any, options: IpcEventArgType["open-text-file-in-text-editor"]) => {
-
-
         // todo: control access to file in web mode
-
         let manualOpen = false;
         let openNewWindow = false;
         if (options["manualOpen"] === true) {
@@ -3948,7 +3538,8 @@ export class IpcManagerOnMainProcess {
                         utilityType: "TextEditor",
                         utilityOptions: {
                             fileName: fileName
-                        }
+                        },
+                        windowId: options["displayWindowId"],
                     }
                 )
                 return;

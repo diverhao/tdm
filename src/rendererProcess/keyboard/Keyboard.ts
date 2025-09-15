@@ -563,10 +563,12 @@ export class Keyboard {
     on_F1_press = () => {
         if (this.noModifierKeyDown()) {
             const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
+            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
             ipcManager.sendFromRendererProcess("create-utility-display-window", 
                 {
                     utilityType: "Help", 
-                    utilityOptions: {}
+                    utilityOptions: {},
+                    windowId: displayWindowId,
                 }
             )
         }

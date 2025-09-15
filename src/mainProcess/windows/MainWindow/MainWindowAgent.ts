@@ -36,11 +36,11 @@ export class MainWindowAgent {
     // resolved after the websocket IPC is established between Main Window and main process
     // resolved at IpcManagerOnMainProcess.handleWebsocketIpcConnectedOnMainWindow()
     // after this one is resolved, the user can select the profile
-    creationResolve2: any;
-    creationReject2: any;
-    creationPromise2: Promise<string> = new Promise((resolve, reject) => {
-        this.creationResolve2 = resolve;
-        this.creationReject2 = reject;
+    websocketIpcConnectedResolve: any;
+    websocketIpcConnectedReject: any;
+    websocketIpcConnectedPromise: Promise<string> = new Promise((resolve, reject) => {
+        this.websocketIpcConnectedResolve = resolve;
+        this.websocketIpcConnectedReject = reject;
     });
 
     constructor(windowAgentsManager: WindowAgentsManager) {

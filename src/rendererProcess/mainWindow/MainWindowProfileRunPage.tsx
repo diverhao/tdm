@@ -78,6 +78,7 @@ export class MainWindowProfileRunPage {
 
 
         const openFileBrowser = (event: any) => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             // priority:
             // the valid input path variable which should be an absolute path
             // this tdl file's path
@@ -147,7 +148,8 @@ export class MainWindowProfileRunPage {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "FileBrowser",
-                    utilityOptions: { path: openPath, modal: false }
+                    utilityOptions: { path: openPath, modal: false },
+                    windowId: mainWindowId,
                 }
             );
         };
@@ -159,22 +161,26 @@ export class MainWindowProfileRunPage {
         };
 
         const showProfileInfo = (event: any) => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             // window id
             // no tdl file name, no macro, do not replace macro
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "ProfilesViewer",
                     utilityOptions: {},
+                    windowId: mainWindowId,
                 }
             );
         };
         const showLogInfo = (event: any) => {
             // window id
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             // no tdl file name, no macro, do not replace macro
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "LogViewer",
-                    utilityOptions: {}
+                    utilityOptions: {},
+                    windowId: mainWindowId
                 }
             );
         };
@@ -183,107 +189,133 @@ export class MainWindowProfileRunPage {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("new-tdm-process", {});
         }
         const openDefaultDisplayWindows = (event: any) => {
-            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-default-display-windows", {});
+            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-default-display-windows", {
+                windowId: this.getMainWindowClient().getWindowId(),
+            });
         }
 
         // utility windows
         const openProbeWindow = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "Probe",
-                    utilityOptions: { channelNames: [] }
+                    utilityOptions: { channelNames: [] },
+                    windowId: mainWindowId,
                 }
             );
         }
 
         const openChannelGraphWindow = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "ChannelGraph",
-                    utilityOptions: { channelNames: [] }
+                    utilityOptions: { channelNames: [] },
+                    windowId: mainWindowId,
                 }
             );
         }
         const openSeqGraphWindow = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "SeqGraph",
-                    utilityOptions: {}
+                    utilityOptions: {},
+                    windowId: mainWindowId,
                 }
             );
         }
 
         const openPvMonitorWindow = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "PvMonitor",
-                    utilityOptions: { channelNames: [] }
+                    utilityOptions: { channelNames: [] },
+                    windowId: mainWindowId,
                 }
             );
         }
 
         const openCaSnooperWindow = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "CaSnooper",
-                    utilityOptions: {}
+                    utilityOptions: {},
+                    windowId: mainWindowId,
                 }
             );
         }
         const openCaswWindow = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "Casw",
-                    utilityOptions: {}
+                    utilityOptions: {},
+                    windowId: mainWindowId,
                 }
             );
         }
         const openFileConverterWindow = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "FileConverter",
-                    utilityOptions: {}
+                    utilityOptions: {},
+                    windowId: mainWindowId,
                 }
             );
         }
         const openPvTablesWindow = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "PvTable",
-                    utilityOptions: { channelNames: [] }
+                    utilityOptions: { channelNames: [] },
+                    windowId: mainWindowId,
                 }
             );
         }
 
         const openDataViewerWindow = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "DataViewer",
-                    utilityOptions: { channelNames: [] }
+                    utilityOptions: { channelNames: [] },
+                    windowId: mainWindowId,
                 }
             );
         }
         const openCalculatorWindow = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "Calculator",
-                    utilityOptions: {}
+                    utilityOptions: {},
+                    windowId: mainWindowId,
                 }
             );
         }
         const openTerminalWindow = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "Terminal",
-                    utilityOptions: {}
+                    utilityOptions: {},
+                    windowId: mainWindowId,
                 }
             );
         }
         const openTextEditorWindow = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "TextEditor",
-                    utilityOptions: { fileName: "" }
+                    utilityOptions: { fileName: "" },
+                    windowId: mainWindowId,
                 }
             );
         }
@@ -298,11 +330,13 @@ export class MainWindowProfileRunPage {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("quit-tdm-process", {});
         }
         const openTalhk = () => {
+            const mainWindowId = this.getMainWindowClient().getWindowId();
             // todo: include alarm handler server address
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "Talhk",
-                    utilityOptions: { serverAddress: "http://127.0.0.1:4000" }
+                    utilityOptions: { serverAddress: "http://127.0.0.1:4000" },
+                    windowId: mainWindowId,
                 }
             );
         }
@@ -625,17 +659,22 @@ export class MainWindowProfileRunPage {
     createNewDisplay = (event: any) => {
         // event.preventDefault();
         // this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file", "");
-        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file",
+        // this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file",
+        //     {
+        //         options: {
+        //             tdlFileNames: [],
+        //             mode: "editing",
+        //             editable: true,
+        //             macros: [],
+        //             replaceMacros: false,
+        //             // currentTdlFolder?: string;
+        //             windowId: this.getMainWindowClient().getWindowId(),
+        //         }
+        //     }
+        // );
+        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-blank-display-window",
             {
-                options: {
-                    tdlFileNames: [],
-                    mode: "editing",
-                    editable: true,
-                    macros: [],
-                    replaceMacros: false,
-                    // currentTdlFolder?: string;
-                    windowId: this.getMainWindowClient().getWindowId(),
-                }
+                displayWindowId: this.getMainWindowClient().getWindowId(),
             }
         );
     };

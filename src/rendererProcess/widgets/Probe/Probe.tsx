@@ -1215,6 +1215,7 @@ export class Probe extends BaseWidget {
                             // directly use the IPC, not the openProbeWindow function
                             const channelName = value.split(" ")[0];
                             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                            const displayWindowId = displayWindowClient.getWindowId();
                             const mainProcessMode = displayWindowClient.getMainProcessMode();
                             if (mainProcessMode === "web") {
                                 g_widgets1.openProbeWindow([], channelName);
@@ -1226,7 +1227,8 @@ export class Probe extends BaseWidget {
                                     .sendFromRendererProcess("create-utility-display-window",
                                         {
                                             utilityType: "Probe",
-                                            utilityOptions: { channelNames: [channelName] }
+                                            utilityOptions: { channelNames: [channelName] },
+                                            windowId: displayWindowId,
                                         }
                                     );
                             }

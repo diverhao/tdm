@@ -429,8 +429,8 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
                         macros: macros,
                         replaceMacros: false,
                         // currentTdlFolder?: string;
+                        windowId: "0", // let main window take the burden
                     },
-                    httpResponse: undefined
                 }
             )
         }
