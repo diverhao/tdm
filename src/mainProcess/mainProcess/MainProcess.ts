@@ -209,11 +209,9 @@ export class MainProcess {
              * (3) create and initialize the context
              */
             // (1)
-            app.whenReady().then(async () => {
-                const firstProfileName = this.getProfiles().getFirstProfileName();
-                this.getIpcManager().handleProfileSelected(undefined, {
-                    selectedProfileName: firstProfileName,
-                })
+            const firstProfileName = this.getProfiles().getFirstProfileName();
+            this.getIpcManager().handleProfileSelected(undefined, {
+                selectedProfileName: firstProfileName,
             })
         } else if (this.getMainProcessMode() === "ssh-server") {
             /**

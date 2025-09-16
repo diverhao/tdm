@@ -9,11 +9,12 @@ import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, g_widgets1
 import * as GlobalMethods from "../../global/GlobalMethods";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../mainProcess/log/Log";
-import * as THREE from 'three';
+// import * as THREE from 'three';
+import {OrthographicCamera, Scene, WebGLRenderer, BufferGeometry, BufferAttribute, ShaderMaterial, Points, Color, Vector2} from "three";
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
 
 export type type_yAxis = {
     label: string;
@@ -1090,8 +1091,8 @@ export class XYPlotPlot {
         const mountRef = React.useRef<HTMLDivElement>(null);
 
         const fun1 = () => {
-            const scene = new THREE.Scene();
-            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+            const scene = new Scene();
+            const camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
 
             camera.position.z = 1;
             const containerWidth = this.plotWidth;
@@ -1100,7 +1101,7 @@ export class XYPlotPlot {
             const pixelWorldUnitRatioX = containerWidth / 2;
             const pixelWorldUnitRatioY = containerHeight / 2;
 
-            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            const renderer = new WebGLRenderer({ alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(containerWidth, containerHeight);
             mountRef.current!.appendChild(renderer.domElement);
@@ -1137,8 +1138,8 @@ export class XYPlotPlot {
 
                 // ---------------- points --------------
                 if (showPoint === true) {
-                    const pointGeometry = new THREE.BufferGeometry();
-                    pointGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                    const pointGeometry = new BufferGeometry();
+                    pointGeometry.setAttribute('position', new BufferAttribute(positions, 3));
                     const pointSize = this.yAxes[this.getYIndex(index)].pointSize;
                     const pointType = this.yAxes[this.getYIndex(index)].pointType;
 
@@ -1162,7 +1163,7 @@ export class XYPlotPlot {
                                             :
                                             1;
 
-                    const pointMaterial = new THREE.ShaderMaterial({
+                    const pointMaterial = new ShaderMaterial({
                         uniforms: {
                             // for some shapes, the actual point size is different from pointSize value
                             size: { value: pointSize },
@@ -1232,7 +1233,7 @@ export class XYPlotPlot {
                     });
 
 
-                    const points = new THREE.Points(pointGeometry, pointMaterial);
+                    const points = new Points(pointGeometry, pointMaterial);
                     scene.add(points);
                 }
 
@@ -1245,9 +1246,9 @@ export class XYPlotPlot {
 
                     const lineMaterial = new LineMaterial({
                         worldUnits: false,
-                        color: new THREE.Color(color),
+                        color: new Color(color),
                         linewidth: lineWidth,
-                        resolution: new THREE.Vector2(containerWidth, containerHeight),
+                        resolution: new Vector2(containerWidth, containerHeight),
                         dashed: true,
                         dashSize: this.calcDashSizeWebGl(index),
                         gapSize: this.calcGapSizeWebGl(index),

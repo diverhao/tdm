@@ -11,9 +11,7 @@ import { ChannelSeverity } from "../../channel/TcaChannel";
 // import { clipboard } from "electron";
 // import { homedir } from "os";
 import { FitAddon } from "@xterm/addon-fit";
-import * as mathjs from "mathjs";
-// import * as os from "os";
-// import fs from "fs";
+// import { parse } from "mathjs";
 import { TerminalIos } from "./TerminalIos";
 import { Log } from "../../../mainProcess/log/Log";
 
@@ -1168,17 +1166,19 @@ export class Terminal extends BaseWidget {
                     const commandRawArray = commandRaw.split("=");
                     if (commandRawArray.length === 1) {
                         // normal evaluation
-                        const commandParse = mathjs.parse(commandRaw);
-                        result = commandParse.evaluate(this.bcVariables);
+                        // todo: test
+                        // const commandParse = parse(commandRaw);
+                        // result = commandParse.evaluate(this.bcVariables);
                     } else if (commandRawArray.length === 2) {
                         const variableRaw = commandRawArray[0];
                         if (variableRaw.trim().includes(" ")) {
                             throw new Error("Syntax error");
                         }
                         // process RHS, and
-                        const commandParse = mathjs.parse(commandRawArray[1]);
-                        result = commandParse.evaluate(this.bcVariables);
-                        this.bcVariables[variableRaw.trim()] = result;
+                        //todo uncomment, test parse
+                        // const commandParse = parse(commandRawArray[1]);
+                        // result = commandParse.evaluate(this.bcVariables);
+                        // this.bcVariables[variableRaw.trim()] = result;
                     } else {
                         throw new Error("Syntax error");
                     }

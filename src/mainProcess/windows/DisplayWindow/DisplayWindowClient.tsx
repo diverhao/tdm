@@ -31,7 +31,6 @@ import { TextUpdate } from "../../../rendererProcess/widgets/TextUpdate/TextUpda
 import { PvMonitor } from "../../../rendererProcess/widgets/PvMonitor/PvMonitor";
 import { Casw } from "../../../rendererProcess/widgets/Casw/Casw";
 import { TextEditor } from "../../../rendererProcess/widgets/TextEditor/TextEditor";
-import html2canvas from "html2canvas";
 import { convertEpochTimeToString } from "../../../rendererProcess/global/GlobalMethods";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
 import path from "path";
@@ -41,6 +40,8 @@ import { Talhk } from "../../../rendererProcess/widgets/Talhk/Talhk";
 import { FileBrowser } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 // import '../../resources/css/simple.css';
+// there is no typescrit def for this lib, I created a wrapper at dom-to-image-more.d.ts
+import {toBlob} from "dom-to-image-more";
 
 
 console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Finished loading modules.")
@@ -272,7 +273,6 @@ export class DisplayWindowClient {
                     };
 
                     const handleMouseUp = () => {
-                        console.log("mouse is up")
                         // this.setWindowAlwaysOnTop(false);
                         // cancel always on top
                         window.removeEventListener('mousemove', handleMouseMove);
@@ -604,7 +604,6 @@ export class DisplayWindowClient {
                     break;
                 }
                 if (eventElement.id.startsWith("DataViewerPlot-")) {
-                    console.log("caught in data viewer plot")
                     return;
                 }
                 eventElement = eventElement.parentElement;
@@ -768,7 +767,6 @@ export class DisplayWindowClient {
         utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph",
         utilityOptions: Record<string, any>
     ) => {
-        console.log("tdl", utilityType)
         if (utilityType === "Probe") {
             // todo: this window should not be editable, in editing mode, it is a mess
             const widgetTdl = Probe.generateWidgetTdl(utilityOptions);
@@ -1213,17 +1211,15 @@ export class DisplayWindowClient {
             return;
         }
         try {
-            const canvas = await html2canvas(document.body);
-            canvas.toBlob(async (blob: Blob | null) => {
-                if (blob !== null) {
-                    const dateNowStr = convertEpochTimeToString(Date.now());
-                    const suggestedName = `TDM-screenshot-${dateNowStr}.png`;
-                    const description = 'Screenshot Image';
-                    const applicationKey = "application/image";
-                    const applicationValue = [".png"];
-                    this.downloadData(blob, suggestedName, description, applicationKey, applicationValue);
-                }
-            });
+            const blob = await toBlob(document.body);
+            if (blob !== null) {
+                const dateNowStr = convertEpochTimeToString(Date.now());
+                const suggestedName = `TDM-screenshot-${dateNowStr}.png`;
+                const description = 'Screenshot Image';
+                const applicationKey = "application/image";
+                const applicationValue = [".png"];
+                this.downloadData(blob, suggestedName, description, applicationKey, applicationValue);
+            }
         } catch (err) {
             Log.error('Error capturing screenshot:', err);
         }
@@ -1511,20 +1507,18 @@ export class DisplayWindowClient {
             return;
         }
         try {
-            const canvas = await html2canvas(document.body);
-            canvas.toBlob(async (blob: Blob | null) => {
-                if (blob !== null) {
-                    try {
-                        await navigator.clipboard.write([
-                            new ClipboardItem({
-                                'image/png': blob
-                            })
-                        ]);
-                    } catch (err) {
-                        Log.error('Error copying to clipboard:', err);
-                    }
+            const blob = await toBlob(document.body);
+            if (blob !== null) {
+                try {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({
+                            'image/png': blob
+                        })
+                    ]);
+                } catch (err) {
+                    Log.error('Error copying to clipboard:', err);
                 }
-            });
+            }
         } catch (err) {
             Log.error('Error capturing screenshot:', err);
         }
@@ -1627,7 +1621,6 @@ export class DisplayWindowClient {
     };
 
     getMainProcessMode = (): "desktop" | "web" | "ssh-client" => {
-        console.log("ssh host name", this.getHostname())
         const userAgent = navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
             if (this.getHostname() === "127.0.0.1") {

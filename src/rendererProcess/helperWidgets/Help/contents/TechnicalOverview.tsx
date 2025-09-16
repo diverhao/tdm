@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Help } from "../Help";
 import { LINK, IMG, ARTICLE, P, H1, H2, H3, SLIDESHOW, LI, CODE, parseTree, TREE, TREEWRAP } from "../Elements"
-import { fontFamily } from "html2canvas/dist/types/css/property-descriptors/font-family";
 
 const treeStr = `
 

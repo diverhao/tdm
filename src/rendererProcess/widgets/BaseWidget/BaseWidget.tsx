@@ -1,4 +1,4 @@
-import * as mathjs from "mathjs";
+
 import * as React from "react";
 import { MouseEvent } from "react";
 import { Channel_ACCESS_RIGHTS, getMouseEventClientX, getMouseEventClientY, g_widgets1 } from "../../global/GlobalVariables";
@@ -12,6 +12,7 @@ import { rendererWindowStatus } from "../../global/Widgets";
 import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { Log } from "../../../mainProcess/log/Log";
 import { GlobalVariables } from "../../global/GlobalVariables";
+import {evaluate} from "mathjs";
 
 export type type_BaseWidget_tdl = {
     type: string;
@@ -1536,7 +1537,7 @@ export abstract class BaseWidget {
         }
 
         try {
-            const result = mathjs.evaluate(tmp.join(""));
+            const result = evaluate(tmp.join(""));
             if (typeof result === "boolean") {
                 return result === true ? 1 : 0;
             } else {

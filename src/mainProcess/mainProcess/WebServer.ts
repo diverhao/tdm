@@ -419,16 +419,19 @@ export class WebServer {
                     });
 
                 } else if (command === "create-display-window-agent") {
-                    console.log("create-display-window-agent ======================", data);
-                    
+                    // when a webpage refreshes, the server needs to re-create the DisplayWindowAgent object
+
+                    // the data contains the information of the page page
                     const { tdlFileNames, mode, editable, macros, currentTdlFolder } = JSON.parse(data);
                     const tdlFileName = tdlFileNames[0];
                     const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
                     const windowId = "0";
+
                     // create the DisplayWindowAgent object for this web page, then send
                     // back the display window ID, so that the webpage can proceed to load with 
                     const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-                    // windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, currentTdlFolder, "0");
+
+                    // read the file
                     const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder)
                     if (tdlResult !== undefined) {
                         const tdl = tdlResult["tdl"];
@@ -443,9 +446,8 @@ export class WebServer {
                             hide: false,
                             windowId: windowId,
                         };
-                        // await this.createDisplayWindow(options);
                         const displayWindowId = windowAgentsManager.obtainDisplayWindowId();
-                        const displayWindowAgent = await windowAgentsManager.createDisplayWindowAgent(options, displayWindowId);
+                        await windowAgentsManager.createDisplayWindowAgent(options, displayWindowId);
                         const ipcServerPort = this.getMainProcess().getIpcManager().getPort();
                         response.json({
                             command: "create-display-window-agent",
@@ -455,10 +457,8 @@ export class WebServer {
                             }
                         })
                     } else {
-                        // Log.error("0", `Cannot read file ${tdlFileName}`);
+                        Log.error("0", `Failed to refresh the webpage for file ${tdlFileName}`);
                     }
-
-
                 }
             });
 

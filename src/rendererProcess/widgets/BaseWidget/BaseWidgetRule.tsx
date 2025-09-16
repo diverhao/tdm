@@ -7,7 +7,7 @@ import { RuleY } from "../../helperWidgets/RuleComponents/RuleY";
 import { RuleBackgroundColor } from "../../helperWidgets/RuleComponents/RuleBackgroundColor";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
-import * as mathjs from "mathjs";
+import {evaluate} from "mathjs";
 import { GlobalVariables } from "../../global/GlobalVariables";
 import { RuleWidth } from "../../helperWidgets/RuleComponents/RuleWidth";
 import { RuleColor } from "../../helperWidgets/RuleComponents/RuleColor";
@@ -603,7 +603,7 @@ export abstract class BaseWidgetRule {
             }
         }
         try {
-            const result = mathjs.evaluate(tmp.join(""));
+            const result = evaluate(tmp.join(""));
             if (typeof result !== "boolean") {
                 return false;
             } else {

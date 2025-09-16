@@ -3,8 +3,8 @@
 <html>
 	<head> </head>
 
-	<body style="-webkit-print-color-adjust: exact">
-		<div id="root">aaabbb</div>
+	<body style="-webkit-print-color-adjust: exact; width: 100%; height: 100%;">
+		<div id="root"></div>
 		<!-- one solution for Electron's "exports is not defined" error -->
 		<!-- We must also change "nodeIntegration" and "contextIsolation" in "app.js" -->
 		<!-- https://stackoverflow.com/questions/54619111/typescript-electron-exports-is-not-defined -->
@@ -31,7 +31,6 @@
 			const displayWindowId = urlParams.get("displayWindowId");
 			const hostnameRaw = urlParams.get("hostname"); // might be null
 			const hostname = hostnameRaw === null ? undefined : hostnameRaw;
-			console.log(window.DisplayWindowClientClass);
             console.log("ipcServerPort", ipcServerPort, "displayWindowAgentId", displayWindowId);
 			new window.DisplayWindowClientClass(displayWindowId, parseInt(ipcServerPort), hostname);
 		</script>

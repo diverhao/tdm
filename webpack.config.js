@@ -18,8 +18,8 @@
 
 const path = require("path");
 const webpack = require("webpack");
-// const BundleAnalyzerPlugin =
-//   require("webpack-bundle-analyzer").BundleAnalyzerPlugin
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+const TerserPlugin = require("terser-webpack-plugin");
 
 const windowClientsConfig = {
 	//HH ------------ html -----------------
@@ -32,6 +32,11 @@ const windowClientsConfig = {
 		}),
 		new webpack.HotModuleReplacementPlugin(),
 		// new BundleAnalyzerPlugin()
+		new BundleAnalyzerPlugin({
+			analyzerMode: "server", // opens a web server
+			analyzerPort: 8888, // port for the report
+			openAnalyzer: true, // automatically open report in browser
+		}),
 	],
 	//HH ------------ javascript -----------------
 	//HH the webpack inject this file's transpilation to generated html file: dist/index.html
@@ -113,6 +118,20 @@ const windowClientsConfig = {
 			//! the only place that uses child_process on client side is the ActionButton "execute command" choice
 			child_process: false,
 		},
+	},
+
+	optimization: {
+		minimize: true,
+		minimizer: [
+			new TerserPlugin({
+				terserOptions: {
+					compress: {
+						drop_console: true, // 🚀 remove console.* calls
+						drop_debugger: true, // 🚀 remove debugger statements
+					},
+				},
+			}),
+		],
 	},
 
 	//HH -------------- npm run dev --------------

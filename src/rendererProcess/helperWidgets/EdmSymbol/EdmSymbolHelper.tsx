@@ -6,7 +6,7 @@ import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConv
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import { GlobalVariables } from "../../global/GlobalVariables";
-import { transform } from "html2canvas/dist/types/css/property-descriptors/transform";
+
 
 export type type_Label_tdl = {
     type: string;

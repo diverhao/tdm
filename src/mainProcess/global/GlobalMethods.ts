@@ -9,7 +9,6 @@ import { execSync } from "child_process";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 // import { MainProcesses } from "../mainProcesses/MainProcesses";
-// import { arg } from "mathjs";
 import * as selfsigned from "selfsigned";
 // import Main from "electron/main";
 

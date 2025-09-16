@@ -2,7 +2,7 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { Help } from "./Help";
 import { HashLink } from "react-router-hash-link";
-import { exp } from "mathjs";
+
 
 /**
  * Shared elements used by Help widget

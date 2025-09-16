@@ -5,8 +5,8 @@ import { CalculatorSidebar } from "./CalculatorSidebar";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import * as mathjs from "mathjs";
 import {Log} from "../../../mainProcess/log/Log";
+import {evaluate} from "mathjs";
 
 export type type_Calculator_tdl = {
     type: string;
@@ -279,7 +279,7 @@ export class Calculator extends BaseWidget {
                                 setHistoryLine(oldValue);
                                 this.inputLineHistory.push(oldValue);
                                 try {
-                                    const result = mathjs.evaluate(this.replaceSpecialCharacters(oldValue));
+                                    const result = evaluate(this.replaceSpecialCharacters(oldValue));
                                     if (typeof result !== "number") {
                                         const errMsg = `Parse error: ${oldValue}`;
                                         throw new Error(errMsg);
@@ -774,7 +774,7 @@ export class Calculator extends BaseWidget {
                     setHistoryLine(oldValue);
                     this.inputLineHistory.push(oldValue);
                     try {
-                        const result = mathjs.evaluate(this.replaceSpecialCharacters(oldValue));
+                        const result = evaluate(this.replaceSpecialCharacters(oldValue));
                         if (typeof result !== "number") {
                             const errMsg = `Parse error: ${oldValue}`;
                             throw new Error(errMsg);

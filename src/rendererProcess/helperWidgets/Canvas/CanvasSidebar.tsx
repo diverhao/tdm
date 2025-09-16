@@ -9,7 +9,7 @@ import * as GlobalMethods from "../../global/GlobalMethods";
 import { g_flushWidgets } from "../Root/Root";
 import { ElementMacroInput, ElementMacroTr, ElementButton, ElementMacroTd, ElementMacrosTable } from "../SharedElements/MacrosTable";
 import { SidebarLargeInput } from "../../widgets/BaseWidget/SidebarLargeInput";
-import { zIndex } from "html2canvas/dist/types/css/property-descriptors/z-index";
+
 
 export class CanvasSidebar {
     private _widgetKey: string;

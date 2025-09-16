@@ -3,7 +3,7 @@
 <html>
 	<head> </head>
 
-	<body style="-webkit-print-color-adjust: exact">
+	<body style="-webkit-print-color-adjust: exact; width: 100%; height: 100%">
 		<div id="root"></div>
 		<!-- one solution for Electron's "exports is not defined" error -->
 		<!-- We must also change "nodeIntegration" and "contextIsolation" in "app.js" -->
@@ -37,7 +37,9 @@
 				// refresh the webpage
                 // (1) tell the main process to create DisplayWindowAgent for this page
                 //     then we obtain the display window ID
-                // (2) use the display window ID and websocket IPC server port to create
+                // (2) update page address with new display window ID, remove the 
+                //     "file" query
+                // (3) use the display window ID and websocket IPC server port to create
                 //     DisplayWindowClient
 				const pageData = sessionStorage.getItem("pageData");
 				if (pageData !== null) {
@@ -57,10 +59,11 @@
 							return data["data"];
 						})
 						.then((data) => {
-                            // (2)
 							const displayWindowId = data["displayWindowId"];
 							const ipcServerPort = data["ipcServerPort"];
+                            // (2)
 							window.history.replaceState({}, "", `DisplayWindow.html?displayWindowId=${displayWindowId}`);
+                            // (3)
 							new window.DisplayWindowClientClass(displayWindowId, parseInt(ipcServerPort));
 						});
 				}

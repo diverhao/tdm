@@ -313,7 +313,6 @@ export class TextUpdate extends BaseWidget {
     _getChannelValue = (raw: boolean = false) => {
 
         const channelValue = this.getChannelValueForMonitorWidget(raw);
-        console.log("channel value ===============================", channelValue)
         if (typeof channelValue === "number" || typeof channelValue === "string") {
             return this._parseChannelValueElement(channelValue);
         } else if (Array.isArray(channelValue)) {

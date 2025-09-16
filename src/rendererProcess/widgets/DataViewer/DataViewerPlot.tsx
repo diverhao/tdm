@@ -9,6 +9,7 @@ import { type_LocalChannel_data } from "../../../mainProcess/channel/LocalChanne
 // import { type_xAxis } from "../XYPlot/XYPlotPlot";
 import uuid from "uuid";
 import * as THREE from 'three';
+import {OrthographicCamera, Scene, WebGLRenderer, BufferGeometry, BufferAttribute, ShaderMaterial, Points, Color, Vector2} from "three";
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
@@ -1021,8 +1022,8 @@ export class DataViewerPlot {
         const mountRef = React.useRef<HTMLDivElement>(null);
 
         const fun1 = () => {
-            const scene = new THREE.Scene();
-            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+            const scene = new Scene();
+            const camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
 
             camera.position.z = 1;
             const containerWidth = this.plotWidth;
@@ -1031,7 +1032,7 @@ export class DataViewerPlot {
             const pixelWorldUnitRatioX = containerWidth / 2;
             const pixelWorldUnitRatioY = containerHeight / 2;
 
-            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            const renderer = new WebGLRenderer({ alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(containerWidth, containerHeight);
             mountRef.current!.appendChild(renderer.domElement);
@@ -1053,9 +1054,9 @@ export class DataViewerPlot {
 
                     const lineMaterial = new LineMaterial({
                         worldUnits: false,
-                        color: new THREE.Color(color),
+                        color: new Color(color),
                         linewidth: lineWidth,
-                        resolution: new THREE.Vector2(containerWidth, containerHeight),
+                        resolution: new Vector2(containerWidth, containerHeight),
                     });
 
                     const line = new Line2(lineGeometry, lineMaterial);
@@ -2535,8 +2536,8 @@ export class DataViewerPlot {
         const mountRef = React.useRef<HTMLDivElement>(null);
 
         const fun1 = () => {
-            const scene = new THREE.Scene();
-            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+            const scene = new Scene();
+            const camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
 
             camera.position.z = 1;
             const containerWidth = this.plotWidth;
@@ -2545,7 +2546,7 @@ export class DataViewerPlot {
             const pixelWorldUnitRatioX = containerWidth / 2;
             const pixelWorldUnitRatioY = containerHeight / 2;
 
-            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            const renderer = new WebGLRenderer({ alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(containerWidth, containerHeight);
             mountRef.current!.appendChild(renderer.domElement);
@@ -2567,9 +2568,9 @@ export class DataViewerPlot {
 
                     const lineMaterial = new LineMaterial({
                         worldUnits: false,
-                        color: new THREE.Color(color),
+                        color: new Color(color),
                         linewidth: lineWidth,
-                        resolution: new THREE.Vector2(containerWidth, containerHeight),
+                        resolution: new Vector2(containerWidth, containerHeight),
                     });
 
                     const line = new Line2(lineGeometry, lineMaterial);

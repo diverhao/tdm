@@ -11,8 +11,8 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 // import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Log } from "../../../mainProcess/log/Log";
-import * as THREE from 'three';
-import { pi, re } from "mathjs";
+// import * as THREE from 'three';
+import {OrthographicCamera, Scene, WebGLRenderer, Vector3, BufferGeometry, BufferAttribute, ShaderMaterial, Points, Color, Vector2, DataTexture, UnsignedByteType, RGBAFormat, SRGBColorSpace, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, PlaneGeometry} from "three";
 import { TcaChannel } from "../../channel/TcaChannel";
 
 export type type_Image_roi = {
@@ -1160,10 +1160,10 @@ export class Image extends BaseWidget {
         )
     }
 
-    texture: THREE.DataTexture | undefined = undefined;
-    renderer: THREE.WebGLRenderer | undefined = undefined;
-    scene: THREE.Scene | undefined = undefined;
-    camera: THREE.OrthographicCamera | undefined = undefined;
+    texture: DataTexture | undefined = undefined;
+    renderer: WebGLRenderer | undefined = undefined;
+    scene: Scene | undefined = undefined;
+    camera: OrthographicCamera | undefined = undefined;
     textureData: Uint8Array | undefined = undefined;
     // imageWidth: number = 0;
     // imageHeight: number = 0;
@@ -1903,27 +1903,27 @@ export class Image extends BaseWidget {
             }
 
             // Create texture from data
-            const texture = new THREE.DataTexture(
+            const texture = new DataTexture(
                 this.textureData,
                 width,
                 height,
-                THREE.RGBAFormat, // always RGBA
-                THREE.UnsignedByteType
+                RGBAFormat, // always RGBA
+                UnsignedByteType
             );
-            texture.colorSpace = THREE.SRGBColorSpace; // Replaces encoding in newer versions
+            texture.colorSpace = SRGBColorSpace; // Replaces encoding in newer versions
 
             // the first data point in this.textureData is plotted on top-left corner
             texture.flipY = true;
             texture.needsUpdate = true;
             texture.generateMipmaps = false;
-            texture.minFilter = THREE.NearestFilter;
-            texture.magFilter = THREE.NearestFilter;
+            texture.minFilter = NearestFilter;
+            texture.magFilter = NearestFilter;
 
             // texture.encoding = THREE.sRGBEncoding;
 
 
 
-            const scene = new THREE.Scene();
+            const scene = new Scene();
 
             // xy view range
             let xMax = this.getXmax();
@@ -1949,7 +1949,7 @@ export class Image extends BaseWidget {
             const camBottom = -height / 2 + yMin;
             const camTop = -height / 2 + yMax;
 
-            const camera = new THREE.OrthographicCamera(
+            const camera = new OrthographicCamera(
                 camLeft,
                 camRight,
                 camTop,
@@ -1965,16 +1965,16 @@ export class Image extends BaseWidget {
             camera.position.z = 5;
             camera.lookAt(0, 0, 0);
 
-            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            const renderer = new WebGLRenderer({ alpha: true });
 
             // the image area, outside of this area is blank
             // this.calcImageSize();
             renderer.setSize(this.getImageSize()[0], this.getImageSize()[1]);
             mountRef.current!.appendChild(renderer.domElement);
 
-            const geometry = new THREE.PlaneGeometry(width, height);
-            const material = new THREE.MeshBasicMaterial({ map: texture, color: 0xffffff });
-            const plane = new THREE.Mesh(geometry, material);
+            const geometry = new PlaneGeometry(width, height);
+            const material = new MeshBasicMaterial({ map: texture, color: 0xffffff });
+            const plane = new Mesh(geometry, material);
             scene.add(plane);
 
             material.transparent = true;
@@ -2011,9 +2011,9 @@ export class Image extends BaseWidget {
             // console.log("fun2 running B");
             this.texture.needsUpdate = true; // upload changes to GPU
             this.texture.generateMipmaps = false;
-            // this.texture.minFilter = THREE.LinearFilter; // No mipmaps, direct filtering
-            this.texture.minFilter = THREE.NearestFilter;
-            this.texture.magFilter = THREE.NearestFilter;
+            // this.texture.minFilter = LinearFilter; // No mipmaps, direct filtering
+            this.texture.minFilter = NearestFilter;
+            this.texture.magFilter = NearestFilter;
 
             this.renderer.render(this.scene, this.camera);
         };
@@ -2067,7 +2067,7 @@ export class Image extends BaseWidget {
                     const ndcY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
                     // Convert NDC → world coordinates
-                    const mouseWorld = new THREE.Vector3(ndcX, ndcY, 0);
+                    const mouseWorld = new Vector3(ndcX, ndcY, 0);
                     mouseWorld.unproject(this.camera);
 
                     this.zoomImage(zoomFactor, mouseWorld.x, mouseWorld.y);
@@ -2388,8 +2388,8 @@ export class Image extends BaseWidget {
         }
         const rect = this.renderer.domElement.getBoundingClientRect();
         const { width, height } = this.getImageDimensions();
-        const mouse = new THREE.Vector2();
-        const raycaster = new THREE.Raycaster();
+        const mouse = new Vector2();
+        const raycaster = new Raycaster();
 
 
         // Convert mouse to normalized device coordinates

@@ -648,7 +648,6 @@ export class WindowAgentsManager {
                 utilityOptions: utilityOptions,
                 windowId: windowId,
             };
-
             const displayWindowAgent = await this.createDisplayWindow(windowOptions);
 
             if (displayWindowAgent === undefined) {
