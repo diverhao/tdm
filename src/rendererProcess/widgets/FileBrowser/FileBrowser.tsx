@@ -1313,49 +1313,19 @@ export class FileBrowser extends BaseWidget {
                     mode = "operating";
                 }
 
-
-                if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-                    ipcManager.sendFromRendererProcess("open-tdl-file", {
-                        options: {
-                            tdlFileNames: [fullTdlFileName],
-                            mode: mode as "operating" | "editing",
-                            editable: editable,
-                            macros: [],
-                            replaceMacros: false,
-                            currentTdlFolder: this.getFolderPath(),
-                            // openInSameWindow: false,
-                            windowId: displayWindowId,
-                        }
-                    })
-
-                } else {
-                    const currentSite = `https://${window.location.host}/`;
-
-                    g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendPostRequestCommand(
-                        "open-tdl-file", {
+                ipcManager.sendFromRendererProcess("open-tdl-file", {
+                    options: {
                         tdlFileNames: [fullTdlFileName],
-                        mode: mode,
+                        mode: mode as "operating" | "editing",
                         editable: editable,
                         macros: [],
-                        replaceMacros: false, // not used
-                        // currentTdlFolder: currentTdlFolder,
-                        // openInSameWindow: openInSameWindow,
-                        windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                    }).then((response: any) => {
-                        // decode string
-                        return response.json()
-                    }).then(data => {
-                        const ipcServerPort = data["ipcServerPort"];
-                        const displayWindowId = data["displayWindowId"];
-                        // const href = `${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`;
-                        const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
-                        // open in new tab
-                        // ! important: avoid shared sessionStorage
-                        window.open(href, "_blank", "noopener, noreferrer")
-                        // open in current tab
-                        // window.location.href = href;
-                    })
-                }
+                        replaceMacros: false,
+                        currentTdlFolder: this.getFolderPath(),
+                        // openInSameWindow: false,
+                        windowId: displayWindowId,
+                    }
+                })
+
 
                 // close the modal window
                 if (this.getModal() === true) {
@@ -1460,7 +1430,7 @@ export class FileBrowser extends BaseWidget {
             if (allowToVisit === false) {
                 displayWindowClient.getIpcManager().handleDialogShowMessageBox(undefined,
                     {
-                        info:                        {
+                        info: {
                             messageType: "error", // | "warning" | "info";
                             humanReadableMessages: [`You are not allowed to visit ${folderPath}.`],
                             rawMessages: [],

@@ -668,7 +668,7 @@ export class ContextMenu {
             click: () => {
                 this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-blank-display-window",
                     {
-                        displayWindowId: this.getDisplayWindowClient().getWindowId(),
+                        windowId: this.getDisplayWindowClient().getWindowId(),
                     }
                 );
             },
@@ -1370,7 +1370,7 @@ export class ContextMenu {
 
                 this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-blank-display-window",
                     {
-                        displayWindowId: this.getDisplayWindowClient().getWindowId(),
+                        windowId: this.getDisplayWindowClient().getWindowId(),
                     }
                 );
             },
@@ -1631,7 +1631,7 @@ export class ContextMenu {
             click: () => {
                 this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-blank-display-window",
                     {
-                        displayWindowId: this.getDisplayWindowClient().getWindowId(),
+                        windowId: this.getDisplayWindowClient().getWindowId(),
                     }
                 );
             },

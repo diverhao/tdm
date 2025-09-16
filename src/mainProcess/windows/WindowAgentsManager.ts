@@ -144,7 +144,7 @@ export class WindowAgentsManager {
      */
     createDisplayWindow = async (options: type_options_createDisplayWindow): Promise<undefined | DisplayWindowAgent> => {
         let { tdl, mode, editable, tdlFileName, macros, replaceMacros, hide, windowId } = options;
-        console.log("create display window ==========================", options)
+
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
         if (mainProcessMode === "ssh-client") {
 

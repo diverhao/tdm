@@ -2459,16 +2459,16 @@ export class Widgets {
             }
             // (3)
             // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-                this.getRoot()
-                    .getDisplayWindowClient()
-                    .getIpcManager()
-                    .sendFromRendererProcess("create-utility-display-window",
-                        {
-                            utilityType: "PvMonitor",
-                            utilityOptions: { channelNames: toBeOpenedChannelNames },
-                            windowId: displayWindowId,
-                        }
-                    );
+            this.getRoot()
+                .getDisplayWindowClient()
+                .getIpcManager()
+                .sendFromRendererProcess("create-utility-display-window",
+                    {
+                        utilityType: "PvMonitor",
+                        utilityOptions: { channelNames: toBeOpenedChannelNames },
+                        windowId: displayWindowId,
+                    }
+                );
             // } else {
             //     const currentSite = `https://${window.location.host}/`;
 
@@ -2498,16 +2498,16 @@ export class Widgets {
             // 	.sendFromRendererProcess("create-utility-display-window", "Probe", { channelNames: [] });
 
             // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-                this.getRoot()
-                    .getDisplayWindowClient()
-                    .getIpcManager()
-                    .sendFromRendererProcess("create-utility-display-window",
-                        {
-                            utilityType: "PvMonitor",
-                            utilityOptions: { channelNames: [] },
-                            windowId: displayWindowId,
-                        }
-                    );
+            this.getRoot()
+                .getDisplayWindowClient()
+                .getIpcManager()
+                .sendFromRendererProcess("create-utility-display-window",
+                    {
+                        utilityType: "PvMonitor",
+                        utilityOptions: { channelNames: [] },
+                        windowId: displayWindowId,
+                    }
+                );
             // } else {
             //     const currentSite = `https://${window.location.host}/`;
 
@@ -2596,16 +2596,16 @@ export class Widgets {
         }
 
         // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot()
-                .getDisplayWindowClient()
-                .getIpcManager()
-                .sendFromRendererProcess("create-utility-display-window",
-                    {
-                        utilityType: "FileBrowser",
-                        utilityOptions: { path: openPath, parentDisplayWindowId: this.getRoot().getDisplayWindowClient().getWindowId(), modal: modal },
-                        windowId: displayWindowId,
-                    }
-                );
+        this.getRoot()
+            .getDisplayWindowClient()
+            .getIpcManager()
+            .sendFromRendererProcess("create-utility-display-window",
+                {
+                    utilityType: "FileBrowser",
+                    utilityOptions: { path: openPath, parentDisplayWindowId: this.getRoot().getDisplayWindowClient().getWindowId(), modal: modal },
+                    windowId: displayWindowId,
+                }
+            );
         // } else {
         //     const currentSite = `https://${window.location.host}/`;
 
@@ -2673,16 +2673,16 @@ export class Widgets {
         }
 
         // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot()
-                .getDisplayWindowClient()
-                .getIpcManager()
-                .sendFromRendererProcess("create-utility-display-window",
-                    {
-                        utilityType: "PvTable",
-                        utilityOptions: { channelNames: [...new Set(channelNames)] },
-                        windowId: displayWindowId,
-                    }
-                );
+        this.getRoot()
+            .getDisplayWindowClient()
+            .getIpcManager()
+            .sendFromRendererProcess("create-utility-display-window",
+                {
+                    utilityType: "PvTable",
+                    utilityOptions: { channelNames: [...new Set(channelNames)] },
+                    windowId: displayWindowId,
+                }
+            );
         // } else {
         //     const currentSite = `https://${window.location.host}/`;
         //     this.getRoot()
@@ -2741,16 +2741,16 @@ export class Widgets {
         }
 
         // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot()
-                .getDisplayWindowClient()
-                .getIpcManager()
-                .sendFromRendererProcess("create-utility-display-window",
-                    {
-                        utilityType: "DataViewer",
-                        utilityOptions: { channelNames: channelNameArray },
-                        windowId: displayWindowId,
-                    }
-                );
+        this.getRoot()
+            .getDisplayWindowClient()
+            .getIpcManager()
+            .sendFromRendererProcess("create-utility-display-window",
+                {
+                    utilityType: "DataViewer",
+                    utilityOptions: { channelNames: channelNameArray },
+                    windowId: displayWindowId,
+                }
+            );
         // } else {
         //     const currentSite = `https://${window.location.host}/`;
         //     this.getRoot()
@@ -2811,16 +2811,16 @@ export class Widgets {
         //         });
         //     return;
         // } else if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot()
-                .getDisplayWindowClient()
-                .getIpcManager()
-                .sendFromRendererProcess("create-utility-display-window",
-                    {
-                        utilityType: "TextEditor",
-                        utilityOptions: options,
-                        windowId: displayWindowId,
-                    }
-                );
+        this.getRoot()
+            .getDisplayWindowClient()
+            .getIpcManager()
+            .sendFromRendererProcess("create-utility-display-window",
+                {
+                    utilityType: "TextEditor",
+                    utilityOptions: options,
+                    windowId: displayWindowId,
+                }
+            );
         // }
     };
 
@@ -2828,13 +2828,13 @@ export class Widgets {
         const displayWindowId = this.getRoot().getDisplayWindowClient().getWindowId();
 
         // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
-                {
-                    utilityType: "Terminal",
-                    utilityOptions: {},
-                    windowId: displayWindowId,
-                }
-            );
+        this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
+            {
+                utilityType: "Terminal",
+                utilityOptions: {},
+                windowId: displayWindowId,
+            }
+        );
         // } else {
         //     const currentSite = `https://${window.location.host}/`;
         //     this.getRoot()
@@ -2897,13 +2897,13 @@ export class Widgets {
 
 
         // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
-                {
-                    utilityType: "ChannelGraph",
-                    utilityOptions: options,
-                    windowId: displayWindowId,
-                }
-            );
+        this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
+            {
+                utilityType: "ChannelGraph",
+                utilityOptions: options,
+                windowId: displayWindowId,
+            }
+        );
         // } else {
         //     const currentSite = `https://${window.location.host}/`;
         //     this.getRoot()
@@ -2934,13 +2934,13 @@ export class Widgets {
 
 
         // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
-                {
-                    utilityType: "SeqGraph",
-                    utilityOptions: options,
-                    windowId: displayWindowId,
-                }
-            );
+        this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
+            {
+                utilityType: "SeqGraph",
+                utilityOptions: options,
+                windowId: displayWindowId,
+            }
+        );
         // } else {
         //     const currentSite = `https://${window.location.host}/`;
         //     this.getRoot()
@@ -2969,13 +2969,13 @@ export class Widgets {
 
         // this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Calculator", {});
         // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
-                {
-                    utilityType: "Calculator",
-                    utilityOptions: {},
-                    windowId: displayWindowId,
-                }
-            );
+        this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
+            {
+                utilityType: "Calculator",
+                utilityOptions: {},
+                windowId: displayWindowId,
+            }
+        );
         // } else {
         //     const currentSite = `https://${window.location.host}/`;
         //     this.getRoot()
@@ -3111,36 +3111,17 @@ export class Widgets {
     duplicateDisplay = () => {
         const ipcManager = this.getRoot().getDisplayWindowClient().getIpcManager();
 
-        if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "web") {
-            const currentSite = `https://${window.location.host}/`;
-
-            ipcManager
-                .sendPostRequestCommand("duplicate-display", {
-                    tdl: this.getRoot().getDisplayWindowClient().generateTdl(),
+        ipcManager.sendFromRendererProcess("duplicate-display",
+            {
+                options:
+                {
+                    tdl: this.getRoot().getDisplayWindowClient().generateTdl() as type_tdl,
                     mode: this.isEditing() ? "editing" : "operating",
                     externalMacros: this.getRoot().getExternalMacros(),
-                })
-                .then((response: any) => {
-                    // decode string
-                    return response.json();
-                })
-                .then((data) => {
-                    const ipcServerPort = data["ipcServerPort"];
-                    const displayWindowId = data["displayWindowId"];
-                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
-                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
-                });
-        } else {
-            ipcManager.sendFromRendererProcess("duplicate-display",
-                {
-                    options:
-                    {
-                        tdl: this.getRoot().getDisplayWindowClient().generateTdl() as type_tdl,
-                        mode: this.isEditing() ? "editing" : "operating",
-                        externalMacros: this.getRoot().getExternalMacros(),
-                    }
-                });
-        }
+                    windowId: this.getRoot().getDisplayWindowClient().getWindowId(),
+                }
+            });
+        // }
     };
 
     // ------------------------ IO -----------------------

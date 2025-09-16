@@ -232,6 +232,8 @@ export class IpcManagerOnDisplayWindow {
         // site info
         this.ipcRenderer.on("site-info", this.handleSiteInfo)
         this.ipcRenderer.on("display-window-id-for-open-tdl-file", this.handleDisplayWindowIdForOpenTdlFile)
+
+        this.ipcRenderer.on("get-media-content", this.handleGetMediaContent)
     };
 
     handleObtainedIframeUuid = (
@@ -275,6 +277,7 @@ export class IpcManagerOnDisplayWindow {
             }
 
             event.stopPropagation();
+
             // `TextEditor` utility window
             const canvas = g_widgets1.getWidget("Canvas");
             let windowName = "";
@@ -327,8 +330,9 @@ export class IpcManagerOnDisplayWindow {
                         tdlFileNames.push(tdlFileName);
                     }
                 }
+
                 if (g_widgets1 !== undefined) {
-                    Log.debug("File Path of dragged files: ", tdlFileNames);
+                    Log.info("File Path of dragged files: ", tdlFileNames);
                     let mode = "operating";
                     if (g_widgets1.isEditing()) {
                         mode = "editing";
@@ -507,8 +511,8 @@ export class IpcManagerOnDisplayWindow {
             g_widgets1.matchWidgetsSize(subcommand as "width" | "height", true);
         } else if (command === "show-tdl-file-contents") {
             this.getDisplayWindowClient().showTdlFileContents();
-        // } else if (command === "create-new-display-in-web-mode") {
-        //     this.handleCreateNewDisplayInWebMode();
+            // } else if (command === "create-new-display-in-web-mode") {
+            //     this.handleCreateNewDisplayInWebMode();
         } else if (command === "open-display-in-ssh-mode") {
             this.handleOpenDisplayInSshMode();
         }
@@ -570,7 +574,7 @@ export class IpcManagerOnDisplayWindow {
     // only in display mode
     handleCreateNewDisplayInWebMode = () => {
         this.sendFromRendererProcess("create-blank-display-window", {
-            displayWindowId: this.getDisplayWindowClient().getWindowId(),
+            windowId: this.getDisplayWindowClient().getWindowId(),
         })
     };
 
@@ -1482,5 +1486,28 @@ export class IpcManagerOnDisplayWindow {
         const currentSite = `https://${window.location.host}/`;
         const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
         window.open(href, "_blank", "noopener, noreferrer")
+    }
+
+    handleGetMediaContent = (event: any, data: IpcEventArgType2["get-media-content"]) => {
+        const { content, widgetKey } = data;
+        const widget = g_widgets1.getWidget(widgetKey);
+        if (widget instanceof Media) {
+
+
+            if (data["content"] !== "") {
+                if (widget.getMediaType(widget.mediaFileName) === "picture") {
+                    widget.base64Content = `data:image/png;base64,${data["content"]}`;
+                } else if (widget.getMediaType(widget.mediaFileName) === "pdf") {
+                    widget.base64Content = `data:application/pdf;base64, ${encodeURI(data["content"])}`;
+                } else {
+                    widget.base64Content = "";
+                }
+            } else {
+                widget.base64Content = "";
+            }
+            g_widgets1.addToForceUpdateWidgets(widgetKey);
+            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+            g_flushWidgets();
+        }
     }
 }

@@ -122,33 +122,7 @@ export class DisplayWindowClient {
         }
 
         this._ipcManager = new IpcManagerOnDisplayWindow(this, ipcServerPort);
-
-        // web mode refresh
-        if (this.getMainProcessMode() === "web") {
-            // we use displayWindowId to identify the web mode sessionStorage
-            // because iframe shares the same sessionStorage, after the parent page is loaded
-            // the iframe page uses the parent's session storage to initialize, which may
-            // cause infinite loop. We use this trick that whenever the sessionStorage.displayWindowId is 
-            // not matched with this window's display ID, we consider it as a freshly opened window
-            // in this way, the iframe can be correctly loaded
-            // However, the window cannot be properly refreshed. See EmbeddedDisplay.tsx for details
-            if (sessionStorage.getItem("displayWindowId") !== this.getWindowId()) {
-                sessionStorage.clear();
-                sessionStorage.setItem("counter", `0`);
-                sessionStorage.setItem("displayWindowId", `${this.getWindowId()}`);
-            } else {
-                sessionStorage.setItem("counter", `${parseInt(sessionStorage.getItem("counter") as string) + 1}`);
-            }
-            if (parseInt(sessionStorage.getItem("counter") as string) % 2 === 0) {
-                this._ipcManager.connectIpcServer();
-            }
-            if (parseInt(sessionStorage.getItem("counter") as string) % 2 === 1) {
-                this.handlePageRefresh();
-            }
-        } else {
-            this._ipcManager.connectIpcServer();
-        }
-
+        this._ipcManager.connectIpcServer();
 
         this._root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
         this._windowTitleType = "window-name";
@@ -177,6 +151,11 @@ export class DisplayWindowClient {
     }
 
 
+    /**
+     * Save the page data after the webpage is rendered for the first time.
+     * 
+     * It is prepared for the page refreshing in web mode.
+     */
     savePageData = () => {
         // save page data only once
         if (sessionStorage.getItem("pageData") !== null) {
@@ -210,26 +189,26 @@ export class DisplayWindowClient {
     /**
      * After the window refreshed and the websocket is connected
      */
-    handlePageRefresh = async () => {
-        const pageDataStr = sessionStorage.getItem("pageData");
+    // handlePageRefresh = async () => {
+    //     const pageDataStr = sessionStorage.getItem("pageData");
 
-        if (this.getMainProcessMode() === "web" && pageDataStr !== null) {
-            Log.info("Refresh web page.")
-            const currentSite = `https://${window.location.host}/`;
-            const pageData = JSON.parse(pageDataStr);
+    //     if (this.getMainProcessMode() === "web" && pageDataStr !== null) {
+    //         Log.info("Refresh web page.")
+    //         const currentSite = `https://${window.location.host}/`;
+    //         const pageData = JSON.parse(pageDataStr);
 
-            const response = await this.getIpcManager().sendPostRequestCommand(
-                "open-tdl-file", { ...pageData, count: sessionStorage.getItem("counter") }
-            )
+    //         const response = await this.getIpcManager().sendPostRequestCommand(
+    //             "open-tdl-file", { ...pageData, count: sessionStorage.getItem("counter") }
+    //         )
 
-            const data = await response.json() as any;
-            const ipcServerPort = data["ipcServerPort"];
-            // it may come back a new display window ID
-            const displayWindowId = data["displayWindowId"];
-            const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
-            window.location.href = href;
-        }
-    }
+    //         const data = await response.json() as any;
+    //         const ipcServerPort = data["ipcServerPort"];
+    //         // it may come back a new display window ID
+    //         const displayWindowId = data["displayWindowId"];
+    //         const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
+    //         window.location.href = href;
+    //     }
+    // }
 
     moveWindow = (dx: number, dy: number) => {
         this.getIpcManager().sendFromRendererProcess("move-window", {
@@ -1065,38 +1044,38 @@ export class DisplayWindowClient {
         const tdl = this.generateTdl();
         const externalMacros = g_widgets1.getRoot().getExternalMacros();
         const tdlFileName = this.getTdlFileName();
-        if (this.getMainProcessMode() === "desktop" || this.getMainProcessMode() === "ssh-client") {
-            this.getIpcManager().sendFromRendererProcess("create-utility-display-window",
-                {
-                    utilityType: "TdlViewer",
-                    utilityOptions: {
-                        tdl: tdl,
-                        externalMacros: externalMacros,
-                        tdlFileName: tdlFileName,
-                    },
-                    windowId: this.getWindowId(),
-                }
-            );
-        } else {
-            // web mode
-            const currentSite = `https://${window.location.host}/`;
-
-            this.getIpcManager().sendPostRequestCommand("create-utility-display-window", {
-                utilityType: "TdlViewer", utilityOptions: {
+        // if (this.getMainProcessMode() === "desktop" || this.getMainProcessMode() === "ssh-client") {
+        this.getIpcManager().sendFromRendererProcess("create-utility-display-window",
+            {
+                utilityType: "TdlViewer",
+                utilityOptions: {
                     tdl: tdl,
                     externalMacros: externalMacros,
                     tdlFileName: tdlFileName,
-                }
-            }).then((response: any) => {
-                // decode string
-                return response.json()
-            }).then(data => {
-                const ipcServerPort = data["ipcServerPort"];
-                const displayWindowId = data["displayWindowId"];
-                window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`)
-            })
+                },
+                windowId: this.getWindowId(),
+            }
+        );
+        // } else {
+        //     // web mode
+        //     const currentSite = `https://${window.location.host}/`;
 
-        }
+        //     this.getIpcManager().sendPostRequestCommand("create-utility-display-window", {
+        //         utilityType: "TdlViewer", utilityOptions: {
+        //             tdl: tdl,
+        //             externalMacros: externalMacros,
+        //             tdlFileName: tdlFileName,
+        //         }
+        //     }).then((response: any) => {
+        //         // decode string
+        //         return response.json()
+        //     }).then(data => {
+        //         const ipcServerPort = data["ipcServerPort"];
+        //         const displayWindowId = data["displayWindowId"];
+        //         window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`)
+        //     })
+
+        // }
     };
 
     /**
@@ -1258,7 +1237,7 @@ export class DisplayWindowClient {
             return;
         }
 
-        
+
         if (fileName !== undefined && fileBlob !== undefined) {
             const tdlFileName = fileName;
             // we supply the file blob
@@ -1648,6 +1627,7 @@ export class DisplayWindowClient {
     };
 
     getMainProcessMode = (): "desktop" | "web" | "ssh-client" => {
+        console.log("ssh host name", this.getHostname())
         const userAgent = navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
             if (this.getHostname() === "127.0.0.1") {

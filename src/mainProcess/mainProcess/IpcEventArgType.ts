@@ -186,12 +186,12 @@ export type IpcEventArgType = {
             tdl: type_tdl;
             mode: "operating" | "editing";
             externalMacros: [string, string][];
+            windowId: string,
         },
-        httpResponse?: any
     },
 
     "create-blank-display-window": {
-        displayWindowId: string,
+        windowId: string,
     },
 
     "zoom-window": {
@@ -532,6 +532,11 @@ export type IpcEventArgType = {
         fileContents: string,
     },
 
+    "get-media-content" : {
+        fullFileName: string,
+        widgetKey: string,
+        displayWindowId: string,
+    }
 
 };
 
@@ -769,6 +774,12 @@ export type IpcEventArgType2 = {
 
     "display-window-id-for-open-tdl-file": {
         displayWindowId: string,
+    },
+
+    "get-media-content" : {
+        displayWindowId: string,
+        widgetKey: string,
+        content: string,
     }
 }
 

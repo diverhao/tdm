@@ -1793,7 +1793,7 @@ export class DisplayWindowAgent {
             // in this way, the webContents.send() is no longer used between the renderer process and main process
             const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
             const hostname = this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" ?
-                "localhost"
+                "127.0.0.1"
                 : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
 
             await window.loadURL(
@@ -1838,7 +1838,6 @@ export class DisplayWindowAgent {
             // if (httpResponse === undefined) {
             const initiatedByWindowAgent = this.getWindowAgentsManager().getAgent(options["windowId"])
             if (initiatedByWindowAgent instanceof DisplayWindowAgent) {
-                console.log("AAA", options["windowId"])
                 initiatedByWindowAgent.sendFromMainProcess("display-window-id-for-open-tdl-file", {
                     displayWindowId: this.getId(),
                 });

@@ -1899,7 +1899,6 @@ export abstract class BaseWidget {
         if (channelName === undefined) {
             return ChannelSeverity.NO_ALARM;
         } else {
-            console.log("channel name ++++++++++++++++ ==", channelName, g_widgets1.getChannelSeverity(channelName));
             return g_widgets1.getChannelSeverity(channelName);
         }
     };

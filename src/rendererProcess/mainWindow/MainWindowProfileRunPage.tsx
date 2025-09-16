@@ -657,24 +657,9 @@ export class MainWindowProfileRunPage {
     };
 
     createNewDisplay = (event: any) => {
-        // event.preventDefault();
-        // this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file", "");
-        // this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file",
-        //     {
-        //         options: {
-        //             tdlFileNames: [],
-        //             mode: "editing",
-        //             editable: true,
-        //             macros: [],
-        //             replaceMacros: false,
-        //             // currentTdlFolder?: string;
-        //             windowId: this.getMainWindowClient().getWindowId(),
-        //         }
-        //     }
-        // );
         this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-blank-display-window",
             {
-                displayWindowId: this.getMainWindowClient().getWindowId(),
+                windowId: this.getMainWindowClient().getWindowId(),
             }
         );
     };

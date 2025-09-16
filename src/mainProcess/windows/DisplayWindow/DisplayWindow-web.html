@@ -30,22 +30,57 @@
 
 		<script type="module">
 			const urlParams = new URLSearchParams(window.location.search);
-			const displayWindowId = urlParams.get("displayWindowId");
+			let displayWindowId = urlParams.get("displayWindowId");
+			let file = urlParams.get("file");
 
-			// request IPC server port from server
-			fetch("/command", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ command: "get-ipc-server-port" }),
-			})
-				.then((res) => res.json())
-				.then((data) => {
-                    const {ipcServerPort} = data;
-					new window.DisplayWindowClientClass(displayWindowId, parseInt(ipcServerPort));
+			if (file !== null) {
+				// refresh the webpage
+                // (1) tell the main process to create DisplayWindowAgent for this page
+                //     then we obtain the display window ID
+                // (2) use the display window ID and websocket IPC server port to create
+                //     DisplayWindowClient
+				const pageData = sessionStorage.getItem("pageData");
+				if (pageData !== null) {
+                    // (1)
+					fetch("/command", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							command: "create-display-window-agent",
+							data: pageData,
+						}),
+					})
+						.then((res) => res.json())
+						.then((data) => {
+							return data["data"];
+						})
+						.then((data) => {
+                            // (2)
+							const displayWindowId = data["displayWindowId"];
+							const ipcServerPort = data["ipcServerPort"];
+							window.history.replaceState({}, "", `DisplayWindow.html?displayWindowId=${displayWindowId}`);
+							new window.DisplayWindowClientClass(displayWindowId, parseInt(ipcServerPort));
+						});
+				}
+			} else {
+                // open a webpage normally
+				// request IPC server port from server
+				fetch("/command", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ command: "get-ipc-server-port" }),
 				})
-				.catch((err) => console.error(err));
+					.then((res) => res.json())
+					.then((data) => {
+						const { ipcServerPort } = data;
+						new window.DisplayWindowClientClass(displayWindowId, parseInt(ipcServerPort));
+					})
+					.catch((err) => console.error(err));
+			}
 		</script>
 	</body>
 </html>

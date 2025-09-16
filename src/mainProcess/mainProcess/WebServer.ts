@@ -298,14 +298,12 @@ export class WebServer {
             const displayWindowId = windowAgentsManager.obtainDisplayWindowId();
             const displayWindowAgent = await windowAgentsManager.createDisplayWindowAgent(options, displayWindowId);
 
-
             if (displayWindowAgent instanceof DisplayWindowAgent) {
                 response.redirect(`/DisplayWindow.html?displayWindowId=${displayWindowAgent.getId()}`)
             }
 
 
         });
-
 
         // ------------------------ POST -----------------------------------
 
@@ -348,7 +346,7 @@ export class WebServer {
         // HTTP POST requests
         // normally the communication should be through websocket, but some commands can only be done in http
         this._server.post("/command",
-            (request: any, response: any) => {
+            async (request: any, response: any) => {
                 // the received JSON is automatically parsed
                 const command = request.body["command"];
                 Log.debug("-1", "Received POST request from", request.socket.address(), "command =", command);
@@ -361,25 +359,30 @@ export class WebServer {
                     //     httpResponse: response,
                     // });
                 } else if (command === "open-tdl-file") {
-                    console.log("command open tdl file ============================= 1")
-                    // const options = data;
-                    // options["postCommand"] = command;
+                    console.log("command open tdl file ============================= 1", data)
+                    const options = data;
+                    options["postCommand"] = command;
+                    // const {displayWindowId, tdlFileName, mode, macros,editable, replaceMacros } = options;
                     // Log.info("-1", data);
                     // this.getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
+                    //     {
+                    //         options: options,
+                    //     }
+                    // );
+
+                    // response.redirect(`<html>OKOKOK</html>`)
+                    response.json({
+                        abc: 333,
+                    })
+                } else if (command === "duplicate-display") {
+                    // const options = data;
+                    // Log.debug("-1", data);
+                    // this.getMainProcess().getIpcManager().handleDuplicateDisplay(undefined,
                     //     {
                     //         options: options,
                     //         httpResponse: response,
                     //     }
                     // );
-                } else if (command === "duplicate-display") {
-                    const options = data;
-                    Log.debug("-1", data);
-                    this.getMainProcess().getIpcManager().handleDuplicateDisplay(undefined,
-                        {
-                            options: options,
-                            httpResponse: response,
-                        }
-                    );
                 } else if (command === "create-utility-display-window") {
                     // const utilityType = data["utilityType"];
                     // const utilityOptions = data["utilityOptions"];
@@ -395,20 +398,66 @@ export class WebServer {
                     // Log.debug("-1", data);
                     // this.getMainProcess().getWindowAgentsManager().createBlankDisplayWindow(response);
                 } else if (command === "media") {
-                    Log.debug("-1", data);
-                    try {
-                        const fullFileName = data["fullFileName"];
-                        const fileBuffer = fs.readFileSync(fullFileName);
-                        const fileBase64Str = fileBuffer.toString("base64");
-                        response.send(JSON.stringify({ content: fileBase64Str }));
-                    } catch (e) {
-                        Log.error("-1", "Cannot read file", data["imageFileName"])
-                        response.send(JSON.stringify({ image: "" }));
-                    }
+                    // Log.debug("-1", data);
+                    // try {
+                    //     const fullFileName = data["fullFileName"];
+                    //     const fileBuffer = fs.readFileSync(fullFileName);
+                    //     const fileBase64Str = fileBuffer.toString("base64");
+                    //     response.send(JSON.stringify({ content: fileBase64Str }));
+                    // } catch (e) {
+                    //     Log.error("-1", "Cannot read file", data["imageFileName"])
+                    //     response.send(JSON.stringify({ image: "" }));
+                    // }
                 } else if (command === "get-ipc-server-port") {
+                    // sent out during the DisplayWindow.html is loading, before the DisplayWindowClient object is created, the html file has had the 
+                    // display window ID, but needs the websocket IPC server port
+                    // after the html page obtains this port, it will 
+                    // this is not sent via IpcManagerOnDisplayWindow.sendPostRequestCommand()
+                    // it is directly sent through fetch API, beacuse the DisplayWindowClient is not created yet!
                     response.json({
                         ipcServerPort: this.getMainProcess().getIpcManager().getPort(),
                     });
+
+                } else if (command === "create-display-window-agent") {
+                    console.log("create-display-window-agent ======================", data);
+                    
+                    const { tdlFileNames, mode, editable, macros, currentTdlFolder } = JSON.parse(data);
+                    const tdlFileName = tdlFileNames[0];
+                    const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+                    const windowId = "0";
+                    // create the DisplayWindowAgent object for this web page, then send
+                    // back the display window ID, so that the webpage can proceed to load with 
+                    const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
+                    // windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, currentTdlFolder, "0");
+                    const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder)
+                    if (tdlResult !== undefined) {
+                        const tdl = tdlResult["tdl"];
+                        const fullTdlFileName = tdlResult["fullTdlFileName"];
+                        const options: type_options_createDisplayWindow = {
+                            tdl: tdl,
+                            mode: mode,
+                            editable: editable,
+                            tdlFileName: fullTdlFileName,
+                            macros: macros,
+                            replaceMacros: false,
+                            hide: false,
+                            windowId: windowId,
+                        };
+                        // await this.createDisplayWindow(options);
+                        const displayWindowId = windowAgentsManager.obtainDisplayWindowId();
+                        const displayWindowAgent = await windowAgentsManager.createDisplayWindowAgent(options, displayWindowId);
+                        const ipcServerPort = this.getMainProcess().getIpcManager().getPort();
+                        response.json({
+                            command: "create-display-window-agent",
+                            data: {
+                                displayWindowId: displayWindowId,
+                                ipcServerPort: ipcServerPort,
+                            }
+                        })
+                    } else {
+                        // Log.error("0", `Cannot read file ${tdlFileName}`);
+                    }
+
 
                 }
             });

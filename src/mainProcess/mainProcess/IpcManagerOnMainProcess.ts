@@ -286,8 +286,8 @@ export class IpcManagerOnMainProcess {
         // -------------- main process -------------------------
         this.ipcMain.on("new-tdm-process", this.handleNewTdmProcess);
         this.ipcMain.on("quit-tdm-process", this.handleQuitTdmProcess);
-        this.ipcMain.on("websocket-ipc-connected-on-display-window", this.handleWebsocketIpcConnectedOnDisplayWindow);
-        this.ipcMain.on("websocket-ipc-connected-on-main-window", this.handleWebsocketIpcConnectedOnMainWindow);
+        this.ipcMain.on("websocket-ipc-connected-on-display-window", this.handleWebsocketIpcConnectedOnDisplayWindow); // done
+        this.ipcMain.on("websocket-ipc-connected-on-main-window", this.handleWebsocketIpcConnectedOnMainWindow); // done
         // ------------------ main window ----------------------
         // we we select a profile
         this.ipcMain.on("profile-selected", this.handleProfileSelected);
@@ -295,13 +295,13 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("bring-up-main-window", this.handleBringUpMainWindow);
         this.ipcMain.on("focus-window", this.handleFocusWindow);
         this.ipcMain.on("close-window", this.handleCloseWindow);
+        this.ipcMain.on("main-window-will-be-closed", this.handleMainWindowWillBeClosed);
         // ------------------- display window ------------------
         // set title
         this.ipcMain.on("set-window-title", this.handleSetWindowTitle);
         this.ipcMain.on("window-will-be-closed", this.handleWindowWillBeClosed);
-        this.ipcMain.on("main-window-will-be-closed", this.handleMainWindowWillBeClosed);
         this.ipcMain.on("open-default-display-windows", this.handleOpenDefaultDisplayWindows);
-        this.ipcMain.on("create-blank-display-window", this.handleCreateBlankDisplayWindow);
+        this.ipcMain.on("create-blank-display-window", this.handleCreateBlankDisplayWindow); // done
         this.ipcMain.on("zoom-window", this.handleZoomWindow);
         this.ipcMain.on("move-window", this.handleMoveWindow)
         this.ipcMain.on("set-window-always-on-top", this.handleSetWindowAlwaysOnTop)
@@ -333,8 +333,8 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("show-context-menu-sidebar", this.handleShowContextMenuSidebar);
         this.ipcMain.on("main-window-show-context-menu", this.handleMainWindowShowContextMenu);
 
-        // utility window
-        this.ipcMain.on("create-utility-display-window", this.createUtilityDisplayWindow);
+        // ---------------- utility window -----------------------
+        this.ipcMain.on("create-utility-display-window", this.createUtilityDisplayWindow); // done
         this.ipcMain.on("data-viewer-export-data", this.handleDataViewerExportData);
         this.ipcMain.on("processes-info", this.handleProcessesInfo);
         this.ipcMain.on("epics-stats", this.handleEpicsStats);
@@ -389,6 +389,7 @@ export class IpcManagerOnMainProcess {
 
         // ----------------- video file --------------------------
         this.ipcMain.on("save-video-file", this.handleSaveVideoFile)
+        this.ipcMain.on("get-media-content", this.handleGetMediaContent)
     };
 
     // ---------------- TDM process ----------------------------
@@ -1564,7 +1565,7 @@ export class IpcManagerOnMainProcess {
 
 
     /**
-     * Basically the same as profile-selected handler <br>
+     * Basically the same as profile-selected handler 
      */
     handleOpenDefaultDisplayWindows = (event: any, options: IpcEventArgType["open-default-display-windows"]) => {
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
@@ -1628,13 +1629,6 @@ export class IpcManagerOnMainProcess {
             }
         }
     };
-
-    handleCreateBlankDisplayWindow = (event: any, options: IpcEventArgType["create-blank-display-window"]) => {
-        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
-        if ((displayWindowAgent instanceof DisplayWindowAgent) || displayWindowAgent instanceof MainWindowAgent) {
-            displayWindowAgent.getWindowAgentsManager().createBlankDisplayWindow(options["displayWindowId"]);
-        }
-    }
 
     // ---------------------- tdl file ---------------------
 
@@ -1802,6 +1796,17 @@ export class IpcManagerOnMainProcess {
         }
     };
 
+    /**
+     * create a blank display window, the same effect as the handleOpenTdlFile() with tdlFileNames = []
+     * 
+     * @param displayWindowId the window ID that initiated the creation of blank display window
+     */
+    handleCreateBlankDisplayWindow = (event: any, options: IpcEventArgType["create-blank-display-window"]) => {
+        const windowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["windowId"]);
+        if ((windowAgent instanceof DisplayWindowAgent) || windowAgent instanceof MainWindowAgent) {
+            windowAgent.getWindowAgentsManager().createBlankDisplayWindow(options["windowId"]);
+        }
+    }
 
     /**
      * Re-read or read a tdl file and update the existing display window with the new TDL file. 
@@ -1823,7 +1828,7 @@ export class IpcManagerOnMainProcess {
      * @param {boolean} replaceMacros If the externally provided macros should replace internally defined macros
      */
     handleLoadTdlFile = async (event: any, options: IpcEventArgType["load-tdl-file"],) => {
-        const {displayWindowId, tdlFileName, mode, editable, externalMacros, replaceMacros, currentTdlFolder} = options;
+        const { displayWindowId, tdlFileName, mode, editable, externalMacros, replaceMacros, currentTdlFolder } = options;
 
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
@@ -2212,19 +2217,20 @@ export class IpcManagerOnMainProcess {
     }
 
     handleDuplicateDisplay = (event: any, data: IpcEventArgType["duplicate-display"],) => {
-        const { options, httpResponse } = data;
+        const { options } = data;
+        const { windowId, tdl, mode, externalMacros } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-        // create a new display window
         windowAgentsManager.createDisplayWindow(
             {
-                tdl: options["tdl"],
-                mode: options["mode"],
+                tdl: tdl,
+                mode: mode,
                 // always editable
                 editable: true,
                 tdlFileName: "",
-                macros: options["externalMacros"],
+                macros: externalMacros,
                 replaceMacros: true,
                 hide: false,
+                windowId: windowId,
             },
         );
     };
@@ -2418,9 +2424,19 @@ export class IpcManagerOnMainProcess {
 
     // ------------------------------------------------------------
 
+    /**
+     * Create a utility window. 
+     * 
+     * Applicable to desktop and web mode.
+     * 
+     * @param utilityType "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "Help" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph"
+     * 
+     * @param utilityOptions The option for this utility
+     * 
+     * @param windowId The display or main window ID that initiates the creation of utility window
+    */
     createUtilityDisplayWindow = (event: any, options: IpcEventArgType["create-utility-display-window"]) => {
         let { utilityType, utilityOptions, windowId } = options;
-        console.log("create utility display window <-----------------", options);
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         if (utilityType === "ProfilesViewer") {
             utilityOptions = {};
@@ -3838,6 +3854,28 @@ export class IpcManagerOnMainProcess {
                 }
             });
         }
+    }
+
+    handleGetMediaContent = (event: any, options: IpcEventArgType["get-media-content"]) => {
+        const { fullFileName, displayWindowId, widgetKey } = options;
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            try {
+                const fileBuffer = fs.readFileSync(fullFileName);
+                const fileBase64Str = fileBuffer.toString("base64");
+                // response.send(JSON.stringify({ content: fileBase64Str }));
+                displayWindowAgent.sendFromMainProcess("get-media-content", {
+                    content: fileBase64Str,
+                    displayWindowId: displayWindowId,
+                    widgetKey: widgetKey,
+                })
+
+            } catch (e) {
+                // Log.error("-1", "Cannot read file", data["imageFileName"])
+                // response.send(JSON.stringify({ image: "" }));
+            }
+        }
+
     }
 
 

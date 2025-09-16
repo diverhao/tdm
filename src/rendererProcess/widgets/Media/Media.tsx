@@ -303,31 +303,36 @@ export class Media extends BaseWidget {
             }
 
             if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "web") {
-                g_widgets1
-                    .getRoot()
-                    .getDisplayWindowClient()
-                    .getIpcManager()
-                    .sendPostRequestCommand("media", { fullFileName: fullFileName })
-                    .then((response: any) => {
-                        // decode string
-                        return response.json();
-                    })
-                    .then((data) => {
-                        if (data["content"] !== "") {
-                            if (this.getMediaType(this.mediaFileName) === "picture") {
-                                this.base64Content = `data:image/png;base64,${data["content"]}`;
-                            } else if (this.getMediaType(this.mediaFileName) === "pdf") {
-                                this.base64Content = `data:application/pdf;base64, ${encodeURI(data["content"])}`;
-                            } else {
-                                this.base64Content = "";
-                            }
-                        } else {
-                            this.base64Content = "";
-                        }
-                        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-                        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-                        g_flushWidgets();
-                    });
+                g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("get-media-content", {
+                    fullFileName: fullFileName,
+                    widgetKey: this.getWidgetKey(),
+                    displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                })
+                // g_widgets1
+                //     .getRoot()
+                //     .getDisplayWindowClient()
+                //     .getIpcManager()
+                //     .sendPostRequestCommand("media", { fullFileName: fullFileName })
+                //     .then((response: any) => {
+                //         // decode string
+                //         return response.json();
+                //     })
+                //     .then((data) => {
+                //         if (data["content"] !== "") {
+                //             if (this.getMediaType(this.mediaFileName) === "picture") {
+                //                 this.base64Content = `data:image/png;base64,${data["content"]}`;
+                //             } else if (this.getMediaType(this.mediaFileName) === "pdf") {
+                //                 this.base64Content = `data:application/pdf;base64, ${encodeURI(data["content"])}`;
+                //             } else {
+                //                 this.base64Content = "";
+                //             }
+                //         } else {
+                //             this.base64Content = "";
+                //         }
+                //         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                //         g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+                //         g_flushWidgets();
+                //     });
             } else if ((g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client")) {
                 //todo: what is this? get-ssh-file does not exist on main process
                 // Log.info("try to obtain file from ssh host")

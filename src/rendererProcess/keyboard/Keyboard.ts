@@ -359,7 +359,7 @@ export class Keyboard {
                 const ipcManager = this.getDisplayWindowClient().getIpcManager();
                 const displayWindowId = this.getDisplayWindowClient().getWindowId();
                 ipcManager.sendFromRendererProcess("create-blank-display-window", {
-                    displayWindowId: displayWindowId,
+                    windowId: displayWindowId,
                 })
             }
         }
