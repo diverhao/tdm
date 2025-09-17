@@ -106,6 +106,13 @@ export class ActionButton extends BaseWidget {
 
     _rules: ActionButtonRules;
 
+    // the <select /> component costs huge amount of resources during rendering
+    // each such component takes about 2 ms to render, which is one order of magnitude 
+    // more than a regular component. That means if a display has 500 such components,
+    // it may cost 1 second to render them, which is unacceptable.
+    // In here we delay the render of <select /> components until all widgets are rendered
+    setDropDownActivated: (value: any) => void = (value: any) => {};
+
     _actions: type_actions_tdl;
     constructor(widgetTdl: type_ActionButton_tdl) {
         super(widgetTdl);
@@ -248,6 +255,10 @@ export class ActionButton extends BaseWidget {
         // const [showDropDown, setShowDropDown] = React.useState(false);
         const elementRef = React.useRef<any>(null);
         const selectRef = React.useRef<any>(null);
+        const [dropDownActivated, setDropDownActivated] = React.useState(false);
+        this.setDropDownActivated = setDropDownActivated;
+
+
         const shadowWidth = 2;
         const calcWidth = () => {
             const width = this.getAllStyle()["width"];
@@ -330,6 +341,13 @@ export class ActionButton extends BaseWidget {
                             border: "none",
                             overflow: "hidden",
                             textOverflow: "hidden",
+
+                            // outline: calcOutline(),
+                            // borderRight: calcBorderBottomRight(),
+                            // borderBottom: calcBorderBottomRight(),
+                            // borderLeft: calcBorderTopLeft(),
+                            // borderTop: calcBorderTopLeft(),
+
                         }}
                         // outline is not affected by opacity of the ElementBody
                         onMouseEnter={(event: any) => {
@@ -376,105 +394,127 @@ export class ActionButton extends BaseWidget {
                                 >
                                     {this.getButtonText()}
                                 </div>
-                                <select
-                                    ref={selectRef}
-                                    style={{
-                                        position: "absolute",
-                                        top: 0,
-                                        left: 0,
-                                        outline: calcOutline(),
-                                        borderRight: calcBorderBottomRight(),
-                                        borderBottom: calcBorderBottomRight(),
-                                        borderLeft: calcBorderTopLeft(),
-                                        borderTop: calcBorderTopLeft(),
-                                        // the <select /> is different from <div />
-                                        // its "width" and "height" is the sum of border and body
-                                        // while the "width" and "height" in <div /> is the body's dimensions, its border is not counted in "width" or "height"
-                                        width: "100%",
-                                        height: "100%",
-                                        backgroundColor: "rgba(0,0,0,0)",
-                                        // outline: "none",
-                                        borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 3,
-                                        // do not show dropdown arrow
-                                        MozAppearance: "none",
-                                        WebkitAppearance: "none",
-                                        opacity: this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false ? 0 : 1,
-                                        overflow: "hidden",
-                                        textAlignLast:
-                                            this.getAllText()["horizontalAlign"] === "flex-start"
-                                                ? "left"
-                                                : this.getAllText()["horizontalAlign"] === "flex-end"
-                                                    ? "right"
-                                                    : "center",
-                                    }}
-                                    onChange={(event: any) => {
-                                        // setShowDropDown(false);
-                                        if (g_widgets1.isEditing()) {
-                                            return;
-                                        }
-                                        const index = parseInt(event.target.value);
-                                        if (index === -1) {
-                                            return;
-                                        }
-                                        const tdl = this.getActions()[index];
-                                        const type = tdl["type"];
-                                        if (type === "OpenDisplay") {
-                                            this.openDisplay(index);
-                                        } else if (type === "WritePV") {
-                                            this.writePv(index);
-                                        } else if (type === "OpenWebPage") {
-                                            this.openWebpage(index);
-                                        } else if (type === "ExecuteCommand") {
-                                            this.executeCommand(index);
-                                        } else if (type === "CloseDisplayWindow") {
-                                            this.closeDisplayWindow(index);
-                                        } else {
-                                            //todo: ExecuteScript
-                                        }
-                                        if (selectRef.current !== null) {
-                                            selectRef.current.value = "-1";
-                                        }
-                                    }}
-                                    defaultValue={"-1"}
-                                >
-                                    <option
+                                {dropDownActivated === true ?
+                                    <select
+                                        ref={selectRef}
                                         style={{
-                                            // width: "100%",
+                                            position: "absolute",
+                                            top: 0,
+                                            left: 0,
+                                            outline: calcOutline(),
+                                            borderRight: calcBorderBottomRight(),
+                                            borderBottom: calcBorderBottomRight(),
+                                            borderLeft: calcBorderTopLeft(),
+                                            borderTop: calcBorderTopLeft(),
+                                            // the <select /> is different from <div />
+                                            // its "width" and "height" is the sum of border and body
+                                            // while the "width" and "height" in <div /> is the body's dimensions, its border is not counted in "width" or "height"
+                                            width: "100%",
+                                            height: "100%",
+                                            backgroundColor: "rgba(0,0,0,0)",
+                                            // outline: "none",
+                                            borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 3,
+                                            // do not show dropdown arrow
+                                            MozAppearance: "none",
+                                            WebkitAppearance: "none",
+                                            opacity: this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false ? 0 : 1,
+                                            overflow: "hidden",
+                                            textAlignLast:
+                                                this.getAllText()["horizontalAlign"] === "flex-start"
+                                                    ? "left"
+                                                    : this.getAllText()["horizontalAlign"] === "flex-end"
+                                                        ? "right"
+                                                        : "center",
+                                        }}
+                                        onChange={(event: any) => {
+                                            // setShowDropDown(false);
+                                            if (g_widgets1.isEditing()) {
+                                                return;
+                                            }
+                                            const index = parseInt(event.target.value);
+                                            if (index === -1) {
+                                                return;
+                                            }
+                                            const tdl = this.getActions()[index];
+                                            const type = tdl["type"];
+                                            if (type === "OpenDisplay") {
+                                                this.openDisplay(index);
+                                            } else if (type === "WritePV") {
+                                                this.writePv(index);
+                                            } else if (type === "OpenWebPage") {
+                                                this.openWebpage(index);
+                                            } else if (type === "ExecuteCommand") {
+                                                this.executeCommand(index);
+                                            } else if (type === "CloseDisplayWindow") {
+                                                this.closeDisplayWindow(index);
+                                            } else {
+                                                //todo: ExecuteScript
+                                            }
+                                            if (selectRef.current !== null) {
+                                                selectRef.current.value = "-1";
+                                            }
+                                        }}
+                                        defaultValue={"-1"}
+                                    >
+                                        <option
+                                            style={{
+                                                // width: "100%",
+                                                width: calcWidth(),
+                                                height: calcHeight(),
+                                            }}
+                                            // it hides the option, causing the <select> to choose the next option, does not help
+                                            // hidden
+                                            disabled
+                                            value={`-1`}
+                                        ></option>
+                                        {this.getActions().map(
+                                            (
+                                                action:
+                                                    | type_action_executecommand_tdl
+                                                    | type_action_opendisplay_tdl
+                                                    | type_action_openwebpage_tdl
+                                                    | type_action_writepv_tdl
+                                                    | type_action_executescript_tdl
+                                                    | type_action_closedisplaywindow,
+                                                index: number
+                                            ) => {
+                                                return (
+                                                    <option
+                                                        style={{
+                                                            width: calcWidth(),
+                                                            height: calcHeight(),
+                                                            // width: "100%",
+                                                        }}
+                                                        key={`${action["type"]}-${action["label"]}-${index}`}
+                                                        value={`${index}`}
+                                                    >
+                                                        {action["label"]}&nbsp;
+                                                    </option>
+                                                );
+                                            }
+                                        )}
+                                    </select>
+                                    :
+                                    <div
+                                        style={{
+                                            position: "absolute",
+                                            top: 0,
+                                            left: 0,
+                                            opacity: this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false ? 0 : 1,
+                                            outline: calcOutline(),
+                                            borderRight: calcBorderBottomRight(),
+                                            borderBottom: calcBorderBottomRight(),
+                                            borderLeft: calcBorderTopLeft(),
+                                            borderTop: calcBorderTopLeft(),
+                                            display: "inline-flex",
                                             width: calcWidth(),
                                             height: calcHeight(),
-                                        }}
-                                        // it hides the option, causing the <select> to choose the next option, does not help
-                                        // hidden
-                                        disabled
-                                        value={`-1`}
-                                    ></option>
-                                    {this.getActions().map(
-                                        (
-                                            action:
-                                                | type_action_executecommand_tdl
-                                                | type_action_opendisplay_tdl
-                                                | type_action_openwebpage_tdl
-                                                | type_action_writepv_tdl
-                                                | type_action_executescript_tdl
-                                                | type_action_closedisplaywindow,
-                                            index: number
-                                        ) => {
-                                            return (
-                                                <option
-                                                    style={{
-                                                        width: calcWidth(),
-                                                        height: calcHeight(),
-                                                        // width: "100%",
-                                                    }}
-                                                    key={`${action["type"]}-${action["label"]}-${index}`}
-                                                    value={`${index}`}
-                                                >
-                                                    {action["label"]}&nbsp;
-                                                </option>
-                                            );
-                                        }
-                                    )}
-                                </select>
+                                            justifyContent: this.getAllText()["horizontalAlign"],
+                                            alignItems: this.getAllText()["verticalAlign"],
+                                            overflow: "hidden",
+                                        }}>
+                                    </div>
+                                }
                             </>
                         ) : (
                             <div
@@ -650,33 +690,7 @@ export class ActionButton extends BaseWidget {
                 });
             } else {
                 // web mode
-                const currentSite = `https://${window.location.host}/`;
-                console.log("action button, ---------------------<><><>")
                 displayWindowClient.openTdlFileInWebMode(tdlFileName);
-
-                // g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendPostRequestCommand(
-                //     "open-tdl-file", {
-                //     tdlFileNames: [tdlFileName],
-                //     mode: mode,
-                //     editable: editable,
-                //     macros: externalMacros,
-                //     replaceMacros: replaceMacros, // not used
-                //     currentTdlFolder: currentTdlFolder,
-                //     openInSameWindow: openInSameWindow,
-                //     windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                // }).then((response: any) => {
-                //     // decode string
-                //     return response.json()
-                // }).then(data => {
-                //     const displayWindowId = data["displayWindowId"];
-                //     const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
-                //     // open in new tab
-                //     // ! important: avoid shared sessionStorage
-                //     window.open(href, "_blank", "noopener, noreferrer")
-                //     // open in current tab
-                //     // window.location.href = href;
-                // })
-
             }
         }
     };
@@ -742,10 +756,8 @@ export class ActionButton extends BaseWidget {
                                 {
                                     text: "OK",
                                     handleClick: (dialogInputText?: string) => {
-                                        console.log("pass word is ", dialogInputText, "...")
                                         if (dialogInputText !== password) {
                                             // password does not match
-                                            console.log("pass word does notmatch")
                                             ipcManager.handleDialogShowMessageBox(undefined,
                                                 {
                                                     info: {
@@ -1013,4 +1025,6 @@ export class ActionButton extends BaseWidget {
             this._sidebar = new ActionButtonSidebar(this);
         }
     };
+
+
 }

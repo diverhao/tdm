@@ -103,7 +103,8 @@ export type type_DialogInputBox = {
 
 
 /**
- * Input argument types for IPC event handlers in main process
+ * Input argument types for IPC event handlers in main process.
+ * Data is sent from Display Window (not Main Window) to main process.
  * 
  * For the event handler in main process, it is used like
  * `handlerWebSocketIpcConnected(event: any, options: IpcEventArgType["websocket-ipc-connected])`
@@ -536,6 +537,12 @@ export type IpcEventArgType = {
         fullFileName: string,
         widgetKey: string,
         displayWindowId: string,
+    },
+
+    "ping": {
+        displayWindowId: string,
+        id: string,
+        time: number,
     }
 
 };
@@ -543,6 +550,7 @@ export type IpcEventArgType = {
 
 /**
  * Input argument types for IPC event handlers in DisplayWindow
+ * Data is sent from Main Process to Display Window
  */
 export type IpcEventArgType2 = {
     "context-menu-command": {
@@ -780,6 +788,12 @@ export type IpcEventArgType2 = {
         displayWindowId: string,
         widgetKey: string,
         content: string,
+    },
+
+    "pong": {
+        displayWindowId: string,
+        id: string,
+        time: number,
     }
 }
 

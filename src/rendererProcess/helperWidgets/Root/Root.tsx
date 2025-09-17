@@ -8,6 +8,7 @@ import { Canvas } from "../Canvas/Canvas";
 import { DisplayWindowClient } from "../../../mainProcess/windows/DisplayWindow/DisplayWindowClient";
 import { type_tdl } from "../../../mainProcess/file/FileReader";
 import { Log } from "../../../mainProcess/log/Log";
+import { ActionButton } from "../../widgets/ActionButton/ActionButton";
 
 /**
  * Update the widgets.
@@ -104,6 +105,7 @@ export class Root {
             Log.info("Start to render new tdl", this.getDisplayWindowClient().getTdlFileName());
         }
 
+
         React.useEffect(() => {
             if (this.isNewTdl) {
                 this.isNewTdl = false;
@@ -114,11 +116,11 @@ export class Root {
                 const windowName = canvas.getWindowName();
                 const tdlFileName = g_widgets1.getTdlFileName();
                 const mode = g_widgets1.isEditing() ? "editing" : "operating";
-                ipcManager.sendFromRendererProcess("new-tdl-rendered", 
+                ipcManager.sendFromRendererProcess("new-tdl-rendered",
                     {
-                        displayWindowId: displayWindowId, 
-                        windowName: windowName, 
-                        tdlFileName: tdlFileName, 
+                        displayWindowId: displayWindowId,
+                        windowName: windowName,
+                        tdlFileName: tdlFileName,
                         mode: mode
                     }
                 );
@@ -127,7 +129,17 @@ export class Root {
                     this.getDisplayWindowClient().savePageData();
                     Log.info("Saved page data for refresh");
                 }
-                
+
+                // lazy render ActionButtons
+                setTimeout(() => {
+                    for (const widget of widgets) {
+                        if (widget !== undefined && widget instanceof ActionButton && widget.getActions().length > 1) {
+                            widget.setDropDownActivated((value: any) => {
+                                return true;
+                            })
+                        }
+                    }
+                }, 200 + 0.1 * widgets.length);
             }
             // todo: history
             // g_widgets1.getEditorHistory().setIsValidHistory(true);
@@ -152,6 +164,7 @@ export class Root {
                     if (widget === undefined) {
                         return null;
                     }
+
                     return widget.getElement();
                 })}
             </div>

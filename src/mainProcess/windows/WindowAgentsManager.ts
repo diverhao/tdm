@@ -191,6 +191,7 @@ export class WindowAgentsManager {
                     let displayWindowAgent = this.replacePreloadedDisplayWindow(options);
                     if (displayWindowAgent !== undefined) {
                         Log.debug("0", `Preloaded display window is consumed, created a new one.`);
+
                         this.createPreloadedDisplayWindow();
                         return displayWindowAgent;
                     } else {
@@ -203,6 +204,7 @@ export class WindowAgentsManager {
                     }
                 }
             }
+
 
             try {
                 // (1)
@@ -353,6 +355,7 @@ export class WindowAgentsManager {
      * 
      */
     createDisplayWindows = async (tdlFileNames: string[], mode: "operating" | "editing", editable: boolean, macros: [string, string][], currentTdlFolder: string | undefined, windowId: string | undefined) => {
+        
         if (tdlFileNames.length === 0) {
             return;
         }
@@ -367,24 +370,26 @@ export class WindowAgentsManager {
             if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp") {
                 // regular display window, .tdl, .edl, or .bob
 
-                const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder)
-                if (tdlResult !== undefined) {
-                    const tdl = tdlResult["tdl"];
-                    const fullTdlFileName = tdlResult["fullTdlFileName"];
-                    const options: type_options_createDisplayWindow = {
-                        tdl: tdl,
-                        mode: mode,
-                        editable: editable,
-                        tdlFileName: fullTdlFileName,
-                        macros: macros,
-                        replaceMacros: false,
-                        hide: false,
-                        windowId: windowId,
-                    };
-                    await this.createDisplayWindow(options);
-                } else {
-                    Log.error("0", `Cannot read file ${tdlFileName}`);
-                }
+                // do it asynchronously to speed up
+                FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder).then((tdlResult) => {
+                    if (tdlResult !== undefined) {
+                        const tdl = tdlResult["tdl"];
+                        const fullTdlFileName = tdlResult["fullTdlFileName"];
+                        const options: type_options_createDisplayWindow = {
+                            tdl: tdl,
+                            mode: mode,
+                            editable: editable,
+                            tdlFileName: fullTdlFileName,
+                            macros: macros,
+                            replaceMacros: false,
+                            hide: false,
+                            windowId: windowId,
+                        };
+                        this.createDisplayWindow(options);
+                    } else {
+                        Log.error("0", `Cannot read file ${tdlFileName}`);
+                    }
+                })
 
             } else if (path.extname(tdlFileName) === ".db" || path.extname(tdlFileName) === ".template") {
                 // utility window

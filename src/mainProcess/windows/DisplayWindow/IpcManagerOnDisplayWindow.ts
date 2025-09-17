@@ -165,7 +165,7 @@ export class IpcManagerOnDisplayWindow {
                 );
             }
         } else {
-            console.log("This display window does not have a process Id yet.");
+            Log.error("This display window does not have a process Id yet.");
         }
     };
 
@@ -234,6 +234,8 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("display-window-id-for-open-tdl-file", this.handleDisplayWindowIdForOpenTdlFile)
 
         this.ipcRenderer.on("get-media-content", this.handleGetMediaContent)
+
+        this.ipcRenderer.on("pong", this.handlePong)
     };
 
     handleObtainedIframeUuid = (
@@ -797,6 +799,11 @@ export class IpcManagerOnDisplayWindow {
         options: IpcEventArgType2["new-tdl"]
     ) => {
         Log.info("Received a new-tdl", options);
+        this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("ping", {
+            displayWindowId: this.getDisplayWindowClient().getWindowId(),
+            id: "0",
+            time: performance.now(),
+        })
         this.getDisplayWindowClient().updateTdl(
             options["newTdl"],
             options["tdlFileName"],
@@ -1480,9 +1487,7 @@ export class IpcManagerOnDisplayWindow {
     }
 
     handleDisplayWindowIdForOpenTdlFile = (event: any, data: IpcEventArgType2["display-window-id-for-open-tdl-file"]) => {
-        console.log("---------------------------------->>>>>")
         const { displayWindowId } = data;
-        console.log("try to open display window ->>>>>>>>>>>>>>>>>>>>>>>>", displayWindowId);
         const currentSite = `https://${window.location.host}/`;
         const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
         window.open(href, "_blank", "noopener, noreferrer")
@@ -1509,5 +1514,9 @@ export class IpcManagerOnDisplayWindow {
             g_widgets1.addToForceUpdateWidgets("GroupSelection2");
             g_flushWidgets();
         }
+    }
+
+    handlePong = (event: any, data: IpcEventArgType2["pong"]) => {
+        Log.info("Round trip time for ping-pong initiated by this Display Window:", performance.now() - data["time"], "ms");
     }
 }

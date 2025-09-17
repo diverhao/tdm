@@ -1529,7 +1529,8 @@ export class DisplayWindowAgent {
                 // wsClient.send(channel, ...[processId, ...args]);
                 Log.debug("0", "send from main process:", { processId: "0", windowId: this.getId(), eventName: channel, data: [arg] })
                 if (typeof wsClient !== "string") {
-                    wsClient.send(JSON.stringify({ processId: "0", windowId: this.getId(), eventName: channel, data: [arg] }));
+                    const str = JSON.stringify({ processId: "0", windowId: this.getId(), eventName: channel, data: [arg] });
+                    wsClient.send(str);
                 }
 
                 if (channel === "new-channel-data") {
@@ -1833,7 +1834,6 @@ export class DisplayWindowAgent {
     private createBrowserWindowInWebMode = (options: any = undefined) => {
 
         // httpResponse is undefined 
-        console.log("options: ", options["windowId"]);
         if (options["windowId"] !== undefined) {
             // if (httpResponse === undefined) {
             const initiatedByWindowAgent = this.getWindowAgentsManager().getAgent(options["windowId"])

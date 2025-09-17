@@ -306,6 +306,7 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("move-window", this.handleMoveWindow)
         this.ipcMain.on("set-window-always-on-top", this.handleSetWindowAlwaysOnTop)
         this.ipcMain.on("duplicate-display", this.handleDuplicateDisplay);
+        this.ipcMain.on("ping", this.handlePing);
 
         // ------------------ tdl file ----------------------
         this.ipcMain.on("open-tdl-file", this.handleOpenTdlFiles); // done
@@ -498,7 +499,6 @@ export class IpcManagerOnMainProcess {
         if (!(windowAgent instanceof DisplayWindowAgent)) {
             return;
         }
-        console.log("---------------- ABC")
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
             Log.error("0", "Profile not selected!");
@@ -1673,6 +1673,7 @@ export class IpcManagerOnMainProcess {
      * @param sendContentsToWindow whether to send file back to display window, only used by .db 
      */
     handleOpenTdlFiles = (event: any, data: IpcEventArgType["open-tdl-file"]) => {
+
         const { options } = data;
         let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
@@ -2082,8 +2083,8 @@ export class IpcManagerOnMainProcess {
      * does not flash.
      */
     handleNewTdlRendered = async (event: any, options: IpcEventArgType["new-tdl-rendered"]) => {
-        const { displayWindowId, windowName, tdlFileName, mode } = options;
 
+        const { displayWindowId, windowName, tdlFileName, mode } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
@@ -2234,6 +2235,13 @@ export class IpcManagerOnMainProcess {
             },
         );
     };
+
+    handlePing = (event: any, data: IpcEventArgType["ping"]) => {
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            displayWindowAgent.sendFromMainProcess("pong", data)
+        }
+    }
 
     // -------------------- channel ------------------------
 
