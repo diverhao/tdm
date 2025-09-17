@@ -105,6 +105,12 @@ export class Root {
             Log.info("Start to render new tdl", this.getDisplayWindowClient().getTdlFileName());
         }
 
+        React.useEffect(() => {
+            setTimeout(() => {
+                g_widgets1.setModeAsyncResolve(123);
+            }, 0)
+
+        })
 
         React.useEffect(() => {
             if (this.isNewTdl) {
@@ -139,7 +145,7 @@ export class Root {
                             })
                         }
                     }
-                }, 200 + 0.1 * widgets.length);
+                }, 50 + 0.1 * widgets.length);
             }
             // todo: history
             // g_widgets1.getEditorHistory().setIsValidHistory(true);

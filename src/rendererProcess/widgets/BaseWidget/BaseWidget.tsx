@@ -12,7 +12,7 @@ import { rendererWindowStatus } from "../../global/Widgets";
 import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { Log } from "../../../mainProcess/log/Log";
 import { GlobalVariables } from "../../global/GlobalVariables";
-import {evaluate} from "mathjs";
+import { evaluate } from "mathjs";
 
 export type type_BaseWidget_tdl = {
     type: string;
@@ -2143,8 +2143,14 @@ export abstract class BaseWidget {
         this.createSidebar();
     }
     jobsAsOperatingModeBegins() {
+        const t0 = performance.now();
         this.activateRules();
+        console.log("--------------", performance.now() - t0)
         this.processChannelNames();
+        // setTimeout(() => {
+        // g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+
+        // }, 3000 + 0 * 0.15 * g_widgets1.getWidgets().size)
     }
 
     // ----------------- sidebar ------------------------

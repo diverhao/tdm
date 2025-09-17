@@ -1498,6 +1498,10 @@ export class Widgets {
 
     // ----------------------------------- renderer window status/mode -----------------------------------
 
+    setModeAsyncResolve: (value: any) => void = () => { };
+    setModeAsyncPromise: any = undefined;
+
+
     /**
      * Set renderer window status. The window must be switched between "operating" and "editing" modes.<br>
      *
@@ -1522,7 +1526,7 @@ export class Widgets {
      * @param {rendererWindowStatus} newMode New renderer window status
      * @param {boolean} doFlush If we want to flush widgets
      */
-    setMode = (newMode: rendererWindowStatus.operating | rendererWindowStatus.editing, doFlush: boolean, destroyAllTcaChannels: boolean) => {
+    setMode = async (newMode: rendererWindowStatus.operating | rendererWindowStatus.editing, doFlush: boolean, destroyAllTcaChannels: boolean) => {
         if (newMode === this.getRendererWindowStatus() && !doFlush) {
             return;
         }
@@ -1571,6 +1575,15 @@ export class Widgets {
 
         window.resizeTo(width + dx, height + dy);
 
+        // if there are a lot of rules, defer the activation of rules until all widgets are rendered
+        this.setModeAsyncResolve = () => { };
+        if (this.getWidgets().size > 500 && newMode === rendererWindowStatus.operating) {
+            this.setModeAsyncPromise = new Promise((resolve, reject) => {
+                this.setModeAsyncResolve = resolve;
+            })
+            await this.setModeAsyncPromise;
+        }
+
         // the dynamically added widgets changes the array (set) of the widget keys
         for (const widgetKey of JSON.parse(JSON.stringify([...this.getWidgets().keys()]))) {
             // (5)
@@ -1604,6 +1617,7 @@ export class Widgets {
         } else {
             this.terminateWindowAttachedScript();
         }
+
     };
 
     // ----------------------- Table widget ------------------------------
