@@ -109,7 +109,6 @@ export class Root {
             setTimeout(() => {
                 g_widgets1.setModeAsyncResolve(123);
             }, 0)
-
         })
 
         React.useEffect(() => {

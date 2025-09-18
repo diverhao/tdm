@@ -1515,6 +1515,14 @@ export class Widgets {
      *
      * (4) adjust window size according to Canvas size, the sidebar will be hidden <br>
      *
+     * 
+     * (4.1) each rule cost about 0.07 ms, which is even most cost than a plain Label widget whose cost is about 0.1 ms
+     *       so if we have x widgets and y rules, equivalently we have x + y widgets.
+     *       we want let the display window render x + y within 5000 during mode change so that
+     *       the user can quickly see the GUI
+     *       So, if x + y > 5000, we defer the following steps, including rules activation, channel connection
+     *       and others to after all the widgets are rendered
+     * 
      * (5) activate rules for each widget, it must be done before connecting channels <br>
      *
      * (6) if we are changing to "operating" mode, re-create all TcaChannel objects and tell main process to monitor all channels <br>
@@ -1553,35 +1561,37 @@ export class Widgets {
         let width = canvas.getStyle().width;
         let height = canvas.getStyle().height;
         if (newMode === rendererWindowStatus.editing) {
-            // width = canvas.getStyle().width + calcSidebarTotalWidth();
             width = canvas.getStyle().width + calcSidebarWidth() + getWindowVerticalScrollBarWidth();
         }
         let dx = window.outerWidth - window.innerWidth;
         let dy = window.outerHeight - window.innerHeight;
 
-        // if (process.platform === "darwin") {
-        //     // do nothing
-        // } else if (process.platform === "linux") {
-        //     dx = 0;
-        //     dy = 0;
-        // } else if (process.platform === "win32") {
-        //     dx = 0;
-        //     dy = 0;
-        // } else {
-        //     dx = 0;
-        //     dy = 0;
-        //     Log.error(`Window resizing error: we only support "linux", "win32", and "darwin"`);
-        // }
-
         window.resizeTo(width + dx, height + dy);
 
-        // if there are a lot of rules, defer the activation of rules until all widgets are rendered
+        // (4.1)
+        const maxEquivalentWidgetsCount = 5000;
+        let equivalentWidgetsCount = this.getWidgets().size;
         this.setModeAsyncResolve = () => { };
-        if (this.getWidgets().size > 500 && newMode === rendererWindowStatus.operating) {
-            this.setModeAsyncPromise = new Promise((resolve, reject) => {
-                this.setModeAsyncResolve = resolve;
-            })
-            await this.setModeAsyncPromise;
+
+        if (newMode === rendererWindowStatus.operating) {
+            for (const [_, widget] of this.getWidgets()) {
+                if (widget instanceof BaseWidget) {
+                    const rules = widget.getRules();
+                    if (rules !== undefined) {
+                        equivalentWidgetsCount = equivalentWidgetsCount + rules.getRules().length * 0.7;
+                        if (equivalentWidgetsCount > maxEquivalentWidgetsCount) {
+                            break;
+                        }
+                    }
+                }
+            }
+            if (equivalentWidgetsCount > maxEquivalentWidgetsCount) {
+                this.setModeAsyncPromise = new Promise((resolve, reject) => {
+                    this.setModeAsyncResolve = resolve;
+                })
+                // block lifted after all widgets are rendered
+                await this.setModeAsyncPromise;
+            }
         }
 
         // the dynamically added widgets changes the array (set) of the widget keys
