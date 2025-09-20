@@ -31,12 +31,12 @@ const windowClientsConfig = {
 			process: "process/browser.js",
 		}),
 		new webpack.HotModuleReplacementPlugin(),
-		// new BundleAnalyzerPlugin()
-		new BundleAnalyzerPlugin({
-			analyzerMode: "server", // opens a web server
-			analyzerPort: 8888, // port for the report
-			openAnalyzer: true, // automatically open report in browser
-		}),
+
+		// new BundleAnalyzerPlugin({
+		// 	analyzerMode: "server", // opens a web server
+		// 	analyzerPort: 8888, // port for the report
+		// 	openAnalyzer: true, // automatically open report in browser
+		// }),
 	],
 	//HH ------------ javascript -----------------
 	//HH the webpack inject this file's transpilation to generated html file: dist/index.html
