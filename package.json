@@ -1,6 +1,6 @@
 {
     "name": "tdm",
-    "version": "2025.08.00",
+    "version": "2025.09.00",
     "description": "A display manager for EPICS",
     "main": "./dist/mainProcess/startMainProcess.js",
     "repository": "https://github.com/MyApp/my-app",
@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2025-09-19T06:45:02Z",
+    "buildDate": "2025-09-21T20:17:59Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
@@ -41,7 +41,7 @@
         "@types/uuid": "^10.0.0",
         "@types/ws": "^8.18.1",
         "css-loader": "^7.1.2",
-        "electron": "^38.0.0",
+        "electron": "^36.0.0",
         "electron-builder": "^24.0.0",
         "process": "^0.11.10",
         "resolve-url-loader": "^5.0.0",

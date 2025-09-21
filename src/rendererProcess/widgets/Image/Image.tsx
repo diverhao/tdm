@@ -6621,6 +6621,7 @@ export class Image extends BaseWidget {
         result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
         result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
         result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
+        result.regionsOfInterest = JSON.parse(JSON.stringify(this._defaultTdl.regionsOfInterest))
         return result;
     };
 

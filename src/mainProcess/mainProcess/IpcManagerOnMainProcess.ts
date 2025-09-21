@@ -51,8 +51,8 @@ export class IpcManagerOnMainProcess {
     createWebSocketIpcServer = () => {
         Log.info('-1', `Creating WebSocket IPC server on port ${this.getPort()}`);
 
-        const key = fs.readFileSync("/Users/1h7/projects2/javascript/test89-https-express/server.key");
-        const cert = fs.readFileSync("/Users/1h7/projects2/javascript/test89-https-express/server.cert");
+        const key = fs.readFileSync(path.join(__dirname, "../resources/profiles/server.key"));
+        const cert = fs.readFileSync(path.join(__dirname, "../resources/profiles/server.cert"));
         // create a https server for the websocket server to attach to
         const httpsServer = https.createServer({
             // key: this.keyAndCert.private,
@@ -396,9 +396,16 @@ export class IpcManagerOnMainProcess {
     // ---------------- TDM process ----------------------------
 
     handleNewTdmProcess = (event: any, options: IpcEventArgType["new-tdm-process"]) => {
-        // const mainProcesses = this.getMainProcess().getMainProcesses();
-        // mainProcesses.createProcess();
-        // todo: spawn a new tdm process
+        const args = process.argv;
+
+        const newProcess = spawn(args[0], args.slice(1), {
+            detached: true,    // Key option for detachment
+            stdio: 'ignore',   // Important: detach from parent's stdio
+        });
+
+        // Unref the child process to allow parent to exit independently
+        newProcess.unref();
+        Log.info("Creating a new TDM instance with args:", args);
     };
 
     /**
