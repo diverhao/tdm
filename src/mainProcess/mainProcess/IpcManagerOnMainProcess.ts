@@ -51,12 +51,10 @@ export class IpcManagerOnMainProcess {
     createWebSocketIpcServer = () => {
         Log.info('-1', `Creating WebSocket IPC server on port ${this.getPort()}`);
 
-        const key = fs.readFileSync(path.join(__dirname, "../resources/profiles/server.key"));
-        const cert = fs.readFileSync(path.join(__dirname, "../resources/profiles/server.cert"));
+        const key = this.getMainProcess().getMainProcessMode() === "web" ? this.getMainProcess().getWebServer()?.getHttpsOptions()?.key : this.keyAndCert.private;
+        const cert = this.getMainProcess().getMainProcessMode() === "web" ? this.getMainProcess().getWebServer()?.getHttpsOptions()?.cert : this.keyAndCert.cert;
         // create a https server for the websocket server to attach to
         const httpsServer = https.createServer({
-            // key: this.keyAndCert.private,
-            // cert: this.keyAndCert.cert
             key: key,
             cert: cert,
         });
@@ -77,6 +75,8 @@ export class IpcManagerOnMainProcess {
                 let newPort = this.getPort() + 1;
                 this.setPort(newPort);
                 this.createWebSocketIpcServer();
+            } else {
+                Log.error("WebSocket for IPC error:", err)
             }
         });
 

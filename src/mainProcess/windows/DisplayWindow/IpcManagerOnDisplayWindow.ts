@@ -91,6 +91,7 @@ export class IpcManagerOnDisplayWindow {
 
         client.onerror = (err: any) => {
             Log.error("IPC websocket client error:", err)
+            console.log(err)
         }
 
         client.onclose = (ev: CloseEvent) => {

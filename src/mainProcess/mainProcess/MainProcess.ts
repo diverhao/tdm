@@ -573,4 +573,8 @@ export class MainProcess {
         return this._wsOpenerServer;
     }
 
+    getWebServer = () => {
+        return this._webServer;
+    }
+
 }

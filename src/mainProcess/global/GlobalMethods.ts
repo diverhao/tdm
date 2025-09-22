@@ -505,9 +505,29 @@ export const cmdLineCallback = (mainProcess: MainProcess, args: type_args) => {
 export const generateKeyAndCert = () => {
     // generate self-signed certificate for https server
 
-    const attrs = [{ name: "commonName", value: "localhost" }];
-    const pems = selfsigned.generate(attrs, { days: 1000 });
+    // const attrs = [{ name: "commonName", value: "localhost" }];
+    // const pems = selfsigned.generate(attrs, { days: 1000 });
+
+    const attrs = [{ name: 'commonName', value: '127.0.0.1' }];
+    const altNames = [
+        // { type: 2, value: 'localhost' }, // DNS
+        { type: 7, ip: '127.0.0.1' },    // IP v4
+        // { type: 7, ip: '::1' }           // IP v6
+    ];
+
+    const pems = selfsigned.generate(attrs, {
+        days: 365,
+        keySize: 2048,
+        algorithm: 'sha256',
+        extensions: [
+            { name: 'basicConstraints', cA: false },
+            { name: 'subjectAltName', altNames }
+        ]
+    });
+
 
     return pems;
+
+
 }
 
