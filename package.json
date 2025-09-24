@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2025-09-21T22:03:46Z",
+    "buildDate": "2025-09-24T15:55:44Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
@@ -119,7 +119,11 @@
                     ],
                     "name": "TDM file"
                 }
-            ]
+            ],
+            "category": "public.app-category.utilities",
+            "identity": "Hao Hao (2S9LY36N4R)",
+            "hardenedRuntime": true,
+            "gatekeeperAssess": false
         },
         "win": {
             "target": [
