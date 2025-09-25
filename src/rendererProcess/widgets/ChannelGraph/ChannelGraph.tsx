@@ -564,17 +564,11 @@ export class ChannelGraph extends BaseWidget {
     openDbFile = (dbFileName: string | undefined = undefined) => {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         // we are expecting to have a "db-file-contents" message from main process: {db: dbJson}
-        displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file",
+        displayWindowClient.getIpcManager().sendFromRendererProcess("load-db-file-contents",
             {
-                options: {
-                    tdlFileNames: dbFileName === undefined ? undefined : [dbFileName],
-                    mode: "operating",
-                    editable: false,
-                    macros: [],
-                    replaceMacros: false,
-                    windowId: displayWindowClient.getWindowId(),
-                    sendContentsToWindow: true, // whether to send the file contents back to the display window, for Channel Graph window
-                }
+                dbFileName: undefined,
+                displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                widgetKey: this.getWidgetKey(),
             })
     }
 

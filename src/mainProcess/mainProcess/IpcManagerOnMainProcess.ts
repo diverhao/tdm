@@ -316,6 +316,7 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("save-data-to-file", this.handleSaveDataToFile);
         this.ipcMain.on("new-tdl-rendered", this.handleNewTdlRendered);
         this.ipcMain.on("window-attached-script", this.handleWindowAttachedScript);
+        this.ipcMain.on("load-db-file-contents", this.handleLoadDbFileContents);
         // ------------- channel operations --------------------
         // tca get
         this.ipcMain.on("tca-get", this.handleTcaGet);
@@ -1796,6 +1797,78 @@ export class IpcManagerOnMainProcess {
                 };
                 if (windowAgent instanceof MainWindowAgent) {
                     windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
+                } else if (windowAgent instanceof DisplayWindowAgent) {
+                    windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
+                }
+
+            }
+        }
+    };
+
+    handleLoadDbFileContents = async (event: any, data: IpcEventArgType["load-db-file-contents"]) => {
+        console.log("-------------")
+        const { widgetKey, displayWindowId, dbFileName } = data;
+        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
+        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        if (selectedProfile === undefined) {
+            Log.error("0", "Profile not selected!");
+            return;
+        }
+
+        const windowAgent = windowAgentsManager.getAgent(displayWindowId);
+        if (!(windowAgent instanceof DisplayWindowAgent)) {
+            return;
+        }
+
+        try {
+            if (dbFileName === undefined) { // manually select the file, only available in desktop mode
+                // (2)
+                // modify tdlFileNames to a string array
+                const dbFileNames = dialog.showOpenDialogSync({
+                    title: "open tdl file",
+                    filters: [{ name: "tdl", extensions: ["db", "template"] }],
+                    // defaultPath: defaultPath,
+                    // properties: ["openFile", "openDirectory","multiSelections"],
+                    properties: ["openFile", "multiSelections"],
+                });
+
+                // at this point, the tdlFileNames must not be empty
+                if (!(Array.isArray(dbFileNames) === true && dbFileNames.length > 0)) {
+                    return;
+                }
+
+                const dbFileName = dbFileNames[0];
+
+                // do it asynchronously to speed up
+                const dbFileContents = await FileReader.readDb(dbFileName, selectedProfile, undefined);
+                if (dbFileContents === undefined) {
+                    return;
+                }
+                // send back the contents
+                windowAgent.sendFromMainProcess("load-db-file-contents", {
+                    dbFileName: dbFileNames[0],
+                    displayWindowId: displayWindowId,
+                    widgetKey: widgetKey,
+                    dbFileContents: dbFileContents,
+                })
+            } else {
+                // (4)
+            }
+        } catch (e) {
+            Log.error("0", e);
+            if (windowAgent !== undefined) {
+                const dialogInfo: { info: type_DialogMessageBox } = {
+                    info: {
+                        // command?: string | undefined;
+                        messageType: "error", // | "warning" | "info";
+                        humanReadableMessages: [`Failed to open db file`],
+                        rawMessages: [`${e}`],
+                        // buttons?: type_DialogMessageBoxButton[] | undefined;
+                        // attachment?: any;
+                    }
+                };
+                if (windowAgent instanceof MainWindowAgent) {
+                    // windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
                 } else if (windowAgent instanceof DisplayWindowAgent) {
                     windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
                 }

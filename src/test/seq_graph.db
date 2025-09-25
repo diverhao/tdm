@@ -1,0 +1,12 @@
+record(ai, "traffic:red_light") {
+    
+}
+
+record(ai, "traffic:yellow_light") {
+    
+}
+
+record(ai, "traffic:green_light") {
+    
+}
+

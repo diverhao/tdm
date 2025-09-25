@@ -121,6 +121,13 @@ export type IpcEventArgType = {
 
     },
 
+
+    "load-db-file-contents": {
+        dbFileName?: string;
+        displayWindowId: string;
+        widgetKey: string;
+    };
+
     "quit-tdm-process": {
         confirmToQuit?: boolean
     }
@@ -533,7 +540,7 @@ export type IpcEventArgType = {
         fileContents: string,
     },
 
-    "get-media-content" : {
+    "get-media-content": {
         fullFileName: string,
         widgetKey: string,
         displayWindowId: string,
@@ -557,6 +564,13 @@ export type IpcEventArgType2 = {
         command: string,
         subcommand?: string | string[] | [string, boolean]
     },
+
+    "load-db-file-contents": {
+        dbFileName: string;
+        displayWindowId: string;
+        widgetKey: string;
+        dbFileContents: Record<string, any>[];
+    }
 
     "new-channel-data": {
         newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>
@@ -632,12 +646,6 @@ export type IpcEventArgType2 = {
 
     "local-font-names": {
         localFontNames: string[]
-    },
-
-    "db-file-contents": {
-        displayWindowId: string,
-        fileName: string,
-        db: Record<string, any>[]
     },
 
     "start-record-video": {
@@ -784,7 +792,7 @@ export type IpcEventArgType2 = {
         displayWindowId: string,
     },
 
-    "get-media-content" : {
+    "get-media-content": {
         displayWindowId: string,
         widgetKey: string,
         content: string,

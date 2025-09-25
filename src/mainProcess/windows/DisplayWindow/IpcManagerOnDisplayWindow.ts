@@ -200,7 +200,7 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("select-a-file", this.handleSelectAFile);
         this.ipcRenderer.on("widget-specific-action", this.handleWidgetSpecificAction);
         this.ipcRenderer.on("local-font-names", this.handleLocalFontNames);
-        this.ipcRenderer.on("db-file-contents", this.handleDbFileContents);
+        this.ipcRenderer.on("load-db-file-contents", this.handleLoadDbFileContents);
 
         this.ipcRenderer.on("start-record-video", this.handleStartRecordVideo);
 
@@ -1379,11 +1379,11 @@ export class IpcManagerOnDisplayWindow {
         FontsData.g_localFonts = localFontNames;
     }
 
-    handleDbFileContents = (event: any, data: IpcEventArgType2["db-file-contents"]) => {
+    handleLoadDbFileContents = (event: any, data: IpcEventArgType2["load-db-file-contents"]) => {
         const widgets = g_widgets1.getWidgets2().values();
         for (const widget of widgets) {
             if (widget instanceof ChannelGraph) {
-                widget.loadDbFile(data["fileName"], data["db"]);
+                widget.loadDbFile(data["dbFileName"], data["dbFileContents"]);
                 break;
             }
         }
