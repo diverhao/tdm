@@ -193,7 +193,7 @@ export class Widgets {
 
     // [left, top]
     // for pasting widgets
-    _contextMenuCursorPosition: [number, number] = [0, 0];
+    private _contextMenuCursorPosition: [number, number] = [0, 0];
 
     private _channelNamePeekDivId: string = "";
     _status: "expanded" | "collapsed" = "collapsed";
@@ -1114,7 +1114,7 @@ export class Widgets {
 
         for (let widget of group.getWidgets().values()) {
             if (widget instanceof BaseWidget) {
-                widget.simpleDeselect(true);
+                widget.simpleDeselect(false);
             } else {
                 const errMsg = `Widget cannot be selected/deselected.`;
                 throw new Error(errMsg);
@@ -3220,9 +3220,9 @@ export class Widgets {
 
     // (1) copy selected widgets
     // (2) remove selected widgets and flush with GroupSelection2
-    cutSelectedWidgets = (doFlush: boolean) => {
+    cutSelectedWidgets = async (doFlush: boolean) => {
         // (1)
-        this.copySelectedWidgets();
+        await this.copySelectedWidgets();
         // (2)
         this.addToForceUpdateWidgets("GroupSelection2");
         this.removeSelectedWidgets(true);
@@ -3242,10 +3242,11 @@ export class Widgets {
     };
 
     // copy and paste, paste to (x+10, y+10)
-    duplicateSelectedWidgets = (doFlush: boolean) => {
-        this.copySelectedWidgets();
-        this.pasteSelectedWidgets(false);
+    duplicateSelectedWidgets = async (doFlush: boolean) => {
+        await this.copySelectedWidgets();
+        await this.pasteSelectedWidgets(false);
     };
+
 
     // (1) deselect all widgets
     // (2) read from clipboard
@@ -3259,10 +3260,10 @@ export class Widgets {
     pasteSelectedWidgets = async (byMouse: boolean) => {
         // (1)
         this.deselectAllWidgets(false);
+
         // (2)
         try {
             const resultRaw = await navigator.clipboard.readText();
-            // console.log()
             const result = JSON.parse(resultRaw);
             // (3)
             let xmin = 10000;
@@ -3278,8 +3279,8 @@ export class Widgets {
                 widgetTdl.widgetKey = newWidgetKey;
                 // (5)
                 if (byMouse) {
-                    widgetTdl.style.left = widgetTdl.style.left - xmin + this._contextMenuCursorPosition[0];
-                    widgetTdl.style.top = widgetTdl.style.top - ymin + this._contextMenuCursorPosition[1];
+                    widgetTdl.style.left = widgetTdl.style.left - xmin + this.getContextMenuCursorPosition()[0];
+                    widgetTdl.style.top = widgetTdl.style.top - ymin + this.getContextMenuCursorPosition()[1];
                 } else {
                     widgetTdl.style.top = widgetTdl.style.top + 10;
                     widgetTdl.style.left = widgetTdl.style.left + 10;
@@ -3655,6 +3656,15 @@ export class Widgets {
     getRoot = () => {
         return this._root;
     };
+
+    setContextMenuCursorPosition = (x: number, y: number) => {
+        this._contextMenuCursorPosition[0] = x;
+        this._contextMenuCursorPosition[1] = y;
+    }
+
+    getContextMenuCursorPosition = () => {
+        return this._contextMenuCursorPosition;
+    }
 
     getSidebarWidgetsList = () => {
         return this._sidebarWidgetsList;

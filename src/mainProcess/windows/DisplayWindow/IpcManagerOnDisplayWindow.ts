@@ -388,7 +388,7 @@ export class IpcManagerOnDisplayWindow {
 
     // ----------------------- event handlers -----------------------------
 
-    handleContextMenuCommand = (event: any, options: IpcEventArgType2["context-menu-command"]) => {
+    handleContextMenuCommand = async (event: any, options: IpcEventArgType2["context-menu-command"]) => {
         const { command, subcommand } = options;
         Log.info("context menu command:", command, "subcommand", subcommand);
         // editing mode

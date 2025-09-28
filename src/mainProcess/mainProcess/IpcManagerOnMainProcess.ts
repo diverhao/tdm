@@ -1806,7 +1806,6 @@ export class IpcManagerOnMainProcess {
     };
 
     handleLoadDbFileContents = async (event: any, data: IpcEventArgType["load-db-file-contents"]) => {
-        console.log("-------------")
         const { widgetKey, displayWindowId, dbFileName } = data;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();

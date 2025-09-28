@@ -19,7 +19,7 @@ cp -a ${TDM_ROOT}/src/mainProcess/resources/css/fonts ${TDM_ROOT}/dist/mainProce
 
 cp -a ${TDM_ROOT}/src/mainProcess/resources ${TDM_ROOT}/dist/mainProcess/
 
-cp -a ${TDM_ROOT}/src/mainProcess/wsPv/*.py ${TDM_ROOT}/dist/mainProcess/wsPv/
+cp -a ${TDM_ROOT}/src/mainProcess/mainProcess/*.py ${TDM_ROOT}/dist/mainProcess/mainProcess/
 cp -a ${TDM_ROOT}/src/test/tdmDemo ${TDM_ROOT}/dist/test
 ln -s ${TDM_ROOT}/dist/mainProcess/resources ${TDM_ROOT}/dist/webpack/
 

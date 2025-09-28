@@ -41,7 +41,7 @@ import { FileBrowser } from "../../../rendererProcess/widgets/FileBrowser/FileBr
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 // import '../../resources/css/simple.css';
 // there is no typescrit def for this lib, I created a wrapper at dom-to-image-more.d.ts
-import {toBlob} from "dom-to-image-more";
+import { toBlob } from "dom-to-image-more";
 
 
 console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Finished loading modules.")
@@ -1544,6 +1544,9 @@ export class DisplayWindowClient {
      * @param {string} widgetKey The widget key where the right click occurs.
      */
     showContextMenu = (widgetKey: string, [x, y]: [number, number], options: Record<string, any> = {}) => {
+        if (g_widgets1 !== undefined) {
+            g_widgets1.setContextMenuCursorPosition(x, y);
+        }
         this.getContextMenu().show(widgetKey, [x, y], options);
     };
 

@@ -249,7 +249,7 @@ export class Keyboard {
 
     on_v_down = () => {
         if (this.onlyMetaDown()) {
-            g_widgets1.pasteSelectedWidgets(true);
+            g_widgets1.pasteSelectedWidgets(false);
             const history = this.getDisplayWindowClient().getActionHistory();
             history.registerAction();
         }
