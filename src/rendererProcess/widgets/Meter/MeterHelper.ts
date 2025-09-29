@@ -93,7 +93,7 @@ export class MeterHelper extends BaseWidgetHelper {
 
 	// not getDefaultTdl(), always generate a new key
 	static generateDefaultTdl = (type: string): type_Meter_tdl => {
-		const result = super.generateDefaultTdl("LED") as type_Meter_tdl;
+		const result = super.generateDefaultTdl("Meter") as type_Meter_tdl;
 
 		result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
 		result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
@@ -102,7 +102,7 @@ export class MeterHelper extends BaseWidgetHelper {
 		return result;
 	};
 
-	static convertBobToTdl = (bob: Record<string, any>): type_Meter_tdl => {
+	static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Meter_tdl => {
 		console.log("\n------------", `Parsing "meter"`, "------------------\n");
 		const tdl = this.generateDefaultTdl("Meter");
 		// all properties for this widget
@@ -113,7 +113,7 @@ export class MeterHelper extends BaseWidgetHelper {
 			"class", // not in tdm
 			"font",
 			"foreground_color",
-			"format", // not in tdm
+			"format",
 			"height",
 			"knob_color", // not in tdm
 			"limits_from_pv",
@@ -121,22 +121,80 @@ export class MeterHelper extends BaseWidgetHelper {
 			"minimum",
 			"name", // not in tdm
 			"needle_color",
-			"precision", // not in tdm
+			"precision", 
 			"pv_name",
-			"rules", // not in tdm
+			"rules", 
 			"scripts", // not in tdm
 			"show_limits", // not in tdm
 			"show_units",
 			"show_value",
 			"tooltip", // not in tdm
 			"type", // not in tdm
-			"visible", // not in tdm
+			"visible",
 			"width",
 			"x",
 			"y",
 		];
         
 
+        for (const propertyName of propertyNames) {
+            const propertyValue = bobWidgetJson[propertyName];
+            if (propertyValue === undefined) {
+                if (propertyName === "widget") {
+                    console.log(`There are one or more widgets inside "display"`);
+                } else {
+                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                }
+                continue;
+            } else {
+                if (propertyName === "background_color") {
+                    tdl["style"]["backgroundColor"] = BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "border_alarm_sensitive") {
+                    tdl["text"]["alarmBorder"] = BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else if (propertyName === "font") {
+                    const font = BobPropertyConverter.convertBobFont(propertyValue);
+                    tdl["style"]["fontSize"] = font["fontSize"];
+                    tdl["style"]["fontFamily"] = font["fontFamily"];
+                    tdl["style"]["fontStyle"] = font["fontStyle"];
+                    tdl["style"]["fontWeight"] = font["fontWeight"];
+                } else if (propertyName === "foreground_color") {
+                    tdl["style"]["color"] = BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "format") {
+                    tdl["text"]["format"] = BobPropertyConverter.convertBobDigitFormat(propertyValue);
+                } else if (propertyName === "x") {
+                    tdl["style"]["left"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "y") {
+                    tdl["style"]["top"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "width") {
+                    tdl["style"]["width"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "height") {
+                    tdl["style"]["height"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "limits_from_pv") {
+                    tdl["text"]["usePvLimits"] = BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else if (propertyName === "maximum") {
+                    tdl["text"]["maxPvValue"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "minimum") {
+                    tdl["text"]["minPvValue"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "needle_color") {
+                    tdl["text"]["pointerColor"] = BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "precision") {
+                    tdl["text"]["scale"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "pv_name") {
+                    tdl["channelNames"].push(BobPropertyConverter.convertBobString(propertyValue));
+                } else if (propertyName === "rules") {
+                    tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
+                } else if (propertyName === "show_units") {
+                    tdl["text"]["showUnit"] = BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else if (propertyName === "show_value") {
+                    tdl["text"]["showPvValue"] = BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else if (propertyName === "visible") {
+                    tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else {
+                    console.log("Skip property", `"${propertyName}"`);
+                }
+            }
+        }
+        
 		return tdl;
 	};
 }

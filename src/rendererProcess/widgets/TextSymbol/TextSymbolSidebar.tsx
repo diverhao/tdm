@@ -4,8 +4,9 @@ import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
 import { SidebarChoiceButtonItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonItems";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { SidebarTextSymbolShowPvValue } from "../../helperWidgets/SidebarComponents/SidebarTextSymbolShowPvValue";
 
 export class TextSymbolSidebar extends BaseWidgetSidebar {
     _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
@@ -13,6 +14,7 @@ export class TextSymbolSidebar extends BaseWidgetSidebar {
     _sidebarChoiceButtonItems: SidebarChoiceButtonItems;
     // _sidebarPolylineFillColor: SidebarPolylineFillColor;
     // _sidebarPolylineFill: SidebarPolylineFill;
+    _sidebarTextSymbolShowPvValue: SidebarTextSymbolShowPvValue;
 
     beingUpdatedItemIndex: number = -1;
 
@@ -23,6 +25,7 @@ export class TextSymbolSidebar extends BaseWidgetSidebar {
         this._sidebarChoiceButtonItems = new SidebarChoiceButtonItems(this);
         // this._sidebarPolylineFillColor = new SidebarPolylineFillColor(this);
         // this._sidebarPolylineFill = new SidebarPolylineFill(this);
+        this._sidebarTextSymbolShowPvValue = new SidebarTextSymbolShowPvValue(this);
     }
 
     getSidebarPictureStretchToFit = () => {
@@ -36,6 +39,10 @@ export class TextSymbolSidebar extends BaseWidgetSidebar {
     getSidebarChoiceButtonItems = () => {
         return this._sidebarChoiceButtonItems;
     };
+
+    getSidebarTextSymbolShowPvValue = () => {
+        return this._sidebarTextSymbolShowPvValue;
+    }
 
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
@@ -105,6 +112,7 @@ export class TextSymbolSidebar extends BaseWidgetSidebar {
                     {this.getSidebarAlarmBackground().getElement()}
                     {this.getSidebarAlarmBorder().getElement()}
                     {this.getSidebarAlarmLevel().getElement()}
+                    {this.getSidebarTextSymbolShowPvValue().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
@@ -187,6 +195,15 @@ export class TextSymbolSidebar extends BaseWidgetSidebar {
                     {this.getSidebarBorderColor().getElement()}
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
+                {/* ----------------- fallback text ------------------------ */}
+                <this._BlockTitle>
+                    <b>Fallback</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarText().getElement()}
+                </this._BlockBody>{" "}
+                <this._HorizontalLine />
+
                 {/* --------------------------- items -------------------------- */}
                 {this.getSidebarChoiceButtonItems().getElement()}
                 <this._HorizontalLine />

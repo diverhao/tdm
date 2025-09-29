@@ -41,6 +41,9 @@ import { TextUpdateHelper } from "../../../rendererProcess/widgets/TextUpdate/Te
 // import { ThermometerHelper } from "../../../rendererProcess/widgets/Thermometer/ThermometerHelper";
 // import { ThumbWheelHelper } from "../../../rendererProcess/widgets/ThumbWheel/ThumbWheelHelper";
 import { Log } from "../../log/Log";
+import { TankHelper } from "../../../rendererProcess/widgets/Tank/TankHelper";
+import { SymbolHelper } from "../../../rendererProcess/widgets/Symbol/SymbolHelper";
+import { TextSymbolHelper } from "../../../rendererProcess/widgets/TextSymbol/TextSymbolHelper";
 
 export class BobPropertyConverter {
     constructor() { }
@@ -63,6 +66,7 @@ export class BobPropertyConverter {
         const bobWidgetsJson = bobJson["widget"];
         for (const bobWidgetJson of bobWidgetsJson) {
             const bobWidgetType = bobWidgetJson["$"]["type"];
+            console.log("bob widget tyep <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", bobWidgetType)
             if (bobWidgetType === "arc") {
                 const widgetTdl = ArcHelper.convertBobToTdl(bobWidgetJson, "arc");
                 const widgetKey = widgetTdl["widgetKey"];
@@ -103,8 +107,32 @@ export class BobPropertyConverter {
                 const widgetTdl = LEDMultiStateHelper.convertBobToTdl(bobWidgetJson);
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "meter") {
+                const widgetTdl = MeterHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "tank") {
+                const widgetTdl = TankHelper.convertBobToTdl(bobWidgetJson, "tank");
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "progressbar") {
+                const widgetTdl = TankHelper.convertBobToTdl(bobWidgetJson, "progressbar");
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "symbol") {
+                const widgetTdl = SymbolHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "text-symbol") {
+                const widgetTdl = TextSymbolHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "textupdate") {
+                const widgetTdl = TextUpdateHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
             } else {
-                return;
+                Log.info("Skip converting widget", bobWidgetType);
             }
         }
 
@@ -313,10 +341,11 @@ export class BobPropertyConverter {
      * to ["Label 0", "Label 1"]
      */
     static convertBobStrings = (
-        propertyValue: { text: string[] }[]
+        propertyValue: Record<string, string[]>[],
+        label: string,
     ) => {
         try {
-            const data = propertyValue[0]["text"];
+            const data = propertyValue[0][label];
             return data;
         } catch (e) {
             Log.error(e);
@@ -628,6 +657,8 @@ export class BobPropertyConverter {
      *                "1"
      *            ]
      * to "rotate(90deg)""
+     * 
+     * We must also change the width, height, top and left of the widget
      */
     static convertBobAngle = (propertyValue: string[]) => {
         const numValue = this.convertBobNum(propertyValue);
@@ -641,6 +672,43 @@ export class BobPropertyConverter {
             return "rotate(90deg)";
         } else {
             return "rotage(0deg)";
+        }
+    }
+
+    /**
+     * From
+     *            [
+     *                "55"
+     *            ]
+     * to "rotate(55deg)""
+     */
+    static convertBobAngleNum = (propertyValue: string[]) => {
+        const numValue = this.convertBobNum(propertyValue);
+        return `rotate(${numValue}deg)`
+    }
+
+
+    /**
+     * from 
+     *     [
+     *         "1"
+     *     ]
+     * to "decimal"
+     */
+    static convertBobDigitFormat = (propertyValue: string[]) => {
+        const numValue = this.convertBobNum(propertyValue);
+        if (numValue === 0) {
+            return "default";
+        } else if (numValue === 1) {
+            return "decimal";
+        } else if (numValue === 2) {
+            return "exponential";
+        } else if (numValue === 4) {
+            return "hexadecimal";
+        } else if (numValue === 6) {
+            return "string";
+        } else {
+            return "default";
         }
     }
 

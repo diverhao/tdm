@@ -3,6 +3,7 @@ import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
+import { Media } from "../../widgets/Media/Media";
 
 /**
  * Represents the X component in sidebar. <br>
@@ -43,7 +44,7 @@ export class SidebarMediaOpenFile extends SidebarComponent {
                             alignItems: "center",
                         }}
                     >
-                        <b>File</b>
+                        {this.getMainWidget() instanceof Media ? <b>File</b> : "File"}
                         {/* <div
                             style={{
                                 display: g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "web" ? "" : "none",

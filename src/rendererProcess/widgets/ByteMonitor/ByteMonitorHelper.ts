@@ -262,7 +262,7 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
                     const horizontalDirection = BobPropertyConverter.convertBobBoolean(propertyValue);
                     tdl["text"]["direction"] = horizontalDirection === true ? "horizontal" : "vertical";
                 } else if (propertyName === "labels") {
-                    tdl["bitNames"] =  BobPropertyConverter.convertBobStrings(propertyValue);
+                    tdl["bitNames"] =  BobPropertyConverter.convertBobStrings(propertyValue, "text");
                 } else if (propertyName === "numBits") {
                     tdl["text"]["bitLength"] =  BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "startBit") {

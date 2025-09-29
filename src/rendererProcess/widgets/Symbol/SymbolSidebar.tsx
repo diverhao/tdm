@@ -4,8 +4,9 @@ import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
 import { SidebarSymbolItems } from "../../helperWidgets/SidebarComponents/SidebarSymbolItems";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { SidebarMediaOpenFile } from "../../helperWidgets/SidebarComponents/SidebarMediaOpenFile";
 
 export class SymbolSidebar extends BaseWidgetSidebar {
     _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
@@ -13,6 +14,7 @@ export class SymbolSidebar extends BaseWidgetSidebar {
     _sidebarSymbolItems: SidebarSymbolItems;
     // _sidebarPolylineFillColor: SidebarPolylineFillColor;
     // _sidebarPolylineFill: SidebarPolylineFill;
+    _sidebarMediaOpenFile: SidebarMediaOpenFile;
 
     beingUpdatedItemIndex: number = -1;
 
@@ -21,6 +23,7 @@ export class SymbolSidebar extends BaseWidgetSidebar {
         this._sidebarPictureStretchToFit = new SidebarPictureStretchToFit(this);
         this._sidebarPictureOpacity = new SidebarPictureOpacity(this);
         this._sidebarSymbolItems = new SidebarSymbolItems(this);
+        this._sidebarMediaOpenFile = new SidebarMediaOpenFile(this);
         // this._sidebarPolylineFillColor = new SidebarPolylineFillColor(this);
         // this._sidebarPolylineFill = new SidebarPolylineFill(this);
     }
@@ -84,6 +87,9 @@ export class SymbolSidebar extends BaseWidgetSidebar {
                     case "select-a-file":
                         this.getSidebarSymbolItems().getUpdateFromWidget()(propertyValue as string);
                         break;
+                    case "select-a-file-fallback-image":
+                        this.getSidebarMediaOpenFile().getUpdateFromWidget()(propertyValue as string);
+                        break;
                     default:
                         Log.error("Unknown property from sidebar: ", propertyName);
                 }
@@ -134,6 +140,15 @@ export class SymbolSidebar extends BaseWidgetSidebar {
                     {this.getSidebarInvisibleInOperation().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
+                {/* ------------------ fallback image ------------------- */}
+                <this._BlockTitle>
+                    <b>Fallback image</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarMediaOpenFile().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
+
                 {/* ------------------- File -------------------------- */}
                 {/* {this.getSidebarOpenFile().getElement()} */}
                 {/* <this._HorizontalLine /> */}
@@ -186,16 +201,16 @@ export class SymbolSidebar extends BaseWidgetSidebar {
 				</this._BlockBody>
 				<this._HorizontalLine /> */}
                 {/* ----------------------- font --------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Font</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarFontFamily().getElement()}
-					{this.getSidebarFontSize().getElement()}
-					{this.getSidebarFontStyle().getElement()}
-					{this.getSidebarFontWeight().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
+                <this._BlockTitle>
+                    <b>Font</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarFontFamily().getElement()}
+                    {this.getSidebarFontSize().getElement()}
+                    {this.getSidebarFontStyle().getElement()}
+                    {this.getSidebarFontWeight().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
                 {/* ---------------- border -------------------------- */}
                 <this._BlockTitle>
                     <b>Border</b>
@@ -230,6 +245,10 @@ export class SymbolSidebar extends BaseWidgetSidebar {
     // getStyle()
     // getFormStyle()
     // getInputStyle()
+
+    getSidebarMediaOpenFile = () => {
+        return this._sidebarMediaOpenFile;
+    }
 
     // ------------------------- style -------------------------
 

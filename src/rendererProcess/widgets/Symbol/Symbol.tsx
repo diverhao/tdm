@@ -183,6 +183,9 @@ export class Symbol extends BaseWidget {
     calcPictureWidth = () => { };
 
     calcFileName = (): string => {
+
+        const fallbackFileName = this.calcFallbackFileName();
+
         if (this.getItemNames().length > 0) {
             if (g_widgets1.isEditing()) {
                 const fileName = this.getItemNames()[0];
@@ -194,10 +197,11 @@ export class Symbol extends BaseWidget {
                         const tdlFileName = displayWindowClient.getTdlFileName();
                         if (tdlFileName !== "") {
                             const tdlFileFolder = path.dirname(tdlFileName);
-                            console.log(tdlFileFolder, fileName)
                             return path.join(tdlFileFolder, fileName);
                         } else {
-                            return `../../../webpack/resources/webpages/tdm-logo.png`;
+                            // return `../../../webpack/resources/webpages/tdm-logo.png`;
+                            // return this.getAllText()["fileName"]
+                            return fallbackFileName;
                         }
 
                     }
@@ -219,7 +223,10 @@ export class Symbol extends BaseWidget {
                                 console.log(tdlFileFolder, fileName)
                                 return path.join(tdlFileFolder, fileName);
                             } else {
-                                return `../../../webpack/resources/webpages/tdm-logo.png`;
+                                // return `../../../webpack/resources/webpages/tdm-logo.png`;
+                                // return this.getAllText()["fileName"]
+                                return fallbackFileName;
+
                             }
 
                         }
@@ -227,11 +234,31 @@ export class Symbol extends BaseWidget {
                 }
             }
         }
-        return `../../../webpack/resources/webpages/tdm-logo.png`;
+        return fallbackFileName;
     };
 
+    calcFallbackFileName = () => {
+        // fallback file name 
+        const fileName = this.getAllText()["fileName"];
+        if (fileName !== undefined) {
+            if (path.isAbsolute(fileName)) {
+                return fileName;
+            } else {
+                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                const tdlFileName = displayWindowClient.getTdlFileName();
+                if (tdlFileName !== "") {
+                    const tdlFileFolder = path.dirname(tdlFileName);
+                    return path.join(tdlFileFolder, fileName);
+                }
+            }
+        }
+        return fileName;
+    }
+
     calcTextVisibility = () => {
-        if (this.calcFileName() === `../../../webpack/resources/webpages/tdm-logo.png`) {
+        if (this.calcFileName() === this.getAllText()["fileName"]
+            // `../../../webpack/resources/webpages/tdm-logo.png`
+        ) {
             return "visible";
         } else {
             return "hidden";
@@ -240,10 +267,14 @@ export class Symbol extends BaseWidget {
 
     handleSelectAFile = (options: Record<string, any>, fileName: string) => {
         const itemIndex = options["itemIndex"];
-        const sidebar = this.getSidebar();
-        if (typeof itemIndex === "number" && sidebar !== undefined) {
-            (sidebar as SymbolSidebar).setBeingUpdatedItemIndex(itemIndex);
-            sidebar.updateFromWidget(undefined, "select-a-file", fileName);
+        if (itemIndex !== undefined) {
+            const sidebar = this.getSidebar();
+            if (typeof itemIndex === "number" && sidebar !== undefined) {
+                (sidebar as SymbolSidebar).setBeingUpdatedItemIndex(itemIndex);
+                sidebar.updateFromWidget(undefined, "select-a-file", fileName);
+            }
+        } else {
+            this.getSidebar()?.updateFromWidget(undefined, "select-a-file-fallback-image", fileName);
         }
     };
 

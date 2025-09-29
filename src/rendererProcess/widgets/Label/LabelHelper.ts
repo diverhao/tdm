@@ -416,9 +416,16 @@ export class LabelHelper extends BaseWidgetHelper {
         }
 
         if (tdl["style"]["transform"].includes("rotate(270deg)") || tdl["style"]["transform"].includes("rotate(90deg)")) {
-            const tmp = tdl["style"]["width"];
-            tdl["style"]["width"] = tdl["style"]["height"];
-            tdl["style"]["height"] = tmp;
+            // modify the x, y, width and height
+            const x = tdl["style"]["left"];
+            const y = tdl["style"]["top"];
+            const w = tdl["style"]["width"];
+            const h = tdl["style"]["height"];
+
+            tdl["style"]["width"] = h
+            tdl["style"]["height"] = w;
+            tdl["style"]["left"] = x + (w - h) / 2;
+            tdl["style"]["top"] = y - (w - h) / 2;
         }
 
         return tdl;
