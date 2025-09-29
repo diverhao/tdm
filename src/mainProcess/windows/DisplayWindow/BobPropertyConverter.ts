@@ -49,289 +49,602 @@ export class BobPropertyConverter {
         return Object.keys(bob).includes("widget");
     };
 
-    static parseBob = (bob: Record<string, any>, result: Record<string, any>) => {
-        let tdl: Record<string, any> = {};
+    static parseBob = (bobJson: Record<string, any>, tdl: Record<string, any>) => {
+        // let tdl: Record<string, any> = {};
 
-        // top level
-        if (!Object.keys(bob).includes("type")) {
-            tdl = CanvasHelper.convertBobToTdl(bob);
-            result[tdl["widgetKey"]] = tdl;
-        } else {
-            const type = bob["type"];
+        // go through all fields, parse Canvas
+        // the '$' and 'widget' are ignored, all others are going to be part of Canvas
+        const widgetTdl = CanvasHelper.convertBobToTdl(bobJson);
+        const widgetKey = widgetTdl["widgetKey"];
+        tdl[widgetKey] = widgetTdl;
 
-            switch (type) {
-                case "rectangle":
-                    tdl = RectangleHelper.convertBobToTdl(bob);
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "label":
-                    tdl = LabelHelper.convertBobToTdl(bob);
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "action_button":
-                    tdl = ActionButtonHelper.convertBobToTdl(bob);
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "textupdate":
-                    tdl = TextUpdateHelper.convertBobToTdl(bob);
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "byte_monitor":
-                    tdl = ByteMonitorHelper.convertBobToTdl(bob);
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "polyline":
-                    tdl = PolylineHelper.convertBobToTdl(bob, "polyline");
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "polygon":
-                    tdl = PolylineHelper.convertBobToTdl(bob, "polygon");
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "textentry":
-                    tdl = TextEntryHelper.convertBobToTdl(bob);
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "bool_button":
-                    tdl = BooleanButtonHelper.convertBobToTdl(bob);
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "arc":
-                    tdl = ArcHelper.convertBobToTdl(bob, "arc");
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "ellipse":
-                    tdl = ArcHelper.convertBobToTdl(bob, "ellipse");
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "picture":
-                    tdl = MediaHelper.convertBobToTdl(bob);
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "led":
-                    tdl = LEDHelper.convertBobToTdl(bob);
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "multi_state_led":
-                    tdl = LEDMultiStateHelper.convertBobToTdl(bob);
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "meter":
-                    tdl = MeterHelper.convertBobToTdl(bob);
-                    result[tdl["widgetKey"]] = tdl;
-                    break;
-                case "group":
-                    break;
-                default:
-                    Log.error("-1", "I don't recognize type", type);
-                    return;
+        // parse all other widgets other than Canvas
+        // Record<string, any>[], each record is a JSON representing a Bob widget
+        const bobWidgetsJson = bobJson["widget"];
+        for (const bobWidgetJson of bobWidgetsJson) {
+            const bobWidgetType = bobWidgetJson["$"]["type"];
+            if (bobWidgetType === "arc") {
+                const widgetTdl = ArcHelper.convertBobToTdl(bobWidgetJson, "arc");
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "ellipse") {
+                const widgetTdl = ArcHelper.convertBobToTdl(bobWidgetJson, "ellipse");
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "label") {
+                const widgetTdl = LabelHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "picture") {
+                const widgetTdl = MediaHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "polygon") {
+                const widgetTdl = PolylineHelper.convertBobToTdl(bobWidgetJson, "polygon");
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "polyline") {
+                const widgetTdl = PolylineHelper.convertBobToTdl(bobWidgetJson, "polyline");
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "rectangle") {
+                const widgetTdl = RectangleHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "byte_monitor") {
+                const widgetTdl = ByteMonitorHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "led") {
+                const widgetTdl = LEDHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "multi_state_led") {
+                const widgetTdl = LEDMultiStateHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else {
+                return;
             }
         }
 
         // "group" or "display"
-        if (this.hasWidget(bob)) {
-            let startingPoint = Object.keys(result).length;
-            let groupLeft = 0;
-            let groupTop = 0;
-            let groupId = "";
+        // if (this.hasWidget(bobJson)) {
+        //     let startingPoint = Object.keys(result).length;
+        //     let groupLeft = 0;
+        //     let groupTop = 0;
+        //     let groupId = "";
 
-            if (bob["type"] === "group") {
-                Log.info("-1", `------------------- parsing "group" ----------------`);
-                startingPoint = Object.keys(result).length;
-                if (bob["x"] !== undefined) {
-                    groupLeft = parseInt(bob["x"]);
-                }
-                if (bob["y"] !== undefined) {
-                    groupTop = parseInt(bob["y"]);
-                }
-                groupId = `Group_${uuidv4()}`;
-            }
+        //     if (bobJson["type"] === "group") {
+        //         Log.info("-1", `------------------- parsing "group" ----------------`);
+        //         startingPoint = Object.keys(result).length;
+        //         if (bobJson["x"] !== undefined) {
+        //             groupLeft = parseInt(bobJson["x"]);
+        //         }
+        //         if (bobJson["y"] !== undefined) {
+        //             groupTop = parseInt(bobJson["y"]);
+        //         }
+        //         groupId = `Group_${uuidv4()}`;
+        //     }
 
-            const widget = bob["widget"];
-            if (Array.isArray(widget)) {
-                for (let widgetMember of widget) {
-                    Log.info("-1", "parsing widget array");
-                    this.parseBob(widgetMember, result);
-                }
-            } else {
-                this.parseBob(widget, result);
-            }
+        //     const widget = bobJson["widget"];
+        //     if (Array.isArray(widget)) {
+        //         for (let widgetMember of widget) {
+        //             Log.info("-1", "parsing widget array");
+        //             this.parseBob(widgetMember, result);
+        //         }
+        //     } else {
+        //         this.parseBob(widget, result);
+        //     }
 
-            if (bob["type"] === "group") {
-                for (let index = startingPoint; index < Object.keys(result).length; index++) {
-                    const newWidget = Object.values(result)[index];
-                    newWidget["style"]["left"] = newWidget["style"]["left"] + groupLeft;
-                    newWidget["style"]["top"] = newWidget["style"]["top"] + groupTop;
-                    newWidget["groupNames"].push(groupId);
-                }
-            }
-        }
+        //     if (bobJson["type"] === "group") {
+        //         for (let index = startingPoint; index < Object.keys(result).length; index++) {
+        //             const newWidget = Object.values(result)[index];
+        //             newWidget["style"]["left"] = newWidget["style"]["left"] + groupLeft;
+        //             newWidget["style"]["top"] = newWidget["style"]["top"] + groupTop;
+        //             newWidget["groupNames"].push(groupId);
+        //         }
+        //     }
+        // }
     };
+
+
     /**
-     * Assume transparent is "false" by default. If the default transparent is "true", like in Label,
-     * we must determine the input argument for transparent before calling this function.
+     * From
+     * 
+     * [
+     *      {
+     *          "color": [
+     *              {
+     *                  "$": {
+     *                      "name": "DISCONNECTED",
+     *                      "red": "200",
+     *                      "green": "0",
+     *                      "blue": "200",
+     *                      "alpha": "200"
+     *                  }
+     *              }
+     *          ]
+     *      }
+     *  ]
+     * 
+     * to "rgba(200, 0, 200, 0.8)"
      */
     static convertBobColor = (
         propertyValue: {
             color: {
-                red: string;
-                green: string;
-                blue: string;
-                alpha?: string;
-            } & Record<string, any>;
-        },
-        transparent: "true" | "false" | undefined
+                "$": {
+                    name?: string;
+                    red: string,
+                    green: string,
+                    blue: string,
+                    alpha?: string,
+                } & Record<string, any>
+            }[]
+        }[]
     ) => {
-        const red = propertyValue["color"]["red"];
-        const green = propertyValue["color"]["green"];
-        const blue = propertyValue["color"]["blue"];
-        let alpha = `1`;
-        const alphaBob = propertyValue["color"]["alpha"];
-        if (alphaBob !== undefined) {
-            alpha = `${parseInt(alphaBob) / 255}`;
+        try {
+            const data = propertyValue[0]["color"][0]["$"];
+            const redStr = data["red"];
+            const greenStr = data["green"];
+            const blueStr = data["blue"];
+            const alphaStr = data["alpha"];
+            const red = parseInt(redStr);
+            const green = parseInt(greenStr);
+            const blue = parseInt(blueStr);
+            let alpha = 1;
+            if (alphaStr !== undefined) {
+                alpha = parseInt(alphaStr) / 255;
+            }
+            return "rgba(" + red.toString() + ", " + green.toString() + ", " + blue.toString() + ", " + alpha.toString() + ")";
+
+        } catch (e) {
+            Log.error(e);
+            return "rgba(0,0,0,0)";
         }
-        if (transparent === "true") {
-            alpha = `0`;
-        } else if (transparent === "false") {
-            alpha = "1";
+    };
+    /**
+     * Convert 
+     * 
+     *            [
+     *                {
+     *                    "state": [
+     *                        {
+     *                            "value": [
+     *                                "0"
+     *                            ],
+     *                            "label": [
+     *                                "State 1"
+     *                            ],
+     *                            "color": [
+     *                                {
+     *                                    "color": [
+     *                                        {
+     *                                            "$": {
+     *                                                "name": "Off",
+     *                                                "red": "60",
+     *                                                "green": "100",
+     *                                                "blue": "60"
+     *                                            }
+     *                                        }
+     *                                    ]
+     *                                }
+     *                            ]
+     *                        },
+     *                        {
+     *                            "value": [
+     *                                "1"
+     *                            ],
+     *                            "label": [
+     *                                "State 2"
+     *                            ],
+     *                            "color": [
+     *                                {
+     *                                    "color": [
+     *                                        {
+     *                                            "$": {
+     *                                                "name": "On",
+     *                                                "red": "0",
+     *                                                "green": "255",
+     *                                                "blue": "0"
+     *                                            }
+     *                                        }
+     *                                    ]
+     *                                }
+     *                            ]
+     *                        }
+     *                    ]
+     *                }
+     *            ]
+     * to {itemNames: ["State 1", "State 2"], itemValues: [0, 1], itemColors: ["rgba(60, 100, 60)", "rgba(0, 255, 0)"]}
+     */
+    static convertBobStates = (
+        propertyValue: { state: { value: string[], label: string[], color: { color: { "$": { name?: string, red: string, green: string, blue: string, alpha?: string } }[] }[] }[] }[]
+    ) => {
+        const result: { itemNames: string[], itemValues: number[], itemColors: string[] } = {
+            itemNames: [],
+            itemValues: [],
+            itemColors: [],
+        };
+        const statesData = propertyValue[0]["state"];
+        for (const stateData of statesData) {
+            const itemName = stateData["label"][0];
+            result["itemNames"].push(itemName);
+            const itemValue = parseFloat(stateData["value"][0]);
+            result["itemValues"].push(itemValue);
+            const itemColor = this.convertBobColor(stateData["color"]);
+            result["itemColors"].push(itemColor);
+        }
+
+        return result;
+    }
+
+
+    /**
+      * from 
+      * 
+      *     [
+      *         "MPS Ops"
+      *     ]
+      * 
+      * to "MPS Ops"
+      */
+    static convertBobString = (
+        propertyValue: string[]
+    ) => {
+        if (propertyValue.length > 0) {
+            return propertyValue[0];
         } else {
-            // do nothing
+            return "";
         }
-        const rgbaColor = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-        return rgbaColor;
     };
 
-    static convertBobFont = (propertyValue: {
-        font: {
-            family: string;
-            style: "REGULAR" | "BOLD" | "BOLD_ITALIC" | "ITALIC";
-            size: string;
-        } & Record<string, any>;
-    }) => {
-        const fontSize = parseInt(propertyValue["font"]["size"]);
-        const fontFamily = propertyValue["font"]["family"];
-        let fontWeight = "normal";
-        let fontStyle = "normal";
-        const fontStyleBob = propertyValue["font"]["style"];
-        if (fontStyleBob === "REGULAR") {
-            fontWeight = "normal";
-            fontStyle = "normal";
-        } else if (fontStyleBob === "BOLD") {
-            fontWeight = "bold";
-            fontStyle = "normal";
-        } else if (fontStyleBob === "BOLD_ITALIC") {
-            fontWeight = "bold";
-            fontStyle = "italic";
-        } else if (fontStyleBob === "ITALIC") {
-            fontWeight = "normal";
-            fontStyle = "italic";
+    /**
+     * From 
+     * 
+     *          [
+     *              {
+     *                  "text": [
+     *                      "Label 0",
+     *                      "Label 1"
+     *                  ]
+     *              }
+     *          ]
+     * to ["Label 0", "Label 1"]
+     */
+    static convertBobStrings = (
+        propertyValue: { text: string[] }[]
+    ) => {
+        try {
+            const data = propertyValue[0]["text"];
+            return data;
+        } catch (e) {
+            Log.error(e);
+            return [];
         }
+    }
 
-        return {
-            fontSize: fontSize,
-            fontWeight: fontWeight,
-            fontStyle: fontStyle,
-            fontFamily: fontFamily,
-        };
-    };
-
-    static convertBobRotationStep = (propertyValue: string, left: number, top: number, width: number, height: number) => {
-        const rotation_steps = ["rotate(0deg)", "rotate(270deg)", "rotate(180deg)", "rotate(90deg)"];
-        const transform = rotation_steps[parseInt(propertyValue)];
-        let newLeft = left;
-        let newTop = top;
-        let newWidth = width;
-        let newHeight = height;
-        if (parseInt(propertyValue) === 1) {
-            newLeft = newLeft + width / 2 - height / 2;
-            newTop = newTop + height / 2 - width / 2;
-            newWidth = height;
-            newHeight = width;
-        } else if (parseInt(propertyValue) === 3) {
-            newLeft = newLeft + width / 2 - height / 2;
-            newTop = newTop + height / 2 - width / 2;
-            newWidth = height;
-            newHeight = width;
+    /**
+     * from 
+     *     [
+     *         "30"
+     *     ]
+     * to 30
+     */
+    static convertBobNum = (
+        propertyValue: string[]
+    ) => {
+        try {
+            if (propertyValue.length > 0) {
+                return parseFloat(propertyValue[0]);
+            } else {
+                return 0;
+            }
+        } catch (e) {
+            Log.error(e);
+            return 0;
         }
-        return {
-            newLeft: newLeft,
-            newTop: newTop,
-            newWidth: newWidth,
-            newHeight: newHeight,
-            transform: transform,
-        };
     };
+    /**
+     * Convert 
+     * 
+     * [
+     *     {
+     *         "point": [
+     *             {
+     *                 "$": {
+     *                     "x": "105.0",
+     *                     "y": "0.0"
+     *                 }
+     *             },
+     *             {
+     *                 "$": {
+     *                     "x": "270.0",
+     *                     "y": "30.0"
+     *                 }
+     *             },
+     *             {
+     *                 "$": {
+     *                     "x": "195.0",
+     *                     "y": "195.0"
+     *                 }
+     *             }
+     *         ]
+     *     }
+     * ]
+     * 
+     * to {pointsX: [105.0, 270.0, 195.0], pointsY: [0.0, 30.0, 195.0]}
+     */
+    static convertBobPoints = (propertyValue:
+        { point: { "$": { x: string, y: string } }[] }[]
+    ) => {
+        try {
+            const result: { pointsX: number[], pointsY: number[] } = { pointsX: [], pointsY: [] };
+            const data = propertyValue[0]["point"];
+            for (const point of data) {
+                const x = parseInt(point["$"]["x"]);
+                const y = parseInt(point["$"]["y"]);
+                result['pointsX'].push(x);
+                result['pointsY'].push(y);
+            }
+            return result;
+        } catch (e) {
+            return {
+                pointsX: [],
+                pointsY: [],
+            }
+        }
+    }
 
-    static convertBobWrapWords = (propertyValue: "true" | "false") => {
-        if (propertyValue === "true") {
+    /**
+     * From 
+     * 
+     *  [
+     *      "false"
+     *  ]
+     * 
+     * to false
+     */
+    static convertBobBoolean = (propertyValue:
+        ("true" | "false")[]
+    ) => {
+        const booleanStr = propertyValue[0];
+        if (booleanStr === "true") {
             return true;
-        } else if (propertyValue === "false") {
+        } else if (booleanStr === "false") {
             return false;
         } else {
-            return true;
+            return false;
         }
-    };
+    }
 
-    static convertBobMacros = (propertyValue: Record<string, string>) => {
+    /**
+     * From 
+     * [ "0" ]
+     * to {showArrowHead: false, showArrowTail: false}
+     */
+    static convertBobArrows = (propertyValue: string[]) => {
+        const numValue = this.convertBobNum(propertyValue);
+        if (numValue === 0) {
+            return {
+                "showArrowHead": false,
+                "showArrowTail": false,
+            }
+        } else if (numValue === 1) {
+            return {
+                "showArrowHead": false,
+                "showArrowTail": true,
+            }
+
+        } else if (numValue === 2) {
+            return {
+                "showArrowHead": true,
+                "showArrowTail": false,
+            }
+
+        } else if (numValue === 3) {
+            return {
+                "showArrowHead": true,
+                "showArrowTail": true,
+            }
+        } else {
+            return {
+                "showArrowHead": false,
+                "showArrowTail": false,
+            }
+        }
+    }
+
+    /**
+     * Todo:
+     * 
+     *    [
+     *        {
+     *            "rule": [
+     *                {
+     *                    "$": {
+     *                        "name": "abc",
+     *                        "prop_id": "width",
+     *                        "out_exp": "false"
+     *                    },
+     *                    "exp": [
+     *                        {
+     *                            "$": {
+     *                                "bool_exp": "$(pv_name)"
+     *                            },
+     *                            "value": [
+     *                                "1500"
+     *                            ]
+     *                        }
+     *                    ],
+     *                    "pv_name": [
+     *                        "val1"
+     *                    ]
+     *                }
+     *            ]
+     *        }
+     *    ]
+     */
+    static convertBobRules = (
+        propertyValue: { rule: Record<string, any>[] }[]
+    ) => {
+        return [];
+    }
+
+    /**
+     * From
+     * 
+     *    [
+     *        {
+     *            "P": [
+     *                "ICS_MPS"
+     *            ],
+     *            "S": [
+     *                "ICS_MPS:TrgCtl"
+     *            ]
+     *        }
+     *    ]
+     * 
+     * to [["P", "ICS_MPS"], ["S", "ICS_MPS:TrgCtl"]]
+     */
+    static convertBobMacros = (
+        propertyValue: Record<string, string[]>[]
+    ) => {
         const result: [string, string][] = [];
-        for (let macroName of Object.keys(propertyValue)) {
-            const macroValue = propertyValue[macroName];
-            result.push([macroName, macroValue]);
+        const data = propertyValue[0];
+        if (data !== undefined) {
+            for (const [key, val] of Object.entries(data)) {
+                const val0 = val[0];
+                if (typeof val0 === "string") {
+                    result.push([key, val0]);
+                }
+
+            }
         }
         return result;
     };
 
-    /**
-     *
-     */
-    static convertBobLEDStates = (propertyValue: Record<string, any>) => {
-        const states = propertyValue["state"];
-        const values: number[] = [];
-        const labels: string[] = [];
-        const colors: string[] = [];
-        if (!Array.isArray(states)) {
-            const value = parseFloat(states["value"]);
-            let label = states["label"];
-            if (typeof label !== "string") {
-                label = "";
-            }
-            const color = this.convertBobColor(states["color"], undefined);
-            values.push(value);
-            labels.push(label);
-            colors.push(color);
+    static convertBobLineStyle = (
+        propertyValue: string[]
+    ) => {
+        const lineStyleNum = this.convertBobNum(propertyValue);
+        if (lineStyleNum === 0) {
+            // solid
+            return "solid";
+        } else if (lineStyleNum === 1) {
+            // dash
+            return "dashed"
+        } else if (lineStyleNum === 2) {
+            // dot
+            return "dotted"
+        } else if (lineStyleNum === 3) {
+            // dash-dot
+            return "dash-dot";
+        } else if (lineStyleNum === 4) {
+            // dash-dot-dot
+            return "dash-dot-dot";
         } else {
-            for (let state of states) {
-                const value = parseFloat(state["value"]);
-                let label = state["label"];
-                if (typeof label !== "string") {
-                    label = "";
-                }
-                const color = this.convertBobColor(state["color"], undefined);
-                values.push(value);
-                labels.push(label);
-                colors.push(color);
-            }
+            // solid
+            return "solid";
         }
-
-        return {
-            itemNames: labels,
-            itemColors: colors,
-            itemValues: values,
-        };
-    };
+    }
 
     /**
-     * When input is undefined, return false
+     * From
+     * 
+     *           [
+     *               {
+     *                   "font": [
+     *                       {
+     *                           "$": {
+     *                               "family": "Libian SC",
+     *                               "style": "REGULAR",
+     *                               "size": "14.0"
+     *                           }
+     *                       }
+     *                   ]
+     *               }
+     *           ]
+     * 
+     * to {fontFamily: "Libian SC", fontStyle: "normal", fontWeight: "normal", fontSize: 14}
      */
-    static convertBobBoolean = (propertyValue: "true" | "false" | undefined) => {
-        if (propertyValue === "true") {
-            return true;
-        } else if (propertyValue === "false") {
-            return false;
-        } else {
-            return false;
+    static convertBobFont = (propertyValue:
+        { font: { "$": { family: string, style: "REGULAR" | "BOLD" | "BOLD_ITALIC" | "ITALIC", size: string } }[] }[]
+    ) => {
+        try {
+            const data = propertyValue[0]["font"][0]["$"];
+            const fontFamily = data["family"];
+            const fontStyleRaw = data["style"];
+            const fontSize = parseInt(data["size"]);
+            let fontStyle = "normal";
+            let fontWeight = "normal";
+            if (fontStyleRaw === "REGULAR") {
+            } else if (fontStyleRaw === "BOLD") {
+                fontWeight = "bold";
+            } else if (fontStyleRaw === "BOLD_ITALIC") {
+                fontStyle = "italic";
+                fontWeight = "bold";
+            } else if (fontStyleRaw === "ITALIC") {
+                fontStyle = "italic";
+            }
+            return {
+                fontFamily: fontFamily,
+                fontWeight: fontWeight,
+                fontStyle: fontStyle,
+                fontSize: fontSize,
+            }
+        } catch (e) {
+            return {
+                fontFamily: "TDM Default",
+                fontSize: 14,
+                fontWeight: "normal",
+                fontStyle: "normal",
+            }
         }
-    };
+    }
+    /**
+     * From
+     *            [
+     *                "1"
+     *            ]
+     * to "flex-start"
+     */
+    static convertBobAlignment = (propertyValue: string[]) => {
+        const numValue = this.convertBobNum(propertyValue);
+        if (numValue === 0) {
+            return "flex-start";
+        } else if (numValue === 1) {
+            return "center";
+        } else if (numValue === 2) {
+            return "flex-end";
+        } else {
+            return "flex-start";
+        }
+    }
+
+    /**
+     * From
+     *            [
+     *                "1"
+     *            ]
+     * to "rotate(90deg)""
+     */
+    static convertBobAngle = (propertyValue: string[]) => {
+        const numValue = this.convertBobNum(propertyValue);
+        if (numValue === 0) {
+            return "rotate(0deg)";
+        } else if (numValue === 1) {
+            return "rotate(270deg)";
+        } else if (numValue === 2) {
+            return "rotate(180deg)";
+        } else if (numValue === 3) {
+            return "rotate(90deg)";
+        } else {
+            return "rotage(0deg)";
+        }
+    }
+
+    // ------------------------------------------------------
 
     static convertBobAction = (
         propertyValue: Record<string, any>,
@@ -444,48 +757,5 @@ export class BobPropertyConverter {
             }
         }
         return result;
-    };
-
-    static convertBobHorizontalAlign = (propertyValue: string) => {
-        const horizontalAligns = ["flex-start", "center", "flex-end"];
-        return horizontalAligns[parseInt(propertyValue)];
-    };
-
-    static convertBobVerticalAlign = (propertyValue: string) => {
-        const verticalAligns = ["flex-start", "center", "flex-end"];
-        return verticalAligns[parseInt(propertyValue)];
-    };
-
-    static convertBobArrows = (propertyValue: string) => {
-        // [boolean, boolean] = [showArrowHead, showArrowTail]
-        // head is the end of the line, tail is the beginning of the line
-        const arrows = [
-            [false, false],
-            [false, true],
-            [true, false],
-            [true, true],
-        ];
-        return arrows[parseInt(propertyValue)];
-    };
-
-    static convertBobLineStyle = (propertyValue: string) => {
-        const styles = ["solid", "dotted", "dashed", "dash-dot", "dash-dot-dot"];
-        return styles[parseInt(propertyValue)];
-    };
-
-    static convertBobPolylinePoints = (propertyValue: Record<string, any>): [number[], number[]] => {
-        const points = propertyValue["point"];
-        const pointsX: number[] = [];
-        const pointsY: number[] = [];
-        if (!Array.isArray(points)) {
-            pointsX.push(parseInt(points["x"]));
-            pointsY.push(parseInt(points["y"]));
-        } else {
-            for (let point of points) {
-                pointsX.push(parseInt(point["x"]));
-                pointsY.push(parseInt(point["y"]));
-            }
-        }
-        return [pointsX, pointsY];
     };
 }

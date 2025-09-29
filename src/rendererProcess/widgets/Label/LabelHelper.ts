@@ -305,7 +305,7 @@ export class LabelHelper extends BaseWidgetHelper {
         return tdl;
     };
 
-    static convertBobToTdl = (bob: Record<string, any>): type_Label_tdl => {
+    static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Label_tdl => {
         console.log("\n------------", `Parsing "label"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Label");
         // all properties for this widget
@@ -327,7 +327,7 @@ export class LabelHelper extends BaseWidgetHelper {
             "scripts", // not in tdm
             "text",
             "tooltip", // not in tdm
-            "transparent", // not in tdm, part of backgroundColor
+            "transparent",
             "type", // not in tdm
             "vertical_alignment",
             "visible", // not in tdm
@@ -337,8 +337,11 @@ export class LabelHelper extends BaseWidgetHelper {
             "y",
         ];
 
+        let transparent = true;
+        tdl["text"]["wrapWord"] = true;
+
         for (const propertyName of propertyNames) {
-            let propertyValue = bob[propertyName];
+            const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
                     console.log(`There are one or more widgets inside "display"`);
@@ -347,78 +350,77 @@ export class LabelHelper extends BaseWidgetHelper {
                 }
                 continue;
             } else {
-                if (propertyName === "x") {
-                    tdl["style"]["left"] = parseInt(propertyValue);
+                if (propertyName === "line_style") {
+                    tdl["text"]["lineStyle"] = BobPropertyConverter.convertBobLineStyle(propertyValue);
+                } else if (propertyName === "line_color") {
+                    tdl["text"]["lineColor"] = BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "line_width") {
+                    tdl["text"]["lineWidth"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "x") {
+                    tdl["style"]["left"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "y") {
-                    tdl["style"]["top"] = parseInt(propertyValue);
+                    tdl["style"]["top"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "width") {
-                    tdl["style"]["width"] = parseInt(propertyValue);
+                    tdl["style"]["width"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "height") {
-                    tdl["style"]["height"] = parseInt(propertyValue);
+                    tdl["style"]["height"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "start_angle") {
+                    tdl["text"]["angleStart"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "total_angle") {
+                    tdl["text"]["angleRange"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "visible") {
+                    tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "background_color") {
-                    const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue, undefined);
+                    const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue);
                     tdl["style"]["backgroundColor"] = rgbaColor;
                 } else if (propertyName === "border_color") {
-                    const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue, undefined);
+                    const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue);
                     tdl["style"]["borderColor"] = rgbaColor;
-                } else if (propertyName === "border_width") {
-                    tdl["style"]["borderWidth"] = parseInt(propertyValue);
+                } else if (propertyName === "foreground_color") {
+                    const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue);
+                    tdl["style"]["color"] = rgbaColor;
+                } else if (propertyName === "horizontal_alignment") {
+                    tdl["text"]["horizontalAlign"] = BobPropertyConverter.convertBobAlignment(propertyValue);
+                } else if (propertyName === "vertical_alignment") {
+                    tdl["text"]["verticalAlign"] = BobPropertyConverter.convertBobAlignment(propertyValue);
+                } else if (propertyName === "rotation_step") {
+                    tdl["style"]["transform"] = BobPropertyConverter.convertBobAngle(propertyValue);
+                } else if (propertyName === "text") {
+                    tdl["text"]["text"] = BobPropertyConverter.convertBobString(propertyValue);
+                } else if (propertyName === "transparent") {
+                    console.log("tarnsparent ......", propertyValue)
+                    transparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "font") {
                     const font = BobPropertyConverter.convertBobFont(propertyValue);
                     tdl["style"]["fontSize"] = font["fontSize"];
-                    tdl["style"]["fontFamily"] = font["fontFamily"];
-                    tdl["style"]["fontStyle"] = font["fontStyle"];
                     tdl["style"]["fontWeight"] = font["fontWeight"];
-                } else if (propertyName === "foreground_color") {
-                    const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue, undefined);
-                    tdl["style"]["color"] = rgbaColor;
-                } else if (propertyName === "horizontal_alignment") {
-                    tdl["text"]["horizontalAlign"] = BobPropertyConverter.convertBobHorizontalAlign(propertyValue);
-                } else if (propertyName === "vertical_alignment") {
-                    tdl["text"]["verticalAlign"] = BobPropertyConverter.convertBobHorizontalAlign(propertyValue);
-                } else if (propertyName === "text") {
-                    if (typeof propertyValue !== "string") {
-                        propertyValue = "";
-                    }
-                    tdl["text"]["text"] = propertyValue;
+                    tdl["style"]["fontStyle"] = font["fontStyle"];
+                    tdl["style"]["fontFamily"] = font["fontFamily"];
+                } else if (propertyName === "border_width") {
+                    tdl["style"]["borderWidth"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "wrap_words") {
-                    tdl["text"]["wrapWord"] = BobPropertyConverter.convertBobWrapWords(propertyValue);
-                } else if (propertyName === "rotation_step") {
-                    // treated below so that "left" and "right" can be updated correctly
+                    tdl["text"]["wrapWord"] = BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else if (propertyName === "rules") {
+                    tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
                 } else {
                     console.log("Skip property", `"${propertyName}"`);
                 }
             }
         }
-        // handle the situation that the "background_color" is not explicitly shown in bob file
-        // while the "transparent" is explicitly shown
-        // default transparent is "false", which requires us to include "undefined" situation
-        if (bob["transparent"] === undefined || bob["transparent"] === "true") {
-            const rgbaArray = GlobalMethods.rgbaStrToRgbaArray(tdl["style"]["backgroundColor"]);
-            rgbaArray[3] = 0;
-            const rgbaString = GlobalMethods.rgbaArrayToRgbaStr(rgbaArray);
-            tdl["style"]["backgroundColor"] = rgbaString;
-        } else if (bob["transparent"] === "false") {
-            const rgbaArray = GlobalMethods.rgbaStrToRgbaArray(tdl["style"]["backgroundColor"]);
-            rgbaArray[3] = 100;
-            const rgbaString = GlobalMethods.rgbaArrayToRgbaStr(rgbaArray);
-            tdl["style"]["backgroundColor"] = rgbaString;
+
+        if (transparent === true) {
+            const originalRgbaColor = tdl["style"]["backgroundColor"];
+            const rgbaColorArray = originalRgbaColor.split(",");
+            rgbaColorArray[3] = "0)";
+            tdl["style"]["backgroundColor"] = rgbaColorArray.join(",");
         }
 
-        // special treatment for rotation
-        if (Object.keys(bob).includes("rotation_step")) {
-            const propertyValue = bob["rotation_step"];
-            const left = parseInt(bob["x"]);
-            const top = parseInt(bob["y"]);
-            const width = parseInt(bob["width"]);
-            const height = parseInt(bob["height"]);
-            const result = BobPropertyConverter.convertBobRotationStep(propertyValue, left, top, width, height);
-            tdl["style"]["transform"] = result["transform"];
-            tdl["style"]["left"] = result["newLeft"];
-            tdl["style"]["top"] = result["newTop"];
-            tdl["style"]["width"] = result["newWidth"];
-            tdl["style"]["height"] = result["newHeight"];
+        if (tdl["style"]["transform"].includes("rotate(270deg)") || tdl["style"]["transform"].includes("rotate(90deg)")) {
+            const tmp = tdl["style"]["width"];
+            tdl["style"]["width"] = tdl["style"]["height"];
+            tdl["style"]["height"] = tmp;
         }
+
         return tdl;
     };
 }

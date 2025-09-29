@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2025-09-28T04:03:39Z",
+    "buildDate": "2025-09-28T23:06:39Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
@@ -61,6 +61,7 @@
         "@types/pegjs": "^0.10.6",
         "@types/selfsigned": "^2.0.4",
         "@types/three": "^0.180.0",
+        "@types/xml2js": "^0.4.14",
         "@xterm/addon-fit": "^0.10.0",
         "@xterm/addon-web-links": "^0.11.0",
         "@xterm/xterm": "^5.5.0",
@@ -90,7 +91,8 @@
         "ts-loader": "^9.5.4",
         "uuid": "^11.0.0",
         "vis-network": "^10.0.1",
-        "ws": "^8.18.3"
+        "ws": "^8.18.3",
+        "xml2js": "^0.6.2"
     },
     "build": {
         "appId": "gov.ornl.sns.tdm",

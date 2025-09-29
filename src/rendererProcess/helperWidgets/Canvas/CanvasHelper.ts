@@ -122,23 +122,23 @@ export class CanvasHelper {
 	/**
 	 * Convert .bob to .tdl
 	 */
-	static convertBobToTdl = (bob: Record<string, any>): type_Canvas_tdl => {
-		console.log("---------------", `Parsing "display"`, "------------------\n");
+	static convertBobToTdl = (bobJson: Record<string, any>): type_Canvas_tdl => {
+		console.log("---------------", `Parsing "display to Canvas"`, "------------------\n");
 		const tdl = this.generateDefaultTdl();
 		// all properties for this widget
 		const propertyNames: string[] = [
-			"actions", // not in tdm
 			"background_color",
 			"class", // not in tdm
 			"grid_color", // not in tdm
-			"grid_step_x", // not in tdm
-			"grid_step_y", // not in tdm
-			"grid_visible", // not in tdm
+			"grid_step_x",
+			"grid_step_y",
+			"grid_visible",
 			"height",
 			"macros",
 			"name",
-			"rules", // not in tdm
-			"scripts", // not in tdm
+			"actions", // todo
+			"rules", // todo
+			"scripts", // todo
 			"type", // not in tdm
 			"width",
 			"x", // always 0 in tdm
@@ -146,7 +146,7 @@ export class CanvasHelper {
 		];
 
 		for (const propertyName of propertyNames) {
-			const propertyValue = bob[propertyName];
+			const propertyValue = bobJson[propertyName];
 			if (propertyValue === undefined) {
 				if (propertyName === "widget") {
 					console.log(`There are one or more widgets inside "display"`);
@@ -156,16 +156,27 @@ export class CanvasHelper {
 				continue;
 			} else {
 				if (propertyName === "name") {
-					tdl["windowName"] = propertyValue;
+					tdl["windowName"] = BobPropertyConverter.convertBobString(propertyValue);
 				} else if (propertyName === "width") {
-					tdl["style"]["width"] = parseInt(propertyValue);
+					tdl["style"]["width"] = BobPropertyConverter.convertBobNum(propertyValue);
 				} else if (propertyName === "height") {
-					tdl["style"]["height"] = parseInt(propertyValue);
+                    tdl["style"]["height"] = BobPropertyConverter.convertBobNum(propertyValue);
 				} else if (propertyName === "background_color") {
-					const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue, undefined);
+					const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue);
 					tdl["style"]["backgroundColor"] = rgbaColor;
+				} else if (propertyName === "grid_color") {
+					const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue);
+					tdl["gridColor"] = rgbaColor;
+				} else if (propertyName === "grid_step_x") {
+					tdl["xGridSize"] = BobPropertyConverter.convertBobNum(propertyValue);
+				} else if (propertyName === "grid_step_y") {
+					tdl["yGridSize"] = BobPropertyConverter.convertBobNum(propertyValue);
+				} else if (propertyName === "grid_visible") {
+					tdl["showGrid"] = BobPropertyConverter.convertBobBoolean(propertyValue);
 				} else if (propertyName === "macros") {
 					tdl["macros"] = BobPropertyConverter.convertBobMacros(propertyValue);
+				} else if (propertyName === "rules") {
+					tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
 				} else {
 					console.log("Skip property", `"${propertyName}"`);
 				}

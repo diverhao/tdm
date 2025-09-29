@@ -135,65 +135,7 @@ export class MeterHelper extends BaseWidgetHelper {
 			"x",
 			"y",
 		];
-
-		for (const propertyName of propertyNames) {
-			const propertyValue = bob[propertyName];
-			if (propertyValue === undefined) {
-				if (propertyName === "widget") {
-					console.log(`There are one or more widgets inside "display"`);
-				} else {
-					console.log("Property", `"${propertyName}"`, "is not in bob file");
-				}
-				continue;
-			} else {
-				if (propertyName === "x") {
-					tdl["style"]["left"] = parseInt(propertyValue);
-				} else if (propertyName === "y") {
-					tdl["style"]["top"] = parseInt(propertyValue);
-				} else if (propertyName === "width") {
-					tdl["style"]["width"] = parseInt(propertyValue);
-				} else if (propertyName === "height") {
-					tdl["style"]["height"] = parseInt(propertyValue);
-				} else if (propertyName === "background_color") {
-					const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue, undefined);
-					tdl["style"]["backgroundColor"] = rgbaColor;
-				} else if (propertyName === "border_alarm_sensitive") {
-					tdl["text"]["alarmBorder"] = BobPropertyConverter.convertBobBoolean(propertyValue);
-				} else if (propertyName === "font") {
-					const font = BobPropertyConverter.convertBobFont(propertyValue);
-					tdl["style"]["fontSize"] = font["fontSize"];
-					tdl["style"]["fontFamily"] = font["fontFamily"];
-					tdl["style"]["fontStyle"] = font["fontStyle"];
-					tdl["style"]["fontWeight"] = font["fontWeight"];
-					// tdl["text"]["dialFontSize"] = font["fontSize"];
-					// tdl["text"]["dialFontFamily"] = font["fontFamily"];
-					// tdl["text"]["dialFontStyle"] = font["fontStyle"];
-					// tdl["text"]["dialFontWeight"] = font["fontWeight"];
-				} else if (propertyName === "foreground_color") {
-					const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue, undefined);
-					tdl["style"]["color"] = rgbaColor;
-					// tdl["text"]["dialFontColor"] = rgbaColor;
-					tdl["text"]["dialColor"] = rgbaColor;
-				} else if (propertyName === "limits_from_pv") {
-					tdl["text"]["usePvLimits"] = BobPropertyConverter.convertBobBoolean(propertyValue);
-				} else if (propertyName === "maximum") {
-					tdl["text"]["maxPvValue"] = parseFloat(propertyValue);
-				} else if (propertyName === "minimum") {
-					tdl["text"]["minPvValue"] = parseFloat(propertyValue);
-				} else if (propertyName === "needle_color") {
-					const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue, undefined);
-					tdl["text"]["pointerColor"] = rgbaColor;
-				} else if (propertyName === "pv_name") {
-					tdl["channelNames"].push(propertyValue);
-				} else if (propertyName === "show_units") {
-					tdl["text"]["showUnit"] = BobPropertyConverter.convertBobBoolean(propertyValue);
-				} else if (propertyName === "show_value") {
-					tdl["text"]["showPvValue"] = BobPropertyConverter.convertBobBoolean(propertyValue);
-				} else {
-					console.log("Skip property", `"${propertyName}"`);
-				}
-			}
-		}
+        
 
 		return tdl;
 	};

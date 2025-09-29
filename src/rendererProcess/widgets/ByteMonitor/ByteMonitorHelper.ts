@@ -195,7 +195,7 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
         return tdl;
     };
 
-    static convertBobToTdl = (bob: Record<string, any>): type_ByteMonitor_tdl => {
+    static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_ByteMonitor_tdl => {
         console.log("\n------------", `Parsing "byte_monitor"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ByteMonitor");
         // all properties for this widget
@@ -214,20 +214,21 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
             "off_color",
             "on_color",
             "pv_name",
-            "rules", // not in tdm
+            "rules",
             "scripts", // not in tdm
             "square",
             "startBit",
             "tooltip", // not in tdm
             "type", // not in tdm
-            "visible", // not in tdm
+            "visible",
             "width",
             "x",
             "y",
         ];
 
+
         for (const propertyName of propertyNames) {
-            const propertyValue = bob[propertyName];
+            const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
                     console.log(`There are one or more widgets inside "display"`);
@@ -236,14 +237,11 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
                 }
                 continue;
             } else {
-                if (propertyName === "x") {
-                    tdl["style"]["left"] = parseInt(propertyValue);
-                } else if (propertyName === "y") {
-                    tdl["style"]["top"] = parseInt(propertyValue);
-                } else if (propertyName === "width") {
-                    tdl["style"]["width"] = parseInt(propertyValue);
-                } else if (propertyName === "height") {
-                    tdl["style"]["height"] = parseInt(propertyValue);
+                if (propertyName === "bitReverse") {
+                    const sequencePositive = BobPropertyConverter.convertBobBoolean(propertyValue);
+                    tdl["text"]["sequence"] = sequencePositive === true ? "positive" : "reverse";
+                } else if (propertyName === "border_alarm_sensitive") {
+                    tdl["text"]["alarmBorder"] = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "font") {
                     const font = BobPropertyConverter.convertBobFont(propertyValue);
                     tdl["style"]["fontSize"] = font["fontSize"];
@@ -251,53 +249,42 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
                     tdl["style"]["fontStyle"] = font["fontStyle"];
                     tdl["style"]["fontWeight"] = font["fontWeight"];
                 } else if (propertyName === "foreground_color") {
-                    const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue, undefined);
-                    tdl["style"]["color"] = rgbaColor;
-                } else if (propertyName === "bitReverse") {
-                    tdl["text"]["sequence"] = BobPropertyConverter.convertBobBoolean(propertyValue) === true ? "positive" : "reverse";
+                    tdl["style"]["color"] = BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "x") {
+                    tdl["style"]["left"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "y") {
+                    tdl["style"]["top"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "width") {
+                    tdl["style"]["width"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "height") {
+                    tdl["style"]["height"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "horizontal") {
-                    tdl["text"]["direction"] = BobPropertyConverter.convertBobBoolean(propertyValue) === true ? "horizontal" : "vertical";
+                    const horizontalDirection = BobPropertyConverter.convertBobBoolean(propertyValue);
+                    tdl["text"]["direction"] = horizontalDirection === true ? "horizontal" : "vertical";
                 } else if (propertyName === "labels") {
-                    if (typeof propertyValue["text"] === "string") {
-                        tdl["bitNames"].push(propertyValue["text"]);
-                    } else {
-                        tdl["bitNames"] = propertyValue["text"];
-                    }
+                    tdl["bitNames"] =  BobPropertyConverter.convertBobStrings(propertyValue);
                 } else if (propertyName === "numBits") {
-                    tdl["text"]["bitLength"] = parseInt(propertyValue);
-                } else if (propertyName === "off_color") {
-                    tdl["itemColors"][0] = BobPropertyConverter.convertBobColor(propertyValue, undefined);
-                } else if (propertyName === "on_color") {
-                    tdl["itemColors"][1] = BobPropertyConverter.convertBobColor(propertyValue, undefined);
-                } else if (propertyName === "square") {
-                    tdl["text"]["shape"] = BobPropertyConverter.convertBobBoolean(propertyValue) === true ? "square" : "round";
+                    tdl["text"]["bitLength"] =  BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "startBit") {
-                    tdl["text"]["bitStart"] = parseInt(propertyValue);
+                    tdl["text"]["bitStart"] =  BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "off_color") {
+                    tdl["itemColors"][0] =  BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "on_color") {
+                    tdl["itemColors"][1] =  BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "pv_name") {
-                    tdl["channelNames"].push(propertyValue);
-                } else if (propertyName === "border_alarm_sensitive") {
-                    tdl["text"]["alarmBorder"] = BobPropertyConverter.convertBobBoolean(propertyValue);
+                    tdl["channelNames"].push(BobPropertyConverter.convertBobString(propertyValue));
+                } else if (propertyName === "rules") {
+                    tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
+                } else if (propertyName === "square") {
+                    const isSquare = BobPropertyConverter.convertBobBoolean(propertyValue);
+                    tdl["text"]["shape"] = isSquare === true? "square" : "round";
+                } else if (propertyName === "visible") {
+                    tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
                     console.log("Skip property", `"${propertyName}"`);
                 }
             }
         }
-
-        // special treatment for rotation
-        if (Object.keys(bob).includes("rotation_step")) {
-            const propertyValue = bob["rotation_step"];
-            const left = parseInt(bob["x"]);
-            const top = parseInt(bob["y"]);
-            const width = parseInt(bob["width"]);
-            const height = parseInt(bob["height"]);
-            const result = BobPropertyConverter.convertBobRotationStep(propertyValue, left, top, width, height);
-            tdl["style"]["transform"] = result["transform"];
-            tdl["style"]["left"] = result["newLeft"];
-            tdl["style"]["top"] = result["newTop"];
-            tdl["style"]["width"] = result["newWidth"];
-            tdl["style"]["height"] = result["newHeight"];
-        }
-
         return tdl;
     };
 }

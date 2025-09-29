@@ -10,6 +10,7 @@ import * as os from "os";
 import { Log } from "../log/Log";
 import { MessagePort } from "worker_threads";
 import { StpConverter } from "../windows/DisplayWindow/StpConverter";
+import xml2js from 'xml2js';
 
 export type type_tdl = Record<string, any> & {
     Canvas: type_Canvas_tdl;
@@ -335,16 +336,24 @@ export class FileReader {
         }
         const tdlFileType = this.tdlFileType(fullTdlFileName);
 
+        console.log("read tdl file --------------", tdlFileType)
         let tdl: Record<string, any> = {};
         if (tdlFileType === "tdl") {
             tdl = await this.readJSON(fullTdlFileName);
         } else if (tdlFileType === "bob") {
-            const xml = fs.readFileSync(fullTdlFileName, "utf-8");
+            const parser = new xml2js.Parser();
+            const bobContents = fs.readFileSync(fullTdlFileName, "utf-8");
+            // console.log(bobContents)
+            const bobJson = await parser.parseStringPromise(bobContents);
+            // console.log("parsing finished")
+            console.log(JSON.stringify(bobJson, null, 4))
+            // console.log("parsing finished 2")
+
             // ! will be replaced, xml2json has some compatible issue
             // ! let xmlJSON = JSON.parse(parser.toJson(xml));
             // console.log("------------->", JSON.stringify(xmlJSON, null, 2));
-            // ! BobPropertyConverter.parseBob(xmlJSON["display"], tdl);
-            // console.log(JSON.stringify(tdl, null, 2));
+            BobPropertyConverter.parseBob(bobJson["display"], tdl);
+            console.log(JSON.stringify(tdl, null, 4));
         } else if (tdlFileType === "edl") {
             if (!this.isRemotePath(fullTdlFileName)) {
                 const edlContents = fs.readFileSync(fullTdlFileName, "utf-8");
@@ -352,7 +361,7 @@ export class FileReader {
                 const edlJSON = EdlConverter.convertEdltoJSON(edlContentsLines, 0);
                 Log.debug("------------->", JSON.stringify(edlJSON, null, 4));
                 EdlConverter.parseEdl(edlJSON, tdl, false, fullTdlFileName, convertEdlSuffix);
-                Log.debug(JSON.stringify(tdl, null, 4));
+                Log.debug("------------>>",JSON.stringify(tdl, null, 4));
             } else {
                 // ignore website certificate error
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
