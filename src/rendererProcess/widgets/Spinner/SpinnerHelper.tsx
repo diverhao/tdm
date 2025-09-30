@@ -1,11 +1,12 @@
 import { GlobalVariables } from "../../global/GlobalVariables";
 import { BobPropertyConverter } from "../../../mainProcess/windows/DisplayWindow/BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
+import { type_rules_tdl, BaseWidgetHelper, type_BaseWidget_tdl } from "../BaseWidget/BaseWidgetHelper";
+import * as GlobalMethods from "../../global/GlobalMethods";
+import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../global/GlobalMethods";
 import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
 
-
-export type type_TextSymbol_tdl = {
+export type type_Spinner_tdl = {
     type: string;
     widgetKey: string;
     key: string;
@@ -14,17 +15,15 @@ export type type_TextSymbol_tdl = {
     channelNames: string[];
     groupNames: string[];
     rules: type_rules_tdl;
-    itemLabels: string[];
-    itemValues: (number | string | number[] | string[] | undefined)[];
 };
 
-export class TextSymbolHelper extends BaseWidgetHelper {
+
+export class SpinnerHelper extends BaseWidgetHelper {
 
 
-    // properties when we create a new TextUpdate
-    // the level 1 properties all have corresponding public or private variable in the widget
-    static _defaultTdl: type_TextSymbol_tdl = {
-        type: "TextSymbol",
+    // override BaseWidget
+    static _defaultTdl: type_Spinner_tdl = {
+        type: "Spinner",
         widgetKey: "", // "key" is a reserved keyword
         key: "",
         // the style for outmost div
@@ -34,7 +33,7 @@ export class TextSymbolHelper extends BaseWidgetHelper {
         style: {
             position: "absolute",
             display: "inline-flex",
-            backgroundColor: "rgba(240, 240, 240, 0.2)",
+            backgroundColor: "rgba(128, 255, 255, 1)",
             left: 100,
             top: 100,
             width: 150,
@@ -57,39 +56,41 @@ export class TextSymbolHelper extends BaseWidgetHelper {
             horizontalAlign: "flex-start",
             verticalAlign: "flex-start",
             wrapWord: false,
-            showUnit: false,
+            showUnit: true,
+            stepSize: 1,
             invisibleInOperation: false,
+            // decimal, exponential, hexadecimal
+            format: "default",
+            // scale, >= 0
+            scale: 0,
             alarmBorder: true,
-            alarmBackground: false,
             alarmText: false,
+            alarmBackground: false,
             alarmLevel: "MINOR",
-            text: "",
-            showPvValue: false,
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
         },
         channelNames: [],
         groupNames: [],
         rules: [],
-        itemLabels: [],
-        itemValues: [],
     };
 
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_TextSymbol_tdl => {
+    // override
+    static generateDefaultTdl = (type: string) => {
         // defines type, widgetKey, and key
         const result = super.generateDefaultTdl(type);
         result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
         result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
         result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
         result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.itemLabels = JSON.parse(JSON.stringify(this._defaultTdl.itemLabels));
-        result.itemValues = JSON.parse(JSON.stringify(this._defaultTdl.itemValues));
-        return result as type_TextSymbol_tdl;
+        return result;
     };
 
 
-    static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_TextSymbol_tdl => {
-        console.log("\n------------", `Parsing text-symbol`, "------------------\n");
-        const tdl = this.generateDefaultTdl("TextSymbol");
+    static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Spinner_tdl => {
+        console.log("\n------------", `Parsing "spinner"`, "------------------\n");
+        const tdl = this.generateDefaultTdl("Spinner") as type_Spinner_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm
@@ -106,20 +107,21 @@ export class TextSymbolHelper extends BaseWidgetHelper {
             "tooltip", // not in tdm
             "pv_name",
             "border_alarm_sensitive",
-            "symbols",
+            "font",
+            "format",
+            "precision",
+            "show_units",
             "foreground_color",
             "background_color",
-            "transparent",
+            "minimum", // not in tdm
+            "maximum", // not in tdm
+            "limits_from_pv", // not in tdm
+            "increment",
+            "buttons_on_left", // not in tdm
+            "enabled", // not in tdm
             "horizontal_alignment",
             "vertical_alignment",
-            "rotation_step",
-            "wrap_words",
-            "array_index", // not in tdm
-            "enabled", // not in tdm
         ];
-
-        let initialIndex = 0;
-        let isTransparent = false;
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -147,56 +149,33 @@ export class TextSymbolHelper extends BaseWidgetHelper {
                     tdl["channelNames"].push(BobPropertyConverter.convertBobString(propertyValue));
                 } else if (propertyName === "border_alarm_sensitive") {
                     tdl["text"]["alarmBorder"] = BobPropertyConverter.convertBobBoolean(propertyValue);
-                } else if (propertyName === "symbols") {
-                    tdl["itemLabels"] = BobPropertyConverter.convertBobStrings(propertyValue, "symbol");
+                } else if (propertyName === "font") {
+                    const data = BobPropertyConverter.convertBobFont(propertyValue);
+                    tdl["style"]["fontSize"] = data["fontSize"];
+                    tdl["style"]["fontFamily"] = data["fontFamily"];
+                    tdl["style"]["fontStyle"] = data["fontStyle"];
+                    tdl["style"]["fontWeight"] = data["fontWeight"];
+                } else if (propertyName === "format") {
+                    tdl["text"]["format"] =  BobPropertyConverter.convertBobDigitFormat(propertyValue);
+                } else if (propertyName === "precision") {
+                    tdl["text"]["scale"] =  BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "show_units") {
+                    tdl["text"]["showUnit"] =  BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "foreground_color") {
                     tdl["style"]["color"] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "background_color") {
                     tdl["style"]["backgroundColor"] = BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "increment") {
+                    tdl["text"]["stepSize"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "horizontal_alignment") {
                     tdl["text"]["horizontalAlign"] = BobPropertyConverter.convertBobAlignment(propertyValue);
                 } else if (propertyName === "vertical_alignment") {
                     tdl["text"]["verticalAlign"] = BobPropertyConverter.convertBobAlignment(propertyValue);
-                } else if (propertyName === "rotation_step") {
-                    tdl["style"]["transform"] = BobPropertyConverter.convertBobAngle(propertyValue);
-                } else if (propertyName === "wrap_words") {
-                    tdl["text"]["wrapWord"] = BobPropertyConverter.convertBobBoolean(propertyValue);
-                } else if (propertyName === "transparent") {
-                    isTransparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
                     console.log("Skip property", `"${propertyName}"`);
                 }
             }
-
-
         }
-
-        for (let ii = 0; ii < tdl["itemLabels"].length; ii++) {
-            tdl["itemValues"].push(ii + initialIndex);
-        }
-
-        if (isTransparent) {
-            const originalRgbaColor = tdl["style"]["backgroundColor"];
-            const rgbaColorArray = originalRgbaColor.split(",");
-            rgbaColorArray[3] = "0)";
-            tdl["style"]["backgroundColor"] = rgbaColorArray.join(",");
-        }
-
-        if (tdl["style"]["transform"].includes("rotate(270deg)") || tdl["style"]["transform"].includes("rotate(90deg)")) {
-            // modify the x, y, width and height
-            const x = tdl["style"]["left"];
-            const y = tdl["style"]["top"];
-            const w = tdl["style"]["width"];
-            const h = tdl["style"]["height"];
-
-            tdl["style"]["width"] = h
-            tdl["style"]["height"] = w;
-            tdl["style"]["left"] = x + (w - h) / 2;
-            tdl["style"]["top"] = y - (w - h) / 2;
-        }
-
-
-
 
         return tdl;
     };

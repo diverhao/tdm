@@ -220,6 +220,7 @@ export class RadioButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarXAlign().getElement()}
                     {this.getSidebarYAlign().getElement()}
                     {this.getSidebarTextColor().getElement()}
+                    {this.getSidebarDirection().getElement()}
                     {/* {this.getSidebarXAlign().getElement()} */}
                     {/* todo: {this.getSidebarYAlign().getElement()} */}
                     {/* todo: {this.getSidebarWrapWord().getElement()} */}

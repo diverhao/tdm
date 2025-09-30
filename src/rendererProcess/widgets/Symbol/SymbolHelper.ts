@@ -88,7 +88,7 @@ export class SymbolHelper extends BaseWidgetHelper {
     };
 
 
-    
+
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Symbol_tdl => {
         console.log("\n------------", `Parsing symbol`, "------------------\n");
         const tdl = this.generateDefaultTdl("Symbol");
@@ -113,7 +113,7 @@ export class SymbolHelper extends BaseWidgetHelper {
             "initial_index",
             "rotation",
             "show_index",
-            "transparent", // not in tdm
+            "transparent",
             "disconnect_overlay_color", // not in tdm
             "array_index",
             "auto_size", // not in tdm
@@ -123,7 +123,7 @@ export class SymbolHelper extends BaseWidgetHelper {
         ];
 
         let initialIndex = 0;
-
+        let isTransparent = false;
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -165,14 +165,24 @@ export class SymbolHelper extends BaseWidgetHelper {
                     tdl["text"]["fileName"] = BobPropertyConverter.convertBobString(propertyValue);
                 } else if (propertyName === "show_index") {
                     tdl["text"]["showPvValue"] = BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else if (propertyName === "transparent") {
+                    isTransparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
                     console.log("Skip property", `"${propertyName}"`);
                 }
             }
 
-            for (let ii = 0; ii < tdl["itemNames"].length; ii++) {
-                tdl["itemValues"].push(ii + initialIndex);
-            }
+        }
+
+        for (let ii = 0; ii < tdl["itemNames"].length; ii++) {
+            tdl["itemValues"].push(ii + initialIndex);
+        }
+
+        if (isTransparent) {
+            const originalRgbaColor = tdl["style"]["backgroundColor"];
+            const rgbaColorArray = originalRgbaColor.split(",");
+            rgbaColorArray[3] = "0)";
+            tdl["style"]["backgroundColor"] = rgbaColorArray.join(",");
         }
 
         return tdl;

@@ -67,6 +67,7 @@ export class RadioButtonHelper extends BaseWidgetHelper {
             confirmOnWrite: false,
             confirmOnWriteUsePassword: false,
             confirmOnWritePassword: "",
+            direction: "vertical", // "horizontal"
 		},
 		channelNames: [],
 		groupNames: [],
@@ -185,103 +186,92 @@ export class RadioButtonHelper extends BaseWidgetHelper {
 		return tdl;
 	};
 
-	// static convertBobToTdl = (bob: Record<string, any>): type_ChoiceButton_tdl => {
-	// console.log("\n------------", `Parsing "textentry"`, "------------------\n");
-	// const tdl = this.generateDefaultTdl("TextEntry") as type_TextEntry_tdl;
-	// // all properties for this widget
-	// const propertyNames: string[] = [
-	// 	"actions", // not in tdm
-	// 	"background_color",
-	// 	"border_alarm_sensitive",
-	// 	"border_color",
-	// 	"border_width",
-	// 	"class", // not in tdm
-	// 	"enabled", // not in tdm
-	// 	"font",
-	// 	"foreground_color",
-	// 	"format", // not in tdm
-	// 	"height",
-	// 	"horizontal_alignment",
-	// 	"multi_line", // not in tdm
-	// 	"name", // not in tdm
-	// 	"precision", // not in tdm
-	// 	"pv_name",
-	// 	"rules", // not in tdm
-	// 	"scripts", // not in tdm
-	// 	"show_units",
-	// 	"tooltip", // not in tdm
-	// 	"type", // not in tdm
-	// 	"vertical_alignment",
-	// 	"visible", // not in tdm
-	// 	"width",
-	// 	"wrap_words",
-	// 	"x",
-	// 	"y",
-	// ];
+    
+    static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_RadioButton_tdl => {
+        console.log("\n------------", `Parsing "radio"`, "------------------\n");
+        const tdl = this.generateDefaultTdl("RadioButton") as type_RadioButton_tdl;
+        // all properties for this widget
+        const propertyNames: string[] = [
+            "type", // not in tdm
+            "name", // not in tdm
+            "class", // not in tdm
+            "x",
+            "y",
+            "width",
+            "height",
+            "actions", // not in tdm
+            "rules",
+            "scripts", // not in tdm
+            "visible",
+            "tooltip", // not in tdm
+            "pv_name",
+            "border_alarm_sensitive",
+            "font",
+            "foreground_color",
+            "items",
+            "items_from_pv",
+            "horizontal",
+            "enabled", // not in tdm
+            "confirm_dialog", // not in tdm
+            "confirm_message", // not in tdm
+            "password", // not in tdm
+        ];
 
-	// for (const propertyName of propertyNames) {
-	// 	const propertyValue = bob[propertyName];
-	// 	if (propertyValue === undefined) {
-	// 		if (propertyName === "widget") {
-	// 			console.log(`There are one or more widgets inside "display"`);
-	// 		} else {
-	// 			console.log("Property", `"${propertyName}"`, "is not in bob file");
-	// 		}
-	// 		continue;
-	// 	} else {
-	// 		if (propertyName === "x") {
-	// 			tdl["style"]["left"] = parseInt(propertyValue);
-	// 		} else if (propertyName === "y") {
-	// 			tdl["style"]["top"] = parseInt(propertyValue);
-	// 		} else if (propertyName === "width") {
-	// 			tdl["style"]["width"] = parseInt(propertyValue);
-	// 		} else if (propertyName === "height") {
-	// 			tdl["style"]["height"] = parseInt(propertyValue);
-	// 		} else if (propertyName === "background_color") {
-	// 			const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue, undefined);
-	// 			tdl["style"]["backgroundColor"] = rgbaColor;
-	// 		} else if (propertyName === "border_alarm_sensitive") {
-	// 			tdl["text"]["alarmBorder"] = BobPropertyConverter.convertBobBoolean(propertyValue);
-	// 		} else if (propertyName === "border_color") {
-	// 			const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue, undefined);
-	// 			tdl["style"]["borderColor"] = rgbaColor;
-	// 		} else if (propertyName === "border_width") {
-	// 			tdl["style"]["borderWidth"] = parseInt(propertyValue);
-	// 		} else if (propertyName === "font") {
-	// 			const font = BobPropertyConverter.convertBobFont(propertyValue);
-	// 			tdl["style"]["fontSize"] = font["fontSize"];
-	// 			tdl["style"]["fontFamily"] = font["fontFamily"];
-	// 			tdl["style"]["fontStyle"] = font["fontStyle"];
-	// 			tdl["style"]["fontWeight"] = font["fontWeight"];
-	// 		} else if (propertyName === "foreground_color") {
-	// 			const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue, undefined);
-	// 			tdl["style"]["color"] = rgbaColor;
-	// 		} else if (propertyName === "horizontal_alignment") {
-	// 			tdl["text"]["horizontalAlign"] = BobPropertyConverter.convertBobHorizontalAlign(propertyValue);
-	// 		} else if (propertyName === "vertical_alignment") {
-	// 			tdl["text"]["verticalAlign"] = BobPropertyConverter.convertBobHorizontalAlign(propertyValue);
-	// 		} else if (propertyName === "pv_name") {
-	// 			tdl["channelNames"].push(propertyValue);
-	// 		} else if (propertyName === "show_units") {
-	// 			tdl["text"]["showUnit"] = BobPropertyConverter.convertBobBoolean(propertyValue);
-	// 		} else if (propertyName === "wrap_words") {
-	// 			tdl["text"]["wrapWord"] = BobPropertyConverter.convertBobBoolean(propertyValue);
-	// 		} else {
-	// 			console.log("Skip property", `"${propertyName}"`);
-	// 		}
-	// 	}
-	// }
+        tdl["text"]["useChannelItems"] = false;
+        tdl["text"]["direction"] = "horizontal";
 
-	// // handle the situation that the "background_color" is not explicitly shown in bob file
-	// // while the "transparent" is explicitly shown
-	// // default transparent is "false"
-	// if (bob["transparent"] === "true") {
-	// 	const rgbaArray = GlobalMethods.rgbaStrToRgbaArray(tdl["style"]["backgroundColor"]);
-	// 	rgbaArray[3] = 0;
-	// 	const rgbaString = GlobalMethods.rgbaArrayToRgbaStr(rgbaArray);
-	// 	tdl["style"]["backgroundColor"] = rgbaString;
-	// }
+        for (const propertyName of propertyNames) {
+            const propertyValue = bobWidgetJson[propertyName];
+            if (propertyValue === undefined) {
+                if (propertyName === "widget") {
+                    console.log(`There are one or more widgets inside "display"`);
+                } else {
+                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                }
+                continue;
+            } else {
+                if (propertyName === "x") {
+                    tdl["style"]["left"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "y") {
+                    tdl["style"]["top"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "width") {
+                    tdl["style"]["width"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "height") {
+                    tdl["style"]["height"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "rules") {
+                    tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
+                } else if (propertyName === "visible") {
+                    tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else if (propertyName === "pv_name") {
+                    tdl["channelNames"].push(BobPropertyConverter.convertBobString(propertyValue));
+                } else if (propertyName === "border_alarm_sensitive") {
+                    tdl["text"]["alarmBorder"] = BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else if (propertyName === "font") {
+                    const data = BobPropertyConverter.convertBobFont(propertyValue);
+                    tdl["style"]["fontSize"] = data["fontSize"];
+                    tdl["style"]["fontFamily"] = data["fontFamily"];
+                    tdl["style"]["fontStyle"] = data["fontStyle"];
+                    tdl["style"]["fontWeight"] = data["fontWeight"];
+                } else if (propertyName === "foreground_color") {
+                    tdl["style"]["color"] = BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "items") {
+                    tdl["itemLabels"] = BobPropertyConverter.convertBobStrings(propertyValue, "item");
+                } else if (propertyName === "items_from_pv") {
+                    tdl["text"]["useChannelItems"] = BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "horizontal") {
+                    const isHorizontal = BobPropertyConverter.convertBobBoolean(propertyValue);
+                    tdl["text"]["direction"] = isHorizontal === true ? "horizontal" : "vertical";
+                } else {
+                    console.log("Skip property", `"${propertyName}"`);
+                }
+            }
+        }
 
-	// return tdl;
-	// };
+        tdl["itemValues"] = [];
+        for (let ii = 0; ii < tdl["itemLabels"].length; ii++) {
+            tdl["itemValues"].push(ii);
+        }
+
+        return tdl;
+    };
 }

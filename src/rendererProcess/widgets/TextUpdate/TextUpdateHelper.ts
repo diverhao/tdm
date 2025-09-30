@@ -559,7 +559,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
             "font",
             "foreground_color",
             "background_color",
-            "transparent", // not in tdm
+            "transparent",
             "format",
             "precision",
             "show_units",
@@ -571,6 +571,8 @@ export class TextUpdateHelper extends BaseWidgetHelper {
             "border_width",
             "border_color",
         ];
+
+        let isTransparent = false;
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -626,10 +628,20 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                     tdl["style"]["borderWidth"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "border_color") {
                     tdl["style"]["borderColor"] = BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "transparent") {
+                    isTransparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
                     console.log("Skip property", `"${propertyName}"`);
                 }
             }
+        }
+
+
+        if (isTransparent) {
+            const originalRgbaColor = tdl["style"]["backgroundColor"];
+            const rgbaColorArray = originalRgbaColor.split(",");
+            rgbaColorArray[3] = "0)";
+            tdl["style"]["backgroundColor"] = rgbaColorArray.join(",");
         }
 
         if (tdl["style"]["transform"].includes("rotate(270deg)") || tdl["style"]["transform"].includes("rotate(90deg)")) {

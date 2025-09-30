@@ -45,6 +45,13 @@ import { TankHelper } from "../../../rendererProcess/widgets/Tank/TankHelper";
 import { SymbolHelper } from "../../../rendererProcess/widgets/Symbol/SymbolHelper";
 import { TextSymbolHelper } from "../../../rendererProcess/widgets/TextSymbol/TextSymbolHelper";
 import { ThermometerHelper } from "../../../rendererProcess/widgets/Thermometer/ThermometerHelper";
+import { CheckBoxHelper } from "../../../rendererProcess/widgets/CheckBox/CheckBoxHelper";
+import { ChoiceButtonHelper } from "../../../rendererProcess/widgets/ChoiceButton/ChoiceButtonHelper";
+import { ComboBoxHelper } from "../../../rendererProcess/widgets/ComboBox/ComboBoxHelper";
+import { RadioButtonHelper } from "../../../rendererProcess/widgets/RadioButton/RadioButtonHelper";
+import { ScaledSliderHelper } from "../../../rendererProcess/widgets/ScaledSlider/ScaledSliderHelper";
+import { SlideButtonHelper } from "../../../rendererProcess/widgets/SlideButton/SlideButtonHelper";
+import { SpinnerHelper } from "../../../rendererProcess/widgets/Spinner/SpinnerHelper";
 
 export class BobPropertyConverter {
     constructor() { }
@@ -138,6 +145,42 @@ export class BobPropertyConverter {
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "action_button") {
                 const widgetTdl = ActionButtonHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "bool_button") {
+                const widgetTdl = BooleanButtonHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "checkbox") {
+                const widgetTdl = CheckBoxHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "choice") {
+                const widgetTdl = ChoiceButtonHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "combo") {
+                const widgetTdl = ComboBoxHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "radio") {
+                const widgetTdl = RadioButtonHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "scaledslider") {
+                const widgetTdl = ScaledSliderHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "slide_button") {
+                const widgetTdl = SlideButtonHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "spinner") {
+                const widgetTdl = SpinnerHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "textentry") {
+                const widgetTdl = TextEntryHelper.convertBobToTdl(bobWidgetJson);
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else {
@@ -314,6 +357,28 @@ export class BobPropertyConverter {
         }
 
         return result;
+    }
+
+
+    /**
+     * from 
+     *     [
+     *         "1"
+     *     ]
+     * to "push and reset"
+     */
+    static convertBobBoolenButtonMode = (propertyValue: any) => {
+        const numVal = this.convertBobNum(propertyValue);
+        if (numVal === 0) {
+            return "toggle";
+        } else if (numVal === 1) {
+            return "push and reset";
+        } else if (numVal === 2) {
+            // TDM does not have this mode, it can be realized by setting onValue/offValue to 0/1
+            return "push and reset (inverted)";
+        } else {
+            return "toggle";
+        }
     }
 
     // ------------------------- actions ---------------------------

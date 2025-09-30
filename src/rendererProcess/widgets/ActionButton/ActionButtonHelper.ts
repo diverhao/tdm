@@ -447,6 +447,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         let confirmDialog = false;
         let confirmMessage = "";
         let password = "";
+        let isTransparent = false;
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -496,6 +497,8 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                     confirmMessage = BobPropertyConverter.convertBobString(propertyValue);
                 } else if (propertyName === "password") {
                     password = BobPropertyConverter.convertBobString(propertyValue);
+                } else if (propertyName === "transparent") {
+                    isTransparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
                     console.log("Skip property", `"${propertyName}"`);
                 }
@@ -513,6 +516,13 @@ export class ActionButtonHelper extends BaseWidgetHelper {
 
         }
 
+
+        if (isTransparent) {
+            const originalRgbaColor = tdl["style"]["backgroundColor"];
+            const rgbaColorArray = originalRgbaColor.split(",");
+            rgbaColorArray[3] = "0)";
+            tdl["style"]["backgroundColor"] = rgbaColorArray.join(",");
+        }
 
 
         if (tdl["style"]["transform"].includes("rotate(270deg)") || tdl["style"]["transform"].includes("rotate(90deg)")) {

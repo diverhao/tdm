@@ -228,7 +228,7 @@ export class RadioButton extends BaseWidget {
                     width: "100%",
                     height: "100%",
                     display: "inline-flex",
-                    flexDirection: "column",
+                    flexDirection: this.getAllText()["direction"] === "horizontal" ? "row" : "column",
                     justifyContent: this.getAllText()["verticalAlign"],
                     alignItems: this.getAllText()["horizontalAlign"],
                     cursor: "pointer",
@@ -240,7 +240,7 @@ export class RadioButton extends BaseWidget {
                     ref={elementRef}
                     style={{
                         display: "inline-flex",
-                        flexDirection: "column",
+                        flexDirection: this.getAllText()["direction"] === "horizontal" ? "row" : "column",
                         justifyContent: "flex-start",
                         alignItems: "flex-start",
                     }}
@@ -447,6 +447,7 @@ export class RadioButton extends BaseWidget {
             confirmOnWrite: false,
             confirmOnWriteUsePassword: false,
             confirmOnWritePassword: "",
+            direction: "vertical", // "horizontal"
         },
         channelNames: [],
         groupNames: [],
