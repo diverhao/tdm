@@ -44,6 +44,7 @@ import { Log } from "../../log/Log";
 import { TankHelper } from "../../../rendererProcess/widgets/Tank/TankHelper";
 import { SymbolHelper } from "../../../rendererProcess/widgets/Symbol/SymbolHelper";
 import { TextSymbolHelper } from "../../../rendererProcess/widgets/TextSymbol/TextSymbolHelper";
+import { ThermometerHelper } from "../../../rendererProcess/widgets/Thermometer/ThermometerHelper";
 
 export class BobPropertyConverter {
     constructor() { }
@@ -129,6 +130,14 @@ export class BobPropertyConverter {
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "textupdate") {
                 const widgetTdl = TextUpdateHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "thermometer") {
+                const widgetTdl = ThermometerHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "action_button") {
+                const widgetTdl = ActionButtonHelper.convertBobToTdl(bobWidgetJson);
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else {
@@ -307,6 +316,271 @@ export class BobPropertyConverter {
         return result;
     }
 
+    // ------------------------- actions ---------------------------
+    /**
+     * Convert
+     * 
+     * [
+     *   {
+     *      action: [
+     *                 ... each action
+     *              ]
+     *   }
+     * ]
+     * 
+     * to each-action[]
+     * 
+     */
+    static convertBobActions = (propertyValue: any) => {
+        const result: any[] = [];
+        // array of actions
+        const actionsData = propertyValue[0]["action"];
+        for (const actionData of actionsData) {
+            const type = actionData["$"]["type"];
+            if (type === "open_display") {
+                result.push(this.convertBobAction_open_display(actionData));
+            } else if (type === "write_pv") {
+                result.push(this.convertBobAction_write_pv(actionData));
+            } else if (type === "command") {
+                result.push(this.convertBobAction_command(actionData));
+            } else if (type === "open_webpage") {
+                result.push(this.convertBobAction_open_webpage(actionData));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Convert 
+     * 
+     * {
+     *      "$": {
+     *          "type": "open_display"
+     *      },
+     *      "description"?: [
+     *          "Open Display 111"
+     *      ],
+     *      "file": [
+     *          "abc.tdl"
+     *      ],
+     *      "macros"?: [
+     *          {
+     *              "a": [
+     *                  "b"
+     *              ],
+     *              "c": [
+     *                  "d"
+     *              ]
+     *          }
+     *      ],
+     *      "target": [
+     *          "tab"
+     *      ],
+     *      "name"?: [
+     *          "def"
+     *      ]
+     * }
+     * 
+     * to {    type: "OpenDisplay",
+     *         label: "Open Display 111",
+     *         fileName: "abc.tdl",
+     *         externalMacros: [["a", "b"], ["c", "d"]];
+     *         useParentMacros: true;
+     *         openInSameWindow: false;
+     *    }
+     */
+    static convertBobAction_open_display = (
+        propertyValue: {
+            "$": {
+                "type": "open_display"
+            },
+            description?: string[],
+            file: string[],
+            macros?: Record<string, string[]>[],
+            target: string[], // "tab", "replace", "window"
+            name?: string[], // pane, I don't know what is it
+        }
+    ) => {
+        let label = "";
+        if (propertyValue["description"] !== undefined) {
+            label = this.convertBobString(propertyValue["description"]);
+        }
+        let externalMacros: [string, string][] = [];
+        if (propertyValue["macros"] !== undefined) {
+            externalMacros = this.convertBobMacros(propertyValue["macros"]);
+        }
+        let openInSameWindow = false;
+        if (propertyValue["target"] !== undefined) {
+            const targetStr = this.convertBobString(propertyValue["target"]);
+            if (targetStr === "replace") {
+                openInSameWindow = true;
+            }
+        }
+
+        const fileName = this.convertBobString(propertyValue["file"]);
+
+        return {
+            type: "OpenDisplay",
+            label: label,
+            fileName: fileName,
+            externalMacros: externalMacros,
+            useParentMacros: true,
+            openInSameWindow: false,
+        }
+    }
+
+
+    /**
+     * From 
+     * 
+     *  {
+     *       "$": {
+     *           "type": "write_pv"
+     *       },
+     *       "description": [
+     *           "Write PV 111"
+     *       ],
+     *       "pv_name": [
+     *           "val1"
+     *       ],
+     *       "value": [
+     *           "0"
+     *       ]
+     *   }
+     * 
+     * to {
+     *       type: "WritePV",
+     *       label: "Write PV 111",
+     *       channelName: "val1",
+     *       channelValue: "0",
+     *       confirmOnWrite: false,
+     *       confirmOnWriteUsePassword: false,
+     *       confirmOnWritePassword: "",
+     *   }
+     * 
+     * The password will be assigned later
+     */
+    static convertBobAction_write_pv = (
+        propertyValue: {
+            "$": {
+                "type": "write_pv"
+            },
+            description?: string[],
+            pv_name: string[],
+            value: string[],
+        }
+    ) => {
+        let label = "";
+        if (propertyValue["description"] !== undefined) {
+            label = this.convertBobString(propertyValue["description"]);
+        }
+        const channelName = this.convertBobString(propertyValue["pv_name"]);
+        const channelValue = this.convertBobString(propertyValue["value"]);
+
+        return {
+            type: "WritePV",
+            label: label,
+            channelName: channelName,
+            channelValue: channelValue,
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
+        }
+    }
+
+
+    /**
+     * From 
+     *  {
+     *      "$": {
+     *          "type": "command"
+     *      },
+     *      "description": [
+     *          "Execute Command 111"
+     *      ],
+     *      "command": [
+     *          "abcd"
+     *      ]
+     *  }
+     * to 
+     *   {
+     *       type: "ExecuteCommand",
+     *       label: "Execute Command 111",
+     *       command: "abcd",
+     *       confirmOnWrite: false,
+     *       confirmOnWriteUsePassword: false,
+     *       confirmOnWritePassword: "",
+     *    }
+     */
+    static convertBobAction_command = (
+        propertyValue: {
+            "$": {
+                "type": "command"
+            },
+            description?: string[],
+            command: string[],
+        }
+    ) => {
+        let label = "";
+        if (propertyValue["description"] !== undefined) {
+            label = this.convertBobString(propertyValue["description"]);
+        }
+        const command = this.convertBobString(propertyValue["command"]);
+
+        return {
+            type: "ExecuteCommand",
+            label: label,
+            command: command,
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
+        }
+    }
+
+    /**
+     * From 
+     * 
+     *     {
+     *         "$": {
+     *             "type": "open_webpage"
+     *         },
+     *         "description": [
+     *             "Open Web Page 111"
+     *         ],
+     *         "url": [
+     *             "abc"
+     *         ]
+     *     }
+     * to {
+     *       type: "OpenWebPage",
+     *       label: "Open Web Page 111",
+     *       url: "abc",
+     *    } 
+     */
+    static convertBobAction_open_webpage = (
+        propertyValue: {
+            "$": {
+                "type": "open_webpage"
+            },
+            description?: string[],
+            url: string[],
+        }
+    ) => {
+        let label = "";
+        if (propertyValue["description"] !== undefined) {
+            label = this.convertBobString(propertyValue["description"]);
+        }
+        const url = this.convertBobString(propertyValue["url"]);
+
+        return {
+            type: "OpenWebPage",
+            label: label,
+            url: url,
+        }
+    }
+
+
+    // -------------------- basic conversions ----------------------
 
     /**
       * from 
@@ -714,116 +988,5 @@ export class BobPropertyConverter {
 
     // ------------------------------------------------------
 
-    static convertBobAction = (
-        propertyValue: Record<string, any>,
-        defaultChannelName: string
-    ):
-        | type_action_opendisplay_tdl
-        | type_action_writepv_tdl
-        | type_action_executecommand_tdl
-        | type_action_executescript_tdl
-        | type_action_openwebpage_tdl
-        | undefined => {
-        let result: Record<string, any> = {};
-        const type = propertyValue["type"];
 
-        let file = propertyValue["file"];
-        if (typeof file !== "string") {
-            file = "";
-        }
-
-        const target = propertyValue["target"];
-        let description = propertyValue["description"];
-        if (typeof description !== "string") {
-            description = "";
-        }
-
-        let pv_name = propertyValue["pv_name"];
-        if (pv_name === "$(pv_name)") {
-            pv_name = defaultChannelName;
-        }
-
-        let value = propertyValue["value"];
-        if (typeof value !== "string") {
-            value = "";
-        }
-
-        const text = propertyValue["text"];
-        let command = propertyValue["command"];
-        if (typeof command !== "string") {
-            command = "";
-        }
-        let url = propertyValue["url"];
-        if (typeof url !== "string") {
-            url = "";
-        }
-        let macros = propertyValue["macros"];
-        if (macros === undefined) {
-            macros = [];
-        }
-
-        if (type === "open_display") {
-            return {
-                type: "OpenDisplay",
-                label: description,
-                fileName: file,
-                externalMacros: this.convertBobMacros(macros),
-                useParentMacros: true,
-                openInSameWindow: false,
-            };
-        } else if (type === "write_pv") {
-            return {
-                type: "WritePV",
-                label: description,
-                channelName: pv_name,
-                channelValue: value,
-                confirmOnWrite: false,
-                confirmOnWriteUsePassword: false,
-                confirmOnWritePassword: "",
-
-            };
-        } else if (type === "execute") {
-            // todo
-            return {
-                type: "ExecuteScript",
-                label: description,
-                fileName: "",
-            };
-        } else if (type === "command") {
-            return {
-                type: "ExecuteCommand",
-                label: description,
-                command: command,
-                confirmOnWrite: false,
-                confirmOnWriteUsePassword: false,
-                confirmOnWritePassword: "",
-            };
-        } else if (type === "open_webpage") {
-            return {
-                type: "OpenWebPage",
-                label: description,
-                url: url,
-            };
-        } else {
-            return undefined;
-        }
-    };
-
-    static convertBobActions = (propertyValue: Record<string, any> | Record<string, any>[], defaultChannelName: string) => {
-        let result: type_actions_tdl = [];
-        if (!Array.isArray(propertyValue)) {
-            const member = this.convertBobAction(propertyValue, defaultChannelName);
-            if (member !== undefined) {
-                result.push(member);
-            }
-        } else {
-            for (let memberBob of propertyValue) {
-                const member = this.convertBobAction(memberBob, defaultChannelName);
-                if (member !== undefined) {
-                    result.push(member);
-                }
-            }
-        }
-        return result;
-    };
 }
