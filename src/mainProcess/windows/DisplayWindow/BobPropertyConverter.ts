@@ -52,6 +52,7 @@ import { RadioButtonHelper } from "../../../rendererProcess/widgets/RadioButton/
 import { ScaledSliderHelper } from "../../../rendererProcess/widgets/ScaledSlider/ScaledSliderHelper";
 import { SlideButtonHelper } from "../../../rendererProcess/widgets/SlideButton/SlideButtonHelper";
 import { SpinnerHelper } from "../../../rendererProcess/widgets/Spinner/SpinnerHelper";
+import { DataViewerHelper } from "../../../rendererProcess/widgets/DataViewer/DataViewerHelper";
 
 export class BobPropertyConverter {
     constructor() { }
@@ -181,6 +182,10 @@ export class BobPropertyConverter {
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "textentry") {
                 const widgetTdl = TextEntryHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "stripchart") {
+                const widgetTdl = DataViewerHelper.convertBobToTdl(bobWidgetJson);
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else {
@@ -1051,7 +1056,242 @@ export class BobPropertyConverter {
         }
     }
 
-    // ------------------------------------------------------
+    // -------------------- stripchart ----------------------------------
+
+
+    /**
+     * Convert 
+     * 
+     *  [
+     *       {
+     *           "trace": [
+     *               {
+     *                   "name": [
+     *                       "$(traces[0].y_pv)"
+     *                   ],
+     *                   "y_pv": [
+     *                       "val1"
+     *                   ],
+     *                   "axis": [
+     *                       "0"
+     *                   ],
+     *                   "trace_type": [
+     *                       "2"
+     *                   ],
+     *                   "color": [
+     *                       {
+     *                           "color": [
+     *                               {
+     *                                   "$": {
+     *                                       "red": "0",
+     *                                       "green": "0",
+     *                                       "blue": "255"
+     *                                   }
+     *                               }
+     *                           ]
+     *                       }
+     *                   ],
+     *                   "line_width": [
+     *                       "2"
+     *                   ],
+     *                   "point_type": [
+     *                       "0"
+     *                   ],
+     *                   "point_size": [
+     *                       "10"
+     *                   ],
+     *                   "visible": [
+     *                       "true"
+     *                   ]
+     *               }
+     *           ]
+     *       }
+     *   ]
+     * 
+     * to
+     *     {
+     *          "label": "val1",
+     *          "valMin": -100.10000000000001,
+     *          "valMax": 1101.1,
+     *          "lineWidth": 2,
+     *          "lineColor": "rgba(0,0,255,1)",
+     *          "ticks": [
+     *              0,
+     *              200,
+     *              400,
+     *              600,
+     *              800,
+     *              1000
+     *          ],
+     *          "ticksText": [
+     *              0,
+     *              200,
+     *              400,
+     *              600,
+     *              800,
+     *              1000
+     *          ],
+     *          "show": true,
+     *          "bufferSize": 50000,
+     *          "displayScale": "Linear"
+     *      }
+     */
+    static convertBobStripchartTraces = (
+        propertyValue: {
+            trace: {
+                name: string[],
+                y_pv: string[],
+                axis: string[],
+                trace_type: string[],
+                color: { color: { "$": { name?: string, red: string, green: string, blue: string, alpha?: string } }[] }[],
+                line_width: string[],
+                point_type: string[],
+                point_size: string[],
+                visible: ("true" | "false")[],
+            }[]
+        }[]
+    ) => {
+        const tracesData = propertyValue[0]["trace"];
+        const result: any[] = [];
+        for (const traceData of tracesData) {
+            const label = this.convertBobString(traceData["y_pv"]);
+            const lineWidth = this.convertBobNum(traceData["line_width"]);
+            const lineColor = this.convertBobColor(traceData["color"]);
+            const show = this.convertBobBoolean(traceData["visible"]);
+            const axis = this.convertBobNum(traceData["axis"]);
+            result.push(
+                {
+                    "label": label,
+                    "valMin": -100.10000000000001, // will be determined in axis
+                    "valMax": 1101.1, // will be determined in axis
+                    "lineWidth": lineWidth,
+                    "lineColor": lineColor,
+                    "ticks": [  // will be determined in axis
+                        0,
+                        200,
+                        400,
+                        600,
+                        800,
+                        1000
+                    ],
+                    "ticksText": [  // will be determined in axis
+                        0,
+                        200,
+                        400,
+                        600,
+                        800,
+                        1000
+                    ],
+                    "show": show,
+                    "bufferSize": 50000,
+                    "displayScale": "Linear", // will be determined in axis
+                    "axis": axis, // additional data, will be removed later
+                }
+            )
+        }
+        return result;
+    }
+
+    /**
+     * Convert
+     * 
+     *          [
+     *              {
+     *                  "y_axis": [
+     *                      {
+     *                          "title": [
+     *                              "Y"
+     *                          ],
+     *                          "autoscale": [
+     *                              "false"
+     *                          ],
+     *                          "log_scale": [
+     *                              "false"
+     *                          ],
+     *                          "minimum": [
+     *                              "22.0"
+     *                          ],
+     *                          "maximum": [
+     *                              "100.0"
+     *                          ],
+     *                          "show_grid": [
+     *                              "false"
+     *                          ],
+     *                          "visible": [
+     *                              "true"
+     *                          ],
+     *                          "color": [
+     *                              {
+     *                                  "color": [
+     *                                      {
+     *                                          "$": {
+     *                                              "name": "Text",
+     *                                              "red": "0",
+     *                                              "green": "0",
+     *                                              "blue": "0"
+     *                                          }
+     *                                      }
+     *                                  ]
+     *                              }
+     *                          ]
+     *                      }
+     *                  ]
+     *              }
+     *          ]
+     * to {
+     *       valMin: 22.0,
+     *       valMax: 100.0,
+     *       displayScale: "linear"
+     *    }
+     */
+
+    static convertBobStripchartYAxes = (
+        propertyValue: {
+            y_axis: {
+                title: string[],
+                autoscale: string[],
+                log_scale: ("true" | "false")[],
+                minimum: string[],
+                maximum: string[],
+                show_grid: string[],
+                visible: string[],
+                color: any
+            }[]
+        }[]
+    ) => {
+        const result: { valMin: number, valMax: number, displayScale: "Log10" | "Linear", ticks: number[], ticksText: number[] }[] = [];
+        const axesData = propertyValue[0]["y_axis"];
+        for (const axisData of axesData) {
+            const valMin = this.convertBobNum(axisData["minimum"]);
+            const valMax = this.convertBobNum(axisData["maximum"]);
+            const displayScale = this.convertBobBoolean(axisData["log_scale"]) === true ? "Log10" : "Linear";
+            const ticks = this.calcYTicksAndLabel(valMin, valMax);
+            result.push({
+                valMin: valMin,
+                valMax: valMax,
+                displayScale: displayScale,
+                ticks: ticks,
+                ticksText: ticks,
+            })
+        }
+        return result;
+    }
+
+    static calcYTicksAndLabel = (valMin: number, valMax: number) => {
+
+        const ticks: number[] = [];
+        const ticksText: (number | string)[] = [];
+
+        const yAxisInterval0 = (valMax - valMin) / 5;
+        const yAxisInterval = parseFloat(yAxisInterval0.toExponential(0));
+
+        for (let val = Math.ceil(valMin / yAxisInterval); val < Math.ceil(valMax / yAxisInterval); val = val + 1) {
+            ticks.push(val * yAxisInterval);
+            ticksText.push(val * yAxisInterval);
+        }
+        return ticks;
+    };
+
 
 
 }

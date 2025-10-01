@@ -352,7 +352,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
                 }
             }
         }
-        
+
         for (let ii = 0; ii < tdl["yAxes"].length; ii++) {
             if (tdl["yAxes"][ii] === undefined) {
                 tdl["yAxes"][ii] = this.generateDefaultYAxis();
@@ -368,6 +368,128 @@ export class DataViewerHelper extends BaseWidgetHelper {
         }
 
         // console.log("===", tdl)
+        return tdl;
+    };
+
+
+    static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_DataViewer_tdl => {
+        console.log("\n------------", `Parsing "stripchart"`, "------------------\n");
+        const tdl = this.generateDefaultTdl("DataViewer") as type_DataViewer_tdl;
+        // all properties for this widget
+        const propertyNames: string[] = [
+            "type", // not in tdm
+            "name", // not in tdm
+            "class", // not in tdm
+            "x",
+            "y",
+            "width",
+            "height",
+            "actions", // not in tdm
+            "rules",
+            "scripts", // not in tdm
+            "visible",
+            "tooltip", // not in tdm
+            "foreground_color",
+            "background_color",
+            "show_grid",
+            "title",
+            "title_font", // not in tdm
+            "label_font", // not in tdm
+            "scale_font",
+            "show_toolbar", // not in tdm
+            "show_legend", // not in tdm
+            "start", // not in tdm
+            "end", // not in tdm
+            "y_axes",
+            // title
+            // autoscale
+            // logscale
+            // minimum
+            // maximum
+            // grid
+            // visible
+            // color
+            "traces",
+            // name
+            // y_pv
+            // y_axis
+            // trace_type
+            // color
+            // width
+            // point_type
+            // point_size
+            // visible
+            "configure", // not in tdm
+            "open_full", // not in tdm
+            "refresh_plot", // not in tdm
+        ];
+
+        let showGrid = true;
+        let bobYAxes: any[] = [];
+
+        for (const propertyName of propertyNames) {
+            const propertyValue = bobWidgetJson[propertyName];
+            if (propertyValue === undefined) {
+                if (propertyName === "widget") {
+                    console.log(`There are one or more widgets inside "display"`);
+                } else {
+                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                }
+                continue;
+            } else {
+                if (propertyName === "x") {
+                    tdl["style"]["left"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "y") {
+                    tdl["style"]["top"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "width") {
+                    tdl["style"]["width"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "height") {
+                    tdl["style"]["height"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "rules") {
+                    tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
+                } else if (propertyName === "visible") {
+                    tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else if (propertyName === "foreground_color") {
+                    tdl["style"]["color"] = BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "background_color") {
+                    tdl["style"]["backgroundColor"] = BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "show_grid") {
+                    showGrid = BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else if (propertyName === "title") {
+                    tdl["text"]["title"] = BobPropertyConverter.convertBobString(propertyValue);
+                } else if (propertyName === "scale_font") {
+                    const data = BobPropertyConverter.convertBobFont(propertyValue);
+                    tdl["style"]["fontSize"] = data["fontSize"];
+                    tdl["style"]["fontFamily"] = data["fontFamily"];
+                    tdl["style"]["fontStyle"] = data["fontStyle"];
+                    tdl["style"]["fontWeight"] = data["fontWeight"];
+                } else if (propertyName === "traces") {
+                    tdl["yAxes"] = BobPropertyConverter.convertBobStripchartTraces(propertyValue);
+                } else if (propertyName === "y_axes") {
+                    bobYAxes = BobPropertyConverter.convertBobStripchartYAxes(propertyValue);
+                } else {
+                    console.log("Skip property", `"${propertyName}"`);
+                }
+            }
+        }
+
+        for (const yAxis of tdl["yAxes"]) {
+            // channel name is the "label"
+            const channelName = yAxis["label"].trim();
+            tdl["channelNames"].push(channelName);
+
+            const bobYAxisIndex = yAxis["axis"];
+            const bobYAxis = bobYAxes[bobYAxisIndex];
+            if (bobYAxis !== undefined) {
+                yAxis["valMin"] = bobYAxis["valMin"];
+                yAxis["valMax"] = bobYAxis["valMax"];
+                yAxis["displayScale"] = bobYAxis["displayScale"];
+                yAxis["ticks"] = bobYAxis["ticks"];
+                yAxis["ticksText"] = bobYAxis["ticksText"];
+            }
+            delete yAxis["axis"];
+        }
+
         return tdl;
     };
 
