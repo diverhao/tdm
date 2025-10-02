@@ -55,6 +55,7 @@ import { SpinnerHelper } from "../../../rendererProcess/widgets/Spinner/SpinnerH
 import { DataViewerHelper } from "../../../rendererProcess/widgets/DataViewer/DataViewerHelper";
 import { ImageHelper } from "../../../rendererProcess/widgets/Image/ImageHelper";
 import { XYPlotHelper } from "../../../rendererProcess/widgets/XYPlot/XYPlotHelper";
+import { EmbeddedDisplayHelper } from "../../../rendererProcess/widgets/EmbeddedDisplay/EmbeddedDisplayHelper";
 
 export class BobPropertyConverter {
     constructor() { }
@@ -196,6 +197,10 @@ export class BobPropertyConverter {
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "xyplot") {
                 const widgetTdl = XYPlotHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "embedded") {
+                const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson);
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else {

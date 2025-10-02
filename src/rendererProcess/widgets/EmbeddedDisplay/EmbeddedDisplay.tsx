@@ -540,9 +540,9 @@ export class EmbeddedDisplay extends BaseWidget {
         channelNames: [],
         groupNames: [],
         rules: [],
-        tdlFileNames: [""],
-        itemNames: ["label1"],
-        itemMacros: [[["a", "b"]]],
+        tdlFileNames: [],
+        itemNames: [],
+        itemMacros: [],
         itemIsWebpage: [false],
     };
 
