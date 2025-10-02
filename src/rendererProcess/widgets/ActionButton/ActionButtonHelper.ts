@@ -448,6 +448,10 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         let confirmMessage = "";
         let password = "";
         let isTransparent = false;
+        tdl["style"]["width"] = 100;
+        tdl["style"]["height"] = 30;
+        tdl["style"]["backgroundColor"] = "rgba(210, 210, 210, 1)";
+        tdl["text"]["appearance"] = "contemporary";
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -540,4 +544,5 @@ export class ActionButtonHelper extends BaseWidgetHelper {
 
         return tdl;
     };
+
 }

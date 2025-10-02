@@ -53,6 +53,8 @@ import { ScaledSliderHelper } from "../../../rendererProcess/widgets/ScaledSlide
 import { SlideButtonHelper } from "../../../rendererProcess/widgets/SlideButton/SlideButtonHelper";
 import { SpinnerHelper } from "../../../rendererProcess/widgets/Spinner/SpinnerHelper";
 import { DataViewerHelper } from "../../../rendererProcess/widgets/DataViewer/DataViewerHelper";
+import { ImageHelper } from "../../../rendererProcess/widgets/Image/ImageHelper";
+import { XYPlotHelper } from "../../../rendererProcess/widgets/XYPlot/XYPlotHelper";
 
 export class BobPropertyConverter {
     constructor() { }
@@ -186,6 +188,14 @@ export class BobPropertyConverter {
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "stripchart") {
                 const widgetTdl = DataViewerHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "image") {
+                const widgetTdl = ImageHelper.convertBobToTdl(bobWidgetJson);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "xyplot") {
+                const widgetTdl = XYPlotHelper.convertBobToTdl(bobWidgetJson);
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else {
@@ -1265,7 +1275,7 @@ export class BobPropertyConverter {
             const valMin = this.convertBobNum(axisData["minimum"]);
             const valMax = this.convertBobNum(axisData["maximum"]);
             const displayScale = this.convertBobBoolean(axisData["log_scale"]) === true ? "Log10" : "Linear";
-            const ticks = this.calcYTicksAndLabel(valMin, valMax);
+            const ticks = this.calcTicksAndLabel(valMin, valMax);
             result.push({
                 valMin: valMin,
                 valMax: valMax,
@@ -1277,7 +1287,289 @@ export class BobPropertyConverter {
         return result;
     }
 
-    static calcYTicksAndLabel = (valMin: number, valMax: number) => {
+    /**
+     * Convert 
+     * 
+     *  [
+     *        {
+     *            "y_axis": [
+     *                {
+     *                    "title": [
+     *                        "abc"
+     *                    ],
+     *                    "autoscale": [
+     *                        "true"
+     *                    ],
+     *                    "log_scale": [
+     *                        "true"
+     *                    ],
+     *                    "minimum": [
+     *                        "22.0"
+     *                    ],
+     *                    "maximum": [
+     *                        "33.0"
+     *                    ],
+     *                    "show_grid": [
+     *                        "true"
+     *                    ],
+     *                    "title_font": [
+     *                        {
+     *                            "font": [
+     *                                {
+     *                                    "$": {
+     *                                        "family": "Liberation Serif",
+     *                                        "style": "BOLD",
+     *                                        "size": "14.0"
+     *                                    }
+     *                                }
+     *                            ]
+     *                        }
+     *                    ],
+     *                    "scale_font": [
+     *                        {
+     *                            "font": [
+     *                                {
+     *                                    "$": {
+     *                                        "family": "Libian SC",
+     *                                        "style": "REGULAR",
+     *                                        "size": "14.0"
+     *                                    }
+     *                                }
+     *                            ]
+     *                        }
+     *                    ],
+     *                    "on_right": [
+     *                        "true"
+     *                    ],
+     *                    "visible": [
+     *                        "false"
+     *                    ],
+     *                    "color": [
+     *                        {
+     *                            "color": [
+     *                                {
+     *                                    "$": {
+     *                                        "name": "Grid",
+     *                                        "red": "128",
+     *                                        "green": "128",
+     *                                        "blue": "128"
+     *                                    }
+     *                                }
+     *                            ]
+     *                        }
+     *                    ]
+     *                }
+     *            ]
+     *        }
+     *    ]
+     * 
+     * to {
+     *        valMin: 22.0,
+     *        valMax: 33.0,
+     *        ticks: [],
+     *        ticksText: [],
+     *        autoScale: true,
+     *        showGrid: true,
+     *        displayScale: "Log10",
+     *    }
+     */
+    static convertBobXYPlotYAxes = (
+        propertyValue: {
+            y_axis: {
+                title: string[],
+                autoscale: ("true" | "false")[],
+                log_scale: ("true" | "false")[],
+                minimum: string[],
+                maximum: string[],
+                show_grid: ("true" | "false")[],
+                title_font: any,
+                scale_font: any,
+                on_right: string[],
+                visible: string[],
+                color: any,
+            }[]
+        }[]
+    ) => {
+        const yAxesData = propertyValue[0]["y_axis"];
+        const result: Record<string, any>[] = [];
+        for (const yAxisData of yAxesData) {
+            const yAxis: Record<string, any> = {};
+            yAxis["valMin"] = this.convertBobNum(yAxisData["minimum"]);
+            yAxis["valMax"] = this.convertBobNum(yAxisData["maximum"]);
+            yAxis["ticks"] = this.calcTicksAndLabel(yAxis["valMin"], yAxis["valMax"]);
+            yAxis["ticksText"] = yAxis["ticks"];
+            yAxis["autoScale"] = this.convertBobBoolean(yAxisData["autoscale"]);
+            yAxis["showGrid"] = this.convertBobBoolean(yAxisData["show_grid"]);
+            yAxis["displayScale"] = this.convertBobBoolean(yAxisData["log_scale"]) === true ? "Log10" : "Linear";
+            result.push(yAxis);
+        }
+        return result;
+    }
+
+    /**
+     * Convert 
+     * 
+     *   [
+     *        {
+     *            "trace": [
+     *                {
+     *                    "name": [
+     *                        "$(traces[0].y_pv)"
+     *                    ],
+     *                    "x_pv": [
+     *                        "ab"
+     *                    ],
+     *                    "y_pv": [
+     *                        "cd"
+     *                    ],
+     *                    "err_pv": [
+     *                        "ef"
+     *                    ],
+     *                    "axis": [
+     *                        "0"
+     *                    ],
+     *                    "trace_type": [
+     *                        "2"
+     *                    ],
+     *                    "color": [
+     *                        {
+     *                            "color": [
+     *                                {
+     *                                    "$": {
+     *                                        "name": "INVALID",
+     *                                        "red": "255",
+     *                                        "green": "0",
+     *                                        "blue": "255"
+     *                                    }
+     *                                }
+     *                            ]
+     *                        }
+     *                    ],
+     *                    "line_width": [
+     *                        "3"
+     *                    ],
+     *                    "line_style": [
+     *                        "1"
+     *                    ],
+     *                    "point_type": [
+     *                        "1"
+     *                    ],
+     *                    "point_size": [
+     *                        "22"
+     *                    ],
+     *                    "visible": [
+     *                        "false"
+     *                    ]
+     *                }
+     *            ]
+     *        }
+     *    ]
+     * 
+     * to {
+     *       label: "cd";
+     *       xPv: "ab", // will be removed
+     *       yPv: "cd", // will be removed
+     *       valMin: 0, // determined later
+     *       valMax: 10, // determined later
+     *       lineWidth: 3,
+     *       lineColor: "rgba(255, 0, 255, 1)",
+     *       ticks: []; // determined later
+     *       ticksText: [], // determined later
+     *       autoScale: false, // determined later
+     *       lineStyle: "dashed",
+     *       pointType: "square",
+     *       pointSize: 22,
+     *       showGrid: true,
+     *       numGrids: 5, 
+     *       displayScale: "Linear", // determined later
+     *    }
+     */
+    static convertBobXYPlotTraces = (
+        propertyValue: {
+            trace: {
+                name: string[],
+                x_pv: string[],
+                y_pv: string[],
+                err_pv: string[],
+                axis: string[],
+                trace_type: string[],
+                color: any,
+                line_width: string[],
+                line_style: string[],
+                point_type: string[],
+                point_size: string[],
+                visible: ("true" | "false")[],
+            }[]
+        }[]
+    ) => {
+        const tracesData = propertyValue[0]["trace"];
+        const result: any[] = [];
+        for (const traceData of tracesData) {
+            const label = this.convertBobString(traceData["y_pv"]);
+            const xPv = this.convertBobString(traceData["x_pv"]);
+            const yPv = this.convertBobString(traceData["y_pv"]);
+            const axis = this.convertBobNum(traceData["axis"]);
+            const valMin = 0;
+            const valMax = 0;
+            const lineWidth = this.convertBobNum(traceData["line_width"]);
+            const lineColor = this.convertBobColor(traceData["color"]);
+            const ticks: number[] = [];
+            const ticksText: (number | string)[] = [];
+            const autoScale = false;
+            const lineStyle = this.convertBobLineStyle(traceData["line_style"]);
+            const pointType = this.convertBobPointType(traceData["point_type"]);
+            const pointSize = this.convertBobNum(traceData["point_size"]);
+            const showGrid = true;
+            const numGrids = 5;
+            const displayScale = "Linear";
+            result.push({
+                label: label,
+                xPv: xPv,  // will be removed
+                yPv: yPv,  // will be removed
+                axis: axis, // will be removed
+                valMin: valMin, // determined later
+                valMax: valMax, // determined later
+                lineWidth: lineWidth,
+                lineColor: lineColor,
+                ticks: ticks, // determined later
+                ticksText: ticksText, // determined later
+                autoScale: autoScale, // determined later
+                lineStyle: lineStyle,
+                pointType: pointType,
+                pointSize: pointSize,
+                showGrid: showGrid, // determined later
+                numGrids: numGrids,
+                displayScale: displayScale, // determined later
+            })
+        }
+        return result;
+    }
+
+    /**
+     * Convert ["1"] to "square"
+     */
+    static convertBobPointType = (
+        propertyValue: string[],
+    ) => {
+        const numVal = this.convertBobNum(propertyValue);
+        if (numVal === 0) {
+            return "none";
+        } else if (numVal === 1) {
+            return "square";
+        } else if (numVal === 2) {
+            return "circle";
+        } else if (numVal === 3) {
+            return "diamond";
+        } else if (numVal === 4) {
+            return "x";
+        } else if (numVal === 5) {
+            return "triangle";
+        } else {
+            return "none";
+        }
+    }
+
+    static calcTicksAndLabel = (valMin: number, valMax: number) => {
 
         const ticks: number[] = [];
         const ticksText: (number | string)[] = [];
@@ -1293,5 +1585,139 @@ export class BobPropertyConverter {
     };
 
 
+    /**
+     * Convert 
+     *           [
+     *               {
+     *                   "name": [
+     *                       "JET"
+     *                   ]
+     *               }
+     *           ]
+     * 
+     * to "jet"
+     */
+    static convertBobColorMap = (
+        propertyValue: { name: string[] }[]
+    ) => {
+        const str = propertyValue[0]["name"][0];
+        if (str === "JET") {
+            return "jet"
+        } else if (str === "GRAY") {
+            return "gray";
+        } else if (str === "SPECTRUM") {
+            return "spectral";
+        } else if (str === "HOT") {
+            return "hot";
+        } else if (str === "COOL") {
+            return "cool";
+        } else if (str === "SHADED") { // not in tdm
+            return "viridis";
+        } else if (str === "MAGMA") {
+            return "magma";
+        } else {
+            return "viridis";
+        }
+    }
+
+
+    /**
+     * Convert 
+     *           [
+     *               {
+     *                   "title": [
+     *                       "X1"
+     *                   ],
+     *                   "autoscale": [
+     *                       "true"
+     *                   ],
+     *                   "log_scale": [
+     *                       "true"
+     *                   ],
+     *                   "minimum": [
+     *                       "5.0"
+     *                   ],
+     *                   "maximum": [
+     *                       "55.0"
+     *                   ],
+     *                   "show_grid": [
+     *                       "true"
+     *                   ],
+     *                   "title_font": [
+     *                       {
+     *                           "font": [
+     *                               {
+     *                                   "$": {
+     *                                       "family": "Liberation Serif",
+     *                                       "style": "BOLD",
+     *                                       "size": "14.0"
+     *                                   }
+     *                               }
+     *                           ]
+     *                       }
+     *                   ],
+     *                   "scale_font": [
+     *                       {
+     *                           "font": [
+     *                               {
+     *                                   "$": {
+     *                                       "family": "LingWai TC",
+     *                                       "style": "REGULAR",
+     *                                       "size": "14.0"
+     *                                   }
+     *                               }
+     *                           ]
+     *                       }
+     *                   ],
+     *                   "visible": [
+     *                       "true"
+     *                   ]
+     *               }
+     *           ]
+     * 
+     * to  {
+     *         label: "X1",
+     *         valMin: 5.0,
+     *         valMax: 55.0,
+     *         ticks: [], // auto generate
+     *         ticksText: [], // auto generate
+     *         autoScale: true,
+     *         showGrid: true,
+     *         numGrids: 5,
+     *     }
+     */
+    static convertBobXYPlotXAxis = (
+        propertyValue: {
+            title: string[],
+            autoscale: ("true" | "false")[],
+            log_scale: string[],
+            minimum: string[],
+            maximum: string[],
+            show_grid: ("true" | "false")[],
+            title_font: any,
+            scale_font: any,
+            visible: string[],
+        }[]
+    ) => {
+        const data = propertyValue[0];
+        const label = this.convertBobString(data["title"]);
+        const valMin = this.convertBobNum(data["minimum"]);
+        const valMax = this.convertBobNum(data["maximum"]);
+        const ticks = this.calcTicksAndLabel(valMin, valMax);
+        const ticksText = ticks;
+        const autoScale = this.convertBobBoolean(data["autoscale"]);
+        const showGrid = this.convertBobBoolean(data["show_grid"]);
+        const numGrids = 5;
+        return {
+            label: label,
+            valMin: valMin,
+            valMax: valMax,
+            ticks: ticks,
+            ticksText: ticksText,
+            autoScale: autoScale,
+            showGrid: showGrid,
+            numGrids: numGrids,
+        }
+    }
 
 }
