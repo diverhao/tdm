@@ -274,6 +274,8 @@ export class WindowAgentsManager {
 
                 // block lifted when the websocket connection is established
                 const parentDisplayWindowAgent = this.getAgent(parentDisplayWindowId);
+                const tdlCanvasWidth = tdl["Canvas"]["style"]["width"];
+                const tdlCanvasHeight = tdl["Canvas"]["style"]["height"];
                 if (parentDisplayWindowAgent instanceof DisplayWindowAgent) {
                     const backgroundColor = tdl["Canvas"]["style"]["backgroundColor"];
                     if (typeof backgroundColor === "string") {
@@ -281,6 +283,8 @@ export class WindowAgentsManager {
                             widgetKey: widgetKey,
                             iframeDisplayId: displayWindowId,
                             tdlBackgroundColor: backgroundColor,
+                            tdlCanvasWidth: tdlCanvasWidth,
+                            tdlCanvasHeight: tdlCanvasHeight,
                         });
                     }
                 }

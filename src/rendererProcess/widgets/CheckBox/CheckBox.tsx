@@ -274,7 +274,7 @@ export class CheckBox extends BaseWidget {
 
         const bitValue = this.getBitValue();
         if (bitValue === undefined) {
-            return "Error";
+            return "";
         } else {
             if (this.getAllText()["bit"] > -1) {
                 // bitValue must be 0 or 1, which can be the index

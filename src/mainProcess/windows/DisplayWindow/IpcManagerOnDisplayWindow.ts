@@ -247,6 +247,8 @@ export class IpcManagerOnDisplayWindow {
         if (widget instanceof EmbeddedDisplay) {
             widget.loadHtml(options["iframeDisplayId"]);
             widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
+            widget.setTdlCanvasWidth(options["tdlCanvasWidth"]);
+            widget.setTdlCanvasHeight(options["tdlCanvasHeight"]);
         } else if (widget instanceof Table) {
             widget.loadHtml(options["iframeDisplayId"]);
             widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);

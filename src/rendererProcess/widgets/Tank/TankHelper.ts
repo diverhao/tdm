@@ -297,7 +297,7 @@ export class TankHelper extends BaseWidgetHelper {
         return tdl;
     };
 
-    // ! todo
+
     static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "progressbar" | "tank"): type_Tank_tdl => {
         console.log("\n------------", `Parsing ${type}`, "------------------\n");
         const tdl = this.generateDefaultTdl("Tank");
@@ -340,6 +340,8 @@ export class TankHelper extends BaseWidgetHelper {
             tdl["text"]["fillColor"] = "rgba(60, 255, 60, 1)";
             tdl["style"]["backgroundColor"] = "rgba(250,250,250,1)";
             tdl["style"]["transform"] = "rotate(90deg)";
+            tdl["style"]["width"] = 100;
+            tdl["style"]["height"] = 20;
             tdl["text"]["showLabels"] = false;
         }
 

@@ -382,7 +382,7 @@ export class FileBrowser extends BaseWidget {
                                 const name = nextElement["name"];
                                 // the element is a tdl file or a folder
                                 if (this.onlyShowTdmFiles === true) {
-                                    if (name.endsWith(".tdl") || nextElement["type"] === "folder") {
+                                    if (name.endsWith(".tdl") || name.endsWith(".bob") || nextElement["type"] === "folder") {
                                         if (name.toLowerCase().includes(this.filterText.toLowerCase())) {
                                             toBeSelectedItemIndex = ii;
                                             break;
@@ -414,7 +414,7 @@ export class FileBrowser extends BaseWidget {
                                     const name = prevElement["name"];
                                     // the element is a tdl file or a folder
                                     if (this.onlyShowTdmFiles === true) {
-                                        if (name.endsWith(".tdl") || prevElement["type"] === "folder") {
+                                        if (name.endsWith(".tdl") ||name.endsWith(".bob") || prevElement["type"] === "folder") {
                                             if (name.toLowerCase().includes(this.filterText.toLowerCase())) {
                                                 toBeSelectedItemIndex = ii;
                                                 break;
@@ -441,7 +441,7 @@ export class FileBrowser extends BaseWidget {
                             this.setSelectedItem(element);
                             forceUpdate({});
                             this.forceUpdateButtons({});
-                            if (element["name"].endsWith(".tdl")) {
+                            if (element["name"].endsWith(".tdl") || element["name"].endsWith(".bob")) {
                                 // wait for the new thumbnail
                                 this.setThumbnail("../../resources/webpages/blank.svg");
                                 this.fetchThumbnail(element["name"]);
@@ -983,7 +983,7 @@ export class FileBrowser extends BaseWidget {
                         this.setSelectedItem(element);
                         this.forceUpdateButtons({});
                         forceUpdateTable({});
-                        if (element["name"].endsWith(".tdl")) {
+                        if (element["name"].endsWith(".tdl") || element["name"].endsWith(".bob")) {
                             // wait for the new thumbnail
                             this.setThumbnail("../../resources/webpages/blank.svg");
                             this.fetchThumbnail(element["name"]);
@@ -1033,7 +1033,7 @@ export class FileBrowser extends BaseWidget {
                             <this._ElementItemName name={element["name"]} ></this._ElementItemName>
                         </div>
                         :
-                        element["name"].endsWith(".tdl") ?
+                        element["name"].endsWith(".tdl") || element["name"].endsWith(".bob") ?
                             <div style={{
                                 display: "inline-flex",
                                 justifyContent: "flex-start",
@@ -1285,7 +1285,7 @@ export class FileBrowser extends BaseWidget {
             if (path.isAbsolute(element['name'])) {
                 fullTdlFileName = element["name"];
             }
-            if (fullTdlFileName.endsWith(".tdl") || fullTdlFileName.endsWith(".edl") || fullTdlFileName.endsWith(".db") || fullTdlFileName.endsWith(".tempate")) {
+            if (fullTdlFileName.endsWith(".tdl") ||fullTdlFileName.endsWith(".bob") || fullTdlFileName.endsWith(".edl") || fullTdlFileName.endsWith(".db") || fullTdlFileName.endsWith(".template")) {
                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                 const ipcManager = displayWindowClient.getIpcManager();
                 const displayWindowId = displayWindowClient.getWindowId();
@@ -1457,7 +1457,7 @@ export class FileBrowser extends BaseWidget {
         if (displayWindowClient.getMainProcessMode() === "web") {
             return;
         } else {
-            if (fileName.endsWith(".tdl")) {
+            if (fileName.endsWith(".tdl") || fileName.endsWith(".bob")) {
                 let tdlFileName = path.join(this.getFolderPath(), fileName);
                 if (this.getFolderPath() === "bookmarks-ABCD" || path.isAbsolute(fileName)) {
                     tdlFileName = fileName;
@@ -1491,6 +1491,8 @@ export class FileBrowser extends BaseWidget {
         } else {
             if (fileName.endsWith(".tdl")) {
                 return "TDM Display File";
+            } else if (fileName.endsWith(".bob")) {
+                return "CSS Phoebus Display File";
             } else if (fileName.endsWith(".db")) {
                 return "EPICS Database File";
             } else if (fileName.endsWith(".template")) {

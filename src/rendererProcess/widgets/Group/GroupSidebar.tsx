@@ -10,6 +10,7 @@ import { SidebarEmbeddedDisplayTabHeight } from "../../helperWidgets/SidebarComp
 import { SidebarEmbeddedDisplayShowTab } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayShowTab";
 import { Log } from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { SidebarGroupShowBox } from "../../helperWidgets/SidebarComponents/SidebarGroupShowBox";
 
 
 export class GroupSidebar extends BaseWidgetSidebar {
@@ -21,6 +22,7 @@ export class GroupSidebar extends BaseWidgetSidebar {
     _sidebarEmbeddedDisplayTabWidth: SidebarEmbeddedDisplayTabWidth;
     _sidebarEmbeddedDisplayTabHeight: SidebarEmbeddedDisplayTabHeight;
     _sidebarEmbeddedDisplayShowTab: SidebarEmbeddedDisplayShowTab;
+    _sidebarGroupShowBox: SidebarGroupShowBox;
 
     constructor(group: Group) {
         super(group);
@@ -31,7 +33,7 @@ export class GroupSidebar extends BaseWidgetSidebar {
         this._sidebarEmbeddedDisplayTabWidth = new SidebarEmbeddedDisplayTabWidth(this);
         this._sidebarEmbeddedDisplayTabHeight = new SidebarEmbeddedDisplayTabHeight(this);
         this._sidebarEmbeddedDisplayShowTab = new SidebarEmbeddedDisplayShowTab(this);
-
+        this._sidebarGroupShowBox = new SidebarGroupShowBox(this);
     }
 
 
@@ -134,6 +136,7 @@ export class GroupSidebar extends BaseWidgetSidebar {
                     {this.getSidebarEmbeddedDisplayTabWidth().getElement()}
                     {this.getSidebarEmbeddedDisplayTabHeight().getElement()}
                     {this.getSidebarEmbeddedDisplayShowTab().getElement()}
+                    {this.getSidebarGroupShowBox().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
 
@@ -218,6 +221,10 @@ export class GroupSidebar extends BaseWidgetSidebar {
 
     getSidebarEmbeddedDisplayShowTab = () => {
         return this._sidebarEmbeddedDisplayShowTab;
+    }
+
+    getSidebarGroupShowBox = () => {
+        return this._sidebarGroupShowBox;
     }
     // ------------------------- style -------------------------
 

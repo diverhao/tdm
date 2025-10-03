@@ -73,6 +73,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
             tabDefaultColor: "rgba(220,220,220,1)",
             showTab: true,
             // isWebpage: false,
+            resize: "none", // "none" | "crop" | "fit"
         },
         channelNames: [],
         groupNames: [],
@@ -341,7 +342,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
             "visible", // not in tdm
             "macros",
             "file",
-            "resize", // not in tdm
+            "resize",
             "group_name", // not in tdm
             "transparent", // not in tdm
             "border_width",
@@ -350,6 +351,8 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
 
         tdl["style"]["width"] = 100;
         tdl["style"]["height"] = 30;
+        tdl["style"]["top"] = 0;
+        tdl["style"]["left"] = 0;
 
 
         for (const propertyName of propertyNames) {
@@ -381,10 +384,16 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
                     tdl["style"]["borderWidth"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "border_color") {
                     tdl["style"]["borderColor"] = BobPropertyConverter.convertBobColor(propertyValue);
+                } else if (propertyName === "resize") {
+                    tdl["text"]["resize"] = BobPropertyConverter.convertBobEmbeddedDisplayResize(propertyValue);
                 } else {
                     console.log("Skip property", `"${propertyName}"`);
                 }
             }
+        }
+
+        if (tdl["itemMacros"].length < 1 && tdl["tdlFileNames"].length > 0) {
+            tdl["itemMacros"].push([]);
         }
 
         return tdl;

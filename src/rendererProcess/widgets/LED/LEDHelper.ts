@@ -325,6 +325,12 @@ export class LEDHelper extends BaseWidgetHelper {
 			"y",
 		];
 
+        tdl["style"]["top"] = 0;
+        tdl["style"]["left"] = 0;
+        tdl["style"]["width"] = 20;
+        tdl["style"]["height"] = 20;
+        tdl["text"]["fallbackText"] = "";
+
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {

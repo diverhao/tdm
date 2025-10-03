@@ -365,6 +365,11 @@ export class ComboBoxHelper extends BaseWidgetHelper {
             "password", // not in tdm
         ];
 
+        tdl["style"]["top"] = 0;
+        tdl["style"]["left"] = 0;
+        tdl["style"]["width"] = 100;
+        tdl["style"]["height"] = 30;
+
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {

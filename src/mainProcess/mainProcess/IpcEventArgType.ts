@@ -661,6 +661,8 @@ export type IpcEventArgType2 = {
         widgetKey: string;
         iframeDisplayId: string;
         tdlBackgroundColor: string;
+        tdlCanvasWidth: number | string;
+        tdlCanvasHeight: number | string;
     },
 
     "request-epics-dbd": {

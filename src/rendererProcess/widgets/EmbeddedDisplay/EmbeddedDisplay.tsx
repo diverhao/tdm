@@ -71,6 +71,9 @@ export class EmbeddedDisplay extends BaseWidget {
 
     iframeBackgroundColor = 'rgba(0,0,0,0)';
 
+    private _tdlCanvasWidth: number | string = 100;
+    private _tdlCanvasHeight: number | string = 100;
+
 
     constructor(widgetTdl: type_EmbeddedDisplay_tdl) {
         super(widgetTdl);
@@ -295,6 +298,19 @@ export class EmbeddedDisplay extends BaseWidget {
         } else {
             const ipcServerPort = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().getIpcServerPort();
             const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
+            let resizeFactor = 1;
+            const resize = this.getAllText()["resize"]; // "none" | "fit" | "crop"
+            if (resize === "fit") {
+                const tdlCanvasHeight = this.getTdlCanvasHeight();
+                const tdlCanvasWidth = this.getTdlCanvasWidth();
+                const widgetWidth = this.getAllStyle()["width"];
+                const widgetHeight = this.getAllStyle()["height"];
+                if (typeof tdlCanvasWidth === "number" && typeof tdlCanvasHeight === "number") {
+                    resizeFactor = Math.min(widgetWidth / tdlCanvasWidth, widgetHeight / tdlCanvasHeight);
+            console.log("resize factor ===================", resizeFactor, widgetWidth, tdlCanvasWidth, widgetHeight, tdlCanvasHeight)
+                }
+            }
+
 
             let iframeSrc = `../../../mainProcess/windows/DisplayWindow/DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${this.iframeDisplayId}`;
             if (mainProcessMode === "web") {
@@ -309,7 +325,8 @@ export class EmbeddedDisplay extends BaseWidget {
                     id="embedded-display"
                     width="100%"
                     height="100%"
-                    
+                    scrolling={resize === "crop" ? "no" : "auto"}
+
                     referrerPolicy="no-referrer"
                     // ! iframe and its parent share the same sessionStorage, which causes an issue 
                     // ! that we cannot refresh the web page
@@ -318,6 +335,9 @@ export class EmbeddedDisplay extends BaseWidget {
                     style={{
                         border: "none",
                         backgroundColor: this.iframeBackgroundColor,
+                        // resize = "fit"
+                        zoom: resize === "fit" ? `${resizeFactor * 100}%` : "100%", // not work in Firefox
+                        overflow: resize === "crop" ? "hidden" : "visible",
                     }}
                 >
                 </iframe>
@@ -332,8 +352,25 @@ export class EmbeddedDisplay extends BaseWidget {
         g_flushWidgets();
     };
 
+
     setIframeBackgroundColor = (tdlBackgroundColor: string) => {
         this.iframeBackgroundColor = tdlBackgroundColor;
+    }
+
+    setTdlCanvasWidth = (width: number | string) => {
+        this._tdlCanvasWidth = width;
+    }
+
+    setTdlCanvasHeight = (height: number | string) => {
+        this._tdlCanvasHeight = height;
+    }
+
+    getTdlCanvasWidth = () => {
+        return this._tdlCanvasWidth;
+    }
+
+    getTdlCanvasHeight = () => {
+        return this._tdlCanvasHeight;
     }
 
 
@@ -536,6 +573,7 @@ export class EmbeddedDisplay extends BaseWidget {
             tabDefaultColor: "rgba(220,220,220,1)",
             showTab: true,
             isWebpage: false,
+            resize: "none", // "none" | "crop" | "fit"
         },
         channelNames: [],
         groupNames: [],

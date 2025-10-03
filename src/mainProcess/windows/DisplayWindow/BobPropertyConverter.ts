@@ -56,6 +56,7 @@ import { DataViewerHelper } from "../../../rendererProcess/widgets/DataViewer/Da
 import { ImageHelper } from "../../../rendererProcess/widgets/Image/ImageHelper";
 import { XYPlotHelper } from "../../../rendererProcess/widgets/XYPlot/XYPlotHelper";
 import { EmbeddedDisplayHelper } from "../../../rendererProcess/widgets/EmbeddedDisplay/EmbeddedDisplayHelper";
+import { GroupHelper } from "../../../rendererProcess/widgets/Group/GroupHelper";
 
 export class BobPropertyConverter {
     constructor() { }
@@ -69,6 +70,7 @@ export class BobPropertyConverter {
 
         // go through all fields, parse Canvas
         // the '$' and 'widget' are ignored, all others are going to be part of Canvas
+
         const widgetTdl = CanvasHelper.convertBobToTdl(bobJson);
         const widgetKey = widgetTdl["widgetKey"];
         tdl[widgetKey] = widgetTdl;
@@ -203,6 +205,11 @@ export class BobPropertyConverter {
                 const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson);
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "group") {
+                const widgetsTdl = GroupHelper.convertBobToTdl(bobWidgetJson);
+                for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
+                    tdl[widgetKey] = widgetTdl;
+                }
             } else {
                 Log.info("Skip converting widget", bobWidgetType);
             }
@@ -430,6 +437,10 @@ export class BobPropertyConverter {
                 result.push(this.convertBobAction_command(actionData));
             } else if (type === "open_webpage") {
                 result.push(this.convertBobAction_open_webpage(actionData));
+            } else if (type === "execute") { // execute script, not in tdm
+                result.push(this.convertBobAction_execute(actionData));
+            } else if (type === "open_file") { // open file, not in tdm
+                result.push(this.convertBobAction_open_file(actionData));
             }
         }
         return result;
@@ -661,6 +672,77 @@ export class BobPropertyConverter {
             type: "OpenWebPage",
             label: label,
             url: url,
+        }
+    }
+
+
+    /**
+     * Convert
+     * 
+     *     {
+     *         "$": {
+     *             "type": "execute"
+     *         },
+     *         "description": [
+     *             "Execute Script"
+     *         ],
+     *         "script": [
+     *             {
+     *                 "$": {
+     *                     "file": "EmbeddedPy"
+     *                 },
+     *                 "text": [
+     *                     "# Embedded python script\nfrom org.csstudio.display.builder.runtime.script import PVUtil, ScriptUtil\nprint 'Hello'\n# widget.setPropertyValue('text', PVUtil.getString(pvs[0]))"
+     *                 ]
+     *             }
+     *         ]
+     *     }
+     * 
+     * to an invalid ExecuteCommand
+     */
+    static convertBobAction_execute = (
+        propertyValue: any
+    ) => {
+        const desc = this.convertBobString(propertyValue["description"]);
+        return {
+            type: "ExecuteCommand",
+            label: `${desc} (Execute Script) not available`,
+            command: "",
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
+        }
+    }
+
+    /**
+     * Convert
+     * 
+     *     {
+     *         "$": {
+     *             "type": "open_file"
+     *         },
+     *         "description": [
+     *             "Open File"
+     *         ],
+     *         "file": [
+     *             "abc"
+     *         ]
+     *     }
+     * 
+     * to an invalid ExecuteCommand
+     */
+    static convertBobAction_open_file = (
+        propertyValue: any
+    ) => {
+
+        const desc = this.convertBobString(propertyValue["description"]);
+        return {
+            type: "ExecuteCommand",
+            label: `${desc} (Open File) not available`,
+            command: "",
+            confirmOnWrite: false,
+            confirmOnWriteUsePassword: false,
+            confirmOnWritePassword: "",
         }
     }
 
@@ -1722,6 +1804,100 @@ export class BobPropertyConverter {
             autoScale: autoScale,
             showGrid: showGrid,
             numGrids: numGrids,
+        }
+    }
+
+    /**
+     * Convert ["1"] to "fit"
+     */
+    static convertBobEmbeddedDisplayResize = (
+        propertyValue: string[]
+    ) => {
+        const numVal = this.convertBobNum(propertyValue);
+        if (numVal === 0) {
+            return "none";
+        } else if (numVal === 1) {
+            return "fit";
+        } else if (numVal === 2) {
+            return "fit";
+        } else if (numVal === 3) {
+            return "fit";
+        } else if (numVal === 4) {
+            return "crop";
+        } else {
+            return "fit";
+        }
+    }
+
+    /**
+     * Convert 
+     *           [
+     *               {
+     *                   "$": {
+     *                       "type": "label",
+     *                       "version": "2.0.0"
+     *                   },
+     *                   "name": [
+     *                       "Label"
+     *                   ],
+     *                   "x": [
+     *                       "27"
+     *                   ],
+     *                   "y": [
+     *                       "27"
+     *                   ],
+     *                   "width": [
+     *                       "180"
+     *                   ],
+     *                   "height": [
+     *                       "120"
+     *                   ],
+     *                   "background_color": [
+     *                       {
+     *                           "color": [
+     *                               {
+     *                                   "$": {
+     *                                       "name": "INVALID",
+     *                                       "red": "255",
+     *                                       "green": "0",
+     *                                       "blue": "255"
+     *                                   }
+     *                               }
+     *                           ]
+     *                       }
+     *                   ],
+     *                   "transparent": [
+     *                       "false"
+     *                   ]
+     *               }
+     *           ]
+     * 
+     * to a tdl-like json file
+     * 
+     */
+
+    static convertBobGroupWidgets = (
+        propertyValue: any[]
+    ) => {
+        const tdl: Record<string, any> = {};
+        this.parseBob({widget: propertyValue}, tdl);
+        delete tdl["Canvas"];
+        return tdl;
+    }
+
+    /**
+     * Convert ["1"] to true or false
+     * 
+     * The true/false is for tdl["text"]["showBox"]
+     */
+    static convertBobGroupStyle = (
+        propertyValue: string[]
+    ) => {
+        const numVal = this.convertBobNum(propertyValue);
+        if (numVal === 3) {
+            return false;
+        } else {
+            return true;
         }
     }
 

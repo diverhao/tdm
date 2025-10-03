@@ -8,7 +8,7 @@ import * as GlobalMethods from "../../global/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_Group_tdl = {
     type: string;
@@ -275,52 +275,54 @@ export class Group extends BaseWidget {
                     top: this.calcTabsTop(),
                 }}
             >
-                {this.getItemNames().map((itemName: string, index: number) => {
-                    return (
-                        <div
-                            key={`${itemName}-${index}-${this.getItemNames()[index]}`}
-                            style={{
-                                display: "inline-flex",
-                                justifyContent: this.getText()["horizontalAlign"],
-                                alignItems: "center",
-                                width:
-                                    this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom"
-                                        ? this.getText()["tabWidth"]
-                                        : "100%",
-                                height: this.getText()["tabHeight"],
-                                backgroundColor:
-                                    this.getSelectedGroup() === index ? this.getText()["tabSelectedColor"] : this.getText()["tabDefaultColor"],
-                                // border: "solid 1px black",
-                                fontWeight: this.getSelectedGroup() === index ? "bold" : "normal",
-                                overflow: "hidden",
-                                whiteSpace: "nowrap",
-                                padding: 4,
-                                borderRadius: 4,
-                                margin: 3,
-                                // marginBottom: 5,
-                                // marginTop: 15,
-                                // marginLeft: 15,
-                            }}
-                            onMouseDown={(event: any) => {
-                                // event.preventDefault();
-                                // forceUpdate({});
-                                // this.selectTab(index);
-                                event.stopPropagation();
-                                this.updateGroup(index);
+                {
+                    this.getAllText()["showTab"] === false ? null :
+                        this.getItemNames().map((itemName: string, index: number) => {
+                            return (
+                                <div
+                                    key={`${itemName}-${index}-${this.getItemNames()[index]}`}
+                                    style={{
+                                        display: "inline-flex",
+                                        justifyContent: this.getText()["horizontalAlign"],
+                                        alignItems: "center",
+                                        width:
+                                            this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom"
+                                                ? this.getText()["tabWidth"]
+                                                : "100%",
+                                        height: this.getText()["tabHeight"],
+                                        backgroundColor:
+                                            this.getSelectedGroup() === index ? this.getText()["tabSelectedColor"] : this.getText()["tabDefaultColor"],
+                                        // border: "solid 1px black",
+                                        fontWeight: this.getSelectedGroup() === index ? "bold" : "normal",
+                                        overflow: "hidden",
+                                        whiteSpace: "nowrap",
+                                        padding: 4,
+                                        borderRadius: 4,
+                                        margin: 3,
+                                        // marginBottom: 5,
+                                        // marginTop: 15,
+                                        // marginLeft: 15,
+                                    }}
+                                    onMouseDown={(event: any) => {
+                                        // event.preventDefault();
+                                        // forceUpdate({});
+                                        // this.selectTab(index);
+                                        event.stopPropagation();
+                                        this.updateGroup(index);
 
-                                g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                                        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
 
-                                if (g_widgets1.isEditing()) {
-                                    this.selectGroup(index, true);
-                                }
-                                g_widgets1.updateSidebar(true);
-                                g_flushWidgets();
-                            }}
-                        >
-                            {itemName}
-                        </div>
-                    );
-                })}
+                                        if (g_widgets1.isEditing()) {
+                                            this.selectGroup(index, true);
+                                        }
+                                        g_widgets1.updateSidebar(true);
+                                        g_flushWidgets();
+                                    }}
+                                >
+                                    {itemName}
+                                </div>
+                            );
+                        })}
             </div>
         );
     };
@@ -395,6 +397,9 @@ export class Group extends BaseWidget {
                     left: 0,
                     backgroundColor: this.getItemBackgroundColors()[index],
                     visibility: index === this.getSelectedGroup() ? "visible" : "hidden",
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
                 }}
                 onMouseDown={(event: any) => {
                     this._handleMouseDown(event);
@@ -412,7 +417,32 @@ export class Group extends BaseWidget {
                     }
                 }}
                 onDoubleClick={this._handleMouseDoubleClick}
-            ></div>
+            >
+                {this.getText()["showBox"] === false ? null :
+                    <>
+                        <div
+                            style={{
+                                left: 30,
+                                top: 0,
+                                position: "absolute",
+                                backgroundColor: this.getItemBackgroundColors()[index],
+                                paddingLeft: 5,
+                                paddingRight: 5,
+                            }}
+                        >
+                            {this.getItemNames()[index]}
+                        </div>
+                        <div
+                            style={{
+                                width: "calc(100% - 15px)",
+                                height: "calc(100% - 15px)",
+                                border: `1.5px solid ${this.getAllStyle()["color"]}`
+                            }}
+                        >
+                        </div>
+                    </>
+                }
+            </div>
         );
     };
 
@@ -715,6 +745,7 @@ export class Group extends BaseWidget {
             tabSelectedColor: "rgba(180,180,180,1)",
             tabDefaultColor: "rgba(220,220,220,1)",
             showTab: true,
+            showBox: false,
         },
         channelNames: [],
         groupNames: [],

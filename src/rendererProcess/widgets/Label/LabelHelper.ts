@@ -339,6 +339,11 @@ export class LabelHelper extends BaseWidgetHelper {
 
         let transparent = true;
         tdl["text"]["wrapWord"] = true;
+        tdl["style"]["top"] = 0;
+        tdl["style"]["left"] = 0;
+        tdl["style"]["width"] = 100;
+        tdl["style"]["height"] = 20;
+        tdl["style"]["backgroundColor"] = "rgba(255,255,255,0)";
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -388,7 +393,6 @@ export class LabelHelper extends BaseWidgetHelper {
                 } else if (propertyName === "text") {
                     tdl["text"]["text"] = BobPropertyConverter.convertBobString(propertyValue);
                 } else if (propertyName === "transparent") {
-                    console.log("tarnsparent ......", propertyValue)
                     transparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "font") {
                     const font = BobPropertyConverter.convertBobFont(propertyValue);
@@ -407,6 +411,9 @@ export class LabelHelper extends BaseWidgetHelper {
                 }
             }
         }
+
+        // the TDM default font is slightly wider
+        tdl["style"]["fontSize"] = tdl["style"]["fontSize"] - 1;
 
         if (transparent === true) {
             const originalRgbaColor = tdl["style"]["backgroundColor"];

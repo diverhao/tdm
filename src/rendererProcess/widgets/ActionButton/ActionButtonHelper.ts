@@ -448,10 +448,13 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         let confirmMessage = "";
         let password = "";
         let isTransparent = false;
+        tdl["style"]["left"] = 0;
+        tdl["style"]["top"] = 0;
         tdl["style"]["width"] = 100;
         tdl["style"]["height"] = 30;
         tdl["style"]["backgroundColor"] = "rgba(210, 210, 210, 1)";
         tdl["text"]["appearance"] = "contemporary";
+        tdl["text"]["text"] = "$(actions)";
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -509,7 +512,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
             }
         }
 
-        console.log(confirmDialog, confirmMessage, password);
+
         const actions = tdl["actions"];
         for (const action of actions) {
             if (action["type"] === "WritePV" || action["type"] === "ExecuteCommand") {
@@ -517,7 +520,13 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                 action["confirmOnWriteUsePassword"] = password === "" ? false : true;
                 action["confirmOnWritePassword"] = password;
             }
-
+        }
+        if (tdl["text"]["text"] === "$(actions)") {
+            if (actions.length === 1) {
+                tdl["text"]["text"] = actions[0]["label"];
+            } else {
+                tdl["text"]["text"] = `Choose 1 of ${actions.length}`;
+            }
         }
 
 

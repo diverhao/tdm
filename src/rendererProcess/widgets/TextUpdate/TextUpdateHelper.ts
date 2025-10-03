@@ -573,6 +573,12 @@ export class TextUpdateHelper extends BaseWidgetHelper {
         ];
 
         let isTransparent = false;
+        tdl["style"]["top"] = 0;
+        tdl["style"]["left"] = 0;
+        tdl["style"]["width"] = 100;
+        tdl["style"]["height"] = 20;
+        tdl["style"]["backgroundColor"] = "rgba(240,240,240,1)";
+
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];

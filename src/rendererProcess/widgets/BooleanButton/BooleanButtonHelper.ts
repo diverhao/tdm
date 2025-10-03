@@ -465,6 +465,12 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
         let offImage = "";
         let onImage = "";
 
+        tdl["style"]["left"] = 0;
+        tdl["style"]["top"] = 0;
+        tdl["style"]["width"] = 100;
+        tdl["style"]["height"] = 30;
+        tdl["text"]["appearance"] = "contemporary";
+
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
@@ -530,6 +536,8 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
                 }
             }
         }
+
+        tdl["text"]["boxWidth"] = Math.ceil(0.4 * Math.min(tdl["style"]["width"], tdl["style"]["height"]))
 
         if (tdl["text"]["mode"] === "push and reset (inverted)") {
             tdl["text"]["mode"] = "push and reset";

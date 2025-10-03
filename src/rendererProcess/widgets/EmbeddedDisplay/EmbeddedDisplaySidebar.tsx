@@ -11,6 +11,7 @@ import { SidebarEmbeddedDisplayTabHeight } from "../../helperWidgets/SidebarComp
 import { SidebarEmbeddedDisplayShowTab } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayShowTab";
 import { Log } from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { SidebarEmbeddedDisplayResize } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayResize";
 
 export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {
 
@@ -22,6 +23,7 @@ export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {
     _sidebarEmbeddedDisplayTabWidth: SidebarEmbeddedDisplayTabWidth;
     _sidebarEmbeddedDisplayTabHeight: SidebarEmbeddedDisplayTabHeight;
     _sidebarEmbeddedDisplayShowTab: SidebarEmbeddedDisplayShowTab;
+    _sidebarEmbeddedDisplayResize: SidebarEmbeddedDisplayResize;
 
     beingUpdatedItemIndex: number = -1;
 
@@ -35,6 +37,7 @@ export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {
         this._sidebarEmbeddedDisplayTabWidth = new SidebarEmbeddedDisplayTabWidth(this);
         this._sidebarEmbeddedDisplayTabHeight = new SidebarEmbeddedDisplayTabHeight(this);
         this._sidebarEmbeddedDisplayShowTab = new SidebarEmbeddedDisplayShowTab(this);
+        this._sidebarEmbeddedDisplayResize = new SidebarEmbeddedDisplayResize(this);
     }
 
     // ------------------------------------- elements --------------------------------------
@@ -140,6 +143,7 @@ export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {
                     {this.getSidebarEmbeddedDisplayTabWidth().getElement()}
                     {this.getSidebarEmbeddedDisplayTabHeight().getElement()}
                     {this.getSidebarEmbeddedDisplayShowTab().getElement()}
+                    {this.getSidebarEmbeddedDisplayResize().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
 
@@ -225,6 +229,10 @@ export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {
 
     getSidebarEmbeddedDisplayShowTab = () => {
         return this._sidebarEmbeddedDisplayShowTab;
+    }
+
+    getSidebarEmbeddedDisplayResize = () => {
+        return this._sidebarEmbeddedDisplayResize;
     }
 
     // ------------------------- style -------------------------

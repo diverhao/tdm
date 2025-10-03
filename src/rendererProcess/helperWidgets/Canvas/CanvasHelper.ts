@@ -145,6 +145,9 @@ export class CanvasHelper {
 			"y", // alwasy 0 in tdm
 		];
 
+        tdl["style"]["width"] = 800;
+        tdl["style"]["height"] = 600;
+
 		for (const propertyName of propertyNames) {
 			const propertyValue = bobJson[propertyName];
 			if (propertyValue === undefined) {

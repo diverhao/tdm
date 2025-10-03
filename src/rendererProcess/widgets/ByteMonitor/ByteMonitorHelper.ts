@@ -226,6 +226,10 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
             "y",
         ];
 
+        tdl["style"]["top"] = 0;
+        tdl["style"]["left"] = 0;
+        tdl["style"]["width"] = 160;
+        tdl["style"]["height"] = 20;
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
