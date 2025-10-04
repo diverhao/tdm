@@ -71,6 +71,7 @@ export class TableHelper extends BaseWidgetHelper {
             tabSelectedColor: "rgba(180,180,180,1)",
             tabDefaultColor: "rgba(220,220,220,1)",
             showTab: true,
+            gap: 5,
         },
         channelNames: [],
         groupNames: [],
@@ -113,7 +114,7 @@ export class TableHelper extends BaseWidgetHelper {
             "file",
             "instances",
             "horizontal", // not in tdm
-            "gap",  // not in tdm
+            "gap",
             "wrap_count", // not in tdm
             "transparent", // not in tdm
         ];
@@ -121,6 +122,7 @@ export class TableHelper extends BaseWidgetHelper {
         tdl["style"]["width"] = 400;
         tdl["style"]["height"] = 300;
         tdl["style"]["borderWidth"] = 0;
+        tdl["text"]["gap"] = 10;
 
         let childrenWidgetsTdl: Record<string, any> = {};
 
@@ -148,6 +150,8 @@ export class TableHelper extends BaseWidgetHelper {
                     tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "instances") {
                     tdl["macros"] = BobPropertyConverter.convertBobTemplateInstances(propertyValue);
+                } else if (propertyName === "gap") {
+                    tdl["text"]["gap"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "file") {
                     const fileName = BobPropertyConverter.convertBobString(propertyValue);
                     const currentFolder = path.dirname(fullTdlFileName);
