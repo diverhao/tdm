@@ -206,6 +206,10 @@ export class BobPropertyConverter {
                 const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson, "embedded");
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "webbrowser") {
+                const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson, "webbrowser");
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "navtabs") {
                 const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson, "navtabs");
                 const widgetKey = widgetTdl["widgetKey"];
@@ -1895,7 +1899,7 @@ export class BobPropertyConverter {
         propertyValue: any[]
     ) => {
         const tdl: Record<string, any> = {};
-        await this.parseBob({ widget: propertyValue }, tdl);
+        await this.parseBob({ widget: propertyValue }, tdl, "");
         delete tdl["Canvas"];
         return tdl;
     }

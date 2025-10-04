@@ -307,7 +307,6 @@ export class EmbeddedDisplay extends BaseWidget {
                 const widgetHeight = this.getAllStyle()["height"];
                 if (typeof tdlCanvasWidth === "number" && typeof tdlCanvasHeight === "number") {
                     resizeFactor = Math.min(widgetWidth / tdlCanvasWidth, widgetHeight / tdlCanvasHeight);
-            console.log("resize factor ===================", resizeFactor, widgetWidth, tdlCanvasWidth, widgetHeight, tdlCanvasHeight)
                 }
             }
 

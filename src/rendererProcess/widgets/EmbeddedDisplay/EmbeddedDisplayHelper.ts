@@ -324,7 +324,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
         return tdl;
     };
 
-    static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "embedded" | "navtabs"): type_EmbeddedDisplay_tdl => {
+    static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "embedded" | "navtabs" | "webbrowser"): type_EmbeddedDisplay_tdl => {
         console.log("\n------------", `Parsing "embedded"`, "------------------\n");
         const tdl = this.generateDefaultTdl("EmbeddedDisplay");
         // all properties for this widget
@@ -357,6 +357,9 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
             "font",
             "active_tab", // not in tdm
             "tabs",
+            // below are only in webbrowser
+            "url",
+            "show_toolbar", // not in tdm
         ];
 
         tdl["style"]["width"] = 100;
@@ -408,6 +411,10 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
                     tdl["tdlFileNames"] = tabsResult["tdlFileNames"];
                     tdl["itemMacros"] = tabsResult["itemMacros"];
                     tdl["itemNames"] = tabsResult["itemNames"];
+                } else if (propertyName === "url") {
+                    tdl["tdlFileNames"].push(BobPropertyConverter.convertBobString(propertyValue));
+                    tdl["itemIsWebpage"].push(true);
+                    tdl["itemNames"].push("");
                 } else {
                     console.log("Skip property", `"${propertyName}"`);
                 }
@@ -425,6 +432,8 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
             // in navtabs, the tabs are part of the width and height
             tdl["style"]["top"] = tdl["style"]["top"] + 35;
             tdl["style"]["height"] = tdl["style"]["height"] - 35;
+        } else {
+            tdl["text"]["showTab"] = false;
         }
 
         return tdl;
