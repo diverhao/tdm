@@ -92,8 +92,11 @@ export class GroupHelper extends BaseWidgetHelper {
         return result as type_Group_tdl;
     };
 
-    static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Group_tdl => {
-        console.log("\n------------", `Parsing "group"`, "------------------\n");
+    /**
+     * "group" and "tabs" are converted to Group
+     */
+    static convertBobToTdl = async (bobWidgetJson: Record<string, any>, type: "group" | "tabs"): Promise<type_Group_tdl> => {
+        console.log("\n------------", `Parsing "${type}"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Group");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -115,20 +118,29 @@ export class GroupHelper extends BaseWidgetHelper {
             "background_color",
             "transparent",
             "widget",
+            "direction", // in Tabs, not in tdm
+            "tab_height", // in Tabs, not in tdm
+            "tabs", // in Tabs
         ];
 
         tdl["style"]["width"] = 300;
         tdl["style"]["height"] = 200;
+        if (type === "tabs") {
+            tdl["style"]["width"] = 400;
+            tdl["style"]["width"] = 300;
+        }
+        
         tdl["style"]["top"] = 0;
         tdl["style"]["left"] = 0;
 
         let transparent = false;
-        tdl["text"]["showTab"] = false;
-        tdl["text"]["showBox"] = true;
-        tdl["style"]["borderWidth"] = 0;
+        if (type === "group") {
+            tdl["text"]["showTab"] = false;
+            tdl["text"]["showBox"] = true;
+            tdl["style"]["borderWidth"] = 0;
+        }
 
         let widgetsTdl: Record<string, any> = {};
-
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
@@ -167,12 +179,24 @@ export class GroupHelper extends BaseWidgetHelper {
                     transparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "style") {
                     tdl["text"]["showBox"] = BobPropertyConverter.convertBobGroupStyle(propertyValue);
-                } else if (propertyName === "widget") {
-                    widgetsTdl = BobPropertyConverter.convertBobGroupWidgets(propertyValue);
+                } else if (propertyName === "widget" && type === "group") {
+                    widgetsTdl = await BobPropertyConverter.convertBobGroupWidgets(propertyValue);
+                } else if (propertyName === "tabs" && type === "tabs") {
+                    const tabsData = propertyValue;
+                    const tabsResult = await BobPropertyConverter.convertBobTabsTabs(tabsData);
+                    tdl["itemNames"] = tabsResult["itemNames"];
+                    widgetsTdl = tabsResult["widgetsTdl"];
+                    tdl["widgetKeys"] = tabsResult["widgetKeys"];
                 } else {
                     console.log("Skip property", `"${propertyName}"`);
                 }
             }
+        }
+
+
+        tdl["itemBackgroundColors"] = [];
+        for (const itemName of tdl["itemNames"]) {
+            tdl["itemBackgroundColors"].push(tdl["style"]["backgroundColor"]);
         }
 
         if (transparent === true) {
@@ -184,23 +208,38 @@ export class GroupHelper extends BaseWidgetHelper {
             tdl["itemBackgroundColors"][0] = newColor;
         }
 
-        // combine them
+
+        if (type === "tabs") {
+            // if a widget is not in the selected tab, hide it
+            for (let index = 0; index < tdl["widgetKeys"].length; index++) {
+                if (index !== tdl["text"]["selectedGroup"]) {
+                    for (const widgetKey of tdl["widgetKeys"][index]) {
+                        widgetsTdl[widgetKey]["style"]["visibility"] = "hidden";
+                    }
+                }
+            }
+            // the tab is part of the widget size in bob file
+            tdl["style"]["top"] = tdl["style"]["top"] + 40;
+            tdl["style"]["height"] = tdl["style"]["height"] - 40;
+        }
+
+        // reposition the children widgets
         const left0 = tdl["style"]["left"];
         const top0 = tdl["style"]["top"];
         for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
-            tdl["widgetKeys"][0].push(widgetKey);
+            // tdl["widgetKeys"][0].push(widgetKey);
             const offset = tdl["text"]["showBox"] === true ? 15 : 0;
             widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + left0 + offset;
             widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + top0 + offset;
         }
 
         // result is an object that contains the Group widget and all its children widgets
-        const result: Record<string, any> = {};
-        result[tdl["widgetKey"]] = tdl;
+        const groupWidgetTdl: Record<string, any> = {};
+        groupWidgetTdl[tdl["widgetKey"]] = tdl;
 
         return {
-            ...result,
-            ...widgetsTdl
+            ...groupWidgetTdl, // group widget tdl
+            ...widgetsTdl, // children widget tdls
         } as any;
     };
 }

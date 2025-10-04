@@ -581,7 +581,7 @@ export class EmbeddedDisplay extends BaseWidget {
         tdlFileNames: [],
         itemNames: [],
         itemMacros: [],
-        itemIsWebpage: [false],
+        itemIsWebpage: [],
     };
 
     // not getDefaultTdl(), always generate a new key

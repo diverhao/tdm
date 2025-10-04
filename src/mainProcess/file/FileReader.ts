@@ -352,7 +352,7 @@ export class FileReader {
             // ! will be replaced, xml2json has some compatible issue
             // ! let xmlJSON = JSON.parse(parser.toJson(xml));
             // console.log("------------->", JSON.stringify(xmlJSON, null, 2));
-            BobPropertyConverter.parseBob(bobJson["display"], tdl);
+            await BobPropertyConverter.parseBob(bobJson["display"], tdl, fullTdlFileName);
             console.log(JSON.stringify(tdl, null, 4));
         } else if (tdlFileType === "edl") {
             if (!this.isRemotePath(fullTdlFileName)) {

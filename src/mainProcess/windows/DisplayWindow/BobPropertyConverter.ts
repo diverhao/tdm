@@ -57,6 +57,7 @@ import { ImageHelper } from "../../../rendererProcess/widgets/Image/ImageHelper"
 import { XYPlotHelper } from "../../../rendererProcess/widgets/XYPlot/XYPlotHelper";
 import { EmbeddedDisplayHelper } from "../../../rendererProcess/widgets/EmbeddedDisplay/EmbeddedDisplayHelper";
 import { GroupHelper } from "../../../rendererProcess/widgets/Group/GroupHelper";
+import { TableHelper } from "../../../rendererProcess/widgets/Table/TableHelper";
 
 export class BobPropertyConverter {
     constructor() { }
@@ -65,7 +66,7 @@ export class BobPropertyConverter {
         return Object.keys(bob).includes("widget");
     };
 
-    static parseBob = (bobJson: Record<string, any>, tdl: Record<string, any>) => {
+    static parseBob = async (bobJson: Record<string, any>, tdl: Record<string, any>, fullTdlFileName: string) => {
         // let tdl: Record<string, any> = {};
 
         // go through all fields, parse Canvas
@@ -202,11 +203,25 @@ export class BobPropertyConverter {
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "embedded") {
-                const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson);
+                const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson, "embedded");
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "navtabs") {
+                const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson, "navtabs");
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "group") {
-                const widgetsTdl = GroupHelper.convertBobToTdl(bobWidgetJson);
+                const widgetsTdl = await GroupHelper.convertBobToTdl(bobWidgetJson, "group");
+                for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
+                    tdl[widgetKey] = widgetTdl;
+                }
+            } else if (bobWidgetType === "tabs") {
+                const widgetsTdl = await GroupHelper.convertBobToTdl(bobWidgetJson, "tabs");
+                for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
+                    tdl[widgetKey] = widgetTdl;
+                }
+            } else if (bobWidgetType === "template") {
+                const widgetsTdl = await TableHelper.convertBobToTdl(bobWidgetJson, fullTdlFileName);
                 for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
                     tdl[widgetKey] = widgetTdl;
                 }
@@ -982,7 +997,7 @@ export class BobPropertyConverter {
     ) => {
         const result: [string, string][] = [];
         const data = propertyValue[0];
-        if (data !== undefined) {
+        if (data !== undefined && typeof data !== "string") {
             for (const [key, val] of Object.entries(data)) {
                 const val0 = val[0];
                 if (typeof val0 === "string") {
@@ -1876,14 +1891,15 @@ export class BobPropertyConverter {
      * 
      */
 
-    static convertBobGroupWidgets = (
+    static convertBobGroupWidgets = async (
         propertyValue: any[]
     ) => {
         const tdl: Record<string, any> = {};
-        this.parseBob({widget: propertyValue}, tdl);
+        await this.parseBob({ widget: propertyValue }, tdl);
         delete tdl["Canvas"];
         return tdl;
     }
+
 
     /**
      * Convert ["1"] to true or false
@@ -1899,6 +1915,223 @@ export class BobPropertyConverter {
         } else {
             return true;
         }
+    }
+
+    /**
+     * Convert 
+     * 
+     *    [
+     *          {
+     *              "tab": [
+     *                  {
+     *                      "name": [
+     *                          "Tab 1"
+     *                      ],
+     *                      "children": [
+     *                          "\n        "
+     *                      ]
+     *                  },
+     *                  {
+     *                      "name": [
+     *                          "Tab 2"
+     *                      ],
+     *                      "children": [
+     *                          {
+     *                              "widget": [
+     *                                  {
+     *                                      "$": {
+     *                                          "type": "text-symbol",
+     *                                          "version": "2.0.0"
+     *                                      },
+     *                                      "name": [
+     *                                          "Text Symbol_1"
+     *                                      ],
+     *                                      "x": [
+     *                                          "118"
+     *                                      ],
+     *                                      "y": [
+     *                                          "89"
+     *                                      ],
+     *                                      "width": [
+     *                                          "135"
+     *                                      ],
+     *                                      "height": [
+     *                                          "60"
+     *                                      ]
+     *                                  }
+     *                              ]
+     *                          }
+     *                      ]
+     *                  }
+     *              ]
+     *          }
+     *      ]
+     * to {itemNames: ["Tab 1"], widgets: [widgetTdl, ...]}
+     */
+    static convertBobTabsTabs = async (
+        propertyValue: {
+            tab: {
+                name: string[],
+                children: { widget: Record<string, any>[] }[]
+            }[]
+        }[]
+    ) => {
+        const tabsData = propertyValue[0]['tab'];
+        const result: { itemNames: string[], widgetKeys: string[][], widgetsTdl: Record<string, any> } = {
+            itemNames: [], // ["tab-1", "tab-2"]
+            widgetsTdl: {}, // list of widget tdls
+            widgetKeys: [], // [["TextUpdate-xxx", "TextUpdate-xxx"], ["TextUpdate-xxx", "TextUpdate-xxx"]]
+        };
+        for (const tabData of tabsData) {
+            const tabResult = await this.convertBobTabsTab(tabData);
+            result["itemNames"].push(tabResult["itemName"]);
+            result["widgetsTdl"] = { ...result["widgetsTdl"], ...tabResult["widgetsTdl"] };
+            result["widgetKeys"].push(tabResult["widgetKeys"]);
+        }
+        return result;
+    }
+
+    static convertBobTabsTab = async (
+        tabData: {
+            name: string[],
+            children: { widget: Record<string, any>[] }[]
+        }
+    ) => {
+        try {
+            const itemName = this.convertBobString(tabData["name"]);
+            const widgetsData = tabData["children"][0]["widget"];
+            const widgetsTdl = await this.convertBobGroupWidgets(widgetsData)
+            return {
+                itemName: itemName,
+                widgetsTdl: widgetsTdl,
+                widgetKeys: Object.keys(widgetsTdl),
+            }
+        } catch (e) {
+            return {
+                itemName: "",
+                widgetsTdl: {},
+                widgetKeys: [],
+            }
+        }
+    }
+
+
+    /**
+     * From 
+     * 
+     *      [
+     *           {
+     *               "tab": [
+     *                   {
+     *                       "name": [
+     *                           "Tab 1"
+     *                       ],
+     *                       "file": [
+     *                           "abc"
+     *                       ],
+     *                       "macros": [
+     *                           {
+     *                               "a": [
+     *                                   "b"
+     *                               ],
+     *                               "c": [
+     *                                   "d"
+     *                               ]
+     *                           }
+     *                       ],
+     *                       "group_name": [
+     *                           ""
+     *                       ]
+     *                   },
+     *                   {
+     *                       "name": [
+     *                           "Tab 2"
+     *                       ],
+     *                       "file": [
+     *                           "def"
+     *                       ],
+     *                       "macros": [
+     *                           "\n        "
+     *                       ],
+     *                       "group_name": [
+     *                           ""
+     *                       ]
+     *                   }
+     *               ]
+     *           }
+     *       ]
+     * 
+     */
+    static convertBobNavTabsTabs = (
+        propertyValue: {
+            tab: {
+                name: string[],
+                file: string[],
+                group_name: string[],
+                macros: Record<string, string[]>[]
+            }[]
+        }[]
+    ) => {
+        const tabsData = propertyValue[0]['tab'];
+        const result: { itemNames: string[], tdlFileNames: string[], itemMacros: [string, string][][] } = {
+            itemNames: [], // ["tab-1", "tab-2"]
+            tdlFileNames: [], // ["file1.tdl", "file2.tdl"]
+            itemMacros: [], // [[["A", "Ring"], ["B", "Linac"]], [["A", "Ring"], ["B", "Linac"]]]
+        };
+        for (const tabData of tabsData) {
+            result["itemNames"].push(this.convertBobString(tabData["name"]));
+            result["tdlFileNames"].push(this.convertBobString(tabData["file"]));
+            result["itemMacros"].push(this.convertBobMacros(tabData["macros"]));
+        }
+        return result;
+    }
+
+    /**
+     * Convert 
+     * 
+     * [
+     *      {
+     *          "instance": [
+     *              {
+     *                  "macros": [
+     *                      {
+     *                          "a": [
+     *                              "b"
+     *                          ],
+     *                          "c": [
+     *                              "c"
+     *                          ]
+     *                      }
+     *                  ]
+     *              },
+     *              {
+     *                  "macros": [
+     *                      {
+     *                          "aa": [
+     *                              "bb"
+     *                          ],
+     *                          "cc": [
+     *                              "cc"
+     *                          ]
+     *                      }
+     *                  ]
+     *              }
+     *          ]
+     *      }
+     *  ]
+     * 
+     * to [[["a", "b"], ["c", "d"]], [["aa", "bb"], ["cc", "dd"]]]
+     */
+    static convertBobTemplateInstances = (
+        propertyValue: {instance: {macros: Record<string, string[]>[]}[]}[]
+    ) => {
+        const instancesData = propertyValue[0]["instance"];
+        const result: [string, string][][] = [];
+        for (const instanceData of instancesData ) {
+            const macorsData = instanceData["macros"];
+            result.push(this.convertBobMacros(macorsData));
+        }
+        return result;
     }
 
 }

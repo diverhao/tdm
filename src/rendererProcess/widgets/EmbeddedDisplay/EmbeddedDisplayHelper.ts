@@ -84,7 +84,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
         itemNames: [],
         // macros
         itemMacros: [],
-        itemIsWebpage: [false],
+        itemIsWebpage: [],
     };
     // not getDefaultTdl(), always generate a new key
     static generateDefaultTdl = (type: string): type_EmbeddedDisplay_tdl => {
@@ -324,7 +324,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
         return tdl;
     };
 
-    static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_EmbeddedDisplay_tdl => {
+    static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "embedded" | "navtabs"): type_EmbeddedDisplay_tdl => {
         console.log("\n------------", `Parsing "embedded"`, "------------------\n");
         const tdl = this.generateDefaultTdl("EmbeddedDisplay");
         // all properties for this widget
@@ -347,12 +347,23 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
             "transparent", // not in tdm
             "border_width",
             "border_color",
+            // belows are only in "navtabs"
+            "direction", // not in tdm
+            "tab_width", // not in tdm
+            "tab_height", // not in tdm
+            "tab_spacing", // not in tdm
+            "selected_color", // not in tdm
+            "deselected_color", // not in tdm
+            "font",
+            "active_tab", // not in tdm
+            "tabs",
         ];
 
         tdl["style"]["width"] = 100;
         tdl["style"]["height"] = 30;
         tdl["style"]["top"] = 0;
         tdl["style"]["left"] = 0;
+        tdl["itemIsWebpage"] = [];
 
 
         for (const propertyName of propertyNames) {
@@ -386,14 +397,34 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
                     tdl["style"]["borderColor"] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "resize") {
                     tdl["text"]["resize"] = BobPropertyConverter.convertBobEmbeddedDisplayResize(propertyValue);
+                } else if (propertyName === "font") {
+                    const font = BobPropertyConverter.convertBobFont(propertyValue);
+                    tdl["style"]["fontSize"] = font["fontSize"];
+                    tdl["style"]["fontWeight"] = font["fontWeight"];
+                    tdl["style"]["fontStyle"] = font["fontStyle"];
+                    tdl["style"]["fontFamily"] = font["fontFamily"];
+                } else if (propertyName === "tabs") {
+                    const tabsResult = BobPropertyConverter.convertBobNavTabsTabs(propertyValue);
+                    tdl["tdlFileNames"] = tabsResult["tdlFileNames"];
+                    tdl["itemMacros"] = tabsResult["itemMacros"];
+                    tdl["itemNames"] = tabsResult["itemNames"];
                 } else {
                     console.log("Skip property", `"${propertyName}"`);
                 }
             }
         }
 
-        if (tdl["itemMacros"].length < 1 && tdl["tdlFileNames"].length > 0) {
-            tdl["itemMacros"].push([]);
+        if (type === "embedded") {
+            if (tdl["itemMacros"].length < 1 && tdl["tdlFileNames"].length > 0) {
+                tdl["itemMacros"].push([]);
+            }
+        } else if (type === "navtabs") {
+            for (const tdlFileName of tdl["tdlFileNames"]) {
+                tdl["itemIsWebpage"].push(false);
+            }
+            // in navtabs, the tabs are part of the width and height
+            tdl["style"]["top"] = tdl["style"]["top"] + 35;
+            tdl["style"]["height"] = tdl["style"]["height"] - 35;
         }
 
         return tdl;
