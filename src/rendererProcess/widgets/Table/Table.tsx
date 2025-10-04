@@ -525,7 +525,7 @@ export class Table extends BaseWidget {
     createDynamicWidgets = () => {
 
         const templateWidgetsTdls = this.copyTemplateWidgetsTdls();
-        const margin = 5;
+        const margin = this.getText()["gap"];
 
         // find the range of all tempalte widgets
         let overallTop = 100000000;
@@ -559,7 +559,7 @@ export class Table extends BaseWidget {
                 const newWidgetKey = widgetTdl.type + "_" + GlobalMethods.generateNewWidgetKey();
                 widgetTdl.key = newWidgetKey;
                 widgetTdl.widgetKey = newWidgetKey;
-                widgetTdl.style.top = widgetTdl.style.top - dY + dH * ii + margin;
+                widgetTdl.style.top = widgetTdl.style.top - dY + dH * ii;
                 widgetTdl.style.left = widgetTdl.style.left - this.getStyle()["left"];
                 widgetTdl["groupNames"] = [];
                 tdl[newWidgetKey] = widgetTdl;
@@ -721,6 +721,7 @@ export class Table extends BaseWidget {
             tabSelectedColor: "rgba(180,180,180,1)",
             tabDefaultColor: "rgba(220,220,220,1)",
             showTab: true,
+            gap: 5,
         },
         channelNames: [],
         groupNames: [],

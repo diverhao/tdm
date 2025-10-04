@@ -4,15 +4,17 @@ import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { Log } from "../../../mainProcess/log/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 import { SidebarTableRowsConfig } from "../../helperWidgets/SidebarComponents/SidebarTableRowsConfig"
+import { SidebarTableGap } from "../../helperWidgets/SidebarComponents/SidebarTableGap";
 
 export class TableSidebar extends BaseWidgetSidebar {
 
     _sidebarTableRowsConfig: SidebarTableRowsConfig;
+    _sidebarTableGap: SidebarTableGap;
 
     constructor(table: Table) {
         super(table);
         this._sidebarTableRowsConfig = new SidebarTableRowsConfig(this);
-
+        this._sidebarTableGap = new SidebarTableGap(this);
     }
 
 
@@ -121,6 +123,7 @@ export class TableSidebar extends BaseWidgetSidebar {
                     <b>Rows</b>
                 </this._BlockTitle>
                 <this._BlockBody>
+                    {this.getSidebarTableGap().getElement()}
                     {this.getSidebarTableRowsConfig().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
@@ -163,6 +166,10 @@ export class TableSidebar extends BaseWidgetSidebar {
 
     getSidebarTableRowsConfig = () => {
         return this._sidebarTableRowsConfig;
+    }
+
+    getSidebarTableGap = () => {
+        return this._sidebarTableGap;
     }
 
     // ------------------------- style -------------------------
