@@ -388,9 +388,12 @@ export class Table extends BaseWidget {
             let regionRight = regionLeft + this._style.width;
             let regionDown = regionTop + this._style.height;
 
-            const isInside = regionLeft < widgetLeft && regionTop < widgetTop && regionDown > widgetDown && regionRight > widgetRight;
+            const isInside = regionLeft <= widgetLeft && regionTop <= widgetTop && regionDown >= widgetDown && regionRight >= widgetRight;
             if (isInside) {
-                this.getWidgetKeys().push(widget.getWidgetKey());
+                // exclude the Table widget itself
+                if (widget.getWidgetKey() !== this.getWidgetKey()) {
+                    this.getWidgetKeys().push(widget.getWidgetKey());
+                }
             }
         }
 
@@ -455,7 +458,6 @@ export class Table extends BaseWidget {
 
         if (widgetKeys !== undefined && widgetKeys.length > 0) {
             for (let widgetKey of widgetKeys) {
-                console.log(widgetKey)
                 const widget = g_widgets1.getWidget2(widgetKey);
                 if (widget instanceof BaseWidget) {
                     const widgetTdl = widget.getTdlCopy(true);

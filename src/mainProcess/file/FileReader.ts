@@ -354,6 +354,20 @@ export class FileReader {
             // console.log("------------->", JSON.stringify(xmlJSON, null, 2));
             await BobPropertyConverter.parseBob(bobJson["display"], tdl, fullTdlFileName);
             console.log(JSON.stringify(tdl, null, 4));
+        } else if (tdlFileType === "plt") {
+            const parser = new xml2js.Parser();
+            const pltContents = fs.readFileSync(fullTdlFileName, "utf-8");
+            // console.log(bobContents)
+            const pltJson = await parser.parseStringPromise(pltContents);
+            // console.log("parsing finished")
+            console.log(JSON.stringify(pltJson, null, 4))
+            // console.log("parsing finished 2")
+
+            // ! will be replaced, xml2json has some compatible issue
+            // ! let xmlJSON = JSON.parse(parser.toJson(xml));
+            // console.log("------------->", JSON.stringify(xmlJSON, null, 2));
+            await BobPropertyConverter.parsePlt(pltJson, tdl);
+            console.log(JSON.stringify(tdl, null, 4));
         } else if (tdlFileType === "edl") {
             if (!this.isRemotePath(fullTdlFileName)) {
                 const edlContents = fs.readFileSync(fullTdlFileName, "utf-8");

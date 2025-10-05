@@ -5,6 +5,8 @@ import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../global/GlobalMetho
 import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
 import { GlobalVariables } from "../../global/GlobalVariables";
+import path from "path";
+import { FileReader } from "../../../mainProcess/file/FileReader";
 
 
 export type type_DataViewer_tdl = {
@@ -372,7 +374,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
     };
 
 
-    static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_DataViewer_tdl => {
+    static convertBobToTdl = async (bobWidgetJson: Record<string, any>, type: "stripchart" | "databrowser", fullTdlFileName: string): Promise<type_DataViewer_tdl> => {
         console.log("\n------------", `Parsing "stripchart"`, "------------------\n");
         const tdl = this.generateDefaultTdl("DataViewer") as type_DataViewer_tdl;
         // all properties for this widget
@@ -422,6 +424,11 @@ export class DataViewerHelper extends BaseWidgetHelper {
             "configure", // not in tdm
             "open_full", // not in tdm
             "refresh_plot", // not in tdm
+
+            // below are in databrowser
+            "file",
+            "show_toolbar", // not in tdm
+            "selection_value_pv", // not in tdm
         ];
 
         let showGrid = true;
@@ -467,28 +474,144 @@ export class DataViewerHelper extends BaseWidgetHelper {
                     tdl["yAxes"] = BobPropertyConverter.convertBobStripchartTraces(propertyValue);
                 } else if (propertyName === "y_axes") {
                     bobYAxes = BobPropertyConverter.convertBobStripchartYAxes(propertyValue);
+                } else if (propertyName === "file") {
+                    // read the file
+                    const fileName = BobPropertyConverter.convertBobString(propertyValue);
+                    const currentFolder = path.dirname(fullTdlFileName);
+                    const childTdlData = await FileReader.readTdlFile(fileName, undefined, currentFolder);
+                    if (childTdlData !== undefined) {
+                        const dataViewerWidgetTdl = Object.values(childTdlData["tdl"])[1];
+                        tdl["yAxes"] = dataViewerWidgetTdl["yAxes"];
+                        tdl["channelNames"] = dataViewerWidgetTdl["channelNames"];
+                    }
                 } else {
                     console.log("Skip property", `"${propertyName}"`);
                 }
             }
         }
 
-        for (const yAxis of tdl["yAxes"]) {
-            // channel name is the "label"
-            const channelName = yAxis["label"].trim();
-            tdl["channelNames"].push(channelName);
+        if (type === "stripchart") {
+            for (const yAxis of tdl["yAxes"]) {
+                // channel name is the "label"
+                const channelName = yAxis["label"].trim();
+                tdl["channelNames"].push(channelName);
 
-            const bobYAxisIndex = yAxis["axis"];
-            const bobYAxis = bobYAxes[bobYAxisIndex];
-            if (bobYAxis !== undefined) {
-                yAxis["valMin"] = bobYAxis["valMin"];
-                yAxis["valMax"] = bobYAxis["valMax"];
-                yAxis["displayScale"] = bobYAxis["displayScale"];
-                yAxis["ticks"] = bobYAxis["ticks"];
-                yAxis["ticksText"] = bobYAxis["ticksText"];
+                const bobYAxisIndex = yAxis["axis"];
+                const bobYAxis = bobYAxes[bobYAxisIndex];
+                if (bobYAxis !== undefined) {
+                    yAxis["valMin"] = bobYAxis["valMin"];
+                    yAxis["valMax"] = bobYAxis["valMax"];
+                    yAxis["displayScale"] = bobYAxis["displayScale"];
+                    yAxis["ticks"] = bobYAxis["ticks"];
+                    yAxis["ticksText"] = bobYAxis["ticksText"];
+                }
+                delete yAxis["axis"];
             }
-            delete yAxis["axis"];
+        } else if (type === "databrowser") {
+            tdl.text.singleWidget = false;
+            tdl.style.boxSizing = "border-box";
+            tdl.style.padding = 0;
         }
+
+        return tdl;
+    };
+
+
+    /**
+     * it converts the contents inside <databrowser> ... </databrowser> to a DataViewer widget
+     */
+    static convertBobToTdl_databrowser = (bobWidgetJson: Record<string, any>): type_DataViewer_tdl => {
+        console.log("\n------------", `Parsing "databrowser"`, "------------------\n");
+        const tdl = this.generateDefaultTdl("DataViewer") as type_DataViewer_tdl;
+        // all properties for this widget
+        const propertyNames: string[] = [
+            "title",
+            "show_toolbar", // not in tdm
+            "update_period",
+            "scroll_step", // not in tdm
+            "scroll", // not in tdm
+            "start", // not in tdm
+            "end", // not in tdm
+            "archive_rescale", // not in tdm
+            "foreground", // not in tdm
+            "background",
+            "title_font", // not in tdm
+            "label_font", // not in tdm
+            "scale_font",
+            "legend_font", // not in tdm
+            "axes",
+            "annotations",  // not in tdm
+            "pvlist",
+        ];
+
+        let bobAxes: {
+            valMin: number,
+            valMax: number,
+            ticks: number[],
+            ticksText: number[],
+            show: boolean,
+            displayScale: "Log10" | "Linear",
+        }[] = [];
+
+        let bobPvs: {
+            label: string,
+            lineWidth: number,
+            lineColor: string,
+            bufferSize: number,
+            axisIndex: number,
+            channelName: string,
+        }[] = [];
+
+        for (const propertyName of propertyNames) {
+            const propertyValue = bobWidgetJson[propertyName];
+            if (propertyValue === undefined) {
+                if (propertyName === "widget") {
+                    console.log(`There are one or more widgets inside "display"`);
+                } else {
+                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                }
+                continue;
+            } else {
+                if (propertyName === "title") {
+                    tdl["text"]["title"] = BobPropertyConverter.convertBobString(propertyValue);
+                } else if (propertyName === "update_period") {
+                    tdl["text"]["updatePeriod"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "background") {
+                    const redValue = BobPropertyConverter.convertBobNum(propertyValue[0]["red"]);
+                    const greenValue = BobPropertyConverter.convertBobNum(propertyValue[0]["green"]);
+                    const blueValue = BobPropertyConverter.convertBobNum(propertyValue[0]["blue"]);
+                    tdl["style"]["backgroundColor"] = `rgba(${redValue}, ${greenValue}, ${blueValue}, 1)`;
+                } else if (propertyName === "scale_font") {
+                    const data = BobPropertyConverter.convertBobFont(propertyValue);
+                    tdl["style"]["fontSize"] = data["fontSize"];
+                    tdl["style"]["fontFamily"] = data["fontFamily"];
+                    tdl["style"]["fontStyle"] = data["fontStyle"];
+                    tdl["style"]["fontWeight"] = data["fontWeight"];
+                } else if (propertyName === "axes") {
+                    bobAxes = BobPropertyConverter.convertBobDataBrowserAxes(propertyValue);
+                } else if (propertyName === "pvlist") {
+                    bobPvs = BobPropertyConverter.convertBobDataBrowserPvlist(propertyValue);
+                } else {
+                    console.log("Skip property", `"${propertyName}"`);
+                }
+            }
+        }
+
+        const yAxes: type_yAxis[] = [];
+
+        for (const bobPv of bobPvs) {
+            const axisIndex = bobPv["axisIndex"];
+            const axisData = bobAxes[axisIndex];
+            if (axisData !== undefined) {
+                yAxes.push({ ...bobPv, ...axisData });
+                tdl["channelNames"].push(bobPv["channelName"]);
+                delete (bobPv as any)["axisIndex"];
+                delete (bobPv as any)["channelName"];
+            }
+        }
+
+        tdl["yAxes"] = yAxes;
+
 
         return tdl;
     };

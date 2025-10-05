@@ -371,7 +371,7 @@ export class WindowAgentsManager {
 
         for (let tdlFileName of tdlFileNames) {
 
-            if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp") {
+            if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp" || path.extname(tdlFileName) === ".plt") {
                 // regular display window, .tdl, .edl, or .bob
 
                 // do it asynchronously to speed up

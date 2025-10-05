@@ -5,6 +5,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { ElementButton, ElementMacrosTable } from "../SharedElements/MacrosTable";
 import { ElementMacroInput, ElementMacroTd, ElementMacroTr } from "../SharedElements/MacrosTable";
+import path from "path";
 
 export class SidebarEmbeddedDisplayItem {
     _items: SidebarEmbeddedDisplayItems;
@@ -65,6 +66,37 @@ export class SidebarEmbeddedDisplayItem {
                         justifyContent: "center",
                         alignItems: "center",
                     }}>
+
+                        {this.isValidDisplayFile(tdlFileName) === false ? null :
+                            <this.StyledButton
+                                onClick={(event: any) => {
+                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                    const displayWindowId = displayWindowClient.getWindowId();
+                                    displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file", {
+                                        options: {
+                                            // tdl?: type_tdl;
+                                            tdlFileNames: [tdlFileName],
+                                            mode: "operating",
+                                            editable: true,
+                                            macros: [],
+                                            replaceMacros: true,
+                                            currentTdlFolder: path.dirname(tdlFileName),
+                                            windowId: displayWindowId,
+                                            // sendContentsToWindow?: boolean;
+                                        }
+                                    });
+                                }}
+                            >
+                                <img
+                                    src={`../../resources/webpages/view-file-symbol.svg`}
+                                    style={{
+                                        width: "75%",
+                                        height: "75%",
+                                    }}
+                                ></img>
+                            </this.StyledButton>
+                        }
+
                         <this.StyledButton
                             onClick={(event: any) => {
                                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
@@ -225,6 +257,14 @@ export class SidebarEmbeddedDisplayItem {
             </>
         );
     };
+
+    isValidDisplayFile = (tdlFileName: string) => {
+        if (tdlFileName.endsWith(".edl") || tdlFileName.endsWith(".tdl") || tdlFileName.endsWith(".bob")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
 
     _ElementUseParentMacros = () => {

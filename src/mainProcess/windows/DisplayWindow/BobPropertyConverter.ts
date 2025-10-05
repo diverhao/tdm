@@ -58,6 +58,7 @@ import { XYPlotHelper } from "../../../rendererProcess/widgets/XYPlot/XYPlotHelp
 import { EmbeddedDisplayHelper } from "../../../rendererProcess/widgets/EmbeddedDisplay/EmbeddedDisplayHelper";
 import { GroupHelper } from "../../../rendererProcess/widgets/Group/GroupHelper";
 import { TableHelper } from "../../../rendererProcess/widgets/Table/TableHelper";
+import { UtilityWindow } from "../UtilityWindow/UtilityWindow";
 
 export class BobPropertyConverter {
     constructor() { }
@@ -65,6 +66,22 @@ export class BobPropertyConverter {
     static hasWidget = (bob: Record<string, any>): boolean => {
         return Object.keys(bob).includes("widget");
     };
+
+    static parsePlt = async (bobJson: Record<string, any>, tdl: Record<string, any>) => {
+        console.log("...", bobJson);
+        const canvasWidgetTdl = UtilityWindow.creatUtilityBlankTdl("DataViewer")["Canvas"];
+        tdl["Canvas"] = canvasWidgetTdl;
+
+        const databrowserData = bobJson["databrowser"];
+        const widgetTdl = DataViewerHelper.convertBobToTdl_databrowser(databrowserData);
+        const widgetKey = widgetTdl["widgetKey"];
+
+        widgetTdl.text.singleWidget = true; // make it 100% width and height
+        widgetTdl.style.boxSizing = "border-box";
+        widgetTdl.style.padding = 5;
+
+        tdl[widgetKey] = widgetTdl;
+    }
 
     static parseBob = async (bobJson: Record<string, any>, tdl: Record<string, any>, fullTdlFileName: string) => {
         // let tdl: Record<string, any> = {};
@@ -191,7 +208,11 @@ export class BobPropertyConverter {
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "stripchart") {
-                const widgetTdl = DataViewerHelper.convertBobToTdl(bobWidgetJson);
+                const widgetTdl = await DataViewerHelper.convertBobToTdl(bobWidgetJson, "stripchart", fullTdlFileName);
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "databrowser") {
+                const widgetTdl = await DataViewerHelper.convertBobToTdl(bobWidgetJson, "databrowser", fullTdlFileName);
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "image") {
@@ -2127,15 +2148,276 @@ export class BobPropertyConverter {
      * to [[["a", "b"], ["c", "d"]], [["aa", "bb"], ["cc", "dd"]]]
      */
     static convertBobTemplateInstances = (
-        propertyValue: {instance: {macros: Record<string, string[]>[]}[]}[]
+        propertyValue: { instance: { macros: Record<string, string[]>[] }[] }[]
     ) => {
         const instancesData = propertyValue[0]["instance"];
         const result: [string, string][][] = [];
-        for (const instanceData of instancesData ) {
+        for (const instanceData of instancesData) {
             const macorsData = instanceData["macros"];
             result.push(this.convertBobMacros(macorsData));
         }
         return result;
     }
+
+
+    /**
+     * Convert 
+     * 
+     *   [
+     *       {
+     *           "axis": [
+     *               {
+     *                   "visible": [
+     *                       "true"
+     *                   ],
+     *                   "name": [
+     *                       "Value 1"
+     *                   ],
+     *                   "use_axis_name": [
+     *                       "false"
+     *                   ],
+     *                   "use_trace_names": [
+     *                       "true"
+     *                   ],
+     *                   "right": [
+     *                       "false"
+     *                   ],
+     *                   "color": [
+     *                       {
+     *                           "red": [
+     *                               "0"
+     *                           ],
+     *                           "green": [
+     *                               "0"
+     *                           ],
+     *                           "blue": [
+     *                               "0"
+     *                           ]
+     *                       }
+     *                   ],
+     *                   "min": [
+     *                       "336.5"
+     *                   ],
+     *                   "max": [
+     *                       "342.5"
+     *                   ],
+     *                   "grid": [
+     *                       "false"
+     *                   ],
+     *                   "autoscale": [
+     *                       "false"
+     *                   ],
+     *                   "log_scale": [
+     *                       "false"
+     *                   ]
+     *               }
+     *           ]
+     *       },
+     *       ...
+     *   ]
+     * 
+     * to an array of type_yAxis subset in DataViewer, 
+     *   {
+     *       valMin: number,
+     *       valMax: number,
+     *       ticks: number[],
+     *       ticksText: number[],
+     *       show: boolean,
+     *       displayScale: "Log10" | "Linear",
+     *   }[]
+     */
+    static convertBobDataBrowserAxes = (
+        propertyValue: {
+            axis: {
+                visible: ("true" | "false")[],
+                name: string[],
+                use_axis_name: ("true" | "false")[],
+                use_trace_names: ("true" | "false")[],
+                right: ("true" | "false")[],
+                color: { red: string, green: string, blue: string }[],
+                min: string[],
+                max: string[],
+                grid: ("true" | "false")[],
+                autoscale: ("true" | "false")[],
+                log_scale: ("true" | "false")[],
+            }[]
+        }[]
+    ) => {
+        const result: {
+            valMin: number,
+            valMax: number,
+            ticks: number[],
+            ticksText: number[],
+            show: boolean,
+            displayScale: "Log10" | "Linear",
+        }[] = [];
+
+        for (const axisData of propertyValue[0]["axis"]) {
+
+            // label: string;
+            const valMin = this.convertBobNum(axisData["min"]);
+            const valMax = this.convertBobNum(axisData["max"]);
+            // lineWidth: number;
+            // lineColor: string;
+            const ticks = this.calcTicksAndLabel(valMin, valMax);
+            const ticksText = ticks;
+            const show = this.convertBobBoolean(axisData["visible"]);
+            // bufferSize: number;
+            const displayScale = this.convertBobBoolean(axisData["log_scale"]) === true ? "Log10" : "Linear";
+            // a subset of type_yAxis in DataViewer
+            result.push(
+                {
+                    valMin,
+                    valMax,
+                    ticks,
+                    ticksText,
+                    show,
+                    displayScale,
+                }
+            )
+        }
+        return result;
+    }
+
+    /**
+     * Convert
+     * 
+     *.  [
+     *       {
+     *           "pv": [
+     *               {
+     *                   "display_name": [
+     *                       "aaa"
+     *                   ],
+     *                   "visible": [
+     *                       "true"
+     *                   ],
+     *                   "name": [
+     *                       "val1"
+     *                   ],
+     *                   "axis": [
+     *                       "0"
+     *                   ],
+     *                   "color": [
+     *                       {
+     *                           "red": [
+     *                               "255"
+     *                           ],
+     *                           "green": [
+     *                               "0"
+     *                           ],
+     *                           "blue": [
+     *                               "0"
+     *                           ]
+     *                       }
+     *                   ],
+     *                   "trace_type": [
+     *                       "AREA"
+     *                   ],
+     *                   "linewidth": [
+     *                       "2"
+     *                   ],
+     *                   "line_style": [
+     *                       "SOLID"
+     *                   ],
+     *                   "point_type": [
+     *                       "NONE"
+     *                   ],
+     *                   "point_size": [
+     *                       "2"
+     *                   ],
+     *                   "waveform_index": [
+     *                       "0"
+     *                   ],
+     *                   "period": [
+     *                       "0.0"
+     *                   ],
+     *                   "ring_size": [
+     *                       "5000"
+     *                   ],
+     *                   "request": [
+     *                       "OPTIMIZED"
+     *                   ],
+     *                   "archive": [
+     *                       {
+     *                           "name": [
+     *                               "Accelerator"
+     *                           ],
+     *                           "url": [
+     *                               "jdbc:oracle:thin:@(DESCRIPTION=(LOAD_BALANCE=OFF)(FAILOVER=ON)(ADDRESS=(PROTOCOL=TCP)(HOST=snsappa.sns.ornl.gov)(PORT=1610))(ADDRESS=(PROTOCOL=TCP)(HOST=snsappb.sns.ornl.gov)(PORT=1610))(CONNECT_DATA=(SERVICE_NAME=prod_controls)))"
+     *                           ],
+     *                           "key": [
+     *                               "1"
+     *                           ]
+     *                       },
+     *                       {
+     *                           "name": [
+     *                               "Instruments"
+     *                           ],
+     *                           "url": [
+     *                               "jdbc:oracle:thin:@snsoroda-scan.sns.gov:1521/scprod_controls"
+     *                           ],
+     *                           "key": [
+     *                               "2"
+     *                           ]
+     *                       }
+     *                   ]
+     *               }
+     *           ]
+     *       }
+     *   ]
+     */
+    static convertBobDataBrowserPvlist = (
+        propertyValue: {
+            pv: {
+                display_name: string[],
+                visible: string[],
+                name: string[],
+                axis: string[],
+                color: { red: string[], green: string[], blue: string[] }[],
+                trace_type: string[],
+                linewidth: string[],
+                line_style: string[],
+                point_type: string[],
+                point_size: string[],
+                waveform_index: string[],
+                period: string[],
+                ring_size: string[],
+                request: string[],
+                archive: { name: string[], url: string[], key: string[] }[],
+            }[]
+        }[]
+    ) => {
+        // a subset of type_yAxis in DataViewer
+        const result: {
+            label: string,
+            lineWidth: number,
+            lineColor: string,
+            bufferSize: number,
+            axisIndex: number, // additional data, will be removed
+            channelName: string, // additional data, will be removed
+        }[] = [];
+
+        const pvsData = propertyValue[0]["pv"];
+        for (const pvData of pvsData) {
+            const label = this.convertBobString(pvData["display_name"]);
+            const lineWidth = this.convertBobNum(pvData["linewidth"]);
+
+            const redValue = this.convertBobNum(pvData["color"][0]["red"]);
+            const greenValue = this.convertBobNum(pvData["color"][0]["green"]);
+            const blueValue = this.convertBobNum(pvData["color"][0]["blue"]);
+            const lineColor = `rgba(${redValue}, ${greenValue}, ${blueValue}, 1)`;
+            const bufferSize = this.convertBobNum(pvData["ring_size"]);
+
+            const axisIndex = this.convertBobNum(pvData["axis"]);
+            const channelName = this.convertBobString(pvData["name"]);
+            result.push({
+                label, lineWidth, lineColor, bufferSize, axisIndex, channelName
+            })
+        }
+        return result;
+    }
+
+
 
 }

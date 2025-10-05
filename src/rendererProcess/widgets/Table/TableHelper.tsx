@@ -119,6 +119,8 @@ export class TableHelper extends BaseWidgetHelper {
             "transparent", // not in tdm
         ];
 
+        tdl["style"]["top"] = 0;
+        tdl["style"]["left"] = 0;
         tdl["style"]["width"] = 400;
         tdl["style"]["height"] = 300;
         tdl["style"]["borderWidth"] = 0;
