@@ -129,16 +129,19 @@ export class GroupHelper extends BaseWidgetHelper {
             tdl["style"]["width"] = 400;
             tdl["style"]["width"] = 300;
         }
-        
+
         tdl["style"]["top"] = 0;
         tdl["style"]["left"] = 0;
 
         let transparent = false;
+        let groupStyle = 0;
         if (type === "group") {
             tdl["text"]["showTab"] = false;
             tdl["text"]["showBox"] = true;
             tdl["style"]["borderWidth"] = 0;
         }
+
+
 
         let widgetsTdl: Record<string, any> = {};
         for (const propertyName of propertyNames) {
@@ -179,6 +182,7 @@ export class GroupHelper extends BaseWidgetHelper {
                     transparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "style") {
                     tdl["text"]["showBox"] = BobPropertyConverter.convertBobGroupStyle(propertyValue);
+                    groupStyle = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "widget" && type === "group") {
                     widgetsTdl = await BobPropertyConverter.convertBobGroupWidgets(propertyValue);
                 } else if (propertyName === "tabs" && type === "tabs") {
@@ -237,9 +241,16 @@ export class GroupHelper extends BaseWidgetHelper {
         const groupWidgetTdl: Record<string, any> = {};
         groupWidgetTdl[tdl["widgetKey"]] = tdl;
 
-        return {
-            ...groupWidgetTdl, // group widget tdl
-            ...widgetsTdl, // children widget tdls
-        } as any;
+
+        if (transparent === true && groupStyle === 3) {
+            // this is a group, not a group widget
+            return widgetsTdl as any;
+        } else {
+            return {
+                ...groupWidgetTdl, // group widget tdl
+                ...widgetsTdl, // children widget tdls
+            } as any;
+
+        }
     };
 }

@@ -188,8 +188,10 @@ export class ImageHelper extends BaseWidgetHelper {
         let password = "";
         let isTransparent = false;
 
-        tdl["style"]["width"] = 100;
-        tdl["style"]["height"] = 30;
+        tdl["style"]["left"] = 0;
+        tdl["style"]["top"] = 0;
+        tdl["style"]["width"] = 400;
+        tdl["style"]["height"] = 300;
         tdl["style"]["backgroundColor"] = "rgba(255, 255, 255, 1)";
         tdl["text"]["colorMap"] = "viridis";
 
