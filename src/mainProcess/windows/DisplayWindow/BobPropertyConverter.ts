@@ -1,11 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
-import { type_action_opendisplay_tdl } from "../../../rendererProcess/widgets/ActionButton/ActionButton";
-import { type_action_writepv_tdl } from "../../../rendererProcess/widgets/ActionButton/ActionButton";
-import { type_action_executescript_tdl } from "../../../rendererProcess/widgets/ActionButton/ActionButton";
-import { type_action_executecommand_tdl } from "../../../rendererProcess/widgets/ActionButton/ActionButton";
-import { type_action_openwebpage_tdl } from "../../../rendererProcess/widgets/ActionButton/ActionButton";
-import { type_actions_tdl } from "../../../rendererProcess/widgets/ActionButton/ActionButton";
-
 import { CanvasHelper } from "../../../rendererProcess/helperWidgets/Canvas/CanvasHelper";
 import { ActionButtonHelper } from "../../../rendererProcess/widgets/ActionButton/ActionButtonHelper";
 import { ArcHelper } from "../../../rendererProcess/widgets/Arc/ArcHelper";
@@ -192,7 +184,11 @@ export class BobPropertyConverter {
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "scaledslider") {
-                const widgetTdl = ScaledSliderHelper.convertBobToTdl(bobWidgetJson);
+                const widgetTdl = ScaledSliderHelper.convertBobToTdl(bobWidgetJson, "scaledslider");
+                const widgetKey = widgetTdl["widgetKey"];
+                tdl[widgetKey] = widgetTdl;
+            } else if (bobWidgetType === "scrollbar") {
+                const widgetTdl = ScaledSliderHelper.convertBobToTdl(bobWidgetJson, "scrollbar");
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "slide_button") {
@@ -255,44 +251,6 @@ export class BobPropertyConverter {
             }
         }
 
-        // "group" or "display"
-        // if (this.hasWidget(bobJson)) {
-        //     let startingPoint = Object.keys(result).length;
-        //     let groupLeft = 0;
-        //     let groupTop = 0;
-        //     let groupId = "";
-
-        //     if (bobJson["type"] === "group") {
-        //         Log.info("-1", `------------------- parsing "group" ----------------`);
-        //         startingPoint = Object.keys(result).length;
-        //         if (bobJson["x"] !== undefined) {
-        //             groupLeft = parseInt(bobJson["x"]);
-        //         }
-        //         if (bobJson["y"] !== undefined) {
-        //             groupTop = parseInt(bobJson["y"]);
-        //         }
-        //         groupId = `Group_${uuidv4()}`;
-        //     }
-
-        //     const widget = bobJson["widget"];
-        //     if (Array.isArray(widget)) {
-        //         for (let widgetMember of widget) {
-        //             Log.info("-1", "parsing widget array");
-        //             this.parseBob(widgetMember, result);
-        //         }
-        //     } else {
-        //         this.parseBob(widget, result);
-        //     }
-
-        //     if (bobJson["type"] === "group") {
-        //         for (let index = startingPoint; index < Object.keys(result).length; index++) {
-        //             const newWidget = Object.values(result)[index];
-        //             newWidget["style"]["left"] = newWidget["style"]["left"] + groupLeft;
-        //             newWidget["style"]["top"] = newWidget["style"]["top"] + groupTop;
-        //             newWidget["groupNames"].push(groupId);
-        //         }
-        //     }
-        // }
     };
 
 

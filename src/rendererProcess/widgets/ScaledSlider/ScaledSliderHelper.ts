@@ -297,8 +297,8 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
 
 
 
-    static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_ScaledSlider_tdl => {
-        console.log("\n------------", `Parsing "scaledslider"`, "------------------\n");
+    static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "scaledslider" | "scrollbar"): type_ScaledSlider_tdl => {
+        console.log("\n------------", `Parsing "${type}"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ScaledSlider") as type_ScaledSlider_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -339,13 +339,20 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
             "show_low", // not in tdm
             "show_lolo", // not in tdm
             "configure", // not in tdm
+            "show_value_tip", // not in tdm            
+            "bar_length", // not in tdm
         ];
 
         let isHorizontal = true;
         let isTransparent = false;
 
-        tdl["text"]["appearance"] = "contemporary";
-        tdl["style"]["backgroundColor"] = "rgba(255,255,255,1)";
+        if (type === "scaledslider") {
+            tdl["text"]["appearance"] = "contemporary";
+            tdl["style"]["backgroundColor"] = "rgba(255,255,255,1)";
+        } else {
+            tdl["text"]["showLabels"] = false;
+            tdl["text"]["showPvValue"] = false;
+        }
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -405,6 +412,7 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
                 }
             }
         }
+
 
         if (isTransparent) {
             const originalRgbaColor = tdl["style"]["backgroundColor"];

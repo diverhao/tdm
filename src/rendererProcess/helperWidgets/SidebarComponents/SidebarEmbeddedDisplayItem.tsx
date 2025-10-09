@@ -72,6 +72,12 @@ export class SidebarEmbeddedDisplayItem {
                                 onClick={(event: any) => {
                                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                     const displayWindowId = displayWindowClient.getWindowId();
+
+                                    let currentTdlFolder = path.dirname(tdlFileName);
+                                    if (!path.isAbsolute(currentTdlFolder)) {
+                                        const parentTdlFileName = g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName();
+                                        currentTdlFolder = path.dirname(parentTdlFileName);
+                                    }
                                     displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file", {
                                         options: {
                                             // tdl?: type_tdl;
@@ -80,7 +86,7 @@ export class SidebarEmbeddedDisplayItem {
                                             editable: true,
                                             macros: [],
                                             replaceMacros: true,
-                                            currentTdlFolder: path.dirname(tdlFileName),
+                                            currentTdlFolder: currentTdlFolder,
                                             windowId: displayWindowId,
                                             // sendContentsToWindow?: boolean;
                                         }
