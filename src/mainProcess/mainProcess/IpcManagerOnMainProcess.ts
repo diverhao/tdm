@@ -99,63 +99,12 @@ export class IpcManagerOnMainProcess {
 
             wsClient.on("error", (err: Error) => {
                 Log.error("-1", "WebSocket IPC client got an error", err)
-                Log.error("-1", "close connection (as well as the renderer process window)");
-                // same as "close" event below
-                const index = Object.values(this.getClients()).indexOf(wsClient);
-                if (index !== -1) {
-                    const id = Object.keys(this.getClients())[index];
-                    const processId = id.split("-")[0];
-                    if (typeof processId === "string") {
-                        const mainProcess = this.getMainProcess();
-                        if (mainProcess instanceof MainProcess) {
-                            const mainProcessMode = mainProcess.getMainProcessMode();
-                            const windowAgent = mainProcess.getWindowAgentsManager().getAgent(id);
-                            // in ssh-client, we must first tell the tcp-server to close
-                            // the handleWindowClosed() may prevent this message sending out
-                            if (mainProcessMode === "ssh-client") {
-                                const sshClient = mainProcess.getSshClient();
-                                if (sshClient !== undefined) {
-                                    sshClient.quit();
-                                }
-                            }
-                            if (windowAgent !== undefined) {
-                                windowAgent.handleWindowClosed();
-                            }
-
-                        }
-                    }
-                }
             });
 
-            // for whatever reason the websocket connection is closed, clean up the server side
+            // websocket connection closed, do nothing
+            // if the display window is still alive, it will try to reconnect
             wsClient.on("close", (code: number, reason: Buffer) => {
-                Log.info("-1", "WebSocket client closed.", code, reason);
-
-                // same as "error" event below
-                const index = Object.values(this.getClients()).indexOf(wsClient);
-                if (index !== -1) {
-                    const id = Object.keys(this.getClients())[index];
-                    const processId = id.split("-")[0];
-                    if (typeof processId === "string") {
-                        const mainProcess = this.getMainProcess();
-                        if (mainProcess instanceof MainProcess) {
-                            const windowAgent = mainProcess.getWindowAgentsManager().getAgent(id);
-                            const mainProcessMode = mainProcess.getMainProcessMode();
-                            // in ssh-client, we must first tell the tcp-server to close
-                            // the handleWindowClosed() may prevent this message sending out
-                            if (mainProcessMode === "ssh-client") {
-                                const sshClient = mainProcess.getSshClient();
-                                if (sshClient !== undefined) {
-                                    // do not quit, quit only when there is an error as in above "error" event handler
-                                    // sshClient.quit();
-                                }
-                            }
-                            if (windowAgent !== undefined) {
-                                windowAgent.handleWindowClosed();
-                            }
-                        }
-                    }
-                }
+                Log.info("-1", "WebSocket client closed.", code, reason.toString());
             });
         });
     };
@@ -490,6 +439,7 @@ export class IpcManagerOnMainProcess {
         const mainProcess = this.getMainProcess();
         const mainProcessMode = mainProcess.getMainProcessMode();
         const windowId = data["windowId"];
+        const reconnect = data["reconnect"];
         Log.info("-1", "register window", windowId, "for WebSocket IPC");
         if (mainProcessMode === "desktop" || mainProcessMode === "web") {
             // desktop mode: websocket client on main/display window
@@ -500,6 +450,10 @@ export class IpcManagerOnMainProcess {
             // in this way the DisplayWindowAgent.sendFromMainProcess() or MainWindowAgent.sendFromMainProcess()
             // on the calling process won't send message to the windows
             ipcManager.getClients()[windowId] = windowId;
+        }
+
+        if (reconnect === true) {
+            return;
         }
 
         // lift the block in create window method
@@ -559,12 +513,14 @@ export class IpcManagerOnMainProcess {
     }
 
 
+
     handleWebsocketIpcConnectedOnMainWindow = (event: any, data: IpcEventArgType["websocket-ipc-connected-on-main-window"]) => {
         // the main processes' ipc manager
         const ipcManager = this.getMainProcess().getIpcManager();
         const mainProcess = this.getMainProcess();
         const mainProcessMode = mainProcess.getMainProcessMode();
         const windowId = data["windowId"];
+        const reconnect = data["reconnect"];
         Log.info("-1", "register window", windowId, "for WebSocket IPC");
 
         if (mainProcessMode === "desktop" || mainProcessMode === "web") {
@@ -575,6 +531,10 @@ export class IpcManagerOnMainProcess {
             // in this way the DisplayWindowAgent.sendFromMainProcess() or MainWindowAgent.sendFromMainProcess()
             // on the calling process won't send message to the windows
             ipcManager.getClients()[windowId] = windowId;
+        }
+
+        if (reconnect === true) {
+            return;
         }
 
         // lift the block in create window method

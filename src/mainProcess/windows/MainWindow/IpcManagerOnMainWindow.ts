@@ -14,7 +14,8 @@ import { IpcEventArgType, IpcEventArgType3, type_DialogInputBox, type_DialogMess
 export class IpcManagerOnMainWindow {
     private _mainWindowClient: MainWindowClient;
     ipcServerPort: number = -1;
-    wsClient: WebSocket | undefined;
+    private _websocketClient: undefined | WebSocket = undefined;
+    // wsClient: WebSocket | undefined;
     // object that stores the callback functions for events
     eventListeners: Record<string, (evnet: any, ...args: any) => any> = {};
 
@@ -22,16 +23,35 @@ export class IpcManagerOnMainWindow {
         this._mainWindowClient = mainWindowClient;
         this.ipcServerPort = ipcServerPort;
         this.connectIpcServer();
+
+        setInterval(() => {
+            this.checkIpcConnection();
+        }, 10000)
     }
 
     /**
+     * Check if the websocket-based IPC connection is alive. If not, reconnect.
+     */
+    checkIpcConnection = () => {
+        const websocketClient = this.getWebSocketClient();
+        if (websocketClient === undefined) {
+            this.connectIpcServer(true);
+        } else if (websocketClient.CLOSED) {
+            console.log("websocket IPC is closed, re-connect")
+            this.connectIpcServer(true);
+        }
+        // else: it is good, do nothing
+    }
+    /**
      * Connect ipc server after we receive the port number from main process via electron IPC mechanism
      */
-    connectIpcServer = () => {
+    connectIpcServer = (reconnect: boolean = false) => {
         if (this.getIpcServerPort() === -1) {
             return;
         }
-        console.log("Connecting to IPC server on port", this.getIpcServerPort());
+
+        Log.info(`Trying to ${reconnect === true ? "re-" : ""}connect to ipc server`, this.ipcServerPort);
+
         let serverAddress = `wss://127.0.0.1:${this.getIpcServerPort()}`
         if (this.getMainWindowClient().getMainProcessMode() === "web") {
             const host = window.location.host.split(":")[0];
@@ -42,7 +62,12 @@ export class IpcManagerOnMainWindow {
 
         client.onopen = () => {
             Log.info("Connected to IPC server on port", this.getIpcServerPort());
-            this.wsClient = client;
+            this.setWebSocketClient(client);
+
+            if (reconnect === true) {
+                // remove prompt
+                this.getMainWindowClient().getPrompt().removeElement();
+            }
 
             console.log(JSON.stringify({
                 processId: this.getMainWindowClient().getProcessId(),
@@ -51,11 +76,12 @@ export class IpcManagerOnMainWindow {
                 data: [{
                     processId: this.getMainWindowClient().getProcessId(),
                     windowId: this.getMainWindowClient().getWindowId(),
+                    reconnect: reconnect,
                 }],
             })
             );
 
-            this.wsClient.send(
+            this.getWebSocketClient()?.send(
                 JSON.stringify({
                     // additional info
                     processId: this.getMainWindowClient().getProcessId(),
@@ -65,6 +91,7 @@ export class IpcManagerOnMainWindow {
                     data: [{
                         processId: this.getMainWindowClient().getProcessId(),
                         windowId: this.getMainWindowClient().getWindowId(),
+                        reconnect: reconnect,
                     }],
                 })
             );
@@ -82,6 +109,19 @@ export class IpcManagerOnMainWindow {
             const message = event.data;
             Log.debug("IPC error happens", message);
         };
+
+        client.onclose = (event: any) => {
+            const message = event.data;
+            Log.error("IPC websocket connection closed", message);
+            this.handleDialogShowMessageBox(undefined, {
+                info: {
+                    messageType: "error",
+                    humanReadableMessages: ["Window lost connection with TDM main service. Trying to reconnect ..."],
+                    rawMessages: []
+                }
+            })
+
+        }
     };
 
 
@@ -135,8 +175,8 @@ export class IpcManagerOnMainWindow {
         Log.debug("send message to IPC server", channelName);
         const processId = this.getMainWindowClient().getProcessId();
         if (processId !== "") {
-            if (this.wsClient !== undefined) {
-                this.wsClient.send(
+            if (this.getWebSocketClient() !== undefined) {
+                this.getWebSocketClient()?.send(
                     JSON.stringify({
                         processId: processId,
                         windowId: this.getMainWindowClient().getWindowId(),
@@ -439,5 +479,12 @@ export class IpcManagerOnMainWindow {
         if (this.getMainWindowClient().getState() === mainWindowState.start) {
             this.getMainWindowClient().getStartupPage()?.forceUpdate();
         }
+    }
+    getWebSocketClient = () => {
+        return this._websocketClient;
+    }
+
+    setWebSocketClient = (newClient: WebSocket) => {
+        this._websocketClient = newClient;
     }
 }

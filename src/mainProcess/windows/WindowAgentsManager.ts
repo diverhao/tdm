@@ -48,6 +48,8 @@ export class WindowAgentsManager {
     creatingEmbeddedDisplayBackdrop: string[] = [];
     // private _mainProcessId: string;
 
+    private _newestWindowId = 0;
+
     constructor(mainProcess: MainProcess) {
         this._mainProcess = mainProcess;
         // this._mainProcessId = mainProcess.getProcessId();
@@ -927,31 +929,35 @@ export class WindowAgentsManager {
      */
     obtainDisplayWindowId = (): string => {
 
-        const maxWindowId = this.getMainProcess().getMainProcessMode() === "web" ? 100000 : 500;
-        const mainProcessId = "0"; // this.getMainProcess().getProcessId();
-        const ids: number[] = [];
-        for (const agent of Object.values(this.getAgents())) {
-            if (agent instanceof DisplayWindowAgent) {
-                const displayWindowId = agent.getId();
-                const displayWindowIdNum = parseInt(displayWindowId.split("-")[1]);
-                if (!isNaN(displayWindowIdNum)) {
-                    ids.push(displayWindowIdNum);
-                }
-            }
-        }
-        ids.sort((a, b) => a - b);
+        // const maxWindowId = this.getMainProcess().getMainProcessMode() === "web" ? 100000 : 5000;
+        // const mainProcessId = "0"; // this.getMainProcess().getProcessId();
+        // const ids: number[] = [];
+        // for (const agent of Object.values(this.getAgents())) {
+        //     if (agent instanceof DisplayWindowAgent) {
+        //         const displayWindowId = agent.getId();
+        //         const displayWindowIdNum = parseInt(displayWindowId.split("-")[1]);
+        //         if (!isNaN(displayWindowIdNum)) {
+        //             ids.push(displayWindowIdNum);
+        //         }
+        //     }
+        // }
+        // ids.sort((a, b) => a - b);
 
 
-        for (let ii = 0; ii < maxWindowId; ii++) {
-            if (!ids.includes(ii)) {
-                return `${mainProcessId}-${ii}`;
-            }
-        }
-        Log.error(
-            mainProcessId,
-            `You have used up indices in DisplayWindow-index.html. There are 500 of them, are you opening 500 display windows?`
-        );
-        return "";
+        // for (let ii = 0; ii < maxWindowId; ii++) {
+        //     if (!ids.includes(ii)) {
+        //         return `${mainProcessId}-${ii}`;
+        //     }
+        // }
+
+        this._newestWindowId = this._newestWindowId + 1;
+        return `0-${this._newestWindowId}`;
+
+        // Log.error(
+        //     mainProcessId,
+        //     `You have used up indices in DisplayWindow-index.html. There are 500 of them, are you opening 500 display windows?`
+        // );
+        // return "";
     };
 
 }

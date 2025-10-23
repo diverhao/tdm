@@ -135,11 +135,13 @@ export type IpcEventArgType = {
     "websocket-ipc-connected-on-display-window": {
         processId: string,
         windowId: string,
+        reconnect: boolean,
     },
 
     "websocket-ipc-connected-on-main-window": {
         processId: string,
         windowId: string,
+        reconnect: boolean,
     },
 
     "profile-selected": {
