@@ -93,6 +93,7 @@ import { RuleOutlineWidth } from "../../helperWidgets/RuleComponents/RuleOutline
 import { RuleEmbeddedDisplaySelectTabIndex } from "../../helperWidgets/RuleComponents/RuleEmbeddedDisplaySelectTabIndex";
 import { BaseWidget } from "./BaseWidget";
 import { Log } from "../../../mainProcess/log/Log";
+import { RuleImageXmin } from "../../helperWidgets/RuleComponents/RuleImageXmin";
 
 export type type_rule_tdl = {
     boolExpression: string;
@@ -398,6 +399,9 @@ export abstract class BaseWidgetRule {
             },
             RuleEmbeddedDisplaySelectTabIndex: () => {
                 return new RuleEmbeddedDisplaySelectTabIndex(rule);
+            },
+            RuleImageXmin: () => {
+                return new RuleImageXmin(rule);
             },
         };
         return ruleComponents;

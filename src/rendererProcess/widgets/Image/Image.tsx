@@ -14,6 +14,7 @@ import { Log } from "../../../mainProcess/log/Log";
 // import * as THREE from 'three';
 import {OrthographicCamera, Scene, WebGLRenderer, Vector3, BufferGeometry, BufferAttribute, ShaderMaterial, Points, Color, Vector2, DataTexture, UnsignedByteType, RGBAFormat, SRGBColorSpace, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, PlaneGeometry} from "three";
 import { TcaChannel } from "../../channel/TcaChannel";
+import { ImageRules } from "./ImageRules";
 
 export type type_Image_roi = {
     xPv: string;
@@ -145,7 +146,7 @@ export class Image extends BaseWidget {
     // its value is changed in 3 places: this.select2(), this._handleMouseMove() and this._handleMouseUp()
     // private _readyToDeselect: boolean = false;
 
-    // _rules: TextUpdatRules;
+    _rules: ImageRules;
     axisWidth: number = 40;
     configHeight: number = 20;
     autoXY: boolean = true;
@@ -170,7 +171,7 @@ export class Image extends BaseWidget {
 
         this._regionOfInterest = JSON.parse(JSON.stringify(widgetTdl.regionsOfInterest));
 
-        // this._rules = new TextUpdateRules(this, widgetTdl);
+        this._rules = new ImageRules(this, widgetTdl);
 
         // this._sidebar = new TextUpdateSidebar(this);
     }
@@ -426,7 +427,7 @@ export class Image extends BaseWidget {
         if (this.autoXY === true) {
             return 0;
         } else {
-            return this.getText()["xMin"];
+            return this.getAllText()["xMin"];
         }
     }
 
@@ -1585,8 +1586,8 @@ export class Image extends BaseWidget {
     }
 
     _ElementXrange = () => {
-        const [xMin, setXmin] = React.useState(`${this.getText()["xMin"]}`);
-        const [xMax, setXmax] = React.useState(`${this.getText()["xMax"]}`);
+        const [xMin, setXmin] = React.useState(`${this.getXmin()}`);
+        const [xMax, setXmax] = React.useState(`${this.getXmax()}`);
         return (
             <div
                 style={{

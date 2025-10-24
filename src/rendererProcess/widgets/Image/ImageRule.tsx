@@ -1,8 +1,8 @@
-import { TextUpdateRules } from "./TextUpdateRules";
+import { ImageRules } from "./ImageRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
-export class TextUpdateRule extends BaseWidgetRule {
-	constructor(index: number, rules: TextUpdateRules) {
+export class ImageRule extends BaseWidgetRule {
+	constructor(index: number, rules: ImageRules) {
 		super(index, rules);
         
 
@@ -19,9 +19,10 @@ export class TextUpdateRule extends BaseWidgetRule {
 			"Border Color": "RuleBorderColor",
 			"Horizontal Align": "RuleXAlign",
 			"Vertical Align": "RuleYAlign",
+            // "X Min": "RuleImageXmin",
 			// // "Box Width": "RuleSlideButtonBoxWidth",
-			"Wrap Word": "RuleWrapWord",
-			"Show Unit": "RuleShowUnit",
+			// "Wrap Word": "RuleWrapWord",
+			// "Show Unit": "RuleShowUnit",
             // "Highlight BG Color": "RuleHighlightBackgroundColor",
 			// // "Use Channel Items": "RuleChoiceButtonUseChannelItems",
 			// // // // "Selected BG Color": "RuleChoiceButtonSelectedBackgroundColor",

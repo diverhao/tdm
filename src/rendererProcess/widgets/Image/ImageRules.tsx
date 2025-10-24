@@ -1,18 +1,18 @@
-import { TextUpdate, type_TextUpdate_tdl } from "./TextUpdate";
+import { Image, type_Image_tdl } from "./Image";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
-import { TextUpdateRule } from "./TextUpdateRule";
+import { ImageRule } from "./ImageRule";
 
 
-export class TextUpdateRules extends BaseWidgetRules {
-	constructor(textUpdate: TextUpdate, widgetTdl: type_TextUpdate_tdl) {
-		super(textUpdate, widgetTdl);
+export class ImageRules extends BaseWidgetRules {
+	constructor(image: Image, imageTdl: type_Image_tdl) {
+		super(image, imageTdl);
         this.initRules();
 	}
 
     
 	initRules = () => {
 		for (let ii = 0; ii < this.getRulesTdl().length; ii++) {
-            const newRule = new TextUpdateRule(ii, this);
+            const newRule = new ImageRule(ii, this);
 			this.getRules().push(newRule);
 		}
 	};
@@ -24,7 +24,7 @@ export class TextUpdateRules extends BaseWidgetRules {
 		const newRuleTdl = this.generateNewRuleTdl();
 		this.getRulesTdl().push(newRuleTdl);
         // (2)
-		const newRule = new TextUpdateRule(this.getRulesTdl().length - 1, this);
+		const newRule = new ImageRule(this.getRulesTdl().length - 1, this);
         newRule.renewRuleComponent(true);
 		this.getRules().push(newRule);
 	};
