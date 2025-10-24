@@ -136,12 +136,14 @@ export class Root {
                 }
 
                 // lazy render ActionButtons
+                // because this rendering only happens once, for newly created ActionButton widget, 
+                // the dropdown is not activated here, but in jobsAsOperatingModeBegins()
                 setTimeout(() => {
                     for (const widget of widgets) {
                         if (widget !== undefined && widget instanceof ActionButton && widget.getActions().length > 1) {
                             widget.setDropDownActivated((value: any) => {
                                 return true;
-                            })
+                            });
                         }
                     }
                 }, 50 + 0.1 * widgets.length);

@@ -111,7 +111,7 @@ export class ActionButton extends BaseWidget {
     // more than a regular component. That means if a display has 500 such components,
     // it may cost 1 second to render them, which is unacceptable.
     // In here we delay the render of <select /> components until all widgets are rendered
-    setDropDownActivated: (value: any) => void = (value: any) => {};
+    setDropDownActivated: (value: any) => void = (value: any) => { };
 
     _actions: type_actions_tdl;
     constructor(widgetTdl: type_ActionButton_tdl) {
@@ -188,7 +188,7 @@ export class ActionButton extends BaseWidget {
         });
 
         return (
-            <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
+            <ErrorBoundary style={{ ...this.getStyle(), backgroundColor: "rgba(0,0,0,0)" }} widgetKey={this.getWidgetKey()}>
                 <>
                     <this._ElementBody></this._ElementBody>
                     {this._showSidebar() ? this._sidebar?.getElement() : null}
@@ -202,7 +202,7 @@ export class ActionButton extends BaseWidget {
         return (
             // always update the div below no matter the TextUpdateBody is .memo or not
             // TextUpdateResizer does not update if it is .memo
-            <div style={{ ...this.getElementBodyRawStyle(), borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 2 }}>
+            <div style={{ ...this.getElementBodyRawStyle(), borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 3, overflow: "hidden" }}>
                 <this._ElementArea></this._ElementArea>
                 {this._showResizers() ? <this._ElementResizer /> : null}
             </div>
@@ -257,7 +257,6 @@ export class ActionButton extends BaseWidget {
         const selectRef = React.useRef<any>(null);
         const [dropDownActivated, setDropDownActivated] = React.useState(false);
         this.setDropDownActivated = setDropDownActivated;
-
 
         const shadowWidth = 2;
         const calcWidth = () => {
@@ -413,7 +412,7 @@ export class ActionButton extends BaseWidget {
                                             height: "100%",
                                             backgroundColor: "rgba(0,0,0,0)",
                                             // outline: "none",
-                                            borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 3,
+                                            // borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 10,
                                             // do not show dropdown arrow
                                             MozAppearance: "none",
                                             WebkitAppearance: "none",
@@ -1026,5 +1025,14 @@ export class ActionButton extends BaseWidget {
         }
     };
 
+    jobsAsOperatingModeBegins() {
+        super.jobsAsOperatingModeBegins();
+        // for newly created widget, the dropdown can only be activated here
+        setTimeout(() => {
+            this.setDropDownActivated((oldValue: boolean) => {
+                return true;
+            })
+        }, 50 + Math.random() * 150)
+    }
 
 }
