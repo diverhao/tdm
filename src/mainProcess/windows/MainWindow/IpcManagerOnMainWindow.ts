@@ -36,7 +36,7 @@ export class IpcManagerOnMainWindow {
         const websocketClient = this.getWebSocketClient();
         if (websocketClient === undefined) {
             this.connectIpcServer(true);
-        } else if (websocketClient.CLOSED) {
+        } else if (websocketClient.readyState === WebSocket.CLOSED) {
             console.log("websocket IPC is closed, re-connect")
             this.connectIpcServer(true);
         }

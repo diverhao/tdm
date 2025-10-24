@@ -25,6 +25,7 @@ export class EdlFileConverterThread {
         // if there is already a worker thread running, do not start
         let worker = this.getThread();
         if (worker !== undefined) {
+
             const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
             if (displayWindowAgent instanceof DisplayWindowAgent) {
                 displayWindowAgent.sendFromMainProcess("file-converter-command", {
@@ -42,7 +43,6 @@ export class EdlFileConverterThread {
                 })
             }
         } else {
-
             worker = new Worker(path.join(__dirname, '../helpers/EdlFileConverterThread.js'), {
                 workerData: options,
                 stdout: true, // Ignore stdout

@@ -12,7 +12,7 @@ const start = async (options: {
     displayWindowId: string,
     widgetKey: string,
 }) => {
-    if (options["src"].endsWith(".edl")) {
+    if (options["src"].endsWith(".edl") || options["src"].endsWith(".stp") || options["src"].endsWith(".bob") || options["src"].endsWith(".plt")) {
         await FileReader.readEdlAndSaveTdl(
             options["src"], // sourceFile: string,
             options["dest"], // destinationFolder: string,

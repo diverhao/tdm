@@ -115,7 +115,7 @@ const iterateFolder = (folderPath: string) => {
 }
 
 const getDestFileName = (srcFileName: string) => {
-    return srcFileName.replace(edlFolder, tdlFolder).replace(".edl", ".tdl").replace(".stp", ".tdl");
+    return srcFileName.replace(edlFolder, tdlFolder).replace(".edl", ".tdl").replace(".stp", ".tdl").replace(".bob", ".tdl").replace(".plt", ".tdl");
 }
 
 const convertFile = (srcFileName: string) => {
@@ -124,7 +124,7 @@ const convertFile = (srcFileName: string) => {
     const destFolderName = path.dirname(destFileName)
     fs.mkdirSync(destFolderName, { recursive: true });
 
-    if (srcFileName.endsWith(".edl") || srcFileName.endsWith(".stp")) {
+    if (srcFileName.endsWith(".edl") || srcFileName.endsWith(".stp") || srcFileName.endsWith(".bob") || srcFileName.endsWith(".plt")) {
         // convert the file
         toBeConvertedFiles.push(srcFileName);
         FileReader.readEdlAndSaveTdl(srcFileName, destFolderName, undefined, true)

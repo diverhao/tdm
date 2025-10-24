@@ -75,7 +75,7 @@ export class BobPropertyConverter {
         tdl[widgetKey] = widgetTdl;
     }
 
-    static parseBob = async (bobJson: Record<string, any>, tdl: Record<string, any>, fullTdlFileName: string) => {
+    static parseBob = async (bobJson: Record<string, any>, tdl: Record<string, any>, fullTdlFileName: string, convertBobSuffix: boolean = false) => {
         // let tdl: Record<string, any> = {};
 
         // go through all fields, parse Canvas
@@ -160,7 +160,7 @@ export class BobPropertyConverter {
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "action_button") {
-                const widgetTdl = ActionButtonHelper.convertBobToTdl(bobWidgetJson);
+                const widgetTdl = ActionButtonHelper.convertBobToTdl(bobWidgetJson, convertBobSuffix);
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "bool_button") {
@@ -220,15 +220,15 @@ export class BobPropertyConverter {
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "embedded") {
-                const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson, "embedded");
+                const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson, "embedded", convertBobSuffix);
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "webbrowser") {
-                const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson, "webbrowser");
+                const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson, "webbrowser", convertBobSuffix);
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "navtabs") {
-                const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson, "navtabs");
+                const widgetTdl = EmbeddedDisplayHelper.convertBobToTdl(bobWidgetJson, "navtabs", convertBobSuffix);
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "group") {
@@ -421,14 +421,17 @@ export class BobPropertyConverter {
      * to each-action[]
      * 
      */
-    static convertBobActions = (propertyValue: any) => {
+    static convertBobActions = (propertyValue: any, convertBobSuffix: boolean) => {
         const result: any[] = [];
         // array of actions
+        if (typeof propertyValue[0] !== "object") {
+            return result;
+        }
         const actionsData = propertyValue[0]["action"];
         for (const actionData of actionsData) {
             const type = actionData["$"]["type"];
             if (type === "open_display") {
-                result.push(this.convertBobAction_open_display(actionData));
+                result.push(this.convertBobAction_open_display(actionData, convertBobSuffix));
             } else if (type === "write_pv") {
                 result.push(this.convertBobAction_write_pv(actionData));
             } else if (type === "command") {
@@ -493,7 +496,8 @@ export class BobPropertyConverter {
             macros?: Record<string, string[]>[],
             target: string[], // "tab", "replace", "window"
             name?: string[], // pane, I don't know what is it
-        }
+        },
+        convertBobSuffix: boolean
     ) => {
         let label = "";
         if (propertyValue["description"] !== undefined) {
@@ -511,7 +515,11 @@ export class BobPropertyConverter {
             }
         }
 
-        const fileName = this.convertBobString(propertyValue["file"]);
+        let fileName = this.convertBobString(propertyValue["file"]);
+
+        if (convertBobSuffix === true) {
+            fileName = fileName.replaceAll(".bob", ".tdl").replaceAll(".plt", ".tdl");
+        }
 
         return {
             type: "OpenDisplay",

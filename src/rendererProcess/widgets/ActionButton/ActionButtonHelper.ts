@@ -413,7 +413,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         return tdl;
     };
 
-    static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_ActionButton_tdl => {
+    static convertBobToTdl = (bobWidgetJson: Record<string, any>, convertBobSuffix: boolean): type_ActionButton_tdl => {
         console.log("\n------------", `Parsing "action_button"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ActionButton");
         // all properties for this widget
@@ -475,7 +475,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                 } else if (propertyName === "height") {
                     tdl["style"]["height"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "actions") {
-                    tdl["actions"] = BobPropertyConverter.convertBobActions(propertyValue);
+                    tdl["actions"] = BobPropertyConverter.convertBobActions(propertyValue, convertBobSuffix);
                 } else if (propertyName === "rules") {
                     tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
                 } else if (propertyName === "visible") {

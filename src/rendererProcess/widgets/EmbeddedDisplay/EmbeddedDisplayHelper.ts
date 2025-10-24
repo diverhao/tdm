@@ -324,7 +324,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
         return tdl;
     };
 
-    static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "embedded" | "navtabs" | "webbrowser"): type_EmbeddedDisplay_tdl => {
+    static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "embedded" | "navtabs" | "webbrowser", convertBobSufffix: boolean = false): type_EmbeddedDisplay_tdl => {
         console.log("\n------------", `Parsing "embedded"`, "------------------\n");
         const tdl = this.generateDefaultTdl("EmbeddedDisplay");
         // all properties for this widget
@@ -392,7 +392,12 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
                 } else if (propertyName === "macros") {
                     tdl["itemMacros"].push(BobPropertyConverter.convertBobMacros(propertyValue));
                 } else if (propertyName === "file") {
-                    tdl["tdlFileNames"].push(BobPropertyConverter.convertBobString(propertyValue));
+                    const fileName = (BobPropertyConverter.convertBobString(propertyValue));
+                    if (convertBobSufffix === true) {
+                        tdl["tdlFileNames"].push(fileName.replaceAll(".bob", ".tdl").replaceAll(".plt", ".tdl"))
+                    } else {
+                        tdl["tdlFileNames"].push(fileName);
+                    }
                     tdl["itemNames"].push("")
                 } else if (propertyName === "border_width") {
                     tdl["style"]["borderWidth"] = BobPropertyConverter.convertBobNum(propertyValue);

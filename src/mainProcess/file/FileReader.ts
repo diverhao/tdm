@@ -336,7 +336,6 @@ export class FileReader {
         }
         const tdlFileType = this.tdlFileType(fullTdlFileName);
 
-        console.log("read tdl file --------------", tdlFileType)
         let tdl: Record<string, any> = {};
         if (tdlFileType === "tdl") {
             tdl = await this.readJSON(fullTdlFileName);
@@ -352,7 +351,7 @@ export class FileReader {
             // ! will be replaced, xml2json has some compatible issue
             // ! let xmlJSON = JSON.parse(parser.toJson(xml));
             // console.log("------------->", JSON.stringify(xmlJSON, null, 2));
-            await BobPropertyConverter.parseBob(bobJson["display"], tdl, fullTdlFileName);
+            await BobPropertyConverter.parseBob(bobJson["display"], tdl, fullTdlFileName, convertEdlSuffix);
             console.log(JSON.stringify(tdl, null, 4));
         } else if (tdlFileType === "plt") {
             const parser = new xml2js.Parser();
@@ -431,7 +430,7 @@ export class FileReader {
 
         const t0 = Date.now();
         if (parentPort && destinationFolder && path.isAbsolute(edlFileName)) {
-            const destFileName = path.join(destinationFolder, path.basename(edlFileName)).replace(".edl", ".tdl").replace(".stp", ".tdl");
+            const destFileName = path.join(destinationFolder, path.basename(edlFileName)).replace(".edl", ".tdl").replace(".stp", ".tdl").replace(".bob", ".tdl").replace(".plt", ".tdl");
             parentPort.postMessage({
                 type: "one-file-conversion-started",
                 srcFileName: edlFileName,
@@ -448,7 +447,7 @@ export class FileReader {
 
             const t1 = Date.now();
             if (parentPort && destinationFolder && path.isAbsolute(edlFileName)) {
-                const destFileName = path.join(destinationFolder, path.basename(edlFileName)).replace(".edl", ".tdl").replace(".stp", ".tdl");
+                const destFileName = path.join(destinationFolder, path.basename(edlFileName)).replace(".edl", ".tdl").replace(".stp", ".tdl").replace(".bob", ".tdl").replace(".plt", ".tdl");
                 parentPort.postMessage({
                     type: "one-file-conversion-finished",
                     srcFileName: edlFileName,
@@ -464,10 +463,10 @@ export class FileReader {
         } else {
             const tdl = tdlResult["tdl"];
             const fullTdlFileName = tdlResult["fullTdlFileName"];
-            let newFullTdlFileName = fullTdlFileName.replace(".edl", ".tdl").replace(".stp", ".tdl");
+            let newFullTdlFileName = fullTdlFileName.replace(".edl", ".tdl").replace(".stp", ".tdl").replace(".bob", ".tdl").replace(".plt", ".tdl");
             if (destinationFolder !== undefined) {
                 const fileName = path.basename(fullTdlFileName);
-                newFullTdlFileName = path.join(destinationFolder, fileName).replace(".edl", ".tdl").replace(".stp", ".tdl");
+                newFullTdlFileName = path.join(destinationFolder, fileName).replace(".edl", ".tdl").replace(".stp", ".tdl").replace(".bob", ".tdl").replace(".plt", ".tdl");
             }
             fs.writeFileSync(
                 newFullTdlFileName,
@@ -484,7 +483,7 @@ export class FileReader {
 
             const t1 = Date.now();
             if (parentPort && destinationFolder && path.isAbsolute(edlFileName)) {
-                const destFileName = path.join(destinationFolder, path.basename(edlFileName)).replace(".edl", ".tdl").replace(".stp", ".tdl");
+                const destFileName = path.join(destinationFolder, path.basename(edlFileName)).replace(".edl", ".tdl").replace(".stp", ".tdl").replace(".bob", ".tdl").replace(".plt", ".tdl");
                 parentPort.postMessage({
                     type: "one-file-conversion-finished",
                     srcFileName: edlFileName,
@@ -540,6 +539,20 @@ export class FileReader {
                     const t1 = Date.now();
                     if (parentPort) {
                         const destFileName = path.join(destinationFolder, path.basename(fileAndFolderFullName)).replace(".stp", ".tdl");
+                    }
+                } else if (path.extname(fileAndFolder) === ".bob") {
+                    // stp file
+                    await this.readEdlAndSaveTdl(fileAndFolderFullName, destinationFolder, undefined, convertEdlSuffix, parentPort);
+                    const t1 = Date.now();
+                    if (parentPort) {
+                        const destFileName = path.join(destinationFolder, path.basename(fileAndFolderFullName)).replace(".bob", ".tdl");
+                    }
+                } else if (path.extname(fileAndFolder) === ".plt") {
+                    // stp file
+                    await this.readEdlAndSaveTdl(fileAndFolderFullName, destinationFolder, undefined, convertEdlSuffix, parentPort);
+                    const t1 = Date.now();
+                    if (parentPort) {
+                        const destFileName = path.join(destinationFolder, path.basename(fileAndFolderFullName)).replace(".plt", ".tdl");
                     }
                 } else {
                     let newFileAndFolderFullName = path.join(destinationFolder, fileAndFolder);
