@@ -395,7 +395,7 @@ export class ActionButton extends BaseWidget {
                                     {this.getText()["appearance"] === "contemporary" ?
                                         <>
                                             &nbsp;
-                                            <img src="../../../mainProcess/resources/webpages/arrowDown-thin.svg"
+                                            <img src="../../resources/webpages/arrowDown-thin.svg"
                                                 style={{
                                                     width: this.getAllStyle()["fontSize"] * 0.7,
                                                     height: this.getAllStyle()["fontSize"] * 0.7,
@@ -628,7 +628,6 @@ export class ActionButton extends BaseWidget {
     openDisplay = (index: number) => {
         const tdl = this.getActions()[index] as type_action_opendisplay_tdl;
         let tdlFileName = tdl["fileName"];
-
         // the display must be in "operating" mode to open another display
         const mode = "operating";
         const editable = g_widgets1.getRoot().getEditable();

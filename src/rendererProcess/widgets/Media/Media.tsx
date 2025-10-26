@@ -7,7 +7,7 @@ import { MediaSidebar } from "./MediaSidebar";
 import * as path from "path";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import {Log} from "../../../mainProcess/log/Log";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_Media_tdl = {
     type: string;
@@ -112,8 +112,8 @@ export class Media extends BaseWidget {
             this.setRulesStyle(rulesValues["style"]);
             this.setRulesText(rulesValues["text"]);
         }
-        this.setAllStyle({...this.getStyle(), ...this.getRulesStyle()});
-        this.setAllText({...this.getText(), ...this.getRulesText()});
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
@@ -196,7 +196,7 @@ export class Media extends BaseWidget {
         this.resolveFileName();
 
         const fileType = this.getMediaType(this.getAllText()["fileName"]);
-        if (fileType === "picture") {
+        if (fileType === "picture" || fileType === "vector-picture") {
             return <this._ElementPicture></this._ElementPicture>;
         } else if (fileType === "pdf") {
             return <this._ElementPdf></this._ElementPdf>;
@@ -220,8 +220,9 @@ export class Media extends BaseWidget {
         }
     };
 
-    getMediaType = (fileName: string): "picture" | "pdf" | "video-local-file" | "video-remote-stream" | "NA" => {
-        const pictureTypes = ["jpg", "jpeg", "bmp", "png", "svg", "gif"];
+    getMediaType = (fileName: string): "picture" | "vector-picture" | "pdf" | "video-local-file" | "video-remote-stream" | "NA" => {
+        const pictureTypes = ["jpg", "jpeg", "bmp", "png", "gif"];
+        const vectorPictureTypes = ["svg"];
         const pdfTypes = ["pdf"];
         const localVideoFileTypes = ["mp4", "ogg", "webm", "mp3", "mov"];
 
@@ -230,6 +231,8 @@ export class Media extends BaseWidget {
 
         if (pictureTypes.includes(fileType)) {
             return "picture";
+        } else if (vectorPictureTypes.includes(fileType)) {
+            return "vector-picture";
         } else if (pdfTypes.includes(fileType)) {
             return "pdf";
         } else if (localVideoFileTypes.includes(fileType)) {
@@ -258,6 +261,13 @@ export class Media extends BaseWidget {
             ></img>
         );
     };
+
+    _ElementSvgImage = ({ svgString }: { svgString: string }) => {
+        const encoded = encodeURIComponent(svgString);
+        const dataUrl = `data:image/svg+xml;utf8,${encoded}`;
+
+        return <img src={dataUrl} alt="SVG" />;
+    }
 
     isRemotePath = (path: string) => {
         if (path.startsWith("http://") || path.startsWith("https://")) {
@@ -294,7 +304,7 @@ export class Media extends BaseWidget {
             }
             this.mediaFileName = rawFileName;
 
-            if (this.getMediaType(this.mediaFileName) !== "picture" && this.getMediaType(this.mediaFileName) !== "pdf") {
+            if (this.getMediaType(this.mediaFileName) !== "picture" && this.getMediaType(this.mediaFileName) !== "vector-picture" && this.getMediaType(this.mediaFileName) !== "pdf") {
                 this.base64Content = "";
                 g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                 g_widgets1.addToForceUpdateWidgets("GroupSelection2");
@@ -456,9 +466,11 @@ export class Media extends BaseWidget {
     };
 
     updateFileContents = (contents: string) => {
-        if (this.base64Content !== `data:image/png;base64,${contents}` && this.base64Content !== `data:application/pdf;base64, ${encodeURI(contents)}`) {
+        if (this.base64Content !== `data:image/png;base64,${contents}` && this.base64Content !== `data:image/svg+xml;utf8,${encodeURIComponent(contents)}` && this.base64Content !== `data:application/pdf;base64, ${encodeURI(contents)}`) {
             if (this.getMediaType(this.getAllText()["fileName"]) === "picture") {
                 this.base64Content = `data:image/png;base64,${contents}`;
+            } else if (this.getMediaType(this.getAllText()["fileName"]) === "vector-picture") {
+                this.base64Content = `data:image/svg+xml;utf8,${encodeURIComponent(contents)}`;
             } else if (this.getMediaType(this.getAllText()["fileName"]) === "pdf") {
                 this.base64Content = `data:application/pdf;base64, ${encodeURI(contents)}`;
             } else {
@@ -712,7 +724,7 @@ export class Media extends BaseWidget {
 
     jobsAsOperatingModeBegins() {
         const fileType = this.getMediaType(this.getText()["fileName"]);
-        if (fileType === "picture") {
+        if (fileType === "picture" || fileType === "vector-picture") {
             this.setReadWriteType("read");
         } else {
             this.setReadWriteType("write");

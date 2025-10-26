@@ -90,16 +90,16 @@ export class IpcManagerOnDisplayWindow {
             serverAddress = `wss://${host}:${this.getIpcServerPort()}`;
         }
         const client = new WebSocket(serverAddress);
-        
+
         client.onopen = () => {
             Log.info("Successfully connected to ipc server", this.getDisplayWindowClient().getWindowId(), this.ipcServerPort);
             this.setWebSocketClient(client);
-            
+
             if (reconnect === true) {
                 // remove prompt
                 this.getDisplayWindowClient().getPrompt().removeElement();
             }
-            
+
             client.send(
                 JSON.stringify({
                     processId: this.getDisplayWindowClient().getProcessId(),
@@ -1086,7 +1086,6 @@ export class IpcManagerOnDisplayWindow {
 
     handleSshFileContents = (event: any, data: IpcEventArgType2["ssh-file-contents"]) => {
         // find the widget
-        Log.debug("----------------->, we get the file contents", data["fileContents"])
         const widget = g_widgets1.getWidget2(data["widgetKey"]);
         if (widget instanceof Media) {
             widget.updateFileContents(data["fileContents"]);
@@ -1543,6 +1542,8 @@ export class IpcManagerOnDisplayWindow {
             if (data["content"] !== "") {
                 if (widget.getMediaType(widget.mediaFileName) === "picture") {
                     widget.base64Content = `data:image/png;base64,${data["content"]}`;
+                } else if (widget.getMediaType(widget.mediaFileName) === "vector-picture") {
+                    widget.base64Content = `data:image/svg+xml;utf8,${encodeURIComponent(data["content"])}`;
                 } else if (widget.getMediaType(widget.mediaFileName) === "pdf") {
                     widget.base64Content = `data:application/pdf;base64, ${encodeURI(data["content"])}`;
                 } else {

@@ -3908,7 +3908,10 @@ export class IpcManagerOnMainProcess {
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             try {
                 const fileBuffer = fs.readFileSync(fullFileName);
-                const fileBase64Str = fileBuffer.toString("base64");
+                let fileBase64Str = fileBuffer.toString("base64");
+                if (fullFileName.endsWith(".svg")) {
+                    fileBase64Str = fileBuffer.toString();
+                }
                 // response.send(JSON.stringify({ content: fileBase64Str }));
                 displayWindowAgent.sendFromMainProcess("get-media-content", {
                     content: fileBase64Str,

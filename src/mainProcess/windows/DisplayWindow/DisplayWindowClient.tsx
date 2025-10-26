@@ -1233,7 +1233,6 @@ export class DisplayWindowClient {
             return;
         }
 
-
         if (fileName !== undefined && fileBlob !== undefined) {
             const tdlFileName = fileName;
             // we supply the file blob
@@ -1263,7 +1262,12 @@ export class DisplayWindowClient {
 
         } else {
             // manually select the file in web browser file prompt or read file on server (ActionButton open)
+            let currentTdlFolder = undefined;
+            try {
+                currentTdlFolder = path.dirname(this.getTdlFileName());
+            } catch (e) {
 
+            }
 
             this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
                 options: {
@@ -1274,10 +1278,11 @@ export class DisplayWindowClient {
                     // external macros: user-provided and parent display macros
                     macros: [],
                     replaceMacros: true,
-                    currentTdlFolder: undefined,
+                    currentTdlFolder: currentTdlFolder,
                     windowId: this.getWindowId(),
                 }
             })
+
 
             // const inputElement = document.createElement("input");
             // inputElement.type = "file";
