@@ -656,10 +656,9 @@ export class DisplayWindowAgent {
         const channelAgentsManager = this.getWindowAgentsManager().getMainProcess().getChannelAgentsManager();
         const channelType = channelAgentsManager.determineChannelType(channelName);
 
-        if (channelType !== "local") {
+        if ((channelType !== "local") && (channelType !== "global")) {
             return;
         }
-
 
         this.addAndConnectLocalChannel(channelName);
 

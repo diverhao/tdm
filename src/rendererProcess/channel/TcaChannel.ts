@@ -123,9 +123,9 @@ export class TcaChannel {
 
     // allowed character in EPICS channel name
     // a-z A-Z 0-9 _ - : . ; [ ] < > 
-    static regexEpicsChannelName = /^[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+$/;
+    // static regexEpicsChannelName = /^(?:ca:\/\/)?[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+$/;
     // "pva://" + regular EPICS PV name
-    static regexPvaChannelName = /^pva:\/\/[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+(\/[a-zA-Z0-9:\_\-\.]+)?$/;
+    // static regexPvaChannelName = /^pva:\/\/[a-zA-Z0-9:\_\-\[\]<>\.;$\{\}\(\)]+(\/[a-zA-Z0-9:\_\-\.]+)?$/;
 
 
 
@@ -193,28 +193,57 @@ export class TcaChannel {
 
 
     static checkChannelName = (channelName: string | undefined): "local" | "ca" | "global" | "pva" | undefined => {
+
         if (channelName === undefined) {
             return undefined;
-        } else {
-            const resultLocal = channelName.match(this.regexLocalChannelName);
-            const resultGlobal = channelName.match(this.regexGlobalChannelName);
-            const resultCa = channelName.match(this.regexEpicsChannelName);
-            const resultPva = channelName.match(this.regexPvaChannelName);
-            if (resultLocal === null && resultCa === null && resultGlobal === null && resultPva === null) {
-                return undefined;
-            }
-            else if (resultLocal !== null) {
-                return "local";
-            } else if (resultCa !== null) {
-                return "ca";
-            } else if (resultGlobal !== null) {
-                return "global";
-            } else if (resultPva !== null) {
-                return "pva";
-            } else {
-                return undefined;
-            }
         }
+
+        if (channelName.startsWith("loc://")) {
+            return "local";
+        } else if (channelName.startsWith("glb://")) {
+            return "global";
+        } else if (channelName.startsWith("pva://")) {
+            return "pva"
+        } else if (channelName.startsWith("ca://")) {
+            return "ca"
+        } else {
+            // get default protocol
+            const defaultProtocol = g_widgets1.getRoot().getDisplayWindowClient().getProfileEntry("EPICS Custom Environment", "Default Protocol");
+            if (defaultProtocol === "PVA") {
+                return "pva";
+            } else if (defaultProtocol === "CA") {
+                return "ca";
+            } else {
+                // if there is no default protocol setting, use CA
+                return "ca";
+            }
+
+        }
+        
+        // if (channelName?.startsWith("ca"))
+
+        //     if (channelName === undefined) {
+        //         return undefined;
+        //     } else {
+        //         const resultLocal = channelName.match(this.regexLocalChannelName);
+        //         const resultGlobal = channelName.match(this.regexGlobalChannelName);
+        //         const resultCa = channelName.match(this.regexEpicsChannelName);
+        //         const resultPva = channelName.match(this.regexPvaChannelName);
+        //         if (resultLocal === null && resultCa === null && resultGlobal === null && resultPva === null) {
+        //             return undefined;
+        //         }
+        //         else if (resultLocal !== null) {
+        //             return "local";
+        //         } else if (resultCa !== null) {
+        //             return "ca";
+        //         } else if (resultGlobal !== null) {
+        //             return "global";
+        //         } else if (resultPva !== null) {
+        //             return "pva";
+        //         } else {
+        //             return undefined;
+        //         }
+        //     }
     }
 
     /**
@@ -1112,9 +1141,9 @@ export class TcaChannel {
             this.getReadWriteIos().rejectAllIos(this);
             // (5)
             const windowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-            g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("tca-destroy", 
+            g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("tca-destroy",
                 {
-                    displayWindowId: windowId, 
+                    displayWindowId: windowId,
                     channelName: this.getChannelName()
                 }
             );
@@ -1125,9 +1154,9 @@ export class TcaChannel {
     // let main process know we want to monitor this channel, only monitor DBR_TIME data
     monitor = () => {
         const windowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-        g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("tca-monitor", 
+        g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("tca-monitor",
             {
-                displayWindowId: windowId, 
+                displayWindowId: windowId,
                 channelName: this.getChannelName()
             }
         );

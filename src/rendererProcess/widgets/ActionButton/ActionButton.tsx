@@ -392,6 +392,19 @@ export class ActionButton extends BaseWidget {
                                     }}
                                 >
                                     {this.getButtonText()}
+                                    {this.getText()["appearance"] === "contemporary" ?
+                                        <>
+                                            &nbsp;
+                                            <img src="../../../mainProcess/resources/webpages/arrowDown-thin.svg"
+                                                style={{
+                                                    width: this.getAllStyle()["fontSize"] * 0.7,
+                                                    height: this.getAllStyle()["fontSize"] * 0.7,
+                                                }}
+                                            ></img>
+                                        </>
+                                        :
+                                        null
+                                    }
                                 </div>
                                 {dropDownActivated === true ?
                                     <select

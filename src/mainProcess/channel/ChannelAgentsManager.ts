@@ -127,9 +127,11 @@ export class ChannelAgentsManager {
     /**
      * Both loc:// and glb:// are considered as local type in main process
      */
-    determineChannelType = (channelName: string): "ca" | "local" | "pva" | undefined => {
-        if (channelName.startsWith("loc://") || channelName.startsWith("glb://")) {
+    determineChannelType = (channelName: string): "ca" | "local" | "pva" | "global" | undefined => {
+        if (channelName.startsWith("loc://")) {
             return "local";
+        } else if (channelName.startsWith("glb://")) {
+            return "global";
         } else if (channelName.startsWith("pva://")) {
             return "pva"
         } else if (channelName.startsWith("ca://")) {

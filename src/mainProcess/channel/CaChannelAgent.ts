@@ -579,6 +579,8 @@ export class CaChannelAgent {
             // pva://demo:abc.EGU --> demo:abc.EGU, one full pv name
             // pva://demo:abc/timeStamp.nanoseconds --> pva://demo:abc
             return this.getChannelName().replace("pva://", "").split("/")[0]
+        } else if (this.getProtocol() === "ca") {
+            return this.getChannelName().replace("ca://", "");
         }
         return this.getChannelName();
     };
