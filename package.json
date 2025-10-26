@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2025-10-24T04:40:42Z",
+    "buildDate": "2025-10-26T03:06:30Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
@@ -69,7 +69,7 @@
         "cors": "^2.8.5",
         "dom-to-image": "^2.6.0",
         "dom-to-image-more": "^3.7.1",
-        "epics-tca": "^1.1.26",
+        "epics-tca": "^1.1.29",
         "express": "^5.1.0",
         "express-session": "^1.18.2",
         "katex": "^0.16.22",

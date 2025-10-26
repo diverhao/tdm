@@ -115,7 +115,9 @@ export class ChannelAgentsManager {
                 }
             }
 
-            const unconnectedChannelNames = Object.keys(context.getUnresolvedChannelsByName());
+            const unconnectedCaChannelNames = Object.keys(context.getUnresolvedCaChannelsByName());
+            const unconnectedPvaChannelNames = Object.keys(context.getUnresolvedPvaChannelsByName());
+            const unconnectedChannelNames = [...unconnectedCaChannelNames, ...unconnectedPvaChannelNames];
             result["tcp"]["unresolved_channel_names"] = {};
             result["tcp"]["unresolved_channel_names"]["channels"] = unconnectedChannelNames;
             return result;

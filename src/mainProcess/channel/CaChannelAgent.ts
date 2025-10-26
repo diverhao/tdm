@@ -124,12 +124,12 @@ export class CaChannelAgent {
                     return false;
                 }
                 // this._channelCreationPromise = context.createChannel(this._channelName, 5);
-                let channelName = this.getBareChannelName();
+                let bareChannelName = this.getBareChannelName();
                 if (this.getProtocol() === "ca") {
-                    this._channelCreationPromise = context.createChannel(channelName, "ca", creationTimeout);
+                    this._channelCreationPromise = context.createChannel(bareChannelName, "ca", creationTimeout);
                     channelTmp = await this._channelCreationPromise;
                 } else if (this.getProtocol() === "pva") {
-                    this._channelCreationPromise = context.createChannel(channelName, "pva", creationTimeout);
+                    this._channelCreationPromise = context.createChannel(bareChannelName, "pva", creationTimeout);
                     channelTmp = await this._channelCreationPromise;
                 }
 
@@ -366,7 +366,6 @@ export class CaChannelAgent {
                 const errMsg = `Value to put for channel ${this.getChannelName()} is undefined.`;
                 throw new Error(errMsg);
             }
-            // console.log(`Run command await channel.putPva("${pvRequest}", [${[newValue]}], ${ioTimeout})`)
             putStatus = await channel.putPva(pvRequest, [newValue], ioTimeout);
         } catch (e) {
             Log.error("0", e);
@@ -396,7 +395,6 @@ export class CaChannelAgent {
      * In this way, if there no other window having MONITOR or outstanding GET/PUT, this channel is destroyed.
      */
     createMonitor = async (displayWindowId: string): Promise<void> => {
-        console.log("create monitor=============", this.getChannelName())
         // this.addClientsNum();
         // this.addMonitorOperation();
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.MONITOR);
@@ -491,7 +489,6 @@ export class CaChannelAgent {
                             // let newDbrData = JSON.parse(JSON.stringify(channelMonitor.getChannel().getDbrData()));
                             // let newPvaData = JSON.parse(JSON.stringify(channelMonitor.getPvaData()));
                             let newPvaData = channelMonitor.getPvaData();
-                            console.log("pva monitor", this.getChannelName())
                             displayWindowAgent.addNewChannelData(this.getChannelName(), newPvaData);
                         }
                     }
@@ -514,6 +511,7 @@ export class CaChannelAgent {
      * (2) Remove this object from the `ChannelAgentsManager`.
      */
     destroyHard = () => {
+        const protocol = this.getProtocol();
         try {
             // (1)
             const channel = this.getChannel();
@@ -523,8 +521,8 @@ export class CaChannelAgent {
                 // the channel may not be connected yet, in this case, this._channel is not assigned
                 // but we can obtain the epics Channel object from Context
                 const context = this.getChannelAgentsManager().getContext();
-                if (context !== undefined) {
-                    const channel = context.getChannel(this.getBareChannelName());
+                if (context !== undefined && (protocol === "ca" || protocol === "pva")) {
+                    const channel = context.getChannel(this.getBareChannelName(), protocol);
                     if (channel instanceof Channel) {
                         channel.destroyHard();
                     } else {
@@ -777,30 +775,6 @@ export class CaChannelAgent {
         const channelName = this.getChannelName();
         const channelAgentsManager = this.getChannelAgentsManager();
         return channelAgentsManager.determineChannelType(channelName);
-        // if (this.getChannelName().startsWith("pva://")) {
-        //     return "pva"
-        // } else if (this.getChannelName().startsWith("ca://")) {
-        //     return "ca"
-        // } else {
-        //     // get default protocol
-        //     const profile = this.getChannelAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
-        //     if (profile !== undefined) {
-        //         const defaultProtodol = profile.getEntry("EPICS Custom Environment", "Default Protocol");
-        //         if (defaultProtodol === "PVA") {
-        //             console.log("we are using pva protocol =====================", this.getChannelName())
-        //             return "pva";
-        //         } else if (defaultProtodol === "CA") {
-        //             return "ca";
-        //         } else {
-        //             // if there is no default protocol setting, use CA
-        //             return "ca";
-        //         }
-        //     } else {
-        //         // if there is no default protocol setting, use CA
-        //         return "ca";
-        //     }
-
-        // }
     }
 
     /**

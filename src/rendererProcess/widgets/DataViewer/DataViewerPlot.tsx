@@ -1864,11 +1864,13 @@ export class DataViewerPlot {
 
     _ElementControls = () => {
 
+        const isUtilityWindow = g_widgets1.getRoot().getDisplayWindowClient().getIsUtilityWindow();
+
         return (
             <div
                 style={{
                     // width: `100%`,
-                    width: window.innerWidth,
+                    width: isUtilityWindow === true? window.innerWidth: this.getMainWidget().getAllStyle()["width"],
                     height: `${this.toolbarHeight}`,
                     display: "inline-flex",
                     flexFlow: "row",
