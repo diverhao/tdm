@@ -393,7 +393,7 @@ export class Casw extends BaseWidget {
                     this.DataViewerMoved = true;
                 }
             }
-        })
+        }, [])
         return <div
             style={{
                 display: "inline-flex",

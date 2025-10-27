@@ -5,6 +5,8 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
+import { DataViewer } from "../DataViewer/DataViewer";
+import { Log } from "../../../mainProcess/log/Log";
 
 export type type_ProfilesViewer_tdl = {
     type: string;
@@ -43,6 +45,11 @@ export class ProfilesViewer extends BaseWidget {
             tcp: {},
         }
 
+    DataViewerMoved: boolean = false;
+
+    wrapperRef: any = undefined;
+
+
 
     constructor(widgetTdl: type_ProfilesViewer_tdl) {
         super(widgetTdl);
@@ -70,10 +77,15 @@ export class ProfilesViewer extends BaseWidget {
                     this.requestProcessesInfo();
                 }
                 if (this.showEpicsStats === true) {
+                    // when we receive the reply, the plot is updated
                     this.requestEpicsStats();
                 }
             }, 1000)
         )
+
+        window.addEventListener("resize", () => {
+            this.resizeDataViewer();
+        })
     }
 
     requestProcessesInfo = () => {
@@ -167,6 +179,18 @@ export class ProfilesViewer extends BaseWidget {
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         const [selection, setSelection] = React.useState("profiles");
+
+        React.useEffect(() => {
+            if (this.DataViewerMoved === false) {
+                const ElementDataViewer = document.getElementById("DataViewer");
+                const ElementDataViewerWrapper = document.getElementById("DataViewerWrapper");
+                if (ElementDataViewer !== null && ElementDataViewerWrapper !== null) {
+                    ElementDataViewerWrapper.appendChild(ElementDataViewer);
+                    this.resizeDataViewer()
+                    this.DataViewerMoved = true;
+                }
+            }
+        }, [])
 
         return (
             <div
@@ -265,6 +289,10 @@ export class ProfilesViewer extends BaseWidget {
             >
             </this._ElementEpicsStatsFilter>
             <h3>
+                Number of bytes received in last second (TCP and UDP)
+            </h3>
+            <this._ElementEpicsStatsPlotWrapper show={show}></this._ElementEpicsStatsPlotWrapper>
+            <h3>
                 UDP
             </h3>
             <table>
@@ -344,6 +372,54 @@ export class ProfilesViewer extends BaseWidget {
                 })}
             </table>
         </div>
+    }
+
+    _ElementEpicsStatsPlotWrapper = ({ show }: any) => {
+        const elementRef = React.useRef<any>(null);
+        this.wrapperRef = elementRef;
+        return <div
+            id="DataViewerWrapper"
+            ref={elementRef}
+            style={{
+                // marginTop: 20,
+                position: "relative",
+                width: "100%",
+                height: 450,
+                display: show === true ? "inline-flex" : "none",
+            }}
+        >
+
+        </div>
+    }
+
+
+    resizeDataViewer = () => {
+        // get Table size
+        let width = 0;
+        let height = 0;
+        if (this.wrapperRef !== undefined && this.wrapperRef.current !== null) {
+            width = this.wrapperRef.current.offsetWidth;
+            height = this.wrapperRef.current.offsetHeight;
+        }
+
+        if (width === 0 || height === 0) {
+            const ElementDataViewerWrapper = document.getElementById("DataViewerWrapper");
+            if (ElementDataViewerWrapper !== null) {
+                width = ElementDataViewerWrapper.offsetWidth;
+                height = ElementDataViewerWrapper.offsetHeight;
+            }
+        }
+        if (width !== 0 && height !== 0) {
+            for (let widget of g_widgets1.getWidgets2().values()) {
+                if (widget instanceof DataViewer) {
+                    const widgetKey = widget.getWidgetKey();
+                    widget.getStyle()["width"] = width;
+                    widget.getStyle()["height"] = height;
+                    g_widgets1.addToForceUpdateWidgets(widgetKey);
+                    g_flushWidgets()
+                }
+            }
+        }
     }
 
     _ElementEpicsStatsChannelNames = ({ channels, startIndex, filterText }: any) => {
@@ -1034,13 +1110,38 @@ export class ProfilesViewer extends BaseWidget {
         g_flushWidgets();
     }
 
-
     updateEpicsStats = (epicsStats: {
         udp: Record<string, any>,
         tcp: Record<string, Record<string, any>>,
     }) => {
-        console.log("new epics stats ====================", epicsStats)
         this.epicsStats = epicsStats;
+
+        // calculate the total # of bytes, including TCP and UDP traffic
+        let lastSecondCount = epicsStats["udp"]["bytesReceivedInLastSecond"];
+        for (const [, tcpTransportStats] of Object.entries(epicsStats["tcp"])) {
+            const bytesReceivedInLastSecond = tcpTransportStats["bytesReceivedInLastSecond"]
+            if ( bytesReceivedInLastSecond !== undefined) {
+                lastSecondCount = lastSecondCount + bytesReceivedInLastSecond;
+            }
+        }
+        try {
+            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+            for (const widget of g_widgets1.getWidgets().values()) {
+                if (widget instanceof DataViewer) {
+                    const channelName = widget.getChannelNames()[0];
+                    if (channelName !== undefined) {
+                        const channel = g_widgets1.getTcaChannel(channelName);
+                        channel.put(displayWindowId, { value: lastSecondCount }, 1);
+                    } else {
+                        throw new Error("There is no channel name defined");
+                    }
+                    break;
+                }
+            }
+        } catch (e) {
+            Log.error(e);
+        }
+
         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
         g_flushWidgets();
     }
@@ -1066,8 +1167,8 @@ export class ProfilesViewer extends BaseWidget {
                         event.preventDefault();
                         if (event.button === 0) {
                             if (type === "Display Window") {
-                                
-                                displayWindowClient.getIpcManager().sendFromRendererProcess("focus-window", {displayWindowId: displayWindowId});
+
+                                displayWindowClient.getIpcManager().sendFromRendererProcess("focus-window", { displayWindowId: displayWindowId });
                             }
                             else if (type === "Main Window") {
                                 displayWindowClient.getIpcManager().sendFromRendererProcess("bring-up-main-window", {});

@@ -817,7 +817,21 @@ export class DisplayWindowClient {
             // widgetTdl.text.singleWidget = true;
             // widgetTdl.style.boxSizing = "border-box";
             // widgetTdl.style.padding = 5;
+
+
+            // casw has a DataViewer
+            const widgetTdl2 = DataViewer.generateDefaultTdl("DataViewer");
+            const widgetKey2 = widgetTdl2.widgetKey;
+            // will be lively updated upon window resize and view switch
+            widgetTdl2.style.width = 666;
+            widgetTdl2.style.height = 333;
+            widgetTdl2.channelNames = ["loc://lastSecondCount=0"];
+            widgetTdl2.text["title"] = [""];
+
+            // put Casw on top of XYPlot, so that the mouse click/down reaches Casw
             tdl[widgetKey] = widgetTdl;
+            tdl[widgetKey2] = widgetTdl2;
+
             tdl["Canvas"].style.backgroundColor = "rgba(255, 255, 255, 1)";
         } else if (utilityType === "LogViewer") {
             const widgetTdl = LogViewer.generateWidgetTdl(utilityOptions);

@@ -13,7 +13,6 @@ import {OrthographicCamera, Scene, WebGLRenderer, BufferGeometry, BufferAttribut
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 type type_yAxis = {
     label: string;
@@ -1864,13 +1863,13 @@ export class DataViewerPlot {
 
     _ElementControls = () => {
 
-        const isUtilityWindow = g_widgets1.getRoot().getDisplayWindowClient().getIsUtilityWindow();
+        const isSingleWidget = this.getMainWidget().getText()["singleWidget"];
 
         return (
             <div
                 style={{
                     // width: `100%`,
-                    width: isUtilityWindow === true? window.innerWidth: this.getMainWidget().getAllStyle()["width"],
+                    width: isSingleWidget === true? window.innerWidth: this.getMainWidget().getAllStyle()["width"],
                     height: `${this.toolbarHeight}`,
                     display: "inline-flex",
                     flexFlow: "row",
