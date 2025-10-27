@@ -929,37 +929,16 @@ export class DisplayWindowClient {
             widgetTdl.style.boxSizing = "border-box";
             widgetTdl.style.padding = "20px";
 
-            // ca snooper has a XYPlot (not DataViewer):
-            const widgetTdl2 = XYPlot.generateDefaultTdl("XYPlot");
+            const widgetTdl2 = DataViewer.generateDefaultTdl("DataViewer");
             const widgetKey2 = widgetTdl2.widgetKey;
             // will be lively updated upon window resize and view switch
             widgetTdl2.style.width = 666;
             widgetTdl2.style.height = 333;
-            widgetTdl2.channelNames = ["loc://histX<number[]>([1,2,3])", "loc://histY<number[]>([1,2,3])"];
-            widgetTdl2.xAxis["label"] = "t [second]";
-            widgetTdl2.xAxis["valMin"] = -100;
-            widgetTdl2.xAxis["valMax"] = 0;
-            widgetTdl2.yAxes.push(
-                {
-                    label: `Count`,
-                    valMin: 0,
-                    valMax: 50,
-                    lineWidth: 2,
-                    lineColor: "rgba(255,0,0,1)",
-                    ticks: [0, 50, 100],
-                    ticksText: [0, 50, 100],
-                    autoScale: false,
-                    lineStyle: "solid",
-                    pointType: "none",
-                    pointSize: 5,
-                    showGrid: true,
-                    numGrids: 5,
-                    displayScale: "Linear",
-                }
-            )
-            // put CaSnooper on top of XYPlot, so that the mouse click/down reaches CaSnooper
-            tdl[widgetKey2] = widgetTdl2;
+            widgetTdl2.channelNames = ["loc://lastSecondCount=0"];
+            widgetTdl2.text["title"] = ["# of packets / s"];
+
             tdl[widgetKey] = widgetTdl;
+            tdl[widgetKey2] = widgetTdl2;
         } else if (utilityType === "Talhk") {
             // default size is 100%
             const widgetTdl = Talhk.generateWidgetTdl(utilityOptions); // set server address from utilityOptions
@@ -980,37 +959,18 @@ export class DisplayWindowClient {
             widgetTdl.style.boxSizing = "border-box";
             widgetTdl.style.padding = "20px";
 
-            // ca snooper has a XYPlot (not DataViewer):
-            const widgetTdl2 = XYPlot.generateDefaultTdl("XYPlot");
+            // casw has a DataViewer
+            const widgetTdl2 = DataViewer.generateDefaultTdl("DataViewer");
             const widgetKey2 = widgetTdl2.widgetKey;
             // will be lively updated upon window resize and view switch
             widgetTdl2.style.width = 666;
             widgetTdl2.style.height = 333;
-            widgetTdl2.channelNames = ["loc://histX<number[]>([1,2,3])", "loc://histY<number[]>([1,2,3])"];
-            widgetTdl2.xAxis["label"] = "t [second]";
-            widgetTdl2.xAxis["valMin"] = -100;
-            widgetTdl2.xAxis["valMax"] = 0;
-            widgetTdl2.yAxes.push(
-                {
-                    label: `Count`,
-                    valMin: 0,
-                    valMax: 50,
-                    lineWidth: 2,
-                    lineColor: "rgba(255,0,0,1)",
-                    ticks: [0, 50, 100],
-                    ticksText: [0, 50, 100],
-                    autoScale: false,
-                    lineStyle: "solid",
-                    pointType: "none",
-                    pointSize: 5,
-                    showGrid: true,
-                    numGrids: 5,
-                    displayScale: "Linear",
-                }
-            )
+            widgetTdl2.channelNames = ["loc://lastSecondCount=0"];
+            widgetTdl2.text["title"] = ["# of packets / second"];
+
             // put Casw on top of XYPlot, so that the mouse click/down reaches Casw
-            tdl[widgetKey2] = widgetTdl2;
             tdl[widgetKey] = widgetTdl;
+            tdl[widgetKey2] = widgetTdl2;
         }
     };
 

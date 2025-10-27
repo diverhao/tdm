@@ -7,10 +7,10 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Table } from "../../helperWidgets/Table/Table";
 import { v4 as uuidv4 } from "uuid";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { XYPlot } from "../XYPlot/XYPlot";
 import { convertDateObjToString, countDuplicates } from "../../global/GlobalMethods";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../mainProcess/log/Log";
+import { DataViewer } from "../DataViewer/DataViewer";
 
 export type type_CaProtoSearchData = {
     msSinceEpoch: number,
@@ -68,6 +68,8 @@ export class CaSnooper extends BaseWidget {
         };
 
     bottomView: "raw-data" | "stats" | "counts-channel-name" | "counts-src-ip" | "counts-udp-client" = "raw-data";
+
+    lastSecondCount = 0;
 
     memoId: string = "";
 
@@ -177,6 +179,9 @@ export class CaSnooper extends BaseWidget {
         }
 
         this.filterData(newData);
+
+        this.lastSecondCount = this.lastSecondCount + newData.length;
+
         this.forceUpdateTable();
         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
         g_flushWidgets();
@@ -202,26 +207,30 @@ export class CaSnooper extends BaseWidget {
         // this._sidebar = new PvTableSidebar(this);
 
         setInterval(() => {
-            // only for histogram
             this.processData();
+            const lastSecondCount = this.lastSecondCount;
+            this.lastSecondCount = 0;
             try {
                 const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                const xTcaChannel = g_widgets1.getTcaChannel("loc://histX" + "@window_" + displayWindowId);
-                xTcaChannel.put(displayWindowId, { value: this.histogramDataX }, 1);
-            } catch (e) {
-                Log.error(e);
-            }
-            try {
-                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                const yTcaChannel = g_widgets1.getTcaChannel("loc://histY" + "@window_" + displayWindowId);
-                yTcaChannel.put(displayWindowId, { value: this.histogramDataY }, 1);
+                for (const widget of g_widgets1.getWidgets().values()) {
+                    if (widget instanceof DataViewer) {
+                        const channelName = widget.getChannelNames()[0];
+                        if (channelName !== undefined) {
+                            const channel = g_widgets1.getTcaChannel(channelName);
+                            channel.put(displayWindowId, { value: lastSecondCount }, 1);
+                        } else {
+                            throw new Error("There is no channel name defined");
+                        }
+                        break;
+                    }
+                }
             } catch (e) {
                 Log.error(e);
             }
         }, 1000)
 
         window.addEventListener("resize", () => {
-            this.resizeXYPlot();
+            this.resizeDataViewer();
         })
     }
 
@@ -373,7 +382,7 @@ export class CaSnooper extends BaseWidget {
         );
     };
 
-    XYPlotMoved: boolean = false;
+    DataViewerMoved: boolean = false;
 
 
 
@@ -382,13 +391,13 @@ export class CaSnooper extends BaseWidget {
         this.forceUpdateTable = () => { forceUpdate({}) };
 
         React.useEffect(() => {
-            if (this.XYPlotMoved === false) {
-                const ElementXYPlot = document.getElementById("XYPlot");
-                const ElementXYPlotWrapper = document.getElementById("XYPlotWrapper");
-                if (ElementXYPlot !== null && ElementXYPlotWrapper !== null) {
-                    ElementXYPlotWrapper.appendChild(ElementXYPlot);
-                    this.resizeXYPlot()
-                    this.XYPlotMoved = true;
+            if (this.DataViewerMoved === false) {
+                const ElementDataViewer = document.getElementById("DataViewer");
+                const ElementDataViewerWrapper = document.getElementById("DataViewerWrapper");
+                if (ElementDataViewer !== null && ElementDataViewerWrapper !== null) {
+                    ElementDataViewerWrapper.appendChild(ElementDataViewer);
+                    this.resizeDataViewer()
+                    this.DataViewerMoved = true;
                 }
             }
         })
@@ -412,14 +421,14 @@ export class CaSnooper extends BaseWidget {
                             : null
             }
             <this._ElementDataTable></this._ElementDataTable>
-            <this._ElementXYPlotWrapper></this._ElementXYPlotWrapper>
+            <this._ElementDataViewerWrapper></this._ElementDataViewerWrapper>
 
         </div>
     }
 
-    _ElementXYPlotWrapper = () => {
+    _ElementDataViewerWrapper = () => {
         return <div
-            id="XYPlotWrapper"
+            id="DataViewerWrapper"
             style={{
                 position: "relative",
                 width: "100%",
@@ -572,7 +581,7 @@ export class CaSnooper extends BaseWidget {
                         marginLeft={0}
                         handleMouseDown={() => {
                             this.bottomView = "raw-data";
-                            this.resizeXYPlot()
+                            this.resizeDataViewer()
                             g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                             g_flushWidgets();
 
@@ -586,7 +595,7 @@ export class CaSnooper extends BaseWidget {
                         marginLeft={10}
                         handleMouseDown={() => {
                             this.bottomView = "stats";
-                            this.resizeXYPlot()
+                            this.resizeDataViewer()
                             g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                             g_flushWidgets();
 
@@ -600,7 +609,7 @@ export class CaSnooper extends BaseWidget {
                         marginLeft={10}
                         handleMouseDown={() => {
                             this.bottomView = "counts-channel-name";
-                            this.resizeXYPlot()
+                            this.resizeDataViewer()
                             g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                             g_flushWidgets();
 
@@ -613,7 +622,7 @@ export class CaSnooper extends BaseWidget {
                         marginLeft={10}
                         handleMouseDown={() => {
                             this.bottomView = "counts-src-ip";
-                            this.resizeXYPlot()
+                            this.resizeDataViewer()
                             g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                             g_flushWidgets();
 
@@ -626,7 +635,7 @@ export class CaSnooper extends BaseWidget {
                         marginLeft={10}
                         handleMouseDown={() => {
                             this.bottomView = "counts-udp-client";
-                            this.resizeXYPlot()
+                            this.resizeDataViewer()
                             g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                             g_flushWidgets();
 
@@ -878,7 +887,7 @@ export class CaSnooper extends BaseWidget {
     tableRef: React.MutableRefObject<any> | undefined = undefined;
     countsRef: React.MutableRefObject<any> | undefined = undefined;
 
-    resizeXYPlot = () => {
+    resizeDataViewer = () => {
         // get Table size
         let width = 0;
         let height = 0;
@@ -888,15 +897,15 @@ export class CaSnooper extends BaseWidget {
         }
 
         if (width === 0 || height === 0) {
-            const ElementXYPlotWrapper = document.getElementById("XYPlotWrapper");
-            if (ElementXYPlotWrapper !== null) {
-                width = ElementXYPlotWrapper.offsetWidth;
-                height = ElementXYPlotWrapper.offsetHeight;
+            const ElementDataViewerWrapper = document.getElementById("DataViewerWrapper");
+            if (ElementDataViewerWrapper !== null) {
+                width = ElementDataViewerWrapper.offsetWidth;
+                height = ElementDataViewerWrapper.offsetHeight;
             }
         }
         if (width !== 0 && height !== 0) {
             for (let widget of g_widgets1.getWidgets2().values()) {
-                if (widget instanceof XYPlot) {
+                if (widget instanceof DataViewer) {
                     const widgetKey = widget.getWidgetKey();
                     widget.getStyle()["width"] = width;
                     widget.getStyle()["height"] = height;

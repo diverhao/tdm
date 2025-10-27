@@ -239,6 +239,7 @@ export class DataViewer extends BaseWidget {
                 style={
                     this.getElementBodyRawStyle()
                 }
+                id="DataViewer"
             >
                 <this._ElementArea></this._ElementArea>
                 {this._showResizers() ? <this._ElementResizer /> : null}

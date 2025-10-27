@@ -2,6 +2,7 @@ import { ChannelAgentsManager } from "./ChannelAgentsManager";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { DisplayOperations } from "./CaChannelAgent";
 import EventEmitter from "events";
+import { converEpochTimeToEpicsTimeStamp } from "../../rendererProcess/global/GlobalMethods";
 
 
 export type type_LocalChannel_data = {
@@ -31,7 +32,6 @@ export class LocalChannelAgent {
         channelValue: number | string | number[] | string[] = 0,
         channelStrings: string[] = []
     ) {
-        console.log("LocalChannelAgent: constructor +++++++++++++++++++++++++++++++++++", channelName, channelStrings);
         this._channelAgentsManager = channelAgentsManager;
         this._channelName = channelName;
         // this._mainProcessId = channelAgentsManager.getMainProcess().getProcessId();
@@ -40,6 +40,8 @@ export class LocalChannelAgent {
             value: channelValue,
             type: channelType,
             strings: channelStrings,
+            secondsSinceEpoch: 0,
+            nanoSeconds: 0,
         };
     }
 
@@ -62,6 +64,15 @@ export class LocalChannelAgent {
     getDbrType = () => {
         return this.getDbrData()["type"];
     };
+
+    setDbrTime = () => {
+        const timeNow = Date.now();
+        const epochTimeNow = converEpochTimeToEpicsTimeStamp(timeNow);
+        const secondsSinceEpoch = Math.floor(epochTimeNow / 1000);
+        const nanoSeconds = (epochTimeNow - Math.floor(epochTimeNow)) * 1000 * 1000;
+        this.getDbrData()["secondsSinceEpoch"] = secondsSinceEpoch;
+        this.getDbrData()["nanoSeconds"] = nanoSeconds;
+    }
 
     /**
      * PUT operation is initiated from renderer process. This operation is
@@ -144,7 +155,7 @@ export class LocalChannelAgent {
                     }
                 }
 
-            } 
+            }
         }
 
         // force update, without changing the value, like .PROC in EPICS PV
@@ -156,6 +167,8 @@ export class LocalChannelAgent {
         if (!dbrDataChanged) {
             return;
         }
+
+        this.setDbrTime();
 
         // send the new value to all display windows
         const channelAgentsManager = this.getChannelAgentsManager();

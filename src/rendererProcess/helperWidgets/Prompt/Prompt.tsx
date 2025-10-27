@@ -4,6 +4,7 @@ import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 import { Log } from "../../../mainProcess/log/Log";
 import { type_DialogInputBox, type_DialogMessageBox, type_DialogMessageBoxButton } from "../../../mainProcess/mainProcess/IpcEventArgType";
+import { TdmLogo } from "../../global/Images";
 
 
 
@@ -164,7 +165,7 @@ export abstract class Prompt {
                 display: "inline-flex",
                 justifyContent: "center",
             }}>
-                <img src={"../../resources/webpages/tdm-logo.svg"} width="50px" height="50px"></img>
+                <TdmLogo width={50} height={50}></TdmLogo>
             </div>
             <h2>TDM</h2>
             <div style={{
@@ -270,7 +271,7 @@ export abstract class Prompt {
         return (<this._ElementBackground>
             {/* header */}
             <div>
-                <img src="../../resources/webpages/tdm-logo.svg" height="30px"></img>
+                <TdmLogo width={50} height={50}></TdmLogo>
             </div>
             <div style={{
                 fontSize: 30,
@@ -381,7 +382,7 @@ export abstract class Prompt {
         return (<this._ElementBackground>
             {/* header */}
             <div>
-                <img src="../../resources/webpages/tdm-logo.svg" height="30px"></img>
+                <TdmLogo width={50} height={50}></TdmLogo>
             </div>
             {/* human readable info */}
             <div style={{

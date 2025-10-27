@@ -7,10 +7,10 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Table } from "../../helperWidgets/Table/Table";
 import { v4 as uuidv4 } from "uuid";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { XYPlot } from "../XYPlot/XYPlot";
 import { convertDateObjToString } from "../../global/GlobalMethods";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../mainProcess/log/Log";
+import { DataViewer } from "../DataViewer/DataViewer";
 
 export type type_CaProtoRsrvIsUpData = {
     msSinceEpoch: number,
@@ -65,6 +65,9 @@ export class Casw extends BaseWidget {
     clearCaProtoRsrvIsUpData = () => {
         this.getCaProtoRsrvIsUpData().length = 0;
     }
+
+
+    lastSecondCount = 0;
 
     memoId: string = "";
 
@@ -148,38 +151,6 @@ export class Casw extends BaseWidget {
         }
     }
 
-    processData1 = () => {
-
-        const timeNow = Date.now();
-        let currentIndex = 0;
-        if (this.getCaProtoRsrvIsUpData().length > 0) {
-            const timeOldest = this.getCaProtoRsrvIsUpData()[0]["msSinceEpoch"];
-            const oldexIndex = Math.ceil((timeOldest - timeNow) / 1000);
-
-            const resultX = [];
-            const resultY = [];
-            for (let ii = oldexIndex; ii <= 0; ii++) {
-                resultX.push(ii);
-                resultY.push(0);
-            }
-
-            for (let ii = 0; ii < this.getCaProtoRsrvIsUpData().length; ii++) {
-                const filtered = this.getFilteredProtoSearchData()[ii];
-                if (!filtered) {
-                    continue;
-                } else {
-                    const data = this.getCaProtoRsrvIsUpData()[ii];
-                    const time = data["msSinceEpoch"];
-                    currentIndex = resultY.length + Math.ceil((time - timeNow) / 1000) - 1;
-                    resultY[currentIndex] = resultY[currentIndex] + 1;
-                }
-            }
-
-            this.histogramDataX = resultX;
-            this.histogramDataY = resultY;
-        }
-
-    }
 
     stopCaswServer = () => {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
@@ -198,7 +169,11 @@ export class Casw extends BaseWidget {
             this.getCaProtoRsrvIsUpData().splice(0, this.getCaProtoRsrvIsUpData().length - this.bufferSize);
         }
         this.filterData(newData);
+
+        this.lastSecondCount = this.lastSecondCount + newData.length;
+
         this.forceUpdateTable();
+
         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
         g_flushWidgets();
     }
@@ -222,26 +197,31 @@ export class Casw extends BaseWidget {
         // no sidebar
         // this._sidebar = new PvTableSidebar(this);
 
-        setInterval(() => {
+        setInterval(async () => {
             this.processData();
+            const lastSecondCount = this.lastSecondCount;
+            this.lastSecondCount = 0;
             try {
                 const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                const xTcaChannel = g_widgets1.getTcaChannel("loc://histX" + "@window_" + displayWindowId);
-                xTcaChannel.put(displayWindowId, { value: this.histogramDataX }, 1);
-            } catch (e) {
-                Log.error(e);
-            }
-            try {
-                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                const yTcaChannel = g_widgets1.getTcaChannel("loc://histY" + "@window_" + displayWindowId);
-                yTcaChannel.put(displayWindowId, { value: this.histogramDataY }, 1);
+                for (const widget of g_widgets1.getWidgets().values()) {
+                    if (widget instanceof DataViewer) {
+                        const channelName = widget.getChannelNames()[0];
+                        if (channelName !== undefined) {
+                            const channel = g_widgets1.getTcaChannel(channelName);
+                            channel.put(displayWindowId, { value: lastSecondCount }, 1);
+                        } else {
+                            throw new Error("There is no channel name defined");
+                        }
+                        break;
+                    }
+                }
             } catch (e) {
                 Log.error(e);
             }
         }, 1000)
 
         window.addEventListener("resize", () => {
-            this.resizeXYPlot();
+            this.resizeDataViewer();
         })
     }
 
@@ -395,7 +375,7 @@ export class Casw extends BaseWidget {
         );
     };
 
-    XYPlotMoved: boolean = false;
+    DataViewerMoved: boolean = false;
 
 
 
@@ -404,13 +384,13 @@ export class Casw extends BaseWidget {
         this.forceUpdateTable = () => { forceUpdate({}) };
 
         React.useEffect(() => {
-            if (this.XYPlotMoved === false) {
-                const ElementXYPlot = document.getElementById("XYPlot");
-                const ElementXYPlotWrapper = document.getElementById("XYPlotWrapper");
-                if (ElementXYPlot !== null && ElementXYPlotWrapper !== null) {
-                    ElementXYPlotWrapper.appendChild(ElementXYPlot);
-                    this.resizeXYPlot()
-                    this.XYPlotMoved = true;
+            if (this.DataViewerMoved === false) {
+                const ElementDataViewer = document.getElementById("DataViewer");
+                const ElementDataViewerWrapper = document.getElementById("DataViewerWrapper");
+                if (ElementDataViewer !== null && ElementDataViewerWrapper !== null) {
+                    ElementDataViewerWrapper.appendChild(ElementDataViewer);
+                    this.resizeDataViewer()
+                    this.DataViewerMoved = true;
                 }
             }
         })
@@ -425,7 +405,7 @@ export class Casw extends BaseWidget {
             {/* <this._ElementHeader></this._ElementHeader>
             <this._ElementFilters></this._ElementFilters>
             <this._ElementDataTable></this._ElementDataTable>
-            <this._ElementXYPlotWrapper></this._ElementXYPlotWrapper> */}
+            <this._ElementDataViewerWrapper></this._ElementDataViewerWrapper> */}
 
             <this._ElementHeader></this._ElementHeader>
             <this._ElementSettings></this._ElementSettings>
@@ -437,14 +417,14 @@ export class Casw extends BaseWidget {
                         : null
             }
             <this._ElementDataTable></this._ElementDataTable>
-            <this._ElementXYPlotWrapper></this._ElementXYPlotWrapper>
+            <this._ElementDataViewerWrapper></this._ElementDataViewerWrapper>
 
         </div>
     }
 
-    _ElementXYPlotWrapper = () => {
+    _ElementDataViewerWrapper = () => {
         return <div
-            id="XYPlotWrapper"
+            id="DataViewerWrapper"
             style={{
                 position: "relative",
                 width: "100%",
@@ -608,7 +588,7 @@ export class Casw extends BaseWidget {
                         marginLeft={0}
                         handleMouseDown={() => {
                             this.bottomView = "raw-data";
-                            this.resizeXYPlot()
+                            this.resizeDataViewer()
                             g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                             g_flushWidgets();
 
@@ -622,7 +602,7 @@ export class Casw extends BaseWidget {
                         marginLeft={10}
                         handleMouseDown={() => {
                             this.bottomView = "stats";
-                            this.resizeXYPlot()
+                            this.resizeDataViewer()
                             g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                             g_flushWidgets();
 
@@ -636,7 +616,7 @@ export class Casw extends BaseWidget {
                         marginLeft={10}
                         handleMouseDown={() => {
                             this.bottomView = "counts-src-ip";
-                            this.resizeXYPlot()
+                            this.resizeDataViewer()
                             g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                             g_flushWidgets();
 
@@ -649,7 +629,7 @@ export class Casw extends BaseWidget {
                         marginLeft={10}
                         handleMouseDown={() => {
                             this.bottomView = "counts-tcp-client";
-                            this.resizeXYPlot()
+                            this.resizeDataViewer()
                             g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                             g_flushWidgets();
 
@@ -826,7 +806,7 @@ export class Casw extends BaseWidget {
                         </input>
                     </form>
                 </div>
-                
+
             </div >
         )
     }
@@ -834,7 +814,7 @@ export class Casw extends BaseWidget {
     tableRef: React.MutableRefObject<any> | undefined = undefined;
 
 
-    resizeXYPlot = () => {
+    resizeDataViewer = () => {
         // get Table size
         let width = 0;
         let height = 0;
@@ -844,15 +824,15 @@ export class Casw extends BaseWidget {
         }
 
         if (width === 0 || height === 0) {
-            const ElementXYPlotWrapper = document.getElementById("XYPlotWrapper");
-            if (ElementXYPlotWrapper !== null) {
-                width = ElementXYPlotWrapper.offsetWidth;
-                height = ElementXYPlotWrapper.offsetHeight;
+            const ElementDataViewerWrapper = document.getElementById("DataViewerWrapper");
+            if (ElementDataViewerWrapper !== null) {
+                width = ElementDataViewerWrapper.offsetWidth;
+                height = ElementDataViewerWrapper.offsetHeight;
             }
         }
         if (width !== 0 && height !== 0) {
             for (let widget of g_widgets1.getWidgets2().values()) {
-                if (widget instanceof XYPlot) {
+                if (widget instanceof DataViewer) {
                     const widgetKey = widget.getWidgetKey();
                     widget.getStyle()["width"] = width;
                     widget.getStyle()["height"] = height;
@@ -863,33 +843,6 @@ export class Casw extends BaseWidget {
         }
     }
 
-
-    resizeXYPlot1 = () => {
-        // get Table size
-        if (this.tableRef !== undefined && this.tableRef.current !== null) {
-            let width = this.tableRef.current.offsetWidth;
-            let height = this.tableRef.current.offsetHeight;
-            if (width === 0 || height === 0) {
-                const ElementXYPlotWrapper = document.getElementById("XYPlotWrapper");
-                if (ElementXYPlotWrapper !== null) {
-                    width = ElementXYPlotWrapper.offsetWidth;
-                    height = ElementXYPlotWrapper.offsetHeight;
-                }
-            }
-
-            if (width !== 0 && height !== 0) {
-                for (let widget of g_widgets1.getWidgets2().values()) {
-                    if (widget instanceof XYPlot) {
-                        const widgetKey = widget.getWidgetKey();
-                        widget.getStyle()["width"] = width;
-                        widget.getStyle()["height"] = height;
-                        g_widgets1.addToForceUpdateWidgets(widgetKey);
-                        g_flushWidgets()
-                    }
-                }
-            }
-        }
-    }
 
 
 

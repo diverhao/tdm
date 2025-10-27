@@ -148,6 +148,11 @@ export const converEpicsTimeStampToEpochTime = (msSince1990UTC: number): number 
     return msSince1990UTC + ms1990UTC;
 };
 
+export const converEpochTimeToEpicsTimeStamp = (epochTimeMs: number): number => {
+    const ms1990UTC = Date.UTC(90, 0, 1, 0, 0, 0, 0);
+    return epochTimeMs - ms1990UTC;
+};
+
 // "2023-03-25 10:00:00.000" local time
 export const getCurrentTimeString = () => {
     const nowMs = Date.now();
