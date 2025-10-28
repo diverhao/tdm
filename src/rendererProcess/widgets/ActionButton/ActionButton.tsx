@@ -202,7 +202,7 @@ export class ActionButton extends BaseWidget {
         return (
             // always update the div below no matter the TextUpdateBody is .memo or not
             // TextUpdateResizer does not update if it is .memo
-            <div style={{ ...this.getElementBodyRawStyle(), borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 3, overflow: "hidden" }}>
+            <div style={{ ...this.getElementBodyRawStyle(), borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 3, overflow: "visible" }}>
                 <this._ElementArea></this._ElementArea>
                 {this._showResizers() ? <this._ElementResizer /> : null}
             </div>
@@ -231,6 +231,7 @@ export class ActionButton extends BaseWidget {
                     fontWeight: this.getAllStyle().fontWeight,
                     outline: this._getElementAreaRawOutlineStyle(),
                     color: this._getElementAreaRawTextStyle(),
+                    borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 3,
                     backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
                 }}
                 // title={"tooltip"}
@@ -313,8 +314,8 @@ export class ActionButton extends BaseWidget {
                     alignItems: "flex-start",
                     justifyContent: "center",
                     // position: "relative",
-                    overflow: "visible",
-                    textOverflow: "hidden",
+                    // overflow: "visible",
+                    // textOverflow: "hidden",
                 }}
             >
                 {/* <this._StyledSelectionBox> */}
@@ -323,7 +324,7 @@ export class ActionButton extends BaseWidget {
                         width: "100%",
                         height: "100%",
                         backgroundColor: `rgba(0, 0, 0, 0)`,
-                        overflow: `visible`,
+                        // overflow: `visible`,
                     }}
                 >
                     <div
@@ -338,8 +339,8 @@ export class ActionButton extends BaseWidget {
                             backgroundColor: `rgba(0, 0, 0, 0)`,
                             outline: "none",
                             border: "none",
-                            overflow: "hidden",
-                            textOverflow: "hidden",
+                            // overflow: "visible",
+                            // textOverflow: "hidden",
 
                             // outline: calcOutline(),
                             // borderRight: calcBorderBottomRight(),
@@ -352,6 +353,7 @@ export class ActionButton extends BaseWidget {
                         onMouseEnter={(event: any) => {
                             if (!g_widgets1.isEditing()) {
                                 if (elementRef.current !== null) {
+                                    console.log("okokok")
                                     elementRef.current.style["outlineStyle"] = "solid";
                                     elementRef.current.style["outlineWidth"] = "3px";
                                     elementRef.current.style["outlineColor"] = "rgba(105,105,105,1)";

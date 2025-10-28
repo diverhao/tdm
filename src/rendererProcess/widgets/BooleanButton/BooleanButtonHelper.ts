@@ -58,7 +58,6 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
             // the LED indicator or picture position and size
             horizontalAlign: "center",
             verticalAlign: "center",
-            boxWidth: 100,
             // text styles
             wrapWord: false,
             showUnit: false,
@@ -536,8 +535,6 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
                 }
             }
         }
-
-        tdl["text"]["boxWidth"] = Math.ceil(0.4 * Math.min(tdl["style"]["width"], tdl["style"]["height"]))
 
         if (tdl["text"]["mode"] === "push and reset (inverted)") {
             tdl["text"]["mode"] = "push and reset";

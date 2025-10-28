@@ -22,7 +22,7 @@ export class BooleanButtonRule extends BaseWidgetRule {
             "Border Color": "RuleBorderColor",
             "Horizontal Align": "RuleXAlign",
             "Vertical Align": "RuleYAlign",
-            "Box Width": "RuleSlideButtonBoxWidth",
+            // "Box Width": "RuleSlideButtonBoxWidth",
             "Wrap Word": "RuleWrapWord",
             "Show Unit": "RuleShowUnit",
             "Use Channel Items": "RuleChoiceButtonUseChannelItems",

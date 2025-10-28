@@ -532,7 +532,7 @@ export class SlideButton extends BaseWidget {
         rules: [],
         itemLabels: ["False", "True"],
         itemValues: [0, 1],
-        itemColors: ["rgba(60, 100, 60, 1)", "rgba(60, 255, 60, 1)"],
+        itemColors: ["rgba(210, 210, 210, 1)", "rgba(0, 255, 0, 1)"],
     };
 
     // override

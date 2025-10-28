@@ -244,7 +244,7 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
                     <b>LED Indicator</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {this.getSidebarSlideButtonBoxWidth().getElement()}
+                    {/* {this.getSidebarSlideButtonBoxWidth().getElement()} */}
                     {/* {this.getSidebarSlideButtonBoxRatio().getElement()} */}
                     {this.getSidebarLEDBit().getElement()}
                     {this.getSidebarBooleanButtonShowLED().getElement()}

@@ -304,6 +304,12 @@ export class BooleanButton extends BaseWidget {
             }
         }
 
+        const calcLedFullSize = () => {
+            return Math.min(this.getAllStyle()["width"], this.getAllStyle()["height"]) * 0.5;
+        }
+
+        const ledFullSize = calcLedFullSize();
+
         return (
             <div
                 ref={elementRef}
@@ -386,8 +392,8 @@ export class BooleanButton extends BaseWidget {
                         this.getAllText()["usePictures"] === true ? (
                             <>
                                 <img
-                                    width={this.getAllText()["boxWidth"]}
-                                    height={this.getAllText()["boxWidth"]}
+                                    width={ledFullSize}
+                                    height={ledFullSize}
                                     style={{
                                         objectFit: "scale-down",
                                     }}
@@ -399,10 +405,10 @@ export class BooleanButton extends BaseWidget {
                             <>
                                 <div
                                     style={{
-                                        width: this.getAllText()["boxWidth"],
-                                        height: this.getAllText()["boxWidth"],
+                                        width: ledFullSize,
+                                        height: ledFullSize,
                                         display: "inline-flex",
-                                        borderRadius: this.getAllText()["boxWidth"] / 2,
+                                        borderRadius: ledFullSize / 2,
                                         backgroundColor: this.getButtonBackgroundColor(),
                                         // backgroundColor: this.calcColor(),
                                         border: "solid 1px rgba(30,30,30,1)",
@@ -864,7 +870,6 @@ export class BooleanButton extends BaseWidget {
             // the LED indicator or picture position and size
             horizontalAlign: "center",
             verticalAlign: "center",
-            boxWidth: 100,
             // text styles
             wrapWord: false,
             showUnit: false,

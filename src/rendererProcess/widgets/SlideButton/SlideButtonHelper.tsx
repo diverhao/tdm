@@ -78,7 +78,7 @@ export class SlideButtonHelper extends BaseWidgetHelper {
         rules: [],
         itemLabels: ["False", "True"],
         itemValues: [0, 1],
-        itemColors: ["rgba(60, 100, 60, 1)", "rgba(60, 255, 60, 1)"],
+        itemColors: ["rgba(210, 210, 210, 1)", "rgba(0, 255, 0, 1)"],
     };
 
     // override
@@ -128,9 +128,11 @@ export class SlideButtonHelper extends BaseWidgetHelper {
             "password", // not in tdm
         ];
 
+        tdl["style"]["x"] = 0;
+        tdl["style"]["y"] = 0;
+        tdl["style"]["width"] = 100;
+        tdl["style"]["height"] = 30;
         tdl["text"]["useChannelItems"] = false;
-        tdl["text"]["selectedBackgroundColor"] = "rgba(0,255,0,1)";
-        tdl["text"]["unselectedBackgroundColor"] = "rgba(210,210,210,1)";
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
