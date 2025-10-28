@@ -183,7 +183,7 @@ export class MainWindowClient {
         this._profileRunPage = newPage;
     };
     saveProfiles = () => {
-        this.getIpcManager().sendFromRendererProcess("save-profiles", 
+        this.getIpcManager().sendFromRendererProcess("save-profiles",
             {
                 modifiedProfiles: this.getProfiles()
             }
@@ -273,6 +273,31 @@ export class MainWindowClient {
         return this._profiles[this._selectedProfileName];
     };
 
+
+    getProfileCategory = (profileName: string, categoryName: string) => {
+        const profile = this._profiles[profileName];
+        if (profile !== undefined) {
+            const category = profile[categoryName];
+            if (category !== undefined) {
+                return category;
+            }
+        }
+        return undefined;
+    };
+
+    getProfileEntry = (profileName: string, categoryName: string, entryName: string) => {
+        const category = this.getProfileCategory(profileName, categoryName);
+        if (category !== undefined) {
+            const entry = category[entryName];
+            if (entry !== undefined) {
+                return entry;
+            }
+        }
+        return undefined;
+    };
+
+
+
     getEnvDefault = () => {
         return this._envDefault;
     }
@@ -296,7 +321,7 @@ export class MainWindowClient {
     setLogFileName = (newName: string) => {
         this._logFileName = newName;
     }
-    
+
     getSite = () => {
         return this._site;
     }

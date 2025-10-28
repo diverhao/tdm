@@ -105,8 +105,9 @@ export class MainWindowAgent {
                     icon: path.join(__dirname, '../../../webpack/resources/webpages/tdm-logo.png'),
                     webPreferences: {
                         // use node.js
+                        preload: path.join(__dirname, 'preload.js'), // <-- preload script here
                         nodeIntegration: true,
-                        contextIsolation: false,
+                        contextIsolation: true,
                         nodeIntegrationInWorker: true,
                         sandbox: false,
                         webviewTag: true,

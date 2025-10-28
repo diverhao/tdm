@@ -225,27 +225,49 @@ export class IpcManagerOnMainWindow {
             event.stopPropagation();
             if (this.getMainWindowClient().getSelectedProfileName() === "") {
                 // if no profile is selected, let the profile button handle the event
+                return;
             } else {
-                // profile is selected
+                // regular display window
                 const tdlFileNames: string[] = [];
                 for (const file of event.dataTransfer.files) {
                     // full name
-                    const tdlFileName = file.path;
-                    tdlFileNames.push(tdlFileName);
-                }
-                this.sendFromRendererProcess("open-tdl-file", {
-                    options: {
-                        tdlFileNames: tdlFileNames,
-                        mode: "operating",
-                        // manually opened, always editable
-                        editable: true,
-                        // use parent window's macros
-                        macros: [],
-                        replaceMacros: true,
-                        // currentTdlFolder?: string;
-                        windowId: this.getMainWindowClient().getWindowId(),
+                    // must use preload.js to resolve the full file path
+                    const electronAPI = (window as any).electronAPI;
+                    if (electronAPI !== undefined && electronAPI.getFilePath !== undefined) {
+                        const tdlFileName = electronAPI.getFilePath(file);
+                        tdlFileNames.push(tdlFileName);
                     }
-                });
+                }
+
+                // if (g_widgets1 !== undefined) {
+                Log.info("File Path of dragged files: ", tdlFileNames);
+                // let mode = "operating";
+                const selectedProfile = this.getMainWindowClient().getSelectedProfile();
+                let mode = "operating" as "operating" | "editing";
+                if (selectedProfile !== undefined) {
+                    mode = this.getMainWindowClient()
+                        .getProfileEntry(
+                            this.getMainWindowClient().getSelectedProfileName(),
+                            "EPICS Custom Environment",
+                            "Manually Opened TDL Mode"
+                        );
+
+                }
+                this.sendFromRendererProcess("open-tdl-file",
+                    {
+                        options: {
+                            tdlFileNames: tdlFileNames,
+                            mode: mode,
+                            // manually opened, always editable
+                            editable: true,
+                            // use parent window's macros
+                            macros: [],
+                            replaceMacros: true,
+                            // currentTdlFolder?: string;
+                            windowId: this.getMainWindowClient().getWindowId(),
+                        }
+                    }
+                );
             }
         });
 
