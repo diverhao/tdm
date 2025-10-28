@@ -1408,7 +1408,7 @@ export class ScaledSlider extends BaseWidget {
         text: {
             showUnit: true,
             minPvValue: 0,
-            maxPvValue: 10,
+            maxPvValue: 100,
             usePvLimits: false,
             numTickIntervals: 5,
             // layout

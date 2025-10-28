@@ -121,11 +121,12 @@ export class LEDMultiStateHelper extends BaseWidgetHelper {
             "y",
         ];
 
-
         tdl["style"]["top"] = 0;
         tdl["style"]["left"] = 0;
         tdl["style"]["width"] = 20;
         tdl["style"]["height"] = 20;
+        tdl["itemNames"][0] = "State 1";
+        tdl["itemNames"][1] = "State 2";
         
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];

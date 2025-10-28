@@ -123,6 +123,11 @@ export class SpinnerHelper extends BaseWidgetHelper {
             "vertical_alignment",
         ];
 
+        tdl["style"]["x"] = 0;
+        tdl["style"]["y"] = 0;
+        tdl["style"]["width"] = 100;
+        tdl["style"]["height"] = 20;
+
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {

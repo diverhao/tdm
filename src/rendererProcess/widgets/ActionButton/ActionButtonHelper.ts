@@ -440,19 +440,17 @@ export class ActionButtonHelper extends BaseWidgetHelper {
             "rotation_step",
             "enabled", // not in tdm
             "show_confirm_dialog",
-            "confirm_message",
+            "confirm_message", // not in tdm
             "password",
         ];
 
         let confirmDialog = false;
-        let confirmMessage = "";
         let password = "";
         let isTransparent = false;
         tdl["style"]["left"] = 0;
         tdl["style"]["top"] = 0;
         tdl["style"]["width"] = 100;
         tdl["style"]["height"] = 30;
-        tdl["style"]["backgroundColor"] = "rgba(210, 210, 210, 1)";
         tdl["text"]["appearance"] = "contemporary";
         tdl["text"]["text"] = "$(actions)";
 
@@ -500,8 +498,6 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                     tdl["style"]["transform"] = BobPropertyConverter.convertBobAngle(propertyValue);
                 } else if (propertyName === "show_confirm_dialog") {
                     confirmDialog = BobPropertyConverter.convertBobBoolean(propertyValue);
-                } else if (propertyName === "confirm_message") {
-                    confirmMessage = BobPropertyConverter.convertBobString(propertyValue);
                 } else if (propertyName === "password") {
                     password = BobPropertyConverter.convertBobString(propertyValue);
                 } else if (propertyName === "transparent") {

@@ -166,6 +166,11 @@ export class MediaHelper extends BaseWidgetHelper {
             "y",
         ];
 
+        tdl["style"]["width"] = 150;
+        tdl["style"]["height"] = 100;
+        tdl["text"]["stretchToFit"] = true;
+
+
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {

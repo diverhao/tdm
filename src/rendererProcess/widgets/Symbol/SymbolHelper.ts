@@ -110,7 +110,7 @@ export class SymbolHelper extends BaseWidgetHelper {
             "border_alarm_sensitive",
             "symbols",
             "background_color",
-            "initial_index",
+            "initial_index", // not in tdm
             "rotation",
             "show_index",
             "transparent",
@@ -122,8 +122,12 @@ export class SymbolHelper extends BaseWidgetHelper {
             "fallback_symbol",
         ];
 
-        let initialIndex = 0;
         let isTransparent = false;
+
+        tdl["style"]["left"] = 0;
+        tdl["style"]["top"] = 0;
+        tdl["style"]["width"] = 100;
+        tdl["style"]["height"] = 100;
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -155,8 +159,6 @@ export class SymbolHelper extends BaseWidgetHelper {
                     tdl["itemNames"] = BobPropertyConverter.convertBobStrings(propertyValue, "symbol");
                 } else if (propertyName === "background_color") {
                     tdl["style"]["backgroundColor"] = BobPropertyConverter.convertBobColor(propertyValue);
-                } else if (propertyName === "initial_index") {
-                    initialIndex = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "rotation") {
                     tdl["style"]["transform"] = BobPropertyConverter.convertBobAngleNum(propertyValue);
                 } else if (propertyName === "preserve_ratio") {
@@ -175,7 +177,7 @@ export class SymbolHelper extends BaseWidgetHelper {
         }
 
         for (let ii = 0; ii < tdl["itemNames"].length; ii++) {
-            tdl["itemValues"].push(ii + initialIndex);
+            tdl["itemValues"].push(ii);
         }
 
         if (isTransparent) {

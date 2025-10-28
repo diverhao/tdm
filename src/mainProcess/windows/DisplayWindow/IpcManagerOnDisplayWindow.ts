@@ -89,6 +89,9 @@ export class IpcManagerOnDisplayWindow {
             Log.info("Web mode host:", host);
             serverAddress = `wss://${host}:${this.getIpcServerPort()}`;
         }
+
+        const mainProcessMode = this.getDisplayWindowClient().getMainProcessMode();
+
         const client = new WebSocket(serverAddress);
 
         client.onopen = () => {
@@ -120,20 +123,13 @@ export class IpcManagerOnDisplayWindow {
             console.log(err)
         }
 
-        // setTimeout(() => {
-        //     console.log("Display window ID =======", this.getDisplayWindowClient().getWindowId())
-        //     if (this.getDisplayWindowClient().getWindowId() === "0-5" && reconnect === false) {
-        //         client.close();
-        //     }
-        // }, 5000)
-
         client.onclose = (ev: CloseEvent) => {
             Log.error("IPC websocket connection closed", ev, ev.code, ev.reason);
             // show a message on the display window
             this.handleDialogShowMessageBox(undefined, {
                 info: {
                     messageType: "error",
-                    humanReadableMessages: ["Window lost connection with TDM main service. Trying to reconnect ..."],
+                    humanReadableMessages: [`Window lost connection with TDM main service. ${mainProcessMode === "desktop" ? "Trying to reconnect ..." : ""}`],
                     rawMessages: []
                 }
             })

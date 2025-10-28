@@ -55,7 +55,7 @@ export class TankHelper extends BaseWidgetHelper {
             // showPvValue: true,
             usePvLimits: false,
             minPvValue: 0,
-            maxPvValue: 10,
+            maxPvValue: 100,
             useLogScale: false,
             // tank and water colors
             fillColor: "rgba(0,200,0,1)",
@@ -331,9 +331,11 @@ export class TankHelper extends BaseWidgetHelper {
         ];
 
         let horizontalDirection = false;
-        tdl["text"]["fillColor"] = "rgba(0,0,255,1)";
+
+        tdl["style"]["left"] = 0;
+        tdl["style"]["top"] = 0;
+        tdl["text"]["usePvLimits"] = true;
         tdl["text"]["containerColor"] = "rgba(192,192,192,1)";
-        tdl["style"]["backgroundColor"] = "rgba(240,240,240,1)";
 
         if (type === "progressbar") {
             horizontalDirection = true;
@@ -343,6 +345,11 @@ export class TankHelper extends BaseWidgetHelper {
             tdl["style"]["width"] = 100;
             tdl["style"]["height"] = 20;
             tdl["text"]["showLabels"] = false;
+        } else if (type === "tank") {
+            tdl["style"]["width"] = 150;
+            tdl["style"]["height"] = 200;
+            tdl["text"]["fillColor"] = "rgba(0,0,255,1)";
+            tdl["style"]["backgroundColor"] = "rgba(240,240,240,1)";
         }
 
         for (const propertyName of propertyNames) {

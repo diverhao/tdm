@@ -313,8 +313,20 @@ export class PolylineHelper extends BaseWidgetHelper {
 
         let transparent = false;
 
-        tdl["text"]["fillColor"] = "rgba(0,0,255,1)";
+        tdl["style"]["top"] = 0;
+        tdl["style"]["left"] = 0;
+        tdl["style"]["width"] = 100;
+        tdl["style"]["height"] = 20;
         tdl["text"]["lineColor"] = "rgba(0,0,255,1)";
+        if (type === "polygon") {
+            tdl["text"]["fillColor"] = "rgba(0,0,255,1)";
+            tdl["text"]["closed"] = true;
+            tdl["text"]["fill"] = true;
+        } else if (type === "polyline") {
+            tdl["text"]["fill"] = false;
+            tdl["text"]["arrowLength"] = 20;
+            tdl["text"]["arrowWidth"] = 4;
+        }
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -363,14 +375,6 @@ export class PolylineHelper extends BaseWidgetHelper {
             }
         }
 
-        if (type === "polyline") {
-            tdl["text"]["fill"] = false;
-        }
-
-        if (type === "polygon") {
-            tdl["text"]["closed"] = true;
-            tdl["text"]["fill"] = true;
-        }
 
         if (transparent === true) {
             tdl["text"]["fill"] = false;
@@ -379,6 +383,8 @@ export class PolylineHelper extends BaseWidgetHelper {
         // the arrow length is in unit of line width
         if (tdl["text"]["lineWidth"] !== 0) {
             tdl["text"]["arrowLength"] = tdl["text"]["arrowLength"] / tdl["text"]["lineWidth"];
+        } else {
+            tdl["text"]["arrowLength"] = tdl["text"]["arrowLength"] / 3;
         }
 
 

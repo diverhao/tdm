@@ -318,31 +318,6 @@ export class Media extends BaseWidget {
                     widgetKey: this.getWidgetKey(),
                     displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
                 })
-                // g_widgets1
-                //     .getRoot()
-                //     .getDisplayWindowClient()
-                //     .getIpcManager()
-                //     .sendPostRequestCommand("media", { fullFileName: fullFileName })
-                //     .then((response: any) => {
-                //         // decode string
-                //         return response.json();
-                //     })
-                //     .then((data) => {
-                //         if (data["content"] !== "") {
-                //             if (this.getMediaType(this.mediaFileName) === "picture") {
-                //                 this.base64Content = `data:image/png;base64,${data["content"]}`;
-                //             } else if (this.getMediaType(this.mediaFileName) === "pdf") {
-                //                 this.base64Content = `data:application/pdf;base64, ${encodeURI(data["content"])}`;
-                //             } else {
-                //                 this.base64Content = "";
-                //             }
-                //         } else {
-                //             this.base64Content = "";
-                //         }
-                //         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-                //         g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-                //         g_flushWidgets();
-                //     });
             } else if ((g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client")) {
                 //todo: what is this? get-ssh-file does not exist on main process
                 // Log.info("try to obtain file from ssh host")
@@ -352,86 +327,7 @@ export class Media extends BaseWidget {
                 //     fullFileName: fullFileName,
                 // })
             }
-        }
-        // else if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client" && this.mediaFileName !== rawFileName) {
-
-        //     let fullFileName = "";
-
-        //     if (this.isRemotePath(rawFileName)) {
-        //         this.mediaFileName = rawFileName;
-        //         this.base64Content = rawFileName;
-        //         return;
-        //     }
-
-        //     if (path.isAbsolute(rawFileName)) {
-        //         fullFileName = rawFileName;
-        //     } else {
-        //         const tdlFileName = g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName();
-        //         if (!path.isAbsolute(tdlFileName)) {
-        //             console.log("Error in resolving image file name");
-        //             this.base64Content = "";
-        //             return;
-        //         }
-        //         fullFileName = path.join(path.dirname(tdlFileName), rawFileName);
-        //     }
-        //     this.mediaFileName = rawFileName;
-
-        //     if (this.getMediaType(this.mediaFileName) !== "picture" && this.getMediaType(this.mediaFileName) !== "pdf") {
-        //         this.base64Content = "";
-        //         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-        //         g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-        //         g_flushWidgets();
-        //         return;
-        //     }
-        //     // todo: should be kept?
-        //     // image file contents, base64 format
-        //     // if (this.getAllText()["fileContents"] !== "" && this.getAllText()["fileContents"] !== undefined) {
-        //     //     return `${this.getAllText()["fileContents"]}`;
-        //     // }
-
-        //     // const rawFileName = this.getAllText()["fileName"];
-        //     // let fullFileName = rawFileName;
-
-        //     // if (this.isRemotePath(this.getAllText()["fileName"])) {
-        //     //     // return rawFileName;
-        //     //     fullFileName = rawFileName;
-        //     // }
-
-        //     // if (path.isAbsolute(rawFileName)) {
-        //     //     // return rawFileName;
-        //     //     fullFileName = rawFileName;
-        //     // }
-
-        //     // const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        //     // // full name
-        //     // const currentTdlFileFullName = displayWindowClient.getTdlFileName();
-        //     // if (path.isAbsolute(currentTdlFileFullName)) {
-        //     //     // return path.join(path.dirname(currentTdlFileFullName), rawFileName);
-        //     //     fullFileName = path.join(path.dirname(currentTdlFileFullName), rawFileName);;
-        //     // } else {
-        //     //     const tdlFullFileName = g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName();
-        //     //     if (tdlFullFileName !== "") {
-        //     //         const dirName = path.dirname(tdlFullFileName);
-        //     //         // return path.join(dirName, rawFileName);
-        //     //         fullFileName = path.join(dirName, rawFileName);
-
-        //     //     } else {
-        //     //         // we cannot determine the current file's path
-        //     //         // return rawFileName;
-        //     //         fullFileName = rawFileName;
-        //     //     }
-        //     // }
-
-        //     // todo: read remote file
-        //     console.log("try to obtain file from ssh host")
-        //     g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("get-ssh-file", {
-        //         displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-        //         widgetKey: this.getWidgetKey(),
-        //         fullFileName: fullFileName,
-        //     })
-
-        // }
-        else { // "desktop" mode
+        } else { // "desktop" mode
             // image file contents, base64 format
             if (this.getAllText()["fileContents"] !== "" && this.getAllText()["fileContents"] !== undefined) {
                 return `${this.getAllText()["fileContents"]}`;

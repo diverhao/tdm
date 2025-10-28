@@ -54,7 +54,7 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
             showUnit: true,
             // PV related
             minPvValue: 0,
-            maxPvValue: 10,
+            maxPvValue: 100,
             usePvLimits: false,
             numTickIntervals: 10,
             // layout
@@ -345,11 +345,18 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
 
         let isHorizontal = true;
         let isTransparent = false;
+        tdl["style"]["x"] = 0;
+        tdl["style"]["y"] = 0;
+        tdl["text"]["usePvLimits"] = true;
 
         if (type === "scaledslider") {
             tdl["text"]["appearance"] = "contemporary";
             tdl["style"]["backgroundColor"] = "rgba(255,255,255,1)";
+            tdl["style"]["width"] = 400;
+            tdl["style"]["height"] = 55;
         } else {
+            tdl["style"]["width"] = 100;
+            tdl["style"]["height"] = 20;
             tdl["text"]["showLabels"] = false;
             tdl["text"]["showPvValue"] = false;
         }

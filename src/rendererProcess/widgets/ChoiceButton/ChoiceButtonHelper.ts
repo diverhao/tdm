@@ -269,6 +269,13 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
 
         tdl["text"]["useChannelItems"] = false;
 
+        tdl["style"]["left"] = 0;
+        tdl["style"]["top"] = 0;
+        tdl["style"]["width"] = 100;
+        tdl["style"]["height"] = 43;
+        tdl["itemLabels"] = ["Item 1", "Item 2"];
+        tdl["text"]["appearance"] = "contemporary";
+
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {

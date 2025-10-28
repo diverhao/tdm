@@ -787,7 +787,7 @@ export class Tank extends BaseWidget {
             // showPvValue: true,
             usePvLimits: false,
             minPvValue: 0,
-            maxPvValue: 10,
+            maxPvValue: 100,
             useLogScale: false,
             // tank and water colors
             fillColor: "rgba(0,200,0,1)",

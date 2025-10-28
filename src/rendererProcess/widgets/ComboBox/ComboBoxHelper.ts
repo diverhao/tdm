@@ -34,7 +34,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
             top: 100,
             width: 150,
             height: 80,
-            backgroundColor: "rgba(128, 255, 255, 0)",
+            backgroundColor: "rgba(210, 210, 210, 1)",
             // angle
             transform: "rotate(0deg)",
             // border, it is different from the "alarmBorder" below,
@@ -369,6 +369,9 @@ export class ComboBoxHelper extends BaseWidgetHelper {
         tdl["style"]["left"] = 0;
         tdl["style"]["width"] = 100;
         tdl["style"]["height"] = 30;
+        tdl["itemLabels"] = ["item 0"];
+        tdl["itemValues"] = [0];
+        tdl["text"]["useChannelItems"] = true;
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];

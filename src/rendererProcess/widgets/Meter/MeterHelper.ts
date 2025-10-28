@@ -135,7 +135,11 @@ export class MeterHelper extends BaseWidgetHelper {
 			"x",
 			"y",
 		];
-        
+
+        tdl["style"]["left"] = 0;
+        tdl["style"]["top"] = 0;
+        tdl["style"]["width"] = 240;
+        tdl["style"]["height"] = 120;
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];

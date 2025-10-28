@@ -217,6 +217,10 @@ export class RadioButtonHelper extends BaseWidgetHelper {
             "password", // not in tdm
         ];
 
+        tdl["style"]["left"] = 0;
+        tdl["style"]["top"] = 0;
+        tdl["style"]["width"] = 100;
+        tdl["style"]["height"] = 60;
         tdl["text"]["useChannelItems"] = false;
         tdl["text"]["direction"] = "horizontal";
 

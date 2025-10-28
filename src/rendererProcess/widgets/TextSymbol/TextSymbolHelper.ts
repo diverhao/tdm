@@ -118,8 +118,16 @@ export class TextSymbolHelper extends BaseWidgetHelper {
             "enabled", // not in tdm
         ];
 
-        let initialIndex = 0;
         let isTransparent = false;
+
+        tdl["style"]["width"] = 32;
+        tdl["style"]["height"] = 32;
+        tdl["style"]["top"] = 0;
+        tdl["style"]["left"] = 0;
+        tdl["text"]["horizontalAlign"] = "center";
+        tdl["text"]["verticalAlign"] = "center";
+        tdl["text"]["wrapWord"] = true;
+
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -172,7 +180,7 @@ export class TextSymbolHelper extends BaseWidgetHelper {
         }
 
         for (let ii = 0; ii < tdl["itemLabels"].length; ii++) {
-            tdl["itemValues"].push(ii + initialIndex);
+            tdl["itemValues"].push(ii);
         }
 
         if (isTransparent) {

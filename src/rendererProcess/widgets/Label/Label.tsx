@@ -326,7 +326,7 @@ export class Label extends BaseWidget {
         },
         text: {
             // text contents
-            text: "Labe Text",
+            text: "Label text",
             // text align
             horizontalAlign: "flex-start",
             verticalAlign: "flex-start",

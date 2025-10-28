@@ -58,9 +58,9 @@ export class ThermometerHelper extends BaseWidgetHelper {
             showUnit: true,
             usePvLimits: false,
             minPvValue: 0,
-            maxPvValue: 10,
+            maxPvValue: 100,
             useLogScale: false,
-            fillColor: "rgba(0,200,0,1)",
+            fillColor: "rgba(60,255,60,1)",
             // fillColorMinor: "rgba(255, 150, 100, 1)",
             // fillColorMajor: "rgba(255,0,0,1)",
             // fillColorInvalid: "rgba(200,0,200,1)",
@@ -123,6 +123,11 @@ export class ThermometerHelper extends BaseWidgetHelper {
         ];
 
         tdl["text"]["showLabels"] = false;
+        tdl["style"]["top"] = 0;
+        tdl["style"]["left"] = 0;
+        tdl["style"]["width"] = 40;
+        tdl["style"]["height"] = 160;
+        tdl["text"]["usePvLimits"] = true;
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];

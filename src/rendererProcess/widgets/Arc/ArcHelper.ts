@@ -259,7 +259,19 @@ export class ArcHelper extends BaseWidgetHelper {
             "y",
         ];
 
-        tdl["text"]["angleRange"] = 90;
+        tdl["style"]["top"] = 0;
+        tdl["style"]["left"] = 0;
+
+        if (type === "arc") {
+            tdl["text"]["angleRange"] = 90;
+            tdl["style"]["width"] = 100;
+            tdl["style"]["height"] = 100;
+        } else if (type === "ellipse") {
+            tdl["style"]["width"] = 100;
+            tdl["style"]["height"] = 50;
+            tdl["text"]["angleRange"] = 360;
+            tdl["text"]["showRadius"] = "none";
+        }
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];

@@ -530,7 +530,7 @@ export class ComboBox extends BaseWidget {
             top: 100,
             width: 150,
             height: 80,
-            backgroundColor: "rgba(128, 255, 255, 0)",
+            backgroundColor: "rgba(210, 210, 210, 1)",
             // angle
             transform: "rotate(0deg)",
             // border, it is different from the "alarmBorder" below,

@@ -51,7 +51,7 @@ export class LabelHelper extends BaseWidgetHelper {
         },
         text: {
             // text contents
-            text: "Labe Text",
+            text: "Label text",
             // text align
             horizontalAlign: "flex-start",
             verticalAlign: "flex-start",
