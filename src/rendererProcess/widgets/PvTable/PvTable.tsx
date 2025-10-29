@@ -29,6 +29,7 @@ export type type_PvTable_tdl = {
     channelNames: string[];
     fieldNames: string[];
     channelValues: (number | undefined)[];
+    channelSelects: boolean[];
 };
 
 
@@ -96,6 +97,7 @@ export class PvTable extends BaseWidget {
     _table: Table;
 
     _channelValues: (number | undefined)[] = [];
+    _channelSelects: boolean[] = [];
 
     constructor(widgetTdl: type_PvTable_tdl) {
         super(widgetTdl);
@@ -108,6 +110,7 @@ export class PvTable extends BaseWidget {
         this.setMacros(JSON.parse(JSON.stringify(widgetTdl.macros)));
         this.setFieldNames(JSON.parse(JSON.stringify(widgetTdl.fieldNames)));
         this._channelValues = JSON.parse(JSON.stringify(widgetTdl.channelValues));
+        this._channelSelects = JSON.parse(JSON.stringify(widgetTdl.channelSelects));
         // this.addDefaultFieldNames();
 
         this._settings = new PvTableSettings(this);
@@ -368,11 +371,13 @@ export class PvTable extends BaseWidget {
                         "Add new channel above": () => {
                             this.getChannelNamesLevel5().splice(channelNameIndex, 0, "");
                             this.getChannelValues().splice(channelNameIndex, 0, undefined);
+                            this.getChannelSelects().splice(channelNameIndex, 0, true);
                             this.forceUpdateTable();
                         },
                         "Add new channel below": () => {
                             this.getChannelNamesLevel5().splice(channelNameIndex + 1, 0, "");
-                            this.getChannelValues().splice(channelNameIndex, 0, undefined);
+                            this.getChannelValues().splice(channelNameIndex + 1, 0, undefined);
+                            this.getChannelSelects().splice(channelNameIndex + 1, 0, true);
                             this.modifyingRowIndex = channelNameIndex + 2;
                             this.forceUpdateTable();
                         },
@@ -381,6 +386,7 @@ export class PvTable extends BaseWidget {
                             const deletedBaseChannelName = this.getChannelNamesLevel5()[channelNameIndex];
                             this.getChannelNamesLevel5().splice(channelNameIndex, 1);
                             this.getChannelValues().splice(channelNameIndex, 1);
+                            this.getChannelSelects().splice(channelNameIndex, 1);
 
                             // this.setExpanedBaseChannelNames();
                             // this.expandAndExtractChannelNames();
@@ -406,10 +412,16 @@ export class PvTable extends BaseWidget {
                                 const tmp2 = this.getChannelNamesLevel5()[channelNameIndex - 1];
                                 this.getChannelNamesLevel5()[channelNameIndex] = tmp2;
                                 this.getChannelNamesLevel5()[channelNameIndex - 1] = tmp1;
+
                                 const tmp3 = this.getChannelValues()[channelNameIndex];
                                 const tmp4 = this.getChannelValues()[channelNameIndex - 1];
                                 this.getChannelValues()[channelNameIndex] = tmp3;
                                 this.getChannelValues()[channelNameIndex - 1] = tmp4;
+
+                                const tmp5 = this.getChannelSelects()[channelNameIndex];
+                                const tmp6 = this.getChannelSelects()[channelNameIndex - 1];
+                                this.getChannelSelects()[channelNameIndex] = tmp5;
+                                this.getChannelSelects()[channelNameIndex - 1] = tmp6;
                                 // this.setExpanedBaseChannelNames();
                                 this.forceUpdateTable();
                             }
@@ -425,6 +437,11 @@ export class PvTable extends BaseWidget {
                                 const tmp4 = this.getChannelValues()[channelNameIndex + 1];
                                 this.getChannelValues()[channelNameIndex] = tmp3;
                                 this.getChannelValues()[channelNameIndex + 1] = tmp4;
+
+                                const tmp5 = this.getChannelSelects()[channelNameIndex];
+                                const tmp6 = this.getChannelSelects()[channelNameIndex + 1];
+                                this.getChannelSelects()[channelNameIndex] = tmp5;
+                                this.getChannelSelects()[channelNameIndex + 1] = tmp6;
                                 // this.setExpanedBaseChannelNames();
                                 this.forceUpdateTable();
                             }
@@ -800,6 +817,7 @@ export class PvTable extends BaseWidget {
                     handleClick={() => {
                         this.getChannelNamesLevel5().splice(0, 0, "");
                         this.getChannelValues().splice(0, 0, undefined);
+                        this.getChannelSelects().splice(0, 0, true);
                         this.modifyingRowIndex = 1;
                         this.forceUpdateTable();
                     }}
@@ -874,10 +892,11 @@ export class PvTable extends BaseWidget {
                             const channelNameLevel5 = this.getChannelNamesLevel5()[ii];
                             const channelNameLevel4 = BaseWidget.channelNameLevel0to4(channelNameLevel5);
                             const channelValue = this.getChannelValues()[ii];
-                            if (channelValue !== undefined) {
+                            const channelSelected = this.getChannelSelects()[ii];
+                            if (channelSelected === true && channelValue !== undefined) {
                                 try {
                                     const tcaChannel = g_widgets1.getTcaChannel(channelNameLevel4);
-                                    tcaChannel.put(g_widgets1.getRoot().getDisplayWindowClient().getWindowId(), {value: channelValue}, 1);
+                                    tcaChannel.put(g_widgets1.getRoot().getDisplayWindowClient().getWindowId(), { value: channelValue }, 1);
                                 } catch (e) {
                                     Log.error(e);
                                 }
@@ -954,28 +973,36 @@ export class PvTable extends BaseWidget {
                     }}>
                     </div>
 
-                    {/* PV name */}
+                    {/* Channel selected */}
                     <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
                         {/* content */}
-                        Name
+                        Selected
                         {/* no options */}
                         {/* resizer */}
                         <this._ElementTableHeaderResizer columnIndex={0}></this._ElementTableHeaderResizer>
                     </this._ElementTableCell>
-                    {/* PV value */}
+                    {/* PV name */}
                     <this._ElementTableCell columnIndex={1} additionalStyle={{ justifyContent: "space-between" }}>
-                        set value
+                        {/* content */}
+                        Name
                         {/* no options */}
                         {/* resizer */}
                         <this._ElementTableHeaderResizer columnIndex={1}></this._ElementTableHeaderResizer>
-
                     </this._ElementTableCell>
-                    {/* PV snapshot value */}
-                    <this._ElementTableCell columnIndex={1} additionalStyle={{ justifyContent: "space-between" }}>
-                        Snapshot value
+                    {/* PV value */}
+                    <this._ElementTableCell columnIndex={2} additionalStyle={{ justifyContent: "space-between" }}>
+                        set value
                         {/* no options */}
                         {/* resizer */}
                         <this._ElementTableHeaderResizer columnIndex={2}></this._ElementTableHeaderResizer>
+
+                    </this._ElementTableCell>
+                    {/* PV snapshot value */}
+                    <this._ElementTableCell columnIndex={3} additionalStyle={{ justifyContent: "space-between" }}>
+                        Snapshot value
+                        {/* no options */}
+                        {/* resizer */}
+                        <this._ElementTableHeaderResizer columnIndex={3}></this._ElementTableHeaderResizer>
 
                     </this._ElementTableCell>
                     {/* PV fields  */}
@@ -983,7 +1010,7 @@ export class PvTable extends BaseWidget {
                         return (
                             <this._ElementTableCell
                                 key={`${fieldName}-${index}`}
-                                columnIndex={index + 3}
+                                columnIndex={index + 4}
                                 additionalStyle={{ justifyContent: "space-between" }}
                             >
                                 {/* field name, with Input */}
@@ -991,7 +1018,7 @@ export class PvTable extends BaseWidget {
                                 {/* options */}
                                 <this._ElementTableHeaderOptionsMenu key={`${fieldName}-${index}-optionsButton`} columnIndex={index + 2}></this._ElementTableHeaderOptionsMenu>
                                 {/* resizer */}
-                                <this._ElementTableHeaderResizer key={`${fieldName}-${index}-resizer`} columnIndex={index + 2}></this._ElementTableHeaderResizer>
+                                <this._ElementTableHeaderResizer key={`${fieldName}-${index}-resizer`} columnIndex={index + 4}></this._ElementTableHeaderResizer>
 
                             </this._ElementTableCell>
                         );
@@ -1045,20 +1072,31 @@ export class PvTable extends BaseWidget {
                                         }}>
 
                                         </div>
-                                        {/* PV name */}
+                                        {/* Channel selected */}
                                         <this._ElementTableCell columnIndex={0} AdditionalStyle={{ justifyContent: "space-between" }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={this.getChannelSelects()[channelNameIndex]}
+                                                onChange={(event: any) => {
+                                                    event.preventDefault();
+                                                    this.getChannelSelects()[channelNameIndex] = !this.getChannelSelects()[channelNameIndex];
+                                                }}
+                                            />
+                                        </this._ElementTableCell>
+                                        {/* PV name */}
+                                        <this._ElementTableCell columnIndex={1} AdditionalStyle={{ justifyContent: "space-between" }}>
                                             <this._ElementTableLineChannelName key={`${channelNameLevel4}-${channelNameIndex}-channelName`} rowIndex={channelNameIndex + 1}></this._ElementTableLineChannelName>
                                             {/* <this._ElementTableLineOptionsButton channelNameIndex={channelNameIndex}></this._ElementTableLineOptionsButton> */}
                                             <this._ElementTableLineOptionsMenu channelNameIndex={channelNameIndex}></this._ElementTableLineOptionsMenu>
                                         </this._ElementTableCell>
                                         {/* PV value set */}
-                                        <this._ElementTableCell columnIndex={1}>
+                                        <this._ElementTableCell columnIndex={2}>
                                             <this._ElementChannelValueInputDiv channelNameLevel4={channelNameLevel4} fieldName={"value"}></this._ElementChannelValueInputDiv>
                                         </this._ElementTableCell>
                                         {/* snapshot values */}
                                         <this._ElementTableCell
                                             key={`snapshot-value-${channelNameIndex}`}
-                                            columnIndex={2}
+                                            columnIndex={3}
                                         >
                                             {this.getChannelValues()[channelNameIndex]}
                                         </this._ElementTableCell>
@@ -1071,7 +1109,7 @@ export class PvTable extends BaseWidget {
                                             return (
                                                 <this._ElementTableCell
                                                     key={`${fieldName}-${index}-${channelNameIndex}`}
-                                                    columnIndex={index + 3}
+                                                    columnIndex={index + 4}
                                                 >
                                                     {channelValue}
                                                 </this._ElementTableCell>
@@ -1259,17 +1297,6 @@ export class PvTable extends BaseWidget {
         }
     };
 
-    // override
-    getTdlCopy = (newKey: boolean = true): Record<string, any> => {
-        const result = super.getTdlCopy(newKey);
-        // result.fieldNames = this.getStrippedFieldNames();
-        result.fieldNames = this.getFieldlNames();
-        result.macros = JSON.parse(JSON.stringify(this.getMacros()));
-        result.channelNames = JSON.parse(JSON.stringify(this.getChannelNamesLevel5()));
-        result.channelValues = JSON.parse(JSON.stringify(this.getChannelValues()));
-        return result;
-    };
-
     // concretize abstract method
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
@@ -1310,6 +1337,10 @@ export class PvTable extends BaseWidget {
 
     setChannelValues = (newValues: (number | undefined)[]) => {
         this._channelValues = newValues;
+    }
+
+    getChannelSelects = () => {
+        return this._channelSelects;
     }
 
     // ----------------------- styles -----------------------
@@ -1371,6 +1402,7 @@ export class PvTable extends BaseWidget {
         // fieldNames: ["VAL", "RTYP", "SEVR", "TIME", "UNITS"],
         fieldNames: ["value", "RTYP", "severity", "time", "units"],
         channelValues: [],
+        channelSelects: [],
     };
 
     // override
@@ -1384,6 +1416,7 @@ export class PvTable extends BaseWidget {
         result.macros = JSON.parse(JSON.stringify(this._defaultTdl.macros));
         result.fieldNames = JSON.parse(JSON.stringify(this._defaultTdl.fieldNames));
         result.channelValues = JSON.parse(JSON.stringify(this._defaultTdl.channelValues));
+        result.channelSelects = JSON.parse(JSON.stringify(this._defaultTdl.channelSelects));
         return result;
     };
 
@@ -1392,6 +1425,24 @@ export class PvTable extends BaseWidget {
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_PvTable_tdl => {
         const result = this.generateDefaultTdl("PvTable");
         result.channelNames = utilityOptions.channelNames as string[];
+        result.channelValues = [] as (number | undefined)[];
+        result.channelSelects = [] as (boolean)[];
+        for (let ii = 0; ii < result.channelNames.length; ii ++) {
+            result.channelSelects.push(true);
+            result.channelValues.push(undefined);
+        }
+        return result;
+    };
+
+    // override
+    getTdlCopy = (newKey: boolean = true): Record<string, any> => {
+        const result = super.getTdlCopy(newKey);
+        // result.fieldNames = this.getStrippedFieldNames();
+        result.fieldNames = this.getFieldlNames();
+        result.macros = JSON.parse(JSON.stringify(this.getMacros()));
+        result.channelNames = JSON.parse(JSON.stringify(this.getChannelNamesLevel5()));
+        result.channelValues = JSON.parse(JSON.stringify(this.getChannelValues()));
+        result.channelSelects = JSON.parse(JSON.stringify(this.getChannelSelects()));
         return result;
     };
 
