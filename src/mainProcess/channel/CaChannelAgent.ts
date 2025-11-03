@@ -577,7 +577,7 @@ export class CaChannelAgent {
         if (this.getProtocol() === "pva") {
             // pva://demo:abc --> demo:abc
             // pva://demo:abc.EGU --> demo:abc.EGU, one full pv name
-            // pva://demo:abc/timeStamp.nanoseconds --> pva://demo:abc
+            // pva://demo:abc/timeStamp/nanoseconds --> pva://demo:abc
             return this.getChannelName().replace("pva://", "").split("/")[0]
         } else if (this.getProtocol() === "ca") {
             return this.getChannelName().replace("ca://", "");
@@ -781,7 +781,7 @@ export class CaChannelAgent {
 
     /**
      * pva://demo:abc.EGU --> ""
-     * pva://demo:abc/timeStamp.nanoseconds --> "timeStamp.nanoseconds"
+     * pva://demo:abc/timeStamp/nanoseconds --> "timeStamp.nanoseconds"
      * pva://demo:abc --> ""
      */
     getPvRequest = (): string => {
@@ -792,7 +792,7 @@ export class CaChannelAgent {
             if (channelNameArray.length === 1) {
                 return "";
             } else {
-                return channelNameArray[1];
+                return channelNameArray.slice(1).join(".");
             }
         }
     }

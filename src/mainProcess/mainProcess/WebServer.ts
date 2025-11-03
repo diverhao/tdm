@@ -136,9 +136,20 @@ export class WebServer {
             searchFilter: ldapSearchFilter,
             searchScope: ldapSearchScope,
         };
+
+        let keyFileContents: Buffer = Buffer.from("");
+        let certFileContents: Buffer = Buffer.from("");
+        try {
+            keyFileContents = fs.readFileSync(httpsKeyFileName);
+            certFileContents = fs.readFileSync(httpsCertificateFileName);
+        } catch (e) {
+            keyFileContents = fs.readFileSync(path.join(__dirname, "../resources/profiles/server.key"));
+            certFileContents = fs.readFileSync(path.join(__dirname, "../resources/profiles/server.cert"));
+        }
+
         const httpsOptions = {
-            key: fs.readFileSync(httpsKeyFileName),
-            cert: fs.readFileSync(httpsCertificateFileName),
+            key: keyFileContents,
+            cert: certFileContents,
         }
         this.setHttpsOptions(httpsOptions);
         this.setLdapOptions(ldapOptions);

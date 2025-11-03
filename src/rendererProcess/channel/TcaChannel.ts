@@ -602,7 +602,7 @@ export class TcaChannel {
         // never timeout
         const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["READ"], timeout, undefined);
 
-        // channel name, pva://demo:abc/timeStamp.nanoseconds
+        // channel name, pva://demo:abc/timeStamp/nanoseconds
         ipcManager.sendFromRendererProcess("fetch-pva-type",
             {
                 channelName: this.getChannelName(),
@@ -1921,7 +1921,8 @@ export class TcaChannel {
             if (channelNameArray.length === 1) {
                 return "";
             } else {
-                return channelNameArray[1];
+                // return channelNameArray[1];
+                return channelNameArray.slice(1).join(".");
             }
         } else {
             return "";
