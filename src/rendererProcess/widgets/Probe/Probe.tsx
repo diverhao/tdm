@@ -466,7 +466,7 @@ export class Probe extends BaseWidget {
         // const [value, setValue] = React.useState(this._getChannelValue());
         // const isFocused = React.useRef<boolean>(false);
         const [channelName, setChannelName] = React.useState(this.getChannelNames()[0]);
-        const channelNameInputRef: React.RefObject<null | HTMLInputElement> = React.useRef(null);
+        // const channelNameInputRef: React.RefObject<null | HTMLInputElement> = React.useRef(null);
         const filterElementRef = React.useRef<any>(null);
         const [filterValue, setFilterValue] = React.useState("");
         const elementProcessRef = React.useRef<any>(null);
@@ -498,6 +498,23 @@ export class Probe extends BaseWidget {
             setChannelName(`${this.getChannelNames()[0]}`);
         }, [this.getChannelNames()[0]]);
 
+
+        // channel name hint
+        const inputElementRef = React.useRef<any>(null);
+        const formElementRef = React.useRef<any>(null);
+
+        const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
+        const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
+        const [channelNameHintElementDimension, setChannelNameHintElementDimension] = React.useState({ width: 0, maxHeight: 0, left: 0, top: 0 });
+        const [channelNameHintData, setChannelNameHintData] = React.useState<string[]>([]);
+
+        const selectHint = (channelName: string) => {
+            this.newProbe(channelName);
+            // (event.currentTarget.elements[0] as HTMLInputElement).blur();
+            // setShowChannelNameHint(false);
+            setChannelName(channelName);
+            setShowChannelNameHint(false)
+        }
 
         return (
             <div
@@ -546,10 +563,12 @@ export class Probe extends BaseWidget {
                         }}
                     >
                         <form
+                            ref={formElementRef}
                             onSubmit={(event: any) => {
                                 event.preventDefault();
                                 this.newProbe(channelName);
                                 (event.currentTarget.elements[0] as HTMLInputElement).blur();
+                                setShowChannelNameHint(false);
                             }}
                             style={{
                                 fontSize: 25,
@@ -559,23 +578,67 @@ export class Probe extends BaseWidget {
                             }}
                         >
                             <this.ElementPvInput
-                                ref={channelNameInputRef}
+                                ref={inputElementRef}
                                 type="text"
                                 name="channelName"
                                 placeholder="PV Name"
                                 value={channelName}
-                                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setChannelName(event.target.value)}
+                                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newVal = event.target.value;
+                                    setChannelName(newVal);
+
+                                    // send query for channel name if there are more than 1 character input
+                                    if (newVal.trim().length >= 2) {
+                                        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                        const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
+                                        console.log(queryStr)
+                                        if (queryStr !== "") {
+                                            fetch(queryStr)
+                                                .then(res => res.json())
+                                                .then((data: any) => {
+                                                    console.log(data, inputElementRef.current, formElementRef.current);
+                                                    if (Object.keys(data).length > 0 && formElementRef.current !== null) {
+
+                                                        // const rectInput = inputElementRef.current.getBoundingClientRect();
+                                                        const recForm = formElementRef.current.getBoundingClientRect();
+                                                        setChannelNameHintElementDimension({
+                                                            left: 0, // rectInput.left, // - recForm.left,
+                                                            top: recForm.height + 5, //rectInput.top - recForm.top + rectInput.height,
+                                                            width: recForm.width - 5,
+                                                            maxHeight: 400,
+                                                        })
+                                                        setChannelNameHintData(Object.keys(data));
+                                                        setShowChannelNameHint(true);
+                                                    } else {
+                                                        setChannelNameHintData(data);
+                                                        setShowChannelNameHint(false);
+                                                    }
+                                                })
+                                        }
+                                    }
+
+                                }}
                                 // must use enter to change the value
                                 onBlur={(event: any) => {
+                                    setShowChannelNameHint(false);
+                                    setChannelNameHintData([]);
+
                                     const orig = this.getChannelNames()[0];
                                     if (orig !== channelName) {
                                         setChannelName(orig);
                                     }
                                 }}
                                 onFocus={() => {
-                                    channelNameInputRef.current?.select();
+                                    inputElementRef.current?.select();
                                 }}
                             />
+                            <ChannelNameHintElement
+                                show={showChannelNameHint}
+                                additionalStyle={channelNameHintElementDimension}
+                                channelNames={channelNameHintData}
+                                selectHint={selectHint}
+                            ></ChannelNameHintElement>
+
                         </form>
                     </div>
                 </div>
@@ -1019,7 +1082,7 @@ export class Probe extends BaseWidget {
     // StyledToolTip
 
 
-    ElementPvInput = ({ additionalStyle, type, name, placeholder, onChange, value, onBlue, onFocus }: any) => {
+    ElementPvInput = ({ additionalStyle, type, name, placeholder, onChange, value, onBlur, onFocus }: any) => {
         const refElement = React.useRef<any>(null);
         return (
             <input
@@ -1049,6 +1112,7 @@ export class Probe extends BaseWidget {
                     if (refElement.current !== null) {
                         refElement.current.style["color"] = "#937878";
                     }
+                    onBlur();
                 }}
                 onMouseEnter={() => {
                     if (refElement.current !== null) {

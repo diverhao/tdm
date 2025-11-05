@@ -112,16 +112,6 @@ export class DataViewerSettings {
         )
     }
 
-    _styleInput = {
-        width: "55%",
-        border: "solid 1px rgba(0,0,0,0)",
-        outline: "none",
-        borderRadius: 0,
-        backgroundColor: "rgba(255, 255, 255, 0)",
-        // padding: 0,
-        // margin: 0,
-    };
-
     _ElementBackgroundColor = () => {
         const [showCollapsible, setShowCollapsible] = React.useState<boolean>(false);
         const elementRefBackgroundColor = React.useRef<any>(null);
@@ -433,6 +423,24 @@ export class DataViewerSettings {
         const [lineWidth, setLineWidth] = React.useState<string>(`${yAxis["lineWidth"]}`);
         const [bufferSize, setBufferSize] = React.useState<string>(`${yAxis["bufferSize"]}`);
 
+        // channel name hint
+        const formElementRef = React.useRef<any>(null);
+
+        const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
+        const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
+        const [channelNameHintElementDimension, setChannelNameHintElementDimension] = React.useState({ width: 0, maxHeight: 0, left: 0, top: 0 });
+        const [channelNameHintData, setChannelNameHintData] = React.useState<string[]>([]);
+
+        const selectHint = (channelName: string) => {
+            setChannelNameInput(channelName);
+            setShowChannelNameHint(false)
+
+            this.getPlot().updateTrace(index, channelName, true)
+            setTimeout(() => {
+                this.updatePlot();
+            }, 500);
+        }
+
         return (
             <div style={{
                 width: "100%",
@@ -443,6 +451,7 @@ export class DataViewerSettings {
             }}>
                 {/* channel name */}
                 <form
+                    ref={formElementRef}
                     style={{
                         width: "100%",
                         fontSize: 25,
@@ -452,6 +461,8 @@ export class DataViewerSettings {
                     // style={this.getFormStyle()}
                     onSubmit={(event: any) => {
                         event.preventDefault();
+                        setShowChannelNameHint(false);
+
                         if (elementRefChannelNameInput.current !== null) {
                             elementRefChannelNameInput.current.blur();
                         }
@@ -475,10 +486,44 @@ export class DataViewerSettings {
                         value={channelNameInput}
                         onChange={
                             (event: any) => {
-                                setChannelNameInput(event.target.value);
+                                const newVal = event.target.value;
+                                setChannelNameInput(newVal);
+
+                                // send query for channel name if there are more than 1 character input
+                                if (newVal.trim().length >= 2) {
+                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                    const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
+                                    console.log(queryStr)
+                                    if (queryStr !== "") {
+                                        fetch(queryStr)
+                                            .then(res => res.json())
+                                            .then((data: any) => {
+                                                if (Object.keys(data).length > 0 && formElementRef.current !== null) {
+
+                                                    // const rectInput = inputElementRef.current.getBoundingClientRect();
+                                                    const recForm = formElementRef.current.getBoundingClientRect();
+                                                    setChannelNameHintElementDimension({
+                                                        left: recForm.left, // rectInput.left, // - recForm.left,
+                                                        top: recForm.top + recForm.height + 5, //rectInput.top - recForm.top + rectInput.height,
+                                                        width: recForm.width - 5,
+                                                        maxHeight: 200,
+                                                    })
+                                                    setChannelNameHintData(Object.keys(data));
+                                                    setShowChannelNameHint(true);
+                                                } else {
+                                                    setChannelNameHintData(data);
+                                                    setShowChannelNameHint(false);
+                                                }
+                                            })
+                                    }
+                                }
+
                             }
                         }
                         onBlur={(event: any) => {
+                            setShowChannelNameHint(false);
+                            setChannelNameHintData([]);
+
                             if (elementRefChannelNameInput.current !== null) {
                                 elementRefChannelNameInput.current.style["color"] = "rgba(0,0,0,1)";
                             }
@@ -505,6 +550,14 @@ export class DataViewerSettings {
                             }
                         }}
                     ></input>
+
+                    <ChannelNameHintElement
+                        show={showChannelNameHint}
+                        additionalStyle={channelNameHintElementDimension}
+                        channelNames={channelNameHintData}
+                        selectHint={selectHint}
+                    ></ChannelNameHintElement>
+
                 </form>
                 <table style={{ width: "90%" }}>
                     <col style={{ width: "30%" }}></col>

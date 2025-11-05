@@ -1,7 +1,7 @@
 import ReactDOM from "react-dom/client";
 import * as React from "react";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { GlobalVariables } from "../../global/GlobalVariables";
+import { g_widgets1, GlobalVariables } from "../../global/GlobalVariables";
 
 export class SidebarLargeInput {
     value: string = "";
@@ -41,6 +41,31 @@ export class SidebarLargeInput {
 
     _Element = ({ withOkButton }: { withOkButton: boolean }) => {
         const [localValue, setLocalValue] = React.useState(this.getValue());
+
+        // channel name hint
+        const formElementRef = React.useRef<any>(null);
+
+        const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
+        const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
+        const [channelNameHintElementDimension, setChannelNameHintElementDimension] = React.useState({ width: 0, maxHeight: 0, left: 0, top: 0 });
+        const [channelNameHintData, setChannelNameHintData] = React.useState<string[]>([]);
+
+        const selectHint = (channelName: string) => {
+            // this.newProbe(channelName);
+            // (event.currentTarget.elements[0] as HTMLInputElement).blur();
+            // setShowChannelNameHint(false);
+            setLocalValue(channelName);
+            setShowChannelNameHint(false)
+            if (withOkButton === true) {
+                // do nothing on submit
+                // do the change when click the OK button
+            } else {
+                this.value = channelName;
+                this.setValue(channelName);
+                this.updater(channelName);
+            }
+        }
+
         return (
             <div style={{
                 display: "inline-flex",
@@ -70,6 +95,7 @@ export class SidebarLargeInput {
                         Hit Enter to confirm the input.
                     </p>
                     <form
+                        ref={formElementRef}
                         style={{
                             width: "95%",
                             display: "inline-flex",
@@ -81,6 +107,8 @@ export class SidebarLargeInput {
                         }}
                         onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
                             event.preventDefault();
+                            setShowChannelNameHint(false);
+
                             if (withOkButton === true) {
                                 // do nothing on submit
                                 // do the change when click the OK button
@@ -111,9 +139,43 @@ export class SidebarLargeInput {
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                                 const newVal = event.target.value;
                                 setLocalValue(newVal);
+
+                                if (this.readableText === "Channel Name") {
+                                    // send query for channel name if there are more than 1 character input
+                                    if (newVal.trim().length >= 2) {
+                                        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                        const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
+                                        console.log(queryStr)
+                                        if (queryStr !== "") {
+                                            fetch(queryStr)
+                                                .then(res => res.json())
+                                                .then((data: any) => {
+                                                    if (Object.keys(data).length > 0 && formElementRef.current !== null) {
+
+                                                        // const rectInput = inputElementRef.current.getBoundingClientRect();
+                                                        const recForm = formElementRef.current.getBoundingClientRect();
+                                                        setChannelNameHintElementDimension({
+                                                            left: recForm.left, // rectInput.left, // - recForm.left,
+                                                            top: recForm.top + recForm.height + 5, //rectInput.top - recForm.top + rectInput.height,
+                                                            width: recForm.width - 5,
+                                                            maxHeight: 200,
+                                                        })
+                                                        setChannelNameHintData(Object.keys(data));
+                                                        setShowChannelNameHint(true);
+                                                    } else {
+                                                        setChannelNameHintData(data);
+                                                        setShowChannelNameHint(false);
+                                                    }
+                                                })
+                                        }
+                                    }
+                                }
                             }}
                             // must use enter to change the value
                             onBlur={(event: any) => {
+                                setShowChannelNameHint(false);
+                                setChannelNameHintData([]);
+
                                 // const orig = this.getMainWidget().getChannelNames()[0];
                                 const orig = this.getValue();
                                 console.log("blur:", orig, localValue)
@@ -122,6 +184,14 @@ export class SidebarLargeInput {
                                 }
                             }}
                         />
+
+                        <ChannelNameHintElement
+                            show={showChannelNameHint}
+                            additionalStyle={channelNameHintElementDimension}
+                            channelNames={channelNameHintData}
+                            selectHint={selectHint}
+                        ></ChannelNameHintElement>
+
                     </form>
                     <ElementRectangleButton
                         handleClick={() => {

@@ -432,6 +432,51 @@ export class PvMonitor extends BaseWidget {
         const inputRef = React.useRef<any>(null);
         const selectRef = React.useRef<any>(null);
         const [channelName, setChannelName] = React.useState(`${this.getChannelNamesLevel0()[0]}`)
+
+
+        // channel name hint
+        const formElementRef = React.useRef<any>(null);
+
+        const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
+        const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
+        const [channelNameHintElementDimension, setChannelNameHintElementDimension] = React.useState({ width: 0, maxHeight: 0, left: 0, top: 0 });
+        const [channelNameHintData, setChannelNameHintData] = React.useState<string[]>([]);
+
+        const selectHint = (channelName: string) => {
+            setChannelName(channelName);
+            setShowChannelNameHint(false)
+
+
+            // disconnect the old channel softly and clean up data
+            const oldChannelName = this.getChannelNamesLevel0()[0];
+            try {
+                const oldTcaChannel = g_widgets1.getTcaChannel(oldChannelName);
+                oldTcaChannel.destroy(this.getWidgetKey());
+            } catch (e) {
+
+            }
+            this.clearData();
+
+            // update channel name
+            this.getChannelNamesLevel0().length = 0;
+            this.getChannelNamesLevel0().push(channelName);
+            this.processChannelNames();
+
+            // connect new channel 
+            const newTcaChannel = g_widgets1.createTcaChannel(channelName, this.getWidgetKey());
+            if (newTcaChannel !== undefined) {
+                newTcaChannel.getMeta(undefined);
+                newTcaChannel.monitor();
+            }
+            // blur the input box
+            if (inputRef.current !== null) {
+                inputRef.current.blur();
+            }
+            // re-render
+            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+            g_flushWidgets();
+        }
+
         return (
             <div style={{
                 width: "100%",
@@ -445,13 +490,18 @@ export class PvMonitor extends BaseWidget {
             }}>
                 <div>PV Monitor for </div>
                 <form
+                    ref={formElementRef}
                     spellCheck={false}
                     style={{
                         width: "100%",
                         flexGrow: 1,
+                        backgroundColor: "yellow",
+                        position: "relative",
                     }}
                     onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
                         event.preventDefault();
+                        setShowChannelNameHint(false);
+
                         // disconnect the old channel softly and clean up data
                         const oldChannelName = this.getChannelNamesLevel0()[0];
                         try {
@@ -497,6 +547,37 @@ export class PvMonitor extends BaseWidget {
                         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                             const newVal = event.target.value;
                             setChannelName(newVal);
+
+
+                            // send query for channel name if there are more than 1 character input
+                            if (newVal.trim().length >= 2) {
+                                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
+                                console.log(queryStr)
+                                if (queryStr !== "") {
+                                    fetch(queryStr)
+                                        .then(res => res.json())
+                                        .then((data: any) => {
+                                            if (Object.keys(data).length > 0 && formElementRef.current !== null) {
+
+                                                // const rectInput = inputElementRef.current.getBoundingClientRect();
+                                                const recForm = formElementRef.current.getBoundingClientRect();
+                                                setChannelNameHintElementDimension({
+                                                    left: 0,
+                                                    top: recForm.height + 5,
+                                                    width: recForm.width - 5,
+                                                    maxHeight: 200,
+                                                })
+                                                setChannelNameHintData(Object.keys(data));
+                                                setShowChannelNameHint(true);
+                                            } else {
+                                                setChannelNameHintData(data);
+                                                setShowChannelNameHint(false);
+                                            }
+                                        })
+                                }
+                            }
+
                         }}
                         onMouseEnter={(event: any) => {
                             if (inputRef.current !== null) {
@@ -511,6 +592,9 @@ export class PvMonitor extends BaseWidget {
                         // must use enter to change the value
                         onBlur={(event: any) => {
                             event.preventDefault();
+                            setShowChannelNameHint(false);
+                            setChannelNameHintData([]);
+
                             if (inputRef.current !== null) {
                                 inputRef.current.style["color"] = "rgba(0, 0, 0, 1)";
                             }
@@ -526,6 +610,13 @@ export class PvMonitor extends BaseWidget {
                             }
                         }}
                     />
+
+                    <ChannelNameHintElement
+                        show={showChannelNameHint}
+                        additionalStyle={channelNameHintElementDimension}
+                        channelNames={channelNameHintData}
+                        selectHint={selectHint}
+                    ></ChannelNameHintElement>
                 </form>
             </div>
         )

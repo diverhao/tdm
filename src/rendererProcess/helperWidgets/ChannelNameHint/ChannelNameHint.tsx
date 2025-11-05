@@ -54,6 +54,7 @@ export class ChannelNameHint {
                     userSelect: "none",
                     padding: 2,
                     boxSizing: "border-box",
+                    color: "rgba(0,0,0,1)",
                 }}
                 onMouseEnter={() => {
                     if (elementRef.current !== null) {

@@ -230,7 +230,7 @@ export class PvTable extends BaseWidget {
 
     _ElementBodyRaw = (): React.JSX.Element => {
         return (
-            <div style={{ ...this.getElementBodyRawStyle(), overflow: "scroll" }}>
+            <div style={{ ...this.getElementBodyRawStyle(), overflow: "scroll", }}>
                 <this._ElementArea></this._ElementArea>
                 {/* <this._BulkAddChannelsPage></this._BulkAddChannelsPage> */}
                 {/* <this._ElementSettings></this._ElementSettings> */}
@@ -507,11 +507,49 @@ export class PvTable extends BaseWidget {
         // a level-5 channel name
         const [channelName, setChannelName] = React.useState<string>(this.getChannelNamesLevel5()[rowIndex - 1]);
         const elementRefInput = React.useRef<any>(null);
+
+
+        // channel name hint
+        const formElementRef = React.useRef<any>(null);
+
+        const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
+        const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
+        const [channelNameHintElementDimension, setChannelNameHintElementDimension] = React.useState({ width: 0, maxHeight: 0, left: 0, top: 0 });
+        const [channelNameHintData, setChannelNameHintData] = React.useState<string[]>([]);
+
+        const selectHint = (channelName: string) => {
+            setChannelName(channelName);
+            setShowChannelNameHint(false)
+
+            this.modifyingRowIndex = -1;
+
+            // level 5 channel name is basically level 0 without field name
+            const oldChannelNameLevel5 = this.getChannelNamesLevel5()[rowIndex - 1];
+            const oldChannelNameLevel4 = BaseWidget.channelNameLevel0to4(oldChannelNameLevel5, this.getMacros());
+
+            this.getChannelNamesLevel5()[rowIndex - 1] = channelName;
+
+            try {
+                for (let fieldName of this.getFieldlNames()) {
+                    g_widgets1.removeTcaChannel(`${oldChannelNameLevel4}.${fieldName}`, this.getWidgetKey());
+                }
+                g_widgets1.removeTcaChannel(`${oldChannelNameLevel4}`, this.getWidgetKey());
+            } catch (e) {
+                Log.error(e);
+            }
+
+            // connect new channel
+            this.processChannelNames();
+            g_widgets1.connectAllTcaChannels(true);
+            this.forceUpdateTable();
+        }
+
         if (this.modifyingRowIndex === rowIndex) {
             return (
                 <div
                     style={{
                         width: "100%",
+                        overflow: "visible",
                     }}
                     onMouseDown={(event: any) => {
                         if (event.button === 1) {
@@ -523,8 +561,11 @@ export class PvTable extends BaseWidget {
 
                 >
                     <form
+                        ref={formElementRef}
                         onSubmit={(event: any) => {
                             // event.preventDefault();
+                            setShowChannelNameHint(false)
+
                             this.modifyingRowIndex = -1;
 
                             event.preventDefault();
@@ -576,11 +617,49 @@ export class PvTable extends BaseWidget {
                             }}
                             onChange={(event: any) => {
                                 event.preventDefault();
-                                setChannelName(event.target.value);
+                                const newVal = event.target.value;
+                                setChannelName(newVal);
+
+                                // send query for channel name if there are more than 1 character input
+                                // UtilityWindow has a 20 px padding
+                                let padding = this.getStyle()["padding"];
+                                if (padding === undefined) {
+                                    padding = 0;
+                                }
+                                if (newVal.trim().length >= 2) {
+                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                    const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
+                                    console.log(queryStr)
+                                    if (queryStr !== "") {
+                                        fetch(queryStr)
+                                            .then(res => res.json())
+                                            .then((data: any) => {
+                                                if (Object.keys(data).length > 0 && formElementRef.current !== null) {
+
+                                                    // const rectInput = inputElementRef.current.getBoundingClientRect();
+                                                    const recForm = formElementRef.current.getBoundingClientRect();
+                                                    setChannelNameHintElementDimension({
+                                                        left: recForm.left - padding,
+                                                        top: recForm.top + recForm.height + 5 - padding,
+                                                        width: recForm.width - 5,
+                                                        maxHeight: 200,
+                                                    })
+                                                    setChannelNameHintData(Object.keys(data));
+                                                    setShowChannelNameHint(true);
+                                                } else {
+                                                    setChannelNameHintData(data);
+                                                    setShowChannelNameHint(false);
+                                                }
+                                            })
+                                    }
+                                }
                             }}
                             // readOnly={!(this.modifyingColumnIndex === columnIndex)}
                             onBlur={(event: any) => {
                                 event.preventDefault();
+                                setShowChannelNameHint(false);
+                                setChannelNameHintData([]);
+
                                 if (elementRefInput.current !== null) {
                                     elementRefInput.current.style["border"] = "solid 1px rgba(255,0,0,0)";
                                 }
@@ -596,6 +675,13 @@ export class PvTable extends BaseWidget {
                             }}
                         >
                         </input>
+
+                        <ChannelNameHintElement
+                            show={showChannelNameHint}
+                            additionalStyle={channelNameHintElementDimension}
+                            channelNames={channelNameHintData}
+                            selectHint={selectHint}
+                        ></ChannelNameHintElement>
                     </form>
                 </div>
             )
@@ -1427,7 +1513,7 @@ export class PvTable extends BaseWidget {
         result.channelNames = utilityOptions.channelNames as string[];
         result.channelValues = [] as (number | undefined)[];
         result.channelSelects = [] as (boolean)[];
-        for (let ii = 0; ii < result.channelNames.length; ii ++) {
+        for (let ii = 0; ii < result.channelNames.length; ii++) {
             result.channelSelects.push(true);
             result.channelValues.push(undefined);
         }

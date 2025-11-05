@@ -632,9 +632,9 @@ export class ChannelGraph extends BaseWidget {
                 // open Probe
                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                 const displayWindowId = displayWindowClient.getWindowId();
-                displayWindowClient.getIpcManager().sendFromRendererProcess("create-utility-display-window", 
+                displayWindowClient.getIpcManager().sendFromRendererProcess("create-utility-display-window",
                     {
-                        utilityType: "Probe", 
+                        utilityType: "Probe",
                         utilityOptions: { channelNames: [channelName] },
                         windowId: displayWindowId,
                     }
@@ -648,13 +648,31 @@ export class ChannelGraph extends BaseWidget {
     private _ElementChannelInput = ({ channelName, setChannelName }: any) => {
         const elementRef = React.useRef<any>(null);
 
+        // channel name hint
+        const formElementRef = React.useRef<any>(null);
+
+        const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
+        const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
+        const [channelNameHintElementDimension, setChannelNameHintElementDimension] = React.useState({ width: 0, maxHeight: 0, left: 0, top: 0 });
+        const [channelNameHintData, setChannelNameHintData] = React.useState<string[]>([]);
+
+        const selectHint = (channelName: string) => {
+            setChannelName(channelName);
+            setShowChannelNameHint(false)
+            this.expandNode(channelName);
+        }
+
         return (
-            <form onSubmit={(event: any) => {
-                event.preventDefault();
-                this.expandNode(channelName);
-            }}
+            <form
+                ref={formElementRef}
+                onSubmit={(event: any) => {
+                    event.preventDefault();
+                    setShowChannelNameHint(false)
+                    this.expandNode(channelName);
+                }}
                 style={{
                     width: "100%",
+                    position: "relative",
                 }}
             >
                 <input
@@ -675,7 +693,37 @@ export class ChannelGraph extends BaseWidget {
                     placeholder="channel name"
                     onChange={(event: any) => {
                         event.preventDefault();
-                        setChannelName(event.target.value);
+                        const newVal = event.target.value;
+                        setChannelName(newVal);
+
+                        // send query for channel name if there are more than 1 character input
+                        if (newVal.trim().length >= 2) {
+                            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                            const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
+                            console.log(queryStr)
+                            if (queryStr !== "") {
+                                fetch(queryStr)
+                                    .then(res => res.json())
+                                    .then((data: any) => {
+                                        if (Object.keys(data).length > 0 && formElementRef.current !== null) {
+
+                                            // const rectInput = inputElementRef.current.getBoundingClientRect();
+                                            const recForm = formElementRef.current.getBoundingClientRect();
+                                            setChannelNameHintElementDimension({
+                                                left: 0,
+                                                top: recForm.height + 5,
+                                                width: recForm.width - 5,
+                                                maxHeight: 200,
+                                            })
+                                            setChannelNameHintData(Object.keys(data));
+                                            setShowChannelNameHint(true);
+                                        } else {
+                                            setChannelNameHintData(data);
+                                            setShowChannelNameHint(false);
+                                        }
+                                    })
+                            }
+                        }
                     }}
                     onMouseEnter={(event: any) => {
                         event.preventDefault();
@@ -699,12 +747,22 @@ export class ChannelGraph extends BaseWidget {
                     }}
                     onBlur={(event: any) => {
                         event.preventDefault();
+                        setShowChannelNameHint(false);
+                        setChannelNameHintData([]);
+
                         if (elementRef.current !== null) {
                             elementRef.current.style["color"] = "black";
                         }
                     }}
                 >
                 </input>
+
+                <ChannelNameHintElement
+                    show={showChannelNameHint}
+                    additionalStyle={channelNameHintElementDimension}
+                    channelNames={channelNameHintData}
+                    selectHint={selectHint}
+                ></ChannelNameHintElement>
             </form>
         )
     }

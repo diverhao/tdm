@@ -802,7 +802,7 @@ export class DisplayWindowClient {
             widgetTdl.style.width = "100%";
             widgetTdl.style.height = "100%";
             widgetTdl.style.boxSizing = "border-box";
-            widgetTdl.style.padding = "20px";
+            widgetTdl.style.padding = 20;
             tdl[widgetKey] = widgetTdl;
             tdl["Canvas"].style.backgroundColor = "rgba(255, 255, 255, 1)";
         } else if (utilityType === "DataViewer") {
