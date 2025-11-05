@@ -391,7 +391,8 @@ export class Profile {
                 "EPICS Log Level": { value: "error", DESCRIPTION: "The log level for EPICS library (epics-tca).", choices: ["trace", "debug", "info", "warn", "error", "fatal"] },
                 "Video Saving Folder": { value: " ", DESCRIPTION: "Automatically save video files to this folder. Fallback is HOME folder." },
                 "Image Saving Folder": { value: " ", DESCRIPTION: "Automatically save image files to this folder. Fallback is HOME folder." },
-                "Python Command": { value: "python3", DESCRIPTION: "The python command for running script attached to the display windows. You can add options to it." }
+                "Python Command": { value: "python3", DESCRIPTION: "The python command for running script attached to the display windows. You can add options to it." },
+                "Channel Lookup Server Address": { value: " ", DESCRIPTION: "The channel lookup server address, e.g. the Channel Explorer server address like http://localhost:3000" }
             },
             "Preset Colors": {
                 "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Colors.",

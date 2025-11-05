@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2025-11-03T20:33:12Z",
+    "buildDate": "2025-11-05T01:13:24Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
@@ -21,7 +21,11 @@
         "build-doc": "./node_modules/.bin/typedoc --skipErrorChecking src --out doc/TypeDoc --entryPointStrategy expand",
         "dev": "webpack serve --mode development",
         "build": "webpack --mode production",
-        "build-file-converter": "pkg ./dist/webpack/EdlFileConverter.js --targets node18-win-x64,node18-macos-x64,node18-linux-x64,node18-win-arm64,node18-macos-arm64,node18-linux-arm64 --out-path ./out"
+        "build-file-converter": "pkg ./dist/webpack/EdlFileConverter.js --targets node18-win-x64,node18-macos-x64,node18-linux-x64,node18-win-arm64,node18-macos-arm64,node18-linux-arm64 --out-path ./out",
+        "build-standalone-tools": "pkg ./dist/mainProcess/standaloneTools/tget.js --targets node18-macos-x64,node18-linux-x64,node18-win-x64 --output dist/myCommand"
+    },
+    "bin": {
+        "tget": "./dist/mainProcess/standaloneTools/tget.js"
     },
     "license": "MIT",
     "devDependencies": {
@@ -43,6 +47,7 @@
         "css-loader": "^7.1.2",
         "electron": "^38.0.0",
         "electron-builder": "^24.0.0",
+        "pkg": "^5.8.1",
         "process": "^0.11.10",
         "resolve-url-loader": "^5.0.0",
         "style-loader": "^4.0.0",
@@ -166,6 +171,12 @@
         "files": [
             "dist/**/*",
             "package.json"
+        ],
+        "extraResources": [
+            {
+                "from": "dist/myCommand",
+                "to": "myCommand"
+            }
         ],
         "directories": {
             "output": "out",

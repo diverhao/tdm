@@ -42,6 +42,7 @@ import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 // import '../../resources/css/simple.css';
 // there is no typescrit def for this lib, I created a wrapper at dom-to-image-more.d.ts
 import { toBlob } from "dom-to-image-more";
+import { ChannelNameHint } from "../../../rendererProcess/helperWidgets/ChannelNameHint/ChannelNameHint";
 
 
 console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Finished loading modules.")
@@ -92,6 +93,7 @@ export class DisplayWindowClient {
     private _hostname: string = "127.0.0.1";
 
     private _prompt: PromptOnDisplayWindow;
+    private _channelNameHint: ChannelNameHint;
 
     private _textEditorModified: boolean = false;
 
@@ -139,6 +141,7 @@ export class DisplayWindowClient {
         this.startToListenMouseEvents();
 
         this._prompt = new PromptOnDisplayWindow(this);
+        this._channelNameHint = new ChannelNameHint();
 
         if (hostname === undefined) {
             this._hostname = "127.0.0.1";
@@ -1720,6 +1723,29 @@ export class DisplayWindowClient {
             displayWindowId: this.getWindowId(),
             state: state,
         })
+    }
+
+    getChannelNameHint = () => {
+        return this._channelNameHint;
+    }
+
+    generateChannelLookupQuery = (channelNamesStr: string) => {
+        const channelFinderAddress = this.getProfileEntry("EPICS Custom Environment", "Channel Lookup Server Address");
+        if (channelFinderAddress !== undefined && channelFinderAddress.trim() !== "") {
+            const channelNames = channelNamesStr.split(" ");
+            const channelNamesObj: Record<string, string> = {};
+            for (let ii = 0; ii < channelNames.length; ii++) {
+                const channelName = channelNames[ii];
+                if (channelName.trim() !== "") {
+                    channelNamesObj[`keyword${ii + 1}`] = channelName.trim();
+                }
+            }
+            if (Object.keys(channelNamesObj).length > 0) {
+                const params = new URLSearchParams(channelNamesObj);
+                return `${channelFinderAddress}/search?${params}`;
+            }
+        }
+        return "";
     }
 
 }
