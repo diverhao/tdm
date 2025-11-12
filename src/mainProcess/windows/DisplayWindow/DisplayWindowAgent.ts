@@ -1732,7 +1732,7 @@ export class DisplayWindowAgent {
             },
         };
         try {
-            await app.whenReady();
+            // await app.whenReady();
             app.focus({ steal: true });
             const window = new BrowserWindow(windowOptions);
             this._browserWindow = window;

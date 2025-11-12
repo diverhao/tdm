@@ -22,6 +22,7 @@ export type type_options_createDisplayWindow = {
     utilityOptions?: Record<string, any>;
     // postCommand?: string;
     isPreviewDisplayWindow?: boolean;
+    isPreloadedDisplayWindow?: boolean;
     windowId?: string;
 };
 
@@ -159,7 +160,7 @@ export class WindowAgentsManager {
                 // if (this.get) {
                 exisitedDisplayWindow.show();
                 // }
-                return;
+                return undefined;
             }
 
             const displayWindowId = this.obtainDisplayWindowId();
@@ -211,7 +212,13 @@ export class WindowAgentsManager {
             try {
                 // (1)
                 const displayWindowId = this.obtainDisplayWindowId();
-                const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
+                const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
+                if (options["isPreloadedDisplayWindow"]) {
+                    this.preloadedDisplayWindowAgent = displayWindowAgent;
+                } else if (options["isPreviewDisplayWindow"]) {
+                    this.previewDisplayWindowAgent = displayWindowAgent;
+                }
+                
                 // (2)
                 await displayWindowAgent.createBrowserWindow(options);
                 return displayWindowAgent;
@@ -243,7 +250,7 @@ export class WindowAgentsManager {
             // a simple place holder for context menu and lifecycle management
             // there is no BrowserWindow in iframe display, it is an iframe in web browser
             const displayWindowId = this.obtainDisplayWindowId();
-            const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
+            const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
             return undefined;
         } else {
 
@@ -267,7 +274,7 @@ export class WindowAgentsManager {
                 // (1)
                 const displayWindowId = this.obtainDisplayWindowId();
 
-                const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
+                const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
                 // (2) do it on client side
                 //! await displayWindowAgent.createBrowserWindow();
                 // (3)
@@ -361,7 +368,7 @@ export class WindowAgentsManager {
      * 
      */
     createDisplayWindows = async (tdlFileNames: string[], mode: "operating" | "editing", editable: boolean, macros: [string, string][], currentTdlFolder: string | undefined, windowId: string | undefined) => {
-        
+
         if (tdlFileNames.length === 0) {
             return;
         }
@@ -521,12 +528,14 @@ export class WindowAgentsManager {
             macros: [],
             replaceMacros: false,
             hide: true,
+            isPreloadedDisplayWindow: true,
         };
         const displayWindowAgent = await this.createDisplayWindow(options);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             Log.info("0", `Created preload display window ${displayWindowAgent.getId()}`);
             // (3)
-            this.preloadedDisplayWindowAgent = displayWindowAgent;
+            // this is done inside this.createDisplayWindow() method to prevent race condition
+            // this.preloadedDisplayWindowAgent = displayWindowAgent;
             this.creatingPreloadedDisplayWindow = false;
             return displayWindowAgent;
         } else {
@@ -561,7 +570,8 @@ export class WindowAgentsManager {
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             Log.info("0", `Created preview display window ${displayWindowAgent.getId()}`);
             // (3)
-            this.previewDisplayWindowAgent = displayWindowAgent;
+            // this is done inside this.createDisplayWindow() to prevent race condition
+            // this.previewDisplayWindowAgent = displayWindowAgent;
             this.creatingPreviewDisplayWindow = false;
             return displayWindowAgent;
         } else {
@@ -704,7 +714,7 @@ export class WindowAgentsManager {
             };
             const displayWindowId = this.obtainDisplayWindowId();
 
-            const displayWindowAgent = await this.createDisplayWindowAgent(options, displayWindowId);
+            const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
             await displayWindowAgent.createWebBrowserWindow(url);
         } catch (e) {
             Log.error("0", e);
