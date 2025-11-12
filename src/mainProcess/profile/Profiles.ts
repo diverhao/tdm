@@ -21,6 +21,11 @@ export class Profiles {
 
     updateProfiles = (filePath: string, profilesJson: Record<string, any>) => {
         this._filePath = filePath;
+        // empty the current profiles
+        for (const profileName of Object.keys(this._profiles)) {
+            delete this._profiles[profileName];
+        }
+        // fill in the new ones
         for (let profileName in profilesJson) {
             this._profiles[profileName] = new Profile(profileName, profilesJson[profileName]);
         }
