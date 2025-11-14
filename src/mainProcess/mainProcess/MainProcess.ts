@@ -20,6 +20,7 @@ import { ApplicationMenu } from "./ApplicationMenu";
 import { Profiles } from "../profile/Profiles";
 import * as fs from "fs";
 import { LocalFontsReader } from "../file/LocalFontsReader";
+import { openTdlFileAsRequestedByAnotherInstance } from "../global/GlobalMethods";
 
 /**
  * Represents a main process.
@@ -197,10 +198,14 @@ export class MainProcess {
                 // (2)
                 await this.getWindowAgentsManager().createMainWindow();
                 // (3)
+                // if the user selected files to be opened
                 // todo: eliminate it
-                if (callback !== undefined) {
-                    callback(this, this.getRawArgs());
-                }
+                // if (callback !== undefined) {
+                //     callback(this, this.getRawArgs());
+                // }
+                // if (args["attach"] === -1) {
+                    openTdlFileAsRequestedByAnotherInstance(args["fileNames"][0], this);
+                // }
             })
         } if (this.getMainProcessMode() === "web") {
             /**
