@@ -562,8 +562,7 @@ export class EmbeddedDisplay extends BaseWidget {
      *       disconnect their tca Channels
      * 
      * (4.1) modify widgets tdls with new widget keys
-     *     modify their left and top
-     *     todo: apply macros
+     *       modify their left and top
      * 
      * (5) create widgets objects (BaseWidget) for each widget, except Canvas
      *     each widget's insideEmbeddedDisplay is true
@@ -577,6 +576,9 @@ export class EmbeddedDisplay extends BaseWidget {
      * 
      * (7.2) re-process channel names with macros provided by EmbeddedDisplay, 
      *       the previous jobsAsOperatingModeBegins() already did that, but without external macros
+     *
+     * (7.3) apply macros, this has been done in jobsAsOperatingModeBegins(), but we need to
+     *       do it again to apply macros from parent EmbeddedDisplay
      * 
      * (8) connect channels
      * 
@@ -658,7 +660,13 @@ export class EmbeddedDisplay extends BaseWidget {
      */
     removeChildWidgets = () => {
         for (const childWidgetKey of this.getChildWidgetKeys()) {
+            const childWidget = g_widgets1.getWidget(childWidgetKey);
+            if (childWidget instanceof EmbeddedDisplay) {
+                childWidget.removeChildWidgets();
+            }
+            console.log("removing", childWidgetKey)
             g_widgets1.removeWidget(childWidgetKey, false, false, true);
+            
         }
         this.clearChildWidgetKeys();
     }

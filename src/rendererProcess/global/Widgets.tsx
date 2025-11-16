@@ -1608,16 +1608,18 @@ export class Widgets {
         // the dynamically added widgets changes the array (set) of the widget keys
         for (const widgetKey of JSON.parse(JSON.stringify([...this.getWidgets().keys()]))) {
             // (5)
-            const widget = this.getWidget2(widgetKey);
-            if (widget instanceof BaseWidget) {
-                if (newMode === rendererWindowStatus.operating) {
-                    widget.jobsAsOperatingModeBegins();
-                } else {
-                    widget.jobsAsEditingModeBegins();
+            try {
+                const widget = this.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    if (newMode === rendererWindowStatus.operating) {
+                        widget.jobsAsOperatingModeBegins();
+                    } else {
+                        widget.jobsAsEditingModeBegins();
+                    }
+                    widget.setMode(newMode, oldMode);
                 }
-                widget.setMode(newMode, oldMode);
-            }
-            this.addToForceUpdateWidgets(widgetKey);
+                this.addToForceUpdateWidgets(widgetKey);
+            } catch (e) { }
         }
         // (6)
 

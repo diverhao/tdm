@@ -1886,7 +1886,7 @@ export class BobPropertyConverter {
         propertyValue: any[]
     ) => {
         const tdl: Record<string, any> = {};
-        await this.parseBob({ widget: propertyValue }, tdl, "");
+        await this.parseBob({ widget: propertyValue }, tdl, "", true);
         delete tdl["Canvas"];
         return tdl;
     }

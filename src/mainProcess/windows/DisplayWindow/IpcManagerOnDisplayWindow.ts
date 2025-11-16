@@ -327,6 +327,9 @@ export class IpcManagerOnDisplayWindow {
             const embeddedDisplayWidgetLeft = embeddedDisplayWidget.getStyle()["left"];
             // (3)
             embeddedDisplayWidget.getStyle()["backgroundColor"] = canvasBackgroundColor;
+
+            const widgetMapPairs: [string, BaseWidget][] = [];
+
             // (4)
             embeddedDisplayWidget.removeChildWidgets();
             for (const widgetTdl of Object.values(tdl)) {
@@ -352,6 +355,8 @@ export class IpcManagerOnDisplayWindow {
                         widget.jobsAsOperatingModeBegins();
                         // (7.2)
                         widget.processChannelNames(allMacros);
+                        // will be used to re-construct widgets
+                        widgetMapPairs.push([newWidgetKey, widget]);
                     } else {
                         // skip this widget
                     }
@@ -361,6 +366,13 @@ export class IpcManagerOnDisplayWindow {
             }
             embeddedDisplayWidget.loadingText = ``;
 
+            const widgetsMap = g_widgets1.getWidgets();
+            for (const widgetMapPair of widgetMapPairs) {
+                widgetsMap.delete(widgetMapPair[0]);
+            }
+            g_widgets1._widgets = this.insertAfter(widgetsMap, embeddedDisplayWidgetKey, widgetMapPairs);
+
+
             // (8)
             embeddedDisplayWidget.connectAllTcaChannels();
 
@@ -369,7 +381,19 @@ export class IpcManagerOnDisplayWindow {
         // (9) the new widgets are already added to the list
         g_widgets1.addToForceUpdateWidgets(widgetKey);
         g_flushWidgets();
+    }
 
+    insertAfter(map: Map<string, type_widget | undefined>, afterKey: string, entriesToInsert: [string, BaseWidget][]) {
+        const newMap = new Map();
+        for (const [key, value] of map) {
+            newMap.set(key, value);
+            if (key === afterKey) {
+                for (const [k, v] of entriesToInsert) {
+                    newMap.set(k, v);
+                }
+            }
+        }
+        return newMap;
     }
 
     handleRequestEpicsDbd = (event: any, result: IpcEventArgType2["request-epics-dbd"]) => {
