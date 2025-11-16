@@ -1004,6 +1004,10 @@ export class DisplayWindowClient {
             const specialWidgetKeys = ["GroupSelection2", "MouseSelectionRegion"];
             for (let [widgetKey, widget] of g_widgets1.getWidgets2()) {
                 if (!specialWidgetKeys.includes(widgetKey)) {
+                    if ((widget instanceof BaseWidget) && widget.getEmbeddedDisplayWidgetKey() !== "") {
+                        // only if it is not a child of an EmbeddedDisplay
+                        continue;
+                    }
                     result[widgetKey] = widget.getTdlCopy(false);
                 }
             }

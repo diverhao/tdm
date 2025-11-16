@@ -851,15 +851,16 @@ export class Widgets {
      * any widget key in the display window, do nothing <br>
      * (1) deselect all widgets, so that this widget is migrated from GroupSelection2 to g_widgets <br>
      * (2) let this widget to be flushed <br>
-     * (3) delete the entry in this._widgets <br>
-     * (4) delete the entry in GroupSelection2, the widget might in there too <br>
-     * (5) update sidebar <br>
+     * (3) remove TcaChannels associated with this widget <br>
+     * (4) delete the entry in this._widgets <br>
+     * (5) delete the entry in GroupSelection2, the widget might in there too <br>
+     * (6) update sidebar <br>
      * @param {string} widgetKey The widgetKey that will be removed
      * @param {boolean} deselectAllWidgets If we want to deselect all widgets during this process. Set to false when we remove MouseSelectionRegion
      * @param {boolean} doFlush If we want to flush the widgets
      * @returns {void}
      */
-    removeWidget = (widgetKey: string, deselectAllWidgets: boolean, doFlush: boolean): void => {
+    removeWidget = (widgetKey: string, deselectAllWidgets: boolean, doFlush: boolean, disconnectChannels: boolean = false): void => {
         if (!this.hasWidget(widgetKey)) {
             return;
         }
@@ -886,11 +887,21 @@ export class Widgets {
         // (2)
         this.addToForceUpdateWidgets(widgetKey);
         // (3)
-        this._widgets.delete(widgetKey);
+        if (disconnectChannels === true) {
+            const widget = this._widgets.get(widgetKey);
+            if (widget instanceof BaseWidget) {
+                const tcaChannelNames = widget.getChannelNames();
+                for (const tcaChannelName of tcaChannelNames) {
+                    this.removeTcaChannel(tcaChannelName, widgetKey);
+                }
+            }
+        }
         // (4)
+        this._widgets.delete(widgetKey);
+        // (5)
         const group: GroupSelection2 = this.getGroupSelection2();
         group.getWidgets().delete(widgetKey);
-        // (5)
+        // (6)
         g_widgets1.updateSidebar(doFlush);
     };
 

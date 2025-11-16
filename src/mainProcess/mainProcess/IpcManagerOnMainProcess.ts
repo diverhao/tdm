@@ -266,6 +266,7 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("new-tdl-rendered", this.handleNewTdlRendered);
         this.ipcMain.on("window-attached-script", this.handleWindowAttachedScript);
         this.ipcMain.on("load-db-file-contents", this.handleLoadDbFileContents);
+        this.ipcMain.on("read-embedded-display-tdl", this.handleReadEmbeddedDisplayTdl)
         // ------------- channel operations --------------------
         // tca get
         this.ipcMain.on("tca-get", this.handleTcaGet);
@@ -1835,6 +1836,42 @@ export class IpcManagerOnMainProcess {
             }
         }
     };
+
+    handleReadEmbeddedDisplayTdl = async (event: any, data: IpcEventArgType["read-embedded-display-tdl"]) => {
+        const { displayWindowId, widgetKey, tdlFileName, currentTdlFolder, macros } = data;
+        console.log("   ====== trying to read file", tdlFileName, currentTdlFolder)
+        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+
+            FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder).then((tdlResult) => {
+                if (tdlResult !== undefined) {
+                    const tdl = tdlResult["tdl"];
+                    const fullTdlFileName = tdlResult["fullTdlFileName"];
+                    displayWindowAgent.sendFromMainProcess("read-embedded-display-tdl", {
+                        displayWindowId: displayWindowId,
+                        widgetKey: widgetKey,
+                        tdl: tdl,
+                        macros: macros,
+                        fullTdlFileName: fullTdlFileName,
+                    })
+                } else {
+                    Log.error("0", `Cannot read file ${tdlFileName}`);
+                    displayWindowAgent.sendFromMainProcess("read-embedded-display-tdl", {
+                        displayWindowId: displayWindowId,
+                        widgetKey: widgetKey,
+                        macros: macros,
+                        // no tdl and no fullTdlFileName mean file does not exist
+                        // tdl: tdl,
+                        // fullTdlFileName: "file-does-not-exist",
+                    })
+                }
+            })
+        } else {
+            Log.info("Cannot find Display Window Agent for", displayWindowId);
+        }
+
+    }
 
     /**
      * create a blank display window, the same effect as the handleOpenTdlFile() with tdlFileNames = []

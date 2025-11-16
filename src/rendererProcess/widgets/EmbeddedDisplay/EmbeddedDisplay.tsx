@@ -12,6 +12,7 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import * as path from "path";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Log } from "../../../mainProcess/log/Log";
+import { TcaChannel } from "../../channel/TcaChannel";
 
 export type type_EmbeddedDisplay_tdl = {
     type: string;
@@ -55,6 +56,10 @@ export class EmbeddedDisplay extends BaseWidget {
     _rules: EmbeddedDisplayRules;
 
     _tdlFileNames: string[];
+    _fullTdlFileName: string = "";
+    // the widget keys for the currently selected tab
+    _childWidgetKeys: string[] = [];
+
     _itemNames: string[];
     _itemMacros: [string, string][][];
     _itemIsWebpage: boolean[];
@@ -169,19 +174,6 @@ export class EmbeddedDisplay extends BaseWidget {
             this.renderChildWidgets = false;
         });
 
-        // type type_options_createDisplayWindow = {
-        // 	tdl: type_tdl;
-        // 	mode: "editing" | "operating";
-        // 	editable: boolean;
-        // 	tdlFileName: string;
-        // 	macros: [string, string][];
-        // 	replaceMacros: boolean;
-        // 	hide: boolean;
-        // 	utilityType?: string;
-        // 	utilityOptions?: Record<string, any>;
-        // };
-
-
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
                 <>
@@ -229,148 +221,46 @@ export class EmbeddedDisplay extends BaseWidget {
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                {/* {`${this._getChannelValue()}${this.getText().showUnit ? this._getChannelUnit() : ""}`} */}
 
                 {this.getItemNames().length <= 1 || this.getText()["showTab"] === false ? null : (
                     <this._ElementTabs></this._ElementTabs>
                 )}
 
+
                 <this._ElementIframe></this._ElementIframe>
-                {/* <this._ElementMask></this._ElementMask> */}
+
             </div>
         );
     };
 
     _ElementIframe = () => {
-        if (g_widgets1.isEditing()) {
-            return (
-                <this._ElementIframeInEditing></this._ElementIframeInEditing>
-            )
-        } else {
-            return (
-                <this._ElementIframeInOperating></this._ElementIframeInOperating>
-            );
-        }
-    }
 
-    _ElementIframeInEditing = () => {
-        return <div style={{
-            width: "100%",
-            height: "100%",
-            position: "absolute",
-            top: 0,
-            left: 0,
-            display: "inline-flex",
-            justifyContent: 'center',
-            alignItems: "center",
-        }}>
-            Embedded display
-        </div>
-    }
-
-    _ElementIframeInOperating = () => {
-
-        const iframeElementRef = React.useRef<any>(null);
         const webviewElementRef = React.useRef<any>(null);
 
-        React.useEffect(() => {
-            if (iframeElementRef.current !== null) {
-                iframeElementRef.current.style["backgroundColor"] = this.iframeBackgroundColor;
-            }
-        });
+        let display: string = "none";
+        let link = "";
 
-        if (this.getItemIsWebpage()[this.getSelectedTab()] === true) {
-            let tdlFileName = this.getTdlFileNames()[this.getSelectedTab()];
-            const link = tdlFileName;
-            return (
-                <iframe
-                    ref={webviewElementRef}
-                    src={link}
-                    id="embedded-display"
-                    width="100%"
-                    height="100%"
-                    style={{
-                        border: "none",
-                        backgroundColor: this.iframeBackgroundColor,
-                    }}
-                ></iframe>
-            )
-        } else {
-            const ipcServerPort = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().getIpcServerPort();
-            const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
-            let resizeFactor = 1;
-            const resize = this.getAllText()["resize"]; // "none" | "fit" | "crop"
-            if (resize === "fit") {
-                const tdlCanvasHeight = this.getTdlCanvasHeight();
-                const tdlCanvasWidth = this.getTdlCanvasWidth();
-                const widgetWidth = this.getAllStyle()["width"];
-                const widgetHeight = this.getAllStyle()["height"];
-                if (typeof tdlCanvasWidth === "number" && typeof tdlCanvasHeight === "number") {
-                    resizeFactor = Math.min(widgetWidth / tdlCanvasWidth, widgetHeight / tdlCanvasHeight);
-                }
-            }
-
-
-            let iframeSrc = `../../../mainProcess/windows/DisplayWindow/DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${this.iframeDisplayId}`;
-            if (mainProcessMode === "web") {
-                const currentSite = `https://${window.location.host}/`;
-                iframeSrc = `${currentSite}DisplayWindow.html?displayWindowId=${this.iframeDisplayId}`
-            }
-            return (
-                <iframe
-                    ref={iframeElementRef}
-                    src={iframeSrc}
-                    name="embedded-display"
-                    id="embedded-display"
-                    width="100%"
-                    height="100%"
-                    scrolling={resize === "crop" ? "no" : "auto"}
-
-                    referrerPolicy="no-referrer"
-                    // ! iframe and its parent share the same sessionStorage, which causes an issue 
-                    // ! that we cannot refresh the web page
-                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                    // sandbox="allow-scripts"
-                    style={{
-                        border: "none",
-                        backgroundColor: this.iframeBackgroundColor,
-                        // resize = "fit"
-                        zoom: resize === "fit" ? `${resizeFactor * 100}%` : "100%", // not work in Firefox
-                        overflow: resize === "crop" ? "hidden" : "visible",
-                    }}
-                >
-                </iframe>
-            );
+        if (g_widgets1.isEditing() === false && this.getItemIsWebpage()[this.getSelectedTab()] === true) {
+            display = "";
+            link = this.getTdlFileNames()[this.getSelectedTab()];
         }
+
+        return (
+            <iframe
+                ref={webviewElementRef}
+                src={link}
+                id="embedded-display"
+                width="100%"
+                height="100%"
+                style={{
+                    border: "none",
+                    display: display,
+                    // backgroundColor: this.iframeBackgroundColor,
+                }}
+            ></iframe>
+        )
     };
 
-    loadHtml = (iframeDisplayId: string) => {
-        Log.info("load html", iframeDisplayId, this.getSelectedTab())
-        this.iframeDisplayId = iframeDisplayId;
-        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-        g_flushWidgets();
-    };
-
-
-    setIframeBackgroundColor = (tdlBackgroundColor: string) => {
-        this.iframeBackgroundColor = tdlBackgroundColor;
-    }
-
-    setTdlCanvasWidth = (width: number | string) => {
-        this._tdlCanvasWidth = width;
-    }
-
-    setTdlCanvasHeight = (height: number | string) => {
-        this._tdlCanvasHeight = height;
-    }
-
-    getTdlCanvasWidth = () => {
-        return this._tdlCanvasWidth;
-    }
-
-    getTdlCanvasHeight = () => {
-        return this._tdlCanvasHeight;
-    }
 
 
     calcTabsLeft = () => {
@@ -504,15 +394,6 @@ export class EmbeddedDisplay extends BaseWidget {
         }
     };
 
-
-    handleSelectAFile = (options: Record<string, any>, fileName: string) => {
-        const itemIndex = options["itemIndex"];
-        const sidebar = this.getSidebar();
-        if (typeof itemIndex === "number" && sidebar !== undefined) {
-            (sidebar as EmbeddedDisplaySidebar).setBeingUpdatedItemIndex(itemIndex);
-            sidebar.updateFromWidget(undefined, "select-a-file", fileName);
-        }
-    };
 
 
     // ----------------------- styles -----------------------
@@ -668,71 +549,110 @@ export class EmbeddedDisplay extends BaseWidget {
         this._selectedTab = tabIndex;
     };
 
-    selectTab = (index: number) => {
+    /**
+     * (1) read tdl file for new tab
+     * 
+     * (2) extract background and macros information, skip script
+     * 
+     * (3) change this widget's background
+     * 
+     * (4.1) remove old Tab's widgets
+     *       disconnect their tca Channels
+     * 
+     * (4) modify widgets tdls with new widget keys
+     *     modify their left and top
+     *     todo: apply macros
+     * 
+     * (5) create widgets objects (BaseWidget) for each widget, except Canvas
+     *     each widget's insideEmbeddedDisplay is true
+     *     
+     * (6) change the children widgets to be inside EmbeddedDisplay
+     *     register these widgets in this EmbeddedDisplay
+     * 
+     * todo (7) append these widgets after this EmbeddedDisplay in g_widgets1
+     * 
+     * (7.1) run widget.jobsAsOperatingModeBegins() for all children widgets
+     * 
+     * (7.2) re-process channel names with macros provided by EmbeddedDisplay, 
+     *       the previous jobsAsOperatingModeBegins() already did that, but without external macros
+     * 
+     * (8) connect channels
+     * 
+     * (8.1) remove all children widgets in this EmbeddedDisplay
+     * 
+     * (9) force update these widgets
+     * 
+     */
+    selectTab = (index: number, forceSelect: boolean = false) => {
         if (g_widgets1.isEditing()) {
             // do nothing
             return;
         }
-        if (index === this.getSelectedTab()) {
+        if (index === this.getSelectedTab() && forceSelect === false) {
             return;
         }
-
-
-        const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-
 
         const oldTab = this.getSelectedTab();
         const oldTabIsWeb = this.getItemIsWebpage()[oldTab];
         const newTab = index;
         const newTabIsWeb = this.getItemIsWebpage()[newTab];
 
-        const macros = this.expandItemMacros(newTab);
-
         this.setSelectedTab(index);
 
-        this.iframeDisplayId = "";
+        if (newTabIsWeb === false) {
+            const macros = this.expandItemMacros(newTab);
 
-        let tdlFileName = this.getTdlFileNames()[this.getSelectedTab()];
-        tdlFileName = BaseWidget.expandChannelName(tdlFileName, macros);
+            let tdlFileName = this.getTdlFileNames()[this.getSelectedTab()];
+            tdlFileName = BaseWidget.expandChannelName(tdlFileName, macros);
 
-        // web --> web
-        // web --> tdl
-        // tdl --> web
-        // tdl --> tdl
-        if (oldTabIsWeb === true && newTabIsWeb === true) {
-            // do nothing
-        } else if (oldTabIsWeb === true && newTabIsWeb === false) {
-            ipcManager.sendFromRendererProcess("obtain-iframe-uuid", {
-                displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                widgetKey: this.getWidgetKey(),
-                mode: g_widgets1.isEditing() ? "editing" : "operating",
-                tdlFileName: tdlFileName,
-                macros: macros,
-                currentTdlFolder: path.dirname(g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName()),
-                replaceMacros: this.getAllText()["useParentMacros"]
-            });
-        } else if (oldTabIsWeb === false && newTabIsWeb === true) {
-            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-            if (this.iframeDisplayId !== "") {
-                displayWindowClient.getIpcManager().sendFromRendererProcess("close-iframe-display", {
-                    displayWindowId: this.iframeDisplayId,
+
+            if (typeof tdlFileName === "string" && tdlFileName.endsWith(".tdl")) {
+                const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
+                let currentTdlFolder = path.dirname(g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName());
+
+                // if this EmbeddedDisplay is inside another EmbeddedDisplay
+                // use the parent EmbeddedDisplay's path
+                if (this.getEmbeddedDisplayWidgetKey() !== "") {
+                    const parentWidget = g_widgets1.getWidget(this.getEmbeddedDisplayWidgetKey());
+                    if (parentWidget instanceof EmbeddedDisplay) {
+                        const parentFullTdlFileName = parentWidget.getFullTdlFileName();
+                        if (parentFullTdlFileName !== "") {
+                            currentTdlFolder = path.dirname(parentFullTdlFileName);
+                        }
+                    }
+                }
+
+                ipcManager.sendFromRendererProcess("read-embedded-display-tdl", {
+                    displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                    widgetKey: this.getWidgetKey(),
+                    tdlFileName: tdlFileName,
+                    macros: macros,
+                    currentTdlFolder: currentTdlFolder,
+                    // replaceMacros: this.getAllText()["useParentMacros"]
                 })
             }
-        } else {
-            ipcManager.sendFromRendererProcess("switch-iframe-display-tab", {
-                displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                widgetKey: this.getWidgetKey(),
-                mode: g_widgets1.isEditing() ? "editing" : "operating",
-                tdlFileName: tdlFileName,
-                macros: macros,
-                currentTdlFolder: path.dirname(g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName()),
-                iframeDisplayId: this.iframeDisplayId,
-            });
+        } else if (oldTabIsWeb === false && newTabIsWeb === true) {
+            // clear the child widgets
+            this.removeChildWidgets();
+            // change the background color
+            this.getStyle()["backgroundColor"] = "rgba(255,255,255,1)";
+        } else if (oldTabIsWeb === true && newTabIsWeb === true) {
+            // do nothing
         }
         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
         g_flushWidgets();
 
     };
+
+    /**
+     * Remove all child widgets and disconnect TCA channels in them
+     */
+    removeChildWidgets = () => {
+        for (const childWidgetKey of this.getChildWidgetKeys()) {
+            g_widgets1.removeWidget(childWidgetKey, false, false, true);
+        }
+        this.clearChildWidgetKeys();
+    }
 
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
@@ -741,14 +661,13 @@ export class EmbeddedDisplay extends BaseWidget {
         }
     };
 
+    /**
+     * (1) remove the widgets from g_widgets1._widgets
+     * 
+     * (2) clear this._childWidgetKeys
+     */
     jobsAsEditingModeBegins() {
-        // tell main process to terminate the current iframe session, invokes "closed" event handler
-        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        if (this.iframeDisplayId !== "") {
-            displayWindowClient.getIpcManager().sendFromRendererProcess("close-iframe-display", {
-                displayWindowId: this.iframeDisplayId,
-            })
-        }
+        this.removeChildWidgets();
         super.jobsAsEditingModeBegins();
     }
 
@@ -779,26 +698,74 @@ export class EmbeddedDisplay extends BaseWidget {
         return expandedItemMacros;
     }
 
+
+
     jobsAsOperatingModeBegins(): void {
-        // connect the currently selected tab
-        this.iframeDisplayId = "";
-        let macros = this.expandItemMacros(0);
-
-        let tdlFileName = this.getTdlFileNames()[this.getSelectedTab()];
-        tdlFileName = BaseWidget.expandChannelName(tdlFileName, macros);
-
-        const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-        ipcManager.sendFromRendererProcess("obtain-iframe-uuid", {
-            displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-            widgetKey: this.getWidgetKey(),
-            mode: g_widgets1.isEditing() ? "editing" : "operating",
-            tdlFileName: tdlFileName,
-            macros: macros,
-            currentTdlFolder: path.dirname(g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName()),
-            replaceMacros: this.getText()["useParentMacros"]
-        });
-
+        this.selectTab(0, true);
         super.jobsAsOperatingModeBegins()
+    }
+
+    /**
+     * Similar to g_widgets1.connectAllTcaChannels()
+     */
+    connectAllTcaChannels = (reconnect: boolean = false) => {
+
+        const tcaChannels: TcaChannel[] = [];
+
+        // (1)
+        for (let childWidgetKey of this.getChildWidgetKeys()) {
+            Log.info("---", childWidgetKey)
+            const childWidget = g_widgets1.getWidget(childWidgetKey);
+            Log.info("===", childWidget)
+            if (childWidget instanceof BaseWidget) {
+                for (let channelNameLevel3 of childWidget.getChannelNamesLevel3()) {
+                    Log.info("connect all tca channels", channelNameLevel3)
+                    const tcaChannel = g_widgets1.createTcaChannel(channelNameLevel3, childWidgetKey);
+                    if (tcaChannel instanceof TcaChannel) {
+                        tcaChannels.push(tcaChannel);
+                    }
+                }
+            }
+        }
+        for (let tcaChannel of tcaChannels) {
+            // (2)
+            // level 4 channel name
+            const channelName = tcaChannel.getChannelName();
+            if (TcaChannel.checkChannelName(channelName) === "local" || TcaChannel.checkChannelName(channelName) === "global") {
+                // if the initial dbr data is different from default, put init values
+                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                const displayWindowId = displayWindowClient.getWindowId();
+                // the meta data is extracted in TcaChannel constructor
+                tcaChannel.put(displayWindowId, tcaChannel.getDbrData(), 1);
+            }
+            if (TcaChannel.checkChannelName(channelName) === "pva") {
+                tcaChannel.fetchPvaType(undefined);
+            } else {
+                tcaChannel.getMeta(undefined);
+            }
+            // (3)
+            tcaChannel.monitor();
+        }
+    };
+
+    setFullTdlFileName = (newName: string) => {
+        this._fullTdlFileName = newName;
+    }
+
+    getFullTdlFileName = () => {
+        return this._fullTdlFileName;
+    }
+
+    getChildWidgetKeys = () => {
+        return this._childWidgetKeys;
+    }
+
+    clearChildWidgetKeys = () => {
+        this._childWidgetKeys.length = 0;
+    }
+
+    appendChildWidgetKey = (newWidgetKey: string) => {
+        this._childWidgetKeys.push(newWidgetKey);
     }
 
 }

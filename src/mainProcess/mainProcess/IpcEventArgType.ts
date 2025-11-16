@@ -552,6 +552,14 @@ export type IpcEventArgType = {
         displayWindowId: string,
         id: string,
         time: number,
+    },
+
+    "read-embedded-display-tdl": {
+        displayWindowId: string,
+        widgetKey: string,
+        tdlFileName: string,
+        currentTdlFolder: string,
+        macros: [string, string][],
     }
 
 };
@@ -806,7 +814,16 @@ export type IpcEventArgType2 = {
         displayWindowId: string,
         id: string,
         time: number,
+    },
+
+    "read-embedded-display-tdl": {
+        displayWindowId: string,
+        widgetKey: string,
+        macros: [string, string][],
+        fullTdlFileName?: string,
+        tdl?: type_tdl,
     }
+
 }
 
 /**

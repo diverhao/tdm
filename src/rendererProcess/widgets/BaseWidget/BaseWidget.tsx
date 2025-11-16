@@ -191,6 +191,11 @@ export abstract class BaseWidget {
      */
     _channelNamesLevel4: string[] = [];
 
+    /**
+     * inside an EmbeddedDisplay, the parent widget's key
+     */
+    _embeddedDisplayWidgetKey: string = "";
+
     getChannelNamesLevel0 = () => {
         return this._channelNamesLevel0;
     }
@@ -1328,6 +1333,9 @@ export abstract class BaseWidget {
     /**
      * Starting from level-0 channel names, update level-1/2/3 channel names from
      * the up-to-date macros
+     * 
+     * @param [widgetMacros=[]] the externally provided macros, this does not include the Canvas-provided 
+     *                          macros. This macros could be from users, parent widget, and others.
      */
     processChannelNames(widgetMacros: [string, string][] = [], removeDuplicated: boolean = true) {
         this._channelNamesLevel1 = [];
@@ -1342,7 +1350,7 @@ export abstract class BaseWidget {
             const errMsg = "No Canvas widget";
             throw new Error(errMsg);
         }
-        const macros = [...widgetMacros, ...canvas.getAllMacros()];
+        const macros = [...canvas.getAllMacros(), ...widgetMacros];
 
 
         // ------------ level 1 --------------
@@ -1926,6 +1934,14 @@ export abstract class BaseWidget {
         return g_widgets1.getChannelAccessRight(channelName);
     };
 
+    getEmbeddedDisplayWidgetKey = () => {
+        return this._embeddedDisplayWidgetKey;
+    }
+
+    setEmbeddedDisplayWidgetKey = (newKey: string) => {
+        this._embeddedDisplayWidgetKey = newKey;
+    }
+
     // -------------------- putters ----------------------------------
 
     /**
@@ -2167,4 +2183,6 @@ export abstract class BaseWidget {
             clearInterval(schedule as any);
         }
     }
+
+
 }

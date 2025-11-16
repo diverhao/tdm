@@ -30,7 +30,7 @@ import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/Chan
 import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
 import { Table } from "../../../rendererProcess/widgets/Table/Table";
 import { FileBrowser } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
-import path from "path";
+import { v4 as uuidv4 } from "uuid";
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 import { Image } from "../../../rendererProcess/widgets/Image/Image";
 import { IpcEventArgType, IpcEventArgType2 } from "../../mainProcess/IpcEventArgType";
@@ -241,6 +241,7 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("window-will-be-closed", this.handleWindowWillBeClosed);
 
         this.ipcRenderer.on("obtained-iframe-uuid", this.handleObtainedIframeUuid);
+        this.ipcRenderer.on("read-embedded-display-tdl", this.handleReadEmbeddedDisplayTdl);
 
         this.ipcRenderer.on("request-epics-dbd", this.handleRequestEpicsDbd);
 
@@ -278,16 +279,82 @@ export class IpcManagerOnDisplayWindow {
         options: IpcEventArgType2["obtained-iframe-uuid"]
     ) => {
         const widget = g_widgets1.getWidget2(options["widgetKey"]);
-        if (widget instanceof EmbeddedDisplay) {
-            widget.loadHtml(options["iframeDisplayId"]);
-            widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
-            widget.setTdlCanvasWidth(options["tdlCanvasWidth"]);
-            widget.setTdlCanvasHeight(options["tdlCanvasHeight"]);
-        } else if (widget instanceof Table) {
+        if (widget instanceof Table) {
             widget.loadHtml(options["iframeDisplayId"]);
             widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
         }
     };
+
+    handleReadEmbeddedDisplayTdl = (
+        event: any,
+        data: IpcEventArgType2["read-embedded-display-tdl"]
+    ) => {
+        // this macros is from parent EmbeddedDisplay and its ancestors
+        const { widgetKey, tdl, fullTdlFileName, macros } = data;
+        if (tdl === undefined || fullTdlFileName === undefined) {
+            // cannot read file
+        } else {
+            // continue the jobsAsOperatingModeBegins() in EmbeddedDisplay
+            // (2)
+            const canvasWidgetTdl = tdl["Canvas"];
+            const canvasBackgroundColor = canvasWidgetTdl["style"]["backgroundColor"];
+            let canvasMacros = canvasWidgetTdl["macros"];
+            // this the previous macros and this TDL's macros
+            let allMacros = [...canvasMacros, ...macros];
+
+            const embeddedDisplayWidget = g_widgets1.getWidget(widgetKey);
+            const embeddedDisplayWidgetKey = widgetKey;
+
+
+            if (embeddedDisplayWidget instanceof EmbeddedDisplay) {
+                embeddedDisplayWidget.setFullTdlFileName(fullTdlFileName);
+
+                const embeddedDisplayWidgetTop = embeddedDisplayWidget.getStyle()["top"];
+                const embeddedDisplayWidgetLeft = embeddedDisplayWidget.getStyle()["left"];
+                // (3)
+                embeddedDisplayWidget.getStyle()["backgroundColor"] = canvasBackgroundColor;
+                // (4.1)
+                embeddedDisplayWidget.removeChildWidgets();
+                for (const widgetTdl of Object.values(tdl)) {
+                    if (!widgetTdl["widgetKey"].includes("Canvas")) {
+                        // (4)
+                        const widgetKey = widgetTdl["widgetKey"];
+                        const newWidgetKey = widgetKey.split("_")[0] + "_" + uuidv4();
+                        widgetTdl["widgetKey"] = newWidgetKey;
+                        widgetTdl["key"] = newWidgetKey;
+                        widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + embeddedDisplayWidgetTop;
+                        widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + embeddedDisplayWidgetLeft;
+                        // (4.1)
+                        // (5)
+                        const widget = g_widgets1.createWidget(widgetTdl, false);
+                        if (widget instanceof BaseWidget) {
+                            // (6)
+                            widget.setEmbeddedDisplayWidgetKey(embeddedDisplayWidgetKey);
+                            embeddedDisplayWidget.appendChildWidgetKey(newWidgetKey);
+                            // todo: (7)
+                            // (7.1)
+                            widget.jobsAsOperatingModeBegins();
+                            // (7.2)
+                            widget.processChannelNames(allMacros);
+                        } else {
+                            // skip this widget
+                        }
+                    } else {
+                        // do nothing
+                    }
+                }
+
+                // (8)
+                embeddedDisplayWidget.connectAllTcaChannels();
+
+            } else {
+                Log.info("Cannot find EmbeddedDisplay widget", widgetKey);
+            }
+        }
+        // (9) the new widgets are already added to the list
+        g_flushWidgets();
+
+    }
 
     handleRequestEpicsDbd = (event: any, result: IpcEventArgType2["request-epics-dbd"]) => {
         const widget = g_widgets1.getWidget(result["widgetKey"]);

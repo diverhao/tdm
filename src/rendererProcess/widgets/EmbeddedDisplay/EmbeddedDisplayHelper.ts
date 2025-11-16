@@ -441,6 +441,11 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
             tdl["text"]["showTab"] = false;
         }
 
+        tdl["itemIsWebpage"].length = 0;
+        for (let ii = 0; ii < tdl["tdlFileNames"].length; ii++) {
+            tdl["itemIsWebpage"].push(false);
+        }
+
         return tdl;
     };
 }

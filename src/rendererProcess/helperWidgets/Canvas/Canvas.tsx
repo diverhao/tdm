@@ -404,7 +404,14 @@ export class Canvas {
     // };
 
     /**
-     * Get external and self-defined macros
+     * For a widget, the macros are expanded from furtheset to nearest, if there
+     * is any duplicated macros, the nearest one will be used.
+     *  - macros provided externally by users
+     *  - widget's own macros if there is one, it is in widgetTdl["macros"]
+     *  - macros from its parent widget, these macros may be the parent's own macros, or the 
+     *    macros inherited from somewhere else. These macros are passed to this current widget
+     *    as a whole
+     *  - macros from the Canvas in this display window, this is the lowest priority
      * 
      * external macros must be a set of fully expanded macros, e.g S=SYS, not S=${S1}
      */
