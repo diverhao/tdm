@@ -3,8 +3,6 @@ import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
-import * as GlobalMethods from "../../global/GlobalMethods";
-import { FontsData } from "../../global/FontsData";
 
 /**
  * Represents the X component in sidebar. <br>
@@ -33,7 +31,6 @@ export class SidebarEmbeddedDisplayResize extends SidebarComponent {
 				>
                     <option value="none">None</option>
                     <option value="fit">Fit content into widget</option>
-                    <option value="crop">Crop content</option>
 				</select>
 			</form>
 		);

@@ -290,13 +290,24 @@ export class IpcManagerOnDisplayWindow {
         data: IpcEventArgType2["read-embedded-display-tdl"]
     ) => {
         // this macros is from parent EmbeddedDisplay and its ancestors
-        const { widgetKey, tdl, fullTdlFileName, macros } = data;
+        const { widgetKey, tdl, fullTdlFileName, macros, widgetWidth, widgetHeight, resize } = data;
+
+
         if (tdl === undefined || fullTdlFileName === undefined) {
             // cannot read file
         } else {
             // continue the jobsAsOperatingModeBegins() in EmbeddedDisplay
             // (2)
             const canvasWidgetTdl = tdl["Canvas"];
+            let scalingFactor = 1;
+            if (resize === "fit") {
+                const canvasWidth = canvasWidgetTdl.style["width"];
+                const canvasHeight = canvasWidgetTdl.style["height"];
+                if (typeof canvasHeight === "number" && typeof canvasWidth === "number") {
+                    scalingFactor = Math.min(widgetWidth / canvasWidth, widgetHeight / canvasHeight);
+                }
+            }
+
             const canvasBackgroundColor = canvasWidgetTdl["style"]["backgroundColor"];
             let canvasMacros = canvasWidgetTdl["macros"];
             // this the previous macros and this TDL's macros
@@ -313,18 +324,20 @@ export class IpcManagerOnDisplayWindow {
                 const embeddedDisplayWidgetLeft = embeddedDisplayWidget.getStyle()["left"];
                 // (3)
                 embeddedDisplayWidget.getStyle()["backgroundColor"] = canvasBackgroundColor;
-                // (4.1)
+                // (4)
                 embeddedDisplayWidget.removeChildWidgets();
                 for (const widgetTdl of Object.values(tdl)) {
                     if (!widgetTdl["widgetKey"].includes("Canvas")) {
-                        // (4)
+                        // (4.1)
                         const widgetKey = widgetTdl["widgetKey"];
                         const newWidgetKey = widgetKey.split("_")[0] + "_" + uuidv4();
                         widgetTdl["widgetKey"] = newWidgetKey;
                         widgetTdl["key"] = newWidgetKey;
-                        widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + embeddedDisplayWidgetTop;
-                        widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + embeddedDisplayWidgetLeft;
-                        // (4.1)
+                        widgetTdl["style"]["top"] = widgetTdl["style"]["top"] * scalingFactor + embeddedDisplayWidgetTop;
+                        widgetTdl["style"]["left"] = widgetTdl["style"]["left"] * scalingFactor + embeddedDisplayWidgetLeft;
+                        widgetTdl["style"]["width"] = widgetTdl["style"]["width"] * scalingFactor;
+                        widgetTdl["style"]["height"] = widgetTdl["style"]["height"] * scalingFactor;
+                        widgetTdl["style"]["fontSize"] = widgetTdl["style"]["fontSize"] * scalingFactor;
                         // (5)
                         const widget = g_widgets1.createWidget(widgetTdl, false);
                         if (widget instanceof BaseWidget) {

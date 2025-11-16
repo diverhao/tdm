@@ -560,6 +560,9 @@ export type IpcEventArgType = {
         tdlFileName: string,
         currentTdlFolder: string,
         macros: [string, string][],
+        widgetWidth: number,
+        widgetHeight: number,
+        resize: "none" | "crop" | "fit",
     }
 
 };
@@ -822,6 +825,9 @@ export type IpcEventArgType2 = {
         macros: [string, string][],
         fullTdlFileName?: string,
         tdl?: type_tdl,
+        widgetWidth: number,
+        widgetHeight: number,
+        resize: "none" | "crop" | "fit",
     }
 
 }

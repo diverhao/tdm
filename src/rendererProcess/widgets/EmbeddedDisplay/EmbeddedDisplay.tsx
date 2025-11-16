@@ -453,7 +453,7 @@ export class EmbeddedDisplay extends BaseWidget {
             tabDefaultColor: "rgba(220,220,220,1)",
             showTab: true,
             isWebpage: false,
-            resize: "none", // "none" | "crop" | "fit"
+            resize: "none", // "none" "fit"
         },
         channelNames: [],
         groupNames: [],
@@ -556,10 +556,10 @@ export class EmbeddedDisplay extends BaseWidget {
      * 
      * (3) change this widget's background
      * 
-     * (4.1) remove old Tab's widgets
+     * (4) remove old Tab's widgets
      *       disconnect their tca Channels
      * 
-     * (4) modify widgets tdls with new widget keys
+     * (4.1) modify widgets tdls with new widget keys
      *     modify their left and top
      *     todo: apply macros
      * 
@@ -628,6 +628,9 @@ export class EmbeddedDisplay extends BaseWidget {
                     tdlFileName: tdlFileName,
                     macros: macros,
                     currentTdlFolder: currentTdlFolder,
+                    widgetWidth: this.getStyle()["width"],
+                    widgetHeight: this.getStyle()["height"],
+                    resize: this.getText()["resize"],
                     // replaceMacros: this.getAllText()["useParentMacros"]
                 })
             }

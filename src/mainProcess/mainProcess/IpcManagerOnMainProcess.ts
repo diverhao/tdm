@@ -1838,8 +1838,8 @@ export class IpcManagerOnMainProcess {
     };
 
     handleReadEmbeddedDisplayTdl = async (event: any, data: IpcEventArgType["read-embedded-display-tdl"]) => {
-        const { displayWindowId, widgetKey, tdlFileName, currentTdlFolder, macros } = data;
-        console.log("   ====== trying to read file", tdlFileName, currentTdlFolder)
+        const { displayWindowId, widgetKey, tdlFileName, currentTdlFolder, macros, widgetWidth, widgetHeight, resize } = data;
+
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
@@ -1854,6 +1854,9 @@ export class IpcManagerOnMainProcess {
                         tdl: tdl,
                         macros: macros,
                         fullTdlFileName: fullTdlFileName,
+                        widgetWidth: widgetWidth,
+                        widgetHeight: widgetHeight,
+                        resize: resize,
                     })
                 } else {
                     Log.error("0", `Cannot read file ${tdlFileName}`);
@@ -1861,6 +1864,9 @@ export class IpcManagerOnMainProcess {
                         displayWindowId: displayWindowId,
                         widgetKey: widgetKey,
                         macros: macros,
+                        widgetWidth: widgetWidth,
+                        widgetHeight: widgetHeight,
+                        resize: resize,
                         // no tdl and no fullTdlFileName mean file does not exist
                         // tdl: tdl,
                         // fullTdlFileName: "file-does-not-exist",
