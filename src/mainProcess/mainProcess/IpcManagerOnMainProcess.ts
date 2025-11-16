@@ -1857,6 +1857,7 @@ export class IpcManagerOnMainProcess {
                         widgetWidth: widgetWidth,
                         widgetHeight: widgetHeight,
                         resize: resize,
+                        tdlFileName: tdlFileName,
                     })
                 } else {
                     Log.error("0", `Cannot read file ${tdlFileName}`);
@@ -1867,6 +1868,7 @@ export class IpcManagerOnMainProcess {
                         widgetWidth: widgetWidth,
                         widgetHeight: widgetHeight,
                         resize: resize,
+                        tdlFileName: tdlFileName,
                         // no tdl and no fullTdlFileName mean file does not exist
                         // tdl: tdl,
                         // fullTdlFileName: "file-does-not-exist",

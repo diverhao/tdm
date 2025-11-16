@@ -76,6 +76,8 @@ export class EmbeddedDisplay extends BaseWidget {
 
     iframeBackgroundColor = 'rgba(0,0,0,0)';
 
+    loadingText = "";
+
     private _tdlCanvasWidth: number | string = 100;
     private _tdlCanvasHeight: number | string = 100;
 
@@ -225,7 +227,7 @@ export class EmbeddedDisplay extends BaseWidget {
                 {this.getItemNames().length <= 1 || this.getText()["showTab"] === false ? null : (
                     <this._ElementTabs></this._ElementTabs>
                 )}
-
+                {this.loadingText}
 
                 <this._ElementIframe></this._ElementIframe>
 
@@ -591,6 +593,7 @@ export class EmbeddedDisplay extends BaseWidget {
         if (index === this.getSelectedTab() && forceSelect === false) {
             return;
         }
+        this.loadingText = `Loading ${this.getTdlFileNames()[index]}`;
 
         const oldTab = this.getSelectedTab();
         const oldTabIsWeb = this.getItemIsWebpage()[oldTab];
@@ -635,11 +638,14 @@ export class EmbeddedDisplay extends BaseWidget {
                 })
             }
         } else if (oldTabIsWeb === false && newTabIsWeb === true) {
+            this.loadingText = "";
+
             // clear the child widgets
             this.removeChildWidgets();
             // change the background color
             this.getStyle()["backgroundColor"] = "rgba(255,255,255,1)";
         } else if (oldTabIsWeb === true && newTabIsWeb === true) {
+            this.loadingText = "";
             // do nothing
         }
         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
@@ -670,6 +676,7 @@ export class EmbeddedDisplay extends BaseWidget {
      * (2) clear this._childWidgetKeys
      */
     jobsAsEditingModeBegins() {
+        this.loadingText = "";
         this.removeChildWidgets();
         super.jobsAsEditingModeBegins();
     }

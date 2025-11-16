@@ -828,6 +828,7 @@ export type IpcEventArgType2 = {
         widgetWidth: number,
         widgetHeight: number,
         resize: "none" | "crop" | "fit",
+        tdlFileName: string,
     }
 
 }

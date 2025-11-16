@@ -290,11 +290,18 @@ export class IpcManagerOnDisplayWindow {
         data: IpcEventArgType2["read-embedded-display-tdl"]
     ) => {
         // this macros is from parent EmbeddedDisplay and its ancestors
-        const { widgetKey, tdl, fullTdlFileName, macros, widgetWidth, widgetHeight, resize } = data;
+        const { widgetKey, tdl, fullTdlFileName, macros, widgetWidth, widgetHeight, resize, tdlFileName } = data;
+        const embeddedDisplayWidget = g_widgets1.getWidget(widgetKey);
+        const embeddedDisplayWidgetKey = widgetKey;
 
+
+        if (!(embeddedDisplayWidget instanceof EmbeddedDisplay)) {
+            return;
+        }
 
         if (tdl === undefined || fullTdlFileName === undefined) {
             // cannot read file
+            embeddedDisplayWidget.loadingText = `Failed to load ${tdlFileName}`;
         } else {
             // continue the jobsAsOperatingModeBegins() in EmbeddedDisplay
             // (2)
@@ -313,58 +320,54 @@ export class IpcManagerOnDisplayWindow {
             // this the previous macros and this TDL's macros
             let allMacros = [...canvasMacros, ...macros];
 
-            const embeddedDisplayWidget = g_widgets1.getWidget(widgetKey);
-            const embeddedDisplayWidgetKey = widgetKey;
 
+            embeddedDisplayWidget.setFullTdlFileName(fullTdlFileName);
 
-            if (embeddedDisplayWidget instanceof EmbeddedDisplay) {
-                embeddedDisplayWidget.setFullTdlFileName(fullTdlFileName);
-
-                const embeddedDisplayWidgetTop = embeddedDisplayWidget.getStyle()["top"];
-                const embeddedDisplayWidgetLeft = embeddedDisplayWidget.getStyle()["left"];
-                // (3)
-                embeddedDisplayWidget.getStyle()["backgroundColor"] = canvasBackgroundColor;
-                // (4)
-                embeddedDisplayWidget.removeChildWidgets();
-                for (const widgetTdl of Object.values(tdl)) {
-                    if (!widgetTdl["widgetKey"].includes("Canvas")) {
-                        // (4.1)
-                        const widgetKey = widgetTdl["widgetKey"];
-                        const newWidgetKey = widgetKey.split("_")[0] + "_" + uuidv4();
-                        widgetTdl["widgetKey"] = newWidgetKey;
-                        widgetTdl["key"] = newWidgetKey;
-                        widgetTdl["style"]["top"] = widgetTdl["style"]["top"] * scalingFactor + embeddedDisplayWidgetTop;
-                        widgetTdl["style"]["left"] = widgetTdl["style"]["left"] * scalingFactor + embeddedDisplayWidgetLeft;
-                        widgetTdl["style"]["width"] = widgetTdl["style"]["width"] * scalingFactor;
-                        widgetTdl["style"]["height"] = widgetTdl["style"]["height"] * scalingFactor;
-                        widgetTdl["style"]["fontSize"] = widgetTdl["style"]["fontSize"] * scalingFactor;
-                        // (5)
-                        const widget = g_widgets1.createWidget(widgetTdl, false);
-                        if (widget instanceof BaseWidget) {
-                            // (6)
-                            widget.setEmbeddedDisplayWidgetKey(embeddedDisplayWidgetKey);
-                            embeddedDisplayWidget.appendChildWidgetKey(newWidgetKey);
-                            // todo: (7)
-                            // (7.1)
-                            widget.jobsAsOperatingModeBegins();
-                            // (7.2)
-                            widget.processChannelNames(allMacros);
-                        } else {
-                            // skip this widget
-                        }
+            const embeddedDisplayWidgetTop = embeddedDisplayWidget.getStyle()["top"];
+            const embeddedDisplayWidgetLeft = embeddedDisplayWidget.getStyle()["left"];
+            // (3)
+            embeddedDisplayWidget.getStyle()["backgroundColor"] = canvasBackgroundColor;
+            // (4)
+            embeddedDisplayWidget.removeChildWidgets();
+            for (const widgetTdl of Object.values(tdl)) {
+                if (!widgetTdl["widgetKey"].includes("Canvas")) {
+                    // (4.1)
+                    const widgetKey = widgetTdl["widgetKey"];
+                    const newWidgetKey = widgetKey.split("_")[0] + "_" + uuidv4();
+                    widgetTdl["widgetKey"] = newWidgetKey;
+                    widgetTdl["key"] = newWidgetKey;
+                    widgetTdl["style"]["top"] = widgetTdl["style"]["top"] * scalingFactor + embeddedDisplayWidgetTop;
+                    widgetTdl["style"]["left"] = widgetTdl["style"]["left"] * scalingFactor + embeddedDisplayWidgetLeft;
+                    widgetTdl["style"]["width"] = widgetTdl["style"]["width"] * scalingFactor;
+                    widgetTdl["style"]["height"] = widgetTdl["style"]["height"] * scalingFactor;
+                    widgetTdl["style"]["fontSize"] = widgetTdl["style"]["fontSize"] * scalingFactor;
+                    // (5)
+                    const widget = g_widgets1.createWidget(widgetTdl, false);
+                    if (widget instanceof BaseWidget) {
+                        // (6)
+                        widget.setEmbeddedDisplayWidgetKey(embeddedDisplayWidgetKey);
+                        embeddedDisplayWidget.appendChildWidgetKey(newWidgetKey);
+                        // todo: (7)
+                        // (7.1)
+                        widget.jobsAsOperatingModeBegins();
+                        // (7.2)
+                        widget.processChannelNames(allMacros);
                     } else {
-                        // do nothing
+                        // skip this widget
                     }
+                } else {
+                    // do nothing
                 }
-
-                // (8)
-                embeddedDisplayWidget.connectAllTcaChannels();
-
-            } else {
-                Log.info("Cannot find EmbeddedDisplay widget", widgetKey);
             }
+            embeddedDisplayWidget.loadingText = ``;
+
+            // (8)
+            embeddedDisplayWidget.connectAllTcaChannels();
+
+
         }
         // (9) the new widgets are already added to the list
+        g_widgets1.addToForceUpdateWidgets(widgetKey);
         g_flushWidgets();
 
     }
