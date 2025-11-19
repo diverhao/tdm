@@ -611,7 +611,7 @@ export class EmbeddedDisplay extends BaseWidget {
             tdlFileName = BaseWidget.expandChannelName(tdlFileName, macros);
 
 
-            if (typeof tdlFileName === "string" && tdlFileName.endsWith(".tdl")) {
+            if (typeof tdlFileName === "string") {
                 const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
                 let currentTdlFolder = path.dirname(g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName());
 

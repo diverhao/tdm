@@ -232,12 +232,12 @@ export class BobPropertyConverter {
                 const widgetKey = widgetTdl["widgetKey"];
                 tdl[widgetKey] = widgetTdl;
             } else if (bobWidgetType === "group") {
-                const widgetsTdl = await GroupHelper.convertBobToTdl(bobWidgetJson, "group");
+                const widgetsTdl = await GroupHelper.convertBobToTdl(bobWidgetJson, "group", convertBobSuffix);
                 for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
                     tdl[widgetKey] = widgetTdl;
                 }
             } else if (bobWidgetType === "tabs") {
-                const widgetsTdl = await GroupHelper.convertBobToTdl(bobWidgetJson, "tabs");
+                const widgetsTdl = await GroupHelper.convertBobToTdl(bobWidgetJson, "tabs", convertBobSuffix);
                 for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
                     tdl[widgetKey] = widgetTdl;
                 }
@@ -1883,10 +1883,11 @@ export class BobPropertyConverter {
      */
 
     static convertBobGroupWidgets = async (
-        propertyValue: any[]
+        propertyValue: any[],
+        convertBobSufffix: boolean,
     ) => {
         const tdl: Record<string, any> = {};
-        await this.parseBob({ widget: propertyValue }, tdl, "", true);
+        await this.parseBob({ widget: propertyValue }, tdl, "", convertBobSufffix);
         delete tdl["Canvas"];
         return tdl;
     }
@@ -1965,7 +1966,8 @@ export class BobPropertyConverter {
                 name: string[],
                 children: { widget: Record<string, any>[] }[]
             }[]
-        }[]
+        }[],
+        convertBobSufffix: boolean
     ) => {
         const tabsData = propertyValue[0]['tab'];
         const result: { itemNames: string[], widgetKeys: string[][], widgetsTdl: Record<string, any> } = {
@@ -1974,7 +1976,7 @@ export class BobPropertyConverter {
             widgetKeys: [], // [["TextUpdate-xxx", "TextUpdate-xxx"], ["TextUpdate-xxx", "TextUpdate-xxx"]]
         };
         for (const tabData of tabsData) {
-            const tabResult = await this.convertBobTabsTab(tabData);
+            const tabResult = await this.convertBobTabsTab(tabData, convertBobSufffix);
             result["itemNames"].push(tabResult["itemName"]);
             result["widgetsTdl"] = { ...result["widgetsTdl"], ...tabResult["widgetsTdl"] };
             result["widgetKeys"].push(tabResult["widgetKeys"]);
@@ -1986,12 +1988,13 @@ export class BobPropertyConverter {
         tabData: {
             name: string[],
             children: { widget: Record<string, any>[] }[]
-        }
+        },
+        convertBobSufffix: boolean
     ) => {
         try {
             const itemName = this.convertBobString(tabData["name"]);
             const widgetsData = tabData["children"][0]["widget"];
-            const widgetsTdl = await this.convertBobGroupWidgets(widgetsData)
+            const widgetsTdl = await this.convertBobGroupWidgets(widgetsData, convertBobSufffix)
             return {
                 itemName: itemName,
                 widgetsTdl: widgetsTdl,

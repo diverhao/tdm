@@ -177,16 +177,20 @@ export class MainProcess {
 
         // main process mode specific initializations
         // 4 modes: ssh-client, desktop, web, and ssh-server mode
-        /**
-         * todo: more test and optimize
-         */
         if (this.getMainProcessMode() === "ssh-client") {
-            if (sshServerConfig !== undefined) {
-                let callingProcessId = sshServerConfig["callingProcessId"];
-                this._sshClient = new SshClient(this, sshServerConfig, callingProcessId)
-            } else {
-                Log.error(0, "Input for MainProcess constructor error: sshServerConfig cannot be undefined in ssh-client mode");
-            }
+            app.whenReady().then(async () => {
+                // create the main window that loads from local, its purpose is to provide
+                // a GUI interface for user to input password
+                await this.getWindowAgentsManager().createMainWindow();
+                // todo:
+                // if (sshServerConfig !== undefined) {
+                    this._sshClient = new SshClient(this, sshServerConfig as any)
+                // } else {
+                    // Log.error(0, "Input for MainProcess constructor error: sshServerConfig cannot be undefined in ssh-client mode");
+                    // todo: quit
+                // }
+            })
+
         } else if (this.getMainProcessMode() === "desktop") {
             /**
              * (1) wait for the app ready, 
@@ -204,10 +208,10 @@ export class MainProcess {
                 //     callback(this, this.getRawArgs());
                 // }
                 // if (args["attach"] === -1) {
-                    openTdlFileAsRequestedByAnotherInstance(args["fileNames"][0], this);
+                openTdlFileAsRequestedByAnotherInstance(args["fileNames"][0], this);
                 // }
             })
-        } if (this.getMainProcessMode() === "web") {
+        } else if (this.getMainProcessMode() === "web") {
             /**
              * (1) wait for the app ready, 
              * (2) find the first profile and set it as the selected profile
@@ -228,6 +232,10 @@ export class MainProcess {
                 // (2)
                 await this.getWindowAgentsManager().createMainWindow();
             })
+        } else {
+            // no such mode
+            Log.error("No such a mode", this.getMainProcessMode(), "Quit ...")
+            this.quit();
         }
     }
 

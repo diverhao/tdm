@@ -95,7 +95,7 @@ export class GroupHelper extends BaseWidgetHelper {
     /**
      * "group" and "tabs" are converted to Group
      */
-    static convertBobToTdl = async (bobWidgetJson: Record<string, any>, type: "group" | "tabs"): Promise<type_Group_tdl> => {
+    static convertBobToTdl = async (bobWidgetJson: Record<string, any>, type: "group" | "tabs", convertBobSuffix: boolean): Promise<type_Group_tdl> => {
         console.log("\n------------", `Parsing "${type}"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Group");
         // all properties for this widget
@@ -184,10 +184,10 @@ export class GroupHelper extends BaseWidgetHelper {
                     tdl["text"]["showBox"] = BobPropertyConverter.convertBobGroupStyle(propertyValue);
                     groupStyle = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "widget" && type === "group") {
-                    widgetsTdl = await BobPropertyConverter.convertBobGroupWidgets(propertyValue);
+                    widgetsTdl = await BobPropertyConverter.convertBobGroupWidgets(propertyValue, convertBobSuffix);
                 } else if (propertyName === "tabs" && type === "tabs") {
                     const tabsData = propertyValue;
-                    const tabsResult = await BobPropertyConverter.convertBobTabsTabs(tabsData);
+                    const tabsResult = await BobPropertyConverter.convertBobTabsTabs(tabsData, convertBobSuffix);
                     tdl["itemNames"] = tabsResult["itemNames"];
                     widgetsTdl = tabsResult["widgetsTdl"];
                     tdl["widgetKeys"] = tabsResult["widgetKeys"];

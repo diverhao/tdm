@@ -218,7 +218,7 @@ export class WindowAgentsManager {
                 } else if (options["isPreviewDisplayWindow"]) {
                     this.previewDisplayWindowAgent = displayWindowAgent;
                 }
-                
+
                 // (2)
                 await displayWindowAgent.createBrowserWindow(options);
                 return displayWindowAgent;
@@ -729,100 +729,38 @@ export class WindowAgentsManager {
      */
     createMainWindow = async () => {
 
-        if (this.getMainProcess().getMainProcessMode() === "ssh-client") {
-            const mainWindowAgent = this.createMainWindowAgent();
-            // create the real browser window
-            mainWindowAgent.createBrowserWindow();
-            return mainWindowAgent;
-        } else {
+        const mainWindowAgent = this.createMainWindowAgent();
 
-            const mainWindowAgent = this.createMainWindowAgent();
-
-            await mainWindowAgent.createBrowserWindow();
+        await mainWindowAgent.createBrowserWindow();
 
 
-            // the uuid of the main window is the `${processId}-mainWindow",
-            // the process ID is obtained from the html file name, e.g. "MainWindow-1.html"
+        // the uuid of the main window is the `${processId}-mainWindow",
+        // the process ID is obtained from the html file name, e.g. "MainWindow-1.html"
 
-            //! the websocket ipc server port can only be sent through webcontents
-            //! in the TDM web version, the ipc server port is a fixed number
-            // const ipcServerPort = this.getMainProcess().getMainProcesses().getIpcManager().getPort();
-            // mainWindowAgent.getWebContents()?.send("websocket-ipc-server-port", ipcServerPort);
-            return mainWindowAgent;
-            // block lifted when we receive "websocket-ipc-connected" message
-            // await mainWindowAgent.creationPromise;
-            // // writeFileSync("/Users/haohao/tdm.log", `createMainWindow ===================== lifted\n`, {flag: "a"});
-
-            // // ws opener server port
-            // const wsOpenerServer = this.getMainProcess().getWsOpenerServer();
-            // const wsOpenerPort = wsOpenerServer.getPort();
-            // mainWindowAgent.sendFromMainProcess("update-ws-opener-port", { newPort: wsOpenerPort });
-
-            // // read default and OS-defined EPICS environment variables
-            // // in main window editing page, we need env default and env os
-            // const env = Environment.getTempInstance();
-            // let envDefault = env.getEnvDefault();
-            // let envOs = env.getEnvOs();
-
-            // if (typeof envDefault !== "object") {
-            //     envDefault = {};
-            // }
-            // if (typeof envOs !== "object") {
-            //     envOs = {};
-            // }
-
-            // const site = this.getMainProcess().getSite();
-            // mainWindowAgent.sendFromMainProcess(
-            //     "after-main-window-gui-created",
-            //     {
-            //         profiles: this.getMainProcess().getProfiles().serialize(),
-            //         profilesFileName: this.getMainProcess().getProfiles().getFilePath(),
-            //         envDefault: envDefault,
-            //         envOs: envOs,
-            //         logFileName: this.getMainProcess().getLogFileName(),
-            //         site: site,
-            //     }
-            // );
-
-            // // "Emitted when the application is activated"
-            // app.on("activate", async () => {
-            //     // On macOS it's common to re-create a window in the app when the
-            //     // dock icon is clicked and there are no other windows open.
-            //     if (BrowserWindow.getAllWindows().length === 0) {
-            //         // must be async
-            //         await mainWindowAgent.createBrowserWindow();
-            //         // mainWindowAgent.sendFromMainProcess("uuid", processId);
-            //         mainWindowAgent.sendFromMainProcess(
-            //             "after-main-window-gui-created",
-            //             {
-            //                 profiles: this.getMainProcess().getProfiles().serialize(),
-            //                 profilesFileName: this.getMainProcess().getProfiles().getFilePath(),
-            //                 envDefault: envDefault,
-            //                 envOs: envOs,
-            //                 logFileName: this.getMainProcess().getLogFileName(),
-            //                 site,
-            //             }
-            //         );
-
-            //         // if (cmdLineSelectedProfile !== "") {
-            //         // 	mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", cmdLineSelectedProfile);
-            //         // }
-            //     }
-            // });
-            // // at this moment the main window is ready for selecting profile
-            // mainWindowAgent.creationResolve2();
-        }
+        //! the websocket ipc server port can only be sent through webcontents
+        //! in the TDM web version, the ipc server port is a fixed number
+        // const ipcServerPort = this.getMainProcess().getMainProcesses().getIpcManager().getPort();
+        // mainWindowAgent.getWebContents()?.send("websocket-ipc-server-port", ipcServerPort);
+        return mainWindowAgent;
     };
+
+    // createMainWindowOnSshClient = () => {
+    //     const mainWindowAgent = this.createMainWindowAgent();
+    //     // create the real browser window
+    //     mainWindowAgent.createBrowserWindow();
+    //     return mainWindowAgent;
+    // }
 
     createMainWindowAgent = (): MainWindowAgent => {
         let mainWindowAgent = this.getMainWindowAgent();
-        if (mainWindowAgent === undefined) {
+        if (mainWindowAgent instanceof MainWindowAgent) {
+            return mainWindowAgent;
+        } else {
             mainWindowAgent = new MainWindowAgent(this);
-            // this.getAgents()["mainWindow"] = mainWindowAgent;
             const mainWindowId = mainWindowAgent.getId();
             this.getAgents()[mainWindowId] = mainWindowAgent;
+            return mainWindowAgent;
         }
-        return mainWindowAgent as MainWindowAgent;
     };
 
     // ------------------ agents ----------------------

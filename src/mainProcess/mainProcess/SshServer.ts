@@ -84,7 +84,7 @@ export class SshServer {
         console.log("Creating TCP server on port", port);
 
         const tcpServer: net.Server = net.createServer(
-            // callback function invoked upon connection
+            // callback function invoked upon each connection from client
             (socket: net.Socket) => {
                 // writeFileSync(path.join(os.homedir(), "tdm.log"), `new client connected ${socket.remoteAddress}:${socket.remotePort}\n`, { flag: 'a' });
 
