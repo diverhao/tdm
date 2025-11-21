@@ -163,12 +163,18 @@ export class WindowAgentsManager {
                 return undefined;
             }
 
-            const displayWindowId = this.obtainDisplayWindowId();
+            const displayWindowId = windowId;
+            if (displayWindowId !== undefined) {
+                const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
+                // only the browser window is managed by ssh-client, all others are managed by ssh-server
+                displayWindowAgent.createBrowserWindow(options);
+                return undefined;
 
-            const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
-            // only the browser window is managed by ssh-client, all others are managed by ssh-server
-            displayWindowAgent.createBrowserWindow();
-            return undefined;
+            } else {
+                //todo: what to do
+                return undefined;
+            }
+
         } else {
             // web, desktop, or ssh-server mode
 
@@ -211,7 +217,7 @@ export class WindowAgentsManager {
 
             try {
                 // (1)
-                const displayWindowId = this.obtainDisplayWindowId();
+                let displayWindowId = this.obtainDisplayWindowId();
                 const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
                 if (options["isPreloadedDisplayWindow"]) {
                     this.preloadedDisplayWindowAgent = displayWindowAgent;
@@ -743,13 +749,6 @@ export class WindowAgentsManager {
         // mainWindowAgent.getWebContents()?.send("websocket-ipc-server-port", ipcServerPort);
         return mainWindowAgent;
     };
-
-    // createMainWindowOnSshClient = () => {
-    //     const mainWindowAgent = this.createMainWindowAgent();
-    //     // create the real browser window
-    //     mainWindowAgent.createBrowserWindow();
-    //     return mainWindowAgent;
-    // }
 
     createMainWindowAgent = (): MainWindowAgent => {
         let mainWindowAgent = this.getMainWindowAgent();

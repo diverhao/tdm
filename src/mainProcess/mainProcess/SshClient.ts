@@ -23,9 +23,9 @@ export class SshClient {
 
     private _serverIP: string;
     private _serverSshPort: number = -1;
-    // private _tcpServerPort: number = -1;
     private _userName: string;
     private _privateKeyFile: string;
+
     private _lastHeartbeatTime = Date.now();
     private readonly tcpPortStr = "we have successfully created TCP server on port";
 
@@ -74,10 +74,14 @@ export class SshClient {
         this._mainProcess = mainProcess;
 
         // todo: validate the config
-        this._serverIP = sshServerConifg["ip"];
-        this._serverSshPort = sshServerConifg["port"];
-        this._userName = sshServerConifg["userName"];
-        this._privateKeyFile = sshServerConifg["privateKeyFile"];
+        this._serverIP = "127.0.0.1";
+        this._serverSshPort = 22;
+        this._userName = "haohao";
+        this._privateKeyFile = "";
+        // this._serverIP = sshServerConifg["ip"];
+        // this._serverSshPort = sshServerConifg["port"];
+        // this._userName = sshServerConifg["userName"];
+        // this._privateKeyFile = sshServerConifg["privateKeyFile"];
         // this.tdmCmd = `export DISPLAY=:99; ` + sshServerConifg["tdmCommand"];
 
         this._sshClient = new Client();
@@ -97,11 +101,12 @@ export class SshClient {
      * (4) lift blocking when "ready" event is emitted
      */
     connectSsh = async () => {
-        let resolve: any;
-        let reject: any;
+        console.log("   step 1  =============== connect sssh")
+        let resolveFunc: any;
+        let rejectFunc: any;
         let promise = new Promise((resolve, reject) => {
-            resolve = resolve;
-            reject = reject;
+            resolveFunc = resolve;
+            rejectFunc = reject;
         })
 
 
@@ -137,8 +142,10 @@ export class SshClient {
 
         // (2)
         sshClient.on("ready", () => {
+            console.log("   step 2  =============== sssh connected successfully")
+
             Log.info("0", "SSH tunnel has been digged through, we are ready to establish TCP connection with", `${this.getServerIP()}}`);
-            resolve();
+            resolveFunc();
         }
         );
 
@@ -164,12 +171,16 @@ export class SshClient {
     }
 
     /**
-     * Run TDM in ssh-server mode on SSH server. It will start the TCP server as well
+     * Run TDM in ssh-server mode on SSH server. It will start the TCP server.
+     * This TCP port will be transferred to client. 
+     * 
+     * @returns TCP port on ssh server
      */
     startTdmOnServer = async (): Promise<number> => {
 
         const sshClient = this.getSshClient();
         let tdmCmd = `export DISPLAY=:99; ` + "/home/haohao/linux-arm64-unpacked/tdm --main-process-mode ssh-server";
+        tdmCmd = `export DISPLAY=:99; ` + "cd /Users/haohao/tdm; npm start -- --settings /Users/haohao/profiles.json --attach -1 --main-process-mode ssh-server";
         const mainProcess = this.getMainProcess();
         const mainWindowAgent = mainProcess.getWindowAgentsManager().getMainWindowAgent();
         if (!(mainWindowAgent instanceof MainWindowAgent)) {
@@ -179,23 +190,26 @@ export class SshClient {
         }
 
         // resolved to TCP server port
-        let resolve: any;
-        let reject: any;
+        let resolveFunc: any;
+        let rejectFunc: any;
         const promise = new Promise<number>((resolve, reject) => {
-            resolve = resolve;
-            reject = reject;
+            resolveFunc = resolve;
+            rejectFunc = reject;
         })
 
         // start the TDM on ssh server, this TDM instance will start a
         // TCP server, whose port is in 
         // a Tcp server is automatically started with the TDM
+
+        console.log("     Start TDM on ssh server")
+
         sshClient.exec(tdmCmd, //{ x11: true},
             (err: Error | undefined, stream: ClientChannel) => {
                 if (err === undefined) {
                     // the "data" event is the "console.log()" from remote TDM
                     stream.on("data", (data: Buffer) => {
                         const dataStr = data.toString();
-                        Log.debug("0", "[ssh server]", dataStr);
+                        Log.info("     [ssh server]", dataStr);
                         // when the Tcp server is successfully created and starts to listen in remote TDM
                         // the remote TDM console.log() a stdout that looks like ... we have successfully created on port 3000 ...
                         if (dataStr.includes(this.tcpPortStr)) {
@@ -204,13 +218,12 @@ export class SshClient {
                             if (tmp1 !== undefined) {
                                 const tcpServerPort = parseInt(tmp1);
                                 if (!isNaN(tcpServerPort)) {
-                                    Log.info("TCP server port is", tcpServerPort);
-                                    resolve(tcpServerPort);
+                                    Log.info("Successfully obtained remote server's TCP port", tcpServerPort);
+                                    resolveFunc(tcpServerPort);
                                     return;
                                 }
                             }
                         }
-                        Log.error("Cannot obtain TCP server's port");
                         // todo: show error message on main screen
                     });
                 } else {
@@ -226,7 +239,7 @@ export class SshClient {
             }
         );
 
-        // lifted when the TCP server port is successfully obtained
+        // resolved to the TCP port number on server
         return await promise;
     }
 
@@ -234,11 +247,11 @@ export class SshClient {
 
         const sshClient = this.getSshClient();
         // resolved to TCP server port
-        let resolve: any;
-        let reject: any;
+        let resolveFunc: any;
+        let rejectFunc: any;
         const promise = new Promise<ClientChannel>((resolve, reject) => {
-            resolve = resolve;
-            reject = reject;
+            resolveFunc = resolve;
+            rejectFunc = reject;
         })
 
         // srcIp could be localhost, 127.0.0.1, or local computer's IP
@@ -259,7 +272,7 @@ export class SshClient {
                         this.sendToTcpServer({
                             command: "tcp-client-heartbeat"
                         });
-                    }, 1000)
+                    }, 10000)
 
                     this.startTcpEventListeners();
 
@@ -280,7 +293,7 @@ export class SshClient {
                         this.handleConnectionError("tcp", err);
                     })
 
-                    resolve(tcpStream);
+                    resolveFunc(tcpStream);
                 }
             }
         )
@@ -343,6 +356,14 @@ export class SshClient {
             this.setTcpStream(tcpStream);
 
             this.updateCallingProcessMainWindowMessageBox("success");
+
+            // request to update profiles in main window
+            this.sendToTcpServer({
+                command: "update-profiles-in-main-window",
+                data: {                    
+                }
+            })
+
         } catch (e) {
             Log.error("-1", `${e}`);
             this.updateCallingProcessMainWindowMessageBox("fail");
@@ -421,8 +442,8 @@ export class SshClient {
     }
 
     startTcpEventListeners = () => {
-        this.tcpEventListenersOn("tcp-server-created", this.handleTcpServerCreated);
-        this.tcpEventListenersOn("create-main-window-step-2", this.handleCreateMainWindowStep2);
+        // this.tcpEventListenersOn("tcp-server-created", this.handleTcpServerCreated);
+        this.tcpEventListenersOn("update-profiles-in-main-window", this.handleUpdateProfilesInMainWindow);
         this.tcpEventListenersOn("create-display-window-step-2", this.handleCreateDisplayWindowStep2);
         this.tcpEventListenersOn("create-web-display-window-step-2", this.handleCreateWebDisplayWindowStep2);
         this.tcpEventListenersOn("create-iframe-display-step-2", this.handleCreateIframeDisplayStep2);
@@ -431,13 +452,25 @@ export class SshClient {
         this.tcpEventListenersOn("quit-tdm-process", this.handleQuitTdmProcess);
     }
 
-    handleTcpServerCreated = () => {
-        this.sendToTcpServer({
-            command: "main-process-id",
-            data: {
-                id: "0",
-            }
-        })
+    // handleTcpServerCreated = () => {
+    //     this.sendToTcpServer({
+    //         command: "main-process-id",
+    //         data: {
+    //             id: "0",
+    //         }
+    //     })
+    // }
+
+    handleUpdateProfilesInMainWindow = (data: {
+        profilesJson: Record<string, any>,
+        profilesFullFileName: string,
+    }) => { 
+        const {profilesJson, profilesFullFileName} = data;
+        const mainWindowAgent = this.getMainProcess().getWindowAgentsManager().getMainWindowAgent();
+        if (mainWindowAgent instanceof MainWindowAgent) {
+            console.log("------------ updating profiles on clinet")
+            mainWindowAgent.updateProfiles(profilesFullFileName, profilesJson);
+        }
     }
 
     handleCreateMainWindowStep2 = () => {
@@ -446,10 +479,10 @@ export class SshClient {
         // quit the calling main process, it is a safe place to quit the calling process
         // if too early, this main process may be termined with the calling process
         // if too late, the user may operate on the calling process, which may cause unexpected behavior
-        const callingMainprocess = this.getCallingMainProcess();
-        if (callingMainprocess !== undefined) {
+        // const callingMainprocess = this.getCallingMainProcess();
+        // if (callingMainprocess !== undefined) {
             // callingMainprocess.quit();
-        }
+        // }
     }
 
     handleCreateDisplayWindowStep2 = (options: any) => {

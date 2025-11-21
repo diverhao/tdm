@@ -12,7 +12,7 @@ export class SshServer {
 
     private _ipcManager: IpcManagerOnMainProcess;
     private _tcpServer: net.Server | undefined = undefined;
-    private _tcpSockets: net.Socket[] = [];
+    private _tcpSocket: net.Socket | undefined = undefined;
     private _lastHeartbeatTime = Date.now();
     private _heartbeatInterval: NodeJS.Timeout | undefined = undefined;
     private _mainProcessId: string = "-1";
@@ -42,6 +42,7 @@ export class SshServer {
         this.tcpEventListenersOn("quit-main-process", this.handleQuitMainProcess)
         this.tcpEventListenersOn("tcp-client-heartbeat", this.handleTcpClientHeartBeat);
         this.tcpEventListenersOn("forward-to-websocket-ipc", this.handlForwardtoWebsocketIpc);
+        this.tcpEventListenersOn("update-profiles-in-main-window", this.handleUpdateProfilesInMainWindow)
     }
 
     handleMainProcessId = (data: { id: string }) => {
@@ -73,9 +74,29 @@ export class SshServer {
         this.setLastHeartbeatTime();
     }
 
-    handlForwardtoWebsocketIpc = (data: any) => {
-        this.forwardToMainProcesses(data);
+    handlForwardtoWebsocketIpc = (message: any) => {
+        // this.forwardToMainProcesses(data);
+        const ipcManagerOnMainProcess = this.getIpcManager();
+        const windowId = message["windowId"];
+        console.log("ssh server forward this to its websocket -------------------------------->>>>>>>>>>>>", message);
+        ipcManagerOnMainProcess.handleMessage(windowId, message)
+
     }
+    handleUpdateProfilesInMainWindow = (data: {}) => {
+        // tell client to create a GUI window
+        const profilesJson = this.getIpcManager().getMainProcess().getWindowAgentsManager().getMainProcess().getProfiles().getProfiles();
+        const profilesFullFileName = this.getIpcManager().getMainProcess().getWindowAgentsManager().getMainProcess().getProfiles().getFilePath();
+
+        console.log("Server is trying to create main window")
+        this.sendToTcpClient(JSON.stringify({
+            command: "update-profiles-in-main-window",
+            data: {
+                profilesJson: profilesJson,
+                profilesFullFileName: profilesFullFileName
+            }
+        }))
+    }
+
     createTcpServer = () => {
         // writeFileSync("/Users/haohao/tdm.log", `Creating TCP server on port ${port0}\n`, { flag: "a" });
         this.setPort(this.getPort() + 1);
@@ -88,29 +109,9 @@ export class SshServer {
             (socket: net.Socket) => {
                 // writeFileSync(path.join(os.homedir(), "tdm.log"), `new client connected ${socket.remoteAddress}:${socket.remotePort}\n`, { flag: 'a' });
 
-                this._tcpSockets.push(socket);
                 // writeFileSync("/Users/haohao/tdm.log", `\nSocket connected --------------------------------------: ${port}\n`, { flag: 'a' });
 
-
-                this._heartbeatInterval = setInterval(() => {
-                    // writeFileSync(path.join(os.homedir(), "tdm.log"), `heartbeat interval\n`, { flag: 'a' });
-
-                    // writeFileSync("/Users/haohao/tdm.log", `\nTcp interval --------------------------------------: ${port}\n`, { flag: 'a' });
-                    this.checkLastHeartbeatTime();
-                    this.sendToTcpClient(JSON.stringify({ command: "tcp-server-heartbeat" }), false);
-                }, 1000)
-                // clear the self destruction countdown of the insance
-                this.clearSelfDestructionCountDown();
-                Log.debug("-1", "SSH TCP server got a client:", socket.remoteAddress, socket.remotePort)
-                this.startTcpEventListeners();
-
-                // tell client the port once the connection is established
-                this.sendToTcpClient(JSON.stringify({
-                    command: 'tcp-server-created',
-                    data: {
-                        port: port,
-                    }
-                }))
+                console.log("AAA_______________________********************")
 
                 // when receive data from the TCP client, forward it to the WebSocket client, and then forward to IPC websocket server
                 socket.on('data', (data: Buffer) => this.handleTcpData(data));
@@ -132,11 +133,30 @@ export class SshServer {
                     // writeFileSync("/Users/haohao/tdm.log", `\nSocket error --------------------------------------: ${err.message}, ${port}\n`, { flag: 'a' });
                     this.handleQuitMainProcess();
                 });
+                this._heartbeatInterval = setInterval(() => {
+                    // writeFileSync(path.join(os.homedir(), "tdm.log"), `heartbeat interval\n`, { flag: 'a' });
+
+                    // writeFileSync("/Users/haohao/tdm.log", `\nTcp interval --------------------------------------: ${port}\n`, { flag: 'a' });
+                    this.checkLastHeartbeatTime();
+                    this.sendToTcpClient(JSON.stringify({ command: "tcp-server-heartbeat" }), false);
+                }, 1000)
+                // clear the self destruction countdown of the insance
+                this.clearSelfDestructionCountDown();
+                Log.debug("-1", "SSH TCP server got a client:", socket.remoteAddress, socket.remotePort)
+                this.startTcpEventListeners();
+
+                // tell client the port once the connection is established
+                this.sendToTcpClient(JSON.stringify({
+                    command: 'tcp-server-created',
+                    data: {
+                        port: port,
+                    }
+                }))
+
+                this._tcpSocket = socket;
+
             }
         );
-
-        this._tcpServer = tcpServer;
-
 
         // 'close' event: Triggered when the server is closed or there is an "error" emitted
         // do not do anything
@@ -171,19 +191,12 @@ export class SshServer {
         })
         // listen to all network `interfaces
         tcpServer.listen(port, "0.0.0.0");
+
+        this._tcpServer = tcpServer;
     }
 
 
 
-    // senders
-    // let the ipc manager parse the message
-    // it is invoked when the TCP server receives a message from TCP client
-    forwardToMainProcesses = (message: { processId: string; windowId: string; eventName: string; data: any[] }) => {
-        const ipcManagerOnMainProcess = this.getIpcManager();
-        const windowId = message["windowId"];
-        console.log("-------------------------------->>>>>>>>>>>>", message);
-        ipcManagerOnMainProcess.handleMessage(windowId, message)
-    }
 
     handleTcpData = (data: Buffer) => {
         // writeFileSync(path.join(os.homedir(), "tdm.log"), `Received data from ssh TCP client: ${data.toString()}\n`, { flag: 'a' });
@@ -210,15 +223,15 @@ export class SshServer {
     // this function intercepts the message that was supposed to go to the renderer process, routing the message to TCP client
     // {command: any}
     sendToTcpClient = (data: string, print: boolean = true) => {
-        const tcpSockets = this.getTcpSockets();
-        const tcpSocket = tcpSockets[0];
+
+        const tcpSocket = this.getTcpSocket();
         if (tcpSocket !== undefined) {
             if (print) {
                 console.log("send to TCP client", data)
             }
             tcpSocket.write(data);
         } else {
-            console.log("TCP client socket not exist on SSH server");
+            console.log("TCP client socket not exist on SSH server. Failed to send", data);
         }
     }
 
@@ -227,8 +240,8 @@ export class SshServer {
         this._tcpServer = newServer;
     }
 
-    getTcpSockets = () => {
-        return this._tcpSockets;
+    getTcpSocket = () => {
+        return this._tcpSocket;
     }
 
     getIpcManager = () => {
@@ -286,9 +299,10 @@ export class SshServer {
         //         }
         //     }
         // );
-        for (let socket of this._tcpSockets) {
-            socket.destroy();
-        }
+        // for (let socket of this._tcpSockets) {
+        //     socket.destroy();
+        // }
+        this.getTcpSocket()?.destroy();
         // this._tcpSocket?.destroy();
         // this._tcpServer = undefined;
         // this._tcpSocket = undefined;

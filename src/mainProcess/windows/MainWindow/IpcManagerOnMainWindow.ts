@@ -205,6 +205,7 @@ export class IpcManagerOnMainWindow {
         this.ipcRenderer.on("dialog-show-input-box", this.handleDialogShowInputBox);
         this.ipcRenderer.on("window-will-be-closed", this.handleWindowWillBeClosed);
         this.ipcRenderer.on("log-file-name", this.handleLogFileName);
+        this.ipcRenderer.on("update-profiles", this.handleUpdateProfiles);
     };
 
 
@@ -317,7 +318,7 @@ export class IpcManagerOnMainWindow {
      */
     private _handleAfterMainWindowGuiCreated = (event: any, data: IpcEventArgType3["after-main-window-gui-created"]) => {
         const { envDefault, envOs, profiles, profilesFileName, logFileName, site } = data;
-
+        console.log("after main window GUI created ---------------------")
         const mainWindowClient = this.getMainWindowClient();
         // in editing page, we need the env default and env os
         mainWindowClient.setEnvDefault(envDefault);
@@ -502,6 +503,29 @@ export class IpcManagerOnMainWindow {
             this.getMainWindowClient().getStartupPage()?.forceUpdate();
         }
     }
+
+    /**
+     * only for ssh-client mode
+     */
+    handleUpdateProfiles = (event: any, data: IpcEventArgType3["update-profiles"]) => {
+        const { profilesFullFileName, profilesJson } = data;
+        const mainWindowClient = this.getMainWindowClient();
+        const startupPage = mainWindowClient.getStartupPage();
+        console.log("update profiles", data, mainWindowClient.getState() === mainWindowState.start, startupPage instanceof MainWindowStartupPage)
+        // we must be on main window startup page
+        if (mainWindowClient.getState() === mainWindowState.start && startupPage instanceof MainWindowStartupPage) {
+            // update data
+            mainWindowClient.setProfiles(profilesJson);
+            mainWindowClient.setProfilesFileName(profilesFullFileName);
+            // refresh page
+            console.log("force update page")
+            startupPage.forceUpdate();
+        } else {
+            // todo: show a warning page
+        }
+
+    }
+
     getWebSocketClient = () => {
         return this._websocketClient;
     }

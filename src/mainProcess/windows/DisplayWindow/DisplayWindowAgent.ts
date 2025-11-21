@@ -1137,11 +1137,13 @@ export class DisplayWindowAgent {
      *
      */
     addNewChannelData = (channelName: string, newData: type_dbrData | type_LocalChannel_data) => {
-        if (this._newChannelData[channelName] !== undefined && newData !== undefined) {
-            if (Array.isArray(this._newChannelData[channelName])) {
-                this._newChannelData[channelName] = [...this._newChannelData[channelName], newData]
+        const data = this._newChannelData;
+        const existingData = data[channelName];
+        if (existingData !== undefined && newData !== undefined) {
+            if (Array.isArray(existingData)) {
+                this._newChannelData[channelName] = [...(existingData), newData]
             } else {
-                this._newChannelData[channelName] = [this._newChannelData[channelName], newData]
+                this._newChannelData[channelName] = [existingData, newData]
             };
         } else {
             this._newChannelData[channelName] = newData;
@@ -1509,8 +1511,9 @@ export class DisplayWindowAgent {
             const ipcManagerOnMainProcesses = this.getWindowAgentsManager().getMainProcess().getIpcManager();
             const sshServer = ipcManagerOnMainProcesses.getSshServer();
             if (sshServer !== undefined) {
-                const args = Object.values(arg);
-                sshServer.sendToTcpClient(JSON.stringify({ processId: "0", windowId: this.getId(), eventName: channel, data: args }));
+                // const args = Object.values(arg);
+                // console.log("args ===", args)
+                sshServer.sendToTcpClient(JSON.stringify({ processId: "0", windowId: this.getId(), eventName: channel, data: [arg] }));
             }
         } else {
 
@@ -1666,7 +1669,7 @@ export class DisplayWindowAgent {
         const mainProcesMode = this.getWindowAgentsManager().getMainProcess().getMainProcessMode();
         if (mainProcesMode === "ssh-server") {
             // tell client to create a GUI window
-            await this.createBrowserWindowInSshSeverMode();
+            await this.createBrowserWindowInSshSeverMode(options);
         } else if (mainProcesMode === "ssh-client" || mainProcesMode === "desktop") {
             await this.createBrowserWindowInDesktopMode(options);
         } else if (mainProcesMode === "web") {
@@ -1812,11 +1815,12 @@ export class DisplayWindowAgent {
         }
     }
 
-    private createBrowserWindowInSshSeverMode = () => {
-        // tell client to create a GUI window
+    private createBrowserWindowInSshSeverMode = (options: any) => {
+        // tell client to create a GUI window with a display window id
         const sshServer = this.getWindowAgentsManager().getMainProcess().getIpcManager().getSshServer();
         if (sshServer !== undefined) {
-            sshServer.sendToTcpClient(JSON.stringify({ command: "create-display-window-step-2", data: this._options }))
+            options["windowId"] = this.getId();
+            sshServer.sendToTcpClient(JSON.stringify({ command: "create-display-window-step-2", data: options }))
         }
     }
 

@@ -139,8 +139,7 @@ export class MainProcess {
             // only show in desktop mode
             this.getApplicationMenu().createApplicationMenu()
         } else if (args["mainProcessMode"] === "ssh-server") {
-            // self destruction count down until tcp server heartbeat starts to run
-            this.getIpcManager().createSshServer();
+        } else if (args["mainProcessMode"] === "ssh-client") {
         } else {
             throw new Error(`Unrecognized mode ${args["mainProcessMode"]}`);
         }
@@ -184,10 +183,10 @@ export class MainProcess {
                 await this.getWindowAgentsManager().createMainWindow();
                 // todo:
                 // if (sshServerConfig !== undefined) {
-                    this._sshClient = new SshClient(this, sshServerConfig as any)
+                this._sshClient = new SshClient(this, sshServerConfig as any)
                 // } else {
-                    // Log.error(0, "Input for MainProcess constructor error: sshServerConfig cannot be undefined in ssh-client mode");
-                    // todo: quit
+                // Log.error(0, "Input for MainProcess constructor error: sshServerConfig cannot be undefined in ssh-client mode");
+                // todo: quit
                 // }
             })
 
@@ -208,7 +207,9 @@ export class MainProcess {
                 //     callback(this, this.getRawArgs());
                 // }
                 // if (args["attach"] === -1) {
-                openTdlFileAsRequestedByAnotherInstance(args["fileNames"][0], this);
+                if (args["fileNames"][0] !== undefined) {
+                    openTdlFileAsRequestedByAnotherInstance(args["fileNames"][0], this);
+                }
                 // }
             })
         } else if (this.getMainProcessMode() === "web") {
@@ -225,11 +226,16 @@ export class MainProcess {
         } else if (this.getMainProcessMode() === "ssh-server") {
             /**
              * (1) wait for the app ready, 
-             * (2) create main window, the callback will run after the profile is selected from client side
+             * (2) create ssh server,  self destruction count down until tcp server heartbeat starts to run
+             * (3) create main window, the callback will run after the profile is selected from client side
              */
+
             // (1)
             app.whenReady().then(async () => {
                 // (2)
+                console.log("creating ssh server on tdm")
+                this.getIpcManager().createSshServer();
+                // (3)
                 await this.getWindowAgentsManager().createMainWindow();
             })
         } else {

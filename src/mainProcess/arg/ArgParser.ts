@@ -126,6 +126,8 @@ Options:
                         result["mainProcessMode"] = "web";
                     } else if (argv[ii] === "ssh-server") {
                         result["mainProcessMode"] = "ssh-server";
+                    } else if (argv[ii] === "ssh-client") {
+                        result["mainProcessMode"] = "ssh-client";
                     } else {
                         throw new Error("Error at --main-process-mode")
                     }
@@ -135,6 +137,7 @@ Options:
                 }
             }
         } catch (e) {
+            console.log("error -------***", e)
             const resultTmp: type_args = {
                 macros: [],
                 settings: "",

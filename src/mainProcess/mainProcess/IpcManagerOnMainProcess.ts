@@ -145,6 +145,7 @@ export class IpcManagerOnMainProcess {
                 || eventName === "processes-info"
                 || eventName === "close-iframe-display"
                 || eventName === "bring-up-main-window"
+                || eventName === "websocket-ipc-connected-on-main-window"
             ) {
                 const eventListeners = mainProcess.getIpcManager().getEventListeners();
                 const callback = eventListeners[eventName];
@@ -169,7 +170,7 @@ export class IpcManagerOnMainProcess {
                 //     windowAgent.creationResolve("");
                 // }
             }
-            // forward the message to remote ssh server
+            // normally, we forward the message to remote ssh server via TCP
             const sshClient = mainProcess.getSshClient();
             const tcpMessage = {
                 command: "forward-to-websocket-ipc",
@@ -484,6 +485,7 @@ export class IpcManagerOnMainProcess {
         const replaceMacros = windowAgent.getReplaceMacros();
         const utilityType = windowAgent.getUtilityType();
         const utilityOptions = windowAgent.getUtilityOptions();
+
         windowAgent.sendFromMainProcess("new-tdl", {
             newTdl: tdl,
             tdlFileName: tdlFileName,
@@ -516,6 +518,7 @@ export class IpcManagerOnMainProcess {
 
 
     handleWebsocketIpcConnectedOnMainWindow = (event: any, data: IpcEventArgType["websocket-ipc-connected-on-main-window"]) => {
+        console.log("handleWebsocketIpcConnectedOnMainWindow ---------------************" )
         // the main processes' ipc manager
         const ipcManager = this.getMainProcess().getIpcManager();
         const mainProcess = this.getMainProcess();
@@ -524,7 +527,7 @@ export class IpcManagerOnMainProcess {
         const reconnect = data["reconnect"];
         Log.info("-1", "register window", windowId, "for WebSocket IPC");
 
-        if (mainProcessMode === "desktop" || mainProcessMode === "web") {
+        if (mainProcessMode === "desktop" || mainProcessMode === "web"|| mainProcessMode === "ssh-client") {
             // desktop mode: websocket client on main/display window
             ipcManager.getClients()[windowId] = event;
         } else if (mainProcessMode === "ssh-server") {
@@ -1529,6 +1532,77 @@ export class IpcManagerOnMainProcess {
                 // (e)
                 windowAgentsManager.createPreviewDisplayWindow();
             }
+        } else if (mainProcessMode === "ssh-server") {
+
+            /**
+             * (1) create epics-tca CA and PVA context 
+             * 
+             * (2) create SQL
+             * 
+             * (3) open default TDL files
+             * 
+             * (4) prepare main window, i.e. change title, telling main window to switch to run mode, etc
+             */
+
+            // (1)
+            await this.getMainProcess().getChannelAgentsManager().createAndInitContext();
+            // (2)
+            this.getMainProcess().createSql();
+
+            // (3)
+            let tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
+            let macros = selectedProfile.getMacros();
+            let currentTdlFolder: undefined | string = undefined;
+            if (args !== undefined) {
+                currentTdlFolder = args["cwd"] === "" ? undefined : args["cwd"];
+                if (args["alsoOpenDefaults"]) {
+                    tdlFileNames.push(...args["fileNames"]);
+                } else {
+                    tdlFileNames = args["fileNames"];
+                }
+
+                // args["macros"] overrides profile-defined macros
+                macros = [...args["macros"], ...macros];
+            }
+
+            const mode = selectedProfile.getMode() as "editing" | "operating";
+            const editable = selectedProfile.getEditable();
+            windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, currentTdlFolder, undefined);
+
+
+            /**
+             * (4) For Main Window in desktop mode:
+             * 
+             * (a) wait for the main window URL to be loaded
+             *     the event is emitted when the .loadURL() is done when creating the BrowserWindow in MainWindowAgent
+             * 
+             * (b) wait for the main window's websocket IPC established
+             *     the event is emitted when the websocket-ipc-connected is received in main process from main window
+             * 
+             * (c) change main window title with selected profile name
+             * 
+             * (d) tell main window to switch to run mode by sending "after-profile-selected" to main window
+             * 
+             * (e) create preview Display Window for File Browser, it is an invisible Display Window dedicated
+             *     for the File Browser utility window
+             */
+            const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
+            if (mainWindowAgent instanceof MainWindowAgent) {
+                // (a)
+                await mainWindowAgent.loadURLPromise;
+                // (b)
+                await mainWindowAgent.websocketIpcConnectedPromise;
+                // (c)
+                const oldTitle = mainWindowAgent.getTitle();
+                const newTitle = oldTitle + " -- " + selectedProfileName;
+                mainWindowAgent.setTitle(newTitle);
+                // (d)
+                mainWindowAgent.sendFromMainProcess("after-profile-selected", {
+                    profileName: selectedProfileName,
+                });
+                // (e)
+                windowAgentsManager.createPreviewDisplayWindow();
+            }            
         }
     }
 

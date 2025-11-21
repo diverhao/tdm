@@ -74,6 +74,8 @@ export class MainWindowAgent {
 
     /**
      * Create the GUI window. <br>
+     * 
+     * If this is a SSH server, update the SSH client's main window
      *
      * @returns {Promise<void>} until the GUI window is created and the html file is loaded.
      */
@@ -81,161 +83,87 @@ export class MainWindowAgent {
         const mainProcesMode = this.getWindowAgentsManager().getMainProcess().getMainProcessMode();
 
         if (mainProcesMode === "ssh-server") {
-            // tell client to create a GUI window
-            const sshServer = this.getWindowAgentsManager().getMainProcess().getIpcManager().getSshServer();
-            if (sshServer !== undefined) {
-                sshServer.sendToTcpClient(JSON.stringify({ command: "create-main-window-step-2" }))
-            }
-        } else {
+            // do nothing, wait for update-profiles-in-main-window
+        } else if (mainProcesMode === "ssh-client" || mainProcesMode === "desktop") {
 
-            if (httpResponse === undefined) {
-                // default options
-                const windowOptions = {
-                    width: 1000,
-                    height: 800,
-                    backgroundColor: `rgb(255, 255, 255)`,
-                    title: this.generateWindowTitle(),
-                    resizable: true,
-                    // with chrome (not the Google Chrome)
-                    frame: true,
-                    autoHideMenuBar: true,
-                    minWidth: 200,
-                    minHeight: 100,
-                    show: true,
-                    icon: path.join(__dirname, '../../../webpack/resources/webpages/tdm-logo.png'),
-                    webPreferences: {
-                        // use node.js
-                        preload: path.join(__dirname, 'preload.js'), // <-- preload script here
-                        nodeIntegration: true,
-                        contextIsolation: true,
-                        nodeIntegrationInWorker: true,
-                        sandbox: false,
-                        webviewTag: true,
-                        backgroundThrottling: false,
-                        webSecurity: false,
-                        defaultFontFamily: {
-                            standard: "Arial",
-                        }
+            // default options
+            const windowOptions = {
+                width: 1000,
+                height: 800,
+                backgroundColor: `rgb(255, 255, 255)`,
+                title: this.generateWindowTitle(),
+                resizable: true,
+                // with chrome (not the Google Chrome)
+                frame: true,
+                autoHideMenuBar: true,
+                minWidth: 200,
+                minHeight: 100,
+                show: true,
+                icon: path.join(__dirname, '../../../webpack/resources/webpages/tdm-logo.png'),
+                webPreferences: {
+                    // use node.js
+                    preload: path.join(__dirname, 'preload.js'), // <-- preload script here
+                    nodeIntegration: true,
+                    contextIsolation: true,
+                    nodeIntegrationInWorker: true,
+                    sandbox: false,
+                    webviewTag: true,
+                    backgroundThrottling: false,
+                    webSecurity: false,
+                    defaultFontFamily: {
+                        standard: "Arial",
+                    }
+                },
+            };
+            const window = new BrowserWindow(windowOptions);
+
+            this._browserWindow = window;
+            window.setMenu(null);
+
+            this.getWindowAgentsManager().setDockMenu();
+
+            // clear cache
+            // const session = window.webContents.session;
+            // session.clearCache();
+            // session.clearStorageData();
+
+            // clean up data when the GUI is closed
+            // ! in ssh-client mode, once the window is asked to close, close it immeidately
+            // ! otherwise the window-will-be-closed message from main process may never arrive at
+            // ! the renderer process, causing the window hanging 
+            // if (mainProcesMode !== "ssh-client") {
+            window.on("closed", this.handleWindowClosed);
+            window.on("close", (event: any) => {
+                this.handleWindowClose(event);
+            });
+            // }
+
+            const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
+            const hostname = this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" ?
+                "127.0.0.1" : "ABCD";
+                // : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
+
+            // const hostname = "127.0.0.1";
+
+            this.loadURLPromise = window.loadURL(
+                url.format({
+                    pathname: path.join(__dirname, `MainWindow.html`),
+                    protocol: "file:",
+                    slashes: true,
+                    query: {
+                        ipcServerPort: `${ipcServerPort}`,
+                        mainWindowId: `${this.getId()}`,
+                        hostname: `${hostname}`,
                     },
-                };
-                const window = new BrowserWindow(windowOptions);
+                })
+            );
+            await this.loadURLPromise;
+        } else if (mainProcesMode === "web") {
+            // web mode
+            const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
 
-                // window.webContents.on("did-finish-load", async () => {
-                //     const mainProcess = this.getWindowAgentsManager().getMainProcess();
-                //     const mainProcesses = mainProcess.getMainProcesses();
-                //     const openFilePath = mainProcesses.getExternalFileName();
-                //     // must set to "", this file can only be automatically opened once
-                //     mainProcesses.setExternalFileName("");
-                //     if (openFilePath !== "") {
-                //         // select first available profile
-                //         const profiles = mainProcess.getProfiles();
-                //         const firstProfileName = profiles.getProfileNames()[0];
-                //         if (firstProfileName === undefined) {
-                //             return;
-                //         } else {
-                //             await mainProcess.getIpcManager().handleProfileSelected(undefined, firstProfileName, undefined, undefined);
-                //             const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
-                //             if (selectedProfile === undefined) {
-                //                 // pop-up an error message if no profile is selected
-                //                 Log.error("-1", "No profile selected, failed to open", openFilePath);
-                //                 const mainWindowAgent = mainProcess.getWindowAgentsManager().getMainWindowAgent();
-                //                 if (mainWindowAgent instanceof MainWindowAgent) {
-                //                     Log.debug("-1", "sending prompt to show the error message");
-                //                     mainWindowAgent.sendFromMainProcess("show-prompt", {
-                //                         type: "error-message",
-                //                         messages: [`Failed to open ${openFilePath}.`, "Reason: no profile selected"],
-                //                     })
-                //                 }
-                //                 return;
-                //             } else {
-                //                 const editable = `${selectedProfile.getEntry("EPICS Custom Environment", "Manually Opened TDL Editable")}`.toUpperCase() === "YES" ? true : false;
-                //                 mainProcess.getIpcManager().handleOpenTdlFiles(
-                //                     undefined,
-                //                     {
-                //                         // tdl?: type_tdl;
-                //                         tdlFileNames: [openFilePath],
-                //                         mode: "operating",
-                //                         editable: editable,
-                //                         // external macros: user-provided and parent display macros
-                //                         macros: [],
-                //                         replaceMacros: false,
-                //                         // currentTdlFolder?: string;
-                //                     },
-                //                     undefined
-                //                 )
-                //             }
-                //         }
-                //     } else {
-                //         setTimeout(() => {
-                //             this.sendFromMainProcess("show-prompt", {
-                //                 type: "error-message",
-                //                 messages: [`Failed to open ${openFilePath}.`, `Reason: no profile selected ${process.argv.length}`],
-                //             })
-
-                //         }, 5000)
-
-                //     }
-                // })
-
-                // open development tools
-                // const webContents = window.webContents;
-                // window.webContents.openDevTools();
-
-                this._browserWindow = window;
-                window.setMenu(null);
-
-                this.getWindowAgentsManager().setDockMenu();
-
-                // clear cache
-                // const session = window.webContents.session;
-                // session.clearCache();
-                // session.clearStorageData();
-
-                // clean up data when the GUI is closed
-                // ! in ssh-client mode, once the window is asked to close, close it immeidately
-                // ! otherwise the window-will-be-closed message from main process may never arrive at
-                // ! the renderer process, causing the window hanging 
-                // if (mainProcesMode !== "ssh-client") {
-                window.on("closed", this.handleWindowClosed);
-                window.on("close", (event: any) => {
-                    this.handleWindowClose(event);
-                });
-                // }
-
-
-                // await window.loadURL(
-                // 	url.format({
-                // 		pathname: path.join(__dirname, `MainWindow-${"0"}.html`),
-                // 		protocol: "file:",
-                // 		slashes: true,
-                // 	})
-                // );
-
-                const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
-                const hostname = this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" ?
-                    "127.0.0.1"
-                    : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
-
-
-                this.loadURLPromise = window.loadURL(
-                    url.format({
-                        pathname: path.join(__dirname, `MainWindow.html`),
-                        protocol: "file:",
-                        slashes: true,
-                        query: {
-                            ipcServerPort: `${ipcServerPort}`,
-                            mainWindowId: `${this.getId()}`,
-                            hostname: `${hostname}`,
-                        },
-                    })
-                );
-                await this.loadURLPromise;
-            } else {
-                // web mode
-                const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
-
-                httpResponse.send(
-                    `
+            httpResponse.send(
+                `
                 <html>
                     <body style="margin: 0px; padding: 0px">
                         <div id="root"></div>
@@ -254,10 +182,23 @@ export class MainWindowAgent {
                     </body>
                 </html>
                 `
-                );
-            }
+            );
+        } else {
+            Log.error("Wrong main process mode");
         }
     };
+
+    /**
+     * Only for ssh-client mode
+     */
+    updateProfiles = (profilesFullFileName: string, profilesJson: Record<string, any>) => {
+        // no need to update profiles in local
+        console.log("client ------------- updating profiles", profilesFullFileName, profilesJson)
+        this.sendFromMainProcess("update-profiles", {
+            profilesFullFileName: profilesFullFileName,
+            profilesJson: profilesJson,
+        })
+    }
 
 
     /**
