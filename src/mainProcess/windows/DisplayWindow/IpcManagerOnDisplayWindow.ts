@@ -103,7 +103,7 @@ export class IpcManagerOnDisplayWindow {
                 this.getDisplayWindowClient().getPrompt().removeElement();
             }
 
-            this.sendFromRendererProcess("websocket-ipc-connected-on-display-window", 
+            this.sendFromRendererProcess("websocket-ipc-connected-on-display-window",
                 {
                     processId: this.getDisplayWindowClient().getProcessId(),
                     windowId: this.getDisplayWindowClient().getWindowId(),
@@ -282,7 +282,6 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("pong", this.handlePong)
 
         this.ipcRenderer.on("bounce-back", this.handleBounceBack);
-
     };
 
     handleObtainedIframeUuid = (
@@ -1677,7 +1676,7 @@ export class IpcManagerOnDisplayWindow {
     }
 
     handleBounceBack = (event: any, message: IpcEventArgType2["bounce-back"]) => {
-        const {eventName, data} = message;
+        const { eventName, data } = message;
         this.sendFromRendererProcess(eventName as any, data);
     }
 

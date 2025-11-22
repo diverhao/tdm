@@ -1,9 +1,7 @@
-// import { writeFileSync } from "fs";
-// import { IpcManagerOnMainProcesses } from "./IpcManagerOnMainProcesses";
 import net from "net";
 import { Log } from "../log/Log";
 import { IpcManagerOnMainProcess } from "../mainProcess/IpcManagerOnMainProcess";
-import { MainProcess } from "../mainProcess/MainProcess";
+import { tcpPortStr } from "../global/GlobalVariables";
 
 /**
  * 
@@ -36,38 +34,15 @@ export class SshServer {
     tcpEventListenersOn = (eventName: string, callback: (...args: any) => void) => {
         this.tcpEventListeners[eventName] = callback;
     }
-    // tcp-specific events, other events are forwarded to the MainProcesses.ipcManager 
-    startTcpEventListeners = () => {
-        this.tcpEventListenersOn("main-process-id", this.handleMainProcessId);
-        this.tcpEventListenersOn("quit-main-process", this.handleQuitMainProcess)
-        this.tcpEventListenersOn("tcp-client-heartbeat", this.handleTcpClientHeartBeat);
-        this.tcpEventListenersOn("forward-to-websocket-ipc", this.handlForwardtoWebsocketIpc);
-        this.tcpEventListenersOn("update-profiles", this.handleUpdateProfiles)
-    }
 
-    handleMainProcessId = (data: { id: string }) => {
-        // create main process using this process ID
-        // todo: refactor
-        // const mainProcessId = data["id"];
-        // console.log("I got main process ID:", mainProcessId, ". Then I will create the main process");
-        // this.getIpcManager().getMainProcesses().createProcess(undefined, "ssh-server", mainProcessId);
-        // new MainProcess();
-        // this.setMainProcessId(mainProcessId);
-    }
     /**
-     * quit the whole thing
+     * 
+     * These events are from TCP clients. 
+     * They are intercepted and handled here, will not be forwarded to websocket
+     * The websocket MainProcess.IpcManager does not have handlers for these events
      */
-    handleQuitMainProcess = () => {
-        // this.getIpcManager().getMainProcesses().quit();
-        // const mainProcesses = this.getIpcManager().getMainProcesses();
-        // writeFileSync("/Users/haohao/tdm.log", `\nquit main process.......${mainProcesses.getProcesses().length}\n`, { flag: "a" });
-        // this.quit();
-        // const mainProcess = mainProcesses.getProcesses()[0];
-        const mainProcess = this.getIpcManager().getMainProcess();
-        // writeFileSync("/Users/haohao/tdm.log", "quit main process ABCDEFG\n", { flag: 'a' });
-        console.log("quit main process .........................");
-        mainProcess.quit();
-        process.kill(process.pid, 9);
+    startTcpEventListeners = () => {
+        this.tcpEventListenersOn("tcp-client-heartbeat", this.handleTcpClientHeartBeat);
     }
 
     handleTcpClientHeartBeat = () => {
@@ -75,26 +50,9 @@ export class SshServer {
     }
 
     handlForwardtoWebsocketIpc = (message: any) => {
-        // this.forwardToMainProcesses(data);
         const ipcManagerOnMainProcess = this.getIpcManager();
         const windowId = message["windowId"];
-        console.log("ssh server forward this to its websocket -------------------------------->>>>>>>>>>>>", message);
         ipcManagerOnMainProcess.handleMessage(windowId, message)
-
-    }
-    handleUpdateProfiles = (data: {}) => {
-        // tell client to create a GUI window
-        const profilesJson = this.getIpcManager().getMainProcess().getWindowAgentsManager().getMainProcess().getProfiles().getProfiles();
-        const profilesFullFileName = this.getIpcManager().getMainProcess().getWindowAgentsManager().getMainProcess().getProfiles().getFilePath();
-
-        console.log("Server is trying to create main window")
-        this.sendToTcpClient(JSON.stringify({
-            command: "update-profiles",
-            data: {
-                profilesJson: profilesJson,
-                profilesFullFileName: profilesFullFileName
-            }
-        }))
     }
 
     createTcpServer = () => {
@@ -104,14 +62,11 @@ export class SshServer {
 
         console.log("Creating TCP server on port", port);
 
+        const mainProcess = this.getIpcManager().getMainProcess();
+
         const tcpServer: net.Server = net.createServer(
             // callback function invoked upon each connection from client
             (socket: net.Socket) => {
-                // writeFileSync(path.join(os.homedir(), "tdm.log"), `new client connected ${socket.remoteAddress}:${socket.remotePort}\n`, { flag: 'a' });
-
-                // writeFileSync("/Users/haohao/tdm.log", `\nSocket connected --------------------------------------: ${port}\n`, { flag: 'a' });
-
-                console.log("AAA_______________________********************")
 
                 // when receive data from the TCP client, forward it to the WebSocket client, and then forward to IPC websocket server
                 socket.on('data', (data: Buffer) => this.handleTcpData(data));
@@ -119,30 +74,30 @@ export class SshServer {
                 // when the tcp stream is abruptly ended, e.g. client got killed by ctrl+c
                 // the broken network cable does not cause the stream, that is handled by the heartbeat
                 socket.on('end', () => {
-                    // writeFileSync(path.join(os.homedir(), "tdm.log"), `tcp client ends\n`, { flag: 'a' });
-                    this.handleQuitMainProcess();
+                    mainProcess.quit();
+                    process.kill(process.pid, 9);
                 });
 
                 socket.on('close', () => {
-                    // writeFileSync(path.join(os.homedir(), "tdm.log"), `tcp client closed\n`, { flag: 'a' });
-                    this.handleQuitMainProcess();
-
+                    mainProcess.quit();
+                    process.kill(process.pid, 9);
                 })
 
                 socket.on('error', (err) => {
-                    // writeFileSync("/Users/haohao/tdm.log", `\nSocket error --------------------------------------: ${err.message}, ${port}\n`, { flag: 'a' });
-                    this.handleQuitMainProcess();
+                    mainProcess.quit();
+                    process.kill(process.pid, 9);
                 });
-                this._heartbeatInterval = setInterval(() => {
-                    // writeFileSync(path.join(os.homedir(), "tdm.log"), `heartbeat interval\n`, { flag: 'a' });
 
-                    // writeFileSync("/Users/haohao/tdm.log", `\nTcp interval --------------------------------------: ${port}\n`, { flag: 'a' });
+                this._heartbeatInterval = setInterval(() => {
                     this.checkLastHeartbeatTime();
                     this.sendToTcpClient(JSON.stringify({ command: "tcp-server-heartbeat" }), false);
                 }, 1000)
+
                 // clear the self destruction countdown of the insance
                 this.clearSelfDestructionCountDown();
+
                 Log.debug("-1", "SSH TCP server got a client:", socket.remoteAddress, socket.remotePort)
+
                 this.startTcpEventListeners();
 
                 // tell client the port once the connection is established
@@ -154,39 +109,35 @@ export class SshServer {
                 }))
 
                 this._tcpSocket = socket;
-
             }
         );
 
         // 'close' event: Triggered when the server is closed or there is an "error" emitted
         // do not do anything
         tcpServer.on('close', () => {
-            // writeFileSync(path.join(os.homedir(), "tdm.log"), `we have closed the tcp server\n`, { flag: 'a' });
-            this.handleQuitMainProcess();
+            mainProcess.quit();
+            process.kill(process.pid, 9);
         });
 
         // when the port is in-use, or others
         // when a server has an error, it emits "close" event, which is handled above
         tcpServer.on('error', (err) => {
-            // writeFileSync(path.join(os.homedir(), "tdm.log"), `we have an error on the tcp server\n`, { flag: 'a' });
-
             tcpServer.close();
-            // writeFileSync(path.join(os.homedir(), "tdm.log"), `tcp server error ${err.message}\n`, { flag: 'a' });
-            // writeFileSync("/Users/haohao/tdm.log", `\nServer error --------------------------------------: ${err.message}, ${port}\n`, { flag: 'a' });
+
             // if the port is being used, find a new one
             if (err.message.includes("EADDRINUSE") && this.getPort() < 4100) {
                 this.createTcpServer()
             } else {
-                this.handleQuitMainProcess();
+                mainProcess.quit();
+                process.kill(process.pid, 9);
             }
         });
 
         // this event emits just before the socket callback executes
         // assign the tcpServer
         tcpServer.once("listening", () => {
-            // writeFileSync(path.join(os.homedir(), "tdm.log"), `we have successfully created TCP server on port ${port}\n`, { flag: 'a' });
             // ! important: the ssh client uses this magic string to connect tcp server
-            console.log("we have successfully created TCP server on port", port);
+            console.log(tcpPortStr, port);
             this.setTcpServer(tcpServer);
         })
         // listen to all network `interfaces
@@ -195,25 +146,33 @@ export class SshServer {
         this._tcpServer = tcpServer;
     }
 
-
-
-
+    /**
+     * handle the tcp data from TCP client
+     */
     handleTcpData = (data: Buffer) => {
-        // writeFileSync(path.join(os.homedir(), "tdm.log"), `Received data from ssh TCP client: ${data.toString()}\n`, { flag: 'a' });
         console.log(`Received data from ssh TCP client: ${data.toString()}`);
         this.dataChunk = this.dataChunk + data.toString();
         for (const dataJSON of this.extractData()) {
-            // dataJSON: {command: string, data: weboscket message}
-            // special keyword "command"
+
+            // dataJSON: {command: string, data: weboscket message} 
+            // or the raw websocket message which does not contain command field
             const command = dataJSON["command"];
-            const data = dataJSON["data"];
-            const callback = this.tcpEventListeners[command];
-            if (callback !== undefined) {
-                if (data === undefined) {
-                    callback();
-                } else {
-                    // writeFileSync("/Users/haohao/tdm.log", `run callback for ${command}\n`, { flag: 'a' });
-                    callback(data);
+
+            if (command === undefined) {
+                // raw websocket message, handled by IPC manager
+                const ipcManagerOnMainProcess = this.getIpcManager();
+                const windowId = dataJSON["windowId"];
+                ipcManagerOnMainProcess.handleMessage(windowId, dataJSON as any)
+            } else {
+                // TCP specific message, handled here
+                const data = dataJSON["data"];
+                const callback = this.tcpEventListeners[command];
+                if (callback !== undefined) {
+                    if (data === undefined) {
+                        callback();
+                    } else {
+                        callback(data);
+                    }
                 }
             }
         }
@@ -258,25 +217,22 @@ export class SshServer {
     }
 
     checkLastHeartbeatTime = () => {
+        const mainProcess = this.getIpcManager().getMainProcess();
         try {
             const tDiff = Date.now() - this.getLastHeartbeatTime();
-            // console.log("t diff = ", tDiff)
             this._tcpServer?.getConnections((cb, num) => {
-                // writeFileSync("/Users/haohao/tdm.log", `tcp connections ${num} \n`, { flag: 'a' });
-
             });
 
             if (tDiff > 15 * 1000) {
                 // quit
-                // writeFileSync("/Users/haohao/tdm.log", "Heartbeat timeout: quit TDM ssh server", { flag: 'a' });
-                // this.getIpcManager().getMainProcesses().quit();
-                this.handleQuitMainProcess()
+                mainProcess.quit();
+                process.kill(process.pid, 9);
             }
         } catch (e) {
             // when the process is killed, the console.log() throws an exception
             // do nothing
-            // this.getIpcManager().getMainProcesses().quit();
-            this.handleQuitMainProcess()
+            mainProcess.quit();
+            process.kill(process.pid, 9);
         }
     }
     getHeartbeatInterval = () => {
@@ -284,28 +240,12 @@ export class SshServer {
     }
 
     quit = () => {
-        // writeFileSync("/Users/haohao/tdm.log", "\nQuit ssh server.......\n", { flag: "a" });
-
         // quit interval
         clearInterval(this.getHeartbeatInterval());
         // quit TCP server
         this._tcpServer?.close();
-        // this._tcpServer?.close(
-        //     (err) => {
-        //         if (err) {
-        //             writeFileSync("/Users/haohao/tdm.log", "\nError during server shutdown tcp server\n", {flag: "a"});
-        //         } else {
-        //             writeFileSync("/Users/haohao/tdm.log", "\n No Error during server shutdown tcp server\n", {flag: "a"});
-        //         }
-        //     }
-        // );
-        // for (let socket of this._tcpSockets) {
-        //     socket.destroy();
-        // }
+
         this.getTcpSocket()?.destroy();
-        // this._tcpSocket?.destroy();
-        // this._tcpServer = undefined;
-        // this._tcpSocket = undefined;
     }
 
     getMainProcessId = () => {

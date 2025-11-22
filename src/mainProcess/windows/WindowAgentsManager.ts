@@ -75,11 +75,6 @@ export class WindowAgentsManager {
     // (4) manually a tdl file, editable, in operating mode
     //     it is realized by handleOpenTdlFiles()
 
-    generateDisplayWindowId = (): string => {
-        // epoch time (ms) + uuid
-        return `${Date.now().toString()}-${uuid()}`;
-    };
-
     createDisplayWindowAgent = (options: type_options_createDisplayWindow, displayWindowId: string): DisplayWindowAgent => {
         const displayWindowAgent = new DisplayWindowAgent(this, options, displayWindowId);
 
@@ -218,6 +213,7 @@ export class WindowAgentsManager {
             try {
                 // (1)
                 let displayWindowId = this.obtainDisplayWindowId();
+
                 const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
                 if (options["isPreloadedDisplayWindow"]) {
                     this.preloadedDisplayWindowAgent = displayWindowAgent;
@@ -667,7 +663,7 @@ export class WindowAgentsManager {
     /**
      * Create a window displaying webpage
      */
-    createWebDisplayWindow = async (url: string) => {
+    createWebDisplayWindow = async (url: string, displayWindowId: string | undefined = undefined) => {
         try {
             const tdl: type_tdl = {
                 Canvas: {
@@ -694,10 +690,17 @@ export class WindowAgentsManager {
                 replaceMacros: false,
                 hide: false,
             };
-            const displayWindowId = this.obtainDisplayWindowId();
 
-            const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
-            await displayWindowAgent.createWebBrowserWindow(url);
+            // for desktop, ssh-server and web mode: create a new display window ID
+            if (displayWindowId === undefined) {
+                const displayWindowId = this.obtainDisplayWindowId();
+                const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
+                await displayWindowAgent.createWebBrowserWindow(url);
+            } else {
+                // for ssh-client mode, it takes the displayWindowId from ssh-server
+                const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
+                await displayWindowAgent.createWebBrowserWindow(url);
+            }
         } catch (e) {
             Log.error("0", e);
         }

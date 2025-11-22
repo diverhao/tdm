@@ -1908,7 +1908,7 @@ export class DisplayWindowAgent {
             // tell client to create a GUI window
             const sshServer = this.getWindowAgentsManager().getMainProcess().getIpcManager().getSshServer();
             if (sshServer !== undefined) {
-                sshServer.sendToTcpClient(JSON.stringify({ command: "create-web-display-window-step-2", data: url }))
+                sshServer.sendToTcpClient(JSON.stringify({ command: "create-web-display-window-step-2", data: {url: url, displayWindowId: this.getId()} }))
             }
         } else {
 

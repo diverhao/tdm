@@ -183,7 +183,9 @@ export class MainProcess {
                 await this.getWindowAgentsManager().createMainWindow();
                 // todo:
                 // if (sshServerConfig !== undefined) {
-                this._sshClient = new SshClient(this, sshServerConfig as any)
+                setTimeout(() => {
+                    this._sshClient = new SshClient(this, sshServerConfig as any)
+                }, 1000)
                 // } else {
                 // Log.error(0, "Input for MainProcess constructor error: sshServerConfig cannot be undefined in ssh-client mode");
                 // todo: quit

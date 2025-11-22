@@ -100,7 +100,7 @@ export class ContextMenu {
                                 mode: windowStatus,
                                 displayWindowId: windowId,
                                 widgetKeys: selectedWidgetKeys,
-                                options: options
+                                options: options,
                             }
                         );
                 } else {

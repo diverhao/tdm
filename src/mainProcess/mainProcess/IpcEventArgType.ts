@@ -563,6 +563,10 @@ export type IpcEventArgType = {
         widgetWidth: number,
         widgetHeight: number,
         resize: "none" | "crop" | "fit",
+    },
+
+    "update-profiles": {
+        windowId: string
     }
 
 };
@@ -834,8 +838,13 @@ export type IpcEventArgType2 = {
     "bounce-back": {
         eventName: string,
         data: any,
-    }
+    },
 
+    "update-profiles": {
+        windowId: string, 
+        profilesJson: Record<string, any>,
+        profilesFullFileName: string,
+    }
 }
 
 /**
@@ -902,8 +911,14 @@ export type IpcEventArgType3 = {
     },
 
     "update-profiles": {
-        profilesFullFileName: string,
+        windowId: string, 
         profilesJson: Record<string, any>,
-    }
+        profilesFullFileName: string,
+    },
+
+    "bounce-back": {
+        eventName: string,
+        data: any,
+    },
 
 }

@@ -15,7 +15,7 @@ export class SidebarLargeInput {
     constructor() {
     }
 
-    createElement = (value: string, setValue: any, readableText: string, updater: any, withOkButton: boolean = false) => {
+    createElement = (value: string, setValue: any, readableText: string, updater: any, withOkButton: boolean = false, windowType: "DisplayWindow" | "MainWindow" = "DisplayWindow") => {
         this.removeElement();
         this.setValue = setValue;
         this.value = value;
@@ -35,8 +35,13 @@ export class SidebarLargeInput {
         newElement.style.alignItems = "flex-start";
         newElement.style.justifyContent = "center";
 
-        ReactDOM.createRoot(newElement).render(<this._Element withOkButton={withOkButton}></this._Element>);
-        document.body.appendChild(newElement);
+        if (windowType === "DisplayWindow") {
+            ReactDOM.createRoot(newElement).render(<this._Element withOkButton={withOkButton}></this._Element>);
+            document.body.appendChild(newElement);
+        } else {
+            ReactDOM.createRoot(newElement).render(<this._ElementForMainWindow withOkButton={withOkButton}></this._ElementForMainWindow>);
+            document.body.appendChild(newElement);
+        }
     }
 
     _Element = ({ withOkButton }: { withOkButton: boolean }) => {
@@ -191,6 +196,118 @@ export class SidebarLargeInput {
                             channelNames={channelNameHintData}
                             selectHint={selectHint}
                         ></ChannelNameHintElement>
+
+                    </form>
+                    <ElementRectangleButton
+                        handleClick={() => {
+                            if (withOkButton === true) {
+                                this.value = localValue;
+                                this.setValue(localValue);
+                                this.updater(localValue);
+                            }
+                            this.removeElement();
+                        }}
+                    >
+                        {withOkButton === true ? "OK" : "Close"}
+                    </ElementRectangleButton>
+                </div>
+            </div>
+        )
+    }
+
+    /**
+     * similar to _Element, but without channel name hint
+     */
+    _ElementForMainWindow = ({ withOkButton }: { withOkButton: boolean }) => {
+        const [localValue, setLocalValue] = React.useState(this.getValue());
+
+        // channel name hint
+        const formElementRef = React.useRef<any>(null);
+
+
+        return (
+            <div style={{
+                display: "inline-flex",
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0, 0, 0, 0.2)",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                backdropFilter: "blur(10px)",
+            }}>
+                <div style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "85%",
+                    height: "70%",
+                    backgroundColor: "rgba(20,20,20,1)",
+                    color: "rgba(210,210,210,1)",
+                    borderRadius: 6,
+                }}>
+                    <h2>
+                        Set value for <span style={{ color: "yellow" }}>{this.readableText}</span>
+                    </h2>
+                    <p style={{ fontSize: 13, marginTop: 0 }}>
+                        Hit Enter to confirm the input.
+                    </p>
+                    <form
+                        ref={formElementRef}
+                        style={{
+                            width: "95%",
+                            display: "inline-flex",
+                            flexDirection: "column",
+                            justifyContent: 'center',
+                            alignItems: "center,",
+                            marginTop: 10,
+                            marginBottom: 10,
+                        }}
+                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+                            event.preventDefault();
+
+                            if (withOkButton === true) {
+                                // do nothing on submit
+                                // do the change when click the OK button
+                            } else {
+                                this.value = localValue;
+                                this.setValue(localValue);
+                                this.updater(localValue);
+                            }
+                        }}
+                    >
+
+                        <input
+                            style={{
+                                width: "100%",
+                                paddingTop: 6,
+                                paddingBottom: 3,
+                                paddingLeft: 3,
+                                paddingRight: 3,
+                                fontSize: GlobalVariables.defaultFontSize * 1.2,
+                                fontFamily: GlobalVariables.defaultMonoFontFamily,
+                                outline: "none",
+                                borderRadius: 0,
+                                border: "none",
+                            }}
+                            type="string"
+                            spellCheck={false}
+                            value={localValue}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                const newVal = event.target.value;
+                                setLocalValue(newVal);
+                            }}
+                            // must use enter to change the value
+                            onBlur={(event: any) => {
+                                // const orig = this.getMainWidget().getChannelNames()[0];
+                                const orig = this.getValue();
+                                console.log("blur:", orig, localValue)
+                                if (orig !== localValue) {
+                                    setLocalValue(orig);
+                                }
+                            }}
+                        />
 
                     </form>
                     <ElementRectangleButton

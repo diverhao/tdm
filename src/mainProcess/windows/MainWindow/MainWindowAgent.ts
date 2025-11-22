@@ -188,20 +188,6 @@ export class MainWindowAgent {
         }
     };
 
-    /**
-     * Only for ssh-client mode
-     */
-    updateProfiles = () => {
-        // no need to update profiles in local
-        const profilesFullFileName = this.getWindowAgentsManager().getMainProcess().getProfiles().getProfileNames()[0];
-        const profilesJson = this.getWindowAgentsManager().getMainProcess().getProfiles().serialize();
-        console.log("client ------------- updating profiles", profilesFullFileName, profilesJson)
-        this.sendFromMainProcess("update-profiles", {
-            profilesFullFileName: profilesFullFileName,
-            profilesJson: profilesJson,
-        })
-    }
-
 
     /**
      * Get WebContents for this window <br>

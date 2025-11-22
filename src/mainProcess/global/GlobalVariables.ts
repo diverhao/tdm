@@ -22,3 +22,7 @@ export const sshTcpServerPort = 5555;
 // if the port is not available, quit
 export const defaultWebServerPort = 3000;
 
+// magic words printed by the TDM in ssh-server mode indicating that it has
+// successfully created a TCP server. The ssh-client can obtain the TCP server port
+// based on this string
+export const tcpPortStr = "we have successfully created TCP server on port;"

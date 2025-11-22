@@ -174,7 +174,8 @@ export class IpcManagerOnMainProcess {
                     data: message,
                 }
                 if (sshClient !== undefined) {
-                    sshClient.sendToTcpServer(tcpMessage);
+                    sshClient.sendToTcpServer(message);
+                    // sshClient.sendToTcpServer(tcpMessage);
                 } else {
                     Log.error("-1", "Error: the main process", processId, "is not a ssh client");
                 }
@@ -239,6 +240,7 @@ export class IpcManagerOnMainProcess {
         // ------------------ main window ----------------------
         // we we select a profile
         this.ipcMain.on("profile-selected", this.handleProfileSelected);
+        this.ipcMain.on("update-profiles", this.handleUpdateProfiles);
         // show main window
         this.ipcMain.on("bring-up-main-window", this.handleBringUpMainWindow);
         this.ipcMain.on("focus-window", this.handleFocusWindow);
@@ -362,16 +364,29 @@ export class IpcManagerOnMainProcess {
      * Quit this process, initiated from main window
      */
     handleQuitTdmProcess = (event: any, option: IpcEventArgType["quit-tdm-process"]) => {
-        if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
-            const sshServer = this.getMainProcess().getIpcManager().getSshServer();
-            sshServer?.sendToTcpClient(JSON.stringify(
-                { command: "quit-tdm-process" }));
-        }
-        // we have confirmed in the message box to quit
-        if (option["confirmToQuit"] === true) {
-            this.getMainProcess().quit()
+        const mainProcessMode = this.getMainProcess().getMainProcessMode();
+
+        // in ssh-client mode, the quit-tdm-process is handled in ssh-server
+        if (mainProcessMode === "ssh-client") {
             return;
         }
+
+        // we have confirmed in the message box to quit
+        if (option["confirmToQuit"] === true) {
+            // this.getMainProcess().quit()
+            if (mainProcessMode === "ssh-server") {
+                const sshServer = this.getMainProcess().getIpcManager().getSshServer();
+                sshServer?.sendToTcpClient(JSON.stringify(
+                    { command: "quit-tdm-process-immediately", data: {} }));
+                setTimeout(() => {
+                    this.getMainProcess().quit()
+                }, 1000)
+            } else {
+                this.getMainProcess().quit()
+            }
+            return;
+        }
+
         // check if there is any modified windows
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
@@ -403,12 +418,19 @@ export class IpcManagerOnMainProcess {
                 }
             });
             return;
-            // }
         } else {
-            this.getMainProcess().quit()
+
+            if (mainProcessMode === "ssh-server") {
+                const sshServer = this.getMainProcess().getIpcManager().getSshServer();
+                sshServer?.sendToTcpClient(JSON.stringify(
+                    { command: "quit-tdm-process-immediately", data: {} }));
+                setTimeout(() => {
+                    this.getMainProcess().quit()
+                }, 1000)
+            } else {
+                this.getMainProcess().quit()
+            }
         }
-        // const mainProcesses = this.getMainProcess().getMainProcesses();
-        // mainProcesses.quit();
     }
 
     /**
@@ -1556,6 +1578,31 @@ export class IpcManagerOnMainProcess {
         }
     }
 
+    /**
+     * The main window asks for to update the profiles content from main process. 
+     * The main process will provide the up-to-date profiles content.
+     */
+    handleUpdateProfiles = (event: any, options: IpcEventArgType["update-profiles"]) => {
+        const { windowId } = options;
+
+        const windowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(windowId);
+
+        if (windowAgent instanceof MainWindowAgent) {
+            const profilesJson = this.getMainProcess().getWindowAgentsManager().getMainProcess().getProfiles().getProfiles();
+            const profilesFullFileName = this.getMainProcess().getWindowAgentsManager().getMainProcess().getProfiles().getFilePath();
+
+            windowAgent.sendFromMainProcess(
+                "update-profiles",
+                {
+                    windowId: windowId,
+                    profilesJson: profilesJson,
+                    profilesFullFileName: profilesFullFileName
+                }
+            )
+        } else {
+            Log.error("update-profiles can only be request by main window");
+        }
+    }
 
     /**
      * Basically the same as profile-selected handler 
@@ -3393,7 +3440,7 @@ export class IpcManagerOnMainProcess {
 
     handleFetchThumbnail = async (event: any, message: IpcEventArgType["fetch-thumbnail"]) => {
         // open this tdl file in preview display window
-        if (this.getMainProcess().getMainProcessMode() === "web") {
+        if (this.getMainProcess().getMainProcessMode() !== "desktop") {
             return;
         }
 

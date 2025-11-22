@@ -71,7 +71,7 @@ export class MainWindowProfileRunPage {
                         }
                     }
                 );
-            }, true)
+            }, true, "MainWindow")
         };
         // const openFileBrowser = (event: any) => {
         //     this.getMainWindowClient().getIpcManager().sendFromRendererProcess("new-tdm-process");
@@ -368,6 +368,11 @@ export class MainWindowProfileRunPage {
             "Help": openHelpWindow,
             "Exit": quitTdmProcess,
         };
+
+        if (this.getMainWindowClient().getMainProcessMode() === "ssh-client") {
+            delete(buttonFunctions["Open file"])
+            delete(buttonFunctions["New TDM process"])
+        }
 
         return (
             <div style={{

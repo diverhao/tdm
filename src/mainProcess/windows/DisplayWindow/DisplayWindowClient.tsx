@@ -85,7 +85,6 @@ export class DisplayWindowClient {
 
     private _processId: string = "";
 
-
     private _webGlSupported: boolean = false;
 
     private _contextMenu: ContextMenu;

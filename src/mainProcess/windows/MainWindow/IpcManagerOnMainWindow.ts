@@ -214,6 +214,7 @@ export class IpcManagerOnMainWindow {
         this.ipcRenderer.on("window-will-be-closed", this.handleWindowWillBeClosed);
         this.ipcRenderer.on("log-file-name", this.handleLogFileName);
         this.ipcRenderer.on("update-profiles", this.handleUpdateProfiles);
+        this.ipcRenderer.on("bounce-back", this.handleBounceBack);
     };
 
 
@@ -373,6 +374,7 @@ export class IpcManagerOnMainWindow {
     }
 
     handleDialogShowMessageBox = (event: any, data: IpcEventArgType3["dialog-show-message-box"]) => {
+        console.log("dia log show message box")
         const { info } = data;
         const command = info["command"];
         if (command === undefined) {
@@ -402,8 +404,11 @@ export class IpcManagerOnMainWindow {
                 };
             }
         }
-        this.getMainWindowClient().getPrompt().createElement("dialog-message-box", info);
-        Log.debug("dialog-message-box, info", info);
+
+        if (command !== "hide") {
+            this.getMainWindowClient().getPrompt().createElement("dialog-message-box", info);
+            Log.debug("dialog-message-box, info", info);
+        }
     };
 
     handleDialogShowInputBox = (event: any, data: IpcEventArgType3["dialog-show-input-box"]) => {
@@ -517,22 +522,25 @@ export class IpcManagerOnMainWindow {
      * only for ssh-client mode
      */
     handleUpdateProfiles = (event: any, data: IpcEventArgType3["update-profiles"]) => {
-        const { profilesFullFileName, profilesJson } = data;
+        const { windowId, profilesFullFileName, profilesJson } = data;
         const mainWindowClient = this.getMainWindowClient();
         const startupPage = mainWindowClient.getStartupPage();
-        console.log("update profiles", data, mainWindowClient.getState() === mainWindowState.start, startupPage instanceof MainWindowStartupPage)
         // we must be on main window startup page
         if (mainWindowClient.getState() === mainWindowState.start && startupPage instanceof MainWindowStartupPage) {
             // update data
             mainWindowClient.setProfiles(profilesJson);
             mainWindowClient.setProfilesFileName(profilesFullFileName);
             // refresh page
-            console.log("force update page")
             startupPage.forceUpdate();
         } else {
-            // todo: show a warning page
+            // todo: show a warning page?
         }
 
+    }
+
+    handleBounceBack = (event: any, message: IpcEventArgType3["bounce-back"]) => {
+        const { eventName, data } = message;
+        this.sendFromRendererProcess(eventName as any, data);
     }
 
     getWebSocketClient = () => {
