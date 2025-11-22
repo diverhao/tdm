@@ -122,11 +122,7 @@ export class IpcManagerOnMainProcess {
          * 4 possible modes: "desktop", "web", "ssh-server", "ssh-client"
          */
         if (mainProcessMode === "ssh-client") {
-            // messages that must be on client side
-            // do not call callbacks, forward message to tcp server
-            // add one more layer:
-            // {command: string, data: websocket-ipc-data}
-            // they are intercepted here
+            // messages that are processed on client side, do not forward message to tcp server
             // "show-context-menu" 
             // "show-context-menu-sidebar" 
             // "main-window-show-context-menu"
@@ -134,6 +130,7 @@ export class IpcManagerOnMainProcess {
             // "close-window": close the window, same as clicking the close button
             // "focus-window": focus the window, initiated by mosue down event on thumbnail
             // "processes-info": request processes info (CPU, memory) from renderer process
+            // "bring-up-main-window": all info needed by main window are stored
             if (
                 eventName === "show-context-menu"
                 || eventName === "show-context-menu-sidebar"
@@ -155,31 +152,32 @@ export class IpcManagerOnMainProcess {
                     callback(wsClient, ...data);
                 }
                 return;
-            }
-
-            let fullWindowId = windowId;
-            // same as desktoip or web mode, always register the websocket client
-            // also forward the message to to ssh server, so that the window can be registered
-            if (this.getClients()[fullWindowId] === undefined) {
-                Log.debug("-1", "register window", windowId, "for WebSocket IPC");
-                this.getClients()[fullWindowId] = wsClient;
-                // lift the block in create window method
-                // const windowAgent = mainProcess.getWindowAgentsManager().getAgent(windowId);
-                // if (windowAgent instanceof MainWindowAgent || windowAgent instanceof DisplayWindowAgent) {
-                //     console.log("lift block for", windowId);
-                //     windowAgent.creationResolve("");
-                // }
-            }
-            // normally, we forward the message to remote ssh server via TCP
-            const sshClient = mainProcess.getSshClient();
-            const tcpMessage = {
-                command: "forward-to-websocket-ipc",
-                data: message,
-            }
-            if (sshClient !== undefined) {
-                sshClient.sendToTcpServer(tcpMessage);
             } else {
-                Log.error("-1", "Error: the main process", processId, "is not a ssh client");
+
+                let fullWindowId = windowId;
+                // same as desktoip or web mode, always register the websocket client
+                // also forward the message to to ssh server, so that the window can be registered
+                if (this.getClients()[fullWindowId] === undefined) {
+                    Log.debug("-1", "register window", windowId, "for WebSocket IPC");
+                    this.getClients()[fullWindowId] = wsClient;
+                    // lift the block in create window method
+                    // const windowAgent = mainProcess.getWindowAgentsManager().getAgent(windowId);
+                    // if (windowAgent instanceof MainWindowAgent || windowAgent instanceof DisplayWindowAgent) {
+                    //     console.log("lift block for", windowId);
+                    //     windowAgent.creationResolve("");
+                    // }
+                }
+                // normally, we forward the message to remote ssh server via TCP
+                const sshClient = mainProcess.getSshClient();
+                const tcpMessage = {
+                    command: "forward-to-websocket-ipc",
+                    data: message,
+                }
+                if (sshClient !== undefined) {
+                    sshClient.sendToTcpServer(tcpMessage);
+                } else {
+                    Log.error("-1", "Error: the main process", processId, "is not a ssh client");
+                }
             }
         } else if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-server") {
             // find callback for this event
@@ -518,7 +516,7 @@ export class IpcManagerOnMainProcess {
 
 
     handleWebsocketIpcConnectedOnMainWindow = (event: any, data: IpcEventArgType["websocket-ipc-connected-on-main-window"]) => {
-        console.log("handleWebsocketIpcConnectedOnMainWindow ---------------************" )
+        console.log("handleWebsocketIpcConnectedOnMainWindow ---------------************")
         // the main processes' ipc manager
         const ipcManager = this.getMainProcess().getIpcManager();
         const mainProcess = this.getMainProcess();
@@ -527,7 +525,7 @@ export class IpcManagerOnMainProcess {
         const reconnect = data["reconnect"];
         Log.info("-1", "register window", windowId, "for WebSocket IPC");
 
-        if (mainProcessMode === "desktop" || mainProcessMode === "web"|| mainProcessMode === "ssh-client") {
+        if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-client") {
             // desktop mode: websocket client on main/display window
             ipcManager.getClients()[windowId] = event;
         } else if (mainProcessMode === "ssh-server") {
@@ -567,6 +565,7 @@ export class IpcManagerOnMainProcess {
         }
 
         const site = this.getMainProcess().getSite();
+
         windowAgent.sendFromMainProcess(
             "after-main-window-gui-created",
             {
@@ -605,26 +604,8 @@ export class IpcManagerOnMainProcess {
             }
         });
         windowAgent.websocketIpcConnectedResolve();
-
-        // await windowAgent.loadURLPromise;
-        // // at this moment the main window is ready for selecting profile
-        // // windowAgent.creationResolve2();
-        // const selectedProfileName = this.getMainProcess().getProfiles().getSelectedProfileName()
-        // windowAgent.sendFromMainProcess("after-profile-selected", {
-        //     profileName: selectedProfileName,
-        // });
-        // // create the preview window for file browser
-        // this.getMainProcess().getWindowAgentsManager().createPreviewDisplayWindow();
-
-        // }
-
-        // displayWindowAgent.sendFromMainProcess("preset-colors", selectedProfile.getCategory("Preset Colors"));
-
-
-        // }
-
-
     }
+
     // ----------------------- Profiles ------------------------
 
     /**
@@ -953,7 +934,7 @@ export class IpcManagerOnMainProcess {
         if (mainWindowAgent instanceof MainWindowAgent) {
             mainWindowAgent.focus();
         } else {
-            if (this.getMainProcess().getMainProcessMode() === "desktop" || this.getMainProcess().getMainProcessMode() === "ssh-server") {
+            if (this.getMainProcess().getMainProcessMode() === "desktop" || this.getMainProcess().getMainProcessMode() === "ssh-client") {
                 // re-create main window
                 await windowAgentsManager.createMainWindow();
                 mainWindowAgent = windowAgentsManager.getMainWindowAgent();
@@ -978,40 +959,6 @@ export class IpcManagerOnMainProcess {
                                     displayWindowAgent.takeThumbnail(windowName, tdlFileName);
                                 }
                             }
-                        }
-                    }
-                }
-            } else if (this.getMainProcess().getMainProcessMode() === "ssh-client") {
-                const sshClient = this.getMainProcess().getSshClient();
-                const displayWindowAgents = windowAgentsManager.getAgents();
-                // find an available display window, send out the bring-up-main-window event from this window
-                if (Object.values(displayWindowAgents).length > 0) {
-                    const displayWindowAgent = Object.values(displayWindowAgents)[0];
-                    if (displayWindowAgent instanceof DisplayWindowAgent) {
-                        const dislayWindowId = displayWindowAgent.getId();
-                        if (sshClient !== undefined) {
-                            sshClient.routeToRemoteWebsocketIpcServer({
-                                windowId: dislayWindowId,
-                                eventName: "bring-up-main-window",
-                                data: [],
-                            })
-                            // take thumbnails as soon as possible, 2 seconds is a reasonable time
-                            setTimeout(() => {
-                                const displayWindowAgents = windowAgentsManager.getAgents();
-                                for (let displayWindowId of Object.keys(displayWindowAgents)) {
-                                    const displayWindowAgent = displayWindowAgents[displayWindowId];
-                                    // not main window
-                                    if (displayWindowAgent instanceof DisplayWindowAgent) {
-                                        // not pre-loaded display window
-                                        if (displayWindowAgent !== windowAgentsManager.preloadedDisplayWindowAgent) {
-                                            // must be a display window, not embedded window: (-1, 0, 1, ..., 10000)
-                                            const windowName = displayWindowAgent.getWindowName();
-                                            const tdlFileName = displayWindowAgent.getTdlFileName();
-                                            displayWindowAgent.takeThumbnail(windowName, tdlFileName);
-                                        }
-                                    }
-                                }
-                            }, 2000);
                         }
                     }
                 }
@@ -1586,12 +1533,14 @@ export class IpcManagerOnMainProcess {
              * (e) create preview Display Window for File Browser, it is an invisible Display Window dedicated
              *     for the File Browser utility window
              */
+
             const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
             if (mainWindowAgent instanceof MainWindowAgent) {
                 // (a)
                 await mainWindowAgent.loadURLPromise;
                 // (b)
-                await mainWindowAgent.websocketIpcConnectedPromise;
+                // the websocket is never connected in ssh server 
+                // await mainWindowAgent.websocketIpcConnectedPromise;
                 // (c)
                 const oldTitle = mainWindowAgent.getTitle();
                 const newTitle = oldTitle + " -- " + selectedProfileName;
@@ -1601,8 +1550,9 @@ export class IpcManagerOnMainProcess {
                     profileName: selectedProfileName,
                 });
                 // (e)
-                windowAgentsManager.createPreviewDisplayWindow();
-            }            
+                // do not create preview display window in ssh client
+                // windowAgentsManager.createPreviewDisplayWindow();
+            }
         }
     }
 
@@ -1716,7 +1666,7 @@ export class IpcManagerOnMainProcess {
      * @param sendContentsToWindow whether to send file back to display window, only used by .db 
      */
     handleOpenTdlFiles = (event: any, data: IpcEventArgType["open-tdl-file"]) => {
-        console.log(data)
+        console.log("      >>>>>>>", data)
         const { options } = data;
         let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();

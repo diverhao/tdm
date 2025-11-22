@@ -141,7 +141,7 @@ export class MainWindowAgent {
             const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
             const hostname = this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" ?
                 "127.0.0.1" : "ABCD";
-                // : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
+            // : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
 
             // const hostname = "127.0.0.1";
 
@@ -191,8 +191,10 @@ export class MainWindowAgent {
     /**
      * Only for ssh-client mode
      */
-    updateProfiles = (profilesFullFileName: string, profilesJson: Record<string, any>) => {
+    updateProfiles = () => {
         // no need to update profiles in local
+        const profilesFullFileName = this.getWindowAgentsManager().getMainProcess().getProfiles().getProfileNames()[0];
+        const profilesJson = this.getWindowAgentsManager().getMainProcess().getProfiles().serialize();
         console.log("client ------------- updating profiles", profilesFullFileName, profilesJson)
         this.sendFromMainProcess("update-profiles", {
             profilesFullFileName: profilesFullFileName,
@@ -339,8 +341,8 @@ export class MainWindowAgent {
             const sshServer = ipcManagerOnMainProcesses.getSshServer();
             if (sshServer !== undefined) {
                 // writeFileSync("/Users/haohao/tdm.log", `send from main process for Main Window ===================== ${JSON.stringify(args)}\n`, {flag: "a"});
-                const args = Object.values(arg);
-                sshServer.sendToTcpClient(JSON.stringify({ processId: "0", windowId: this.getId(), eventName: channel, data: args }));
+                // const args = Object.values(arg);
+                sshServer.sendToTcpClient(JSON.stringify({ processId: "0", windowId: this.getId(), eventName: channel, data: [arg] }));
             }
         } else {
             // the main window must come with a process ID

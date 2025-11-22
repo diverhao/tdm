@@ -103,18 +103,26 @@ export class IpcManagerOnDisplayWindow {
                 this.getDisplayWindowClient().getPrompt().removeElement();
             }
 
-            client.send(
-                JSON.stringify({
+            this.sendFromRendererProcess("websocket-ipc-connected-on-display-window", 
+                {
                     processId: this.getDisplayWindowClient().getProcessId(),
                     windowId: this.getDisplayWindowClient().getWindowId(),
-                    eventName: "websocket-ipc-connected-on-display-window",
-                    data: [{
-                        processId: this.getDisplayWindowClient().getProcessId(),
-                        windowId: this.getDisplayWindowClient().getWindowId(),
-                        reconnect: reconnect,
-                    }],
-                })
-            );
+                    reconnect: reconnect,
+                }
+            )
+
+            // client.send(
+            //     JSON.stringify({
+            //         processId: this.getDisplayWindowClient().getProcessId(),
+            //         windowId: this.getDisplayWindowClient().getWindowId(),
+            //         eventName: "websocket-ipc-connected-on-display-window",
+            //         data: [{
+            //             processId: this.getDisplayWindowClient().getProcessId(),
+            //             windowId: this.getDisplayWindowClient().getWindowId(),
+            //             reconnect: reconnect,
+            //         }],
+            //     })
+            // );
 
         };
 
@@ -272,6 +280,9 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("get-media-content", this.handleGetMediaContent)
 
         this.ipcRenderer.on("pong", this.handlePong)
+
+        this.ipcRenderer.on("bounce-back", this.handleBounceBack);
+
     };
 
     handleObtainedIframeUuid = (
@@ -1663,6 +1674,11 @@ export class IpcManagerOnDisplayWindow {
 
     handlePong = (event: any, data: IpcEventArgType2["pong"]) => {
         Log.info("Round trip time for ping-pong initiated by this Display Window:", performance.now() - data["time"], "ms");
+    }
+
+    handleBounceBack = (event: any, message: IpcEventArgType2["bounce-back"]) => {
+        const {eventName, data} = message;
+        this.sendFromRendererProcess(eventName as any, data);
     }
 
     getWebSocketClient = () => {

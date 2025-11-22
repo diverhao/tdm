@@ -595,46 +595,22 @@ export class WindowAgentsManager {
      * It will inherit the profile's macros. The caller won't be able to provide any macros.
      */
     createBlankDisplayWindow = async (windowId: string) => {
-        const mainProcessMode = this.getMainProcess().getMainProcessMode();
-        if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-server") {
-            const tdl: type_tdl = FileReader.getBlankWhiteTdl();
-            const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-            const macros = selectedProfile?.getMacros();
-            const options: type_options_createDisplayWindow = {
-                tdl: tdl,
-                mode: "editing" as "operating" | "editing",
-                editable: true,
-                // empty tdl file name, means it is not saved
-                tdlFileName: "",
-                macros: macros === undefined ? [] : macros,
-                replaceMacros: true,
-                hide: false,
-                windowId: windowId,
-            };
-            await this.createDisplayWindow(options);
-        } else if (mainProcessMode === "ssh-client") {
-            // todo: verify if it is correct
-            const windowAgent = this.getAgent(windowId);
-            if (windowAgent !== undefined) {
-                // const windowId = windowAgent.getId();
-                const sshClient = this.getMainProcess().getSshClient();
-                if (sshClient !== undefined) {
-                    sshClient.routeToRemoteWebsocketIpcServer({
-                        windowId: windowId,
-                        eventName: "open-tdl-file",
-                        data: [{
-                            tdlFileNames: [],
-                            mode: "editing",
-                            editable: true,
-                            macros: [],
-                            replaceMacros: false,
-                            // currentTdlFolder?: string;
-                            windowId: windowAgent.getId(),
-                        }]
-                    })
-                }
-            }
-        }
+        const tdl: type_tdl = FileReader.getBlankWhiteTdl();
+        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        const macros = selectedProfile?.getMacros();
+        const options: type_options_createDisplayWindow = {
+            tdl: tdl,
+            mode: "editing" as "operating" | "editing",
+            editable: true,
+            // empty tdl file name, means it is not saved
+            tdlFileName: "",
+            macros: macros === undefined ? [] : macros,
+            replaceMacros: true,
+            hide: false,
+            windowId: windowId,
+        };
+        await this.createDisplayWindow(options);
+
     };
 
     // ----------------------- utility display window --------------------
@@ -906,5 +882,45 @@ export class WindowAgentsManager {
         // );
         // return "";
     };
+
+
+    /**
+     * Show warning or error sign on each window
+     */
+    showPrompt = (type: "error" | "info", humanReadableMessages: string[], rawMessages: string[]) => {
+        const mainProcess = this.getMainProcess();
+        const windowAgentsManager = mainProcess.getWindowAgentsManager();
+
+        for (const windowAgent of Object.values(windowAgentsManager.getAgents())) {
+            if (windowAgent === undefined) {
+                continue;
+            }
+            if (windowAgent instanceof DisplayWindowAgent && windowAgent === windowAgentsManager.preloadedDisplayWindowAgent) {
+                continue;
+            }
+            if (windowAgent instanceof DisplayWindowAgent && windowAgent === windowAgentsManager.previewDisplayWindowAgent) {
+                continue;
+            }
+            // no sure why (windowAgent instanceof MainWindowAgent) || (windowAgent instanceof DisplayWindowAgent) does not work
+            if ((windowAgent instanceof MainWindowAgent)) {
+                windowAgent.sendFromMainProcess("dialog-show-message-box", {
+                    info: {
+                        messageType: type,
+                        humanReadableMessages: humanReadableMessages,
+                        rawMessages: rawMessages,
+                    }
+                });
+            }
+            if (windowAgent instanceof DisplayWindowAgent) {
+                windowAgent.sendFromMainProcess("dialog-show-message-box", {
+                    info: {
+                        messageType: type,
+                        humanReadableMessages: humanReadableMessages,
+                        rawMessages: rawMessages,
+                    }
+                });
+            }
+        }
+    }
 
 }

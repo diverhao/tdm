@@ -81,20 +81,28 @@ export class IpcManagerOnMainWindow {
             })
             );
 
-            this.getWebSocketClient()?.send(
-                JSON.stringify({
-                    // additional info
+            this.sendFromRendererProcess("websocket-ipc-connected-on-main-window",
+                {
                     processId: this.getMainWindowClient().getProcessId(),
                     windowId: this.getMainWindowClient().getWindowId(),
-                    eventName: "websocket-ipc-connected-on-main-window",
-                    // the real data
-                    data: [{
-                        processId: this.getMainWindowClient().getProcessId(),
-                        windowId: this.getMainWindowClient().getWindowId(),
-                        reconnect: reconnect,
-                    }],
-                })
-            );
+                    reconnect: reconnect,
+                }
+            )
+
+            // this.getWebSocketClient()?.send(
+            //     JSON.stringify({
+            //         // additional info
+            //         processId: this.getMainWindowClient().getProcessId(),
+            //         windowId: this.getMainWindowClient().getWindowId(),
+            //         eventName: "websocket-ipc-connected-on-main-window",
+            //         // the real data
+            //         data: [{
+            //             processId: this.getMainWindowClient().getProcessId(),
+            //             windowId: this.getMainWindowClient().getWindowId(),
+            //             reconnect: reconnect,
+            //         }],
+            //     })
+            // );
         };
 
         client.onmessage = (event: any) => {
@@ -172,7 +180,7 @@ export class IpcManagerOnMainWindow {
         channelName: T,
         data: IpcEventArgType[T]
     ): void => {
-        Log.debug("send message to IPC server", channelName);
+        Log.info("send message to IPC server", channelName);
         const processId = this.getMainWindowClient().getProcessId();
         if (processId !== "") {
             if (this.getWebSocketClient() !== undefined) {
@@ -338,6 +346,7 @@ export class IpcManagerOnMainWindow {
      * After the profile selected. The main process already prepared the EPICS context.
      */
     private _handleAfterProfileSelected = (event: any, data: IpcEventArgType3["after-profile-selected"]) => {
+        console.log("after profile selected ==============", data, this.getMainWindowClient().getProfiles())
         const { profileName } = data;
         this.getMainWindowClient().setSelectedProfileName(profileName);
         this.getMainWindowClient().setProfileRunPage(new MainWindowProfileRunPage(this.getMainWindowClient()));

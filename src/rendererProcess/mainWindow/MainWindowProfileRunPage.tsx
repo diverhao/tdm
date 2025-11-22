@@ -18,6 +18,7 @@ export class MainWindowProfileRunPage {
         this._selectedProfileName = mainWindowClient.getSelectedProfileName();
         // make local copies
         this._profiles = JSON.parse(JSON.stringify(mainWindowClient.getProfiles()));
+        console.log("mainWindowClient.getProfiles()", mainWindowClient.getSelectedProfile(), JSON.stringify(mainWindowClient.getProfiles()));
         this._selectedProfile = JSON.parse(JSON.stringify(mainWindowClient.getSelectedProfile()));
         this._largeInput = new SidebarLargeInput();
     }

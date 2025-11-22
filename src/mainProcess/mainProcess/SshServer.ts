@@ -42,7 +42,7 @@ export class SshServer {
         this.tcpEventListenersOn("quit-main-process", this.handleQuitMainProcess)
         this.tcpEventListenersOn("tcp-client-heartbeat", this.handleTcpClientHeartBeat);
         this.tcpEventListenersOn("forward-to-websocket-ipc", this.handlForwardtoWebsocketIpc);
-        this.tcpEventListenersOn("update-profiles-in-main-window", this.handleUpdateProfilesInMainWindow)
+        this.tcpEventListenersOn("update-profiles", this.handleUpdateProfiles)
     }
 
     handleMainProcessId = (data: { id: string }) => {
@@ -82,14 +82,14 @@ export class SshServer {
         ipcManagerOnMainProcess.handleMessage(windowId, message)
 
     }
-    handleUpdateProfilesInMainWindow = (data: {}) => {
+    handleUpdateProfiles = (data: {}) => {
         // tell client to create a GUI window
         const profilesJson = this.getIpcManager().getMainProcess().getWindowAgentsManager().getMainProcess().getProfiles().getProfiles();
         const profilesFullFileName = this.getIpcManager().getMainProcess().getWindowAgentsManager().getMainProcess().getProfiles().getFilePath();
 
         console.log("Server is trying to create main window")
         this.sendToTcpClient(JSON.stringify({
-            command: "update-profiles-in-main-window",
+            command: "update-profiles",
             data: {
                 profilesJson: profilesJson,
                 profilesFullFileName: profilesFullFileName

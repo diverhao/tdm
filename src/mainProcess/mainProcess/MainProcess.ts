@@ -104,7 +104,7 @@ export class MainProcess {
     private readonly _rawArgs: type_args;
 
     // profiles
-    private readonly _profiles: Profiles;
+    private _profiles: Profiles;
 
     // log stream for writing to file
     private _logStream: undefined | fs.WriteStream = undefined;
@@ -579,6 +579,11 @@ export class MainProcess {
     getProfiles = () => {
         return this._profiles;
     }
+
+    setProfiles = (newProfiles: Profiles) => {
+        this._profiles = newProfiles;
+    }
+
     /**
      * Get site for this TDM 
      * 

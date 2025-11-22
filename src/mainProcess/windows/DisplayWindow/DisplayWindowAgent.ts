@@ -180,7 +180,7 @@ export class DisplayWindowAgent {
         return this._utilityOptions;
     }
 
-    
+
 
     constructor(windowAgentsManager: WindowAgentsManager, options: type_options_createDisplayWindow, id: string) {
         this._windowAgentsManager = windowAgentsManager;
@@ -1910,8 +1910,7 @@ export class DisplayWindowAgent {
             if (sshServer !== undefined) {
                 sshServer.sendToTcpClient(JSON.stringify({ command: "create-web-display-window-step-2", data: url }))
             }
-        }
-        else {
+        } else {
 
             let width = 1200;
             let height = 1100;

@@ -47,7 +47,7 @@ export class ContextMenuDesktop {
                         label: "Edit Display",
                         accelerator: "CmdOrCtrl+e",
                         click: () => {
-                            this._displayWindowAgent.sendFromMainProcess("context-menu-command", 
+                            this._displayWindowAgent.sendFromMainProcess("context-menu-command",
                                 {
                                     command: "edit-display"
                                 }
@@ -60,7 +60,7 @@ export class ContextMenuDesktop {
                         label: "Edit Display",
                         accelerator: "CmdOrCtrl+e",
                         click: () => {
-                            this._displayWindowAgent.sendFromMainProcess("context-menu-command", 
+                            this._displayWindowAgent.sendFromMainProcess("context-menu-command",
                                 {
                                     command: "edit-display"
                                 }
@@ -109,7 +109,7 @@ export class ContextMenuDesktop {
             label: "Execute Display",
             accelerator: "CmdOrCtrl+e",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                     {
                         command: "execute-display"
                     }
@@ -120,7 +120,7 @@ export class ContextMenuDesktop {
             label: "Save Display",
             accelerator: "CmdOrCtrl+s",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                     {
                         command: "save-display"
                     }
@@ -131,7 +131,7 @@ export class ContextMenuDesktop {
             label: "Save Display As",
             accelerator: "CmdOrCtrl+Shift+s",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                     {
                         command: "save-display-as"
                     }
@@ -143,7 +143,7 @@ export class ContextMenuDesktop {
             label: "Duplicate Display",
             accelerator: "CmdOrCtrl+d",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                     {
                         command: "duplicate-display"
                     }
@@ -156,7 +156,7 @@ export class ContextMenuDesktop {
             click: () => {
                 this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                     {
-                        command:  "reload-display"
+                        command: "reload-display"
                     }
                 );
             },
@@ -164,7 +164,7 @@ export class ContextMenuDesktop {
         {
             label: "Show Display Contents",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                     {
                         command: "show-tdl-file-contents"
                     }
@@ -228,9 +228,9 @@ export class ContextMenuDesktop {
         {
             label: "Open Display with File Browser",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                     {
-                        command: "file-browser", 
+                        command: "file-browser",
                         subcommand: ["", true]
                     }
                 );
@@ -251,9 +251,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Label",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "label"
                             }
                         );
@@ -263,10 +263,10 @@ export class ContextMenuDesktop {
                 {
                     label: "Polyline",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
                                 command: "create-widget",
-                                subcommand:  "polyline"
+                                subcommand: "polyline"
                             }
                         );
                     },
@@ -274,9 +274,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Arc",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "arc"
                             }
                         );
@@ -285,9 +285,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Rectangle",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "rectangle"
                             }
                         );
@@ -296,9 +296,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Media",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "media"
                             }
                         );
@@ -312,9 +312,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Text Update",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "text-update"
                             }
                         );
@@ -323,9 +323,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Meter",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "meter"
                             }
                         );
@@ -336,7 +336,7 @@ export class ContextMenuDesktop {
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command:  "create-widget", 
+                                command: "create-widget",
                                 subcommand: "tank"
                             }
                         );
@@ -347,8 +347,8 @@ export class ContextMenuDesktop {
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                 command: "create-widget", 
-                                 subcommand: "thermometer"
+                                command: "create-widget",
+                                subcommand: "thermometer"
                             }
                         );
                     },
@@ -358,9 +358,9 @@ export class ContextMenuDesktop {
                 {
                     label: "LED",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "led"
                             }
                         );
@@ -369,9 +369,9 @@ export class ContextMenuDesktop {
                 {
                     label: "LED (Multi State)",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "led-multi-state"
                             }
                         );
@@ -382,7 +382,7 @@ export class ContextMenuDesktop {
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command:  "create-widget", 
+                                command: "create-widget",
                                 subcommand: "byte-monitor"
                             }
                         );
@@ -392,9 +392,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Symbol",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "symbol"
                             }
                         );
@@ -405,7 +405,7 @@ export class ContextMenuDesktop {
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command:  "create-widget", 
+                                command: "create-widget",
                                 subcommand: "text-symbol"
                             }
                         );
@@ -421,7 +421,7 @@ export class ContextMenuDesktop {
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command:  "create-widget", 
+                                command: "create-widget",
                                 subcommand: "text-entry"
                             }
                         );
@@ -430,9 +430,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Scaled Slider",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "scaled-slider"
                             }
                         );
@@ -441,9 +441,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Spinner",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "spinner"
                             }
                         );
@@ -461,9 +461,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Boolean Button",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "boolean-button"
                             }
                         );
@@ -472,9 +472,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Slide Button",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "slide-button"
                             }
                         );
@@ -483,9 +483,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Check Box",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "check-box"
                             }
                         );
@@ -495,9 +495,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Choice Button",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "choice-button"
                             }
                         );
@@ -506,9 +506,9 @@ export class ContextMenuDesktop {
                 {
                     label: "Combo Box",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", 
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command: "create-widget", 
+                                command: "create-widget",
                                 subcommand: "combo-box"
                             }
                         );
@@ -519,7 +519,7 @@ export class ContextMenuDesktop {
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",
                             {
-                                command:  "create-widget", 
+                                command: "create-widget",
                                 subcommand: "radio-button"
                             }
                         );
@@ -533,38 +533,38 @@ export class ContextMenuDesktop {
                 {
                     label: "Action Button",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "action-button"});
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "action-button" });
                     },
                 },
 
                 {
                     label: "Embedded Display",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "embedded-display"});
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "embedded-display" });
                     },
                 },
                 {
                     label: "Table",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "table"});
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "table" });
                     },
                 },
                 {
                     label: "Group",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "group"});
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "group" });
                     },
                 },
                 {
                     label: "Binary Image",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "binary-image"});
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "binary-image" });
                     },
                 },
                 {
                     label: "Image",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "image"});
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "image" });
                     },
                 },
 
@@ -573,25 +573,25 @@ export class ContextMenuDesktop {
                 {
                     label: "Probe",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "probe"});
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "probe" });
                     },
                 },
                 {
                     label: "Data Viewer",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "data-viewer"});
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "data-viewer" });
                     },
                 },
                 {
                     label: "PV Monitor",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "pv-monitor"});
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "pv-monitor" });
                     },
                 },
                 {
                     label: "File Browser",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "file-browser"});
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "file-browser" });
                     },
                 },
                 {
@@ -627,7 +627,7 @@ export class ContextMenuDesktop {
                 {
                     label: "Seq Graph",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "seq-graph" } );
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "seq-graph" });
                     },
                 },
                 // do not explicitly create Help widget
@@ -659,7 +659,7 @@ export class ContextMenuDesktop {
             label: "Paste Widgets",
             accelerator: "CmdOrCtrl+v",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "paste-widgets"});
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "paste-widgets" });
             },
         },
         {
@@ -683,15 +683,18 @@ export class ContextMenuDesktop {
             label: "Toggle Title",
             accelerator: "CmdOrCtrl+t",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command",{ command: "toggle-title"});
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "toggle-title" });
             },
         },
         {
             label: "Bring Up Main Winodw",
             accelerator: "F2",
             click: () => {
-                // todo: for ssh-client
-                this.getWindowAgentsManager().getMainProcess().getIpcManager().handleBringUpMainWindow(undefined, {});
+                const windowAgent = this.getDisplayWindowAgent();
+                windowAgent.sendFromMainProcess("bounce-back", {
+                    eventName: "bring-up-main-window",
+                    data: []
+                })
             },
         },
         {
@@ -791,7 +794,7 @@ export class ContextMenuDesktop {
             label: "Help",
             accelerator: "F1",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "help"});
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "help" });
             },
         },
 
@@ -801,21 +804,21 @@ export class ContextMenuDesktop {
             label: "Copy Widgets",
             accelerator: "CmdOrCtrl+c",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "copy-widgets"});
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "copy-widgets" });
             },
         },
         {
             label: "Cut Widgets",
             accelerator: "CmdOrCtrl+x",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "cut-widgets" } );
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "cut-widgets" });
             },
         },
         {
             label: "Paste Widgets",
             accelerator: "CmdOrCtrl+v",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "paste-widgets"});
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "paste-widgets" });
             },
         },
         {
@@ -906,13 +909,13 @@ export class ContextMenuDesktop {
                 {
                     label: "Middle",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "align-widgets", subcommand: "middle" } );
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "align-widgets", subcommand: "middle" });
                     },
                 },
                 {
                     label: "Bottom",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "align-widgets", subcommand: "bottom"});
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "align-widgets", subcommand: "bottom" });
                     },
                 },
             ],
@@ -1099,7 +1102,14 @@ export class ContextMenuDesktop {
             label: "Create New Display",
             accelerator: "CmdOrCtrl+n",
             click: () => {
-                this.getDisplayWindowAgent().getWindowAgentsManager().createBlankDisplayWindow(this.getDisplayWindowAgent().getId());
+                // this.getDisplayWindowAgent().getWindowAgentsManager().createBlankDisplayWindow(this.getDisplayWindowAgent().getId());
+                const windowAgent = this.getDisplayWindowAgent();
+                windowAgent.sendFromMainProcess("bounce-back", {
+                    eventName: "create-blank-display-window",
+                    data: {
+                        windowId: windowAgent.getId(),
+                    }
+                })
             },
         },
 
@@ -1177,8 +1187,12 @@ export class ContextMenuDesktop {
             label: "Bring Up Main Window",
             accelerator: "F2",
             click: () => {
-                // todo: for ssh-client
-                this.getWindowAgentsManager().getMainProcess().getIpcManager().handleBringUpMainWindow(undefined, {});
+                const windowAgent = this.getDisplayWindowAgent();
+                windowAgent.sendFromMainProcess("bounce-back", {
+                    eventName: "bring-up-main-window",
+                    data: []
+                })
+
             },
         },
         {
@@ -1278,7 +1292,7 @@ export class ContextMenuDesktop {
             label: "Help",
             accelerator: "F1",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "help" } );
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "help" });
             },
         },
     ];
@@ -1475,8 +1489,12 @@ export class ContextMenuDesktop {
             label: "Bring Up Main Winodw",
             accelerator: "F2",
             click: () => {
-                // todo: for ssh-client
-                this.getWindowAgentsManager().getMainProcess().getIpcManager().handleBringUpMainWindow(undefined, {});
+                const windowAgent = this.getDisplayWindowAgent();
+                windowAgent.sendFromMainProcess("bounce-back", {
+                    eventName: "bring-up-main-window",
+                    data: []
+                })
+
             },
         },
         {
@@ -1577,7 +1595,7 @@ export class ContextMenuDesktop {
             label: "Help",
             accelerator: "F1",
             click: () => {
-                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "help"});
+                this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "help" });
             },
         },
     ];
@@ -1625,6 +1643,10 @@ export class ContextMenuDesktop {
             widgetSpecificItems = this.resolveWidgetSpecificItems(widgetKeys[0], options);
         }
 
+        if (this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "ssh-client") {
+            this.removeItemsForAllMenus(["Open Display", "Open Display with File Browser"])
+        }
+
         const name = `${mode}_${location}`;
 
         if (widgetSpecificItems === undefined) {
@@ -1634,12 +1656,25 @@ export class ContextMenuDesktop {
         }
     };
 
-    removeItems = (itemNames: string[]) => {
+    removeItemsForWidget = (itemNames: string[]) => {
         for (let ii = this._template_operating_Widget.length - 1; ii >= 0; ii--) {
             const entry = this._template_operating_Widget[ii];
             for (let itemName of itemNames) {
                 if ((entry["label"] === itemName)) {
                     this._template_operating_Widget.splice(ii, 1);
+                }
+            }
+        }
+    }
+
+    removeItemsForAllMenus = (itemNames: string[]) => {
+        for (let template of [this._template_editing_Canvas, this._template_editing_Widget, this._template_operating_Canvas, this._template_operating_Widget]) {
+            for (let ii = template.length - 1; ii >= 0; ii--) {
+                const entry = template[ii];
+                for (let itemName of itemNames) {
+                    if ((entry["label"] === itemName)) {
+                        template.splice(ii, 1);
+                    }
                 }
             }
         }
@@ -1651,6 +1686,7 @@ export class ContextMenuDesktop {
         type type_role = ('undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'pasteAndMatchStyle' | 'delete' | 'selectAll' | 'reload' | 'forceReload' | 'toggleDevTools' | 'resetZoom' | 'zoomIn' | 'zoomOut' | 'toggleSpellChecker' | 'togglefullscreen' | 'window' | 'minimize' | 'close' | 'help' | 'about' | 'services' | 'hide' | 'hideOthers' | 'unhide' | 'quit' | 'startSpeaking' | 'stopSpeaking' | 'zoom' | 'front' | 'appMenu' | 'fileMenu' | 'editMenu' | 'viewMenu' | 'shareMenu' | 'recentDocuments' | 'toggleTabBar' | 'selectNextTab' | 'selectPreviousTab' | 'showAllTabs' | 'mergeAllWindows' | 'clearRecentDocuments' | 'moveTabToNewWindow' | 'windowMenu');
         type type_type = ('normal' | 'separator' | 'submenu' | 'checkbox' | 'radio');
 
+
         // these utility windows should never be edited
         // if their editable bit in DisplayWindowAgent is true, then they should be able to "Save" in operating mode
         // The purpose of this "Save" is updating the settings 
@@ -1658,7 +1694,7 @@ export class ContextMenuDesktop {
             (widgetKey.includes("DataViewer") || widgetKey.includes("Probe") || widgetKey.includes("ChannelGraph") || widgetKey.includes("PvTable") || widgetKey.includes("PvMonitor") || widgetKey.includes("SeqGraph"))
         ) {
             // these utility windows should never be editable
-            this.removeItems(["Edit Display"]);
+            this.removeItemsForWidget(["Edit Display"]);
             // add Save even in operating mode
             let alreadyHasSaveDisplay = false;
             for (const entry of this._template_operating_Widget) {
@@ -1691,11 +1727,11 @@ export class ContextMenuDesktop {
             || widgetKey.includes("FileConverter")
             || widgetKey.includes("Terminal")) {
             // they have not state, the "Save Display As" is removed
-            this.removeItems(["Reload Display", "Save Display As", "Duplicate Display", "Copy PV Names", "Copy PV Values"]);
+            this.removeItemsForWidget(["Reload Display", "Save Display As", "Duplicate Display", "Copy PV Names", "Copy PV Values"]);
         } else if (widgetKey.includes("PvMonitor")
             || widgetKey.includes("TextEditor")) {
             // they are stateful, we should be able to save them
-            this.removeItems(["Reload Display", "Duplicate Display", "Copy PV Names", "Copy PV Values"]);
+            this.removeItemsForWidget(["Reload Display", "Duplicate Display", "Copy PV Names", "Copy PV Values"]);
         }
 
         // <input /> or <textarea /> element, show copy/paste/cut/redo/undo if they are focused
@@ -1747,7 +1783,7 @@ export class ContextMenuDesktop {
                 {
                     label: "Settings",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("widget-specific-action",{ widgetKey: widgetKey, actionName: "open-settings"});
+                        this.getDisplayWindowAgent().sendFromMainProcess("widget-specific-action", { widgetKey: widgetKey, actionName: "open-settings" });
                     },
                 },
                 { type: "separator" as type_type },

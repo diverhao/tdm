@@ -829,6 +829,11 @@ export type IpcEventArgType2 = {
         widgetHeight: number,
         resize: "none" | "crop" | "fit",
         tdlFileName: string,
+    },
+
+    "bounce-back": {
+        eventName: string,
+        data: any,
     }
 
 }
