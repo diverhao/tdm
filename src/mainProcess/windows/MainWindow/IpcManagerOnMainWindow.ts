@@ -347,7 +347,6 @@ export class IpcManagerOnMainWindow {
      * After the profile selected. The main process already prepared the EPICS context.
      */
     private _handleAfterProfileSelected = (event: any, data: IpcEventArgType3["after-profile-selected"]) => {
-        console.log("after profile selected ==============", data, this.getMainWindowClient().getProfiles())
         const { profileName } = data;
         this.getMainWindowClient().setSelectedProfileName(profileName);
         this.getMainWindowClient().setProfileRunPage(new MainWindowProfileRunPage(this.getMainWindowClient()));

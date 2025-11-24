@@ -109,6 +109,9 @@ export class MainProcess {
     // log stream for writing to file
     private _logStream: undefined | fs.WriteStream = undefined;
 
+    // we are connecting to ssh
+    private _connectingToSsh: boolean = false;
+
     constructor(
         // mainProcesses: MainProcesses,
         args: type_args,
@@ -331,7 +334,7 @@ export class MainProcess {
         if (this.getMainProcessMode() === "ssh-client") {
             const sshClient = this.getSshClient();
             if (sshClient !== undefined) {
-                sshClient.quit();
+                sshClient.destroy("");
             }
         }
 
@@ -601,6 +604,18 @@ export class MainProcess {
 
     getWebServer = () => {
         return this._webServer;
+    }
+
+    isConnectingToSsh = () => {
+        return this._connectingToSsh;
+    }
+
+    setConnectingToSsh = (newStatus: boolean) => {
+        this._connectingToSsh = newStatus;
+    }
+
+    setMainProcessMode = (newMode: "desktop" | "ssh-client") => {
+        this._mainProcessMode = newMode;
     }
 
 }

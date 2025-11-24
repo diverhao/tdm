@@ -203,25 +203,8 @@ export class ContextMenuDesktop {
                             }
                         }
                     );
-                } else if (mainProcessMode === "ssh-client") {
-                    const sshClient = this.getWindowAgentsManager().getMainProcess().getSshClient();
-                    if (sshClient !== undefined) {
-                        sshClient.routeToRemoteWebsocketIpcServer({
-                            windowId: this.getDisplayWindowAgent().getId(),
-                            eventName: "open-tdl-file",
-                            data: [{
-                                tdlFileNames: undefined, // open dialog
-                                mode: editable === true ? "editing" : "operating",
-                                editable: editable,
-                                macros: [],
-                                replaceMacros: false,
-                                // currentTdlFolder?: string;
-                                windowId: this.getDisplayWindowAgent().getId(),
-                            }]
-                        })
-                    }
                 } else {
-                    Log.error("0", "main process mode must be desktop or ssh-client");
+                    Log.error("0", "main process mode must be desktop");
                 }
             },
         },
@@ -1055,27 +1038,8 @@ export class ContextMenuDesktop {
                             }
                         }
                     );
-                } else if (mainProcessMode === "ssh-client") {
-                    // tell display window 
-                    const sshClient = this.getWindowAgentsManager().getMainProcess().getSshClient();
-                    if (sshClient !== undefined) {
-                        sshClient.routeToRemoteWebsocketIpcServer({
-                            windowId: this.getDisplayWindowAgent().getId(),
-                            eventName: "open-tdl-file",
-                            data: [{
-                                // tdlFileNames?: string[];
-                                mode: "operating",
-                                editable: editable,
-                                macros: [],
-                                replaceMacros: false,
-                                // currentTdlFolder?: string;
-                                windowId: this.getDisplayWindowAgent().getId(),
-                            }]
-                        })
-                    }
-
                 } else {
-                    Log.error("0", "main process mode must be desktop or ssh-client");
+                    Log.error("0", "main process mode must be desktop");
                 }
             },
 
@@ -1364,25 +1328,8 @@ export class ContextMenuDesktop {
                             }
                         }
                     );
-                } else if (mainProcessMode === "ssh-client") {
-                    const sshClient = this.getWindowAgentsManager().getMainProcess().getSshClient();
-                    if (sshClient !== undefined) {
-                        sshClient.routeToRemoteWebsocketIpcServer({
-                            windowId: this.getDisplayWindowAgent().getId(),
-                            eventName: "open-tdl-file",
-                            data: [{
-                                tdlFileNames: undefined, // open dialog
-                                mode: "editing",
-                                editable: editable,
-                                macros: [],
-                                replaceMacros: false,
-                                // currentTdlFolder?: string;
-                                windowId: this.getDisplayWindowAgent().getId(),
-                            }]
-                        })
-                    }
                 } else {
-                    Log.error("0", "main process mode must be desktop or ssh-client");
+                    Log.error("0", "main process mode must be desktop");
                 }
             },
 

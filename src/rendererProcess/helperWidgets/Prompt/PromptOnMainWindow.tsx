@@ -36,48 +36,17 @@ export class PromptOnMainWindow extends Prompt {
         const username: string = data["username"];
         const hostname: string = data["hostname"];
 
-        return (<this._ElementBackground>
-            <div>Input password for {username}@{hostname}</div>
-            <div style={{
-                fontSize: 12,
-                color: "rgba(150, 150, 150, 1)",
+        return (
+            <this._ElementBackground>
+                <div>Input password for {username}@{hostname}</div>
+                <div style={{
+                    fontSize: 12,
+                    color: "rgba(150, 150, 150, 1)",
 
-            }}>You have about 15 seconds to input the password.</div>
-            <this._ElementForm
-                handleSubmit={(event: any) => {
-                    event.preventDefault();
-                    this.getMainWindowClient().getIpcManager().sendFromRendererProcess("ssh-password-prompt-result", {
-                        password: password,
-                        sshMainProcessId: sshMainProcessId,
-                    })
-                    this.startEventListeners();
-                    this.removeElement();
-                }}
-                widthPercent={90}
-            >
-                <this._ElementInput
-                    autoFocus={true}
-                    value={password}
-                    handleChange={(event: any) => {
+                }}>You have about 15 seconds to input the password.</div>
+                <this._ElementForm
+                    handleSubmit={(event: any) => {
                         event.preventDefault();
-                        setPasword(event.target.value);
-                    }}
-                    type="password"
-                >
-                </this._ElementInput>
-            </this._ElementForm>
-            <div style={{
-                display: "inline-flex",
-                width: "100%",
-                flexDirection: 'row',
-                alignItems: "cener",
-                justifyContent: "center",
-                margin: 5,
-                userSelect: "none",
-            }}>
-                <ElementRectangleButton
-                    handleClick={(event: React.MouseEvent) => {
-                        // event.preventDefault();
                         this.getMainWindowClient().getIpcManager().sendFromRendererProcess("ssh-password-prompt-result", {
                             password: password,
                             sshMainProcessId: sshMainProcessId,
@@ -85,26 +54,58 @@ export class PromptOnMainWindow extends Prompt {
                         this.startEventListeners();
                         this.removeElement();
                     }}
-                    text={"Submit"}
+                    widthPercent={90}
                 >
-                    Submit
-                </ElementRectangleButton>
-                &nbsp; &nbsp; &nbsp; &nbsp;
-                <ElementRectangleButton
-                    handleClick={(event: React.MouseEvent) => {
-                        // event.preventDefault();
-                        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("ssh-password-prompt-result", {
-                            password: "",
-                            sshMainProcessId: sshMainProcessId,
-                        })
-                        this.startEventListeners();
-                        this.removeElement();
-                    }}
-                >
-                    Cancel
-                </ElementRectangleButton>
-            </div>
-        </this._ElementBackground>)
+                    <this._ElementInput
+                        autoFocus={true}
+                        value={password}
+                        handleChange={(event: any) => {
+                            event.preventDefault();
+                            setPasword(event.target.value);
+                        }}
+                        type="password"
+                    >
+                    </this._ElementInput>
+                </this._ElementForm>
+                <div style={{
+                    display: "inline-flex",
+                    width: "100%",
+                    flexDirection: 'row',
+                    alignItems: "cener",
+                    justifyContent: "center",
+                    margin: 5,
+                    userSelect: "none",
+                }}>
+                    <ElementRectangleButton
+                        handleClick={(event: React.MouseEvent) => {
+                            // event.preventDefault();
+                            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("ssh-password-prompt-result", {
+                                password: password,
+                                sshMainProcessId: sshMainProcessId,
+                            })
+                            this.startEventListeners();
+                            this.removeElement();
+                        }}
+                        text={"Submit"}
+                    >
+                        Submit
+                    </ElementRectangleButton>
+                    &nbsp; &nbsp; &nbsp; &nbsp;
+                    <ElementRectangleButton
+                        handleClick={(event: React.MouseEvent) => {
+                            // event.preventDefault();
+                            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("ssh-password-prompt-result", {
+                                password: "",
+                                sshMainProcessId: sshMainProcessId,
+                            })
+                            this.startEventListeners();
+                            this.removeElement();
+                        }}
+                    >
+                        Cancel
+                    </ElementRectangleButton>
+                </div>
+            </this._ElementBackground>)
 
     }
 

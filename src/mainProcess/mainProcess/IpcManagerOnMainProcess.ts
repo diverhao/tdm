@@ -143,6 +143,7 @@ export class IpcManagerOnMainProcess {
                 || eventName === "close-iframe-display"
                 || eventName === "bring-up-main-window"
                 || eventName === "websocket-ipc-connected-on-main-window"
+                || eventName === "ssh-password-prompt-result"
             ) {
                 const eventListeners = mainProcess.getIpcManager().getEventListeners();
                 const callback = eventListeners[eventName];
@@ -153,7 +154,6 @@ export class IpcManagerOnMainProcess {
                 }
                 return;
             } else {
-
                 let fullWindowId = windowId;
                 // same as desktoip or web mode, always register the websocket client
                 // also forward the message to to ssh server, so that the window can be registered
@@ -538,7 +538,7 @@ export class IpcManagerOnMainProcess {
 
 
     handleWebsocketIpcConnectedOnMainWindow = (event: any, data: IpcEventArgType["websocket-ipc-connected-on-main-window"]) => {
-        console.log("handleWebsocketIpcConnectedOnMainWindow ---------------************")
+
         // the main processes' ipc manager
         const ipcManager = this.getMainProcess().getIpcManager();
         const mainProcess = this.getMainProcess();
@@ -949,7 +949,6 @@ export class IpcManagerOnMainProcess {
      * (3) tell main window to show this profile's page, like this.handleProfileSelected(). Ignore command line parameters. <br>
      *
      */
-
     handleBringUpMainWindow = async (event: any, options: IpcEventArgType["bring-up-main-window"]) => {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         let mainWindowAgent = windowAgentsManager.getMainWindowAgent();
@@ -996,6 +995,12 @@ export class IpcManagerOnMainProcess {
         }
     };
 
+    /**
+     * Try to close the window GUI. 
+     * 
+     * This is the first step in closing a window. 
+     * All the related data are handled in later events emitted by BrowserWindow such as "window-will-be-closed"
+     */
     handleCloseWindow = async (event: any, options: IpcEventArgType["close-window"]) => {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const windowAgent = windowAgentsManager.getAgent(options["displayWindowId"]);
@@ -1713,7 +1718,7 @@ export class IpcManagerOnMainProcess {
      * @param sendContentsToWindow whether to send file back to display window, only used by .db 
      */
     handleOpenTdlFiles = (event: any, data: IpcEventArgType["open-tdl-file"]) => {
-        console.log("      >>>>>>>", data)
+
         const { options } = data;
         let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
