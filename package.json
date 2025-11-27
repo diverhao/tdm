@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2025-11-23T23:28:18Z",
+    "buildDate": "2025-11-27T06:02:24Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",

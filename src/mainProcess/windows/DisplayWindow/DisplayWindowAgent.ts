@@ -49,7 +49,7 @@ export class DisplayWindowAgent {
     /**
      * Browser window object
      */
-    private _browserWindow: BrowserWindow | undefined;
+    private _browserWindow: any; //BrowserWindow | undefined;
 
     /**
      * The CA channels (`CaChannelAgent`) this display window has. <br>
@@ -1346,7 +1346,7 @@ export class DisplayWindowAgent {
                     Log.info("Save screenshot to", imageFileName);
                 }
             });
-        }).catch((err) => {
+        }).catch((err: any) => {
             Log.error("0", err)
             this.sendFromMainProcess("dialog-show-message-box",
                 {
@@ -1739,7 +1739,7 @@ export class DisplayWindowAgent {
             app.focus({ steal: true });
             const window = new BrowserWindow(windowOptions);
             this._browserWindow = window;
-            this._browserWindow.webContents.setWindowOpenHandler(({ url }) => {
+            this._browserWindow.webContents.setWindowOpenHandler(({ url }: any) => {
                 Log.debug("0", `open new window ${url}`);
                 return { action: "allow" };
             });
@@ -1769,7 +1769,7 @@ export class DisplayWindowAgent {
             // context menu for editable element, e.g. input box, to show cut/copy/paste options
             // see https://www.electronjs.org/docs/latest/api/menu-item
             // this is the the 2nd place that listens to events from renderer process other than the IpcManagerOnMainProcess
-            this._browserWindow.webContents.on("context-menu", (_, props) => {
+            this._browserWindow.webContents.on("context-menu", (_: any, props: any) => {
                 const menu = new Menu();
                 if (props.isEditable) {
                     menu.append(new MenuItem({ label: "Cut", role: "cut" }));

@@ -1,4 +1,4 @@
-import { app, Menu } from "electron";
+import { app } from "electron";
 import { WindowAgentsManager } from "../windows/WindowAgentsManager";
 import { IpcManagerOnMainProcess } from "./IpcManagerOnMainProcess";
 import { ChannelAgentsManager } from "../channel/ChannelAgentsManager";
@@ -94,9 +94,6 @@ export class MainProcess {
     // web server for web mode, in non-web mode, this is undefined
     private _webServer: WebServer | undefined = undefined;
 
-    // gui
-    // menubar on top of the window or top of the screen, it only shows in desktop mode
-    private _applicationMenu: ApplicationMenu;
     // fonts available on the local system
     private _localFontNames: string[] = [];
 
@@ -125,8 +122,6 @@ export class MainProcess {
         // websocket opener server
         this._wsOpenerServer = new WsOpenerServer(this, args["attach"], args["flexibleAttach"]);
 
-        // Create a custom menu template
-        this._applicationMenu = new ApplicationMenu(this);
 
 
         // profiles
@@ -140,9 +135,14 @@ export class MainProcess {
             this._webServer = new WebServer(this, args["httpServerPort"]);
         } else if (args["mainProcessMode"] === "desktop") {
             // only show in desktop mode
-            this.getApplicationMenu().createApplicationMenu()
+            // Create a custom menu template
+            // menubar on top of the window or top of the screen, it only shows in desktop mode
+            const applicationMenu = new ApplicationMenu(this);
+            applicationMenu.createApplicationMenu()
         } else if (args["mainProcessMode"] === "ssh-server") {
         } else if (args["mainProcessMode"] === "ssh-client") {
+            const applicationMenu = new ApplicationMenu(this);
+            applicationMenu.createApplicationMenu()
         } else {
             throw new Error(`Unrecognized mode ${args["mainProcessMode"]}`);
         }
@@ -171,11 +171,15 @@ export class MainProcess {
         this._windowAgentsManager = new WindowAgentsManager(this);
 
         // ignore ssl error
-        app.commandLine.appendSwitch("ignore-certificate-errors");
-        app.commandLine.appendSwitch("allow-insecure-localhost", "true");
+        if (this.getMainProcessMode() !== "ssh-server") {
+            app.commandLine.appendSwitch("ignore-certificate-errors");
+            app.commandLine.appendSwitch("allow-insecure-localhost", "true");
+        }
 
-        this.readLocalFontNames();
-        this.enableLogToFile();
+        if (this.getMainProcessMode() !== "ssh-server") {
+            this.readLocalFontNames();
+            this.enableLogToFile();
+        }
 
         // main process mode specific initializations
         // 4 modes: ssh-client, desktop, web, and ssh-server mode
@@ -230,19 +234,14 @@ export class MainProcess {
             })
         } else if (this.getMainProcessMode() === "ssh-server") {
             /**
-             * (1) wait for the app ready, 
-             * (2) create ssh server,  self destruction count down until tcp server heartbeat starts to run
-             * (3) create main window, the callback will run after the profile is selected from client side
+             * (1) create ssh server,  self destruction count down until tcp server heartbeat starts to run
+             * (2) create main window, the callback will run after the profile is selected from client side
              */
 
             // (1)
-            app.whenReady().then(async () => {
-                // (2)
-                console.log("creating ssh server on tdm")
-                this.getIpcManager().createSshServer();
-                // (3)
-                await this.getWindowAgentsManager().createMainWindow();
-            })
+            this.getIpcManager().createSshServer();
+            // (2)
+            this.getWindowAgentsManager().createMainWindow();
         } else {
             // no such mode
             Log.error("No such a mode", this.getMainProcessMode(), "Quit ...")
@@ -556,11 +555,7 @@ export class MainProcess {
     setEdlFileConverterThread = (newEdlFileConverterThread: EdlFileConverterThread) => {
         this._edlFileConverterThread = newEdlFileConverterThread;
     }
-
-    getApplicationMenu = () => {
-        return this._applicationMenu;
-    }
-
+    
     getLocalFontNames = () => {
         return this._localFontNames;
     }
