@@ -211,7 +211,8 @@ export class Label extends BaseWidget {
         } else {
             try {
                 // the "GroupSelection2" may have not been created yet
-                const macros = (g_widgets1.getWidget2("Canvas") as Canvas).getAllMacros();
+                // const macros = (g_widgets1.getWidget2("Canvas") as Canvas).getAllMacros();
+                const macros = this.getAllMacros();
                 // "\\n" is "\n"
                 // expand with channel name
                 const expandedText = BaseWidget.expandChannelName(rawText, macros, true).replaceAll("\\n", "\n");

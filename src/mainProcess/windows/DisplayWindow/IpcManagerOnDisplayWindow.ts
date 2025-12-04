@@ -327,9 +327,9 @@ export class IpcManagerOnDisplayWindow {
 
             const canvasBackgroundColor = canvasWidgetTdl["style"]["backgroundColor"];
             let canvasMacros = canvasWidgetTdl["macros"];
-            // this the previous macros and this TDL's macros
-            let allMacros = [...canvasMacros, ...macros];
-
+            // it contains (1) item macros passed along from EmbeddedDisplay widget, e.g. the item macros in EmbeddedDisplay 
+            //             (2) the macros defined in Canvas of the TDL file
+            let allMacros = [...macros, ...canvasMacros];
 
             embeddedDisplayWidget.setFullTdlFileName(fullTdlFileName);
 
@@ -357,6 +357,8 @@ export class IpcManagerOnDisplayWindow {
                     // (5)
                     const widget = g_widgets1.createWidget(widgetTdl, false);
                     if (widget instanceof BaseWidget) {
+                        // (5.1)
+                        widget.setMacros(allMacros);
                         // (6)
                         widget.setEmbeddedDisplayWidgetKey(embeddedDisplayWidgetKey);
                         embeddedDisplayWidget.appendChildWidgetKey(newWidgetKey);

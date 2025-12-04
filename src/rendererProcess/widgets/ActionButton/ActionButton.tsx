@@ -590,7 +590,7 @@ export class ActionButton extends BaseWidget {
 
     getButtonText = () => {
         const rawText = this.getAllText()["text"];
-        const macros = (g_widgets1.getWidget2("Canvas") as Canvas).getAllMacros();
+        const macros = this.getAllMacros();
         // "\\n" is "\n"
         const result = BaseWidget.expandChannelName(rawText, macros, true).replaceAll("\\n", "\n");
         return result;

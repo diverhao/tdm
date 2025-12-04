@@ -212,6 +212,8 @@ export abstract class BaseWidget {
         return this._channelNamesLevel4;
     }
 
+    _macros: [string, string][] = [];
+
     constructor(widgetTdl: type_BaseWidget_tdl) {
         // these 2 properties must exist
         this._type = widgetTdl.type;
@@ -1350,8 +1352,8 @@ export abstract class BaseWidget {
             const errMsg = "No Canvas widget";
             throw new Error(errMsg);
         }
-        const macros = [...canvas.getAllMacros(), ...widgetMacros];
-
+        // const macros = [...widgetMacros, ...canvas.getAllMacros()];
+        const macros = this.getAllMacros();
 
         // ------------ level 1 --------------
         // (1) formula channel name or regular channel name
@@ -1670,29 +1672,17 @@ export abstract class BaseWidget {
                 let tmp0 = this.extractLocalChannelName(strTmp);
                 let tmp1 = tmp0.replace(/@.*/, "") + `@window_${displayWindowId}`;
                 strTmp = strTmp.replace(tmp0, tmp1);
-                // strTmp = strTmp.replace(/@.*/, "");
-                // strTmp = strTmp + `@window_${displayWindowId}`;
             }
-            while (strTmp.match(/\$[\(|\{]([0-9a-zA-Z\-_:\.\[\]<>\;]+)[\)|\}]/g) !== null) {
-                strTmp = strTmp.replace(/\$[\(|\{]([0-9a-zA-Z\-_:\.\[\]<>\;]+)[\)|\}]/g, (strSegment: string) => {
-                    const name = strSegment.replace("$", "").replace("{", "").replace("}", "").replace("(", "").replace(")", "");
-                    const names = macros1.map((item: [string, string]) => {
-                        return item[0];
-                    });
-                    const values = macros1.map((item: [string, string]) => {
-                        return item[1];
-                    });
-                    // 1st index that matches
-                    const index = names.indexOf(name);
-                    if (index > -1) {
-                        return macros1[index][1];
-                    } else {
-                        return strSegment;
-                    }
-                });
-                count++;
-                if (count > 10) {
-                    Log.info("Reached loop limit, quit");
+
+            // loop no more than 10 times, this is practically enough for a value of macro is macro, 
+            // like [["ABC", "$(DEF)"], ["DEF", "$(GHI)"], ["GHI", "Ring"]]
+            for (let ii = 0; ii < 10; ii++) {
+                for (const macro of macros) {
+                    const name = macro[0];
+                    const value = macro[1];
+                    strTmp = strTmp.replaceAll("${" + name + "}", value).replaceAll("$(" + name + ")", value);
+                }
+                if ((!strTmp.includes("(")) && (!strTmp.includes("(")) && (!strTmp.includes("{")) && (!strTmp.includes("}"))) {
                     break;
                 }
             }
@@ -1706,8 +1696,58 @@ export abstract class BaseWidget {
 
     // ------------------------- getters ----------------------------------------
 
+
+    /**
+     * Get all macros for this widget.
+     * 
+     * TDM does not provide macros option for a widget, a widget's macros come from (Priority high to low:)
+     *  (1) the user-provided, stored in Root
+     *  (2) upper-level provided, for now, it is only servicing widgets inside EmbeddedDisplay,
+     *      e.g. passed down from EmbeddedDisplay widget's item macros, or
+     *      the Canvas macros defined in TDL file
+     *      it is obtain via BaseWidget.getMacros()
+     *  (3) the Canvas definition, stored in Canvas
+     * 
+     * Higher priority macros appears first
+     */
+    getAllMacros = () => {
+
+        const canvas = g_widgets1.getWidget("Canvas");
+        if (!(canvas instanceof Canvas)) {
+            return [];
+        }
+        const canvasMacros = canvas.getMacros();
+
+        // user-provided macros, may contain the parent window macros
+        const externalMacros = g_widgets1.getRoot().getExternalMacros();
+
+        // the BaseWidget.expandChannelName() picks the macro that appears first in macros array
+        return [...externalMacros, ...this.getMacros(), ...canvasMacros];
+    }
+
+
+
+    /**
+     * get widget-specific macros. For now, it is only servicing widgets inside EmbeddedDisplay TDL file
+     * 
+     * If this widget is not inside any EmbeddedDisplay, then the _macros should be empty
+     * 
+     * If this widget is inside an EmbeddedDisplay, its _macros contains
+     *  - the EmbeddedDisplay widget's item macros
+     *  - the Canvas macros defined in the EmbeddedDisplay widget's TDL file
+     * 
+     * If this widget is an EmbeddedDisplay widget, its _macros is passed 
+     * down to all the widgets in its TDL file. This work is done in "read-embedded-display-tdl" event's request and reply
+     */
+    getMacros = () => {
+        return this._macros;
+    }
+
+    setMacros = (newMacros: [string, string][]) => {
+        this._macros = newMacros;
+    }
+
     _getElementAreaRawOutlineStyle = (): string => {
-        // console.log("======================", this.getAllText()["invisibleInOperation"])
         // if (!g_widgets1.isEditing() && this.getAllText()["invisibleInOperation"]) {
         //     return AlarmOutlineStyle[ChannelSeverity.NO_ALARM];
         // }

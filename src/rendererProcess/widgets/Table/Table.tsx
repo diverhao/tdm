@@ -58,7 +58,7 @@ export class Table extends BaseWidget {
     // _itemNames: string[];
     // _itemBackgroundColors: string[];
     _widgetKeys: string[];
-    _macros: [string, string][][] = [];
+    _tabMacros: [string, string][][] = [];
 
     // _allWidgetKeys: string[] = [];
     // _tmp_itemBackgroundColor = "rgba(0,0,0,0.14159265358979323846264338327)";
@@ -223,7 +223,7 @@ export class Table extends BaseWidget {
      * [[["SYS", "RNG"], ["SUBSYS", "BPM"]], [["SYS", "BST"], ["SUBSYS", "BLM"]]] --> "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM"
      */
     serializeMacros = () => {
-        const macros = this.getMacros();
+        const macros = this.getTabMacros();
         let result: string = "";
         for (const rowMacros of macros) {
             const rowMacrosStr = GlobalMethods.serializeMacros(rowMacros);
@@ -553,7 +553,7 @@ export class Table extends BaseWidget {
         tdl["Canvas"] = canvsWidgetTdl;
 
         // create widgets Tdl
-        for (let ii = 0; ii < this.getMacros().length; ii++) {
+        for (let ii = 0; ii < this.getTabMacros().length; ii++) {
             for (const widgetTdlOriginal of templateWidgetsTdls) {
 
                 const widgetTdl = JSON.parse(JSON.stringify(widgetTdlOriginal));
@@ -574,8 +574,8 @@ export class Table extends BaseWidget {
                     throw new Error(errMsg);
                 }
 
-                if (this.getMacros()[ii] !== undefined) {
-                    const macros = [...canvas.getAllMacros(), ...this.getMacros()[ii]];
+                if (this.getTabMacros()[ii] !== undefined) {
+                    const macros = [...this.getTabMacros()[ii], ...this.getAllMacros()];
 
                     if (macros !== undefined && macros.length > 0) {
 
@@ -607,7 +607,7 @@ export class Table extends BaseWidget {
 
                                 if (action["type"] === "OpenDisplay") {
                                     action["fileName"] = BaseWidget.expandChannelName(action["fileName"], macros, true);
-                                    action["externalMacros"] = [...this.getMacros()[ii], ...action["externalMacros"]];
+                                    action["externalMacros"] = [...this.getTabMacros()[ii], ...action["externalMacros"]];
                                 } else if (action["type"] === "WritePV") {
                                     action["channelName"] = BaseWidget.expandChannelName(action["channelName"], macros, true);
                                     action["channelValue"] = BaseWidget.expandChannelName(action["channelValue"], macros, true);
@@ -753,7 +753,7 @@ export class Table extends BaseWidget {
         // result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
         // result["itemBackgroundColors"] = JSON.parse(JSON.stringify(this.getItemBackgroundColors()));
         result["widgetKeys"] = JSON.parse(JSON.stringify(this.getWidgetKeys()));
-        result["macros"] = JSON.parse(JSON.stringify(this.getMacros()));
+        result["macros"] = JSON.parse(JSON.stringify(this.getTabMacros()));
         return result;
     }
 
@@ -798,12 +798,12 @@ export class Table extends BaseWidget {
         return this._widgetKeys;
     };
 
-    getMacros = () => {
-        return this._macros;
+    getTabMacros = () => {
+        return this._tabMacros;
     }
 
-    setMacros = (newMacros: [string, string][][]) => {
-        this._macros = newMacros;
+    setTabMacros = (newMacros: [string, string][][]) => {
+        this._tabMacros = newMacros;
     }
 
     // ---------------------- setters -------------------------

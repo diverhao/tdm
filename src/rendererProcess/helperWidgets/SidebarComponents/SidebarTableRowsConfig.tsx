@@ -36,7 +36,7 @@ export class SidebarTableRowsConfig extends SidebarComponent {
                                 `Each row in below input box represents a row in the Table. The macros should be in form of SYS=RNG, SUBSYS=BPM`,
                                 (macrosStr: string) => {
                                     const macros = mainWidget.deserializeMacros(macrosStr);
-                                    mainWidget.setMacros(macros);
+                                    mainWidget.setTabMacros(macros);
                                     this.updateWidget(undefined);
                                 }
                             )
