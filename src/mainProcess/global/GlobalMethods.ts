@@ -107,6 +107,12 @@ export const getCurrentDateTimeStr = (useAsFileName: boolean = false) => {
  *          `false` if there is no existing TDM instance running
  */
 export const openTdlInFirstExistingInstance = (args: type_args): boolean => {
+
+    const mainProcessMode = args["mainProcessMode"];
+    if (mainProcessMode === "ssh-server") {
+        return false;
+    }
+
     const isFirstInstance = app.requestSingleInstanceLock();
     if (isFirstInstance === true) {
         // (1)
@@ -199,9 +205,18 @@ export const openTdlInSpecificExistingInstance = async (args: type_args): Promis
  * opened in MacOS file manager, and to "second-instance" for TDL files opened in
  * Linux and Windows file managers.
  * 
+ * If in "ssh-server" mode, only create main process
+ * 
  * @param args The command line arguments for the new TDM instance.
  */
 export const openTdlInNewInstance = (args: type_args) => {
+
+    const mainProcessMode = args["mainProcessMode"];
+
+    if (mainProcessMode === "ssh-server") {
+        const mainProcess = new MainProcess(args, cmdLineCallback, mainProcessMode, undefined);
+        return;
+    }
 
     /**
      * Only emitted on MacOS when double click the TDL file in Finder
@@ -256,7 +271,6 @@ export const openTdlInNewInstance = (args: type_args) => {
         }
     });
 
-    const mainProcesMode = args["mainProcessMode"];
     const mainProcess = new MainProcess(args, cmdLineCallback, mainProcesMode, undefined);
 }
 
@@ -328,6 +342,8 @@ export function isStartedFromShell() {
 
 /**
  * if the TDL file is opened in GUI file manager in Linux or Windows, modify `args["attach"]` to -2
+ * 
+ * if the main process mode is "ssh-server", change attach to -1
  */
 export const processArgsAttach = (args: type_args) => {
     /**
@@ -343,6 +359,10 @@ export const processArgsAttach = (args: type_args) => {
             args["attach"] = -2; // -2 means we are trying to open file from file manager
         }
     }
+
+    if (args["mainProcessMode"] === "ssh-server") {
+        args["attach"] = -1;
+    }
 }
 
 /**
@@ -357,6 +377,12 @@ export const processArgsAttach = (args: type_args) => {
  * (4) if already selected a profile, then ignore the requested profile
  */
 export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainProcess: MainProcess, args?: type_args) => {
+
+    const mainProcesMode = mainProcess.getMainProcessMode();
+
+    if (mainProcesMode === "ssh-server") {
+        return;
+    }
 
     // (1)
     if (path.isAbsolute(filePath) === false && args === undefined) {

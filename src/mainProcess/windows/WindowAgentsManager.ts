@@ -1,6 +1,6 @@
 import { MainWindowAgent } from "./MainWindow/MainWindowAgent";
 import { DisplayWindowAgent } from "./DisplayWindow/DisplayWindowAgent";
-import { dialog, app, BrowserWindow, Menu, MenuItem } from "electron";
+import { app, Menu } from "electron";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { v4 as uuid } from "uuid";
 import { UtilityWindow } from "./UtilityWindow/UtilityWindow";
@@ -799,7 +799,7 @@ export class WindowAgentsManager {
      * (3) a BrowserWindow is closed
      */
     setDockMenu = () => {
-        if (process.platform === "darwin") {
+        if (process.platform === "darwin" && this.getMainProcess().getMainProcessMode() !== "ssh-server") {
             const menuItems: (Electron.MenuItem | Electron.MenuItemConstructorOptions)[] = [];
 
             for (let windowAgent of Object.values(this._agents)) {

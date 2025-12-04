@@ -1,4 +1,3 @@
-import { app } from "electron";
 import path from "path";
 import os from "os";
 import { defaultWebServerPort } from "../global/GlobalVariables";
@@ -66,9 +65,11 @@ Options:
         };
 
         // the process.argv is different for development mode and packaged TDM
-        let ii0 = 2;
-        if (app.isPackaged) {
-            ii0 = 1;
+        // in development mode: ["/path/to/Electron", ".", ...other-args]
+        // after packaging: ["/path/to/tdm", ...other-args]
+        let ii0 = 1;
+        if (argv[1] === ".") {
+            ii0 = 2;
         }
 
         try {
@@ -81,7 +82,7 @@ Options:
                     // this.printHelp();
                     // exit the application, 
                     // do not use app.quit(), that will continue the electron for a while
-                    app.exit();
+                    process.exit();
                 } else if (arg === dashdashSettings) {
                     ii++;
                     result["settings"] = this.parseSettings(argv[ii]);
@@ -239,11 +240,12 @@ Options:
         // "--attach abcd"
         // return -1;
         Log.fatal("-1", `Wrong --attach argument ${portRawStr}, quit TDM.`);
-        app.quit();
+        process.exit();
         return -1;
     };
 
     static printTdmBanner = () => {
+
         const aboutInfo = generateAboutInfo();
         console.log(`
 -----------------------------------------------

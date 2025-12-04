@@ -16,7 +16,7 @@ import { IpcEventArgType2, IpcEventArgType3 } from "../../mainProcess/IpcEventAr
 export class MainWindowAgent {
     private _id: string = "";
     private _windowAgentsManager: WindowAgentsManager;
-    private _browserWindow: BrowserWindow | undefined;
+    private _browserWindow: any; // BrowserWindow | undefined;
     // private _mainProcessId: string;
     readyToClose: boolean = false;
 
@@ -264,6 +264,9 @@ export class MainWindowAgent {
     };
 
     focus = () => {
+        if (this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "ssh-server") {
+            return;
+        }
         const browserWindow = this.getBrowserWindow();
         if (browserWindow instanceof BrowserWindow) {
             if (browserWindow.isMinimized()) {
@@ -276,6 +279,10 @@ export class MainWindowAgent {
     };
 
     showContextMenu = (menu: ("copy" | "cut" | "paste")[]) => {
+        if (this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "ssh-server") {
+            return;
+        }
+
         let contextMenuTemplate: (Electron.MenuItem | Electron.MenuItemConstructorOptions)[] = [];
         if (menu.includes("copy")) {
             contextMenuTemplate.push(
@@ -366,29 +373,6 @@ export class MainWindowAgent {
     getBrowserWindow = (): BrowserWindow | undefined => {
         return this._browserWindow;
     };
-
-    // getMainProcessId = () => {
-    //     return this._mainProcessId;
-    // };
-
-    // getRendererWindowStatus = (): "editing" | "operating" => {
-    // 	return "editing";
-    // };
-
-    // // tdl and channel related
-    // getTdlPath() {
-    // 	return "";
-    // }
-    // setTdl = () => {};
-    // getTdl = (): undefined => {
-    // 	return undefined;
-    // };
-    // hasChannel = (channelName: string): boolean => {
-    // 	return false;
-    // };
-    // getChannelNames = (): string[] => {
-    // 	return [];
-    // };
 
 
     showAboutTdm = () => {
