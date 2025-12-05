@@ -65,7 +65,7 @@ export class SshClient {
         // this.tdmCmd = `export DISPLAY=:99; ` + sshServerConifg["tdmCommand"];
         // this.tdmCmd = `export DISPLAY=:99; ` + "/home/haohao/linux-arm64-unpacked/tdm --main-process-mode ssh-server";
         this._tdmCmd = `export DISPLAY=:99; ` + "cd /Users/haohao/tdm; npm start -- --settings /Users/haohao/profiles.json --attach -1 --main-process-mode ssh-server";
-        this._tdmCmd = `export DISPLAY=:99; ifconfig;` + "/home/1h7/linux-unpacked/tdm -- --attach -1 --main-process-mode ssh-server";
+        this._tdmCmd = `export DISPLAY=:99; ` + "cd /Users/haohao/tdm; node dist/mainProcess/startMainProcess.js  --main-process-mode ssh-server --settings /Users/haohao/profiles.json";
 
         mainProcess.setConnectingToSsh(true);
         mainProcess.setMainProcessMode("ssh-client");

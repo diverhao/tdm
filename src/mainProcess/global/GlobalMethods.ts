@@ -271,11 +271,8 @@ export const openTdlInNewInstance = (args: type_args) => {
         }
     });
 
-    const mainProcess = new MainProcess(args, cmdLineCallback, mainProcesMode, undefined);
+    const mainProcess = new MainProcess(args, cmdLineCallback, mainProcessMode, undefined);
 }
-
-
-
 
 function getParentProcessName() {
     if (process.platform === "win32") {

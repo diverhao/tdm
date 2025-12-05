@@ -53,6 +53,22 @@ import { defaultWebsocketOpenerServerPort } from "./global/GlobalVariables";
  * load command line arguments
  */
 const args: type_args = ArgParser.parseArgs(process.argv, site);
+if (args["mainProcessMode"] !== "ssh-server") {
+    /**
+     * Print TDM banner in command line. 
+     * 
+     * It includes version number, build date, and the commit hash of the current version. It also provides a
+     * help on how to use TDM.
+     */
+    ArgParser.printTdmBanner();
+
+    /**
+     * `true` for the first TDM instance 
+     * 
+     * `false` for the later TDM instances
+     */
+    app.requestSingleInstanceLock();
+}
 
 if (args["mainProcessMode"] !== "ssh-server") {
     /**
@@ -118,3 +134,4 @@ if (args["attach"] === -1) {
     Log.fatal('-1', `Wrong args["attach"] value ${args["attach"]}`);
     process.exit()
 }
+

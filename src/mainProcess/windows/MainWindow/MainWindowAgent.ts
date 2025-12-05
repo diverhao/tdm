@@ -83,6 +83,7 @@ export class MainWindowAgent {
         const mainProcesMode = this.getWindowAgentsManager().getMainProcess().getMainProcessMode();
 
         if (mainProcesMode === "ssh-server") {
+            console.log(" >>>>>>>>>>>>>> do nothing")
             // do nothing, wait for update-profiles-in-main-window
         } else if (mainProcesMode === "ssh-client" || mainProcesMode === "desktop") {
 
