@@ -1708,7 +1708,7 @@ export abstract class BaseWidget {
      *      it is obtain via BaseWidget.getMacros()
      *  (3) the Canvas definition, stored in Canvas
      * 
-     * Higher priority macros appears first
+     * 
      */
     getAllMacros = () => {
 
@@ -1716,12 +1716,13 @@ export abstract class BaseWidget {
         if (!(canvas instanceof Canvas)) {
             return [];
         }
+        // macros defined in Canvas
         const canvasMacros = canvas.getMacros();
 
         // user-provided macros, may contain the parent window macros
         const externalMacros = g_widgets1.getRoot().getExternalMacros();
 
-        // the BaseWidget.expandChannelName() picks the macro that appears first in macros array
+        // Higher priority macros appears first
         return [...externalMacros, ...this.getMacros(), ...canvasMacros];
     }
 

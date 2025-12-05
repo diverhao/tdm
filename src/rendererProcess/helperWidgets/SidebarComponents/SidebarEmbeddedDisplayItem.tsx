@@ -6,6 +6,7 @@ import { g_flushWidgets } from "../Root/Root";
 import { ElementButton, ElementMacrosTable } from "../SharedElements/MacrosTable";
 import { ElementMacroInput, ElementMacroTd, ElementMacroTr } from "../SharedElements/MacrosTable";
 import path from "path";
+import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 
 export class SidebarEmbeddedDisplayItem {
     _items: SidebarEmbeddedDisplayItems;
@@ -72,19 +73,38 @@ export class SidebarEmbeddedDisplayItem {
                                 onClick={(event: any) => {
                                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                     const displayWindowId = displayWindowClient.getWindowId();
+                                    const mainWidget = this.getMainWidget();
 
-                                    let currentTdlFolder = path.dirname(tdlFileName);
-                                    if (!path.isAbsolute(currentTdlFolder)) {
-                                        const parentTdlFileName = g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName();
-                                        currentTdlFolder = path.dirname(parentTdlFileName);
+                                    const allMacros = mainWidget.getAllMacros();
+                                    const itemMacros = mainWidget.getItemMacros()[this.getIndex()];
+                                    const macros = [...itemMacros, ...allMacros];
+
+                                    let tdlFileName = mainWidget.getTdlFileNames()[this.getIndex()];
+                                    // the tdl file name is expanded based on the macros for this EmbeddedDisplay widget
+                                    // the itemMacros is for the child tdl 
+                                    tdlFileName = BaseWidget.expandChannelName(tdlFileName, allMacros);
+
+                                    let currentTdlFolder = path.dirname(g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName());
+
+                                    // if this EmbeddedDisplay is inside another EmbeddedDisplay
+                                    // use the parent EmbeddedDisplay's path
+                                    if (mainWidget.getEmbeddedDisplayWidgetKey() !== "") {
+                                        const parentWidget = g_widgets1.getWidget(mainWidget.getEmbeddedDisplayWidgetKey());
+                                        if (parentWidget instanceof EmbeddedDisplay) {
+                                            const parentFullTdlFileName = parentWidget.getFullTdlFileName();
+                                            if (parentFullTdlFileName !== "") {
+                                                currentTdlFolder = path.dirname(parentFullTdlFileName);
+                                            }
+                                        }
                                     }
+
                                     displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file", {
                                         options: {
                                             // tdl?: type_tdl;
                                             tdlFileNames: [tdlFileName],
                                             mode: "operating",
                                             editable: true,
-                                            macros: [],
+                                            macros: macros,
                                             replaceMacros: true,
                                             currentTdlFolder: currentTdlFolder,
                                             windowId: displayWindowId,
@@ -240,7 +260,6 @@ export class SidebarEmbeddedDisplayItem {
                     </form>
                 </div>
                 {mainWidget.getItemIsWebpage()[this.getIndex()] === true ? null : <this._ElementMacros></this._ElementMacros>}
-                {mainWidget.getItemIsWebpage()[this.getIndex()] === true ? null : <this._ElementUseParentMacros></this._ElementUseParentMacros>}
                 <div>&nbsp;</div>
             </this._BlockBody>
         );
@@ -271,51 +290,6 @@ export class SidebarEmbeddedDisplayItem {
             return false;
         }
     }
-
-
-    _ElementUseParentMacros = () => {
-        const [useParentMacros, setUseParentMacros] = React.useState(this.getMainWidget().getText()["useParentMacros"]);
-
-        return (
-            <form
-                style={{
-                    display: "inline-flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                }}
-            // onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, invisibleInOperation)} style={this.getFormStyle()}
-            >
-                <div>Use Parent Macros:</div>
-                <input
-                    type="checkbox"
-                    checked={useParentMacros}
-                    onChange={(event: any) => {
-                        // do not preventDefault()
-
-                        const oldVal = this.getMainWidget().getText()["useParentMacros"];
-                        const propertyValue = !useParentMacros;
-                        if (propertyValue === oldVal) {
-                            return;
-                        } else {
-                            this.getMainWidget().getText()["useParentMacros"] = propertyValue;
-                        }
-
-                        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-                        history.registerAction();
-
-                        g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                        g_flushWidgets();
-
-                        setUseParentMacros((prevVal: boolean) => {
-                            return !prevVal;
-                        });
-                    }}
-                />
-            </form>
-        );
-    };
 
     private _macroLineStyle: Record<string, any> = {
         display: "inline-flex",

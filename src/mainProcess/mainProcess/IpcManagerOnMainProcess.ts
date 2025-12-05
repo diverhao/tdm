@@ -1718,7 +1718,6 @@ export class IpcManagerOnMainProcess {
      * @param sendContentsToWindow whether to send file back to display window, only used by .db 
      */
     handleOpenTdlFiles = (event: any, data: IpcEventArgType["open-tdl-file"]) => {
-
         const { options } = data;
         let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();

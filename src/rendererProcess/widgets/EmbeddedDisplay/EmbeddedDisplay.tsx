@@ -227,7 +227,10 @@ export class EmbeddedDisplay extends BaseWidget {
                 {this.getItemNames().length <= 1 || this.getText()["showTab"] === false ? null : (
                     <this._ElementTabs></this._ElementTabs>
                 )}
+
                 {this.loadingText}
+
+                {g_widgets1.isEditing() === true ? "Embedded Display" : ""}
 
                 <this._ElementIframe></this._ElementIframe>
 
@@ -607,16 +610,15 @@ export class EmbeddedDisplay extends BaseWidget {
         this.setSelectedTab(index);
 
         if (newTabIsWeb === false) {
+
             // macros from: (1) user input (2) Canvas where this widget resides
+            // this is all the macros that the EmbeddedDisplay widget have
             const allMacros = this.getAllMacros();
-            // macros defined in this page
+            // macros defined in EmbeddedDisplay widget for this TDL
             const itemMacros = this.getItemMacros()[newTab];
-            // if this EmbeddedDisplay is not inside another EmbeddedDisplay, it is empty
-            // if this EmbeddedDisplay is inside another EmbeddedDisplay, it is the combination of
-            //   (1) the item macros in its parent EmbeddedDisplay widget, and
-            //   (2) the Canvas macros in this EmbeddedDisplay widget's TDL file
-            const widgetMacros = this.getMacros();
-            
+
+            // EmbeddedDisplay always inherits parent's macros
+            const macros = [...itemMacros, ...allMacros];
 
             let tdlFileName = this.getTdlFileNames()[this.getSelectedTab()];
             // the tdl file name is expanded based on the macros for this EmbeddedDisplay widget
@@ -647,13 +649,12 @@ export class EmbeddedDisplay extends BaseWidget {
                     // these macros are passed down to the widgets in TDL file, 
                     // these macros are assigned to _macros for these widgets
                     // In this way, we can pass all the parent display's macros and the item macros down
-                    // to each 
-                    macros: [...itemMacros, ...widgetMacros],
+                    // to each widget inside the EmbeddedDisplay's TDL file
+                    macros: macros,
                     currentTdlFolder: currentTdlFolder,
                     widgetWidth: this.getStyle()["width"],
                     widgetHeight: this.getStyle()["height"],
                     resize: this.getText()["resize"],
-                    // replaceMacros: this.getAllText()["useParentMacros"]
                 })
             }
         } else if (oldTabIsWeb === false && newTabIsWeb === true) {
@@ -683,7 +684,7 @@ export class EmbeddedDisplay extends BaseWidget {
             }
             console.log("removing", childWidgetKey)
             g_widgets1.removeWidget(childWidgetKey, false, false, true);
-            
+
         }
         this.clearChildWidgetKeys();
     }
