@@ -50,25 +50,26 @@ import { defaultWebsocketOpenerServerPort } from "./global/GlobalVariables";
 // import { type_sshServerConfig } from "./mainProcesses/SshClient";
 
 /**
- * `true` for the first TDM instance 
- * 
- * `false` for the later TDM instances
- */
-app.requestSingleInstanceLock();
-
-
-/**
- * Print TDM banner in command line. 
- * 
- * It includes version number, build date, and the commit hash of the current version. It also provides a
- * help on how to use TDM.
- */
-ArgParser.printTdmBanner();
-
-/**
  * load command line arguments
  */
 const args: type_args = ArgParser.parseArgs(process.argv, site);
+
+if (args["mainProcessMode"] !== "ssh-server") {
+    /**
+     * Print TDM banner in command line. 
+     * 
+     * It includes version number, build date, and the commit hash of the current version. It also provides a
+     * help on how to use TDM.
+     */
+    ArgParser.printTdmBanner();
+
+    /**
+     * `true` for the first TDM instance 
+     * 
+     * `false` for the later TDM instances
+     */
+    app.requestSingleInstanceLock();
+}
 
 /**
  * Here is the site-specific profile file
@@ -85,6 +86,7 @@ Log.info('-1', "Input arguments:", args);
 processArgsAttach(args);
 
 if (args["attach"] === -1) {
+    // "ssh-server" mode will run this
     // `--attach`'s role ends, use a real port
     args["attach"] = defaultWebsocketOpenerServerPort;
     openTdlInNewInstance(args);
@@ -92,7 +94,7 @@ if (args["attach"] === -1) {
     const success = openTdlInFirstExistingInstance(args);
     if (success === true) {
         // do nothing, the file is opened in another instance, this instance quits
-        app.exit()
+        process.exit()
     } else {
         // there was no existing instance, open a new instance
         // `--attach`'s role ends, use a real port
@@ -104,7 +106,7 @@ if (args["attach"] === -1) {
     openTdlInSpecificExistingInstance(args).then((success: boolean) => {
         if (success === true) {
             // do nothing, the file is opened in another instance, this instance quits
-            app.quit();
+            process.exit()
         } else {
             // open a new instance with this particular port number
             // if this port is occupied by other applications, quit
@@ -114,5 +116,5 @@ if (args["attach"] === -1) {
 } else {
     // this situation should never happen because ArgParser has already handled wrong args["attach"] values
     Log.fatal('-1', `Wrong args["attach"] value ${args["attach"]}`);
-    app.quit();
+    process.exit()
 }

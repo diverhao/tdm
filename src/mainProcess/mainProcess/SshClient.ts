@@ -52,10 +52,10 @@ export class SshClient {
         this._mainProcess = mainProcess;
 
         // todo: validate the config
-        this._serverIP = "127.0.0.1";
+        this._serverIP = "mpex-ics-srv008";
         this._serverSshPort = 22;
-        this._userName = "haohao";
-        this._privateKeyFile = "/Users/haohao/.ssh/id_rsa";
+        this._userName = "1h7";
+        this._privateKeyFile = "/Users/1h7/.ssh/id_rsa";
 
         // this._serverIP = sshServerConifg["ip"];
         // this._serverSshPort = sshServerConifg["port"];
@@ -65,6 +65,7 @@ export class SshClient {
         // this.tdmCmd = `export DISPLAY=:99; ` + sshServerConifg["tdmCommand"];
         // this.tdmCmd = `export DISPLAY=:99; ` + "/home/haohao/linux-arm64-unpacked/tdm --main-process-mode ssh-server";
         this._tdmCmd = `export DISPLAY=:99; ` + "cd /Users/haohao/tdm; npm start -- --settings /Users/haohao/profiles.json --attach -1 --main-process-mode ssh-server";
+        this._tdmCmd = `export DISPLAY=:99; ifconfig;` + "/home/1h7/linux-unpacked/tdm -- --attach -1 --main-process-mode ssh-server";
 
         mainProcess.setConnectingToSsh(true);
         mainProcess.setMainProcessMode("ssh-client");
@@ -72,6 +73,33 @@ export class SshClient {
         this._sshClient = new Client();
         this.startTunnel();
     }
+
+    private _sshClients: Client[] = [];
+    getSshClients = () => {
+        return this._sshClients;
+    }
+
+    private _sshServerConfigs: type_sshServerConfig[] = [
+        {
+            ip: "opslogin01",
+            port: 22,
+            userName: "u19",
+            privateKeyFile: process.env.HOME + '/.ssh/id_rsa',
+            tdmCommand: "",
+        },
+        {
+            ip: "10.112.1.18",
+            port: 22,
+            userName: "1h7",
+            privateKeyFile: '/Users/1h7/.ssh/id_rsa',
+            tdmCommand: `export DISPLAY=:99; ` + "/home/1h7/linux-unpacked/tdm -- --attach -1 --main-process-mode ssh-server",
+        }
+    ]
+
+    getSshServerConfigs = () => {
+        return this._sshServerConfigs;
+    }
+
 
     /** ------------------ connect to SSH and TCP servers --------------- */
 
@@ -92,7 +120,7 @@ export class SshClient {
      * 
      * @returns {Promise<void>}
      */
-    connectSsh = async (): Promise<void> => {
+    connectSsh = async (sshServerConfig: type_sshServerConfig): Promise<void> => {
 
         // resolved when SSH connection is established
         let resolveFunc: any;
@@ -102,8 +130,16 @@ export class SshClient {
             rejectFunc = reject;
         })
 
+        const host = sshServerConfig["ip"];
+        const userName = sshServerConfig["userName"];
+        const port = sshServerConfig["port"];
+        const privateKeyFileName = sshServerConfig["privateKeyFile"];
+        console.log("         <<<<<<<< connecting", host, "with", userName)
 
-        const sshClient = this.getSshClient();
+        // const sshClient = this.getSshClient();
+        const sshClient = new Client();
+        this.getSshClients().push(sshClient);
+
         const mainProcess = this.getMainProcess();
         const windowAgentsManager = mainProcess.getWindowAgentsManager();
         const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
@@ -130,17 +166,22 @@ export class SshClient {
         });
 
         // (2)
-        const privateKeyFileName = this.getPrivateKeyFile();
         if (privateKeyFileName.trim() !== "" && privateKeyFileName !== undefined) {
             // (2.1)
             try {
                 const keyFileContent = readFileSync(privateKeyFileName);
                 sshClient.connect({
-                    host: this.getServerIP(),
-                    port: this.getServerSshPort(),
-                    username: this.getUserName(),
+                    // host: this.getServerIP(),
+                    // port: this.getServerSshPort(),
+                    // username: this.getUserName(),
+                    host: host,
+                    port: port,
+                    username: userName,
                     privateKey: keyFileContent,
                     debug: console.log,
+                    // agentForward: true,
+                    // x11: true,  // <-- crucial for X11 forwarding
+
                 });
             } catch (e) {
                 // e.g. failed to read file, destroy the ssh client
@@ -150,9 +191,12 @@ export class SshClient {
             // (2.2)
             const password = await this.getPassword();
             sshClient.connect({
-                host: this.getServerIP(),
-                port: this.getServerSshPort(),
-                username: this.getUserName(),
+                // host: this.getServerIP(),
+                // port: this.getServerSshPort(),
+                // username: this.getUserName(),
+                host: host,
+                port: port,
+                username: userName,
                 // password: "Mous1ha9ha9",
                 password: password,
                 // tryKeyboard: true,
@@ -163,6 +207,68 @@ export class SshClient {
 
         // (3)
         await promise;
+    }
+
+
+    connectSshs = async () => {
+        const sshServerConfig1 = this.getSshServerConfigs()[0];
+        const sshServerConfig2 = this.getSshServerConfigs()[1];
+        await this.connectSsh(sshServerConfig1);
+
+        console.log("           <<<<<<<<<<<< 1 is connected")
+
+        // resolved when SSH connection is established
+        let resolveFunc: any;
+        let rejectFunc: any;
+        let promise = new Promise((resolve, reject) => {
+            resolveFunc = resolve;
+            rejectFunc = reject;
+        })
+        console.log("           <<<<<<<<<<<< step 1.1")
+
+        const sshClient1 = this.getSshClients()[this.getSshClients().length - 1];
+        const sshClinet2 = new Client();
+        console.log("           <<<<<<<<<<<< step 1.3")
+        sshClient1.forwardOut(
+            "127.0.0.1",
+            0,
+            sshServerConfig2["ip"],
+            sshServerConfig2["port"],
+            (err, stream) => {
+                const privateKeyFileName = "/Users/1h7/.ssh/id_rsa";
+                const keyFileContent = readFileSync(privateKeyFileName);
+
+                sshClinet2.connect({
+                    sock: stream,
+                    username: "1h7",
+                    privateKey: keyFileContent,
+                    // x11: true,
+                    // x11Host: '127.0.0.1',
+                    // x11Port: 6000,
+
+                })
+            }
+        )
+        console.log("           <<<<<<<<<<<< step 1.3")
+
+        sshClinet2.on("ready", () => {
+            console.log("           <<<<<<<<<<<< 2 is connected")
+            console.log("connected to ...");
+            this.getSshClients().push(sshClinet2);
+            this.setSshClient(sshClinet2);
+            resolveFunc();
+        })
+
+        await promise;
+
+
+        // for (const sshServerConfig of this.getSshServerConfigs()) {
+        //     // connect next one
+        //     console.log("       >>>>>>>>>>>>> hop", sshServerConfig["ip"], "connected")
+        // }
+
+        // the last SshClient is final destination
+        // this.setSshClient(this.getSshClients()[this.getSshClients().length - 1]);
     }
 
     /**
@@ -193,7 +299,7 @@ export class SshClient {
         })
 
         // (1)
-        sshClient.exec(tdmCmd, //{ x11: true},
+        sshClient.exec(tdmCmd, { x11: true},
             (err: Error | undefined, stream: ClientChannel) => {
                 if (err === undefined) {
                     // each "data" event one "console.log()" from remote TDM
@@ -215,14 +321,16 @@ export class SshClient {
                     });
                     // if there is an error on SSH stream
                     stream.on("error", (err: any) => {
+                        console.log("errr <<<<<<<<<<<<<<<<<<<<1,")
                         this.destroy(`SSH connection error on ${this.getServerIP()}:${this.getServerSshPort()}. ${err}`)
                     })
                 } else {
+                    console.log("errr <<<<<<<<<<<<<<<<<<<<2,")
                     this.destroy(`Failed to run TDM on ssh server ${this.getServerIP()} using command ${tdmCmd}`);
                 }
             }
         );
-
+        console.log(" <<<<<<<<<< aaa")
         // (2)
         return await promise;
     }
@@ -259,7 +367,8 @@ export class SshClient {
             rejectFunc = reject;
         })
 
-        // srcIp could be localhost, 127.0.0.1, or local computer's IP
+        // the last "jump": connect to the local TCP server operated by TDM
+        // srcIp must be 127.0.0.1
         // srcPort not used but required
         // dstIP must be 127.0.0.1 or localhost, cannot be its IP
         sshClient.forwardOut("127.0.0.1", 0, "127.0.0.1", tcpServerPort,
@@ -267,23 +376,26 @@ export class SshClient {
                 if (err !== undefined) {
                     this.destroy(`Failed to connect TCP server ${this.getServerIP()}${tcpServerPort} via SSH tunnel. ${err}`);
                 } else {
-
+                    console.log("         +>>>>>>>>>>>>>> 1")
                     // (1)
                     this._heartbeatInterval = setInterval(() => {
                         this.checkLastHeartbeatTime();
                     }, 1000)
 
                     // (2)
+                    console.log("         +>>>>>>>>>>>>>> 2")
                     this.registerTcpEventListeners();
                     tcpStream.on("data", (data: Buffer) => {
                         this.handleTcpData(data)
                     })
 
                     // (3)
+                    console.log("         +>>>>>>>>>>>>>> 3")
                     tcpStream.on("end", () => {
                         this.destroy(`TCP connection with ${this.getServerIP()}:${tcpServerPort} disconnected.`);
                     })
 
+                    console.log("         +>>>>>>>>>>>>>> 4")
                     tcpStream.on("error", (err: any) => {
                         this.destroy(`Error on TCP connection with ${this.getServerIP()}:${tcpServerPort}`);
                     })
@@ -301,10 +413,13 @@ export class SshClient {
                     }
 
                     // (5)
+                    console.log("         +>>>>>>>>>>>>>> 5")
+
                     resolveFunc(tcpStream);
                 }
             }
         )
+        console.log("         +>>>>>>>>>>>>>> 6")
 
         // (5.1)
         return await promise;
@@ -333,7 +448,7 @@ export class SshClient {
 
         try {
             // (1)
-            await this.connectSsh();
+            await this.connectSshs();
 
             // (2)
             const tcpServerPort = await this.startTdmOnServer();
@@ -597,6 +712,10 @@ export class SshClient {
 
     setLastHeartbeatTime = () => {
         this._lastHeartbeatTime = Date.now();
+    }
+
+    setSshClient = (newClient: Client) => {
+        this._sshClient = newClient;
     }
 
     // ------------------------- tcp data processing ---------------------------

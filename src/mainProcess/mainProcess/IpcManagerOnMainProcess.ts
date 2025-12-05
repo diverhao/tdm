@@ -1,5 +1,4 @@
-import { app, dialog } from "electron";
-import { BrowserView, BrowserWindow } from "electron";
+import { BrowserView, BrowserWindow, app, dialog } from "electron";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { Profiles } from "../profile/Profiles";
 import { ChannelAgentsManager } from "../channel/ChannelAgentsManager";
@@ -144,6 +143,8 @@ export class IpcManagerOnMainProcess {
                 || eventName === "bring-up-main-window"
                 || eventName === "websocket-ipc-connected-on-main-window"
                 || eventName === "ssh-password-prompt-result"
+                || eventName === "take-screenshot"
+                || eventName === "fetch-thumbnail"
             ) {
                 const eventListeners = mainProcess.getIpcManager().getEventListeners();
                 const callback = eventListeners[eventName];
@@ -1096,7 +1097,6 @@ export class IpcManagerOnMainProcess {
                     // it emits "close" event, readyToClose is used to prevent recursive invocation of
                     // "close" event handler
                     closeBrowserWindow();
-                    // fs.writeFileSync("/Users/haohao/tdm.log", `window is closed =====================\n`, { flag: "a" });
                 } else {
                     if (data["saveConfirmation"] === "Save") {
                         // TextEditor utility window has unsaved contents

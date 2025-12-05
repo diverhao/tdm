@@ -4,7 +4,6 @@ import { FileReader } from "../file/FileReader";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { Log } from "../log/Log";
 import { type_args } from "../mainProcess/IpcEventArgType";
-import { app } from "electron";
 import { openTdlFileAsRequestedByAnotherInstance } from "../global/GlobalMethods";
 
 // this class is part of MainProcesses, it has nothing to do with the runtime MainProcess
@@ -33,6 +32,8 @@ export class WsOpenerServer {
     createServer = () => {
         Log.info("-1", `Creating WebSocket opener server on port ${this.getPort()}`);
 
+        const mainProcess = this.getMainProcess();
+
         this.server = new WebSocket.Server({
             host: "127.0.0.1",
             port: this.getPort(),
@@ -48,7 +49,7 @@ export class WsOpenerServer {
                     this.createServer();
                 } else {
                     Log.fatal("-1", `WebSocket opener port ${this.getPort()} is occupied, and flexibleAttach is false, quit TDM.`);
-                    app.quit();
+                    mainProcess.quit();
                 }
             }
         });
