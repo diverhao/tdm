@@ -1,6 +1,6 @@
 {
     "name": "tdm",
-    "version": "2025.11.00",
+    "version": "2025.12.00",
     "description": "A display manager for EPICS",
     "main": "./dist/mainProcess/startMainProcess.js",
     "repository": "https://github.com/MyApp/my-app",
@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2025-11-27T06:02:24Z",
+    "buildDate": "2025-12-05T03:10:56Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",

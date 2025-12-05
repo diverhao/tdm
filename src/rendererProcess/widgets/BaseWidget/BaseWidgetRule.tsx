@@ -725,7 +725,8 @@ export abstract class BaseWidgetRule {
             const errMsg = "No Canvas widget";
             throw new Error(errMsg);
         }
-        const macros = canvas.getAllMacros();
+        // const macros = canvas.getAllMacros();
+        const macros = widget.getAllMacros();
 
         for (const rawChannelName of this.getRawChannelNamesInBoolExpression()) {
             // result.push(widget.expandChannelName(rawChannelName, macros));
@@ -742,7 +743,8 @@ export abstract class BaseWidgetRule {
             const errMsg = "No Canvas widget";
             throw new Error(errMsg);
         }
-        const macros = canvas.getAllMacros();
+        // const macros = canvas.getAllMacros();
+        const macros = widget.getAllMacros();
 
         for (const rawChannelName of this.getRawChannelNamesInPropertyValue()) {
             // result.push(widget.expandChannelName(rawChannelName, macros));

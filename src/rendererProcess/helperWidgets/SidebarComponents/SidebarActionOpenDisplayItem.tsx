@@ -9,6 +9,7 @@ import { ElementButton } from "../SharedElements/MacrosTable";
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 import path from "path";
 import { Canvas } from "../Canvas/Canvas";
+import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 
 export class SidebarActionOpenDisplayItem {
     _items: SidebarActionItems;
@@ -257,20 +258,25 @@ export class SidebarActionOpenDisplayItem {
 
 
     _ElementTryToOpen = () => {
-        const fileName = this.getTdl()["fileName"];
-        const tdl = this.getTdl();
         const index = this.getIndex();
+        const mainWidget = this.getMainWidget();
 
+        // similar to ActionButton.openDisplay() method
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const currentTdlFileName = displayWindowClient.getTdlFileName();
         const currentTdlFolder = path.dirname(currentTdlFileName);
-        let externalMacros = this.getMainWidget().expandExternalMacros(index);
-        const parentMacros = (g_widgets1.getWidget2("Canvas") as Canvas).getAllMacros(); // this is from the parent display
 
-        if (tdl["useParentMacros"]) {
+
+        const displayConfig = mainWidget.getActions()[index] as type_action_opendisplay_tdl;
+        let tdlFileName = displayConfig["fileName"];
+
+        let externalMacros = [...displayConfig["externalMacros"]]
+        if (displayConfig["useParentMacros"]) {
+            const parentMacros = mainWidget.getAllMacros();
             externalMacros = [...externalMacros, ...parentMacros];
         }
 
+        tdlFileName = BaseWidget.expandChannelName(tdlFileName, externalMacros)
 
         return (
             <div
@@ -290,11 +296,11 @@ export class SidebarActionOpenDisplayItem {
                         const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
                         ipcManager.sendFromRendererProcess("open-tdl-file", {
                             options: {
-                                tdlFileNames: [fileName],
+                                tdlFileNames: [tdlFileName],
                                 mode: "editing",
                                 editable: true,
                                 macros: externalMacros,
-                                replaceMacros: false, // not used
+                                replaceMacros: true, // not used
                                 currentTdlFolder: currentTdlFolder,
                                 // openInSameWindow: false,
                                 windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),

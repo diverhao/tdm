@@ -227,7 +227,10 @@ export class EmbeddedDisplay extends BaseWidget {
                 {this.getItemNames().length <= 1 || this.getText()["showTab"] === false ? null : (
                     <this._ElementTabs></this._ElementTabs>
                 )}
+
                 {this.loadingText}
+
+                {g_widgets1.isEditing() === true ? "Embedded Display" : ""}
 
                 <this._ElementIframe></this._ElementIframe>
 
@@ -566,11 +569,13 @@ export class EmbeddedDisplay extends BaseWidget {
      * 
      * (5) create widgets objects (BaseWidget) for each widget, except Canvas
      *     each widget's insideEmbeddedDisplay is true
-     *     
+     * 
+     * (5.1) set the widget's macros (BaseWidget._macros) to the combination of EmbeddedDisplay-defined
+     *       and the tdl file's Canvas defined
+     * 
      * (6) change the children widgets to be inside EmbeddedDisplay
      *     register these widgets in this EmbeddedDisplay
      * 
-     * todo (7) append these widgets after this EmbeddedDisplay in g_widgets1
      * 
      * (7.1) run widget.jobsAsOperatingModeBegins() for all children widgets
      * 
@@ -605,10 +610,20 @@ export class EmbeddedDisplay extends BaseWidget {
         this.setSelectedTab(index);
 
         if (newTabIsWeb === false) {
-            const macros = this.expandItemMacros(newTab);
+
+            // macros from: (1) user input (2) Canvas where this widget resides
+            // this is all the macros that the EmbeddedDisplay widget have
+            const allMacros = this.getAllMacros();
+            // macros defined in EmbeddedDisplay widget for this TDL
+            const itemMacros = this.getItemMacros()[newTab];
+
+            // EmbeddedDisplay always inherits parent's macros
+            const macros = [...itemMacros, ...allMacros];
 
             let tdlFileName = this.getTdlFileNames()[this.getSelectedTab()];
-            tdlFileName = BaseWidget.expandChannelName(tdlFileName, macros);
+            // the tdl file name is expanded based on the macros for this EmbeddedDisplay widget
+            // the itemMacros is for the child tdl 
+            tdlFileName = BaseWidget.expandChannelName(tdlFileName, allMacros);
 
 
             if (typeof tdlFileName === "string") {
@@ -631,12 +646,15 @@ export class EmbeddedDisplay extends BaseWidget {
                     displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
                     widgetKey: this.getWidgetKey(),
                     tdlFileName: tdlFileName,
+                    // these macros are passed down to the widgets in TDL file, 
+                    // these macros are assigned to _macros for these widgets
+                    // In this way, we can pass all the parent display's macros and the item macros down
+                    // to each widget inside the EmbeddedDisplay's TDL file
                     macros: macros,
                     currentTdlFolder: currentTdlFolder,
                     widgetWidth: this.getStyle()["width"],
                     widgetHeight: this.getStyle()["height"],
                     resize: this.getText()["resize"],
-                    // replaceMacros: this.getAllText()["useParentMacros"]
                 })
             }
         } else if (oldTabIsWeb === false && newTabIsWeb === true) {
@@ -666,7 +684,7 @@ export class EmbeddedDisplay extends BaseWidget {
             }
             console.log("removing", childWidgetKey)
             g_widgets1.removeWidget(childWidgetKey, false, false, true);
-            
+
         }
         this.clearChildWidgetKeys();
     }
@@ -694,27 +712,26 @@ export class EmbeddedDisplay extends BaseWidget {
      * 
      * It is the same as ActionButton.expandExternalMacros()
      */
-    expandItemMacros = (itemIndex: number) => {
-        const expandedItemMacros: [string, string][] = [];
-        let itemMacros = this.getItemMacros()[itemIndex];
-        if (itemMacros === null || itemMacros === undefined) {
-            itemMacros = [];
-        }
-        if (itemMacros !== undefined) {
-            const canvas = g_widgets1.getWidget2("Canvas");
-            if (canvas instanceof Canvas) {
-                const thisDisplayMacros = canvas.getAllMacros();
-                for (let macro of itemMacros) {
-                    expandedItemMacros.push([macro[0], BaseWidget.expandChannelName(macro[1], thisDisplayMacros)]);
-                }
-                if (this.getText()["useParentMacros"]) {
-                    expandedItemMacros.push(...thisDisplayMacros)
-                }
-
-            }
-        }
-        return expandedItemMacros;
-    }
+    // expandItemMacros = (itemIndex: number) => {
+    //     const expandedItemMacros: [string, string][] = [];
+    //     let itemMacros = this.getItemMacros()[itemIndex];
+    //     if (itemMacros === null || itemMacros === undefined) {
+    //         itemMacros = [];
+    //     }
+    //     if (itemMacros !== undefined) {
+    //         const canvas = g_widgets1.getWidget2("Canvas");
+    //         if (canvas instanceof Canvas) {
+    //             const thisDisplayMacros = canvas.getMacros();
+    //             for (let macro of itemMacros) {
+    //                 expandedItemMacros.push([macro[0], BaseWidget.expandChannelName(macro[1], thisDisplayMacros)]);
+    //             }
+    //             if (this.getText()["useParentMacros"]) {
+    //                 expandedItemMacros.push(...thisDisplayMacros)
+    //             }
+    //         }
+    //     }
+    //     return expandedItemMacros;
+    // }
 
 
 

@@ -590,7 +590,7 @@ export class ActionButton extends BaseWidget {
 
     getButtonText = () => {
         const rawText = this.getAllText()["text"];
-        const macros = (g_widgets1.getWidget2("Canvas") as Canvas).getAllMacros();
+        const macros = this.getAllMacros();
         // "\\n" is "\n"
         const result = BaseWidget.expandChannelName(rawText, macros, true).replaceAll("\\n", "\n");
         return result;
@@ -605,74 +605,31 @@ export class ActionButton extends BaseWidget {
         }
     };
 
-    /**
-     * An external macro may be "S=${S1}", where "S1" is this display window's macro <br>
-     * 
-     * This function is the same as EmbeddedDisplay.expandItemMacros()
-     */
-    expandExternalMacros = (index: number) => {
-        const tdl = this.getActions()[index] as type_action_opendisplay_tdl;
-        const expandedExternalMacros: [string, string][] = [];
-        const externalMacros = JSON.parse(JSON.stringify(tdl["externalMacros"])); // this is the user provided macros, will be used by the display
-        if (externalMacros !== undefined) {
-            const canvas = g_widgets1.getWidget2("Canvas");
-            if (canvas instanceof Canvas) {
-                const thisDisplayMacros = canvas.getAllMacros();
-                for (let macro of externalMacros) {
-                    expandedExternalMacros.push([macro[0], BaseWidget.expandChannelName(macro[1], thisDisplayMacros)]);
-                }
-            }
-        }
-        return expandedExternalMacros;
-    }
-
-
     openDisplay = (index: number) => {
-        const tdl = this.getActions()[index] as type_action_opendisplay_tdl;
-        let tdlFileName = tdl["fileName"];
+        const displayConfig = this.getActions()[index] as type_action_opendisplay_tdl;
+        let tdlFileName = displayConfig["fileName"];
         // the display must be in "operating" mode to open another display
         const mode = "operating";
         const editable = g_widgets1.getRoot().getEditable();
 
-        // macros come from 3 places: tdl itself, user provided, and parent display
-        // the tdl["externalMacros"] are provided from the sidebar, they should have higher priority than
-        // parent display macros, but they have lower priority than display-defined macros
-        // make a copy from tdl["externalMacros"]
-        // let externalMacros = JSON.parse(JSON.stringify(tdl["externalMacros"])); // this is the user provided macros, will be used by the display
-        let externalMacros = this.expandExternalMacros(index);
-
-        // if the value in tdl["externalMacros"] is in format ${} or $(), we should expand it
-        const parentMacros = (g_widgets1.getWidget2("Canvas") as Canvas).getAllMacros(); // this is from the parent display
-        // for (let externalMacro of externalMacros) {
-        //     const valueRaw = externalMacro[1];
-        //     if (valueRaw.trim().match(/^\$((\{[^}]+\})|\([^)]+\))/) !== null) {
-        //         const value = valueRaw.trim().replace("$", "").replace("(", "").replace(")", "");
-        //         // math this macro's value with its parent macor's name
-        //         for (let parentMacro of parentMacros) {
-        //             const parentMacroName = parentMacro[0];
-        //             const parentMacroValue = parentMacro[1];
-        //             if (parentMacroName === value) {
-        //                 externalMacro[1] = parentMacroValue;
-        //             }
-        //         }
-        //     }
-        // }
-        // ! In here, we get all macros of the parent display, including the parent display's own macros, and the macros
-        // ! that come from other places
-        if (tdl["useParentMacros"]) {
+        // external macros is composed of 2 parts:
+        // (1) macros defined by ActionButton widget for this display
+        // (2) all macros that is held by this ActionButton widget
+        let externalMacros = [...displayConfig["externalMacros"]]
+        if (displayConfig["useParentMacros"]) {
+            const parentMacros = this.getAllMacros();
             externalMacros = [...externalMacros, ...parentMacros];
         }
-        // if the file is like $(S).tdl, try to replace $(S) with the macros.
+
+        // tdl file name may contain macros
         tdlFileName = BaseWidget.expandChannelName(tdlFileName, externalMacros)
 
-
-        const replaceMacros = false;
         const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
 
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const currentTdlFileName = displayWindowClient.getTdlFileName();
         const currentTdlFolder = path.dirname(currentTdlFileName);
-        const openInSameWindow = tdl["openInSameWindow"];
+        const openInSameWindow = displayConfig["openInSameWindow"];
 
         if (openInSameWindow === true) {
             const displayWindowId = displayWindowClient.getWindowId();
@@ -683,7 +640,7 @@ export class ActionButton extends BaseWidget {
                 mode: mode,
                 editable: editable,
                 externalMacros: externalMacros,
-                replaceMacros: replaceMacros,
+                replaceMacros: true,
                 currentTdlFolder: currentTdlFolder
             }
             );
@@ -695,7 +652,7 @@ export class ActionButton extends BaseWidget {
                         mode: mode,
                         editable: editable,
                         macros: externalMacros,
-                        replaceMacros: replaceMacros, // not used
+                        replaceMacros: true, // not used
                         currentTdlFolder: currentTdlFolder,
                         // openInSameWindow: openInSameWindow,
                         windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),

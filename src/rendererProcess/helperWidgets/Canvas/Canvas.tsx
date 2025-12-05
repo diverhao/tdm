@@ -416,18 +416,15 @@ export class Canvas {
      * external macros must be a set of fully expanded macros, e.g S=SYS, not S=${S1}
      */
     getAllMacros = () => {
+        // todo
         const useExternalMacros = g_widgets1.getRoot().getUseExternalMacros();
         // user-provided macros, may contain the parent window macros
         const externalMacros = g_widgets1.getRoot().getExternalMacros();
         // the BaseWidget.expandChannelName() picks the macro that appears first in macros array
-        return [...this.getMacros(), ...externalMacros];
-        // if (useExternalMacros === true) {
-        // 	// the macros are searched with first match
-        // 	return [...externalMacros, ...this.getMacros()];
-        // } else {
-        // 	return [...this.getMacros(), ...externalMacros];
-        // }
+        return [...externalMacros, ...this.getMacros()];
     };
+
+
     getWindowName = () => {
         return this._windowName;
     };
