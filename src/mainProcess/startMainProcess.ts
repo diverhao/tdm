@@ -44,7 +44,7 @@ import path from "path";
  *  - sns-office-user
  */
 import { site } from "../../package.json";
-import { type_args } from "./mainProcess/IpcEventArgType";
+import { type_args } from "../common/IpcEventArgType";
 import { openTdlInFirstExistingInstance, openTdlInNewInstance, openTdlInSpecificExistingInstance, processArgsAttach } from "./global/GlobalMethods";
 import { defaultWebsocketOpenerServerPort } from "./global/GlobalVariables";
 // import { type_sshServerConfig } from "./mainProcesses/SshClient";

@@ -8,7 +8,7 @@ import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Table } from "../../helperWidgets/Table/Table";
 import { convertEpochTimeToString } from "../../../common/GlobalMethods";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { type_logData } from "../../../mainProcess/mainProcess/IpcEventArgType";
+import { type_logData } from "../../../common/IpcEventArgType";
 
 export type type_LogViewer_tdl = {
     type: string;

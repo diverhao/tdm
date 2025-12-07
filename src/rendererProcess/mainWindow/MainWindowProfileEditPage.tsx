@@ -8,7 +8,7 @@ import {
     ElementArrayPropertyItem,
     ElementArrayPropertyItemRight,
 } from "./MainWindowStyledComponents";
-import { MainWindowClient, mainWindowState } from "../../mainProcess/windows/MainWindow/MainWindowClient";
+import { MainWindowClient, mainWindowState } from "../windows/MainWindow/MainWindowClient";
 import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMenu";
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../common/Log";

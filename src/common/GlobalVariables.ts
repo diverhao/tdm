@@ -1,10 +1,27 @@
 import { type_log_levels } from "./Log";
+import { type_Canvas_tdl } from "../rendererProcess/helperWidgets/Canvas/CanvasHelper";
 
 export let logLevel: type_log_levels = type_log_levels.debug;
 
 export const setLogLevel = (newLogLevel: type_log_levels) => {
     logLevel = newLogLevel;
 }
+
+
+export type type_tdl = Record<string, any> & {
+    Canvas: type_Canvas_tdl;
+    options?: Record<string, any>;
+};
+
+
+
+export type type_LocalChannel_data = {
+    value: number | string | number[] | string[] | undefined;
+    type?: "number" | "string" | "number[]" | "string[]" | "enum";
+    // for enum, if "strings" is empty or not long enough, we will use "0", "1" ... as enum names
+    strings?: string[];
+} & Record<string, any>;
+
 
 
 export let g_selectedWidgetsSizes: [number, number, number, number] = [100000, -100000, 100000, -100000];

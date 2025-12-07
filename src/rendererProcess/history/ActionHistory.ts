@@ -1,5 +1,5 @@
-import { DisplayWindowClient } from "../../mainProcess/windows/DisplayWindow/DisplayWindowClient";
-import { type_tdl } from "../../mainProcess/file/FileReader";
+import { DisplayWindowClient } from "../windows/DisplayWindow/DisplayWindowClient";
+import { type_tdl } from "../../common/GlobalVariables";
 import {Log} from "../../common/Log";
 
 export class ActionHistory {

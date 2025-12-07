@@ -3,14 +3,7 @@ import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent"
 import { DisplayOperations } from "./CaChannelAgent";
 import EventEmitter from "events";
 import { converEpochTimeToEpicsTimeStamp } from "../../common//GlobalMethods";
-
-
-export type type_LocalChannel_data = {
-    value: number | string | number[] | string[] | undefined;
-    type?: "number" | "string" | "number[]" | "string[]" | "enum";
-    // for enum, if "strings" is empty or not long enough, we will use "0", "1" ... as enum names
-    strings?: string[];
-} & Record<string, any>;
+import { type_LocalChannel_data } from "../../common/GlobalVariables";
 
 export class LocalChannelAgent {
     _dbrData: type_LocalChannel_data;

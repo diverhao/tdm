@@ -44,8 +44,8 @@ const windowClientsConfig = {
 	//HH to "dist/main.js", which is loaded by `dist/index.html`
 
 	entry: {
-		DisplayWindowClient: "./src/mainProcess/windows/DisplayWindow/DisplayWindowClient.tsx",
-		MainWindowClient: "./src/mainProcess/windows/MainWindow/MainWindowClient.tsx",
+		DisplayWindowClient: "./src/rendererProcess/windows/DisplayWindow/DisplayWindowClient.tsx",
+		MainWindowClient: "./src/rendererProcess/windows/MainWindow/MainWindowClient.tsx",
 		HelpWindowClient: "./src/mainProcess/windows/HelpWindow/HelpWindowClient.tsx",
 	},
 

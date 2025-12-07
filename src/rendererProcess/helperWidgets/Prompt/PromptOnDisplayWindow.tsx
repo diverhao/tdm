@@ -1,5 +1,5 @@
 import * as React from "react";
-import { DisplayWindowClient } from "../../../mainProcess/windows/DisplayWindow/DisplayWindowClient";
+import { DisplayWindowClient } from "../../../rendererProcess/windows/DisplayWindow/DisplayWindowClient";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import path from "path";
 import { Prompt } from "./Prompt"

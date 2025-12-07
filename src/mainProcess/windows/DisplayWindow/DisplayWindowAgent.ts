@@ -4,10 +4,10 @@ import * as url from "url";
 import { type_options_createDisplayWindow, WindowAgentsManager } from "../../windows/WindowAgentsManager";
 import { CaChannelAgent, DisplayOperations } from "../../channel/CaChannelAgent";
 import { type_dbrData, Channel_DBR_TYPES } from "../../../common/GlobalVariables";
-import { type_tdl } from "../../file/FileReader";
 import { ContextMenuDesktop } from "./ContextMenuDesktop";
 import fs, { read } from "fs";
-import { LocalChannelAgent, type_LocalChannel_data } from "../../channel/LocalChannelAgent";
+import { LocalChannelAgent } from "../../channel/LocalChannelAgent";
+import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { ChannelAgentsManager } from "../../channel/ChannelAgentsManager";
 import { homedir } from "os";
 import { WebSocket } from "ws";
@@ -20,7 +20,7 @@ import pidusage from "pidusage";
 import * as os from "os";
 import { getCurrentDateTimeStr } from "../../global/GlobalMethods";
 import { Promises, PVA_STATUS_TYPE, type_pva_status } from "epics-tca";
-import { IpcEventArgType2 } from "../../mainProcess/IpcEventArgType";
+import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
 
 /**
  * The main process side representation of a display window. <br>
@@ -1798,7 +1798,6 @@ export class DisplayWindowAgent {
             const hostname = this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" ?
                 "127.0.0.1"
                 : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
-
             await window.loadURL(
                 url.format({
                     pathname: path.join(__dirname, `DisplayWindow.html`),

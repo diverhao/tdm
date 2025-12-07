@@ -3,14 +3,14 @@ import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
 import { rendererWindowStatus, type_widget, Widgets } from "../../../rendererProcess/global/Widgets";
 import { type_dbrData } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../../rendererProcess/helperWidgets/Root/Root";
-import { type_tdl } from "../../file/FileReader";
+// import { type_tdl } from "../../file/FileReader";
+import { type_tdl } from "../../../common/GlobalVariables";
 import { DataViewer } from "../../../rendererProcess/widgets/DataViewer/DataViewer";
 import { PvTable } from "../../../rendererProcess/widgets/PvTable/PvTable";
 import { BaseWidget } from "../../../rendererProcess/widgets/BaseWidget/BaseWidget";
 import { ScaledSlider } from "../../../rendererProcess/widgets/ScaledSlider/ScaledSlider";
 import { Spinner } from "../../../rendererProcess/widgets/Spinner/Spinner";
 import { EmbeddedDisplay } from "../../../rendererProcess/widgets/EmbeddedDisplay/EmbeddedDisplay";
-import { type_LocalChannel_data } from "../../channel/LocalChannelAgent";
 import { Canvas } from "../../../rendererProcess/helperWidgets/Canvas/Canvas";
 import { XYPlot } from "../../../rendererProcess/widgets/XYPlot/XYPlot";
 import { Terminal } from "../../../rendererProcess/widgets/Terminal/Terminal";
@@ -33,7 +33,7 @@ import { FileBrowser } from "../../../rendererProcess/widgets/FileBrowser/FileBr
 import { v4 as uuidv4 } from "uuid";
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 import { Image } from "../../../rendererProcess/widgets/Image/Image";
-import { IpcEventArgType, IpcEventArgType2 } from "../../mainProcess/IpcEventArgType";
+import { IpcEventArgType, IpcEventArgType2 } from "../../../common/IpcEventArgType";
 
 
 // var recorder;

@@ -5,7 +5,7 @@ import { getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../
 import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
 import { Canvas } from "../../../rendererProcess/helperWidgets/Canvas/Canvas";
 import { IpcManagerOnDisplayWindow } from "./IpcManagerOnDisplayWindow";
-import { type_tdl } from "../../file/FileReader";
+import { type_tdl } from "../../../common/GlobalVariables";
 import { rendererWindowStatus } from "../../../rendererProcess/global/Widgets";
 import { DataViewer } from "../../../rendererProcess/widgets/DataViewer/DataViewer";
 import { PvTable } from "../../../rendererProcess/widgets/PvTable/PvTable";
@@ -36,11 +36,11 @@ import { convertEpochTimeToString } from "../../../common/GlobalMethods";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
 import path from "path";
 
-import '../../resources/css/katex.min.css';
+import '../../../mainProcess/resources/css/katex.min.css'
 import { Talhk } from "../../../rendererProcess/widgets/Talhk/Talhk";
 import { FileBrowser } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
-// import '../../resources/css/simple.css';
+
 // there is no typescrit def for this lib, I created a wrapper at dom-to-image-more.d.ts
 import { toBlob } from "dom-to-image-more";
 import { ChannelNameHint } from "../../../rendererProcess/helperWidgets/ChannelNameHint/ChannelNameHint";

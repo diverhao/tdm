@@ -4,7 +4,7 @@ import { MainWindowProfileRunPage } from "../../../rendererProcess/mainWindow/Ma
 import { Log } from "../../../common/Log";
 import { MainWindowProfileEditPage } from "../../../rendererProcess/mainWindow/MainWindowProfileEditPage";
 import { MainWindowStartupPage } from "../../../rendererProcess/mainWindow/MainWindowStartupPage";
-import { IpcEventArgType, IpcEventArgType3, type_DialogInputBox, type_DialogMessageBox } from "../../mainProcess/IpcEventArgType";
+import { IpcEventArgType, IpcEventArgType3, type_DialogInputBox, type_DialogMessageBox } from "../../../common/IpcEventArgType";
 
 /**
  * Manage IPC messages sent from main process for main window. <br>

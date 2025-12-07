@@ -13,7 +13,7 @@ import { Log } from "../../../common/Log";
 import { rendererWindowStatus } from "../../global/Widgets";
 import path from "path";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
-import { type_tdl } from "../../../mainProcess/file/FileReader";
+import { type_tdl } from "../../../common/GlobalVariables";
 
 export type type_Table_tdl = {
     type: string;

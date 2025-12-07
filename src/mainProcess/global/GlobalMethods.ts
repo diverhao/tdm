@@ -4,7 +4,7 @@ import { readFileSync } from "fs";
 import * as os from "os";
 import path from "path";
 import { Log } from "../../common/Log";
-import { type_about_info, type_args } from "../mainProcess/IpcEventArgType";
+import { type_about_info, type_args } from "../../common/IpcEventArgType";
 import { execSync } from "child_process";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";

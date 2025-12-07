@@ -2,7 +2,7 @@ import { XYPlot } from "./XYPlot";
 import * as React from "react";
 import katex from "katex";
 import { type_dbrData } from "epics-tca";
-import { type_LocalChannel_data } from "../../../mainProcess/channel/LocalChannelAgent";
+import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { calcTicks, refineTicks } from "../../../common/GlobalMethods";
 import { getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";

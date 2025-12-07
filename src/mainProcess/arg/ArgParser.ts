@@ -4,7 +4,7 @@ import { defaultWebServerPort } from "../global/GlobalVariables";
 import { Log } from "../../common/Log";
 import { type_log_levels } from "../../common/Log";
 import { generateAboutInfo } from "../global/GlobalMethods";
-import { type_args } from "../mainProcess/IpcEventArgType";
+import { type_args } from "../../common/IpcEventArgType";
 
 
 const dashdashMacros = `--macros`;

@@ -1,6 +1,5 @@
 
 import ReactDOM from "react-dom/client";
-import React from "react";
 import { Help } from "../../../rendererProcess/helperWidgets/Help/Help";
 import { FontsData_HelpWindow } from "../../../rendererProcess/global/FontsData_HelpWindow";
 

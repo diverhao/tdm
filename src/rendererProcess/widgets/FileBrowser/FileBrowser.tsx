@@ -13,7 +13,7 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Log } from "../../../common/Log";
 import path from "path";
 import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
-import { type_folder_content, type_single_file_folder } from "../../../mainProcess/mainProcess/IpcEventArgType";
+import { type_folder_content, type_single_file_folder } from "../../../common/IpcEventArgType";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 
 

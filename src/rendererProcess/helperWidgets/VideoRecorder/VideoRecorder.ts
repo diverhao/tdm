@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { DisplayWindowClient } from "../../../mainProcess/windows/DisplayWindow/DisplayWindowClient";
+import { DisplayWindowClient } from "../../windows/DisplayWindow/DisplayWindowClient";
 import path from "path";
 import { g_widgets1,  } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";

@@ -4,7 +4,7 @@ import { BaseWidget } from "../widgets/BaseWidget/BaseWidget";
 import { ReadWriteIos, IO_TYPES } from "./ReadWriteIos";
 import { rendererWindowStatus } from "../global/Widgets";
 import * as GlobalMethods from "../../common/GlobalMethods";
-import { type_LocalChannel_data } from "../../mainProcess/channel/LocalChannelAgent";
+import { type_LocalChannel_data } from "../../common/GlobalVariables";
 import { Channel_ACCESS_RIGHTS } from "../../common/GlobalVariables";
 import { Log } from "../../common/Log";
 

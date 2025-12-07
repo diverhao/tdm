@@ -67,12 +67,12 @@ import { Group } from "../widgets/Group/Group";
 import { PvMonitor } from "../widgets/PvMonitor/PvMonitor";
 import { FileBrowser } from "../widgets/FileBrowser/FileBrowser";
 import { ActionButton } from "../widgets/ActionButton/ActionButton";
-import { type_LocalChannel_data } from "../../mainProcess/channel/LocalChannelAgent";
+import { type_LocalChannel_data } from "../../common/GlobalVariables";
 import path, { dirname } from "path";
 import { Log } from "../../common/Log";
 import { SidebarWidgetsList } from "../helperWidgets/SidebarComponents/SidebarWidgetsList";
 import { SeqGraph } from "../widgets/SeqGraph/SeqGraph";
-import { type_tdl } from "../../mainProcess/file/FileReader";
+import { type_tdl } from "../../common/GlobalVariables";
 
 /**
  * Widget object types union: 3 special types + BaseWidget.

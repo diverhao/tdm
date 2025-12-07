@@ -7,7 +7,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { DataViewerPlot } from "./DataViewerPlot";
 import { DataViewerSettings } from "./DataViewerSettings";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { type_LocalChannel_data } from "../../../mainProcess/channel/LocalChannelAgent";
+import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 
 export type type_DataViewer_tdl = {
     type: string;

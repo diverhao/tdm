@@ -3,37 +3,43 @@ import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../common/GlobalMe
 import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConverter";
 
 export type type_Canvas_tdl = Record<string, any> & {
-	type: "Canvas";
-	widgetKey: "Canvas";
-	key: "Canvas";
-	style: Record<string, number | string>;
-	macros: [string, string][];
-	replaceMacros: boolean;
-	windowName: string;
+    type: "Canvas";
+    widgetKey: "Canvas";
+    // key: "Canvas";
+    style: Record<string, number | string>;
+    macros: [string, string][];
+    // replaceMacros: boolean;
+    windowName: string;
+    script: string;
+    xGridSize: number;
+    yGridSize: number;
+    gridColor: string;
+    showGrid: boolean;
+    isUtilityWindow: boolean;
 };
 
 export class CanvasHelper {
 
-	private static _defaultTdl: type_Canvas_tdl = {
-		type: "Canvas",
-		widgetKey: "Canvas",
-		key: "Canvas",
-		style: {
-			// basics
-			position: "fixed",
-			display: "inline-block",
-			// dimensions
-			left: 0,
-			top: 0,
-			height: 500,
-			width: 500,
-			backgroundColor: `rgba(255, 255, 255, 1)`,
-			// others
-			margin: 0,
-			border: 0,
-			padding: 0,
-			overflow: "hidden",
-		},
+    private static _defaultTdl: type_Canvas_tdl = {
+        type: "Canvas",
+        widgetKey: "Canvas",
+        key: "Canvas",
+        style: {
+            // basics
+            position: "fixed",
+            display: "inline-block",
+            // dimensions
+            left: 0,
+            top: 0,
+            height: 500,
+            width: 500,
+            backgroundColor: `rgba(255, 255, 255, 1)`,
+            // others
+            margin: 0,
+            border: 0,
+            padding: 0,
+            overflow: "hidden",
+        },
         macros: [],
         replaceMacros: false,
         windowName: "",
@@ -42,13 +48,15 @@ export class CanvasHelper {
         yGridSize: 1,
         gridColor: "rgba(128,128,128,1)",
         showGrid: true,
-	};
+        isUtilityWindow: false,
+    };
 
-	// not getDefaultTdl(), always generate a new key
-	static generateDefaultTdl = (): type_Canvas_tdl => {
-		const result = JSON.parse(JSON.stringify(this._defaultTdl));
-		return result;
-	};
+    // not getDefaultTdl(), always generate a new key
+    static generateDefaultTdl = (): type_Canvas_tdl => {
+        const result = JSON.parse(JSON.stringify(this._defaultTdl));
+        return result;
+    };
+
 	// ------------------------------- converter ---------------------
 
 	static convertEdlToTdl = (edl: Record<string, string>): type_Canvas_tdl => {

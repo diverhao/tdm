@@ -5,8 +5,7 @@ import { GlobalVariables } from "../../common/GlobalVariables";
 import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMenu";
 import { Log } from "../../common/Log";
 import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
-
-import { MainWindowClient, mainWindowState } from "../../mainProcess/windows/MainWindow/MainWindowClient";
+import { MainWindowClient, mainWindowState } from "../windows/MainWindow/MainWindowClient";
 
 
 export class MainWindowStartupPage {

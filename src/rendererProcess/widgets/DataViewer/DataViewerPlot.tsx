@@ -6,7 +6,7 @@ import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, type_dbrDa
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Log } from "../../../common/Log";
-import { type_LocalChannel_data } from "../../../mainProcess/channel/LocalChannelAgent";
+import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 // import { type_xAxis } from "../XYPlot/XYPlotPlot";
 import uuid from "uuid";
 import * as THREE from 'three';

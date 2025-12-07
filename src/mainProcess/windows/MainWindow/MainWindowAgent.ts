@@ -6,7 +6,7 @@ import { Log } from "../../../common/Log";
 import { generateAboutInfo } from "../../global/GlobalMethods";
 import pidusage from "pidusage";
 import { writeFileSync } from "fs";
-import { IpcEventArgType2, IpcEventArgType3 } from "../../mainProcess/IpcEventArgType";
+import { IpcEventArgType2, IpcEventArgType3 } from "../../../common/IpcEventArgType";
 
 /**
  * Represents the main window on main process. <br>
@@ -83,7 +83,6 @@ export class MainWindowAgent {
         const mainProcesMode = this.getWindowAgentsManager().getMainProcess().getMainProcessMode();
 
         if (mainProcesMode === "ssh-server") {
-            console.log(" >>>>>>>>>>>>>> do nothing")
             // do nothing, wait for update-profiles-in-main-window
         } else if (mainProcesMode === "ssh-client" || mainProcesMode === "desktop") {
 

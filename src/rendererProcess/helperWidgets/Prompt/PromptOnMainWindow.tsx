@@ -1,5 +1,5 @@
 import * as React from "react";
-import { MainWindowClient } from "../../../mainProcess/windows/MainWindow/MainWindowClient";
+import { MainWindowClient } from "../../windows/MainWindow/MainWindowClient";
 import { Prompt } from "./Prompt"
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 

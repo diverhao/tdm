@@ -1,7 +1,6 @@
 import * as React from "react";
 import { GlobalVariables } from "../../common/GlobalVariables";
-
-import { MainWindowClient } from "../../mainProcess/windows/MainWindow/MainWindowClient";
+import { MainWindowClient } from "../windows/MainWindow/MainWindowClient";
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
 import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
 import path from "path";

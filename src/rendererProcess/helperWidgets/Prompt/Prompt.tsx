@@ -3,7 +3,7 @@ import * as React from "react";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
-import { type_DialogInputBox, type_DialogMessageBox, type_DialogMessageBoxButton } from "../../../mainProcess/mainProcess/IpcEventArgType";
+import { type_DialogInputBox, type_DialogMessageBox, type_DialogMessageBoxButton } from "../../../common/IpcEventArgType";
 import { TdmLogo } from "../../global/Images";
 
 

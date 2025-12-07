@@ -2,9 +2,9 @@
  * This file can be imported by both main and renderer process.
  */
 
-import { Channel_DBR_TYPES, type_dbrData } from "../../common/GlobalVariables";
-import { type_LocalChannel_data } from "../channel/LocalChannelAgent";
-import { type_tdl } from "../file/FileReader";
+import { Channel_DBR_TYPES, type_dbrData } from "./GlobalVariables";
+import { type_LocalChannel_data } from "./GlobalVariables";
+import { type_tdl } from "./GlobalVariables";
 
 
 /**

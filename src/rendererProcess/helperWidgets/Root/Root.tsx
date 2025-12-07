@@ -6,8 +6,8 @@ import { g_setWidgets1 } from "../../global/GlobalVariables";
 import { Widgets, rendererWindowStatus } from "../../global/Widgets";
 import { TextUpdate } from "../../widgets/TextUpdate/TextUpdate";
 import { Canvas } from "../Canvas/Canvas";
-import { DisplayWindowClient } from "../../../mainProcess/windows/DisplayWindow/DisplayWindowClient";
-import { type_tdl } from "../../../mainProcess/file/FileReader";
+import { DisplayWindowClient } from "../../windows/DisplayWindow/DisplayWindowClient";
+import { type_tdl } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { ActionButton } from "../../widgets/ActionButton/ActionButton";
 

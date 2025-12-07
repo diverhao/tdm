@@ -11,7 +11,7 @@ import { SshClient, type_sshServerConfig } from "./SshClient";
 import { CaSnooperServer } from "./CaSnooperServer";
 import { CaswServer } from "./CaswServer";
 import { Sql } from "../archive/Sql";
-import { type_args } from "./IpcEventArgType";
+import { type_args } from "../../common/IpcEventArgType";
 import * as path from "path";
 import { EdlFileConverterThread } from "../file/EdlFileConverterThread";
 import { WsOpenerServer } from "./WsOpenerServer";

@@ -4,7 +4,7 @@ import { app, Menu } from "electron";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { v4 as uuid } from "uuid";
 import { UtilityWindow } from "./UtilityWindow/UtilityWindow";
-import { type_tdl } from "../file/FileReader";
+import { type_tdl } from "../../common/GlobalVariables";
 import { FileReader } from "../file/FileReader";
 import { Log } from "../../common/Log";
 import { spawn } from "child_process";
