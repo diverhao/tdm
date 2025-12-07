@@ -7,7 +7,7 @@ import { PvTable } from "../../widgets/PvTable/PvTable";
 import { SidebarXYPlotYAxes } from "./SidebarXYPlotYAxes";
 import { XYPlot } from "../../widgets/XYPlot/XYPlot";
 import { Collapsible } from "../ColorPicker/Collapsible";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { XYPlotSidebar } from "../../widgets/XYPlot/XYPlotSidebar";
 
 import { SidebarXYPlotYAxis } from "./SidebarXYPlotYAxis";

@@ -2,7 +2,7 @@ import * as React from "react";
 import { ActionButton } from "./ActionButton";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarActionItems } from "../../helperWidgets/SidebarComponents/SidebarActionItems";
-import {Log} from "../../../mainProcess/log/Log";
+import {Log} from "../../../common/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class ActionButtonSidebar extends BaseWidgetSidebar {

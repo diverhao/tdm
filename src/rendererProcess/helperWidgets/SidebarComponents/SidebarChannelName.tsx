@@ -3,7 +3,7 @@ import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
-import * as GlobalMethods from "../../global/GlobalMethods"
+import * as GlobalMethods from "../../../common/GlobalMethods"
 import { TcaChannel } from "../../channel/TcaChannel";
 import { v4 as uuidv4 } from "uuid";
 

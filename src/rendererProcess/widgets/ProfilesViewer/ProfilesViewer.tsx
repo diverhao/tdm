@@ -6,7 +6,7 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { DataViewer } from "../DataViewer/DataViewer";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 
 export type type_ProfilesViewer_tdl = {
     type: string;

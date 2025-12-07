@@ -1,6 +1,6 @@
 // import { BobPropertyConverter } from "../../../mainProcess/windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../../widgets/BaseWidget/BaseWidgetHelper";
-// import * as GlobalMethods from "../../global/GlobalMethods";
+// import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as fs from "fs";
 import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";

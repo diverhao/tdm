@@ -7,9 +7,9 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Table } from "../../helperWidgets/Table/Table";
 import { v4 as uuidv4 } from "uuid";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { convertDateObjToString, countDuplicates } from "../../global/GlobalMethods";
+import { convertDateObjToString, countDuplicates } from "../../../common/GlobalMethods";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { DataViewer } from "../DataViewer/DataViewer";
 
 export type type_CaProtoSearchData = {

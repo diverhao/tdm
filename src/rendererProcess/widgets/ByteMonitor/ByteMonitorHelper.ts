@@ -1,8 +1,8 @@
 import { GlobalVariables } from "../../global/GlobalVariables";
 import { BobPropertyConverter } from "../../../mainProcess/windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import * as GlobalMethods from "../../global/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
+import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConverter";
 
 export type type_ByteMonitor_tdl = {

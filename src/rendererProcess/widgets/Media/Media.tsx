@@ -7,7 +7,7 @@ import { MediaSidebar } from "./MediaSidebar";
 import * as path from "path";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 
 export type type_Media_tdl = {
     type: string;

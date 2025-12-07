@@ -6,7 +6,7 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ThumbWheelSidebar } from "./ThumbWheelSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ThumbWheelRules } from "./ThumbWheelRules";
-import {Log} from "../../../mainProcess/log/Log";
+import {Log} from "../../../common/Log";
 
 export type type_ThumbWheel_tdl = {
     type: string;

@@ -6,7 +6,7 @@ import { SidebarTankShowLabels } from "../../helperWidgets/SidebarComponents/Sid
 import { SidebarScaledSliderCompactScale } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderCompactScale";
 import { SidebarScaledSliderSliderBarBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderSliderBarBackgroundColor"
 import { SidebarScaledSliderSliderBarBackgroundColor1 } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderSliderBarBackgroundColor1"
-import {Log} from "../../../mainProcess/log/Log";
+import {Log} from "../../../common/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class ScaledSliderSidebar extends BaseWidgetSidebar {

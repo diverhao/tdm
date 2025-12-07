@@ -6,9 +6,9 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ThermometerRules } from "./ThermometerRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { ChannelSeverity } from "../../channel/TcaChannel";
-import { calcTicks, refineTicks } from "../../global/GlobalMethods";
+import { calcTicks, refineTicks } from "../../../common/GlobalMethods";
 
 export type type_Thermometer_tdl = {
     type: string;

@@ -3,7 +3,7 @@ import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ByteMonitorSidebar } from "./ByteMonitorSidebar";
-import { rgbaStrToRgbaArray } from "../../global/GlobalMethods";
+import { rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 import { ByteMonitorRules } from "./ByteMonitorRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 

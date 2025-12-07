@@ -4,7 +4,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
 import { Polyline } from "../../widgets/Polyline/Polyline";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { ElementButton, ElementMacroInput, ElementMacroTd, ElementMacroTr } from "../SharedElements/MacrosTable";
 
 /**

@@ -1,10 +1,10 @@
 import { DataViewer } from "./DataViewer";
 import * as React from "react";
 import { ElementProfileBlockNameInput } from "../../mainWindow/MainWindowStyledComponents";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, g_widgets1, type_dbrData, Channel_DBR_TYPES } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { type_LocalChannel_data } from "../../../mainProcess/channel/LocalChannelAgent";
 // import { type_xAxis } from "../XYPlot/XYPlotPlot";
 import uuid from "uuid";

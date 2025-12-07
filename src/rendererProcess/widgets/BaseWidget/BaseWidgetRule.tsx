@@ -92,7 +92,7 @@ import { RuleOutlineStyle } from "../../helperWidgets/RuleComponents/RuleOutline
 import { RuleOutlineWidth } from "../../helperWidgets/RuleComponents/RuleOutlineWidth";
 import { RuleEmbeddedDisplaySelectTabIndex } from "../../helperWidgets/RuleComponents/RuleEmbeddedDisplaySelectTabIndex";
 import { BaseWidget } from "./BaseWidget";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { RuleImageXmin } from "../../helperWidgets/RuleComponents/RuleImageXmin";
 
 export type type_rule_tdl = {

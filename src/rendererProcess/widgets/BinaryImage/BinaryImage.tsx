@@ -4,7 +4,7 @@ import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { BinaryImageSidebar } from "./BinaryImageSidebar";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { BinaryImageRules } from "./BinaryImageRules";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";

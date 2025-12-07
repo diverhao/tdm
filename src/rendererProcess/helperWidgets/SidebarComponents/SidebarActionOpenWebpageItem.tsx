@@ -8,7 +8,7 @@ import { ActionButton } from "../../widgets/ActionButton/ActionButton";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { Collapsible } from "../ColorPicker/Collapsible";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { type_action_openwebpage_tdl } from "../../widgets/ActionButton/ActionButton";
 import { ElementButton } from "../SharedElements/MacrosTable";
 

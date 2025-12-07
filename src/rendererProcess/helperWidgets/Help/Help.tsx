@@ -1,5 +1,5 @@
 
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import * as React from "react";
 import { HashRouter, Routes, Route, useNavigate, createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 

@@ -4,11 +4,11 @@ import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { GroupSidebar } from "./GroupSidebar";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 
 export type type_Group_tdl = {
     type: string;

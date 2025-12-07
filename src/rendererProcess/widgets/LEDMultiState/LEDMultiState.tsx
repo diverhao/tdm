@@ -4,7 +4,7 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { LEDMultiStateSidebar } from "./LEDMultiStateSidebar";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { rgbaStrToRgbaArray } from "../../global/GlobalMethods";
+import { rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 import { LEDMultiStateRules } from "./LEDMultiStateRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 

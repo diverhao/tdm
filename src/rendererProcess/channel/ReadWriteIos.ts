@@ -1,4 +1,4 @@
-import { Log } from "../../mainProcess/log/Log";
+import { Log } from "../../common/Log";
 import { Promises, type_promise } from "./Promises";
 import { TcaChannel } from "./TcaChannel";
 

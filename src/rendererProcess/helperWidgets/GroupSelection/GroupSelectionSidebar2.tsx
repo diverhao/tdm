@@ -1,7 +1,7 @@
 import * as React from "react";
 import { GroupSelection2 } from "./GroupSelection2";
 import { calcSidebarWidth, g_widgets1, GlobalVariables } from "../../global/GlobalVariables";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 import { g_flushWidgets } from "../Root/Root";
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";

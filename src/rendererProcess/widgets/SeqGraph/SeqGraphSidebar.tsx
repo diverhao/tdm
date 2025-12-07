@@ -1,9 +1,9 @@
 import * as React from "react";
 import { Collapsible } from "../../helperWidgets/ColorPicker/Collapsible";
 import { SeqGraph } from "./SeqGraph";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import {Log} from "../../../mainProcess/log/Log";
+import {Log} from "../../../common/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class SeqGraphSidebar extends BaseWidgetSidebar {

@@ -2,7 +2,7 @@ import * as React from "react";
 import { FileBrowser } from "./FileBrowser";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
-import {Log} from "../../../mainProcess/log/Log";
+import {Log} from "../../../common/Log";
 import { SidebarFileBrowserPath } from "../../helperWidgets/SidebarComponents/SidebarFileBrowserPath";
 
 export class FileBrowserSidebar extends BaseWidgetSidebar {

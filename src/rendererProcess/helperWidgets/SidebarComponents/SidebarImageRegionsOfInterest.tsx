@@ -20,7 +20,7 @@ import { ActionButtonSidebar } from "../../widgets/ActionButton/ActionButtonSide
 import { SidebarActionCloseDisplayWindowItem } from "./SidebarActionCloseDisplayWindowItem";
 import { Image, type_Image_roi } from "../../widgets/Image/Image";
 import { Collapsible } from "../ColorPicker/Collapsible";
-import { rgbaArrayToRgbaStr } from "../../global/GlobalMethods";
+import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
 
 export class SidebarImageRegionsOfInterest extends SidebarComponent {
     _forceUpdate: any;

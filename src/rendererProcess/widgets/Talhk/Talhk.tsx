@@ -3,13 +3,13 @@ import { MouseEvent } from "react";
 import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 // import { TextUpdateRules } from "./TextUpdateRules";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 // import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { MainPage } from "./client/MainPage";
 
 

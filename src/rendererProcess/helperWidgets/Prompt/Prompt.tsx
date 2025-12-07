@@ -2,7 +2,7 @@ import ReactDOM from "react-dom/client";
 import * as React from "react";
 import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { type_DialogInputBox, type_DialogMessageBox, type_DialogMessageBoxButton } from "../../../mainProcess/mainProcess/IpcEventArgType";
 import { TdmLogo } from "../../global/Images";
 

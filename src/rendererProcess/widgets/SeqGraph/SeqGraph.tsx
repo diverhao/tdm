@@ -9,7 +9,7 @@ import { DataSet } from "vis-data";
 import { Network } from "vis-network/standalone";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { ChannelAlarmStatus, ChannelSeverity, menuScan, TcaChannel } from "../../channel/TcaChannel";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { SeqGraphSidebar } from "./SeqGraphSidebar";
 import { Condition, SeqProgram, SeqState, SeqStateSet } from "./SeqProgram";
 import { ElementMacrosTable } from "../../helperWidgets/SharedElements/MacrosTable";

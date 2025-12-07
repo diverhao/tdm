@@ -4,13 +4,13 @@ import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { ImageSidebar } from "./ImageSidebar";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 // import { TextUpdateRules } from "./TextUpdateRules";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 // import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 // import * as THREE from 'three';
 import {OrthographicCamera, Scene, WebGLRenderer, Vector3, BufferGeometry, BufferAttribute, ShaderMaterial, Points, Color, Vector2, DataTexture, UnsignedByteType, RGBAFormat, SRGBColorSpace, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, PlaneGeometry} from "three";
 import { TcaChannel } from "../../channel/TcaChannel";

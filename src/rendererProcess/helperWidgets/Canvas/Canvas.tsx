@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import {
     getMouseEventClientX,
     getMouseEventClientY,
@@ -11,7 +11,7 @@ import {
 } from "../../global/GlobalVariables";
 import { CanvasSidebar } from "./CanvasSidebar";
 import { g_flushWidgets } from "../Root/Root";
-import { rgbaArrayToRgbaStr } from "../../global/GlobalMethods";
+import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
 import { rendererWindowStatus } from "../../global/Widgets";
 
 export type type_Canvas_tdl = Record<string, any> & {

@@ -3,7 +3,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidgetRule } from "../../widgets/BaseWidget/BaseWidgetRule";
 import { RuleComponent } from "./RuleComponent";
 import { Collapsible } from "../../helperWidgets/ColorPicker/Collapsible";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 
 export class RuleChoiceButtonUnselectedBackgroundColor extends RuleComponent {
 	constructor(rule: BaseWidgetRule) {

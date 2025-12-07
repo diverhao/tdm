@@ -3,10 +3,10 @@ import { g_widgets1 } from "../global/GlobalVariables";
 import { BaseWidget } from "../widgets/BaseWidget/BaseWidget";
 import { ReadWriteIos, IO_TYPES } from "./ReadWriteIos";
 import { rendererWindowStatus } from "../global/Widgets";
-import * as GlobalMethods from "../global/GlobalMethods";
+import * as GlobalMethods from "../../common/GlobalMethods";
 import { type_LocalChannel_data } from "../../mainProcess/channel/LocalChannelAgent";
 import { Channel_ACCESS_RIGHTS } from "../global/GlobalVariables";
-import { Log } from "../../mainProcess/log/Log";
+import { Log } from "../../common/Log";
 
 export enum ChannelSeverity {
     NO_ALARM,

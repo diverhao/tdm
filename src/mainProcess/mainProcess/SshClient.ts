@@ -92,7 +92,7 @@ export class SshClient {
             port: 22,
             userName: "1h7",
             privateKeyFile: '/Users/1h7/.ssh/id_rsa',
-            tdmCommand: `export DISPLAY=:99; ` + "/home/1h7/linux-unpacked/tdm -- --attach -1 --main-process-mode ssh-server",
+            tdmCommand: `export DISPLAY=:99; ` + "cd /home/haohao/tdm; node dist/mainProcess/startMainProcess.js  --main-process-mode ssh-server",
         }
     ]
 
@@ -288,8 +288,9 @@ export class SshClient {
     startTdmOnServer = async (): Promise<number> => {
 
         const sshClient = this.getSshClient();
-        const tdmCmd = this.getTdmCmd();
-
+        // const tdmCmd = this.getTdmCmd();
+        const tdmCmd = "cd /home/1h7/tdm; ls; /home/1h7/node-v22.21.1-linux-x64/bin/node dist/mainProcess/startMainProcess.js  --main-process-mode ssh-server";
+        // const tdmCmd = "ls -al";
         // resolved when TCP server is created, resolved to TCP server port
         let resolveFunc: any;
         let rejectFunc: any;
@@ -299,7 +300,7 @@ export class SshClient {
         })
 
         // (1)
-        sshClient.exec(tdmCmd, { x11: true},
+        sshClient.exec(tdmCmd, { x11: true },
             (err: Error | undefined, stream: ClientChannel) => {
                 if (err === undefined) {
                     // each "data" event one "console.log()" from remote TDM
@@ -450,8 +451,10 @@ export class SshClient {
             // (1)
             await this.connectSshs();
 
+            console.log("abc -----------")
             // (2)
             const tcpServerPort = await this.startTdmOnServer();
+            console.log("       >>>>started tcp server")
 
             // (3)
             const tcpStream = await this.connectTcpServer(tcpServerPort);

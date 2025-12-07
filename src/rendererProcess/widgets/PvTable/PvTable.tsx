@@ -2,7 +2,7 @@ import { getMouseEventClientY, GlobalVariables } from "../../global/GlobalVariab
 import * as React from "react";
 // import { MouseEvent } from "react";
 import { getMouseEventClientX, g_widgets1 } from "../../global/GlobalVariables";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { PvTableSidebar } from "./PvTableSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
@@ -15,7 +15,7 @@ import { Table } from "../../helperWidgets/Table/Table";
 import { AlarmOutlineStyle } from "../BaseWidget/BaseWidget";
 import { ElementDropDownMenu } from "../../helperWidgets/SharedElements/DropDownMenu";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 
 export type type_PvTable_tdl = {
     type: string;

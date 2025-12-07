@@ -9,7 +9,7 @@ import { SidebarLEDShape } from "../../helperWidgets/SidebarComponents/SidebarLE
 import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
 import { SidebarLEDBit } from "../../helperWidgets/SidebarComponents/SidebarLEDBit";
 import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
-import {Log} from "../../../mainProcess/log/Log";
+import {Log} from "../../../common/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class LEDSidebar extends BaseWidgetSidebar {

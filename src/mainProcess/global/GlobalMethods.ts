@@ -3,7 +3,7 @@ import { app } from "electron";
 import { readFileSync } from "fs";
 import * as os from "os";
 import path from "path";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 import { type_about_info, type_args } from "../mainProcess/IpcEventArgType";
 import { execSync } from "child_process";
 import { MainProcess } from "../mainProcess/MainProcess";

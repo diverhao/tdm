@@ -4,7 +4,7 @@ import { RuleComponent } from "./RuleComponent";
 import * as mathjs from "mathjs";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { EmbeddedDisplay } from "../../widgets/EmbeddedDisplay/EmbeddedDisplay";
-import {Log} from "../../../mainProcess/log/Log";
+import {Log} from "../../../common/Log";
 
 export class RuleEmbeddedDisplaySelectTabIndex extends RuleComponent {
 	constructor(rule: BaseWidgetRule) {

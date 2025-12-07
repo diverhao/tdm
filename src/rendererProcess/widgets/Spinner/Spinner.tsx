@@ -7,7 +7,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { SpinnerRules } from "./SpinnerRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { GlobalVariables } from "../../global/GlobalVariables";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 
 export type type_Spinner_tdl = {

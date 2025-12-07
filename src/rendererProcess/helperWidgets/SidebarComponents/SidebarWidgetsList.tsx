@@ -2,7 +2,7 @@ import * as React from "react";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
 import { GlobalVariables, calcScrollBarWidth, g_widgets1, getWindowVerticalScrollBarWidth } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import * as GlobalMethods from "../../global/GlobalMethods"
+import * as GlobalMethods from "../../../common/GlobalMethods"
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 import { GroupSelectionSidebar2 } from "../GroupSelection/GroupSelectionSidebar2";
 import { type_widget } from "../../global/Widgets";

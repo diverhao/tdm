@@ -7,8 +7,8 @@ import { ElementButton, ElementSmallButton } from "../SharedElements/MacrosTable
 import { DataViewerSidebar } from "../../widgets/DataViewer/DataViewerSidebar";
 import { DataViewer } from "../../widgets/DataViewer/DataViewer";
 import { Collapsible } from "../ColorPicker/Collapsible";
-import * as GlobalMethods from "../../global/GlobalMethods";
-import { Log } from "../../../mainProcess/log/Log";
+import * as GlobalMethods from "../../../common/GlobalMethods";
+import { Log } from "../../../common/Log";
 
 /**
  * Represents the channel names component in sidebar. <br>

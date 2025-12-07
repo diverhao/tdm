@@ -2,8 +2,8 @@ import { v4 as uuidv4 } from "uuid";
 import { DisplayWindowClient } from "../../../mainProcess/windows/DisplayWindow/DisplayWindowClient";
 import path from "path";
 import { g_widgets1, GlobalVariables } from "../../global/GlobalVariables";
-import { Log } from "../../../mainProcess/log/Log";
-import { getCurrentDateTimeStr } from "../../global/GlobalMethods";
+import { Log } from "../../../common/Log";
+import { getCurrentDateTimeStr } from "../../../common/GlobalMethods";
 
 export class VideoRecorder {
     private _sourceId: string = "";

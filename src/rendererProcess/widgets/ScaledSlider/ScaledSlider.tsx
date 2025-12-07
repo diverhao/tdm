@@ -6,9 +6,9 @@ import { ScaledSliderSidebar } from "./ScaledSliderSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ScaledSliderRules } from "./ScaledSliderRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { rgbaStrToRgbaArray, parseIntAngle, rgbaArrayToRgbaStr } from "../../global/GlobalMethods";
-import { Log } from "../../../mainProcess/log/Log";
-import { calcTicks, refineTicks } from "../../global/GlobalMethods";
+import { rgbaStrToRgbaArray, parseIntAngle, rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
+import { Log } from "../../../common/Log";
+import { calcTicks, refineTicks } from "../../../common/GlobalMethods";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 
 export type type_ScaledSlider_tdl = {

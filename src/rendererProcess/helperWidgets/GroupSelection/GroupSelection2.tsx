@@ -6,7 +6,7 @@ import { g_flushWidgets } from "../Root/Root";
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 import { type_widget } from "../../global/Widgets";
 import { Group } from "../../widgets/Group/Group";
-import {Log} from "../../../mainProcess/log/Log";
+import {Log} from "../../../common/Log";
 import { Canvas } from "../Canvas/Canvas";
 
 /**

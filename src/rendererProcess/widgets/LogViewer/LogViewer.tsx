@@ -6,7 +6,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Table } from "../../helperWidgets/Table/Table";
-import { convertEpochTimeToString } from "../../global/GlobalMethods";
+import { convertEpochTimeToString } from "../../../common/GlobalMethods";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { type_logData } from "../../../mainProcess/mainProcess/IpcEventArgType";
 

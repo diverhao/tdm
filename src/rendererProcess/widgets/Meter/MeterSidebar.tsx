@@ -12,7 +12,7 @@ import { SidebarMeterDialLabelPositionPercentage } from "../../helperWidgets/Sid
 import { SidebarMeterPointerLengthPercentage } from "../../helperWidgets/SidebarComponents/SidebarMeterPointerLengthPercentage";
 import { SidebarScaledSliderNumTickIntervals } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderNumTickIntervals";
 
-import {Log} from "../../../mainProcess/log/Log";
+import {Log} from "../../../common/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class MeterSidebar extends BaseWidgetSidebar {

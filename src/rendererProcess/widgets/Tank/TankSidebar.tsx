@@ -10,7 +10,7 @@ import { SidebarScaledSliderCompactScale } from "../../helperWidgets/SidebarComp
 import { SidebarTankScalePosition } from "../../helperWidgets/SidebarComponents/SidebarTankScalePosition";
 import { SidebarTankShowScaleInnerLabel } from "../../helperWidgets/SidebarComponents/SidebarTankShowScaleInnerLabel";
 import { SidebarDisplayScale } from "../../helperWidgets/SidebarComponents/SidebarDisplayScale";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class TankSidebar extends BaseWidgetSidebar {

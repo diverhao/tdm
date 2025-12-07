@@ -2,7 +2,7 @@ import * as React from "react";
 import { PvMonitor } from "./PvMonitor";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarPvMonitorMaxLineNum } from "../../helperWidgets/SidebarComponents/SidebarPvMonitorMaxLineNum"
-import {Log} from "../../../mainProcess/log/Log";
+import {Log} from "../../../common/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class PvMonitorSidebar extends BaseWidgetSidebar {

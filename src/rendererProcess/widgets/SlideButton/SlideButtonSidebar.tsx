@@ -13,7 +13,7 @@ import { SidebarSlideButtonBoxRatio } from "../../helperWidgets/SidebarComponent
 import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems"
 import { SidebarSlideButtonItems } from "../../helperWidgets/SidebarComponents/SidebarSlideButtonItems";
 import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class SlideButtonSidebar extends BaseWidgetSidebar {

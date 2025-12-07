@@ -8,7 +8,7 @@ import { ActionButtonRules } from "./ActionButtonRules";
 import path from "path";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 
 export type type_action_opendisplay_tdl = {
     type: "OpenDisplay";

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { TextEntry } from "./TextEntry";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class TextEntrySidebar extends BaseWidgetSidebar {

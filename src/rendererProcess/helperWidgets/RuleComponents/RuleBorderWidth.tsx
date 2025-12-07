@@ -4,7 +4,7 @@ import { RuleComponent } from "./RuleComponent";
 import * as mathjs from "mathjs";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 
 export class RuleBorderWidth extends RuleComponent {
 	constructor(rule: BaseWidgetRule) {

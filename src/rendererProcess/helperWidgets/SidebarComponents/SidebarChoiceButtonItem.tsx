@@ -3,7 +3,7 @@ import * as React from "react";
 import { ChoiceButton } from "../../widgets/ChoiceButton/ChoiceButton";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { ElementButton } from "../SharedElements/MacrosTable";
 
 export class SidebarChoiceButtonItem {

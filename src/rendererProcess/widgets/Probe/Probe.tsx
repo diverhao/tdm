@@ -13,9 +13,9 @@ import { GlobalVariables } from "../../global/GlobalVariables";
 import { TcaChannel } from "../../channel/TcaChannel";
 import { v4 as uuidv4 } from "uuid";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor, ElementRectangleButtonDefaultTextColor } from "../../helperWidgets/SharedElements/RectangleButton";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { ElementJsonViewer } from "../../helperWidgets/SharedElements/JsonViewer";
-import { mergePvaTypeAndData } from "../../global/GlobalMethods";
+import { mergePvaTypeAndData } from "../../../common/GlobalMethods";
 
 export type type_Probe_tdl = {
     type: string;

@@ -3,10 +3,10 @@ import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { LEDSidebar } from "./LEDSidebar";
-import { rgbaStrToRgbaArray } from "../../global/GlobalMethods";
+import { rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 import { LEDRules } from "./LEDRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 
 export type type_LED_tdl = {
     type: string;

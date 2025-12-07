@@ -3,7 +3,7 @@ import { Collapsible } from "../../helperWidgets/ColorPicker/Collapsible";
 import { DataViewer } from "./DataViewer";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarDataViewerChannelNames } from "../../helperWidgets/SidebarComponents/SidebarDataViewerChannelNames";
-import {Log} from "../../../mainProcess/log/Log";
+import {Log} from "../../../common/Log";
 import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
 
 export class DataViewerSidebar extends BaseWidgetSidebar {

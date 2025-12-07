@@ -1,6 +1,6 @@
 import { BobPropertyConverter } from "../../../mainProcess/windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../global/GlobalMethods";
+import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
 

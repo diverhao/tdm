@@ -2,7 +2,7 @@ import * as React from "react";
 import { BaseWidgetRule } from "../../widgets/BaseWidget/BaseWidgetRule";
 import { RuleComponent } from "./RuleComponent";
 import * as mathjs from "mathjs";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 

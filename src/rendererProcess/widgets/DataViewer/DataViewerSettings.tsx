@@ -4,8 +4,8 @@ import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { CollapsibleWithoutTitle } from "../../helperWidgets/ColorPicker/Collapsible";
 import { DataViewerSidebar } from "./DataViewerSidebar";
-import { Log } from "../../../mainProcess/log/Log";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import { Log } from "../../../common/Log";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 
 export class DataViewerSettings {

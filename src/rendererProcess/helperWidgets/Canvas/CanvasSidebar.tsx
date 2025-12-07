@@ -3,9 +3,9 @@ import { calcSidebarWidth, GlobalVariables } from "../../global/GlobalVariables"
 import { Collapsible } from "../ColorPicker/Collapsible";
 import { Canvas } from "./Canvas";
 import { SidebarCanvasScript } from "../SidebarComponents/SidebarCanvasScript";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { g_flushWidgets } from "../Root/Root";
 import { ElementMacroInput, ElementMacroTr, ElementButton, ElementMacroTd, ElementMacrosTable } from "../SharedElements/MacrosTable";
 import { SidebarLargeInput } from "../../widgets/BaseWidget/SidebarLargeInput";

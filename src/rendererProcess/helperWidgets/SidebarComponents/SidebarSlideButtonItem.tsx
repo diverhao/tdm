@@ -6,7 +6,7 @@ import { g_flushWidgets } from "../Root/Root";
 // import { BooleanButtonSidebar } from "../../widgets/BooleanButton/BooleanButtonSidebar";
 // import { BooleanButton } from "../../widgets/BooleanButton/BooleanButton";
 import { Collapsible } from "../ColorPicker/Collapsible";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { SlideButton } from "../../widgets/SlideButton/SlideButton";
 import { SidebarSlideButtonItems } from "./SidebarSlideButtonItems";
 import { ElementButton } from "../SharedElements/MacrosTable";

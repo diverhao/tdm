@@ -6,7 +6,7 @@ import { ComboBoxSidebar } from "./ComboBoxSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ComboBoxRules } from "./ComboBoxRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 
 export type type_ComboBox_tdl = {
     type: string;

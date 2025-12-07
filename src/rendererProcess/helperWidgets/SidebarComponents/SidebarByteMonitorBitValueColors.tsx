@@ -5,7 +5,7 @@ import { g_flushWidgets } from "../Root/Root";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
 import { ByteMonitor } from "../../widgets/ByteMonitor/ByteMonitor";
 import { Collapsible } from "../ColorPicker/Collapsible";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 
 export class SidebarByteMonitorBitValueColors extends SidebarComponent {
 	// _members: SidebarByteMonitorBitValueColor[] = [];

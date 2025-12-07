@@ -13,7 +13,7 @@ import { ChannelSeverity } from "../../channel/TcaChannel";
 import { FitAddon } from "@xterm/addon-fit";
 // import { parse } from "mathjs";
 import { TerminalIos } from "./TerminalIos";
-import { Log } from "../../../mainProcess/log/Log";
+import { Log } from "../../../common/Log";
 
 
 export type type_Terminal_tdl = {

@@ -4,7 +4,7 @@ import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarXYPlotYAxes } from "./SidebarXYPlotYAxes";
 import { XYPlot } from "../../widgets/XYPlot/XYPlot";
 import { Collapsible } from "../ColorPicker/Collapsible";
-import * as GlobalMethods from "../../global/GlobalMethods";
+import * as GlobalMethods from "../../../common/GlobalMethods";
 
 /**
  * Represents the channel names component in sidebar. <br>
