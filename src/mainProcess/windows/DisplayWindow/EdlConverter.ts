@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 // import { rgbaStrToRgbaArray, rgbaArrayToRgbaStr } from "./GlobalMethods/GlobalMethods";
 import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
-import { CanvasHelper } from "../../../rendererProcess/helperWidgets/Canvas/CanvasHelper";
+import { CanvasHelper } from "../../file/widgetConverters/Canvas/CanvasHelper";
 import { TextUpdateHelper } from "../../file/widgetConverters/TextUpdate/TextUpdateHelper";
 import { RectangleHelper } from "../../file/widgetConverters/Rectangle/RectangleHelper";
 import { LabelHelper } from "../../file/widgetConverters/Label/LabelHelper";

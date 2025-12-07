@@ -14,6 +14,10 @@ import { g_flushWidgets } from "../Root/Root";
 import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
 import { rendererWindowStatus } from "../../global/Widgets";
 
+/**
+ * ! Note: this type is defined in 3 places: (1) here, (2) widgetConverters/CanvasHelper.ts, and (3) common/GlobalVariables
+ * !       These 3 places must be synchronized
+ */
 export type type_Canvas_tdl = Record<string, any> & {
     type: "Canvas";
     widgetKey: "Canvas";

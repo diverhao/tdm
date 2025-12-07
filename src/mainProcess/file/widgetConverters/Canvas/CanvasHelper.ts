@@ -1,6 +1,5 @@
-import { BobPropertyConverter } from "../../../mainProcess/windows/DisplayWindow/BobPropertyConverter";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
-import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConverter";
+import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 
 export type type_Canvas_tdl = Record<string, any> & {
     type: "Canvas";

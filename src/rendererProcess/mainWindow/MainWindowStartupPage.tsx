@@ -1,11 +1,11 @@
 import * as React from "react";
 import * as GlobalMethods from "../../common/GlobalMethods";
-import { Profile } from "../../mainProcess/profile/Profile";
 import { GlobalVariables } from "../../common/GlobalVariables";
 import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMenu";
 import { Log } from "../../common/Log";
 import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
 import { MainWindowClient, mainWindowState } from "../windows/MainWindow/MainWindowClient";
+import { generateDefaultProfile, generateDefaultSshProfile } from "../../common/ProfileCategoryGenerators";
 
 
 export class MainWindowStartupPage {
@@ -77,7 +77,7 @@ export class MainWindowStartupPage {
     private cloneProfile = (name: string) => {
         const profiles = this.getMainWindowClient().getProfiles();
         let newName = `${name}-1`;
-        let propertyValue = Profile.generateDefaultProfile();
+        let propertyValue = generateDefaultProfile();
 
 
         if (name === "") {
@@ -108,7 +108,7 @@ export class MainWindowStartupPage {
         let name = "";
         const profiles = this.getMainWindowClient().getProfiles();
         let newName = `${name}-1`;
-        let propertyValue = Profile.generateDefaultSshProfile();
+        let propertyValue = generateDefaultSshProfile();
 
 
         if (name === "") {

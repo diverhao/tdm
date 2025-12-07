@@ -5,6 +5,7 @@ import { v4 as uuidv4, validate as uuidValidate } from "uuid";
 const fetch = (...args: any[]) => import("node-fetch").then(({ default: fetch }: any) => fetch(...(args as any)));
 import { Log } from "../../common/Log";
 import { FileReader } from "../file/FileReader";
+import { generateDefaultProfile, generateForAllProfilesProfile } from "../../common/ProfileCategoryGenerators";
 
 /**
  * Represents the profiles contained in the JSON-style file. If the file cannot be read/written, the profiles are always
@@ -341,12 +342,12 @@ export class Profiles {
      */
     serialize = (): Record<string, Record<string, any>> => {
         const profilesObj: Record<string, Record<string, any>> = {};
-        const defaultGeneralProfile = Profile.generateDefaultProfile();
+        const defaultGeneralProfile = generateDefaultProfile();
 
 
         // if the input JSON object does not have "For All Profiles" profile, add one in the beginning
         if (Object.keys(this._profiles).includes("For All Profiles") === false) {
-            const forAllProfilesProfileObj = Profile.generateForAllProfilesProfile();
+            const forAllProfilesProfileObj = generateForAllProfilesProfile();
             profilesObj["For All Profiles"] = forAllProfilesProfileObj;
         }
 

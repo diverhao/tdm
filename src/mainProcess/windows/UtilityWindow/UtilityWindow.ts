@@ -1,4 +1,4 @@
-import { type_Canvas_tdl } from "../../../rendererProcess/helperWidgets/Canvas/Canvas";
+import { type_Canvas_tdl } from "../../../common/GlobalVariables";
 
 // stores static methods for creating utility windows
 // does not have BrowserWindow, should not be compared to "class MainWindow" or "class DisplayWindow"

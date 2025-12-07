@@ -1,4 +1,4 @@
-import { CanvasHelper } from "../../../rendererProcess/helperWidgets/Canvas/CanvasHelper";
+import { CanvasHelper } from "../../file/widgetConverters/Canvas/CanvasHelper";
 import { ActionButtonHelper } from "../../file/widgetConverters/ActionButton/ActionButtonHelper";
 import { ArcHelper } from "../../file/widgetConverters/Arc/ArcHelper";
 import { BooleanButtonHelper } from "../../file/widgetConverters/BooleanButton/BooleanButtonHelper";

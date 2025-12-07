@@ -1,5 +1,4 @@
 import { type_log_levels } from "./Log";
-import { type_Canvas_tdl } from "../rendererProcess/helperWidgets/Canvas/CanvasHelper";
 
 export let logLevel: type_log_levels = type_log_levels.debug;
 
@@ -7,6 +6,22 @@ export const setLogLevel = (newLogLevel: type_log_levels) => {
     logLevel = newLogLevel;
 }
 
+
+export type type_Canvas_tdl = Record<string, any> & {
+    type: "Canvas";
+    widgetKey: "Canvas";
+    // key: "Canvas";
+    style: Record<string, number | string>;
+    macros: [string, string][];
+    // replaceMacros: boolean;
+    windowName: string;
+    script: string;
+    xGridSize: number;
+    yGridSize: number;
+    gridColor: string;
+    showGrid: boolean;
+    isUtilityWindow: boolean;
+};
 
 export type type_tdl = Record<string, any> & {
     Canvas: type_Canvas_tdl;

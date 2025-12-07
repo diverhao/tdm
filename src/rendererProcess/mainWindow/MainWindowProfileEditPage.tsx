@@ -13,7 +13,7 @@ import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMen
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../common/Log";
 import * as GlobalMethods from "../../common/GlobalMethods"
-import { Profile } from "../../mainProcess/profile/Profile";
+import { generateArchiveCategory_SNS, generateWebServerCategory, generateWebServerCategory_SNS } from "../../common/ProfileCategoryGenerators";
 
 /**
  * Represents the profile editor. This editor edits one profile.  <br>
@@ -368,7 +368,7 @@ export class MainWindowProfileEditPage {
         };
 
         const addWebServerCategory = () => {
-            const categoryJson = Profile.generateWebServerCategory() as Record<string, any>;
+            const categoryJson = generateWebServerCategory() as Record<string, any>;
             const categoryName = Object.keys(categoryJson)[0]; // should be "Web Server"
             if (Object.keys(this.getLocalProfile()).includes(categoryName)) {
                 Log.error("Web Server category already exists");
@@ -380,7 +380,7 @@ export class MainWindowProfileEditPage {
         }
 
         const addWebServerCategory_SNS = () => {
-            const categoryJson = Profile.generateWebServerCategory_SNS() as Record<string, any>;
+            const categoryJson = generateWebServerCategory_SNS() as Record<string, any>;
             const categoryName = Object.keys(categoryJson)[0]; // should be "Web Server"
             if (Object.keys(this.getLocalProfile()).includes(categoryName)) {
                 Log.error("Web Server category already exists");
@@ -392,7 +392,7 @@ export class MainWindowProfileEditPage {
         }
 
         const addArchiveCategory_SNS = () => {
-            const categoryJson = Profile.generateArchiveCategory_SNS() as Record<string, any>;
+            const categoryJson = generateArchiveCategory_SNS() as Record<string, any>;
             const categoryName = Object.keys(categoryJson)[0]; // should be "Web Server"
             if (Object.keys(this.getLocalProfile()).includes(categoryName)) {
                 Log.error("Archieve category already exists");
