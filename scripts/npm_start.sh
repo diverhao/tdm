@@ -15,7 +15,8 @@ cp ${TDM_ROOT}/src/mainProcess/windows/MainWindow/MainWindow-web.html ${TDM_ROOT
 cp ${TDM_ROOT}/src/mainProcess/windows/DisplayWindow/DisplayWindow-web.html ${TDM_ROOT}/dist/webpack/DisplayWindow.html
 cp ${TDM_ROOT}/src/mainProcess/windows/HelpWindow/HelpWindow-web.html ${TDM_ROOT}/dist/webpack/HelpWindow.html
 
-cp -a ${TDM_ROOT}/src/mainProcess/resources/css/fonts ${TDM_ROOT}/dist/mainProcess/windows/DisplayWindow/
+# todo: what is this?
+cp -a ${TDM_ROOT}/src/rendererProcess/css/fonts ${TDM_ROOT}/dist/mainProcess/windows/DisplayWindow/
 
 cp -a ${TDM_ROOT}/src/mainProcess/resources ${TDM_ROOT}/dist/mainProcess/
 

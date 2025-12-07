@@ -3,8 +3,6 @@ import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
-import * as GlobalMethods from "../../../common/GlobalMethods";
-import { FontsData } from "../../global/FontsData";
 
 /**
  * Represents the X component in sidebar. <br>

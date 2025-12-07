@@ -91,7 +91,7 @@ const ElementJsonViewerField = ({ fieldName, value, topLevel }: { fieldName: str
                     }}
                 >
                     {fieldName} {" "}
-                    <img src={"../../resources/webpages/arrowDown.svg"} height={"8px"}
+                    <img src={"../../webpack/resources/webpages/arrowDown.svg"} height={"8px"}
                         style={{ marginLeft: 5, transform: expanded === true ? "" : `rotate(270deg)` }}
 
                     ></img>

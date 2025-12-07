@@ -143,10 +143,10 @@ export const getScrollLeft = () => {
 
 
 // for mouse down event 
-export const getMouseEventClientX = (event: React.MouseEvent | MouseEvent) => {
+export const getMouseEventClientX = (event: any) => {
     return event.clientX + getScrollLeft();
 }
-export const getMouseEventClientY = (event: React.MouseEvent | MouseEvent) => {
+export const getMouseEventClientY = (event: any) => {
     return event.clientY + getScrollTop();
 }
 

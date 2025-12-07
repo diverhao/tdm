@@ -268,7 +268,7 @@ export const calcTicks = (valMin: number, valMax: number, numTicks: number = 11,
  * This function reduces the ticks by calculating the spacing between 2 adjacent ticks, making sure their spacing is 
  * less than the unitLength, which is typically half of the font size 
  */
-export const refineTicks = (rawTicks: number[], unitLength: number, elementRef: React.MutableRefObject<any>, direction: "horizontal" | "vertical"): string[] => {
+export const refineTicks = (rawTicks: number[], unitLength: number, elementRef: any, direction: "horizontal" | "vertical"): string[] => {
     let result: string[] = [];
     // use exponential or regular expression, take whichever is shorter
     for (let ii = 0; ii < rawTicks.length; ii++) {
