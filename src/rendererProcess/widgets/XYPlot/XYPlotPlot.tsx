@@ -1864,7 +1864,7 @@ export class XYPlotPlot {
                         }}
                     >
                         <img
-                            src={`../../resources/webpages/copy-symbol.svg`}
+                            src={`../../../webpack/resources/webpages/copy-symbol.svg`}
                             height={(this.getMainWidget().getAllStyle()["fontSize"] * 3) / 4}
                         ></img>
                     </div>

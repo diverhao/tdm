@@ -397,7 +397,7 @@ export class ActionButton extends BaseWidget {
                                     {this.getText()["appearance"] === "contemporary" ?
                                         <>
                                             &nbsp;
-                                            <img src="../../resources/webpages/arrowDown-thin.svg"
+                                            <img src="../../../webpack/resources/webpages/arrowDown-thin.svg"
                                                 style={{
                                                     width: this.getAllStyle()["fontSize"] * 0.7,
                                                     height: this.getAllStyle()["fontSize"] * 0.7,

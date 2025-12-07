@@ -99,7 +99,7 @@ export class MainWindowAgent {
                 minWidth: 200,
                 minHeight: 100,
                 show: true,
-                icon: path.join(__dirname, '../../../webpack/resources/webpages/tdm-logo.png'),
+                icon: path.join(__dirname, '../../../common/resources/webpages/tdm-logo.png'),
                 webPreferences: {
                     // use node.js
                     preload: path.join(__dirname, 'preload.js'), // <-- preload script here

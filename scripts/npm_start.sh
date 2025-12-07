@@ -16,13 +16,13 @@ cp ${TDM_ROOT}/src/mainProcess/windows/DisplayWindow/DisplayWindow-web.html ${TD
 cp ${TDM_ROOT}/src/mainProcess/windows/HelpWindow/HelpWindow-web.html ${TDM_ROOT}/dist/webpack/HelpWindow.html
 
 # todo: what is this?
-cp -a ${TDM_ROOT}/src/rendererProcess/css/fonts ${TDM_ROOT}/dist/mainProcess/windows/DisplayWindow/
+#cp -a ${TDM_ROOT}/src/rendererProcess/css/fonts ${TDM_ROOT}/dist/mainProcess/windows/DisplayWindow/
 
-cp -a ${TDM_ROOT}/src/mainProcess/resources ${TDM_ROOT}/dist/mainProcess/
+cp -a ${TDM_ROOT}/src/common/resources ${TDM_ROOT}/dist/common/
 
 cp -a ${TDM_ROOT}/src/mainProcess/mainProcess/*.py ${TDM_ROOT}/dist/mainProcess/mainProcess/
 cp -a ${TDM_ROOT}/src/test/tdmDemo ${TDM_ROOT}/dist/test
-ln -s ${TDM_ROOT}/dist/mainProcess/resources ${TDM_ROOT}/dist/webpack/
+ln -s ${TDM_ROOT}/dist/common/resources ${TDM_ROOT}/dist/webpack/
 
 # inject build date to package.json, which could be loaded by GlobalMethods.generateAboutInfo()
 DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")

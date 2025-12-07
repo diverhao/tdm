@@ -399,7 +399,7 @@ export class MainWindowProfileRunPage {
                         justifyContent: "center",
                         alignItems: "center",
                     }}>
-                        <img src="../../../mainProcess/resources/webpages/tdm-logo.svg" width="40px"></img>
+                        <img src="../../../webpack/resources/webpages/tdm-logo.svg" width="40px"></img>
                     </div>
                     <div style={{
                         margin: 5,

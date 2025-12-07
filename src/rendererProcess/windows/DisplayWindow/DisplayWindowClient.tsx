@@ -36,7 +36,9 @@ import { convertEpochTimeToString } from "../../../common/GlobalMethods";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
 import path from "path";
 
-import '../../../mainProcess/resources/css/katex.min.css'
+// this path is the path in src/ when webpack transpiles this tsx file
+// so we cannot use "../../../webpack/resources/...", but using the path in `src/`
+import '../../../common/resources/css/katex.min.css'
 import { Talhk } from "../../../rendererProcess/widgets/Talhk/Talhk";
 import { FileBrowser } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";

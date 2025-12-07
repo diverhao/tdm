@@ -1934,7 +1934,7 @@ export class DataViewerPlot {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../resources/webpages/scale-2y.svg`}
+                            src={`../../../webpack/resources/webpages/scale-2y.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* re-scale the currently selected trace to vertical plot limits */}
@@ -1980,7 +1980,7 @@ export class DataViewerPlot {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../resources/webpages/scale-y.svg`}
+                            src={`../../../webpack/resources/webpages/scale-y.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* setting page */}
@@ -2000,7 +2000,7 @@ export class DataViewerPlot {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../resources/webpages/settings.svg`}
+                            src={`../../../webpack/resources/webpages/settings.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* pause/play */}
@@ -2031,7 +2031,7 @@ export class DataViewerPlot {
                                     width: "100%",
                                     height: "100%",
                                 }}
-                                src={`../../resources/webpages/pause.svg`}
+                                src={`../../../webpack/resources/webpages/pause.svg`}
                             ></img>
                         ) : (
                             <img
@@ -2039,7 +2039,7 @@ export class DataViewerPlot {
                                     width: "100%",
                                     height: "100%",
                                 }}
-                                src={`../../resources/webpages/play.svg`}
+                                src={`../../../webpack/resources/webpages/play.svg`}
                             ></img>
                         )}
                     </this._StyledFigButton>{" "}
@@ -2068,7 +2068,7 @@ export class DataViewerPlot {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../resources/webpages/horizontal-zoom-in.svg`}
+                            src={`../../../webpack/resources/webpages/horizontal-zoom-in.svg`}
                         ></img>
                     </this._StyledFigButton>{" "}
                     {/* horizontal zoom out */}
@@ -2096,7 +2096,7 @@ export class DataViewerPlot {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../resources/webpages/horizontal-zoom-out.svg`}
+                            src={`../../../webpack/resources/webpages/horizontal-zoom-out.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* horizontal pan left */}
@@ -2125,7 +2125,7 @@ export class DataViewerPlot {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../resources/webpages/horizontal-pan-left.svg`}
+                            src={`../../../webpack/resources/webpages/horizontal-pan-left.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* horizontal pan right */}
@@ -2153,7 +2153,7 @@ export class DataViewerPlot {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../resources/webpages/horizontal-pan-right.svg`}
+                            src={`../../../webpack/resources/webpages/horizontal-pan-right.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* vertical zoom in*/}
@@ -2194,7 +2194,7 @@ export class DataViewerPlot {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../resources/webpages/vertical-zoom-in.svg`}
+                            src={`../../../webpack/resources/webpages/vertical-zoom-in.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* vertical zoom out*/}
@@ -2232,7 +2232,7 @@ export class DataViewerPlot {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../resources/webpages/vertical-zoom-out.svg`}
+                            src={`../../../webpack/resources/webpages/vertical-zoom-out.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* vertical pan down*/}
@@ -2269,7 +2269,7 @@ export class DataViewerPlot {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../resources/webpages/vertical-pan-down.svg`}
+                            src={`../../../webpack/resources/webpages/vertical-pan-down.svg`}
                         ></img>
                     </this._StyledFigButton>{" "}
                     {/* vertical pan up*/}
@@ -2306,7 +2306,7 @@ export class DataViewerPlot {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../resources/webpages/vertical-pan-up.svg`}
+                            src={`../../../webpack/resources/webpages/vertical-pan-up.svg`}
                         ></img>
                     </this._StyledFigButton>{" "}
                     {/* export data */}
@@ -2325,7 +2325,7 @@ export class DataViewerPlot {
                                 width: "70%",
                                 height: "70%",
                             }}
-                            src={`../../resources/webpages/save-to-file.svg`}
+                            src={`../../../webpack/resources/webpages/save-to-file.svg`}
                         ></img>
                     </this._StyledFigButton>{" "}
                     <this._ElementCursorPosition></this._ElementCursorPosition>
@@ -2346,7 +2346,7 @@ export class DataViewerPlot {
                             width: "100%",
                             height: "100%",
                         }}
-                        src={`../../resources/webpages/download-from-cloud-symbol.svg`}
+                        src={`../../../webpack/resources/webpages/download-from-cloud-symbol.svg`}
                     ></img>
                 </this._StyledFigButton>{" "}
             </div>

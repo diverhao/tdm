@@ -252,25 +252,25 @@ export class MainWindowStartupPage {
                 <this._ElementBackgroundContainer
                     top={20}
                     left={10}
-                    fileName={`../../resources/webpages/atom.svg`}
+                    fileName={`../../../webpack/resources/webpages/atom.svg`}
                 ></this._ElementBackgroundContainer>
 
                 <this._ElementBackgroundContainer
                     top={30}
                     left={90}
-                    fileName={`../../resources/webpages/star.svg`}
+                    fileName={`../../../webpack/resources/webpages/star.svg`}
                 ></this._ElementBackgroundContainer>
 
                 <this._ElementBackgroundContainer
                     top={140}
                     left={0}
-                    fileName={`../../resources/webpages/dna.svg`}
+                    fileName={`../../../webpack/resources/webpages/dna.svg`}
                 ></this._ElementBackgroundContainer>
 
                 <this._ElementBackgroundContainer
                     top={100}
                     left={40}
-                    fileName={`../../resources/webpages/chemistry.svg`}
+                    fileName={`../../webpack/resources/webpages/chemistry.svg`}
                 ></this._ElementBackgroundContainer>
             </div>
         );

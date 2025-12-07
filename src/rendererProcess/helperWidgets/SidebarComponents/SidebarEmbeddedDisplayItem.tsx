@@ -114,7 +114,7 @@ export class SidebarEmbeddedDisplayItem {
                                 }}
                             >
                                 <img
-                                    src={`../../resources/webpages/view-file-symbol.svg`}
+                                    src={`../../../webpack/resources/webpages/view-file-symbol.svg`}
                                     style={{
                                         width: "75%",
                                         height: "75%",
@@ -138,7 +138,7 @@ export class SidebarEmbeddedDisplayItem {
                             }}
                         >
                             <img
-                                src={`../../resources/webpages/open-file-symbol.svg`}
+                                src={`../../../webpack/resources/webpages/open-file-symbol.svg`}
                                 style={{
                                     width: "75%",
                                     height: "75%",
@@ -166,7 +166,7 @@ export class SidebarEmbeddedDisplayItem {
                             }}
                         >
                             <img
-                                src={`../../resources/webpages/delete-symbol.svg`}
+                                src={`../../../webpack/resources/webpages/delete-symbol.svg`}
                                 style={{
                                     width: "50%",
                                     height: "50%",

@@ -7,11 +7,10 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import path from "path";
-import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 
 // fix up everytime the <code> is re-rendered, the .js file is compressed, it is modified to export Prism
 // we add module.exports = Prism; to the end of the file
-const Prism1 = require("../../../mainProcess/resources/js/prism.js");
+const Prism1 = require("../../../common/resources/js/prism.js");
 
 export type type_TextEditor_tdl = {
     type: string;

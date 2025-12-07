@@ -149,7 +149,7 @@ export class SidebarActionOpenDisplayItem {
 							}}
 						>
 							<img
-								src="../../../mainProcess/resources/webpages/open-file-symbol.svg"
+								src="../../../webpack/resources/webpages/open-file-symbol.svg"
 								style={{
 									width: 20,
 									height: 15,

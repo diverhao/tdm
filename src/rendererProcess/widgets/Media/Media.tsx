@@ -552,7 +552,7 @@ export class Media extends BaseWidget {
         },
         text: {
             // media file name, could be picture types, pdf, or video type
-            fileName: "../../../mainProcess/resources/webpages/tdm-logo.svg",
+            fileName: "../../../webpack/resources/webpages/tdm-logo.svg",
             // opacity
             opacity: 1,
             // for picture

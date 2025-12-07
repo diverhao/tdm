@@ -763,7 +763,7 @@ export abstract class BaseWidgetRule {
                 }}
             >
                 <img
-                    src={`../../../mainProcess/resources/webpages/delete-symbol.svg`}
+                    src={`../../../webpack/resources/webpages/delete-symbol.svg`}
                     style={{
                         width: "50%",
                         height: "50%",

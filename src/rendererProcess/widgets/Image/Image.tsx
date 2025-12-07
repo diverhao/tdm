@@ -728,7 +728,7 @@ export class Image extends BaseWidget {
                                 this.setHintText("");
                             }}
 
-                            src={"../../resources/webpages/settings.svg"}
+                            src={"../../../webpack/resources/webpages/settings.svg"}
                             width={this.configHeight}
                         ></img>
                         {/* color map range */}
@@ -1331,7 +1331,7 @@ export class Image extends BaseWidget {
                     // this.zoomImage(this.zoomLevel * 1.1, 75, 35)
                     this.setImageXyRange();
                 }}>
-                <img src={"../../resources/webpages/scale-y.svg"} width={this.configHeight}></img>
+                <img src={"../../../webpack/resources/webpages/scale-y.svg"} width={this.configHeight}></img>
             </div>
         );
     }
@@ -1364,7 +1364,7 @@ export class Image extends BaseWidget {
                     // this.zoomImage(this.zoomLevel * 1.1, 75, 35)
                     this.resetViewToFull();
                 }}>
-                <img src={"../../resources/webpages/scale-2y.svg"} width={this.configHeight}></img>
+                <img src={"../../../webpack/resources/webpages/scale-2y.svg"} width={this.configHeight}></img>
 
             </div>
         );
@@ -1407,7 +1407,7 @@ export class Image extends BaseWidget {
                     }
 
                 }}>
-                <img src={playing === true ? "../../resources/webpages/pause.svg" : "../../resources/webpages/play.svg"} width={this.configHeight}></img>
+                <img src={playing === true ? "../../../webpack/resources/webpages/pause.svg" : "../../../webpack/resources/webpages/play.svg"} width={this.configHeight}></img>
 
                 {/* {playing === true ? "Pause" : "Play"} */}
             </div>

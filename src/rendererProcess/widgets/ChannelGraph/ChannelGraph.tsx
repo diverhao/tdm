@@ -499,7 +499,7 @@ export class ChannelGraph extends BaseWidget {
                                                     height: GlobalVariables.defaultFontSize * 0.8,
                                                     cursor: "pointer",
                                                 }}
-                                                src={`../../resources/webpages/delete-symbol.svg`}
+                                                src={`../../../webpack/resources/webpages/delete-symbol.svg`}
                                                 onClick={() => {
                                                     delete this.dbFiles[dbFileName];
                                                     forceUpdate({});
@@ -513,7 +513,7 @@ export class ChannelGraph extends BaseWidget {
                                                     height: GlobalVariables.defaultFontSize * 1,
                                                     cursor: "pointer",
                                                 }}
-                                                src={`../../resources/webpages/modify-symbol.svg`}
+                                                src={`../../../webpack/resources/webpages/modify-symbol.svg`}
                                                 onClick={() => {
                                                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                                     const displayWindowId = displayWindowClient.getWindowId();
@@ -534,7 +534,7 @@ export class ChannelGraph extends BaseWidget {
                                                     height: GlobalVariables.defaultFontSize * 0.8,
                                                     cursor: "pointer",
                                                 }}
-                                                src={`../../resources/webpages/refresh-symbol.svg`}
+                                                src={`../../../webpack/resources/webpages/refresh-symbol.svg`}
                                                 onClick={() => {
                                                     this.openDbFile(dbFileName);
 

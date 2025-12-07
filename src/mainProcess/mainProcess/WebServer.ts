@@ -143,8 +143,8 @@ export class WebServer {
             keyFileContents = fs.readFileSync(httpsKeyFileName);
             certFileContents = fs.readFileSync(httpsCertificateFileName);
         } catch (e) {
-            keyFileContents = fs.readFileSync(path.join(__dirname, "../resources/profiles/server.key"));
-            certFileContents = fs.readFileSync(path.join(__dirname, "../resources/profiles/server.cert"));
+            keyFileContents = fs.readFileSync(path.join(__dirname, "../../common/resources/profiles/server.key"));
+            certFileContents = fs.readFileSync(path.join(__dirname, "../../common/resources/profiles/server.cert"));
         }
 
         const httpsOptions = {
@@ -250,7 +250,7 @@ export class WebServer {
             }
             if (this._authenticationMethod === "LDAP") {
                 // use LDAP login
-                res.sendFile(path.join(__dirname, "../../webpack/resources/webpages/login.html"))
+                res.sendFile(path.join(__dirname, "../../common/resources/webpages/login.html"))
             } else if (this._authenticationMethod === "No authentication") {
                 // same as the "/login" POST request
                 const mainProcess = this.getMainProcess();

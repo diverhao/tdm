@@ -460,7 +460,7 @@ export class ProfilesViewer extends BaseWidget {
                                                         onClick={() => {
                                                             setShowAll(!showAll);
                                                         }}
-                                                        src={"../../../mainProcess/resources/webpages/arrowDown-thin.svg"}
+                                                        src={"../../../webpack/resources/webpages/arrowDown-thin.svg"}
                                                         width="10px"
                                                         height="10px">
 
@@ -513,7 +513,7 @@ export class ProfilesViewer extends BaseWidget {
                             onClick={() => {
                                 setShowAll(!showAll);
                             }}
-                            src={"../../../mainProcess/resources/webpages/arrowUp-thin.svg"}
+                            src={"../../../webpack/resources/webpages/arrowUp-thin.svg"}
                             width="10px"
                             height="10px">
                         </img>

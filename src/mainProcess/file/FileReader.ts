@@ -60,12 +60,12 @@ export class FileReader {
         if (readProfileJSON) {
             // read file failed, copy the default profile
             try {
-                Log.debug("-1", "Trying to create default file", filePath, "from", path.join(__dirname, "../resources/tdls/profiles_default.json"));
+                Log.debug("-1", "Trying to create default file", filePath, "from", path.join(__dirname, "../../common/resources/tdls/profiles_default.json"));
                 fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
-                fs.copyFileSync(path.join(__dirname, "../resources/tdls/profiles_default.json"), filePath);
+                fs.copyFileSync(path.join(__dirname, "../../common/resources/tdls/profiles_default.json"), filePath);
                 // copy GetStarted.tdl
-                fs.copyFileSync(path.join(__dirname, "../resources/tdls/GetStarted.tdl"), path.join(path.dirname(filePath), "GetStarted.tdl"));
+                fs.copyFileSync(path.join(__dirname, "../../common/resources/tdls/GetStarted.tdl"), path.join(path.dirname(filePath), "GetStarted.tdl"));
                 Log.debug("-1", "Created an empty file", filePath);
                 Log.debug("-1", "read this file");
                 fileContents = JSON.parse(fs.readFileSync(filePath).toString());
@@ -103,12 +103,12 @@ export class FileReader {
         if (readProfileJSON) {
             // read file failed, copy the default profile
             try {
-                Log.debug("-1", "Trying to create default file", filePath, "from", path.join(__dirname, "../resources/tdls/profiles_default.json"));
+                Log.debug("-1", "Trying to create default file", filePath, "from", path.join(__dirname, "../../common/resources/tdls/profiles_default.json"));
                 fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
-                fs.copyFileSync(path.join(__dirname, "../resources/tdls/profiles_default.json"), filePath);
+                fs.copyFileSync(path.join(__dirname, "../../common/resources/tdls/profiles_default.json"), filePath);
                 // copy GetStarted.tdl
-                fs.copyFileSync(path.join(__dirname, "../resources/tdls/GetStarted.tdl"), path.join(path.dirname(filePath), "GetStarted.tdl"));
+                fs.copyFileSync(path.join(__dirname, "../../common/resources/tdls/GetStarted.tdl"), path.join(path.dirname(filePath), "GetStarted.tdl"));
                 Log.debug("-1", "Created an empty file", filePath);
                 Log.debug("-1", "read this file");
                 fileContents = JSON.parse(fs.readFileSync(filePath).toString());

@@ -58,7 +58,7 @@ export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 							}}
 						>
 							<img
-								src={`../../resources/webpages/add-symbol.svg`}
+								src={`../../../webpack/resources/webpages/add-symbol.svg`}
 								style={{
 									width: "60%",
 									height: "60%",
@@ -71,14 +71,14 @@ export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 							}}
 						>
 							<img
-								src={`../../resources/webpages/add-symbol.svg`}
+								src={`../../../webpack/resources/webpages/add-symbol.svg`}
 								style={{
 									width: "60%",
 									height: "60%",
 								}}
 							></img>
 							<img
-								src={`../../resources/webpages/web-symbol.svg`}
+								src={`../../../webpack/resources/webpages/web-symbol.svg`}
 								style={{
 									width: "60%",
 									height: "60%",

@@ -407,7 +407,7 @@ export class FileBrowser extends BaseWidget {
                                 const newFolderPath = path.dirname(this.getFolderPath());
                                 this.setFolderPath(newFolderPath);
                                 this.fetchFolderContent();
-                                this.setThumbnail("../../resources/webpages/blank.svg");
+                                this.setThumbnail("../../../webpack/resources/webpages/blank.svg");
                                 return;
                             } else {
                                 for (let ii = selectedItemIndex - 1; ii >= 0; ii--) {
@@ -444,13 +444,13 @@ export class FileBrowser extends BaseWidget {
                             this.forceUpdateButtons({});
                             if (element["name"].endsWith(".tdl") || element["name"].endsWith(".bob")) {
                                 // wait for the new thumbnail
-                                this.setThumbnail("../../resources/webpages/blank.svg");
+                                this.setThumbnail("../../../webpack/resources/webpages/blank.svg");
                                 this.fetchThumbnail(element["name"]);
                             } else if (element["type"] === "folder") {
-                                this.setThumbnail("../../resources/webpages/blank.svg");
+                                this.setThumbnail("../../../webpack/resources/webpages/blank.svg");
                                 // this.setThumbnail("../../resources/webpages/open-file-symbol.svg");
                             } else {
-                                this.setThumbnail("../../resources/webpages/blank.svg");
+                                this.setThumbnail("../../../webpack/resources/webpages/blank.svg");
                                 // this.setThumbnail("../../resources/webpages/copy-symbol.svg");
                             }
 
@@ -483,10 +483,10 @@ export class FileBrowser extends BaseWidget {
                             >
                                 Name &nbsp;
                                 {this.getSortingMethod() === type_sorting_method.name_ascending ?
-                                    <img src={"../../resources/webpages/arrowUp-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                    <img src={"../../../webpack/resources/webpages/arrowUp-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
                                     :
                                     this.getSortingMethod() === type_sorting_method.name_decending ?
-                                        <img src={"../../resources/webpages/arrowDown-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                        <img src={"../../../webpack/resources/webpages/arrowDown-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
                                         :
                                         null
                                 }
@@ -512,10 +512,10 @@ export class FileBrowser extends BaseWidget {
                                     >
                                         Date Modified &nbsp;
                                         {this.getSortingMethod() === type_sorting_method.time_ascending ?
-                                            <img src={"../../resources/webpages/arrowUp-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                            <img src={"../../../webpack/resources/webpages/arrowUp-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
                                             :
                                             this.getSortingMethod() === type_sorting_method.time_decending ?
-                                                <img src={"../../resources/webpages/arrowDown-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                                <img src={"../../../webpack/resources/webpages/arrowDown-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
                                                 :
                                                 null
                                         }
@@ -538,10 +538,10 @@ export class FileBrowser extends BaseWidget {
                                     >
                                         Size &nbsp;
                                         {this.getSortingMethod() === type_sorting_method.size_ascending ?
-                                            <img src={"../../resources/webpages/arrowUp-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                            <img src={"../../../webpack/resources/webpages/arrowUp-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
                                             :
                                             this.getSortingMethod() === type_sorting_method.size_decending ?
-                                                <img src={"../../resources/webpages/arrowDown-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                                <img src={"../../../webpack/resources/webpages/arrowDown-thin.svg"} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
                                                 :
                                                 null
                                         }
@@ -743,7 +743,7 @@ export class FileBrowser extends BaseWidget {
                     // like refresh, force fetch
                     this.setFolderPath(folderPath);
                     this.fetchFolderContent();
-                    this.setThumbnail("../../resources/webpages/blank.svg");
+                    this.setThumbnail("../../../webpack/resources/webpages/blank.svg");
                 }}
                 style={{
                     width: "100%",
@@ -851,7 +851,7 @@ export class FileBrowser extends BaseWidget {
                             })
                             this.forceUpdateButtons({});
                             this.fetchFolderContent();
-                            this.setThumbnail("../../resources/webpages/blank.svg");
+                            this.setThumbnail("../../../webpack/resources/webpages/blank.svg");
                         }
                     }
                 }
@@ -927,7 +927,7 @@ export class FileBrowser extends BaseWidget {
                             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                             this.setFolderPath(this.getFolderPath());
                             this.fetchFolderContent();
-                            this.setThumbnail("../../resources/webpages/blank.svg");
+                            this.setThumbnail("../../../webpack/resources/webpages/blank.svg");
                         }
                     }
                 }
@@ -946,7 +946,7 @@ export class FileBrowser extends BaseWidget {
                         this.updateFolderContent(bookmarks);
                         this.getText()["path"] = "bookmarks-ABCD";
                         this.setFolderPath("bookmarks-ABCD"); // magic word
-                        this.setThumbnail("../../resources/webpages/blank.svg");
+                        this.setThumbnail("../../../webpack/resources/webpages/blank.svg");
                     }
                 }
                 text={"Bookmarks"}
@@ -986,13 +986,13 @@ export class FileBrowser extends BaseWidget {
                         forceUpdateTable({});
                         if (element["name"].endsWith(".tdl") || element["name"].endsWith(".bob")) {
                             // wait for the new thumbnail
-                            this.setThumbnail("../../resources/webpages/blank.svg");
+                            this.setThumbnail("../../../webpack/resources/webpages/blank.svg");
                             this.fetchThumbnail(element["name"]);
                         } else if (element["type"] === "folder") {
-                            this.setThumbnail("../../resources/webpages/blank.svg");
+                            this.setThumbnail("../../../webpack/resources/webpages/blank.svg");
                             // this.setThumbnail("../../resources/webpages/open-file-symbol.svg");
                         } else {
-                            this.setThumbnail("../../resources/webpages/blank.svg");
+                            this.setThumbnail("../../../webpack/resources/webpages/blank.svg");
                             // this.setThumbnail("../../resources/webpages/copy-symbol.svg");
                         }
                     }
@@ -1025,7 +1025,7 @@ export class FileBrowser extends BaseWidget {
                             maxWidth: "100%",
                             overflow: "hidden",
                         }}>
-                            <img src="../../resources/webpages/folder-symbol.svg"
+                            <img src="../../../webpack/resources/webpages/folder-symbol.svg"
                                 style={{ width: GlobalVariables.defaultFontSize, height: GlobalVariables.defaultFontSize, opacity: 1, }}
                             >
                             </img>
@@ -1044,7 +1044,7 @@ export class FileBrowser extends BaseWidget {
                                 maxWidth: "100%",
                                 overflow: "hidden",
                             }}>
-                                <img src="../../resources/webpages/tdm-logo-large-fill.png"
+                                <img src="../../../webpack/resources/webpages/tdm-logo-large-fill.png"
                                     style={{ width: GlobalVariables.defaultFontSize, height: GlobalVariables.defaultFontSize }}
                                 >
                                 </img>
@@ -1062,7 +1062,7 @@ export class FileBrowser extends BaseWidget {
                                 maxWidth: "100%",
                                 overflow: "hidden",
                             }}>
-                                <img src="../../resources/webpages/document-symbol.svg"
+                                <img src="../../../webpack/resources/webpages/document-symbol.svg"
                                     style={{ width: GlobalVariables.defaultFontSize, height: GlobalVariables.defaultFontSize }}
                                 >
                                 </img>
@@ -1276,7 +1276,7 @@ export class FileBrowser extends BaseWidget {
             }
             this.setFolderPath(newFolderPath);
             this.setSelectedItem({ name: "", timeModified: -1, size: -1, type: "file" });
-            this.setThumbnail("../../resources/webpages/blank.svg")
+            this.setThumbnail("../../../webpack/resources/webpages/blank.svg")
             // clear filter
             this.setFilterText("");
             this.filterText = "";
@@ -1371,7 +1371,7 @@ export class FileBrowser extends BaseWidget {
     }
 
     _ElementThumbnail = ({ parentElementRef }: any) => {
-        const [thumbnail, setThumbnail] = React.useState("../../resources/webpages/blank.svg");
+        const [thumbnail, setThumbnail] = React.useState("../../../webpack/resources/webpages/blank.svg");
         this.setThumbnail = setThumbnail;
         const elementRef = React.useRef<any>(null);
 
@@ -1393,7 +1393,7 @@ export class FileBrowser extends BaseWidget {
                     maxHeight: "95%",
                     objectFit: "contain",
                     borderRadius: 5,
-                    border: thumbnail === "../../resources/webpages/blank.svg" ? "none" : "solid 1px rgba(150, 150, 150, 1)",
+                    border: thumbnail === "../../../webpack/resources/webpages/blank.svg" ? "none" : "solid 1px rgba(150, 150, 150, 1)",
                 }}
                 >
                 </img>

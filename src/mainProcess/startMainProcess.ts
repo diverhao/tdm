@@ -91,7 +91,7 @@ if (args["mainProcessMode"] !== "ssh-server") {
  * Here is the site-specific profile file
  */
 if (site === "sns-office-user") {
-    args["settings"] = path.join(__dirname, "resources/profiles/profiles-sns-office-user.json");
+    args["settings"] = path.join(__dirname, "../common/resources/profiles/profiles-sns-office-user.json");
 } // add more site-specific profiles here
 
 

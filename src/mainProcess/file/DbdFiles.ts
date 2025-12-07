@@ -11,7 +11,7 @@ export class DbdFiles {
 
 	readAllDbdFiles = () => {
 		// this folder contains *Record.dbd, dbCommon.dbd, and menu*.dbd from EPICS base 7.0.4.1
-		const dbdDir = path.join(__dirname, "../resources/dbd/");
+		const dbdDir = path.join(__dirname, "../../common/resources/dbd/");
 		const fileNames = fs.readdirSync(dbdDir);
 		for (let fileNameRaw of fileNames) {
 			const fileName = path.join(dbdDir, fileNameRaw);
