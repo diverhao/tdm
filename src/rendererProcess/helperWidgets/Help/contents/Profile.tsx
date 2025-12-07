@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Help } from "../Help";
 import { LINK, IMG, ARTICLE, P, H1, H2, H3, SLIDESHOW, CODE, LI } from "../Elements"
-import { GlobalVariables } from "../../../global/GlobalVariables";
 
 export const Profile = (widget: Help, linkPath: string) => {
     return <Element widget={widget} linkPath={linkPath}></Element>

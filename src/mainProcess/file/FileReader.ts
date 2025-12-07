@@ -7,7 +7,7 @@ import { BobPropertyConverter } from "../windows/DisplayWindow/BobPropertyConver
 import { EdlConverter } from "../windows/DisplayWindow/EdlConverter";
 import { type_Canvas_tdl } from "../../rendererProcess/helperWidgets/Canvas/Canvas";
 import * as os from "os";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 import { MessagePort } from "worker_threads";
 import { StpConverter } from "../windows/DisplayWindow/StpConverter";
 import xml2js from 'xml2js';

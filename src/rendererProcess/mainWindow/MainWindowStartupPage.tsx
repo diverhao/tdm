@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as GlobalMethods from "../../common/GlobalMethods";
 import { Profile } from "../../mainProcess/profile/Profile";
-import { GlobalVariables } from "./GlobalVariables";
+import { GlobalVariables } from "../../common/GlobalVariables";
 import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMenu";
 import { Log } from "../../common/Log";
 import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";

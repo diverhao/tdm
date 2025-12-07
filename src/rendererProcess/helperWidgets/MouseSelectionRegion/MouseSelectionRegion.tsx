@@ -1,5 +1,6 @@
 import * as React from "react";
-import { GlobalVariables, calcSidebarWidth, g_widgets1, getMouseEventClientX, getMouseEventClientY, getScrollLeft, getScrollTop, getWindowHorizontalScrollBarWidth } from "../../global/GlobalVariables";
+import { GlobalVariables, calcSidebarWidth, getMouseEventClientX, getMouseEventClientY, getScrollLeft, getScrollTop, getWindowHorizontalScrollBarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { TextUpdate } from "../../widgets/TextUpdate/TextUpdate";
 import { GroupSelection2 } from "../GroupSelection/GroupSelection2";

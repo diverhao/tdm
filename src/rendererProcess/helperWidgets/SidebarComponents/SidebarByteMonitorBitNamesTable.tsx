@@ -1,9 +1,6 @@
 import * as React from "react";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
-import { GlobalVariables } from "../../global/GlobalVariables";
 import { ByteMonitor } from "../../widgets/ByteMonitor/ByteMonitor";
 import { ElementMacroInput, ElementButton, ElementMacroTd, ElementMacroTr, ElementMacrosTableSingleColumnData } from "../SharedElements/MacrosTable";
 

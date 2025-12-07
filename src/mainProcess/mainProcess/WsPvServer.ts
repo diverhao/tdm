@@ -4,7 +4,7 @@ import { MainProcess } from "../mainProcess/MainProcess";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { CaChannelAgent } from "../channel/CaChannelAgent";
 import { LocalChannelAgent } from "../channel/LocalChannelAgent";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 
 export class WsPvServer {

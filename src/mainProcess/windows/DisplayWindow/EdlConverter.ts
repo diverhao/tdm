@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 // import { rgbaStrToRgbaArray, rgbaArrayToRgbaStr } from "./GlobalMethods/GlobalMethods";
-import { rgbaArrayToRgbaStr } from "../../../rendererProcess/global/GlobalMethods";
+import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
 import { CanvasHelper } from "../../../rendererProcess/helperWidgets/Canvas/CanvasHelper";
 import { TextUpdateHelper } from "../../../rendererProcess/widgets/TextUpdate/TextUpdateHelper";
 import { RectangleHelper } from "../../../rendererProcess/widgets/Rectangle/RectangleHelper";
@@ -20,7 +20,7 @@ import { RadioButtonHelper } from "../../../rendererProcess/widgets/RadioButton/
 import { MediaHelper } from "../../../rendererProcess/widgets/Media/MediaHelper";
 import { ScaledSliderHelper } from "../../../rendererProcess/widgets/ScaledSlider/ScaledSliderHelper";
 import { XYPlotHelper } from "../../../rendererProcess/widgets/XYPlot/XYPlotHelper";
-import { Log } from "../../log/Log";
+import { Log } from "../../../common/Log";
 import { LEDHelper } from "../../../rendererProcess/widgets/LED/LEDHelper";
 import path from "path";
 

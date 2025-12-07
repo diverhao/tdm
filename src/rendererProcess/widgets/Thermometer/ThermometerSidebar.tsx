@@ -10,7 +10,8 @@ import { SidebarScaledSliderNumTickIntervals } from "../../helperWidgets/Sidebar
 import { SidebarScaledSliderCompactScale } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderCompactScale";
 import { SidebarDisplayScale } from "../../helperWidgets/SidebarComponents/SidebarDisplayScale";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class ThermometerSidebar extends BaseWidgetSidebar {
     _sidebarProgressBarBackgroundColor: SidebarProgressBarBackgroundColor;

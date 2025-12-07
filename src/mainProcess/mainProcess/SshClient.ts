@@ -1,7 +1,7 @@
 import { Client, ClientChannel } from "ssh2";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { MainProcess } from "../mainProcess/MainProcess";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import { type_options_createDisplayWindow } from "../windows/WindowAgentsManager";
 import { tcpPortStr } from "../global/GlobalVariables";

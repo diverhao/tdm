@@ -1,5 +1,5 @@
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
-import { Log } from "../../log/Log";
+import { Log } from "../../../common/Log";
 
 /**
  * Singleton class representing the context menu in desktop mode and ssh-client mode.<br>

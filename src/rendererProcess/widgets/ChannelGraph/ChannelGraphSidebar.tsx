@@ -4,7 +4,8 @@ import { ChannelGraph } from "./ChannelGraph";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class ChannelGraphSidebar extends BaseWidgetSidebar {
     constructor(channelGraph: ChannelGraph) {

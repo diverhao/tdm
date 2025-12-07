@@ -4,7 +4,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
 import { CanvasSidebar } from "../Canvas/CanvasSidebar";
-import { GlobalVariables } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 
 /**
  * Represents the X component in sidebar. <br>

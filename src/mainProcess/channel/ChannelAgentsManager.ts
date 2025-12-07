@@ -5,7 +5,7 @@ import { Profile } from "../profile/Profile";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { LocalChannelAgent } from "./LocalChannelAgent";
 import { DbdFiles } from "../file/DbdFiles";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 
 //todo: singleton class
 

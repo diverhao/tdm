@@ -1,6 +1,6 @@
 import * as React from "react";
 import { v4 as uuidv4, validate as uuidValidate } from "uuid";
-import { GlobalVariables } from "./GlobalVariables";
+import { GlobalVariables } from "../../common/GlobalVariables";
 
 import {
     ElementUpDownButtonOnSidebar,

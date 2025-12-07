@@ -2,7 +2,7 @@ import { IncomingMessage } from "http";
 import { WebSocket, WebSocketServer, RawData } from "ws";
 import { FileReader } from "../file/FileReader";
 import { MainProcess } from "../mainProcess/MainProcess";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 import { type_args } from "../mainProcess/IpcEventArgType";
 import { openTdlFileAsRequestedByAnotherInstance } from "../global/GlobalMethods";
 

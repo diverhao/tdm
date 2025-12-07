@@ -1,6 +1,7 @@
 import * as React from "react";
 import { MouseEvent } from "react";
-import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";

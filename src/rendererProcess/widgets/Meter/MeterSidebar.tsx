@@ -13,7 +13,8 @@ import { SidebarMeterPointerLengthPercentage } from "../../helperWidgets/Sidebar
 import { SidebarScaledSliderNumTickIntervals } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderNumTickIntervals";
 
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class MeterSidebar extends BaseWidgetSidebar {
     _sidebarProgressBarBackgroundColor: SidebarProgressBarBackgroundColor;

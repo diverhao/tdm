@@ -5,7 +5,8 @@ import { SidebarDataViewerChannelNames } from "../../helperWidgets/SidebarCompon
 import { SidebarXYPlotYAxes } from "../../helperWidgets/SidebarComponents/SidebarXYPlotYAxes";
 import { SidebarXYPlotXAxis } from "../../helperWidgets/SidebarComponents/SidebarXYPlotXAxis";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class XYPlotSidebar extends BaseWidgetSidebar {
     _sidebarDataViewerChannelNames: SidebarDataViewerChannelNames;

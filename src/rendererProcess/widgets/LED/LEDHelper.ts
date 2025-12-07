@@ -1,4 +1,4 @@
-import { GlobalVariables } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BobPropertyConverter } from "../../../mainProcess/windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConverter";

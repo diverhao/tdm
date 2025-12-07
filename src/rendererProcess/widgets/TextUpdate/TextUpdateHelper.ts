@@ -4,7 +4,7 @@ import * as GlobalMethods from "../../../common/GlobalMethods";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
-import { GlobalVariables } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 
 export type type_TextUpdate_tdl = {
     type: string;

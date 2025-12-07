@@ -2,7 +2,8 @@ import * as React from "react";
 import { Table } from "./Table";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { Log } from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarTableRowsConfig } from "../../helperWidgets/SidebarComponents/SidebarTableRowsConfig"
 import { SidebarTableGap } from "../../helperWidgets/SidebarComponents/SidebarTableGap";
 

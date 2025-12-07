@@ -1,7 +1,7 @@
 import ReactDOM from "react-dom/client";
 import { MainWindowClient, mainWindowState } from "./MainWindowClient";
 import { MainWindowProfileRunPage } from "../../../rendererProcess/mainWindow/MainWindowProfileRunPage";
-import { Log } from "../../log/Log";
+import { Log } from "../../../common/Log";
 import { MainWindowProfileEditPage } from "../../../rendererProcess/mainWindow/MainWindowProfileEditPage";
 import { MainWindowStartupPage } from "../../../rendererProcess/mainWindow/MainWindowStartupPage";
 import { IpcEventArgType, IpcEventArgType3, type_DialogInputBox, type_DialogMessageBox } from "../../mainProcess/IpcEventArgType";

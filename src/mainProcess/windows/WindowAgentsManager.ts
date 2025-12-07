@@ -6,7 +6,7 @@ import { v4 as uuid } from "uuid";
 import { UtilityWindow } from "./UtilityWindow/UtilityWindow";
 import { type_tdl } from "../file/FileReader";
 import { FileReader } from "../file/FileReader";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 import { spawn } from "child_process";
 import path from "path";
 

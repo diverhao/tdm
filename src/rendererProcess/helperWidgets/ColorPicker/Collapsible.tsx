@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ColorPicker } from "./ColorPicker";
-import { GlobalVariables } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 
 export const Collapsible = ({ rgbColorStr, updateFromSidebar, title, eventName }: any) => {
     const rgbaStrToRgbaArray = (rgbaString: string) => {

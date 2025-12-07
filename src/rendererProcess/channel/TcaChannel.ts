@@ -1,11 +1,11 @@
-import { Channel_DBR_TYPES, type_dbrData } from "../global/GlobalVariables";
+import { Channel_DBR_TYPES, type_dbrData } from "../../common/GlobalVariables";
 import { g_widgets1 } from "../global/GlobalVariables";
 import { BaseWidget } from "../widgets/BaseWidget/BaseWidget";
 import { ReadWriteIos, IO_TYPES } from "./ReadWriteIos";
 import { rendererWindowStatus } from "../global/Widgets";
 import * as GlobalMethods from "../../common/GlobalMethods";
 import { type_LocalChannel_data } from "../../mainProcess/channel/LocalChannelAgent";
-import { Channel_ACCESS_RIGHTS } from "../global/GlobalVariables";
+import { Channel_ACCESS_RIGHTS } from "../../common/GlobalVariables";
 import { Log } from "../../common/Log";
 
 export enum ChannelSeverity {

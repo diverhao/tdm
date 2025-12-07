@@ -1,5 +1,6 @@
 import * as React from "react";
-import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
 import { type_widget } from "../../global/Widgets";
 import { g_setWidgets1 } from "../../global/GlobalVariables";
 import { Widgets, rendererWindowStatus } from "../../global/Widgets";

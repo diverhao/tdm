@@ -1,5 +1,5 @@
 import * as React from "react";
-import { calcSidebarWidth, GlobalVariables } from "../../global/GlobalVariables";
+import { calcSidebarWidth, GlobalVariables } from "../../../common/GlobalVariables";
 import { Collapsible } from "../ColorPicker/Collapsible";
 import { Canvas } from "./Canvas";
 import { SidebarCanvasScript } from "../SidebarComponents/SidebarCanvasScript";

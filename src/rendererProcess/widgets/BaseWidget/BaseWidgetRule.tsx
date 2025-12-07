@@ -8,7 +8,7 @@ import { RuleBackgroundColor } from "../../helperWidgets/RuleComponents/RuleBack
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import {evaluate} from "mathjs";
-import { GlobalVariables } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import { RuleWidth } from "../../helperWidgets/RuleComponents/RuleWidth";
 import { RuleColor } from "../../helperWidgets/RuleComponents/RuleColor";
 import { RuleBorderColor } from "../../helperWidgets/RuleComponents/RuleBorderColor";

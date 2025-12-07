@@ -1,7 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 import { DisplayWindowClient } from "../../../mainProcess/windows/DisplayWindow/DisplayWindowClient";
 import path from "path";
-import { g_widgets1, GlobalVariables } from "../../global/GlobalVariables";
+import { g_widgets1,  } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { getCurrentDateTimeStr } from "../../../common/GlobalMethods";
 

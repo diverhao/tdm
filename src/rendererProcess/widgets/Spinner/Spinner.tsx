@@ -6,7 +6,7 @@ import { SpinnerSidebar } from "./SpinnerSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { SpinnerRules } from "./SpinnerRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { GlobalVariables } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 

@@ -6,7 +6,8 @@ import { SidebarChoiceButtonSelectedBackgroundColor } from "../../helperWidgets/
 import { SidebarChoiceButtonUnselectedBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUnselectedBackgroundColor";
 import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class ChoiceButtonSidebar extends BaseWidgetSidebar {
     _sidebarChoiceButtonItems: SidebarChoiceButtonItems;

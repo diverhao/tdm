@@ -7,7 +7,7 @@ import * as fs from "fs";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { FileReader, type_tdl } from "../file/FileReader";
 import path from "path";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 import { type_sshServerConfig } from "./SshClient";
 import * as os from "os";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";

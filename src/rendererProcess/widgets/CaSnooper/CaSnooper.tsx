@@ -1,6 +1,6 @@
-import { getMouseEventClientY, GlobalVariables } from "../../global/GlobalVariables";
+import { getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
-import { getMouseEventClientX, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";

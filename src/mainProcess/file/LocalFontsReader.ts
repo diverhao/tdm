@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { promises as fsPromises } from 'fs';
 import * as path from 'path';
-import { Log } from '../log/Log';
+import { Log } from '../../common/Log';
 
 /**
  * Collection of methods for reading system font names.

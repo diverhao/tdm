@@ -2,7 +2,7 @@ import { nativeImage, WebContents, BrowserWindow, Menu, App } from "electron";
 import * as path from "path";
 import * as url from "url";
 import { WindowAgentsManager } from "../WindowAgentsManager";
-import { Log } from "../../log/Log";
+import { Log } from "../../../common/Log";
 import { generateAboutInfo } from "../../global/GlobalMethods";
 import pidusage from "pidusage";
 import { writeFileSync } from "fs";

@@ -7,7 +7,8 @@ import { SidebarScaledSliderCompactScale } from "../../helperWidgets/SidebarComp
 import { SidebarScaledSliderSliderBarBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderSliderBarBackgroundColor"
 import { SidebarScaledSliderSliderBarBackgroundColor1 } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderSliderBarBackgroundColor1"
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class ScaledSliderSidebar extends BaseWidgetSidebar {
     _sidebarScaledSliderNumTickIntervals: SidebarScaledSliderNumTickIntervals;

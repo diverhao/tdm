@@ -2,7 +2,7 @@ import { ChannelAgentsManager } from "./ChannelAgentsManager";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { DisplayOperations } from "./CaChannelAgent";
 import EventEmitter from "events";
-import { converEpochTimeToEpicsTimeStamp } from "../../rendererProcess/global/GlobalMethods";
+import { converEpochTimeToEpicsTimeStamp } from "../../common//GlobalMethods";
 
 
 export type type_LocalChannel_data = {

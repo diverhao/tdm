@@ -1,8 +1,8 @@
 import path from "path";
 import os from "os";
 import { defaultWebServerPort } from "../global/GlobalVariables";
-import { Log } from "../log/Log";
-import { type_log_levels } from "../log/Log";
+import { Log } from "../../common/Log";
+import { type_log_levels } from "../../common/Log";
 import { generateAboutInfo } from "../global/GlobalMethods";
 import { type_args } from "../mainProcess/IpcEventArgType";
 

@@ -3,7 +3,8 @@ import { ActionButton } from "./ActionButton";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarActionItems } from "../../helperWidgets/SidebarComponents/SidebarActionItems";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class ActionButtonSidebar extends BaseWidgetSidebar {
     _sidebarActionItems: SidebarActionItems;

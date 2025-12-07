@@ -1,7 +1,8 @@
-import { getMouseEventClientY, GlobalVariables } from "../../global/GlobalVariables";
+import { getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 // import { MouseEvent } from "react";
-import { getMouseEventClientX, g_widgets1 } from "../../global/GlobalVariables";
+import { getMouseEventClientX } from "../../../common/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { PvTableSidebar } from "./PvTableSidebar";

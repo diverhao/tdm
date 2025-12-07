@@ -8,7 +8,8 @@ import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/S
 import { SidebarLEDShape } from "../../helperWidgets/SidebarComponents/SidebarLEDShape";
 import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 // import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
 // import { SidebarLEDBit } from "../../helperWidgets/SidebarComponents/SidebarLEDBit";
 

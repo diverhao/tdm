@@ -1,7 +1,8 @@
 import * as React from "react";
 import { MouseEvent } from "react";
 import { convertDateObjToString } from "../../../common/GlobalMethods";
-import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { PvMonitorSidebar } from "./PvMonitorSidebar";

@@ -23,7 +23,8 @@ import { SidebarBooleanButtonOnLabel } from "../../helperWidgets/SidebarComponen
 import { SidebarBooleanButtonOffLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffLabel";
 import { SidebarBooleanButtonMode } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonMode";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class BooleanButtonSidebar extends BaseWidgetSidebar {
     // _sidebarChoiceButtonItems: SidebarChoiceButtonItems;

@@ -13,7 +13,8 @@ import { SidebarBooleanButtonOffLabel } from "../../helperWidgets/SidebarCompone
 import { SidebarBooleanButtonOnValue } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOnValue";
 import { SidebarBooleanButtonOffValue } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffValue";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class CheckBoxSidebar extends BaseWidgetSidebar {
     // _sidebarChoiceButtonItems: SidebarChoiceButtonItems;

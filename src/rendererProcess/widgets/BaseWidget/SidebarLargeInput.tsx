@@ -1,7 +1,8 @@
 import ReactDOM from "react-dom/client";
 import * as React from "react";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { g_widgets1, GlobalVariables } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 
 export class SidebarLargeInput {
     value: string = "";

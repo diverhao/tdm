@@ -1,5 +1,5 @@
 import net from "net";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 import { IpcManagerOnMainProcess } from "../mainProcess/IpcManagerOnMainProcess";
 import { tcpPortStr } from "../global/GlobalVariables";
 

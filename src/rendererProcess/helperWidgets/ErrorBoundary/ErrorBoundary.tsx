@@ -1,4 +1,4 @@
-import { GlobalVariables } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import { Component } from "react";
 import * as React from "react";
 

@@ -5,7 +5,7 @@ import { ChannelAgentsManager } from "../channel/ChannelAgentsManager";
 import { Profile } from "../profile/Profile";
 import { WsPvServer } from "./WsPvServer";
 // import { MainProcesses } from "../mainProcesses/MainProcesses";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 import { websocketPvServerPort } from "../global/GlobalVariables";
 import { SshClient, type_sshServerConfig } from "./SshClient";
 import { CaSnooperServer } from "./CaSnooperServer";

@@ -1,7 +1,8 @@
 console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Start to load modules.")
 
 import ReactDOM from "react-dom/client";
-import { getMouseEventClientX, getMouseEventClientY, g_widgets1, GlobalVariables } from "../../../rendererProcess/global/GlobalVariables";
+import { getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
+import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
 import { Canvas } from "../../../rendererProcess/helperWidgets/Canvas/Canvas";
 import { IpcManagerOnDisplayWindow } from "./IpcManagerOnDisplayWindow";
 import { type_tdl } from "../../file/FileReader";
@@ -21,7 +22,7 @@ import { XYPlot } from "../../../rendererProcess/widgets/XYPlot/XYPlot";
 import { Terminal } from "../../../rendererProcess/widgets/Terminal/Terminal";
 import { Calculator } from "../../../rendererProcess/widgets/Calculator/Calculator";
 import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/ChannelGraph";
-import { Log, type_log_levels } from "../../log/Log";
+import { Log, type_log_levels } from "../../../common/Log";
 import { LogViewer } from "../../../rendererProcess/widgets/LogViewer/LogViewer";
 import { ContextMenu } from "./ContextMenu";
 import { PromptOnDisplayWindow } from "../../../rendererProcess/helperWidgets/Prompt/PromptOnDisplayWindow";
@@ -31,7 +32,7 @@ import { TextUpdate } from "../../../rendererProcess/widgets/TextUpdate/TextUpda
 import { PvMonitor } from "../../../rendererProcess/widgets/PvMonitor/PvMonitor";
 import { Casw } from "../../../rendererProcess/widgets/Casw/Casw";
 import { TextEditor } from "../../../rendererProcess/widgets/TextEditor/TextEditor";
-import { convertEpochTimeToString } from "../../../rendererProcess/global/GlobalMethods";
+import { convertEpochTimeToString } from "../../../common/GlobalMethods";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
 import path from "path";
 

@@ -5,10 +5,10 @@ import {
     getMouseEventClientY,
     getScrollTop,
     GlobalVariables,
-    g_widgets1,
     calcSidebarWidth,
     getWindowVerticalScrollBarWidth,
-} from "../../global/GlobalVariables";
+} from "../../../common/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
 import { CanvasSidebar } from "./CanvasSidebar";
 import { g_flushWidgets } from "../Root/Root";
 import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";

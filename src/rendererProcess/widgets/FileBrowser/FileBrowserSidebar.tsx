@@ -1,7 +1,8 @@
 import * as React from "react";
 import { FileBrowser } from "./FileBrowser";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import {Log} from "../../../common/Log";
 import { SidebarFileBrowserPath } from "../../helperWidgets/SidebarComponents/SidebarFileBrowserPath";
 

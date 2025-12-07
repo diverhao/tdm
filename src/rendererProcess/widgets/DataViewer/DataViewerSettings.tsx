@@ -1,6 +1,7 @@
 import { DataViewer } from "./DataViewer";
 import * as React from "react";
-import { GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { CollapsibleWithoutTitle } from "../../helperWidgets/ColorPicker/Collapsible";
 import { DataViewerSidebar } from "./DataViewerSidebar";

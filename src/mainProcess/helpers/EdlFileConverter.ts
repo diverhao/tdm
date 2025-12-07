@@ -3,7 +3,7 @@ import { FileReader } from "../file/FileReader";
 import * as fs from "fs";
 
 import crypto from "crypto";
-import { convertEpochTimeToString } from "../../rendererProcess/global/GlobalMethods";
+import { convertEpochTimeToString } from "../../common/GlobalMethods";
 import { argv } from "process";
 
 // iterate over all the files in the folder, calculate the MD5, save to a new JSON files

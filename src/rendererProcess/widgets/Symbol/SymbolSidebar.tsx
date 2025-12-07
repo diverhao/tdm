@@ -5,7 +5,8 @@ import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponent
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
 import { SidebarSymbolItems } from "../../helperWidgets/SidebarComponents/SidebarSymbolItems";
 import { Log } from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarMediaOpenFile } from "../../helperWidgets/SidebarComponents/SidebarMediaOpenFile";
 
 export class SymbolSidebar extends BaseWidgetSidebar {

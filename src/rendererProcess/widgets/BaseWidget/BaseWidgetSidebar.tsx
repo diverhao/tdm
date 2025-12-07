@@ -1,5 +1,6 @@
 import * as React from "react";
-import { calcSidebarWidth, GlobalVariables, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { GlobalVariables, calcSidebarWidth } from "../../../common/GlobalVariables";
 import { BaseWidget } from "./BaseWidget";
 
 import { SidebarX } from "../../helperWidgets/SidebarComponents/SidebarX";

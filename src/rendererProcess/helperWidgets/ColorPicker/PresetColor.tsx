@@ -1,6 +1,6 @@
 import * as React from "react";
 import { rgb2hex } from "./Helper";
-import { GlobalVariables } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 
 const PresetColorRaw = ({ setOveredColorName, selectedColorName, setSelectedColorName, colorName, handleColorUpdate }: any) => {

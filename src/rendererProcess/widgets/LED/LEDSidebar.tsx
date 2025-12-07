@@ -10,7 +10,8 @@ import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarC
 import { SidebarLEDBit } from "../../helperWidgets/SidebarComponents/SidebarLEDBit";
 import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class LEDSidebar extends BaseWidgetSidebar {
     _sidebarPictureStretchToFit: SidebarPictureStretchToFit;

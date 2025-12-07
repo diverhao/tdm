@@ -9,19 +9,19 @@ import { MouseSelectionRegion } from "../helperWidgets/MouseSelectionRegion/Mous
 import {
     Channel_DBR_TYPES,
     GlobalVariables,
-    g_widgets1,
     Channel_ACCESS_RIGHTS,
     getMouseEventClientX,
     getMouseEventClientY,
     calcSidebarWidth,
     getWindowVerticalScrollBarWidth,
-} from "./GlobalVariables";
-import { type_dbrData } from "./GlobalVariables";
+    type_dbrData,
+} from "../../common/GlobalVariables";
+import { g_widgets1 } from "./GlobalVariables";
 import { v4 as uuidv4 } from "uuid";
 import { ReadWriteIos } from "../channel/ReadWriteIos";
 import { ChannelSeverity, TcaChannel } from "../channel/TcaChannel";
 import { Root } from "../helperWidgets/Root/Root";
-import { insertToMap } from "./GlobalMethods";
+import { insertToMap } from "../../common/GlobalMethods";
 import * as GlobalMethods from "../../common/GlobalMethods";
 import { Probe } from "../widgets/Probe/Probe";
 import { DataViewer } from "../widgets/DataViewer/DataViewer";

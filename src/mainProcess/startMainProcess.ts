@@ -27,7 +27,7 @@
 
 import { ArgParser } from "./arg/ArgParser";
 import { app } from "electron";
-import { Log } from "./log/Log";
+import { Log } from "../common/Log";
 import path from "path";
 
 /**

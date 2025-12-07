@@ -1,10 +1,6 @@
-import { GlobalVariables } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BobPropertyConverter } from "../../../mainProcess/windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper, type_BaseWidget_tdl } from "../BaseWidget/BaseWidgetHelper";
-import * as GlobalMethods from "../../../common/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
-import { EdlConverter } from "../../../mainProcess/windows/DisplayWindow/EdlConverter";
-import { v4 as uuidv4 } from "uuid";
 
 export type type_Spinner_tdl = {
     type: string;

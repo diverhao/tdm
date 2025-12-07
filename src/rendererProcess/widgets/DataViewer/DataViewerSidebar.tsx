@@ -4,7 +4,8 @@ import { DataViewer } from "./DataViewer";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarDataViewerChannelNames } from "../../helperWidgets/SidebarComponents/SidebarDataViewerChannelNames";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class DataViewerSidebar extends BaseWidgetSidebar {
     _sidebarDataViewerChannelNames: SidebarDataViewerChannelNames;

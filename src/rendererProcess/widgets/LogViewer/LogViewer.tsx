@@ -1,4 +1,4 @@
-import { getMouseEventClientY, GlobalVariables } from "../../global/GlobalVariables";
+import { getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";

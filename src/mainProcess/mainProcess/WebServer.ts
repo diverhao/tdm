@@ -9,7 +9,7 @@ import session from "express-session";
 
 import { IncomingMessage, ServerResponse } from "http";
 import * as fs from "fs";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 import path from "path";
 import { Profile } from "../profile/Profile";
 import { Profiles } from "../profile/Profiles";

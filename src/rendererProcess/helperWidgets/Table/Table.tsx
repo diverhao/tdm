@@ -1,5 +1,6 @@
 import * as React from "react";
-import { g_widgets1, getMouseEventClientY, GlobalVariables } from "../../global/GlobalVariables";
+import {  GlobalVariables } from "../../../common/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 import { g_flushWidgets } from "../Root/Root";
 import { PvMonitor } from "../../widgets/PvMonitor/PvMonitor";

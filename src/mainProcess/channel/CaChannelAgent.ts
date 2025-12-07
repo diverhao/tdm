@@ -1,8 +1,8 @@
 import { Channel, ChannelMonitor, Context, Channel_DBR_TYPES, type_pva_status, PVA_STATUS_TYPE } from "epics-tca";
-import { type_dbrData } from "../../rendererProcess/global/GlobalVariables";
+import { type_dbrData } from "../../common/GlobalVariables";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { ChannelAgentsManager } from "./ChannelAgentsManager";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 
 export enum DisplayOperations {
     GET,

@@ -32,7 +32,7 @@ import { TextEntryHelper } from "../../../rendererProcess/widgets/TextEntry/Text
 import { TextUpdateHelper } from "../../../rendererProcess/widgets/TextUpdate/TextUpdateHelper";
 // import { ThermometerHelper } from "../../../rendererProcess/widgets/Thermometer/ThermometerHelper";
 // import { ThumbWheelHelper } from "../../../rendererProcess/widgets/ThumbWheel/ThumbWheelHelper";
-import { Log } from "../../log/Log";
+import { Log } from "../../../common/Log";
 import { TankHelper } from "../../../rendererProcess/widgets/Tank/TankHelper";
 import { SymbolHelper } from "../../../rendererProcess/widgets/Symbol/SymbolHelper";
 import { TextSymbolHelper } from "../../../rendererProcess/widgets/TextSymbol/TextSymbolHelper";

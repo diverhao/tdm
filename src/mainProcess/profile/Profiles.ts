@@ -3,7 +3,7 @@ import path from "path";
 import { Profile } from "./Profile";
 import { v4 as uuidv4, validate as uuidValidate } from "uuid";
 const fetch = (...args: any[]) => import("node-fetch").then(({ default: fetch }: any) => fetch(...(args as any)));
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 import { FileReader } from "../file/FileReader";
 
 /**

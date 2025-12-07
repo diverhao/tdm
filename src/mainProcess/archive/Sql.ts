@@ -1,5 +1,5 @@
 import oracledb, { ResultSet } from 'oracledb';
-import { Log } from '../log/Log';
+import { Log } from '../../common/Log';
 
 export enum SqlState {
     "DISCONNECTED",

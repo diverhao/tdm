@@ -14,7 +14,8 @@ import { SidebarByteMonitorBitValueColors } from "../../helperWidgets/SidebarCom
 import { SidebarByteMonitorBitNamesTable } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorBitNamesTable";
 import { SidebarByteMonitorSequence } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorSequence";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class ByteMonitorSidebar extends BaseWidgetSidebar {
     _sidebarPictureStretchToFit: SidebarPictureStretchToFit;

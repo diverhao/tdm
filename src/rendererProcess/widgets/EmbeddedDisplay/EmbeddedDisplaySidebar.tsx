@@ -10,7 +10,8 @@ import { SidebarEmbeddedDisplayTabWidth } from "../../helperWidgets/SidebarCompo
 import { SidebarEmbeddedDisplayTabHeight } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabHeight";
 import { SidebarEmbeddedDisplayShowTab } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayShowTab";
 import { Log } from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarEmbeddedDisplayResize } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayResize";
 
 export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {

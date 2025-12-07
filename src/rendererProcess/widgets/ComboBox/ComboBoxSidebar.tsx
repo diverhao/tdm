@@ -17,7 +17,8 @@ import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarC
 // import { SidebarProgressBarBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarProgressbarBackgroundColor";
 import { SidebarChoiceButtonItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonItems";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class ComboBoxSidebar extends BaseWidgetSidebar {
     // _sidebarChoiceButtonItems: SidebarChoiceButtonItems;

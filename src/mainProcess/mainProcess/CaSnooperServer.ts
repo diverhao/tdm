@@ -1,6 +1,6 @@
 import { MainProcess } from "./MainProcess";
 import dgram from "dgram";
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 
 type type_CaUdpMessage = {

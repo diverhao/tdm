@@ -1,7 +1,7 @@
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidgetRule } from "../../widgets/BaseWidget/BaseWidgetRule";
-import { GlobalVariables } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import { SidebarLargeInput } from "../../widgets/BaseWidget/SidebarLargeInput";
 
 

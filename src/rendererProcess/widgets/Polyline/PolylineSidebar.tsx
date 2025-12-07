@@ -6,7 +6,8 @@ import { SidebarPolylineFill } from "../../helperWidgets/SidebarComponents/Sideb
 import { SidebarPolylineClosed } from "../../helperWidgets/SidebarComponents/SidebarPolylineClosed";
 import { SidebarPolylinePointsTable } from "../../helperWidgets/SidebarComponents/SidebarPolylinePointsTable";
 import {Log} from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class PolylineSidebar extends BaseWidgetSidebar {
     _sidebarPolylineSmootherize: SidebarPolylineSmootherize;

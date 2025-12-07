@@ -1,5 +1,6 @@
 import * as React from "react";
-import { GlobalVariables, calcSidebarWidth, g_widgets1, getWindowHorizontalScrollBarWidth, type_dbrData } from "../../global/GlobalVariables";
+import { GlobalVariables, calcSidebarWidth, getWindowHorizontalScrollBarWidth, type_dbrData } from "../../../common/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { DataViewerSidebar } from "./DataViewerSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";

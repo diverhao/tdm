@@ -2,7 +2,7 @@ import path from "path";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { Worker } from 'worker_threads';
-import { Log } from "../log/Log";
+import { Log } from "../../common/Log";
 
 
 export class EdlFileConverterThread {

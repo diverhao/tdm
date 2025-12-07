@@ -7,7 +7,7 @@ import { MainWindowProfileRunPage } from "../../../rendererProcess/mainWindow/Ma
 import { IpcManagerOnMainWindow } from "./IpcManagerOnMainWindow";
 import { FontsData } from "../../../rendererProcess/global/FontsData";
 import { PromptOnMainWindow } from "../../../rendererProcess/helperWidgets/Prompt/PromptOnMainWindow";
-import { Log } from "../../log/Log";
+import { Log } from "../../../common/Log";
 
 
 export enum mainWindowState {

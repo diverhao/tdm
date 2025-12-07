@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GlobalVariables } from "./GlobalVariables";
+import { GlobalVariables } from "../../common/GlobalVariables";
 
 import { MainWindowClient } from "../../mainProcess/windows/MainWindow/MainWindowClient";
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";

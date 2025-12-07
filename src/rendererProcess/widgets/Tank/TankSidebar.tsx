@@ -11,7 +11,8 @@ import { SidebarTankScalePosition } from "../../helperWidgets/SidebarComponents/
 import { SidebarTankShowScaleInnerLabel } from "../../helperWidgets/SidebarComponents/SidebarTankShowScaleInnerLabel";
 import { SidebarDisplayScale } from "../../helperWidgets/SidebarComponents/SidebarDisplayScale";
 import { Log } from "../../../common/Log";
-import { calcSidebarWidth, g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class TankSidebar extends BaseWidgetSidebar {
     _sidebarProgressBarBackgroundColor: SidebarProgressBarBackgroundColor;
