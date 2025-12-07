@@ -36,7 +36,7 @@ import { convertEpochTimeToString } from "../../../common/GlobalMethods";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
 import path from "path";
 
-// this path is the path in src/ when webpack transpiles this tsx file
+// this path is the path inside src/ when webpack transpiles this tsx file
 // so we cannot use "../../../webpack/resources/...", but using the path in `src/`
 import '../../../common/resources/css/katex.min.css'
 import { Talhk } from "../../../rendererProcess/widgets/Talhk/Talhk";
@@ -46,7 +46,6 @@ import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 // there is no typescrit def for this lib, I created a wrapper at dom-to-image-more.d.ts
 import { toBlob } from "dom-to-image-more";
 import { ChannelNameHint } from "../../../rendererProcess/helperWidgets/ChannelNameHint/ChannelNameHint";
-
 
 console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Finished loading modules.")
 

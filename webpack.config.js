@@ -298,4 +298,5 @@ const edlFileConverterConfig = {
 	},
 };
 
-module.exports = [windowClientsConfig, edlFileConverterConfig];
+// module.exports = [windowClientsConfig, edlFileConverterConfig];
+module.exports = [windowClientsConfig];
