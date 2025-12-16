@@ -77,7 +77,7 @@ export class Table extends BaseWidget {
         // this._itemNames = JSON.parse(JSON.stringify(widgetTdl["itemNames"]));
         // this._itemBackgroundColors = JSON.parse(JSON.stringify(widgetTdl["itemBackgroundColors"]));
         this._widgetKeys = JSON.parse(JSON.stringify(widgetTdl["widgetKeys"]));
-        this._macros = JSON.parse(JSON.stringify(widgetTdl["macros"]));
+        this._tabMacros = JSON.parse(JSON.stringify(widgetTdl["macros"]));
 
         // this._sidebar = new GroupSidebar(this);
     }
