@@ -4,7 +4,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
-import { TableSidebar } from "./TableSidebar";
+import { RepeaterSidebar } from "./RepeaterSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
@@ -15,7 +15,7 @@ import path from "path";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { type_tdl } from "../../../common/GlobalVariables";
 
-export type type_Table_tdl = {
+export type type_Repeater_tdl = {
     type: string;
     widgetKey: string;
     key: string;
@@ -27,10 +27,10 @@ export type type_Table_tdl = {
     // itemNames: string[];
     // itemBackgroundColors: string[];
     widgetKeys: string[];
-    macros: [string, string][][]; // this macro is for this Table widget only, not the macro for the whole display
+    macros: [string, string][][]; // this macro is for this Repeater widget only, not the macro for the whole display
 };
 
-export class Table extends BaseWidget {
+export class Repeater extends BaseWidget {
     // level-1 properties in tdl file
     // _type: string;
     // _widgetKey: string;
@@ -64,11 +64,11 @@ export class Table extends BaseWidget {
     // _allWidgetKeys: string[] = [];
     // _tmp_itemBackgroundColor = "rgba(0,0,0,0.14159265358979323846264338327)";
 
-    constructor(widgetTdl: type_Table_tdl) {
+    constructor(widgetTdl: type_Repeater_tdl) {
         super(widgetTdl);
 
-        this.setStyle({ ...Table._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...Table._defaultTdl.text, ...widgetTdl.text });
+        this.setStyle({ ...Repeater._defaultTdl.style, ...widgetTdl.style });
+        this.setText({ ...Repeater._defaultTdl.text, ...widgetTdl.text });
 
         // this._rules = new TextUpdateRules(this, widgetTdl);
 
@@ -391,7 +391,7 @@ export class Table extends BaseWidget {
 
             const isInside = regionLeft <= widgetLeft && regionTop <= widgetTop && regionDown >= widgetDown && regionRight >= widgetRight;
             if (isInside) {
-                // exclude the Table widget itself
+                // exclude the Repeater widget itself
                 if (widget.getWidgetKey() !== this.getWidgetKey()) {
                     this.getWidgetKeys().push(widget.getWidgetKey());
                 }
@@ -681,8 +681,8 @@ export class Table extends BaseWidget {
 
     // properties when we create a new TextUpdate
     // the level 1 properties all have corresponding public or private variable in the widget
-    static _defaultTdl: type_Table_tdl = {
-        type: "Table",
+    static _defaultTdl: type_Repeater_tdl = {
+        type: "Repeater",
         widgetKey: "", // "key" is a reserved keyword
         key: "",
         // the style for outmost div
@@ -825,7 +825,7 @@ export class Table extends BaseWidget {
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {
-            this._sidebar = new TableSidebar(this);
+            this._sidebar = new RepeaterSidebar(this);
         }
     }
 
@@ -833,7 +833,7 @@ export class Table extends BaseWidget {
         super.jobsAsEditingModeBegins();
         this.removeDynamicWidgets();
         if (this.getWidgetKeys()[0] !== undefined) {
-            g_widgets1.getTableTemplateWidgets().push(...this.getWidgetKeys());
+            g_widgets1.getRepeaterTemplateWidgets().push(...this.getWidgetKeys());
         }
     }
 
@@ -841,7 +841,7 @@ export class Table extends BaseWidget {
         super.jobsAsOperatingModeBegins();
         this.createDynamicWidgets();
         if (this.getWidgetKeys()[0] !== undefined) {
-            g_widgets1.getTableTemplateWidgets().push(...this.getWidgetKeys());
+            g_widgets1.getRepeaterTemplateWidgets().push(...this.getWidgetKeys());
         }
     }
 }

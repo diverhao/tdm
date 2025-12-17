@@ -859,9 +859,9 @@ export class ContextMenu {
                     },
                 },
                 {
-                    label: "Table",
+                    label: "Repeater",
                     click: () => {
-                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, { command: "create-widget", subcommand: "table" });
+                        this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, { command: "create-widget", subcommand: "repeater" });
                     },
                 },
                 {

@@ -1,21 +1,21 @@
 import * as React from "react";
-import { Table } from "./Table";
+import { Repeater } from "./Repeater";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
-import { SidebarTableRowsConfig } from "../../helperWidgets/SidebarComponents/SidebarTableRowsConfig"
-import { SidebarTableGap } from "../../helperWidgets/SidebarComponents/SidebarTableGap";
+import { SidebarRepeaterRowsConfig } from "../../helperWidgets/SidebarComponents/SidebarRepeaterRowsConfig"
+import { SidebarRepeaterGap } from "../../helperWidgets/SidebarComponents/SidebarRepeaterGap";
 
-export class TableSidebar extends BaseWidgetSidebar {
+export class RepeaterSidebar extends BaseWidgetSidebar {
 
-    _sidebarTableRowsConfig: SidebarTableRowsConfig;
-    _sidebarTableGap: SidebarTableGap;
+    _sidebarRepeaterRowsConfig: SidebarRepeaterRowsConfig;
+    _sidebarRepeaterGap: SidebarRepeaterGap;
 
-    constructor(table: Table) {
-        super(table);
-        this._sidebarTableRowsConfig = new SidebarTableRowsConfig(this);
-        this._sidebarTableGap = new SidebarTableGap(this);
+    constructor(repeater: Repeater) {
+        super(repeater);
+        this._sidebarRepeaterRowsConfig = new SidebarRepeaterRowsConfig(this);
+        this._sidebarRepeaterGap = new SidebarRepeaterGap(this);
     }
 
 
@@ -124,8 +124,8 @@ export class TableSidebar extends BaseWidgetSidebar {
                     <b>Rows</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {this.getSidebarTableGap().getElement()}
-                    {this.getSidebarTableRowsConfig().getElement()}
+                    {this.getSidebarRepeaterGap().getElement()}
+                    {this.getSidebarRepeaterRowsConfig().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
 
@@ -165,12 +165,12 @@ export class TableSidebar extends BaseWidgetSidebar {
     // getFormStyle()
     // getInputStyle()
 
-    getSidebarTableRowsConfig = () => {
-        return this._sidebarTableRowsConfig;
+    getSidebarRepeaterRowsConfig = () => {
+        return this._sidebarRepeaterRowsConfig;
     }
 
-    getSidebarTableGap = () => {
-        return this._sidebarTableGap;
+    getSidebarRepeaterGap = () => {
+        return this._sidebarRepeaterGap;
     }
 
     // ------------------------- style -------------------------

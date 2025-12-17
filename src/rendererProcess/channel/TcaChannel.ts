@@ -91,6 +91,7 @@ export enum menuScan {
 export class TcaChannel {
     _channelName: string = "";
     _widgetKeys: Set<string> = new Set();
+    // although the name is DBR data, but it also holds PVA data if this channel is PVA type
     _dbrData: type_dbrData | type_LocalChannel_data = { value: undefined, severity: ChannelSeverity.NOT_CONNECTED };
     autoUpdateInterval: any;
     _pvaValueDisplayType: pvaValueDisplayType = pvaValueDisplayType.NOT_DEFINED;

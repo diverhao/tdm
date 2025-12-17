@@ -28,7 +28,7 @@ import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/Fi
 import { ChannelSeverity, TcaChannel, type_pva_status } from "../../../rendererProcess/channel/TcaChannel";
 import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/ChannelGraph";
 import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
-import { Table } from "../../../rendererProcess/widgets/Table/Table";
+import { Repeater } from "../../../rendererProcess/widgets/Repeater/Repeater";
 import { FileBrowser } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
 import { v4 as uuidv4 } from "uuid";
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
@@ -289,7 +289,7 @@ export class IpcManagerOnDisplayWindow {
         options: IpcEventArgType2["obtained-iframe-uuid"]
     ) => {
         const widget = g_widgets1.getWidget2(options["widgetKey"]);
-        if (widget instanceof Table) {
+        if (widget instanceof Repeater) {
             widget.loadHtml(options["iframeDisplayId"]);
             widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
         }
@@ -554,8 +554,8 @@ export class IpcManagerOnDisplayWindow {
                 g_widgets1.createWidgetFromMouse("BinaryImage");
             } else if (subcommand === "image") {
                 g_widgets1.createWidgetFromMouse("Image");
-            } else if (subcommand === "table") {
-                g_widgets1.createWidgetFromMouse("Table");
+            } else if (subcommand === "repeater") {
+                g_widgets1.createWidgetFromMouse("Repeater");
             } else if (subcommand === "terminal") {
                 g_widgets1.createWidgetFromMouse("Terminal");
             } else if (subcommand === "calculator") {

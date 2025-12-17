@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import { FileReader } from "../../../file/FileReader";
 import path from "path";
 
-export type type_Table_tdl = {
+export type type_Repeater_tdl = {
     type: string;
     widgetKey: string;
     key: string;
@@ -20,16 +20,16 @@ export type type_Table_tdl = {
     // itemNames: string[];
     // itemBackgroundColors: string[];
     widgetKeys: string[];
-    macros: [string, string][][]; // this macro is for this Table widget only, not the macro for the whole display
+    macros: [string, string][][]; // this macro is for this Repeater widget only, not the macro for the whole display
 };
 
 
-export class TableHelper extends BaseWidgetHelper {
+export class RepeaterHelper extends BaseWidgetHelper {
 
     // properties when we create a new TextUpdate
     // the level 1 properties all have corresponding public or private variable in the widget
-    static _defaultTdl: type_Table_tdl = {
-        type: "Table",
+    static _defaultTdl: type_Repeater_tdl = {
+        type: "Repeater",
         widgetKey: "", // "key" is a reserved keyword
         key: "",
         // the style for outmost div
@@ -82,7 +82,7 @@ export class TableHelper extends BaseWidgetHelper {
     };
 
     // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_Table_tdl => {
+    static generateDefaultTdl = (type: string): type_Repeater_tdl => {
         const result = super.generateDefaultTdl(type);
         result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
         result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
@@ -92,12 +92,12 @@ export class TableHelper extends BaseWidgetHelper {
         // result.itemBackgroundColors = JSON.parse(JSON.stringify(this._defaultTdl.itemBackgroundColors));
         result.widgetKeys = JSON.parse(JSON.stringify(this._defaultTdl.widgetKeys));
         result.macros = JSON.parse(JSON.stringify(this._defaultTdl.macros));
-        return result as type_Table_tdl;
+        return result as type_Repeater_tdl;
     };
 
     static convertBobToTdl = async (bobWidgetJson: Record<string, any>, fullTdlFileName: string) => {
         console.log("\n------------", `Parsing "template"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Table");
+        const tdl = this.generateDefaultTdl("Repeater");
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm
@@ -176,12 +176,12 @@ export class TableHelper extends BaseWidgetHelper {
             childrenWidgetsTdl[widgetKey]["style"]["left"] = childrenWidgetsTdl[widgetKey]["style"]["left"] + left0;
         }
 
-        const tableWidgetTdl: Record<string, any> = {};
-        tableWidgetTdl[tdl["widgetKey"]] = tdl;
+        const repeaterWidgetTdl: Record<string, any> = {};
+        repeaterWidgetTdl[tdl["widgetKey"]] = tdl;
 
 
         return {
-            ...tableWidgetTdl,
+            ...repeaterWidgetTdl,
             ...childrenWidgetsTdl,
         };
     };

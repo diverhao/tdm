@@ -527,9 +527,9 @@ export class ContextMenuDesktop {
                     },
                 },
                 {
-                    label: "Table",
+                    label: "Repeater",
                     click: () => {
-                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "table" });
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "repeater" });
                     },
                 },
                 {

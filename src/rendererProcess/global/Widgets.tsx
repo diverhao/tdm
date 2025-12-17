@@ -40,7 +40,7 @@ import { RadioButton } from "../widgets/RadioButton/RadioButton";
 import { ComboBox } from "../widgets/ComboBox/ComboBox";
 import { BinaryImage } from "../widgets/BinaryImage/BinaryImage";
 import { Image } from "../widgets/Image/Image";
-import { Table } from "../widgets/Table/Table";
+import { Repeater } from "../widgets/Repeater/Repeater";
 import { Polyline } from "../widgets/Polyline/Polyline";
 import { Arc } from "../widgets/Arc/Arc";
 import { Rectangle } from "../widgets/Rectangle/Rectangle";
@@ -104,7 +104,7 @@ export type type_widgetType =
     | "ComboBox"
     | "BinaryImage"
     | "Image"
-    | "Table"
+    | "Repeater"
     | "TextUpdate"
     | "Terminal"
     | "ChannelGraph"
@@ -407,8 +407,8 @@ export class Widgets {
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
-            case "Table":
-                tdl = Table.generateDefaultTdl("Table");
+            case "Repeater":
+                tdl = Repeater.generateDefaultTdl("Repeater");
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
@@ -670,8 +670,8 @@ export class Widgets {
                 widget = new Image(widgetTdl);
                 break;
             }
-            case "Table": {
-                widget = new Table(widgetTdl);
+            case "Repeater": {
+                widget = new Repeater(widgetTdl);
                 break;
             }
             case "Polyline": {
@@ -1625,9 +1625,9 @@ export class Widgets {
 
         if (newMode === rendererWindowStatus.operating) {
             this.connectAllTcaChannels();
-            this.hideTableTemplateWidgets();
+            this.hideRepeaterTemplateWidgets();
         } else if (newMode === rendererWindowStatus.editing) {
-            this.showTableTemplateWidgets();
+            this.showRepeaterTemplateWidgets();
         }
         this.addToForceUpdateWidgets("GroupSelection2");
         // (7)
@@ -1643,41 +1643,41 @@ export class Widgets {
 
     };
 
-    // ----------------------- Table widget ------------------------------
+    // ----------------------- Repeater widget ------------------------------
 
-    // the template widgets inside a Table should be hidden/shown in operating/editing mode
+    // the template widgets inside a Repeater should be hidden/shown in operating/editing mode
 
-    _tableTemplateWidgets: string[] = [];
+    _repeaterTemplateWidgets: string[] = [];
 
-    getTableTemplateWidgets = () => {
-        return this._tableTemplateWidgets;
+    getRepeaterTemplateWidgets = () => {
+        return this._repeaterTemplateWidgets;
     }
 
-    clearTableTemplateWidgets = () => {
-        this._tableTemplateWidgets.length = 0;
+    clearRepeaterTemplateWidgets = () => {
+        this._repeaterTemplateWidgets.length = 0;
     }
 
-    hideTableTemplateWidgets = () => {
-        for (const widgetKey of this.getTableTemplateWidgets()) {
+    hideRepeaterTemplateWidgets = () => {
+        for (const widgetKey of this.getRepeaterTemplateWidgets()) {
             const widget = this.getWidget2(widgetKey);
             if (widget instanceof BaseWidget) {
                 widget.getStyle()["display"] = "none";
                 this.addToForceUpdateWidgets(widgetKey);
             }
         }
-        // this.clearTableTemplateWidgets();
+        // this.clearRepeaterTemplateWidgets();
     }
 
 
-    showTableTemplateWidgets = () => {
-        for (const widgetKey of this.getTableTemplateWidgets()) {
+    showRepeaterTemplateWidgets = () => {
+        for (const widgetKey of this.getRepeaterTemplateWidgets()) {
             const widget = this.getWidget2(widgetKey);
             if (widget instanceof BaseWidget) {
                 widget.getStyle()["display"] = "inline-flex";
                 this.addToForceUpdateWidgets(widgetKey);
             }
         }
-        this.clearTableTemplateWidgets();
+        this.clearRepeaterTemplateWidgets();
     }
 
 

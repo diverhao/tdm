@@ -49,7 +49,7 @@ import { ImageHelper } from "../../file/widgetConverters/Image/ImageHelper";
 import { XYPlotHelper } from "../../file/widgetConverters/XYPlot/XYPlotHelper";
 import { EmbeddedDisplayHelper } from "../../file/widgetConverters/EmbeddedDisplay/EmbeddedDisplayHelper";
 import { GroupHelper } from "../../file/widgetConverters/Group/GroupHelper";
-import { TableHelper } from "../../file/widgetConverters/Table/TableHelper";
+import { RepeaterHelper } from "../../file/widgetConverters/Repeater/RepeaterHelper";
 import { UtilityWindow } from "../UtilityWindow/UtilityWindow";
 
 export class BobPropertyConverter {
@@ -242,7 +242,7 @@ export class BobPropertyConverter {
                     tdl[widgetKey] = widgetTdl;
                 }
             } else if (bobWidgetType === "template") {
-                const widgetsTdl = await TableHelper.convertBobToTdl(bobWidgetJson, fullTdlFileName);
+                const widgetsTdl = await RepeaterHelper.convertBobToTdl(bobWidgetJson, fullTdlFileName);
                 for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
                     tdl[widgetKey] = widgetTdl;
                 }
