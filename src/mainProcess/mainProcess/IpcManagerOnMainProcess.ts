@@ -2456,13 +2456,14 @@ export class IpcManagerOnMainProcess {
             timeout } = options;
         // (1)
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
+        const channelAgentsManager = this.getMainProcess().getChannelAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId) as DisplayWindowAgent;
         if (displayWindowAgent === undefined) {
             return;
         }
         // in pva, meta data is actually pva type, which does not contain data
         let data = await displayWindowAgent.tcaGetMeta(channelName, timeout);
-        if (channelName.startsWith("pva://") === false) {
+        if (channelAgentsManager.determineChannelType(channelName) === "pva") {
             // ! attention
             // send twice: use periodic and the "tca-get-result" to ensure all the widgets in newly created window are updated
             // in the first place. Otherwise the race condition may happen, the widget key is removed from the forceUpdateWidgets list
@@ -2473,7 +2474,7 @@ export class IpcManagerOnMainProcess {
         // (2)
         // ioId and widgetKey are bounced back
         Log.debug("0", "tca-get-meta result for", channelName, "is", data);
-        if (channelName.startsWith("pva://")) {
+        if (channelAgentsManager.determineChannelType(channelName) === "pva") {
             displayWindowAgent.sendFromMainProcess("fetch-pva-type",
                 {
                     channelName: channelName,

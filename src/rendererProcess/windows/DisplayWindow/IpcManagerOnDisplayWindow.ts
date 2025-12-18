@@ -6,7 +6,6 @@ import { g_flushWidgets } from "../../../rendererProcess/helperWidgets/Root/Root
 // import { type_tdl } from "../../file/FileReader";
 import { type_tdl } from "../../../common/GlobalVariables";
 import { DataViewer } from "../../../rendererProcess/widgets/DataViewer/DataViewer";
-import { PvTable } from "../../../rendererProcess/widgets/PvTable/PvTable";
 import { BaseWidget } from "../../../rendererProcess/widgets/BaseWidget/BaseWidget";
 import { ScaledSlider } from "../../../rendererProcess/widgets/ScaledSlider/ScaledSlider";
 import { Spinner } from "../../../rendererProcess/widgets/Spinner/Spinner";
@@ -34,6 +33,7 @@ import { v4 as uuidv4 } from "uuid";
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 import { Image } from "../../../rendererProcess/widgets/Image/Image";
 import { IpcEventArgType, IpcEventArgType2 } from "../../../common/IpcEventArgType";
+import { Table } from "../../widgets/Table/Table";
 
 
 // var recorder;
@@ -803,12 +803,13 @@ export class IpcManagerOnDisplayWindow {
             try {
                 // (1)
                 let tcaChannels: TcaChannel[] = [];
-                if (channelName.startsWith("pva://")) {
+                const tcaChannel = g_widgets1.getTcaChannel(channelName);
+                if (tcaChannel.getProtocol() === "pva") {
                     // tcaChannels = g_widgets1.getTcaSubPvaChannels(channelName);
                     tcaChannels.push(g_widgets1.getTcaChannel(channelName));
                 } else {
                     try {
-                        tcaChannels.push(g_widgets1.getTcaChannel(channelName));
+                        tcaChannels.push(tcaChannel);
                     } catch (e) {
 
                     }
@@ -1046,10 +1047,10 @@ export class IpcManagerOnDisplayWindow {
                 Log.error(e);
             }
         }
-        if (widgetKey.includes("LogViewer") || widgetKey.includes("PvMonitor") || widgetKey.includes("CaSnooper") || widgetKey.includes("Casw") || widgetKey.includes("FileConverter")) {
+        if (widgetKey.includes("LogViewer") || widgetKey.includes("PvMonitor") || widgetKey.includes("CaSnooper") || widgetKey.includes("Casw") || widgetKey.includes("FileConverter") || widgetKey.includes("Table")) {
             try {
                 const widget = g_widgets1.getWidget2(widgetKey);
-                if ((widget instanceof LogViewer) || (widget instanceof PvMonitor) || (widget instanceof CaSnooper) || (widget instanceof Casw) || (widget instanceof FileConverter)) {
+                if ((widget instanceof LogViewer) || (widget instanceof PvMonitor) || (widget instanceof CaSnooper) || (widget instanceof Casw) || (widget instanceof FileConverter)|| (widget instanceof Table)) {
                     type typeA = (keyof typeof widget.mouseRightButtonDownContextMenuActions);
                     const action = widget.mouseRightButtonDownContextMenuActions[actionName as typeA];
                     if (action !== undefined) {

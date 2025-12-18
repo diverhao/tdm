@@ -1286,7 +1286,6 @@ export class TcaChannel {
                     }
                 }
             }
-
             return value;
         }
     };

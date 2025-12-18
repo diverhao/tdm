@@ -766,8 +766,12 @@ export class DisplayWindowAgent {
      * @returns {Promise<boolean>} `true` if sucess, `false` if failed
      */
     tcaMonitor = async (channelName: string): Promise<boolean> => {
+        const windowAgentsManager = this.getWindowAgentsManager();
+        const mainProcess = windowAgentsManager.getMainProcess();
+        const channelAgentsManager = mainProcess.getChannelAgentsManager();
+        const channelType = channelAgentsManager.determineChannelType(channelName);
 
-        if (channelName.startsWith("pva://")) {
+        if (channelAgentsManager.determineChannelType(channelName) === "pva") {
             const promiseObj = this.promises.getPromise("fetch-pva-type");
             await promiseObj;
 
@@ -777,10 +781,6 @@ export class DisplayWindowAgent {
 
         }
 
-        const windowAgentsManager = this.getWindowAgentsManager();
-        const mainProcess = windowAgentsManager.getMainProcess();
-        const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelType = channelAgentsManager.determineChannelType(channelName);
 
         if (channelType == "ca" || channelType == "pva") {
             // (1)
@@ -1907,7 +1907,7 @@ export class DisplayWindowAgent {
             // tell client to create a GUI window
             const sshServer = this.getWindowAgentsManager().getMainProcess().getIpcManager().getSshServer();
             if (sshServer !== undefined) {
-                sshServer.sendToTcpClient(JSON.stringify({ command: "create-web-display-window-step-2", data: {url: url, displayWindowId: this.getId()} }))
+                sshServer.sendToTcpClient(JSON.stringify({ command: "create-web-display-window-step-2", data: { url: url, displayWindowId: this.getId() } }))
             }
         } else {
 

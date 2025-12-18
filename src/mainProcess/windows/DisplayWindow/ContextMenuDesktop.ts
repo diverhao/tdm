@@ -1741,7 +1741,7 @@ export class ContextMenuDesktop {
                 },
                 { type: "separator" as type_type },
             ]);
-        } else if (options["contextMenuTexts"] !== undefined && (widgetKey.includes("LogViewer") || widgetKey.includes("PvMonitor") || widgetKey.includes("CaSnooper") || widgetKey.includes("Casw") || widgetKey.includes("FileConverter"))) {
+        } else if (options["contextMenuTexts"] !== undefined && (widgetKey.includes("LogViewer") || widgetKey.includes("PvMonitor") || widgetKey.includes("CaSnooper") || widgetKey.includes("Casw") || widgetKey.includes("FileConverter")|| widgetKey.includes("Table"))) {
             // Table: save data, copy data, ...
             if (options["contextMenuTexts"] !== undefined) {
                 const contextMenuTexts = options["contextMenuTexts"];

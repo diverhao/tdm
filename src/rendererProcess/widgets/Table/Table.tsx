@@ -262,15 +262,15 @@ export class Table extends BaseWidget {
         }
 
         const [, forceUpdate] = React.useState({});
-        this.getTab().updateForceUpdateTableFunc(() => {forceUpdate({})});
+        this.getTab().updateForceUpdateTableFunc(() => { forceUpdate({}) });
 
         return (
             <div
-            style={{
-                width: "100%",
-                height: "100%",
-                overflow: "auto",
-            }}
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    overflow: "auto",
+                }}
             >
                 {/* header row */}
                 {data.map((rowData: (string | number | boolean | undefined)[], index: number) => {
@@ -485,6 +485,78 @@ export class Table extends BaseWidget {
     getTab = () => {
         return this._tab;
     }
+
+    mouseEventInsideTable = (ponterX: number, pointerY: number) => {
+        return true;
+    }
+
+
+    mouseRightButtonDownContextMenuActions: {
+        "Copy selected data": any,
+        // "Copy all data": any,
+        // "Save selected data": any
+        // "Save all data": any,
+        // "Unselect data": any,
+        // "Clear data": any,
+    } = {
+            "Copy selected data": () => {
+                const result: string[] = [];
+                const allData = this.processData();
+                if (allData !== undefined) {
+                    for (let index of this.getTab().selectedLines) {
+                        const data = allData[index].join(" ");
+                        result.push(data)
+                    }
+                    navigator.clipboard.writeText(JSON.stringify(result, null, 4));
+                }
+            },
+            // "Copy all data": () => {
+            //     navigator.clipboard.writeText(JSON.stringify(this.getCaProtoSearchData(), null, 4));
+            // },
+            // "Save selected data": () => {
+            //     const result: type_CaProtoSearchData[] = [];
+            //     for (let index of this.getTable().selectedLines) {
+            //         const data = this.getCaProtoSearchData()[index];
+            //         result.push(data)
+            //     }
+            //     if (result.length < 1) {
+            //         return;
+            //     }
+            //     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+            //     const ipcManager = displayWindowClient.getIpcManager();
+            //     const displayWindowId = displayWindowClient.getWindowId();
+            //     ipcManager.sendFromRendererProcess("save-data-to-file",
+            //         {
+            //             displayWindowId: displayWindowId,
+            //             data: result,
+            //             preferredFileTypes: ["json"],
+            //         }
+            //     )
+            // },
+            // "Save all data": () => {
+            //     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+            //     const ipcManager = displayWindowClient.getIpcManager();
+            //     const displayWindowId = displayWindowClient.getWindowId();
+            //     ipcManager.sendFromRendererProcess("save-data-to-file",
+            //         {
+            //             displayWindowId: displayWindowId,
+            //             data: this.getCaProtoSearchData(),
+            //             preferredFileTypes: ["json"],
+            //         }
+            //     )
+            // },
+            // "Unselect data": () => {
+            //     this.getTable().selectedLines.length = 0;
+            //     g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+            //     g_flushWidgets();
+            // },
+            // "Clear data": () => {
+            //     this.clearCaProtoSearchData();
+            //     g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+            //     g_flushWidgets();
+            // },
+        };
+
 
     // ----------------------- styles -----------------------
 

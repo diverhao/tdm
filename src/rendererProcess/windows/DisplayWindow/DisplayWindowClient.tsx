@@ -46,6 +46,7 @@ import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 // there is no typescrit def for this lib, I created a wrapper at dom-to-image-more.d.ts
 import { toBlob } from "dom-to-image-more";
 import { ChannelNameHint } from "../../../rendererProcess/helperWidgets/ChannelNameHint/ChannelNameHint";
+import { Table } from "../../widgets/Table/Table";
 
 console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Finished loading modules.")
 
@@ -494,11 +495,13 @@ export class DisplayWindowClient {
                             this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
                             return;
                         }
+
                     } else if ((widget instanceof LogViewer)
                         || (widget instanceof CaSnooper)
                         || (widget instanceof Casw)
-
+                        || widget instanceof Table
                     ) {
+                        console.log("TABLE <<<<<<<<<<<<<<<<<<<<<<<<<")
                         // Context menu for Table area of LogViewer, PvMonitor, Casw, and CaSnooper,
                         // Operations of copy/save data
                         const selection = window.getSelection();
@@ -520,6 +523,7 @@ export class DisplayWindowClient {
                                 }
                             }
                         }
+                        console.log(contextMenuOptions)
                         this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
                         return;
                     } else if (widget instanceof ChannelGraph) {

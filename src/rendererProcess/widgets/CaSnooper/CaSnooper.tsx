@@ -970,62 +970,62 @@ export class CaSnooper extends BaseWidget {
                     overflowX: "hidden",
                 }}
             > */}
-                {/* header */}
-                <this._ElementTableLine key={`table-header`}>
-                    <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
-                        Index
-                        {/* resizer */}
-                        <this._ElementTableHeaderResizer columnIndex={0}></this._ElementTableHeaderResizer>
-                    </this._ElementTableCell>
-                    <this._ElementTableCell columnIndex={1} additionalStyle={{ justifyContent: "space-between" }}>
-                        Receive Time
-                        {/* resizer */}
-                        <this._ElementTableHeaderResizer columnIndex={1}></this._ElementTableHeaderResizer>
-                    </this._ElementTableCell>
-                    <this._ElementTableCell columnIndex={2} additionalStyle={{ justifyContent: "space-between" }}>
-                        Channel Name
-                        {/* resizer */}
-                        <this._ElementTableHeaderResizer columnIndex={2}></this._ElementTableHeaderResizer>
-                    </this._ElementTableCell>
-                    <this._ElementTableCell columnIndex={3} additionalStyle={{ justifyContent: "space-between" }}>
-                        Source IP Address
-                        {/* resizer */}
-                        <this._ElementTableHeaderResizer columnIndex={3}></this._ElementTableHeaderResizer>
-                    </this._ElementTableCell>
-                    <this._ElementTableCell columnIndex={4} additionalStyle={{ justifyContent: "space-between" }}>
-                        Source Port
-                        {/* resizer */}
-                        <this._ElementTableHeaderResizer columnIndex={4}></this._ElementTableHeaderResizer>
-                    </this._ElementTableCell>
-                </this._ElementTableLine>
+            {/* header */}
+            <this._ElementTableLine key={`table-header`}>
+                <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
+                    Index
+                    {/* resizer */}
+                    <this._ElementTableHeaderResizer columnIndex={0}></this._ElementTableHeaderResizer>
+                </this._ElementTableCell>
+                <this._ElementTableCell columnIndex={1} additionalStyle={{ justifyContent: "space-between" }}>
+                    Receive Time
+                    {/* resizer */}
+                    <this._ElementTableHeaderResizer columnIndex={1}></this._ElementTableHeaderResizer>
+                </this._ElementTableCell>
+                <this._ElementTableCell columnIndex={2} additionalStyle={{ justifyContent: "space-between" }}>
+                    Channel Name
+                    {/* resizer */}
+                    <this._ElementTableHeaderResizer columnIndex={2}></this._ElementTableHeaderResizer>
+                </this._ElementTableCell>
+                <this._ElementTableCell columnIndex={3} additionalStyle={{ justifyContent: "space-between" }}>
+                    Source IP Address
+                    {/* resizer */}
+                    <this._ElementTableHeaderResizer columnIndex={3}></this._ElementTableHeaderResizer>
+                </this._ElementTableCell>
+                <this._ElementTableCell columnIndex={4} additionalStyle={{ justifyContent: "space-between" }}>
+                    Source Port
+                    {/* resizer */}
+                    <this._ElementTableHeaderResizer columnIndex={4}></this._ElementTableHeaderResizer>
+                </this._ElementTableCell>
+            </this._ElementTableLine>
 
-                {/* data lines */}
-                {this.getCaProtoSearchData().map((data: type_CaProtoSearchData, index: number) => {
-                    if (this.getFilteredProtoSearchData()[index] === false) {
-                        return null
-                    } else {
-                        return (
-                            <this._ElementTableLine key={`${data["msSinceEpoch"]}-${data["channelName"]}-${this.memoId}-${index}`} lineIndex={index}>
-                                <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
-                                    {index}
-                                </this._ElementTableCell>
-                                <this._ElementTableCell columnIndex={1} additionalStyle={{ justifyContent: "space-between" }}>
-                                    {convertDateObjToString(new Date(data["msSinceEpoch"]))}
-                                </this._ElementTableCell>
-                                <this._ElementTableCell columnIndex={2} additionalStyle={{ justifyContent: "space-between" }}>
-                                    {data["channelName"]}
-                                </this._ElementTableCell>
-                                <this._ElementTableCell columnIndex={3} additionalStyle={{ justifyContent: "space-between" }}>
-                                    {data["ip"]}
-                                </this._ElementTableCell>
-                                <this._ElementTableCell columnIndex={4} additionalStyle={{ justifyContent: "space-between" }}>
-                                    {data["port"]}
-                                </this._ElementTableCell>
-                            </this._ElementTableLine>
+            {/* data lines */}
+            {this.getCaProtoSearchData().map((data: type_CaProtoSearchData, index: number) => {
+                if (this.getFilteredProtoSearchData()[index] === false) {
+                    return null
+                } else {
+                    return (
+                        <this._ElementTableLine key={`${data["msSinceEpoch"]}-${data["channelName"]}-${this.memoId}-${index}`} lineIndex={index}>
+                            <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
+                                {index}
+                            </this._ElementTableCell>
+                            <this._ElementTableCell columnIndex={1} additionalStyle={{ justifyContent: "space-between" }}>
+                                {convertDateObjToString(new Date(data["msSinceEpoch"]))}
+                            </this._ElementTableCell>
+                            <this._ElementTableCell columnIndex={2} additionalStyle={{ justifyContent: "space-between" }}>
+                                {data["channelName"]}
+                            </this._ElementTableCell>
+                            <this._ElementTableCell columnIndex={3} additionalStyle={{ justifyContent: "space-between" }}>
+                                {data["ip"]}
+                            </this._ElementTableCell>
+                            <this._ElementTableCell columnIndex={4} additionalStyle={{ justifyContent: "space-between" }}>
+                                {data["port"]}
+                            </this._ElementTableCell>
+                        </this._ElementTableLine>
 
-                        )
-                    }
-                })}
+                    )
+                }
+            })}
             {/* </div> */}
         </div>
         )
