@@ -1,5 +1,5 @@
 import * as React from "react";
-import {  GlobalVariables } from "../../../common/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 import { g_flushWidgets } from "../Root/Root";
@@ -32,9 +32,14 @@ export class Table {
     forceUpdatedRows: number[] = [];
     constructor(initColumnwidths: number[], mainWidget: BaseWidget) {
         this.columnWidths = JSON.parse(JSON.stringify(initColumnwidths));
+        // max 200 columns
+        if (this.columnWidths.length < 200) {
+            for (let ii = 0; ii < 200 - this.columnWidths.length; ii++) {
+                this.columnWidths.push(GlobalVariables.defaultFontSize * 5);
+            }
+        }
         this._mainWidget = mainWidget;
     }
-
 
 
     updateForceUpdateTableFunc = (forceUpdateTable: any) => {
@@ -69,10 +74,10 @@ export class Table {
             lineIndex = -1;
         }
         let dataOffset = 0;
-        if (this.getMainWidget() instanceof PvMonitor)  {
+        if (this.getMainWidget() instanceof PvMonitor) {
             dataOffset = (this.getMainWidget() as PvMonitor).dataOffset;
         }
-        const backgroundColorIndex = lineIndex === -1? -1 : lineIndex + dataOffset;
+        const backgroundColorIndex = lineIndex === -1 ? -1 : lineIndex + dataOffset;
         return (
             <div
                 ref={lineRef}
@@ -191,12 +196,15 @@ export class Table {
         if (additionalStyle === undefined) {
             additionalStyle = {};
         }
+
         return (
             <div style={{
                 height: "100%",
-                width: this.columnWidths[columnIndex] === undefined ? GlobalVariables.defaultFontSize * 5 : this.columnWidths[columnIndex],
+                // width: this.columnWidths[columnIndex] === undefined ? GlobalVariables.defaultFontSize * 5 : this.columnWidths[columnIndex],
+                maxWidth: this.columnWidths[columnIndex],
+                minWidth: this.columnWidths[columnIndex],
                 //todo: magic number, to be tuned
-                minWidth: GlobalVariables.defaultFontSize * 5,
+                // minWidth: GlobalVariables.defaultFontSize * 5,
                 backgroundColor: "rgba(255,0,255,0)",
                 display: 'inline-flex',
                 flexDirection: "row",
@@ -240,7 +248,7 @@ export class Table {
                     height: "100%",
                     // fix number
                     width: 3,
-                    backgroundColor: "rgba(255, 255, 255, 1)",
+                    backgroundColor: "rgba(255, 255, 255, 0)",
                     borderLeft: "1px solid grey"
                 }}
                 onMouseEnter={() => {

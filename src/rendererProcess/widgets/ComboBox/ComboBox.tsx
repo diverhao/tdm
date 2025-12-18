@@ -199,8 +199,9 @@ export class ComboBox extends BaseWidget {
         const elementRef = React.useRef<any>(null);
 
         const channelName = this.getChannelNames()[0];
-
+        
         const [itemNames, itemValues] = this.updateItemsFromChannel(channelName);
+        console.log("itemNames ====================", channelName, itemNames, itemValues)
 
         return (
             <div
@@ -280,7 +281,12 @@ export class ComboBox extends BaseWidget {
                                     const channel = g_widgets1.getTcaChannel(channelName);
                                     if (channel.getProtocol() === "pva") {
                                         const dbrData = channel.getDbrData() as any;
-                                        return dbrData["value"]["index"]
+                                        if (dbrData["value"] !== undefined) {
+                                            return dbrData["value"]["index"]
+                                        } else {
+                                            return this.getWidgetKey()
+                                        }
+
                                     } else {
                                         const index = itemValues.indexOf(channel.getDbrData()["value"]);
                                         if (index !== -1) {
@@ -365,14 +371,15 @@ export class ComboBox extends BaseWidget {
             if (this.channelItemsUpdated === false) {
                 try {
                     const channel = g_widgets1.getTcaChannel(channelName);
-                    let strs = channel.getStrings();
+                    let strs = channel.getEnumChoices();
                     let numberOfStringsUsed = channel.getNumerOfStringsUsed();
-                    if (channel.getChannelName().startsWith("pva") && channel.isEnumType()) {
-                        strs = channel.getEnumChoices();
-                        numberOfStringsUsed = strs.length;
-                    }
+                    // if (channel.getChannelName().startsWith("pva") && channel.isEnumType()) {
+                    //     strs = channel.getEnumChoices();
+                    //     console.log("--------------", JSON.stringify(channel.getDbrData()), strs)
+                    //     numberOfStringsUsed = strs.length;
+                    // }
 
-                    if (this.getAllText()["useChannelItems"] === true && strs !== undefined && numberOfStringsUsed !== undefined) {
+                    if (this.getAllText()["useChannelItems"] === true && strs.length > 0 && numberOfStringsUsed !== undefined) {
                         // update itemNames and itemValues
                         this._itemNamesFromChannel.length = 0;
                         this._itemValuesFromChannel.length = 0;
@@ -400,43 +407,6 @@ export class ComboBox extends BaseWidget {
         }
         return [itemNames, itemValues];
     };
-
-    updateItemsFromChannel1 = () => {
-        const channelName = this.getChannelNames()[0];
-
-        if (!g_widgets1.isEditing()) {
-            if (this.channelItemsUpdated === false) {
-                if (this.getAllText()["useChannelItems"]) {
-                    try {
-                        const channel = g_widgets1.getTcaChannel(channelName);
-                        const strs = channel.getStrings();
-                        const numberOfStringsUsed = channel.getNumerOfStringsUsed();
-                        if (this.getAllText()["useChannelItems"] === true && strs !== undefined && numberOfStringsUsed !== undefined) {
-                            // update itemNames and itemValues
-                            this._itemLabelsFromChannel.length = 0;
-                            this._itemValuesFromChannel.length = 0;
-                            for (let ii = 0; ii < numberOfStringsUsed; ii++) {
-                                this._itemLabelsFromChannel.push(strs[ii]);
-                                this._itemValuesFromChannel.push(ii);
-                            }
-                            this.channelItemsUpdated = true;
-                        }
-                    } catch (e) {
-                        Log.error(e);
-                    }
-                } else {
-                    // do nothing
-                }
-            } else {
-                // do nothing
-            }
-        } else {
-            this._itemLabelsFromChannel.length = 0;
-            this._itemValuesFromChannel.length = 0;
-            this.channelItemsUpdated = false;
-        }
-    };
-
 
     handleChange = (event: any) => {
         event.preventDefault();

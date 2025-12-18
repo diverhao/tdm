@@ -178,14 +178,14 @@ export class RadioButton extends BaseWidget {
             if (this.channelItemsUpdated === false) {
                 try {
                     const channel = g_widgets1.getTcaChannel(channelName);
-                    let strs = channel.getStrings();
+                    let strs = channel.getEnumChoices();
                     let numberOfStringsUsed = channel.getNumerOfStringsUsed();
-                    if (channel.getChannelName().startsWith("pva") && channel.isEnumType()) {
-                        strs = channel.getEnumChoices();
-                        numberOfStringsUsed = strs.length;
-                    }
+                    // if (channel.getChannelName().startsWith("pva") && channel.isEnumType()) {
+                    //     strs = channel.getEnumChoices();
+                    //     numberOfStringsUsed = strs.length;
+                    // }
 
-                    if (this.getAllText()["useChannelItems"] === true && strs !== undefined && numberOfStringsUsed !== undefined) {
+                    if (this.getAllText()["useChannelItems"] === true && strs.length > 0 && numberOfStringsUsed !== undefined) {
                         // update itemNames and itemValues
                         this._itemNamesFromChannel.length = 0;
                         this._itemValuesFromChannel.length = 0;

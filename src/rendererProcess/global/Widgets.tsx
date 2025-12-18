@@ -2330,13 +2330,13 @@ export class Widgets {
      * In operating mode, if TcaChannel object does not exist or the channel is not connected, returns undefined.
      *
      */
-    getChannelStrings = (channelName: string): string[] | undefined => {
+    getChannelEnumChoices = (channelName: string): string[] | undefined => {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
         try {
             const tcaChannel = this.getTcaChannel(channelName);
-            return tcaChannel.getStrings();
+            return tcaChannel.getEnumChoices();
         } catch (e) {
             Log.error(e);
             return undefined;

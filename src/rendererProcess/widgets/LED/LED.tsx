@@ -231,9 +231,9 @@ export class LED extends BaseWidget {
                 try {
                     const channelName = this.getChannelNames()[0];
                     const channel = g_widgets1.getTcaChannel(channelName);
-                    const strs = channel.getStrings();
+                    const strs = channel.getEnumChoices();
                     const numberOfStringsUsed = channel.getNumerOfStringsUsed();
-                    if (numberOfStringsUsed && strs) {
+                    if (numberOfStringsUsed && strs.length > 0) {
                         if (index < numberOfStringsUsed) {
                             return strs[index];
                         }

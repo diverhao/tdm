@@ -96,7 +96,7 @@ export class TcaChannel {
     autoUpdateInterval: any;
     _pvaValueDisplayType: pvaValueDisplayType = pvaValueDisplayType.NOT_DEFINED;
     _fullPvaType: any = undefined;
-    _enumChoices: string[] = [];
+    // _enumChoices: string[] = [];
 
     _fieldType: "SEVR" | "" = "";
 
@@ -220,7 +220,7 @@ export class TcaChannel {
             }
 
         }
-        
+
         // if (channelName?.startsWith("ca"))
 
         //     if (channelName === undefined) {
@@ -1206,6 +1206,7 @@ export class TcaChannel {
                         this.setPvaValueDisplayType(pvaValueDisplayType.OBJECT_RAW_FIELD);
                         return JSON.stringify(value);
                     } else {
+                        console.log("this -------------", this.getChannelName(), this.getEnumChoices())
                         // it has a .value field
                         if (type["fields"]["value"]["typeIndex"] === "0x80" && value["value"] !== undefined) {
                             // it has a .value field that is a struct
@@ -1215,11 +1216,11 @@ export class TcaChannel {
                                 const index = (value as any)["value"]["index"];
                                 // the data may not carry "string[] choices", but the first time data must carry it
                                 let choices = (value as any)["value"]["choices"];
-                                if (choices === undefined) {
-                                    choices = this.getEnumChoices();
-                                } else {
-                                    this.setEnumChoices(choices);
-                                }
+                                // if (choices === undefined) {
+                                //     choices = this.getEnumChoices();
+                                // } else {
+                                //     this.setEnumChoices(choices);
+                                // }
                                 if (index !== undefined && choices !== undefined && typeof index === "number" && Array.isArray(choices)) {
                                     const choice = choices[index];
                                     return choice;
@@ -1275,10 +1276,12 @@ export class TcaChannel {
                 } else if (TcaChannel.checkChannelName(this.getChannelName()) === "local" || TcaChannel.checkChannelName(this.getChannelName()) === "global") {
                     const dbrTypeNum = this.getDbrData()["type"];
                     if (dbrTypeNum !== undefined && dbrTypeNum === "enum") {
-                        const choices = this.getDbrData().strings;
-                        this.setEnumChoices(choices);
-                        if (choices !== undefined) {
-                            return choices[value as number];
+                        // const choices = this.getDbrData().strings;
+                        // this.setEnumChoices(choices);
+                        const choices = this.getEnumChoices();
+                        const choice = choices[value as number];
+                        if (choice !== undefined) {
+                            return choice;
                         }
                     }
                 }
@@ -1783,23 +1786,33 @@ export class TcaChannel {
     };
 
     /**
-     * Get enum choices of this channel. Must be a XX_ENUM type data. Only for CA channel.
+     * Get enum choices of this channel. Must be a XX_ENUM type data. 
+     * 
+     * For CA or virtual channel, it is the "strings" field
+     * 
+     * For PVA channel, it is the "value.choices" field
      *
-     * @returns {string[] | undefined} Enum choices of this channel. If channel type is not enum, return undefined.
-     * If the channel is not connected, return undefined.
+     * @returns {string[]} Enum choices of this channel.
      * If the display window is in editing mode, return undefined.
      */
-    getStrings = (): string[] | undefined => {
+    getEnumChoices = (): string[] => {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
-            return undefined;
+            return [];
         }
-        return this.getDbrData()["strings"];
+        const dbrData = this.getDbrData();
+        if (this.getProtocol() === "pva") {
+            const value = dbrData["value"] as any;
+            if (value !== undefined) {
+                const choices = value["choices"];
+                return Array.isArray(choices) ? choices : [];
+            } else {
+                return [];
+            }
+        } else { // ca or virtual pv
+            const choices = dbrData["strings"];
+            return Array.isArray(choices) ? choices : [];
+        }
     };
-
-    getEnumChoices = () => {
-        return this._enumChoices;
-    }
-
 
     /**
      * Get number of strings used in enum type channel. <br>
@@ -1812,7 +1825,7 @@ export class TcaChannel {
         }
         const channelName = this.getChannelName();
         if (TcaChannel.checkChannelName(channelName) === "local" || TcaChannel.checkChannelName(channelName) === "global") {
-            const strs = this.getStrings();
+            const strs = this.getEnumChoices();
             if (strs !== undefined) {
                 return strs.length;
             } else {
@@ -1848,8 +1861,8 @@ export class TcaChannel {
                 }
             }
         } else {
-            const strings = this.getStrings();
-            if (strings !== undefined) {
+            const strings = this.getEnumChoices();
+            if (strings.length > 0) {
                 return true;
             } else {
                 return false;
@@ -1986,9 +1999,9 @@ export class TcaChannel {
     }
 
 
-    setEnumChoices = (newChoices: string[]) => {
-        this._enumChoices = newChoices;
-    }
+    // setEnumChoices = (newChoices: string[]) => {
+    //     this._enumChoices = newChoices;
+    // }
 
 
 

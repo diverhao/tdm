@@ -152,9 +152,9 @@ export class BooleanButton extends BaseWidget {
             if (this.getAllText()["useChannelItems"]) {
                 try {
                     const channel = g_widgets1.getTcaChannel(channelName);
-                    const strs = channel.getStrings();
+                    const strs = channel.getEnumChoices();
                     const numberOfStringsUsed = channel.getNumerOfStringsUsed();
-                    if (this.getAllText()["useChannelItems"] === true && strs !== undefined && numberOfStringsUsed !== undefined) {
+                    if (this.getAllText()["useChannelItems"] === true && strs.length > 0 && numberOfStringsUsed !== undefined) {
                         // update itemNames and itemValues
                         result["offLabel"] = strs[0];
                         result["onLabel"] = strs[1];

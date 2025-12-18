@@ -59,7 +59,7 @@ export class Table extends BaseWidget {
 
     constructor(widgetTdl: type_Table_tdl) {
         super(widgetTdl);
-        this.setReadWriteType("read");
+        this.setReadWriteType("write");
 
         this.setStyle({ ...Table._defaultTdl.style, ...widgetTdl.style });
         this.setText({ ...Table._defaultTdl.text, ...widgetTdl.text });
@@ -261,36 +261,45 @@ export class Table extends BaseWidget {
             )
         }
 
+        const [, forceUpdate] = React.useState({});
+        this.getTab().updateForceUpdateTableFunc(() => {forceUpdate({})});
+
         return (
-            <div>
+            <div
+            style={{
+                width: "100%",
+                height: "100%",
+                overflow: "auto",
+            }}
+            >
                 {/* header row */}
-                <this._ElementTableLine selectable={false}>
-                    <div style={{
-                        width: 3,
-                        height: "100%",
-                        boxSizing: "border-box",
-                    }}>
-                    </div>
-
-                    {data[0].map((label: string | number | boolean | undefined, index: number) => {
-                        return (
-                            <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
-                                {/* content */}
-                                {`${label}`}
-                                {/* resizer */}
-                                <this._ElementTableHeaderResizer columnIndex={index}></this._ElementTableHeaderResizer>
-                            </this._ElementTableCell>
-
-                        )
-                    })}
-                </this._ElementTableLine>
-
                 {data.map((rowData: (string | number | boolean | undefined)[], index: number) => {
                     if (index === 0) {
-                        return null;
+                        return (
+                            <this._ElementTableLine selectable={false} lineIndex={index}>
+                                <div style={{
+                                    width: 3,
+                                    height: "100%",
+                                    boxSizing: "border-box",
+                                }}>
+                                </div>
+
+                                {rowData.map((label: string | number | boolean | undefined, index1: number) => {
+                                    return (
+                                        <this._ElementTableCell columnIndex={index1} additionalStyle={{ justifyContent: "space-between" }}>
+                                            {/* content */}
+                                            {`${label}`}
+                                            {/* resizer */}
+                                            <this._ElementTableHeaderResizer columnIndex={index1}></this._ElementTableHeaderResizer>
+                                        </this._ElementTableCell>
+
+                                    )
+                                })}
+                            </this._ElementTableLine>
+                        )
                     } else {
                         return (
-                            <this._ElementTableLine selectable={false}>
+                            <this._ElementTableLine selectable={true} lineIndex={index}>
                                 {rowData.map((cellData: string | number | boolean | undefined, index1: number) => {
                                     return (
                                         <this._ElementTableCell columnIndex={index1} additionalStyle={{ justifyContent: "space-between" }}>

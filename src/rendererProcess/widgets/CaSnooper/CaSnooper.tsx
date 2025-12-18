@@ -198,7 +198,7 @@ export class CaSnooper extends BaseWidget {
         this.setMacros(JSON.parse(JSON.stringify(widgetTdl.macros)));
 
         // columns: ms since epoch, channel name, ip, port
-        this._table = new Table([GlobalVariables.defaultFontSize * 5, GlobalVariables.defaultFontSize * 30, GlobalVariables.defaultFontSize * 40, GlobalVariables.defaultFontSize * 30, GlobalVariables.defaultFontSize * 10], this);
+        this._table = new Table([GlobalVariables.defaultFontSize * 4, GlobalVariables.defaultFontSize * 16, GlobalVariables.defaultFontSize * 20, GlobalVariables.defaultFontSize * 11, GlobalVariables.defaultFontSize * 8], this);
         this._ElementTableCell = this.getTable().getElementTableCell();
         this._ElementTableLine = this.getTable().getElementTableLine();
         this._ElementTableLineMemo = this.getTable().getElementTableLineMemo();
@@ -959,17 +959,17 @@ export class CaSnooper extends BaseWidget {
                 justifyContent: "flex-start",
                 alignItems: 'center',
                 border: "solid 1px rgba(0,0,0,1)",
-                overflowY: "hidden",
+                overflowY: "auto",
 
             }}>
-            <div
+            {/* <div
                 style={{
                     width: "100%",
                     height: "100%",
                     overflowY: "scroll",
                     overflowX: "hidden",
                 }}
-            >
+            > */}
                 {/* header */}
                 <this._ElementTableLine key={`table-header`}>
                     <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
@@ -1026,7 +1026,7 @@ export class CaSnooper extends BaseWidget {
                         )
                     }
                 })}
-            </div>
+            {/* </div> */}
         </div>
         )
     }

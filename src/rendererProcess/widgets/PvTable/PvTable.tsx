@@ -280,13 +280,13 @@ export class PvTable extends BaseWidget {
     forceUpdateTable: any = undefined;
 
 
-    calcTableWidth = () => {
-        let result = 0;
-        for (let width of this.getTable().columnWidths) {
-            result = result + width;
-        }
-        return result;
-    }
+    // calcTableWidth = () => {
+    //     let result = 0;
+    //     for (let width of this.getTable().columnWidths) {
+    //         result = result + width;
+    //     }
+    //     return result;
+    // }
 
 
     // <this._ElementTableHeaderOptionsButton key={`${fieldName}-${index}-optionsButton`} columnIndex={index + 2}></this._ElementTableHeaderOptionsButton>
@@ -1037,7 +1037,8 @@ export class PvTable extends BaseWidget {
             <div
                 ref={tableRef}
                 style={{
-                    width: this.calcTableWidth(),
+                    // width: this.calcTableWidth(),
+                    width: "100%",
                     height: "100%",
                     fontFamily: GlobalVariables.defaultFontFamily,
                     fontSize: GlobalVariables.defaultFontSize,
