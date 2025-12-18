@@ -73,6 +73,7 @@ import { Log } from "../../common/Log";
 import { SidebarWidgetsList } from "../helperWidgets/SidebarComponents/SidebarWidgetsList";
 import { SeqGraph } from "../widgets/SeqGraph/SeqGraph";
 import { type_tdl } from "../../common/GlobalVariables";
+import { Table } from "../widgets/Table/Table";
 
 /**
  * Widget object types union: 3 special types + BaseWidget.
@@ -105,6 +106,7 @@ export type type_widgetType =
     | "BinaryImage"
     | "Image"
     | "Repeater"
+    | "Table"
     | "TextUpdate"
     | "Terminal"
     | "ChannelGraph"
@@ -414,6 +416,13 @@ export class Widgets {
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
+            case "Table":
+                tdl = Repeater.generateDefaultTdl("Table");
+                tdl.style.left = x;
+                tdl.style.top = y;
+                tdl.style.width = width;
+                tdl.style.height = height;
+                break;
             case "Polyline":
                 tdl = Polyline.generateDefaultTdl("Polyline");
                 tdl.style.left = x;
@@ -668,6 +677,10 @@ export class Widgets {
             }
             case "Image": {
                 widget = new Image(widgetTdl);
+                break;
+            }
+            case "Table": {
+                widget = new Table(widgetTdl);
                 break;
             }
             case "Repeater": {

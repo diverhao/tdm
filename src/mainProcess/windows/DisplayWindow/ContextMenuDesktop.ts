@@ -527,6 +527,12 @@ export class ContextMenuDesktop {
                     },
                 },
                 {
+                    label: "Table",
+                    click: () => {
+                        this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "table" });
+                    },
+                },
+                {
                     label: "Repeater",
                     click: () => {
                         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", { command: "create-widget", subcommand: "repeater" });

@@ -552,6 +552,8 @@ export class IpcManagerOnDisplayWindow {
                 g_widgets1.createWidgetFromMouse("TextUpdate");
             } else if (subcommand === "binary-image") {
                 g_widgets1.createWidgetFromMouse("BinaryImage");
+            } else if (subcommand === "table") {
+                g_widgets1.createWidgetFromMouse("Table");
             } else if (subcommand === "image") {
                 g_widgets1.createWidgetFromMouse("Image");
             } else if (subcommand === "repeater") {
