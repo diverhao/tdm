@@ -523,7 +523,7 @@ export class ComboBox extends BaseWidget {
             // ! todo
             // verticalAlign: "center",
             alarmBorder: true,
-            useChannelItems: false,
+            useChannelItems: true,
             invisibleInOperation: false,
             alarmText: false,
             alarmBackground: false,

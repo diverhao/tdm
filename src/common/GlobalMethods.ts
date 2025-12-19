@@ -793,3 +793,22 @@ export const mergePvaTypeAndData = (type: Record<string, any>, key: string | und
     }
 
 }
+
+
+export const deepMergeObj = (target: Record<string, any>, source: Record<string, any>) => {
+    const result = { ...target };
+
+    for (const key in source) {
+        if (
+            source[key] &&
+            typeof source[key] === "object" &&
+            !Array.isArray(source[key]) &&
+            typeof target[key] === "object"
+        ) {
+            result[key] = deepMergeObj(target[key], source[key]);
+        } else {
+            result[key] = source[key];
+        }
+    }
+    return result;
+}

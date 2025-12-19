@@ -166,7 +166,6 @@ export class TcaChannel {
              * 
              */
             const metaData = TcaChannel.extractNameAndMetaFromLocalChannelName(channelName);
-            console.log("meta data ++++++++++++++++++++++++++++++", metaData)
             if (metaData !== undefined) {
                 this._channelName = BaseWidget.channelNameLevel3to4(channelName);
                 this._dbrData = {
@@ -830,9 +829,16 @@ export class TcaChannel {
             valueTypeIndex = pvaType["typeIndex"];
 
             let dbrDataType = "";
-
+            console.log("this.isEnumType() ================", this.isEnumType(), dbrData)
             // enum is special: input could be a string or number, the string is converted back to number
             if (this.isEnumType()) {
+
+                /**
+                 * PVA enum:
+                 * 
+                 * if it is number, then dire
+                 */
+
                 const value = dbrData["value"];
                 if (typeof value === "number") {
                     // return the index
@@ -853,6 +859,10 @@ export class TcaChannel {
                             if (choice === value) {
                                 return ii;
                             }
+                        }
+                        // if string match failed, try parse int the value
+                        if (!isNaN(parseInt(value)) && choices[parseInt(value)] !== undefined) {
+                            return parseInt(value);
                         }
                         return undefined;
                     } else {
@@ -1206,7 +1216,6 @@ export class TcaChannel {
                         this.setPvaValueDisplayType(pvaValueDisplayType.OBJECT_RAW_FIELD);
                         return JSON.stringify(value);
                     } else {
-                        console.log("this -------------", this.getChannelName(), this.getEnumChoices())
                         // it has a .value field
                         if (type["fields"]["value"]["typeIndex"] === "0x80" && value["value"] !== undefined) {
                             // it has a .value field that is a struct
@@ -1221,6 +1230,7 @@ export class TcaChannel {
                                 // } else {
                                 //     this.setEnumChoices(choices);
                                 // }
+                                console.log("choices, index", value)
                                 if (index !== undefined && choices !== undefined && typeof index === "number" && Array.isArray(choices)) {
                                     const choice = choices[index];
                                     return choice;
@@ -1875,13 +1885,16 @@ export class TcaChannel {
     getDbrData = (): type_dbrData | type_LocalChannel_data => {
         return this._dbrData;
     };
+
     appendToDbrData = (newDbrData: type_dbrData | type_dbrData[] | type_LocalChannel_data | { value: undefined }) => {
         if (Array.isArray(newDbrData)) {
             for (const dbrData of newDbrData) {
-                this._dbrData = { ...this._dbrData, ...dbrData };
+                // deep merge
+                this._dbrData = GlobalMethods.deepMergeObj(this._dbrData, dbrData) as any;
             }
         } else {
-            this._dbrData = { ...this._dbrData, ...newDbrData };
+            // deep merge: PVA may skip some data if they were already delivered
+            this._dbrData = GlobalMethods.deepMergeObj(this._dbrData, newDbrData) as any;
         }
     };
 

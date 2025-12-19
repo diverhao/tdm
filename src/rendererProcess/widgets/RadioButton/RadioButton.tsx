@@ -438,7 +438,7 @@ export class RadioButton extends BaseWidget {
             verticalAlign: "flex-start",
             wrapWord: false,
             alarmBorder: true,
-            useChannelItems: false,
+            useChannelItems: true,
             boxWidth: 13,
             invisibleInOperation: false,
             alarmText: false,

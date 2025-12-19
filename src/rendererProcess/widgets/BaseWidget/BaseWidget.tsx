@@ -1588,6 +1588,7 @@ export abstract class BaseWidget {
     // this function is used in monitor widgets: TextUpdate, ProgressBar, Meter, Tank, Thermometer, LED, LEDMultiState, ByteMonitor
     getChannelValueForMonitorWidget = (raw: boolean = false) => {
         let value = this._getFirstChannelValue(raw);
+
         if (this.getEqChannelArray().length > 0) {
             value = this.evaluateEqChannel();
         }

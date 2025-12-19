@@ -57,7 +57,7 @@ export class RadioButtonHelper extends BaseWidgetHelper {
 			verticalAlign: "flex-start",
 			wrapWord: false,
 			alarmBorder: true,
-			useChannelItems: false,
+			useChannelItems: true,
 			// button size
 			boxWidth: 13,
 			invisibleInOperation: false,

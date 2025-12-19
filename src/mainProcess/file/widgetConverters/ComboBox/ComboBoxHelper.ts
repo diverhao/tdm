@@ -21,6 +21,7 @@ export type type_ComboBox_tdl = {
 
 export class ComboBoxHelper extends BaseWidgetHelper {
     // override BaseWidget
+    
     static _defaultTdl: type_ComboBox_tdl = {
         type: "ComboBox",
         widgetKey: "", // "key" is a reserved keyword
@@ -51,15 +52,17 @@ export class ComboBoxHelper extends BaseWidgetHelper {
             outlineStyle: "none",
             outlineWidth: 1,
             outlineColor: "black",
+        },
+        text: {
+            horizontalAlign: "center",
+            // ! todo
+            // verticalAlign: "center",
+            alarmBorder: true,
+            useChannelItems: true,
+            invisibleInOperation: false,
             alarmText: false,
             alarmBackground: false,
             alarmLevel: "MINOR",
-        },
-        // the ElementBody style
-        text: {
-            alarmBorder: true,
-            useChannelItems: false,
-            invisibleInOperation: false,
             confirmOnWrite: false,
             confirmOnWriteUsePassword: false,
             confirmOnWritePassword: "",
