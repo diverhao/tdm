@@ -1685,6 +1685,8 @@ export class TcaChannel {
 
     /**
      * Get time stamp of this PVA/CA channel.
+     * 
+     * The time_t in PVA is from 1/1 1970 UTC.
      *
      * @returns {Date | undefined} A Date object that represents the time stamp. If the channel is not connected, return undefined.
      * If the display window is in editing mode, return undefined.
@@ -1709,8 +1711,8 @@ export class TcaChannel {
             const secondsSinceEpoch = timeStampData["secondsPastEpoch"];
             const nanoseconds = timeStampData["nanoseconds"];
             if (typeof nanoseconds === "number" && typeof secondsSinceEpoch === "number") {
-                const msSince1990UTC = 1000 * secondsSinceEpoch + nanoseconds * 1e-6;
-                return new Date(GlobalMethods.converEpicsTimeStampToEpochTime(msSince1990UTC));
+                const msSince1970UTC = 1000 * secondsSinceEpoch + nanoseconds * 1e-6;
+                return new Date(msSince1970UTC);
             }
         }
 

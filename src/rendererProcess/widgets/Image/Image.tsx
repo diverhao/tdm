@@ -2449,7 +2449,7 @@ export class Image extends BaseWidget {
             return;
         }
         if (this.textureData === undefined) {
-            this.textureData = new Uint8Array(size * 4); // RGB!
+            this.textureData = new Uint8Array(size * 4); // RGBA!
         }
 
         const dataRaw = this.getImageValue();
