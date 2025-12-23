@@ -1,7 +1,7 @@
 import * as React from "react";
 import { MouseEvent } from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { GlobalVariables, NDArray_ColorMode } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { ImageSidebar } from "./ImageSidebar";
@@ -13,7 +13,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Log } from "../../../common/Log";
 // import * as THREE from 'three';
-import {OrthographicCamera, Scene, WebGLRenderer, Vector3, BufferGeometry, BufferAttribute, ShaderMaterial, Points, Color, Vector2, DataTexture, UnsignedByteType, RGBAFormat, SRGBColorSpace, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, PlaneGeometry} from "three";
+import { OrthographicCamera, Scene, WebGLRenderer, Vector3, BufferGeometry, BufferAttribute, ShaderMaterial, Points, Color, Vector2, DataTexture, UnsignedByteType, RGBAFormat, SRGBColorSpace, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, PlaneGeometry } from "three";
 import { TcaChannel } from "../../channel/TcaChannel";
 import { ImageRules } from "./ImageRules";
 
@@ -530,7 +530,7 @@ export class Image extends BaseWidget {
             const widthPv = roi.widthPv.split("=")[0] + "@window_" + displayWindowId;
             const heightPv = roi.heightPv.split("=")[0] + "@window_" + displayWindowId;
 
-            console.log("roi pvs", xPv, yPv, widthPv, heightPv);
+            // console.log("roi pvs", xPv, yPv, widthPv, heightPv);
 
             // if (newDbrData.includes(xPv)) {
             //     const setRoiLeft = this.setRoisLeft[index];
@@ -1211,7 +1211,7 @@ export class Image extends BaseWidget {
 
     playing: boolean = true;
     imageValueBackup: number[] = [];
-    imageDimensionsBackup: { width: number, height: number } = { width: -1, height: -1 };
+    imageDimensionsBackup: { width: number, height: number, colorMode: NDArray_ColorMode, pixelDepth: number } = { width: -1, height: -1, colorMode: NDArray_ColorMode.mono, pixelDepth: 0 };
 
     setPlaying = (playing: boolean) => {
         if (this.playing === playing) {
@@ -1222,7 +1222,7 @@ export class Image extends BaseWidget {
             this.imageDimensionsBackup = JSON.parse(JSON.stringify(this.getImageDimensions()));
         } else {
             this.imageValueBackup = [];
-            this.imageDimensionsBackup = { width: -1, height: -1 };
+            this.imageDimensionsBackup = { width: -1, height: -1, colorMode: NDArray_ColorMode.mono, pixelDepth: 0 };
         }
         this.playing = playing;
     }
@@ -1285,7 +1285,7 @@ export class Image extends BaseWidget {
         if (this.camera === undefined || this.scene === undefined || this.renderer === undefined) {
             return;
         }
-        console.log("pan image")
+        // console.log("pan image")
 
         const pixelActualSize = this.calcPixelSize();
         const camera = this.camera;
@@ -2226,7 +2226,7 @@ export class Image extends BaseWidget {
                     const tcaChannelY = g_widgets1.getTcaChannel(roiData["yPv"].split("=")[0] + "@window_" + displayWindowId);
                     const tcaChannelWidth = g_widgets1.getTcaChannel(roiData["widthPv"].split("=")[0] + "@window_" + displayWindowId);
                     const tcaChannelHeight = g_widgets1.getTcaChannel(roiData["heightPv"].split("=")[0] + "@window_" + displayWindowId);
-                    console.log("===> ", xyzTopLeft[0], rectRoi);
+                    // console.log("===> ", xyzTopLeft[0], rectRoi);
                     if (tcaChannelX.getDbrData()["value"] !== xyzTopLeft[0]) {
                         tcaChannelX.put(displayWindowId, { value: xyzTopLeft[0] }, 1);
                     }
@@ -2241,7 +2241,7 @@ export class Image extends BaseWidget {
                     }
 
                 } catch (e) {
-                    console.log(g_widgets1.getTcaChannels());
+                    // console.log(g_widgets1.getTcaChannels());
                 }
             }
         }
@@ -2440,22 +2440,43 @@ export class Image extends BaseWidget {
     zMin: number = 0;
 
     processData = (changeGeometry: boolean) => {
-        const { width, height } = this.getImageDimensions();
+        // pixelDepth is not used in displaying data
+        const { width, height, colorMode, pixelDepth } = this.getImageDimensions();
+
+        if (colorMode !== NDArray_ColorMode.mono && colorMode !== NDArray_ColorMode.rgb1 && colorMode !== NDArray_ColorMode.rgb2 && colorMode !== NDArray_ColorMode.rgb3) {
+            Log.error("We only support MONO, RGB1, RGB2, and RGB3 format data in Image widget");
+            return;
+        }
+
         const size = width * height;
-        // this.imageHeight = this.calcImageSize()[1];
-        // this.imageWidth = this.calcImageSize()[0];
+
         if (size === 0) {
             Log.error("Image size is 0");
             return;
         }
+
         if (this.textureData === undefined) {
-            this.textureData = new Uint8Array(size * 4); // RGBA!
+            // we always plot 8-bit RGBA
+            this.textureData = new Uint8Array(size * 4);
         }
 
         const dataRaw = this.getImageValue();
-        if (dataRaw === undefined || dataRaw.length !== size) {
-            Log.error("Image size does not match image data length");
+        // console.log(width, height, colorMode, dataRaw.length)
+        if (Array.isArray(dataRaw) === false) {
+            Log.error("Image data should be an array");
             return;
+        }
+
+        if (colorMode === NDArray_ColorMode.mono) {
+            if (dataRaw.length < size) {
+                Log.error("Image size smaller than dimension");
+                return;
+            }
+        } else if (colorMode === NDArray_ColorMode.rgb1 || colorMode === NDArray_ColorMode.rgb2 || colorMode === NDArray_ColorMode.rgb3) {
+            if (dataRaw.length < 3 * size) {
+                Log.error("Image size smaller than dimension, ...");
+                return;
+            }
         }
 
         if (changeGeometry) {
@@ -2466,7 +2487,7 @@ export class Image extends BaseWidget {
         // color
         let minValue = this.getText()["zMin"];
         let maxValue = this.getText()["zMax"];
-        if (this.getText()["autoZ"] === true) {
+        if (this.getText()["autoZ"] === true && colorMode === NDArray_ColorMode.mono) {
             minValue = Math.min(...dataRaw);
             maxValue = Math.max(...dataRaw);
         }
@@ -2480,18 +2501,71 @@ export class Image extends BaseWidget {
             colorMapFunc = this.grayColorMap;
         }
 
-        for (let ii = 0; ii < dataRaw.length; ii++) {
-            const normalized = Math.round((dataRaw[ii] - minValue) / (maxValue - minValue) * 255);
-            const [r, g, b] = colorMapFunc(normalized);
-            const idx = ii * 4;
-            this.textureData[idx] = r;
-            this.textureData[idx + 1] = g;
-            this.textureData[idx + 2] = b;
-            this.textureData[idx + 3] = 255; // opaque
+        if (colorMode === NDArray_ColorMode.mono) {
+            for (let ii = 0; ii < size; ii++) {
+                const normalized = Math.max(Math.min(Math.round((dataRaw[ii] - minValue) / (maxValue - minValue) * 255)));
+                const [r, g, b] = colorMapFunc(normalized);
+                const idx = ii * 4;
+                this.textureData[idx] = r;
+                this.textureData[idx + 1] = g;
+                this.textureData[idx + 2] = b;
+                this.textureData[idx + 3] = 255; // opaque
+            }
+        } else if (colorMode === NDArray_ColorMode.rgb1) {
+            for (let ii = 0; ii < size; ii++) {
+                const rRaw = dataRaw[3 * ii];
+                const gRaw = dataRaw[3 * ii + 1];
+                const bRaw = dataRaw[3 * ii + 2];
+
+                const rNormalized = Math.max(Math.min(Math.round((rRaw - minValue) / (maxValue - minValue) * 255), 255), 0);
+                const gNormalized = Math.max(Math.min(Math.round((gRaw - minValue) / (maxValue - minValue) * 255), 255), 0);
+                const bNormalized = Math.max(Math.min(Math.round((bRaw - minValue) / (maxValue - minValue) * 255), 255), 0);
+
+                const idx = ii * 4;
+                this.textureData[idx] = rNormalized;
+                this.textureData[idx + 1] = gNormalized;
+                this.textureData[idx + 2] = bNormalized;
+                this.textureData[idx + 3] = 255; // opaque
+            }
+        } else if (colorMode === NDArray_ColorMode.rgb2) {
+            for (let ii = 0; ii < size; ii++) {
+                // i, j coordiate of pixel
+                const j = ii % width;
+                const i = (ii - j) / width;
+
+                const rRaw = dataRaw[3 * i * width + j];
+                const gRaw = dataRaw[3 * i * width + j + width];
+                const bRaw = dataRaw[3 * i * width + j + 2 * width];
+
+                const rNormalized = Math.max(Math.min(Math.round((rRaw - minValue) / (maxValue - minValue) * 255)));
+                const gNormalized = Math.max(Math.min(Math.round((gRaw - minValue) / (maxValue - minValue) * 255)));
+                const bNormalized = Math.max(Math.min(Math.round((bRaw - minValue) / (maxValue - minValue) * 255)));
+
+                const idx = ii * 4;
+                this.textureData[idx] = rNormalized;
+                this.textureData[idx + 1] = gNormalized;
+                this.textureData[idx + 2] = bNormalized;
+                this.textureData[idx + 3] = 255; // opaque
+            }
+        } else if (colorMode === NDArray_ColorMode.rgb3) {
+            for (let ii = 0; ii < size; ii++) {
+                const rRaw = dataRaw[ii];
+                const gRaw = dataRaw[size + ii];
+                const bRaw = dataRaw[size * 2 + ii];
+
+                const rNormalized = Math.max(Math.min(Math.round((rRaw - minValue) / (maxValue - minValue) * 255)));
+                const gNormalized = Math.max(Math.min(Math.round((gRaw - minValue) / (maxValue - minValue) * 255)));
+                const bNormalized = Math.max(Math.min(Math.round((bRaw - minValue) / (maxValue - minValue) * 255)));
+
+                const idx = ii * 4;
+                this.textureData[idx] = rNormalized;
+                this.textureData[idx + 1] = gNormalized;
+                this.textureData[idx + 2] = bNormalized;
+                this.textureData[idx + 3] = 255; // opaque
+            }
+        } else {
 
         }
-
-        // 
     };
 
     // color map arrays are generated by the following python code
@@ -6385,7 +6459,7 @@ export class Image extends BaseWidget {
     }
 
 
-    getImageDimensions = () => {
+    getImageDimensions = (): { width: number, height: number, colorMode: NDArray_ColorMode, pixelDepth: number } => {
         if (this.playing === false) {
             return this.imageDimensionsBackup;
         }
@@ -6395,19 +6469,99 @@ export class Image extends BaseWidget {
             const dbrData = channel.getDbrData();
             if (dbrData !== undefined) {
                 const dimension = dbrData["dimension"];
+                const attribute = dbrData["attribute"];
+                const valueObj = dbrData["value"] as any as { value: any, index: number };
+
+                const valueIndex = valueObj["index"];
+                let pixelDepth = 0; // 8-bit
+
+                if (valueIndex === 0) {
+                    // boolean[] for value
+                    pixelDepth = 1;
+                } else if (valueIndex === 1 || valueIndex === 5) {
+                    // byte[] or ubyte[], 8-bit
+                    pixelDepth = 8;
+                } else if (valueIndex === 2 || valueIndex === 6) {
+                    // short[] or ushort[], 16-bit
+                    pixelDepth = 16;
+                } else if (valueIndex === 3 || valueIndex === 7) {
+                    // int[] or uint[], 32-bit
+                    pixelDepth = 32;
+                } else if (valueIndex === 4 || valueIndex === 8) {
+                    // long[] or ulong, 64-bit
+                    pixelDepth = 64;
+                } else if (valueIndex === 9 || valueIndex === 10) {
+                    // float[] or double[]
+                    pixelDepth = 8;
+                }
+
+
+
                 if (dimension !== undefined && dimension.length >= 2) {
-                    if (typeof dimension[0]["size"] === "number" && typeof dimension[1]["size"] === "number") {
-                        return {
-                            width: dimension[0]["size"],
-                            height: dimension[1]["size"]
-                        };
+                    const dimension0 = dimension[0];
+                    const dimension1 = dimension[1];
+                    const dimension2 = dimension[2];
+
+                    // get color mode, default mono
+                    let colorMode = NDArray_ColorMode.mono;
+                    if (Array.isArray(attribute) && attribute.length >= 1) {
+                        const valueObj = attribute[0]["value"];
+                        if (valueObj !== undefined) {
+                            const colorModeValue = valueObj["value"];
+                            if (colorModeValue !== undefined && NDArray_ColorMode[colorModeValue] !== undefined) {
+                                colorMode = colorModeValue;
+                            }
+                        }
                     }
+
+
+                    if (colorMode === NDArray_ColorMode.mono) {
+                        // mono color
+                        if (typeof dimension0["size"] === "number" && typeof dimension1["size"] === "number") {
+                            return {
+                                width: dimension0["size"],
+                                height: dimension1["size"],
+                                colorMode: colorMode,
+                                pixelDepth: pixelDepth
+                            };
+                        }
+                    } else if (colorMode === NDArray_ColorMode.rgb1) {
+                        if (typeof dimension2["size"] === "number" && typeof dimension1["size"] === "number") {
+                            return {
+                                width: dimension[1]["size"],
+                                height: dimension[2]["size"],
+                                colorMode: colorMode,
+                                pixelDepth: pixelDepth
+                            };
+                        }
+
+                    } else if (colorMode === NDArray_ColorMode.rgb2) {
+                        if (typeof dimension0["size"] === "number" && typeof dimension2["size"] === "number") {
+                            return {
+                                width: dimension[0]["size"],
+                                height: dimension[2]["size"],
+                                colorMode: colorMode,
+                                pixelDepth: pixelDepth
+                            };
+                        }
+
+                    } else if (colorMode === NDArray_ColorMode.rgb3) {
+                        if (typeof dimension0["size"] === "number" && typeof dimension1["size"] === "number") {
+                            return {
+                                width: dimension[0]["size"],
+                                height: dimension[1]["size"],
+                                colorMode: colorMode,
+                                pixelDepth: pixelDepth
+                            };
+                        }
+                    }
+
                 }
             }
         } catch (e) {
             Log.error("Image getImageDimensions error: ", e);
         }
-        return { width: 0, height: 0 };
+        return { width: 0, height: 0, colorMode: NDArray_ColorMode.mono, pixelDepth: 0 };
     }
 
     /**

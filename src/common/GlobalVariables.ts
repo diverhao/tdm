@@ -221,3 +221,15 @@ export enum Channel_ACCESS_RIGHTS {
 export type type_dbrData = Record<string, any> & {
     value: string | string[] | number | number[] | undefined;
 };
+
+
+export enum NDArray_ColorMode {
+    mono,
+    bayer,
+    rgb1,
+    rgb2,
+    rgb3,
+    yuv444,
+    yuv422,
+    yuv411,
+};
