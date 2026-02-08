@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Channel_ACCESS_RIGHTS} from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { type_dbrData } from "../../../common/GlobalVariables";
@@ -68,11 +68,12 @@ export class Probe extends BaseWidget {
 
     constructor(widgetTdl: type_Probe_tdl) {
         super(widgetTdl);
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
-        this.setStyle({ ...Probe._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...Probe._defaultTdl.text, ...widgetTdl.text });
         this._dbdFiles = new DbdFiles(JSON.parse(JSON.stringify(widgetTdl.recordTypes)), JSON.parse(JSON.stringify(widgetTdl.menus)));
-        // assign the sidebar
+
         this._sidebar = new ProbeSidebar(this);
     }
 
@@ -163,12 +164,10 @@ export class Probe extends BaseWidget {
         const channelNameLevel4 = this.getChannelNamesLevel4()[0];
         // if this is an EPICS field channel, e.g. val1.SEVR, no rtype
         if (channelNameLevel4 === undefined) {
-            console.log("AAA ===============")
             this.rtyp = "";
             return;
         } else if (channelNameLevel4.includes(".")) {
             // demo:abc.EGU, no RTYP
-            console.log("BBB ===============")
             this.rtyp = "";
             return;
         } else if (channelNameLevel4.replace("pva://", "").includes("/")) {
@@ -396,9 +395,6 @@ export class Probe extends BaseWidget {
 
     // ------------------------- event ---------------------------------
     // concretize abstract method
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        //todo: remove this method
-    };
 
     // defined in super class
     // _handleMouseDown()
@@ -431,15 +427,14 @@ export class Probe extends BaseWidget {
 
     // concretize abstract method
     _ElementRaw = () => {
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -1616,73 +1611,64 @@ export class Probe extends BaseWidget {
     };
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_Probe_tdl = {
-        type: "Probe",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(255, 255,255, 1)",
-            left: 0,
-            top: 0,
-            width: 500,
-            height: 500,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: true,
-            showUnit: false,
-            alarmBorder: true,
-            highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-            overflowVisible: true,
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        // recordTypesFieldNames: {},
-        // recordTypesMenus: {},
-        recordTypes: {},
-        menus: {},
+    static generateDefaultTdl = () => {
+
+        const defaultTdl: type_Probe_tdl = {
+            type: "Probe",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            // the style for outmost div
+            // these properties are explicitly defined in style because they are
+            // (1) different from default CSS settings, or
+            // (2) they may be modified
+            style: {
+                position: "absolute",
+                display: "inline-flex",
+                backgroundColor: "rgba(255, 255,255, 1)",
+                left: 0,
+                top: 0,
+                width: 500,
+                height: 500,
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+                transform: "rotate(0deg)",
+                color: "rgba(0,0,0,1)",
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(255, 0, 0, 1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+            },
+            // the ElementBody style
+            text: {
+                horizontalAlign: "flex-start",
+                verticalAlign: "flex-start",
+                wrapWord: true,
+                showUnit: false,
+                alarmBorder: true,
+                highlightBackgroundColor: "rgba(255, 255, 0, 1)",
+                overflowVisible: true,
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+            // recordTypesFieldNames: {},
+            // recordTypesMenus: {},
+            recordTypes: {},
+            menus: {},
+        };
+
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_Probe_tdl;
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        // result.recordTypesFieldNames = JSON.parse(JSON.stringify(this._defaultTdl.recordTypesFieldNames));
-        // result.recordTypesMenus = JSON.parse(JSON.stringify(this._defaultTdl.recordTypesMenus));
-        result.recordTypes = JSON.parse(JSON.stringify(this._defaultTdl.recordTypes));
-        result.menus = JSON.parse(JSON.stringify(this._defaultTdl.menus));
-        return result;
-    };
+    generateDefaultTdl: () => any = Probe.generateDefaultTdl;
 
     // static method for generating a widget tdl with external PV name
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_Probe_tdl => {
-        const result = this.generateDefaultTdl("Probe");
+        const result = this.generateDefaultTdl();
         result.channelNames = utilityOptions.channelNames as string[];
         result.recordTypes = utilityOptions.recordTypes as Record<string, any>;
         result.menus = utilityOptions.menus as Record<string, any>;

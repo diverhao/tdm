@@ -6,7 +6,7 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ThumbWheelSidebar } from "./ThumbWheelSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ThumbWheelRules } from "./ThumbWheelRules";
-import {Log} from "../../../common/Log";
+import { Log } from "../../../common/Log";
 
 export type type_ThumbWheel_tdl = {
     type: string;
@@ -28,69 +28,24 @@ export class ThumbWheel extends BaseWidget {
 
     constructor(widgetTdl: type_ThumbWheel_tdl) {
         super(widgetTdl);
-
-        this.setStyle({ ...ThumbWheel._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...ThumbWheel._defaultTdl.text, ...widgetTdl.text });
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
         this._rules = new ThumbWheelRules(this, widgetTdl);
-
-        // assign the sidebar
-        // this._sidebar = new ThumbWheelSidebar(this);
     }
-
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // todo: remove this method
-    };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
 
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({...this.getStyle(), ...this.getRulesStyle()});
-        this.setAllText({...this.getText(), ...this.getRulesText()});
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <>
@@ -365,7 +320,7 @@ export class ThumbWheel extends BaseWidget {
                         fontSize: this.getAllStyle()["fontSize"],
                         fontStyle: this.getAllStyle()["fontStyle"],
                         fontWeight: this.getAllStyle()["fontWeight"],
-                        cursor: g_widgets1.isEditing()? "default" : "text",
+                        cursor: g_widgets1.isEditing() ? "default" : "text",
                     }}
                     ref={keyRef}
                     // highlightBackgroundColor={this.getAllText().highlightBackgroundColor}
@@ -396,28 +351,6 @@ export class ThumbWheel extends BaseWidget {
             </form>
         );
     };
-
-
-    // private _StyledInputInLine = styled.input<any>`
-	// 	background-color: rgba(0, 0, 0, 0);
-	// 	border: none;
-	// 	width: 100%;
-	// 	height: 100%;
-	// 	padding: 0;
-	// 	margin: 0;
-	// 	font-size: 14px;
-	// 	text-overflow: ellipsis;
-	// 	overflow: hidden;
-	// 	white-space: nowrap;
-	// 	outline: none;
-	// 	text-align: ${(props) => props.textAlign};
-	// 	&:hover {
-	// 		cursor: ${(props) => (props.isEditing ? "default" : "text")};
-	// 	}
-	// 	&:focus {
-	// 		background-color: ${(props) => props.highlightBackgroundColor};
-	// 	}
-	// `;
 
     changeChannelValue = (direction: "positive" | "negative" | "nomove") => {
         const channelName = this.getChannelNames()[0];
@@ -594,22 +527,9 @@ export class ThumbWheel extends BaseWidget {
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
     _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
 
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
 
     // -------------------- helper functions ----------------
 
-    // defined in super class
-    // _showSidebar()
-    // _showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
 
     _getChannelValue = (raw: boolean = false) => {
         const value = this._getFirstChannelValue(raw);
@@ -619,10 +539,6 @@ export class ThumbWheel extends BaseWidget {
             return value;
         }
     };
-
-    // _getChannelValue = () => {
-    // 	return this._getFirstChannelValue();
-    // };
 
     _getChannelSeverity = () => {
         return this._getFirstChannelSeverity();
@@ -636,115 +552,64 @@ export class ThumbWheel extends BaseWidget {
         }
     };
 
-    // _getChannelUnit = () => {
-    // 	return this._getFirstChannelUnit();
-    // };
-
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_ThumbWheel_tdl = {
-        type: "ThumbWheel",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(128, 255, 255, 1)",
-            left: 100,
-            top: 100,
-            width: 150,
-            height: 80,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: true,
-            alarmBorder: true,
-            // highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-            // minPvValue: 0,
-            // maxPvValue: 10,
-            // usePvLimits: false,
-            // sliderBlockWidth: 40,
-            // direction: "horizontal",
-            // showPvValue: true,
-            stepSize: 1,
-            invisibleInOperation: false,
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
+    static generateDefaultTdl = () => {
+
+        const defaultTdl: type_ThumbWheel_tdl = {
+            type: "ThumbWheel",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            // the style for outmost div
+            // these properties are explicitly defined in style because they are
+            // (1) different from default CSS settings, or
+            // (2) they may be modified
+            style: {
+                position: "absolute",
+                display: "inline-flex",
+                backgroundColor: "rgba(128, 255, 255, 1)",
+                left: 100,
+                top: 100,
+                width: 150,
+                height: 80,
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+                transform: "rotate(0deg)",
+                color: "rgba(0,0,0,1)",
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(255, 0, 0, 1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+            },
+            // the ElementBody style
+            text: {
+                horizontalAlign: "flex-start",
+                verticalAlign: "flex-start",
+                wrapWord: false,
+                showUnit: true,
+                alarmBorder: true,
+                // highlightBackgroundColor: "rgba(255, 255, 0, 1)",
+                // minPvValue: 0,
+                // maxPvValue: 10,
+                // usePvLimits: false,
+                // sliderBlockWidth: 40,
+                // direction: "horizontal",
+                // showPvValue: true,
+                stepSize: 1,
+                invisibleInOperation: false,
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        return result;
-    };
-
-    // defined in super class
-    // getTdlCopy()
-
-    // --------------------- getters -------------------------
-
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getUpdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
+    generateDefaultTdl: () => any = ThumbWheel.generateDefaultTdl;
 
     // --------------------- sidebar --------------------------
     createSidebar = () => {

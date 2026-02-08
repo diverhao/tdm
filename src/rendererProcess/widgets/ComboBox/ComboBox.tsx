@@ -38,25 +38,17 @@ export class ComboBox extends BaseWidget {
 
     constructor(widgetTdl: type_ComboBox_tdl) {
         super(widgetTdl);
-
-        this.setStyle({ ...ComboBox._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...ComboBox._defaultTdl.text, ...widgetTdl.text });
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
         // items
         this._itemLabels = JSON.parse(JSON.stringify(widgetTdl.itemLabels));
         this._itemValues = JSON.parse(JSON.stringify(widgetTdl.itemValues));
-        // this._itemPictures = JSON.parse(JSON.stringify(widgetTdl.itemPictures));
-        // this._itemColors = JSON.parse(JSON.stringify(widgetTdl.itemColors));
 
         if (this._itemLabels.length === 0) {
             this._itemLabels.push("item-0");
         }
-        // if (this._itemPictures.length === 0) {
-        // this._itemPictures.push("");
-        // }
-        // if (this._itemColors.length === 0) {
-        // this._itemColors.push("rgba(60,100,60,1)");
-        // }
         if (this._itemValues.length === 0) {
             this._itemValues.push(0);
         }
@@ -67,63 +59,20 @@ export class ComboBox extends BaseWidget {
 
         this._rules = new ComboBoxRules(this, widgetTdl);
 
-        // assign the sidebar
-        // this._sidebar = new ComboBoxSidebar(this);
     }
-
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // todo: remove this method
-    };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
 
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -199,7 +148,7 @@ export class ComboBox extends BaseWidget {
         const elementRef = React.useRef<any>(null);
 
         const channelName = this.getChannelNames()[0];
-        
+
         const [itemNames, itemValues] = this.updateItemsFromChannel(channelName);
         console.log("itemNames ====================", channelName, itemNames, itemValues)
 
@@ -476,104 +425,74 @@ export class ComboBox extends BaseWidget {
         return this._getFirstChannelAccessRight();
     };
 
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_ComboBox_tdl = {
-        type: "ComboBox",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 150,
-            height: 80,
-            backgroundColor: "rgba(210, 210, 210, 1)",
-            // angle
-            transform: "rotate(0deg)",
-            // border, it is different from the "alarmBorder" below,
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            horizontalAlign: "center",
-            // ! todo
-            // verticalAlign: "center",
-            alarmBorder: true,
-            useChannelItems: true,
-            invisibleInOperation: false,
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-            confirmOnWrite: false,
-            confirmOnWriteUsePassword: false,
-            confirmOnWritePassword: "",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        itemLabels: ["Label 0", "Label 1"],
-        itemValues: [0, 1],
-    };
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.itemLabels = JSON.parse(JSON.stringify(this._defaultTdl.itemLabels));
-        result.itemValues = JSON.parse(JSON.stringify(this._defaultTdl.itemValues));
-        return result;
+    static generateDefaultTdl = () => {
+
+        const defaultTdl: type_ComboBox_tdl = {
+            type: "ComboBox",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            style: {
+                // basics
+                position: "absolute",
+                display: "inline-flex",
+                // dimensions
+                left: 100,
+                top: 100,
+                width: 150,
+                height: 80,
+                backgroundColor: "rgba(210, 210, 210, 1)",
+                // angle
+                transform: "rotate(0deg)",
+                // border, it is different from the "alarmBorder" below,
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(0, 0, 0, 1)",
+                // font
+                color: "rgba(0,0,0,1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+                // shows when the widget is selected
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+            },
+            text: {
+                horizontalAlign: "center",
+                // ! todo
+                // verticalAlign: "center",
+                alarmBorder: true,
+                useChannelItems: true,
+                invisibleInOperation: false,
+                alarmText: false,
+                alarmBackground: false,
+                alarmLevel: "MINOR",
+                confirmOnWrite: false,
+                confirmOnWriteUsePassword: false,
+                confirmOnWritePassword: "",
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+            itemLabels: ["Label 0", "Label 1"],
+            itemValues: [0, 1],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // overload
+    generateDefaultTdl: () => any = ComboBox.generateDefaultTdl;
+
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
         result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
         result["itemLabels"] = JSON.parse(JSON.stringify(this.getItemLabels()));
-        // result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
-        // result["itemPictures"] = JSON.parse(JSON.stringify(this.getItemPictures()));
         return result;
     }
 
     // --------------------- getters -------------------------
-
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getUpdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
 
     getItemLabels = () => {
         return this._itemLabels;
@@ -582,29 +501,6 @@ export class ComboBox extends BaseWidget {
         return this._itemValues;
     };
 
-    // getItemPictures = () => {
-    // 	return this._itemPictures;
-    // };
-
-    // getItemColors = () => {
-    // 	return this._itemColors;
-    // };
-
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {

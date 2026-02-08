@@ -21,105 +21,32 @@ export type type_Rectangle_tdl = {
 };
 
 export class Rectangle extends BaseWidget {
-    // level-1 properties in tdl file
-    // _type: string;
-    // _widgetKey: string;
-    // _style: Record<string, any>;
-    // _text: Record<string, any>;
-    // _channelNames: string[];
-    // _groupNames: string[] = undefined;
-
-    // sidebar
-    // private _sidebar: TextUpdateSidebar;
-
-    // tmp methods
-    // private _tmp_mouseMoveOnResizerListener: any = undefined;
-    // private _tmp_mouseUpOnResizerListener: any = undefined;
-
-    // widget-specific channels, these channels are only used by this widget
-    // private _tcaChannels: TcaChannel[];
-
-    // used for the situation of shift key pressed + mouse down on a selected widget,
-    // so that when the mouse is up, the widget is de-selected
-    // its value is changed in 3 places: this.select2(), this._handleMouseMove() and this._handleMouseUp()
-    // private _readyToDeselect: boolean = false;
 
     _rules: RectangleRules;
 
     constructor(widgetTdl: type_Rectangle_tdl) {
         super(widgetTdl);
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
         this.setReadWriteType("read");
-        this.setBorderType("inside");
-
-        this.setStyle({ ...Rectangle._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...Rectangle._defaultTdl.text, ...widgetTdl.text });
 
         this._rules = new RectangleRules(this, widgetTdl);
 
-        // this._sidebar = new RectangleSidebar(this);
+        this.setBorderType("inside");
     }
-
-    // ------------------------- event ---------------------------------
-
-    // defined in widget, invoked in sidebar
-    // (1) determine which tdl property should be updated
-    // (2) calculate new value
-    // (3) assign new value
-    // (4) add this widget as well as "GroupSelection2" to g_widgets1.forceUpdateWidgets
-    // (5) flush
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // todo: remove this method
-    };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
 
     // ------------------------------ elements ---------------------------------
 
-    // element = <> body (area + resizer) + sidebar </>
-
     // Body + sidebar
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -145,7 +72,7 @@ export class Rectangle extends BaseWidget {
         return (
             // always update the div below no matter the TextUpdateBody is .memo or not
             // TextUpdateResizer does not update if it is .memo
-            <div style={{...this.getElementBodyRawStyle()}}>
+            <div style={{ ...this.getElementBodyRawStyle() }}>
                 <this._ElementArea></this._ElementArea>
                 {this._showResizers() ? <this._ElementResizer /> : null}
             </div>
@@ -298,106 +225,58 @@ export class Rectangle extends BaseWidget {
         }
     };
 
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
-    // properties when we create a new TextUpdate
-    // the level 1 properties all have corresponding public or private variable in the widget
+    static generateDefaultTdl = (): Record<string, any> => {
 
-    static _defaultTdl: type_Rectangle_tdl = {
-        type: "Rectangle",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(0, 0, 0, 0)", // always transparent, background is controlled in fillColor
-            // angle
-            transform: "rotate(0deg)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // line
-            lineWidth: 3,
-            lineColor: "rgba(0, 0, 255, 1)",
-            lineStyle: "solid",
-            // fill
-            fillColor: "rgba(30, 144,255,1)",
-            fill: true,
-            // corner
-            cornerWidth: 0,
-            cornerHeight: 0,
-            invisibleInOperation: false,
-            alarmBorder: false,
-            alarmShape: false,
-            alarmFill: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
+        const defaultTdl: type_Rectangle_tdl = {
+            type: "Rectangle",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            style: {
+                // basics
+                position: "absolute",
+                display: "inline-flex",
+                // dimensions
+                left: 100,
+                top: 100,
+                width: 100,
+                height: 100,
+                backgroundColor: "rgba(0, 0, 0, 0)", // always transparent, background is controlled in fillColor
+                // angle
+                transform: "rotate(0deg)",
+                // shows when the widget is selected
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+            },
+            text: {
+                // line
+                lineWidth: 3,
+                lineColor: "rgba(0, 0, 255, 1)",
+                lineStyle: "solid",
+                // fill
+                fillColor: "rgba(30, 144,255,1)",
+                fill: true,
+                // corner
+                cornerWidth: 0,
+                cornerHeight: 0,
+                invisibleInOperation: false,
+                alarmBorder: false,
+                alarmShape: false,
+                alarmFill: false,
+                alarmBackground: false,
+                alarmLevel: "MINOR",
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): Record<string, any> => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        return result;
-    };
-
-    // getTdlCopy()
-
-    // --------------------- getters -------------------------
-
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getUpdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-    // getRules()
-
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
+    generateDefaultTdl: () => any = Rectangle.generateDefaultTdl;
+    
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {

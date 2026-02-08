@@ -53,12 +53,9 @@ export class ProfilesViewer extends BaseWidget {
 
     constructor(widgetTdl: type_ProfilesViewer_tdl) {
         super(widgetTdl);
-
-        this.setStyle({ ...ProfilesViewer._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...ProfilesViewer._defaultTdl.text, ...widgetTdl.text });
-
-        // assign the sidebar
-        // this._sidebar = new ProfilesViewerSidebar(this);
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
         // dynamically load css and js
         const css = document.createElement('link');
@@ -109,51 +106,18 @@ export class ProfilesViewer extends BaseWidget {
         }
     }
 
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-    // empty
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => { };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
-
     // ------------------------------ elements ---------------------------------
 
     // concretize abstract method
     _ElementRaw = () => {
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -1120,7 +1084,7 @@ export class ProfilesViewer extends BaseWidget {
         let lastSecondCount = epicsStats["udp"]["bytesReceivedInLastSecond"];
         for (const [, tcpTransportStats] of Object.entries(epicsStats["tcp"])) {
             const bytesReceivedInLastSecond = tcpTransportStats["bytesReceivedInLastSecond"]
-            if ( bytesReceivedInLastSecond !== undefined) {
+            if (bytesReceivedInLastSecond !== undefined) {
                 lastSecondCount = lastSecondCount + bytesReceivedInLastSecond;
             }
         }
@@ -1218,20 +1182,7 @@ export class ProfilesViewer extends BaseWidget {
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
     _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
 
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-
     // -------------------- helper functions ----------------
-
-    // defined in super class
-    // _showSidebar()
-    // _showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
 
     _getChannelValue = () => {
         return this._getFirstChannelValue();
@@ -1243,103 +1194,57 @@ export class ProfilesViewer extends BaseWidget {
         return this._getFirstChannelUnit();
     };
 
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_ProfilesViewer_tdl = {
-        type: "ProfilesViewer",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(255, 255,255, 1)",
-            left: 0,
-            top: 0,
-            width: "100%",
-            height: "100%",
-            boxSizing: "border-box",
-            overflow: "scroll",
-            outlineStyle: "none",
-            // do not use outline in full screen widget, it will cause an extra horizontal scroll bar on bottom
-            // outlineWidth: 1,
-            // outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-        },
-        // the ElementBody style
-        text: {},
-        channelNames: [],
-        groupNames: [],
-        rules: [],
+    static generateDefaultTdl = () => {
+
+        const defaultTdl: type_ProfilesViewer_tdl = {
+            type: "ProfilesViewer",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            // the style for outmost div
+            // these properties are explicitly defined in style because they are
+            // (1) different from default CSS settings, or
+            // (2) they may be modified
+            style: {
+                position: "absolute",
+                display: "inline-flex",
+                backgroundColor: "rgba(255, 255,255, 1)",
+                left: 0,
+                top: 0,
+                width: "100%",
+                height: "100%",
+                boxSizing: "border-box",
+                overflow: "scroll",
+                outlineStyle: "none",
+                // do not use outline in full screen widget, it will cause an extra horizontal scroll bar on bottom
+                // outlineWidth: 1,
+                // outlineColor: "black",
+                transform: "rotate(0deg)",
+                color: "rgba(0,0,0,1)",
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(255, 0, 0, 1)",
+            },
+            // the ElementBody style
+            text: {},
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+        };
+
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_ProfilesViewer_tdl;
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        return result;
-    };
+    generateDefaultTdl: () => any = ProfilesViewer.generateDefaultTdl;
 
     // static method for generating a widget tdl with external PV name
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_ProfilesViewer_tdl => {
-        const result = this.generateDefaultTdl("ProfilesViewer");
+        const result = this.generateDefaultTdl();
         result.text = utilityOptions as Record<string, any>;
         return result;
     };
 
-    // getTdlCopy()
-
-    // --------------------- getters -------------------------
-
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getupdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
     }

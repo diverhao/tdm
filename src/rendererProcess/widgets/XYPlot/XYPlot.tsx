@@ -6,6 +6,7 @@ import { XYPlotSidebar } from "./XYPlotSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { type_xAxis, type_yAxis, XYPlotPlot } from "./XYPlotPlot";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
+import { deepMerge } from "../../../common/GlobalMethods";
 
 export type type_XYPlot_tdl = {
     type: string;
@@ -33,16 +34,13 @@ export class XYPlot extends BaseWidget {
     // updatingByInterval: boolean = true;
     constructor(widgetTdl: type_XYPlot_tdl) {
         super(widgetTdl);
-
-        // to let the mouse selecting buttons on this widget, it needs to be a "write" type widget
-        // this.setReadWriteType("read");
-
-        this.setStyle({ ...XYPlot._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...XYPlot._defaultTdl.text, ...widgetTdl.text });
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
         this._plot = new XYPlotPlot(this);
-        this.getPlot().setXAxis({ ...XYPlot._defaultTdl.xAxis, ...widgetTdl.xAxis });
-        this.getPlot().setYAxes([...XYPlot._defaultTdl.yAxes, ...widgetTdl.yAxes]);
+        this.getPlot().setXAxis(deepMerge(this.generateDefaultTdl().xAxis, widgetTdl.xAxis));
+        this.getPlot().setYAxes(deepMerge(this.generateDefaultTdl().yAxes, widgetTdl.yAxes));
 
         // assign the sidebar
         this._sidebar = new XYPlotSidebar(this);
@@ -51,66 +49,19 @@ export class XYPlot extends BaseWidget {
     mapDbrDataWitNewData = (newChannelNames: string[]) => {
         this.getPlot().mapDbrDataWitNewData(newChannelNames);
     };
-
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => { };
-
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
-
-    // ---------------------------- trace manipulation ----------------------------------
-    // hide/show/remove/insert trace
-
-    // no rules
-
-    // --------------------------- getters --------------------------------------
-
-    // ------------------------------------------
-
+    
     // ------------------------------ elements ---------------------------------
 
     // concretize abstract method
     _ElementRaw = () => {
-        // must do it for every widget
-        // React.useEffect(() => {
-        // 	g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        // });
-
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -221,73 +172,65 @@ export class XYPlot extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_XYPlot_tdl = {
-        type: "XYPlot",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(255, 255,255, 1)",
-            left: 0,
-            top: 0,
-            width: 500,
-            height: 300,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            showLegend: false,
-            showFrame: true,
-        },
-        channelNames: [],
-        groupNames: [],
-        xAxis: {
-            label: "x",
-            valMin: 0,
-            valMax: 100,
-            ticks: [0, 50, 100],
-            ticksText: ["0", "50", "100"],
-            autoScale: false,
-            showGrid: true,
-            numGrids: 10,
-        },
-        yAxes: [],
-        rules: [],
+
+    static generateDefaultTdl = () => {
+        const defaultTdl = {
+            type: "XYPlot",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            // the style for outmost div
+            // these properties are explicitly defined in style because they are
+            // (1) different from default CSS settings, or
+            // (2) they may be modified
+            style: {
+                position: "absolute",
+                display: "inline-flex",
+                backgroundColor: "rgba(255, 255,255, 1)",
+                left: 0,
+                top: 0,
+                width: 500,
+                height: 300,
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+                transform: "rotate(0deg)",
+                color: "rgba(0,0,0,1)",
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(0, 0, 0, 1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+            },
+            // the ElementBody style
+            text: {
+                showLegend: false,
+                showFrame: true,
+            },
+            channelNames: [],
+            groupNames: [],
+            xAxis: {
+                label: "x",
+                valMin: 0,
+                valMax: 100,
+                ticks: [0, 50, 100],
+                ticksText: ["0", "50", "100"],
+                autoScale: false,
+                showGrid: true,
+                numGrids: 10,
+            },
+            yAxes: [],
+            rules: [],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_XYPlot_tdl;
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.xAxis = JSON.parse(JSON.stringify(this._defaultTdl.xAxis));
-        result.yAxes = JSON.parse(JSON.stringify(this._defaultTdl.yAxes));
-        return result;
-    };
+    generateDefaultTdl = XYPlot.generateDefaultTdl;
 
     // static method for generating a widget tdl with external PV name
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_XYPlot_tdl => {
-        const result = this.generateDefaultTdl("XYPlot");
+        const result = this.generateDefaultTdl();
         result.channelNames = utilityOptions.channelNames as string[];
         return result;
     };

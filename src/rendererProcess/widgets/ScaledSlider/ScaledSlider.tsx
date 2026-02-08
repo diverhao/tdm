@@ -35,69 +35,24 @@ export class ScaledSlider extends BaseWidget {
 
     constructor(widgetTdl: type_ScaledSlider_tdl) {
         super(widgetTdl);
-
-        this.setStyle({ ...ScaledSlider._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...ScaledSlider._defaultTdl.text, ...widgetTdl.text });
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
         this._rules = new ScaledSliderRules(this, widgetTdl);
-
-        // assign the sidebar
-        // this._sidebar = new ScaledSliderSidebar(this);
     }
-
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // todo: remove this method
-    };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
 
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -1361,128 +1316,78 @@ export class ScaledSlider extends BaseWidget {
         return this._getFirstChannelAccessRight();
     };
 
-    // _getChannelUnit = () => {
-    // 	return this._getFirstChannelUnit();
-    // };
-
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_ScaledSlider_tdl = {
-        type: "ScaledSlider",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(255, 255, 255, 1)",
-            left: 100,
-            top: 100,
-            width: 150,
-            height: 80,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            showUnit: true,
-            minPvValue: 0,
-            maxPvValue: 100,
-            usePvLimits: false,
-            numTickIntervals: 5,
-            // layout
-            showPvValue: true,
-            showLabels: true,
-            // ------------------------------
-            stepSize: 1,
-            invisibleInOperation: false,
-            // decimal, exponential, hexadecimal
-            format: "default",
-            // scale, >= 0
-            scale: 0,
-            compactScale: false,
-            // "contemporary" | "traditional"
-            appearance: "traditional",
-            // slide bar background color
-            fillColor: "rgba(180, 180, 180, 1)",
-            // slide bar highlight area color
-            // sliderBarBackgroundColor1: "rgba(180, 180, 180, 1)",
-            alarmBorder: true,
-            alarmText: false,
-            alarmFill: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
+    static generateDefaultTdl = () => {
+
+        const defaultTdl: type_ScaledSlider_tdl = {
+            type: "ScaledSlider",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            // the style for outmost div
+            // these properties are explicitly defined in style because they are
+            // (1) different from default CSS settings, or
+            // (2) they may be modified
+            style: {
+                position: "absolute",
+                display: "inline-flex",
+                backgroundColor: "rgba(255, 255, 255, 1)",
+                left: 100,
+                top: 100,
+                width: 150,
+                height: 80,
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+                transform: "rotate(0deg)",
+                color: "rgba(0,0,0,1)",
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(255, 0, 0, 1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+            },
+            // the ElementBody style
+            text: {
+                showUnit: true,
+                minPvValue: 0,
+                maxPvValue: 100,
+                usePvLimits: false,
+                numTickIntervals: 5,
+                // layout
+                showPvValue: true,
+                showLabels: true,
+                // ------------------------------
+                stepSize: 1,
+                invisibleInOperation: false,
+                // decimal, exponential, hexadecimal
+                format: "default",
+                // scale, >= 0
+                scale: 0,
+                compactScale: false,
+                // "contemporary" | "traditional"
+                appearance: "traditional",
+                // slide bar background color
+                fillColor: "rgba(180, 180, 180, 1)",
+                // slide bar highlight area color
+                // sliderBarBackgroundColor1: "rgba(180, 180, 180, 1)",
+                alarmBorder: true,
+                alarmText: false,
+                alarmFill: false,
+                alarmBackground: false,
+                alarmLevel: "MINOR",
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        return result;
-    };
+    generateDefaultTdl: () => any = ScaledSlider.generateDefaultTdl;
 
-    // defined in super class
-    // getTdlCopy()
-
-    // --------------------- getters -------------------------
-
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getUpdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {

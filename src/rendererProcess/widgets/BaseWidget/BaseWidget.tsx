@@ -123,8 +123,8 @@ export abstract class BaseWidget {
     // top level properties in tdl file
     _type: string;
     _widgetKey: string;
-    _style: Record<string, any>;
-    _text: Record<string, any>;
+    _style: Record<string, any> = {};
+    _text: Record<string, any> = {};
     // _channelNames: string[];
     _groupNames: string[] = [];
     _rules: BaseWidgetRules | undefined;
@@ -163,7 +163,11 @@ export abstract class BaseWidget {
     _rulesStyle: Record<string, any> = {};
     _rulesText: Record<string, any> = {};
 
-    renderChildWidgets = false;
+    /**
+     * Guard the widget so that it won't be re-rendered 
+     * when it is being rendered
+     */
+    widgetBeingRendered = false;
 
     /**
      * regular channel name or formula channel, without any touch
@@ -196,57 +200,16 @@ export abstract class BaseWidget {
      */
     _embeddedDisplayWidgetKey: string = "";
 
-    getChannelNamesLevel0 = () => {
-        return this._channelNamesLevel0;
-    }
-    getChannelNamesLevel1 = () => {
-        return this._channelNamesLevel1;
-    }
-    getChannelNamesLevel2 = () => {
-        return this._channelNamesLevel2;
-    }
-    getChannelNamesLevel3 = () => {
-        return this._channelNamesLevel3;
-    }
-    getChannelNamesLevel4 = () => {
-        return this._channelNamesLevel4;
-    }
 
     _macros: [string, string][] = [];
 
     constructor(widgetTdl: type_BaseWidget_tdl) {
-        // these 2 properties must exist
         this._type = widgetTdl.type;
         this._widgetKey = widgetTdl.widgetKey;
 
-        // merge with default
-        this._style = { ...BaseWidget._defaultTdl.style, ...widgetTdl.style };
-        this._text = { ...BaseWidget._defaultTdl.text, ...widgetTdl.text };
-
-        // this._channelNames = [...widgetTdl.channelNames];
-        this._channelNamesLevel0 = [...widgetTdl.channelNames];
-        this._groupNames = [...widgetTdl.groupNames];
-
-        // this._rules = new BaseWidgetRules(this, widgetTdl);
-
-        // sidebar is defined in concerte class
+        this._channelNamesLevel0 = JSON.parse(JSON.stringify(widgetTdl.channelNames));
+        this._groupNames = JSON.parse(JSON.stringify(widgetTdl.groupNames));
     }
-
-
-
-    // ------------------------- event ---------------------------------
-
-    // defined in widget, invoked in sidebar
-    // (1) determine which tdl property should be updated
-    // (2) calculate new value
-    // (3) assign new value
-    // (4) add this widget as well as "GroupSelection2" to g_widgets1.forceUpdateWidgets
-    // (5) flush
-    abstract updateFromSidebar: (
-        event: any,
-        propertyName: string,
-        propertyValue: number | string | number[] | string[] | boolean | undefined
-    ) => void;
 
     // ------------------------ mouse events ----------------------------
 
@@ -884,8 +847,6 @@ export abstract class BaseWidget {
     // -------------------- helper functions ----------------
     // only show the sidebar of widget g_widgets1.sidebarWidgetKey
     _showSidebar = (): boolean => {
-        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-
         const result = g_widgets1.isEditing() && g_widgets1.getSidebarWidgetKey() === this.getWidgetKey();
         return result;
     };
@@ -895,7 +856,7 @@ export abstract class BaseWidget {
     };
 
     _useMemoedElement(): boolean {
-        if (g_widgets1.getForceUpdateWidgets().has(this.getWidgetKey()) === true || this.renderChildWidgets === true) {
+        if (g_widgets1.getForceUpdateWidgets().has(this.getWidgetKey()) === true || this.widgetBeingRendered === true) {
             return false;
         } else {
             return true;
@@ -1067,63 +1028,118 @@ export abstract class BaseWidget {
         },
     };
 
-    // StyledToolTipText = styled.div<any>`
-    // 	visibility: hidden;
-    // 	position: absolute;
-    // 	top: ${(props: any) => {
-    // 		return `${props.height / 2}px`;
-    // 	}};
-    // 	left: ${(props: any) => {
-    // 		return `${props.width / 2}px`;
-    // 	}};
-    // 	z-index: 10000;
-    // 	border-radius: 3px;
-    // 	width: fit-content;
-    // 	white-space: nowrap;
-    // 	padding-left: 3px;
-    // 	padding-right: 3px;
-    // 	padding-top: 1px;
-    // 	padding-bottom: 1px;
-    // 	background-color: rgba(114, 237, 155, 0.85);
-    // `;
-
-    // StyledToolTip = styled.div<any>`
-    // 	&:hover ${this.StyledToolTipText} {
-    // 		visibility: visible;
-    // 	}
-    // `;
 
     // -------------------------- tdl -------------------------------
-    // all methods and variables for tdl must be overridden in concrete class
+    abstract generateDefaultTdl: () => any;
 
-    // properties when we create a new BaseWidget, must be overridden
-    // the level 1 properties all have corresponding public or private variable in the widget
-    static _defaultTdl: type_BaseWidget_tdl = {
-        type: "",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {},
-        // the ElementBody style
-        text: {},
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-    };
+    /**
+     * Verify if a tdl object is valid by comparing the provided tdl and the
+     * widget's default tdl
+     * 
+     * This verification is minimum: for each widget type, the 
+     * 
+     * The tdl properties should be reasonable, e.g. the width should be reasonable number
+     */
+    verifyWidgetTdl(tdl: Record<string, any>) {
 
-    // not getDefaultTdl(), always generate a new key
-    // only defines type, widgetKey and key, the subclass should override it
-    static generateDefaultTdl = (type: string): Record<string, any> => {
-        const result = JSON.parse(JSON.stringify(this._defaultTdl));
-        const widgetKey = type + "_" + GlobalMethods.generateNewWidgetKey();
-        result.widgetKey = widgetKey;
-        result.key = widgetKey;
-        result.type = type;
-        return result;
-    };
+        if (typeof (tdl["type"]) !== "string") {
+            return false;
+        }
+        if (typeof (tdl["widgetKey"]) !== "string") {
+            return false;
+        }
+        if (typeof (tdl["key"]) !== "string") {
+            return false;
+        }
+
+        // tdl["style"]
+        const style = tdl["style"];
+        if (typeof (style) !== "object") {
+            return false;
+        }
+        if (typeof (style["position"]) !== "string") {
+            return false;
+        }
+        if (typeof (style["display"]) !== "string") {
+            return false;
+        }
+        if (typeof (style["left"]) !== "number") {
+            return false;
+        }
+        if (typeof (style["top"]) !== "number") {
+            return false;
+        }
+        if (typeof (style["width"]) !== "number" && style["width"] !== "100%") {
+            return false;
+        }
+        if (typeof (style["height"]) !== "number" && style["height"] !== "100%") {
+            return false;
+        }
+        // the widget must be in visible region
+        if (style["width"] !== "100%" && style["height"] !== "100%") {
+            if (style["left"] + style["width"] <= 0) {
+                return false;
+            }
+            if (style["top"] + style["height"] <= 0) {
+                return false;
+            }
+        }
+        if (!GlobalMethods.isValidRgbaColor(style["backgroundColor"])) {
+            return false;
+        }
+        if (!GlobalMethods.isValidRgbaColor(style["color"])) {
+            return false;
+        }
+        if (typeof (style["fontFamily"]) !== "string") {
+            return false;
+        }
+        if (typeof (style["fontSize"]) !== "number") {
+            return false;
+        }
+        // font size should be reasonable
+        if (style["fontSize"] < 5 || style["fontSize"] > 150) {
+            return false;
+        }
+        if (typeof (style["fontWeight"]) !== "string") {
+            return false;
+        }
+        if (typeof (style["fontStyle"]) !== "string") {
+            return false;
+        }
+        if (typeof (style["position"]) !== "string") {
+            return false;
+        }
+
+        // tdl["text"]
+        if (typeof (tdl["text"]) !== "object") {
+            return false;
+        }
+
+        // tdl["channelNames"]
+        if (!GlobalMethods.isStringArray(tdl["channelNames"])) {
+            return false;
+        }
+
+        // tdl["groupNames"]
+        if (!GlobalMethods.isStringArray(tdl["groupNames"])) {
+            return false;
+        }
+
+        // tdl["rules"]
+        if (!GlobalMethods.isRuleElementArray(tdl["rules"])) {
+            return false;
+        }
+
+        return true;
+    }
+
+    initStyle = (widgetTdl: Record<string, any>) => {
+        this.setStyle(GlobalMethods.deepMerge(this.generateDefaultTdl().style, widgetTdl.style));
+    }
+
+    initText = (widgetTdl: Record<string, any>) => {
+        this.setText(GlobalMethods.deepMerge(this.generateDefaultTdl().text, widgetTdl.text));
+    }
 
     /**
      * Generate the JSON representation for this widget
@@ -1176,14 +1192,27 @@ export abstract class BaseWidget {
         return this._allText;
     }
 
+    /**
+     * Update this._allText and this._allStyle based on new rules
+     */
+    updateAllStyleAndText = () => {
+        this.setRulesStyle({});
+        this.setRulesText({});
+        const rulesValues = this.getRules()?.getValues();
+        if (rulesValues !== undefined) {
+            this.setRulesStyle(rulesValues["style"]);
+            this.setRulesText(rulesValues["text"]);
+        }
+        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
+        this.setAllText({ ...this.getText(), ...this.getRulesText() });
+    }
+
     getElementBodyRawStyle = () => {
         const allStyle = this.getAllStyle();
         const allText = this.getAllText();
         const result: Record<string, any> = {
-            ...this.getStyle(),
-            ...this.getRulesStyle(),
-            // display: "inline-flex",
-            display: this.getAllStyle()["display"],
+            ...this.getAllStyle(),
+
             left: this.getBorderType() === "outside" ? allStyle["left"] - allStyle["borderWidth"] : allStyle["left"],
             top: this.getBorderType() === "outside" ? allStyle["top"] - allStyle["borderWidth"] : allStyle["top"],
             // if it is a readback-type widget, we skip the mouse left-button-down event in operating mode, 
@@ -1201,6 +1230,21 @@ export abstract class BaseWidget {
     };
 
     // --------------------- getters -------------------------
+    getChannelNamesLevel0 = () => {
+        return this._channelNamesLevel0;
+    }
+    getChannelNamesLevel1 = () => {
+        return this._channelNamesLevel1;
+    }
+    getChannelNamesLevel2 = () => {
+        return this._channelNamesLevel2;
+    }
+    getChannelNamesLevel3 = () => {
+        return this._channelNamesLevel3;
+    }
+    getChannelNamesLevel4 = () => {
+        return this._channelNamesLevel4;
+    }
 
     getType = (): string => {
         return this._type;

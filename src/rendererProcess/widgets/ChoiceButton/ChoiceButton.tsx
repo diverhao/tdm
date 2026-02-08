@@ -32,9 +32,9 @@ export class ChoiceButton extends BaseWidget {
 
     constructor(widgetTdl: type_ChoiceButton_tdl) {
         super(widgetTdl);
-
-        this.setStyle({ ...ChoiceButton._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...ChoiceButton._defaultTdl.text, ...widgetTdl.text });
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
         // items
         this._itemLabels = JSON.parse(JSON.stringify(widgetTdl.itemLabels));
@@ -51,64 +51,18 @@ export class ChoiceButton extends BaseWidget {
         this._itemValuesFromChannel = [];
 
         this._rules = new ChoiceButtonRules(this, widgetTdl);
-
-        // assign the sidebar
-        // this._sidebar = new ChoiceButtonSidebar(this);
     }
-
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // todo: remove this method
-    };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
-
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -460,93 +414,75 @@ export class ChoiceButton extends BaseWidget {
         return this._getFirstChannelAccessRight();
     };
 
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
+    static generateDefaultTdl = () => {
 
-    static _defaultTdl: type_ChoiceButton_tdl = {
-        type: "ChoiceButton",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 0,
-            top: 0,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(128, 255, 255, 0)",
-            // angle
-            transform: "rotate(0deg)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // border, it is different from the alarmBorder below
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: false,
-            alarmBorder: true,
-            // colors
-            selectedBackgroundColor: "rgba(218, 218, 218, 1)",
-            unselectedBackgroundColor: "rgba(200, 200, 200, 1)",
-            useChannelItems: true,
-            invisibleInOperation: false,
-            direction: "horizontal",
-            // "contemporary" | "traditional"
-            appearance: "traditional",
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-            confirmOnWrite: false,
-            confirmOnWriteUsePassword: false,
-            confirmOnWritePassword: "",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        // could be more than two labels
-        itemLabels: ["Label 0", "Label 1"],
-        itemValues: [0, 1],
+        const defaultTdl: type_ChoiceButton_tdl = {
+            type: "ChoiceButton",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            style: {
+                // basics
+                position: "absolute",
+                display: "inline-flex",
+                // dimensions
+                left: 0,
+                top: 0,
+                width: 100,
+                height: 100,
+                backgroundColor: "rgba(128, 255, 255, 0)",
+                // angle
+                transform: "rotate(0deg)",
+                // font
+                color: "rgba(0,0,0,1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+                // border, it is different from the alarmBorder below
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(0, 0, 0, 1)",
+                // shows when the widget is selected
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+            },
+            // the ElementBody style
+            text: {
+                horizontalAlign: "flex-start",
+                verticalAlign: "flex-start",
+                wrapWord: false,
+                showUnit: false,
+                alarmBorder: true,
+                // colors
+                selectedBackgroundColor: "rgba(218, 218, 218, 1)",
+                unselectedBackgroundColor: "rgba(200, 200, 200, 1)",
+                useChannelItems: true,
+                invisibleInOperation: false,
+                direction: "horizontal",
+                // "contemporary" | "traditional"
+                appearance: "traditional",
+                alarmText: false,
+                alarmBackground: false,
+                alarmLevel: "MINOR",
+                confirmOnWrite: false,
+                confirmOnWriteUsePassword: false,
+                confirmOnWritePassword: "",
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+            // could be more than two labels
+            itemLabels: ["Label 0", "Label 1"],
+            itemValues: [0, 1],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.itemLabels = JSON.parse(JSON.stringify(this._defaultTdl.itemLabels));
-        result.itemValues = JSON.parse(JSON.stringify(this._defaultTdl.itemValues));
-        return result;
-    };
+    generateDefaultTdl: () => any = ChoiceButton.generateDefaultTdl;
 
-    // overload
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
         result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
@@ -556,19 +492,6 @@ export class ChoiceButton extends BaseWidget {
 
     // --------------------- getters -------------------------
 
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getAllText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getUpdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-
     getItemLabels = () => {
         return this._itemLabels;
     };
@@ -576,21 +499,6 @@ export class ChoiceButton extends BaseWidget {
         return this._itemValues;
     };
 
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {

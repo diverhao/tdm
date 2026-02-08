@@ -184,8 +184,9 @@ export class Casw extends BaseWidget {
 
     constructor(widgetTdl: type_Casw_tdl) {
         super(widgetTdl);
-        this.setStyle({ ...Casw._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...Casw._defaultTdl.text, ...widgetTdl.text });
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
         this.setMacros(JSON.parse(JSON.stringify(widgetTdl.macros)));
 
         // columns: ms since epoch, channel name, ip, port
@@ -270,56 +271,16 @@ export class Casw extends BaseWidget {
     filteredIp = "";
     filteredChannelName = "";
 
-
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => { };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
-
     // ------------------------------ elements ---------------------------------
-
-    // concretize abstract method
     _ElementRaw = () => {
-        // if (this.getExpandedBaseChannelNames().length === 0) {
-        // this function uses g_widgets1. It cannot be invoked in constructor
-        // this.setExpanedBaseChannelNames();
-        // }
-
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -329,7 +290,7 @@ export class Casw extends BaseWidget {
                 </>
             </ErrorBoundary>
         );
-    }; // ----------------------------------------
+    };
 
     _ElementBodyRaw = (): React.JSX.Element => {
         return (
@@ -1027,24 +988,7 @@ export class Casw extends BaseWidget {
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
     _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
 
-    // _Element = React.memo(this._ElementRaw, () => false);
-    // _ElementArea = React.memo(this._ElementAreaRaw, () => true);
-    // _ElementBody = React.memo(this._ElementBodyRaw, () => true);
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-
     // -------------------- helper functions ----------------
-
-    // defined in super class
-    // _showSidebar()
-    // _showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
 
     _getChannelValue = () => {
         return this._getFirstChannelValue();
@@ -1056,115 +1000,68 @@ export class Casw extends BaseWidget {
         return this._getFirstChannelUnit();
     };
 
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_Casw_tdl = {
-        type: "Casw",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(255, 255,255, 1)",
-            left: 0,
-            top: 0,
-            width: 500,
-            height: 500,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: true,
-            showUnit: false,
-            alarmBorder: true,
-            highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-            overflowVisible: true,
-            channelPropertyNames: [],
-            EPICS_CA_SERVER_PORT: 5064,
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        macros: [],
+    static generateDefaultTdl = () => {
+
+        const defaultTdl: type_Casw_tdl = {
+            type: "Casw",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            // the style for outmost div
+            // these properties are explicitly defined in style because they are
+            // (1) different from default CSS settings, or
+            // (2) they may be modified
+            style: {
+                position: "absolute",
+                display: "inline-flex",
+                backgroundColor: "rgba(255, 255,255, 1)",
+                left: 0,
+                top: 0,
+                width: 500,
+                height: 500,
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+                transform: "rotate(0deg)",
+                color: "rgba(0,0,0,1)",
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(255, 0, 0, 1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+            },
+            // the ElementBody style
+            text: {
+                horizontalAlign: "flex-start",
+                verticalAlign: "flex-start",
+                wrapWord: true,
+                showUnit: false,
+                alarmBorder: true,
+                highlightBackgroundColor: "rgba(255, 255, 0, 1)",
+                overflowVisible: true,
+                channelPropertyNames: [],
+                EPICS_CA_SERVER_PORT: 5064,
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+            macros: [],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_Casw_tdl;
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.macros = JSON.parse(JSON.stringify(this._defaultTdl.macros));
-        return result;
-    };
+    generateDefaultTdl: () => any = Casw.generateDefaultTdl;
 
     // static method for generating a widget tdl with external PV name
-    // not the
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_Casw_tdl => {
-        const result = this.generateDefaultTdl("Casw");
+        const result = this.generateDefaultTdl();
         result["text"]["EPICS_CA_REPEATER_PORT"] = utilityOptions["EPICS_CA_REPEATER_PORT"];
         return result;
     };
 
-    // --------------------- getters -------------------------
-
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getupdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         // if (this._sidebar === undefined) {

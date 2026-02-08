@@ -40,32 +40,12 @@ export class DataViewer extends BaseWidget {
     // updatingByInterval: boolean = true;
     constructor(widgetTdl: type_DataViewer_tdl) {
         super(widgetTdl);
-
-        this.setStyle({ ...DataViewer._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...DataViewer._defaultTdl.text, ...widgetTdl.text });
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
         // assign the sidebar
         this._sidebar = new DataViewerSidebar(this);
-
-        // this.tracesInitialized = false;
-
-        // setTimeout(() => {
-        //     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-
-        //     const startTime = GlobalMethods.getLocalOffsetMsTimeString(-20*60*1000).split(".")[0];
-        //     const endTime = GlobalMethods.getLocalOffsetMsTimeString(-1*60*1000).split(".")[0];
-        //     // const endTime = `${Date.now() - 15* 1000}`.replace("T", " ").replace("Z", "");
-        //     displayWindowClient.getIpcManager().sendFromRendererProcess("request-archive-data", {
-        //         displayWindowId: displayWindowClient.getWindowId(),
-        //         widgetKey: this.getWidgetKey(),
-        //         channelName: "RTBT_Diag:BCM25I:Power60",
-        //         // startTime: "2024-05-21 00:00:00", // "2024-01-01 01:23:45", no ms
-        //         // endTime: "2013-05-21 01:00:00",
-        //         startTime: startTime,
-        //         endTime: endTime,
-
-        //     })
-        // }, 10000)
 
         // update plot every "updatePeriod" time
         this.updateInterval = setInterval(() => {
@@ -90,7 +70,7 @@ export class DataViewer extends BaseWidget {
         setTimeout(() => {
             if (this._plot === undefined) {
                 this._plot = new DataViewerPlot(this);
-                this.getPlot().setYAxes([...DataViewer._defaultTdl.yAxes, ...widgetTdl.yAxes]);
+                this.getPlot().setYAxes(JSON.parse(JSON.stringify(widgetTdl.yAxes)));
             }
         }, 0);
 
@@ -111,7 +91,7 @@ export class DataViewer extends BaseWidget {
         });
 
         this._plot = new DataViewerPlot(this);
-        this.getPlot().setYAxes([...DataViewer._defaultTdl.yAxes, ...widgetTdl.yAxes]);
+        this.getPlot().setYAxes(JSON.parse(JSON.stringify(widgetTdl.yAxes)));
         this._settings = new DataViewerSettings(this);
     }
 
@@ -171,7 +151,6 @@ export class DataViewer extends BaseWidget {
 
     // ------------------------- event ---------------------------------
     // concretize abstract method
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => { };
 
     // defined in super class
     // _handleMouseDown()
@@ -262,7 +241,7 @@ export class DataViewer extends BaseWidget {
                 ii++;
             }
             plot.updatePlot(true);
-            
+
         }, [])
 
         return (
@@ -290,7 +269,7 @@ export class DataViewer extends BaseWidget {
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                {g_widgets1.isEditing()? <this._ElementMask></this._ElementMask> : this.getPlot().getElement()}
+                {g_widgets1.isEditing() ? <this._ElementMask></this._ElementMask> : this.getPlot().getElement()}
             </div>
         );
     };
@@ -355,78 +334,63 @@ export class DataViewer extends BaseWidget {
         }
     }
 
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_DataViewer_tdl = {
-        type: "DataViewer",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(255, 255, 255, 1)",
-            left: 0,
-            top: 0,
-            width: 500,
-            height: 300,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 1,
-            borderColor: "rgba(0, 0, 0, 1)",
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            wrapWord: true,
-            showUnit: false,
-            alarmBorder: true,
-            highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-            overflowVisible: true,
-            singleWidget: false,
-            title: "Title",
-            updatePeriod: 1, // second
-            axisZoomFactor: 1.25,
-        },
-        channelNames: [],
-        groupNames: [],
-        yAxes: [],
-        rules: [],
+
+    static generateDefaultTdl = () => {
+
+        const defaultTdl: type_DataViewer_tdl = {
+            type: "DataViewer",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            // the style for outmost div
+            // these properties are explicitly defined in style because they are
+            // (1) different from default CSS settings, or
+            // (2) they may be modified
+            style: {
+                position: "absolute",
+                display: "inline-flex",
+                backgroundColor: "rgba(255, 255, 255, 1)",
+                left: 0,
+                top: 0,
+                width: 500,
+                height: 300,
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+                transform: "rotate(0deg)",
+                color: "rgba(0,0,0,1)",
+                borderStyle: "solid",
+                borderWidth: 1,
+                borderColor: "rgba(0, 0, 0, 1)",
+                horizontalAlign: "flex-start",
+                verticalAlign: "flex-start",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+            },
+            // the ElementBody style
+            text: {
+                wrapWord: true,
+                showUnit: false,
+                alarmBorder: true,
+                highlightBackgroundColor: "rgba(255, 255, 0, 1)",
+                overflowVisible: true,
+                singleWidget: false,
+                title: "Title",
+                updatePeriod: 1, // second
+                axisZoomFactor: 1.25,
+            },
+            channelNames: [],
+            groupNames: [],
+            yAxes: [],
+            rules: [],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_DataViewer_tdl;
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.yAxes = JSON.parse(JSON.stringify(this._defaultTdl.yAxes));
-        return result;
-    };
+    generateDefaultTdl: () => any = DataViewer.generateDefaultTdl;
 
     /** 
      * Static method for generating a widget tdl with external PV name <br>
@@ -435,7 +399,7 @@ export class DataViewer extends BaseWidget {
      * 
     */
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_DataViewer_tdl => {
-        const result = this.generateDefaultTdl("DataViewer");
+        const result = this.generateDefaultTdl();
         // 
         result.style["borderWidth"] = 0;
         result.channelNames = utilityOptions.channelNames as string[];
@@ -449,42 +413,10 @@ export class DataViewer extends BaseWidget {
         return result;
     }
 
-    // --------------------- getters -------------------------
-
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getupdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-
     getYAxes = () => {
         return this.getPlot().yAxes;
     };
 
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
-
-    // ------------------------ customized plot --------------------------
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {

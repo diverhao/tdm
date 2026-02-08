@@ -25,30 +25,6 @@ export type type_Table_tdl = {
 };
 
 export class Table extends BaseWidget {
-    // level-1 properties in tdl file
-    // _type: string;
-    // _widgetKey: string;
-    // _style: Record<string, any>;
-    // _text: Record<string, any>;
-    // _channelNames: string[];
-    // _groupNames: string[] = undefined;
-
-    // sidebar
-    // private _sidebar: TextUpdateSidebar;
-
-    // tmp methods
-    // private _tmp_mouseMoveOnResizerListener: any = undefined;
-    // private _tmp_mouseUpOnResizerListener: any = undefined;
-
-    // widget-specific channels, these channels are only used by this widget
-    // private _tcaChannels: TcaChannel[];
-
-    // used for the situation of shift key pressed + mouse down on a selected widget,
-    // so that when the mouse is up, the widget is de-selected
-    // its value is changed in 3 places: this.select2(), this._handleMouseMove() and this._handleMouseUp()
-    // private _readyToDeselect: boolean = false;
-
-    // _rules: TextUpdateRules;
 
     _tab: Tab;
 
@@ -59,86 +35,29 @@ export class Table extends BaseWidget {
 
     constructor(widgetTdl: type_Table_tdl) {
         super(widgetTdl);
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this.setStyle({ ...Table._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...Table._defaultTdl.text, ...widgetTdl.text });
-
-        // this._rules = new TextUpdateRules(this, widgetTdl);
-
-        // this._sidebar = new TextUpdateSidebar(this);
-
         this._tab = new Tab([50, 50, 50], this);
-
-
         this._ElementTableCell = this.getTab().getElementTableCell();
         this._ElementTableLine = this.getTab().getElementTableLine();
         this._ElementTableHeaderResizer = this.getTab().getElementTableHeaderResizer();
         this._ElementTableLineMemo = this.getTab().getElementTableLineMemo();
-
     }
-
-    // ------------------------- event ---------------------------------
-
-    // defined in widget, invoked in sidebar
-    // (1) determine which tdl property should be updated
-    // (2) calculate new value
-    // (3) assign new value
-    // (4) add this widget as well as "GroupSelection2" to g_widgets1.forceUpdateWidgets
-    // (5) flush
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // todo: remove this method
-    };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
 
     // ------------------------------ elements ---------------------------------
 
-    // element = <> body (area + resizer) + sidebar </>
-
     // Body + sidebar
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()} >
@@ -568,74 +487,65 @@ export class Table extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    // properties when we create a new TextUpdate
-    // the level 1 properties all have corresponding public or private variable in the widget
-
-    static _defaultTdl: type_Table_tdl = {
-        type: "Table",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(240, 240, 240, 1)",
-            // angle
-            transform: "rotate(0deg)",
-            // border, it is different from the "alarmBorder" below,
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // text
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: true,
-            invisibleInOperation: false,
-            // default, decimal, exponential, hexadecimal
-            format: "default",
-            // scale, >= 0
-            scale: 0,
-            // actually "alarm outline"
-            alarmBorder: true,
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-    };
 
     // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): Record<string, any> => {
-        const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        return result;
+    static generateDefaultTdl = (): Record<string, any> => {
+        const defaultTdl: type_Table_tdl = {
+            type: "Table",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            style: {
+                // basics
+                position: "absolute",
+                display: "inline-flex",
+                // dimensions
+                left: 100,
+                top: 100,
+                width: 100,
+                height: 100,
+                backgroundColor: "rgba(240, 240, 240, 1)",
+                // angle
+                transform: "rotate(0deg)",
+                // border, it is different from the "alarmBorder" below,
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(0, 0, 0, 1)",
+                // font
+                color: "rgba(0,0,0,1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+                // shows when the widget is selected
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+            },
+            text: {
+                // text
+                horizontalAlign: "flex-start",
+                verticalAlign: "flex-start",
+                wrapWord: false,
+                showUnit: true,
+                invisibleInOperation: false,
+                // default, decimal, exponential, hexadecimal
+                format: "default",
+                // scale, >= 0
+                scale: 0,
+                // actually "alarm outline"
+                alarmBorder: true,
+                alarmText: false,
+                alarmBackground: false,
+                alarmLevel: "MINOR",
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // defined in super class
-    // getTdlCopy()
+    generateDefaultTdl = Table.generateDefaultTdl;
 
     // --------------------- getters -------------------------
 

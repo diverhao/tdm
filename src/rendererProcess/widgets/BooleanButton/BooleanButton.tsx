@@ -26,68 +26,26 @@ export class BooleanButton extends BaseWidget {
 
     constructor(widgetTdl: type_BooleanButton_tdl) {
         super(widgetTdl);
-
-        this.setStyle({ ...BooleanButton._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...BooleanButton._defaultTdl.text, ...widgetTdl.text });
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
         this._rules = new BooleanButtonRules(this, widgetTdl);
-        // assign the sidebar
-        // this._sidebar = new BooleanButtonSidebar(this);
     }
-
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // todo: remove this method
-    };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
 
     // ------------------------------ elements ---------------------------------
 
     // concretize abstract method
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
 
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -824,150 +782,86 @@ export class BooleanButton extends BaseWidget {
         return this._getFirstChannelAccessRight();
     };
 
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_BooleanButton_tdl = {
-        type: "BooleanButton",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 0,
-            top: 0,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(210, 210, 210, 1)",
-            // angle
-            transform: "rotate(0deg)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // border, it is different from the "alarmBorder" below
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "rgba(0,0,0,1)",
-        },
-        text: {
-            // the LED indicator or picture position and size
-            horizontalAlign: "center",
-            verticalAlign: "center",
-            // text styles
-            wrapWord: false,
-            showUnit: false,
-            // if we want to use the itemLabels and itemValues from channel
-            useChannelItems: false,
-            // use picture instead of colors
-            usePictures: false,
-            showLED: true,
-            // which bit to show, -1 means using the channel value
-            bit: 0,
-            alarmBorder: true,
-            // toggle/push and reset/push no reset/push nothing and set/
-            mode: "toggle",
-            // when the channel is not connected
-            fallbackColor: "rgba(255,0,255,1)",
-            // becomes not visible in operation mode, but still clickable
-            invisibleInOperation: false,
-            // items, each category has 2 items
-            onLabel: "On",
-            offLabel: "Off",
-            onValue: 1,
-            offValue: 0,
-            onColor: "rgba(60, 255, 60, 1)",
-            offColor: "rgba(60, 100, 60, 1)",
-            onPicture: "", // not implemented yet
-            offPicture: "",
-            // "contemporary" | "traditional"
-            appearance: "traditional",
-            confirmOnWrite: false,
-            confirmOnWriteUsePassword: false,
-            confirmOnWritePassword: "",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
+    static generateDefaultTdl = () => {
+
+        const defaultTdl: type_BooleanButton_tdl = {
+            type: "BooleanButton",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            style: {
+                // basics
+                position: "absolute",
+                display: "inline-flex",
+                // dimensions
+                left: 0,
+                top: 0,
+                width: 100,
+                height: 100,
+                backgroundColor: "rgba(210, 210, 210, 1)",
+                // angle
+                transform: "rotate(0deg)",
+                // font
+                color: "rgba(0,0,0,1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+                // border, it is different from the "alarmBorder" below
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(0, 0, 0, 1)",
+                // shows when the widget is selected
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "rgba(0,0,0,1)",
+            },
+            text: {
+                // the LED indicator or picture position and size
+                horizontalAlign: "center",
+                verticalAlign: "center",
+                // text styles
+                wrapWord: false,
+                showUnit: false,
+                // if we want to use the itemLabels and itemValues from channel
+                useChannelItems: false,
+                // use picture instead of colors
+                usePictures: false,
+                showLED: true,
+                // which bit to show, -1 means using the channel value
+                bit: 0,
+                alarmBorder: true,
+                // toggle/push and reset/push no reset/push nothing and set/
+                mode: "toggle",
+                // when the channel is not connected
+                fallbackColor: "rgba(255,0,255,1)",
+                // becomes not visible in operation mode, but still clickable
+                invisibleInOperation: false,
+                // items, each category has 2 items
+                onLabel: "On",
+                offLabel: "Off",
+                onValue: 1,
+                offValue: 0,
+                onColor: "rgba(60, 255, 60, 1)",
+                offColor: "rgba(60, 100, 60, 1)",
+                onPicture: "", // not implemented yet
+                offPicture: "",
+                // "contemporary" | "traditional"
+                appearance: "traditional",
+                confirmOnWrite: false,
+                confirmOnWriteUsePassword: false,
+                confirmOnWritePassword: "",
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        return result;
-    };
+    generateDefaultTdl: () => any = BooleanButton.generateDefaultTdl;
 
-    // overload
-    getTdlCopy(newKey: boolean = true): Record<string, any> {
-        const result = super.getTdlCopy(newKey);
-        return result;
-    }
-
-    // --------------------- getters -------------------------
-
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getUpdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-
-    // getItemLabels = () => {
-    // 	return this._itemLabels;
-    // };
-    // getItemValues = () => {
-    // 	return this._itemValues;
-    // };
-
-    // getItemPictures = () => {
-    // 	return this._itemPictures;
-    // };
-
-    // getItemColors = () => {
-    // 	return this._itemColors;
-    // };
-
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {

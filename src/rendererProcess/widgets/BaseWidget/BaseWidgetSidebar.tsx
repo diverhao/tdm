@@ -268,10 +268,6 @@ export abstract class BaseWidgetSidebar {
         return this._mainWidget;
     };
 
-    getUpdateFromSidebar = () => {
-        return this._mainWidget.updateFromSidebar;
-    };
-
     getStyle = () => {
         return { ...this._style, width: calcSidebarWidth() };
     };

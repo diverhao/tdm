@@ -22,89 +22,23 @@ export type type_Symbol_tdl = {
 };
 
 export class Symbol extends BaseWidget {
-    // level-1 properties in tdl file
-    // _type: string;
-    // _widgetKey: string;
-    // _style: Record<string, any>;
-    // _text: Record<string, any>;
-    // _channelNames: string[];
-    // _groupNames: string[] = undefined;
-
-    // sidebar
-    // private _sidebar: TextUpdateSidebar;
-
-    // tmp methods
-    // private _tmp_mouseMoveOnResizerListener: any = undefined;
-    // private _tmp_mouseUpOnResizerListener: any = undefined;
-
-    // widget-specific channels, these channels are only used by this widget
-    // private _tcaChannels: TcaChannel[];
-
-    // used for the situation of shift key pressed + mouse down on a selected widget,
-    // so that when the mouse is up, the widget is de-selected
-    // its value is changed in 3 places: this.select2(), this._handleMouseMove() and this._handleMouseUp()
-    // private _readyToDeselect: boolean = false;
-
     _rules: SymbolRules;
     _itemNames: string[];
     _itemValues: (number | string | number[] | string[] | undefined)[];
 
     constructor(widgetTdl: type_Symbol_tdl) {
         super(widgetTdl);
-
-        this.setStyle({ ...Symbol._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...Symbol._defaultTdl.text, ...widgetTdl.text });
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
         this._itemNames = JSON.parse(JSON.stringify(widgetTdl.itemNames));
         this._itemValues = JSON.parse(JSON.stringify(widgetTdl.itemValues));
 
         this._rules = new SymbolRules(this, widgetTdl);
-
-        // this._sidebar = new SymbolSidebar(this);
     }
 
-    // ------------------------- event ---------------------------------
-
-    // defined in widget, invoked in sidebar
-    // (1) determine which tdl property should be updated
-    // (2) calculate new value
-    // (3) assign new value
-    // (4) add this widget as well as "GroupSelection2" to g_widgets1.forceUpdateWidgets
-    // (5) flush
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // todo: remove this method
-    };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
-
     // ------------------------------ elements ---------------------------------
-
-    // element = <> body (area + resizer) + sidebar </>
 
     // Body + sidebar
     _ElementRaw = () => {
@@ -120,9 +54,9 @@ export class Symbol extends BaseWidget {
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
 
         return (
@@ -371,71 +305,62 @@ export class Symbol extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    // properties when we create a new TextUpdate
-    // the level 1 properties all have corresponding public or private variable in the widget
-    static _defaultTdl: type_Symbol_tdl = {
-        type: "Symbol",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(240, 240, 240, 0.2)",
-            left: 100,
-            top: 100,
-            width: 150,
-            height: 80,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: false,
-            fileName: "../../../webpack/resources/webpages/tdm-logo.svg",
-            opacity: 1,
-            stretchToFit: false,
-            showPvValue: false,
-            invisibleInOperation: false,
-            alarmBorder: true,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        itemNames: [],
-        itemValues: [],
+    static generateDefaultTdl = (): Record<string, any> => {
+
+        const defaultTdl: type_Symbol_tdl = {
+            type: "Symbol",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            // the style for outmost div
+            // these properties are explicitly defined in style because they are
+            // (1) different from default CSS settings, or
+            // (2) they may be modified
+            style: {
+                position: "absolute",
+                display: "inline-flex",
+                backgroundColor: "rgba(240, 240, 240, 0.2)",
+                left: 100,
+                top: 100,
+                width: 150,
+                height: 80,
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+                transform: "rotate(0deg)",
+                color: "rgba(0,0,0,1)",
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(255, 0, 0, 1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+            },
+            // the ElementBody style
+            text: {
+                horizontalAlign: "flex-start",
+                verticalAlign: "flex-start",
+                wrapWord: false,
+                showUnit: false,
+                fileName: "../../../webpack/resources/webpages/tdm-logo.svg",
+                opacity: 1,
+                stretchToFit: false,
+                showPvValue: false,
+                invisibleInOperation: false,
+                alarmBorder: true,
+                alarmBackground: false,
+                alarmLevel: "MINOR",
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+            itemNames: [],
+            itemValues: [],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): Record<string, any> => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.itemNames = JSON.parse(JSON.stringify(this._defaultTdl.itemNames));
-        result.itemValues = JSON.parse(JSON.stringify(this._defaultTdl.itemValues));
-        return result;
-    };
+    generateDefaultTdl: () => any = Symbol.generateDefaultTdl;
 
     // overload
     getTdlCopy(newKey: boolean = true): Record<string, any> {

@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2025-12-23T16:29:33Z",
+    "buildDate": "2026-02-08T04:28:44Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
@@ -23,9 +23,6 @@
         "build": "webpack --mode production",
         "build-file-converter": "pkg ./dist/webpack/EdlFileConverter.js --targets node18-win-x64,node18-macos-x64,node18-linux-x64,node18-win-arm64,node18-macos-arm64,node18-linux-arm64 --out-path ./out",
         "build-standalone-tools": "pkg ./dist/mainProcess/standaloneTools/tget.js --targets node18-macos-x64,node18-linux-x64,node18-win-x64 --output dist/myCommand"
-    },
-    "bin": {
-        "tget": "./dist/mainProcess/standaloneTools/tget.js"
     },
     "license": "MIT",
     "devDependencies": {
@@ -108,8 +105,8 @@
             "dist/mainProcess/mainProcess/WsPvClient.js",
             "dist/mainProcess/mainProcess/WsPvClient.py",
             "dist/test/tdmDemo/**",
-            "dist/mainProcess/resources/webpages/tdm.png",
-            "dist/mainProcess/resources/webpages/tdm.svg"
+            "dist/common/resources/webpages/tdm.png",
+            "dist/common/resources/webpages/tdm.svg"
         ],
         "mac": {
             "target": {
@@ -175,7 +172,7 @@
         "directories": {
             "output": "out",
             "app": ".",
-            "buildResources": "dist/mainProcess/resources/webpages"
+            "buildResources": "dist/common/resources/webpages"
         },
         "extends": null
     }

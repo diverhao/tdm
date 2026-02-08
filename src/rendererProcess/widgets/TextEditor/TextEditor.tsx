@@ -33,14 +33,12 @@ export class TextEditor extends BaseWidget {
     private fileLimit: number = 2.5 * 1024 * 1024;
     updateHighlightArea: any;
     initialFileContents: string | undefined = undefined;
+
     constructor(widgetTdl: type_TextEditor_tdl) {
         super(widgetTdl);
-
-        this.setStyle({ ...TextEditor._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...TextEditor._defaultTdl.text, ...widgetTdl.text });
-
-        // assign the sidebar
-        // this._sidebar = new ProfilesViewerSidebar(this);
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("read");
 
         // dynamically load css and js
         const css = document.createElement('link');
@@ -63,7 +61,6 @@ export class TextEditor extends BaseWidget {
     // ------------------------- event ---------------------------------
     // concretize abstract method
     // empty
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => { };
 
     // defined in super class
     // _handleMouseDown()
@@ -101,9 +98,9 @@ export class TextEditor extends BaseWidget {
 
         // must do it for every widget
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
 
         return (
@@ -617,59 +614,52 @@ export class TextEditor extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_TextEditor_tdl = {
-        type: "TextEditor",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(255, 255,255, 1)",
-            left: 0,
-            top: 0,
-            width: "100%",
-            height: "100%",
-            boxSizing: "border-box",
-            overflow: "scroll",
-            outlineStyle: "none",
-            // outlineWidth: 1,
-            // outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-        },
-        // the ElementBody style
-        text: {
-            fileName: "",
-            // fileContents: "",
-            writable: false,
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
+    static generateDefaultTdl = () => {
+        const defaultTdl: type_TextEditor_tdl = {
+            type: "TextEditor",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            // the style for outmost div
+            // these properties are explicitly defined in style because they are
+            // (1) different from default CSS settings, or
+            // (2) they may be modified
+            style: {
+                position: "absolute",
+                display: "inline-flex",
+                backgroundColor: "rgba(255, 255,255, 1)",
+                left: 0,
+                top: 0,
+                width: "100%",
+                height: "100%",
+                boxSizing: "border-box",
+                overflow: "scroll",
+                outlineStyle: "none",
+                // outlineWidth: 1,
+                // outlineColor: "black",
+                transform: "rotate(0deg)",
+                color: "rgba(0,0,0,1)",
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(255, 0, 0, 1)",
+            },
+            // the ElementBody style
+            text: {
+                fileName: "",
+                // fileContents: "",
+                writable: false,
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_TextEditor_tdl;
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        return result;
-    };
+    generateDefaultTdl: () => any = TextEditor.generateDefaultTdl;
 
     // static method for generating a widget tdl with external PV name
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_TextEditor_tdl => {
-        const result = this.generateDefaultTdl("TextEditor");
+        const result = this.generateDefaultTdl();
         result.text["fileName"] = utilityOptions["fileName"];
         if (utilityOptions["fileContents"] !== undefined) {
             result.text["initialFileContents"] = utilityOptions["fileContents"];

@@ -812,3 +812,44 @@ export const deepMergeObj = (target: Record<string, any>, source: Record<string,
     }
     return result;
 }
+
+export const isStringArray = (value: unknown): value is string[] => {
+    return Array.isArray(value) && value.every(item => typeof item === 'string');
+}
+
+export const isRuleElement = (item: unknown): boolean => {
+    return (
+        typeof item === 'object' &&
+        item !== null &&
+        'id' in item &&
+        'boolExpression' in item &&
+        'propertyName' in item &&
+        'propertyValue' in item &&
+        typeof (item as any).id === 'string' &&
+        typeof (item as any).boolExpression === 'string' &&
+        typeof (item as any).propertyName === 'string'
+    );
+}
+
+export const isRuleElementArray = (value: unknown): boolean => {
+    return Array.isArray(value) && value.every(isRuleElement);
+}
+
+export const isValidRgbaColor = (color: string): boolean => {
+    const rgbaRegex = /^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(0?\.?\d+|1)\s*\)$/;
+
+    if (!rgbaRegex.test(color)) return false;
+
+    const match = color.match(rgbaRegex)!;
+    const r = parseInt(match[1]);
+    const g = parseInt(match[2]);
+    const b = parseInt(match[3]);
+
+    // Check if RGB values are in valid range (0-255)
+    return r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255;
+}
+
+
+export const deepMerge = (obj1: any, obj2: any): any => {
+    return JSON.parse(JSON.stringify({ ...obj1, ...obj2 }));
+};

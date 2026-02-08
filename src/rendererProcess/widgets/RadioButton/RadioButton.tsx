@@ -33,90 +33,39 @@ export class RadioButton extends BaseWidget {
 
     constructor(widgetTdl: type_RadioButton_tdl) {
         super(widgetTdl);
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
-        this.setStyle({ ...RadioButton._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...RadioButton._defaultTdl.text, ...widgetTdl.text });
+        this._rules = new RadioButtonRules(this, widgetTdl);
 
         // items
         this._itemLabels = JSON.parse(JSON.stringify(widgetTdl.itemLabels));
         this._itemValues = JSON.parse(JSON.stringify(widgetTdl.itemValues));
-        // this._itemPictures = JSON.parse(JSON.stringify(widgetTdl.itemPictures));
-        // this._itemColors = JSON.parse(JSON.stringify(widgetTdl.itemColors));
-
         if (this._itemLabels.length === 0) {
             this._itemLabels.push("Label 0");
         }
-        // if (this._itemPictures.length === 0) {
-        // this._itemPictures.push("");
-        // }
-        // if (this._itemColors.length === 0) {
-        // this._itemColors.push("rgba(60,100,60,1)");
-        // }
         if (this._itemValues.length === 0) {
             this._itemValues.push(0);
         }
         this._itemNamesFromChannel = [];
         this._itemValuesFromChannel = [];
 
-        this._rules = new RadioButtonRules(this, widgetTdl);
 
-        // assign the sidebar
-        // this._sidebar = new RadioButtonSidebar(this);
     }
-
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // todo: remove this method
-    };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
 
     // ------------------------------ elements ---------------------------------
 
     // concretize abstract method
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -392,87 +341,68 @@ export class RadioButton extends BaseWidget {
         }
     };
 
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_RadioButton_tdl = {
-        type: "RadioButton",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(128, 255, 255, 0)",
-            left: 100,
-            top: 100,
-            width: 150,
-            height: 80,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            alarmBorder: true,
-            useChannelItems: true,
-            boxWidth: 13,
-            invisibleInOperation: false,
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-            confirmOnWrite: false,
-            confirmOnWriteUsePassword: false,
-            confirmOnWritePassword: "",
-            direction: "vertical", // "horizontal"
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        itemLabels: ["Label 0", "Label 1"],
-        itemValues: [0, 1],
-        // itemPictures: ["", ""],
-        // itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
+    static generateDefaultTdl = () => {
+
+        const defaultTdl: type_RadioButton_tdl = {
+            type: "RadioButton",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            // the style for outmost div
+            // these properties are explicitly defined in style because they are
+            // (1) different from default CSS settings, or
+            // (2) they may be modified
+            style: {
+                position: "absolute",
+                display: "inline-flex",
+                backgroundColor: "rgba(128, 255, 255, 0)",
+                left: 100,
+                top: 100,
+                width: 150,
+                height: 80,
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+                transform: "rotate(0deg)",
+                color: "rgba(0,0,0,1)",
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(255, 0, 0, 1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+            },
+            // the ElementBody style
+            text: {
+                horizontalAlign: "flex-start",
+                verticalAlign: "flex-start",
+                wrapWord: false,
+                alarmBorder: true,
+                useChannelItems: true,
+                boxWidth: 13,
+                invisibleInOperation: false,
+                alarmText: false,
+                alarmBackground: false,
+                alarmLevel: "MINOR",
+                confirmOnWrite: false,
+                confirmOnWriteUsePassword: false,
+                confirmOnWritePassword: "",
+                direction: "vertical", // "horizontal"
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+            itemLabels: ["Label 0", "Label 1"],
+            itemValues: [0, 1],
+            // itemPictures: ["", ""],
+            // itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.itemLabels = JSON.parse(JSON.stringify(this._defaultTdl.itemLabels));
-        result.itemValues = JSON.parse(JSON.stringify(this._defaultTdl.itemValues));
-        // result.itemPictures = JSON.parse(JSON.stringify(this._defaultTdl.itemPictures));
-        // result.itemColors = JSON.parse(JSON.stringify(this._defaultTdl.itemColors));
-
-        return result;
-    };
+    generateDefaultTdl: () => any = RadioButton.generateDefaultTdl;
 
     // overload
     getTdlCopy(newKey: boolean = true): Record<string, any> {

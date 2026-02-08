@@ -6,7 +6,6 @@ import { TextEntrySidebar } from "./TextEntrySidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { TextEntryRules } from "./TextEntryRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../common/Log";
 
 export type type_TextEntry_tdl = {
     type: string;
@@ -25,69 +24,25 @@ export class TextEntry extends BaseWidget {
 
     constructor(widgetTdl: type_TextEntry_tdl) {
         super(widgetTdl);
-
-        this.setStyle({ ...TextEntry._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...TextEntry._defaultTdl.text, ...widgetTdl.text });
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
         this._rules = new TextEntryRules(this, widgetTdl);
-
-        // assign the sidebar
-        // this._sidebar = new TextEntrySidebar(this);
     }
-
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // todo: remove this method
-    };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
 
     // ------------------------------ elements ---------------------------------
 
     // concretize abstract method
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -352,53 +307,14 @@ export class TextEntry extends BaseWidget {
         }
     };
 
-    // private _StyledInputInLine = styled.input<any>`
-    // 	background-color: rgba(0, 0, 0, 0);
-    // 	border: none;
-    // 	width: 100%;
-    // 	height: 100%;
-    // 	padding: 0;
-    // 	margin: 0;
-    // 	font-size: 14px;
-    // 	text-overflow: ellipsis;
-    // 	overflow: hidden;
-    // 	white-space: nowrap;
-    // 	outline: none;
-    // 	text-align: ${(props) => props.textAlign};
-    // 	&:hover {
-    // 		cursor: ${(props) => (props.isEditing ? "default" : "text")};
-    // 	}
-    // 	&:focus {
-    // 		background-color: ${(props) => props.highlightBackgroundColor};
-    // 	}
-    // `;
 
     // concretize abstract method
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
     _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
 
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
 
     // -------------------- helper functions ----------------
-
-    // defined in super class
-    // _showSidebar()
-    // _showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    // _getChannelValue = () => {
-    // 	return this._getFirstChannelValue();
-    // };
-
 
     // only for TextUpdate and TextEntry
     // they are suitable to display array data in various formats,
@@ -436,90 +352,76 @@ export class TextEntry extends BaseWidget {
         return this._getFirstChannelAccessRight();
     };
 
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
 
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_TextEntry_tdl = {
-        type: "TextEntry",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 0,
-            top: 0,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(128, 255, 255, 1)",
-            // angle
-            transform: "rotate(0deg)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // border, it is different from the alarmBorder below
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // text positions and contents
-            horizontalAlign: "flex-start",
-            verticalAlign: "center",
-            wrapWord: false,
-            showUnit: true,
-            // when the input box is focused
-            highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-            invisibleInOperation: false,
-            // decimal, exponential, hexadecimal
-            format: "default",
-            // scale, >= 0
-            scale: 0,
-            // "contemporary" | "traditional"
-            appearance: "contemporary",
-            // actuall "alarm outline"
-            alarmBorder: true,
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-            confirmOnWrite: false,
-            confirmOnWriteUsePassword: false,
-            confirmOnWritePassword: "",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-    };
 
     // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        return result;
+    static generateDefaultTdl = () => {
+
+        const defaultTdl: type_TextEntry_tdl = {
+            type: "TextEntry",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            style: {
+                // basics
+                position: "absolute",
+                display: "inline-flex",
+                // dimensions
+                left: 0,
+                top: 0,
+                width: 100,
+                height: 100,
+                backgroundColor: "rgba(128, 255, 255, 1)",
+                // angle
+                transform: "rotate(0deg)",
+                // font
+                color: "rgba(0,0,0,1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+                // border, it is different from the alarmBorder below
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(0, 0, 0, 1)",
+                // shows when the widget is selected
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+            },
+            text: {
+                // text positions and contents
+                horizontalAlign: "flex-start",
+                verticalAlign: "center",
+                wrapWord: false,
+                showUnit: true,
+                // when the input box is focused
+                highlightBackgroundColor: "rgba(255, 255, 0, 1)",
+                invisibleInOperation: false,
+                // decimal, exponential, hexadecimal
+                format: "default",
+                // scale, >= 0
+                scale: 0,
+                // "contemporary" | "traditional"
+                appearance: "contemporary",
+                // actuall "alarm outline"
+                alarmBorder: true,
+                alarmText: false,
+                alarmBackground: false,
+                alarmLevel: "MINOR",
+                confirmOnWrite: false,
+                confirmOnWriteUsePassword: false,
+                confirmOnWritePassword: "",
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // defined in super class
-    // getTdlCopy()
+    generateDefaultTdl = TextEntry.generateDefaultTdl;
 
     // --------------------- getters -------------------------
 

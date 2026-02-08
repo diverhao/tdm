@@ -828,7 +828,7 @@ export class DisplayWindowClient {
 
 
             // casw has a DataViewer
-            const widgetTdl2 = DataViewer.generateDefaultTdl("DataViewer");
+            const widgetTdl2 = DataViewer.generateDefaultTdl();
             const widgetKey2 = widgetTdl2.widgetKey;
             // will be lively updated upon window resize and view switch
             widgetTdl2.style.width = 666;
@@ -951,7 +951,7 @@ export class DisplayWindowClient {
             widgetTdl.style.boxSizing = "border-box";
             widgetTdl.style.padding = "20px";
 
-            const widgetTdl2 = DataViewer.generateDefaultTdl("DataViewer");
+            const widgetTdl2 = DataViewer.generateDefaultTdl();
             const widgetKey2 = widgetTdl2.widgetKey;
             // will be lively updated upon window resize and view switch
             widgetTdl2.style.width = 666;
@@ -982,7 +982,7 @@ export class DisplayWindowClient {
             widgetTdl.style.padding = "20px";
 
             // casw has a DataViewer
-            const widgetTdl2 = DataViewer.generateDefaultTdl("DataViewer");
+            const widgetTdl2 = DataViewer.generateDefaultTdl();
             const widgetKey2 = widgetTdl2.widgetKey;
             // will be lively updated upon window resize and view switch
             widgetTdl2.style.width = 666;

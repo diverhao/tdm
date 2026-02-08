@@ -31,9 +31,11 @@ export class SlideButton extends BaseWidget {
 
     constructor(widgetTdl: type_SlideButton_tdl) {
         super(widgetTdl);
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
 
-        this.setStyle({ ...SlideButton._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...SlideButton._defaultTdl.text, ...widgetTdl.text });
+        this._rules = new SlideButtonRules(this, widgetTdl);
 
         // items, number of items must be esactly 2
         this._itemLabels = JSON.parse(JSON.stringify(widgetTdl.itemLabels));
@@ -72,66 +74,21 @@ export class SlideButton extends BaseWidget {
         if (this._itemValues.length >= 2) {
             this._itemValues.splice(2);
         }
-
-        this._rules = new SlideButtonRules(this, widgetTdl);
-
-        // assign the sidebar
-        // this._sidebar = new SlideButtonSidebar(this);
     }
 
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // todo: remove this method
-    };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
 
     // ------------------------------ elements ---------------------------------
 
     // concretize abstract method
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -425,22 +382,7 @@ export class SlideButton extends BaseWidget {
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
     _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
 
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
-
     // -------------------- helper functions ----------------
-
-    // defined in super class
-    // _showSidebar()
-    // _showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
 
     _getChannelValue = (raw: boolean = false) => {
         const value = this._getFirstChannelValue(raw);
@@ -467,87 +409,71 @@ export class SlideButton extends BaseWidget {
         return this._getFirstChannelAccessRight();
     };
 
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
-    // override BaseWidget
-    static _defaultTdl: type_SlideButton_tdl = {
-        type: "SlideButton",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(128, 255, 255, 0)",
-            left: 100,
-            top: 100,
-            width: 150,
-            height: 80,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: false,
-            alarmBorder: true,
-            selectedBackgroundColor: "rgba(100, 100, 100, 1)",
-            unselectedBackgroundColor: "rgba(200, 200, 200, 1)",
-            useChannelItems: true,
-            bit: 0,
-            boxWidth: 100,
-            boxRatio: 3,
-            text: "Label",
-            fallbackColor: "rgba(255,0,255,1)",
-            invisibleInOperation: false,
-            confirmOnWrite: false,
-            confirmOnWriteUsePassword: false,
-            confirmOnWritePassword: "",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        itemLabels: ["False", "True"],
-        itemValues: [0, 1],
-        itemColors: ["rgba(210, 210, 210, 1)", "rgba(0, 255, 0, 1)"],
+    // override
+    static generateDefaultTdl = () => {
+
+        const defaultTdl: type_SlideButton_tdl = {
+            type: "SlideButton",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            // the style for outmost div
+            // these properties are explicitly defined in style because they are
+            // (1) different from default CSS settings, or
+            // (2) they may be modified
+            style: {
+                position: "absolute",
+                display: "inline-flex",
+                backgroundColor: "rgba(128, 255, 255, 0)",
+                left: 100,
+                top: 100,
+                width: 150,
+                height: 80,
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+                transform: "rotate(0deg)",
+                color: "rgba(0,0,0,1)",
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(255, 0, 0, 1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+            },
+            // the ElementBody style
+            text: {
+                horizontalAlign: "flex-start",
+                verticalAlign: "flex-start",
+                wrapWord: false,
+                showUnit: false,
+                alarmBorder: true,
+                selectedBackgroundColor: "rgba(100, 100, 100, 1)",
+                unselectedBackgroundColor: "rgba(200, 200, 200, 1)",
+                useChannelItems: true,
+                bit: 0,
+                boxWidth: 100,
+                boxRatio: 3,
+                text: "Label",
+                fallbackColor: "rgba(255,0,255,1)",
+                invisibleInOperation: false,
+                confirmOnWrite: false,
+                confirmOnWriteUsePassword: false,
+                confirmOnWritePassword: "",
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+            itemLabels: ["False", "True"],
+            itemValues: [0, 1],
+            itemColors: ["rgba(210, 210, 210, 1)", "rgba(0, 255, 0, 1)"],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.itemLabels = JSON.parse(JSON.stringify(this._defaultTdl.itemLabels));
-        result.itemValues = JSON.parse(JSON.stringify(this._defaultTdl.itemValues));
-        result.itemColors = JSON.parse(JSON.stringify(this._defaultTdl.itemColors));
-        return result;
-    };
+    generateDefaultTdl: () => any = SlideButton.generateDefaultTdl;
 
     // overload
     getTdlCopy(newKey: boolean = true): Record<string, any> {

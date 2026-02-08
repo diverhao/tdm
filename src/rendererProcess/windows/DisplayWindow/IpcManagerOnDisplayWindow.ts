@@ -746,6 +746,9 @@ export class IpcManagerOnDisplayWindow {
 
         try {
             const presetColors = this.getDisplayWindowClient().getProfileCategory("Preset Colors");
+            if (presetColors === undefined) {
+                return;
+            }
             for (let colorName of Object.keys(presetColors)) {
                 const colorObject = presetColors[colorName];
                 const rgb = colorObject["value"];

@@ -39,32 +39,7 @@ enum type_sorting_method {
 }
 
 export class FileBrowser extends BaseWidget {
-    // level-1 properties in tdl file
-    // _type: string;
-    // _widgetKey: string;
-    // _style: Record<string, any>;
-    // _text: Record<string, any>;
-    // _channelNames: string[];
-    // _groupNames: string[] = undefined;
 
-    // sidebar
-    // private _sidebar: TextUpdateSidebar;
-
-    // tmp methods
-    // private _tmp_mouseMoveOnResizerListener: any = undefined;
-    // private _tmp_mouseUpOnResizerListener: any = undefined;
-
-    // widget-specific channels, these channels are only used by this widget
-    // private _tcaChannels: TcaChannel[];
-
-    // used for the situation of shift key pressed + mouse down on a selected widget,
-    // so that when the mouse is up, the widget is de-selected
-    // its value is changed in 3 places: this.select2(), this._handleMouseMove() and this._handleMouseUp()
-    // private _readyToDeselect: boolean = false;
-
-    // _rules: TextUpdateRules;
-
-    // _folderPath: string = "";
     _folderContent: type_folder_content = [];
     readonly _modal: boolean;
 
@@ -99,16 +74,12 @@ export class FileBrowser extends BaseWidget {
 
     constructor(widgetTdl: type_FileBrowser_tdl) {
         super(widgetTdl);
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
         this.setReadWriteType("read");
 
-        this.setStyle({ ...FileBrowser._defaultTdl.style, ...widgetTdl.style });
-        this.setText({ ...FileBrowser._defaultTdl.text, ...widgetTdl.text });
-        // this._folderPath = widgetTdl["text"]["path"];
+
         this._modal = widgetTdl["text"]["modal"];
-
-        // this._rules = new FileBrowser(this, widgetTdl);
-
-        // this._sidebar = new TextUpdateSidebar(this);
 
         window.addEventListener('keydown', (event) => {
             if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -129,67 +100,17 @@ export class FileBrowser extends BaseWidget {
         })
     }
 
-    // ------------------------- event ---------------------------------
-
-    // defined in widget, invoked in sidebar
-    // (1) determine which tdl property should be updated
-    // (2) calculate new value
-    // (3) assign new value
-    // (4) add this widget as well as "GroupSelection2" to g_widgets1.forceUpdateWidgets
-    // (5) flush
-    updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // todo: remove this method
-    };
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
-
     // ------------------------------ elements ---------------------------------
 
-    // element = <> body (area + resizer) + sidebar </>
-
-    // Body + sidebar
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.renderChildWidgets = true;
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
         React.useEffect(() => {
-            this.renderChildWidgets = false;
+            this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
@@ -415,7 +336,7 @@ export class FileBrowser extends BaseWidget {
                                     const name = prevElement["name"];
                                     // the element is a tdl file or a folder
                                     if (this.onlyShowTdmFiles === true) {
-                                        if (name.endsWith(".tdl") ||name.endsWith(".bob") || prevElement["type"] === "folder") {
+                                        if (name.endsWith(".tdl") || name.endsWith(".bob") || prevElement["type"] === "folder") {
                                             if (name.toLowerCase().includes(this.filterText.toLowerCase())) {
                                                 toBeSelectedItemIndex = ii;
                                                 break;
@@ -1286,7 +1207,7 @@ export class FileBrowser extends BaseWidget {
             if (path.isAbsolute(element['name'])) {
                 fullTdlFileName = element["name"];
             }
-            if (fullTdlFileName.endsWith(".tdl") ||fullTdlFileName.endsWith(".bob") || fullTdlFileName.endsWith(".edl") || fullTdlFileName.endsWith(".db") || fullTdlFileName.endsWith(".template")) {
+            if (fullTdlFileName.endsWith(".tdl") || fullTdlFileName.endsWith(".bob") || fullTdlFileName.endsWith(".edl") || fullTdlFileName.endsWith(".db") || fullTdlFileName.endsWith(".template")) {
                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                 const ipcManager = displayWindowClient.getIpcManager();
                 const displayWindowId = displayWindowClient.getWindowId();
@@ -1646,137 +1567,83 @@ export class FileBrowser extends BaseWidget {
         } else {
             // do nothing
         }
-
-
     }
-
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
 
     // -------------------------- tdl -------------------------------
 
-    // properties when we create a new TextUpdate
-    // the level 1 properties all have corresponding public or private variable in the widget
+    static generateDefaultTdl = (): Record<string, any> => {
 
-    static _defaultTdl: type_FileBrowser_tdl = {
-        type: "FileBrowser",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(240, 240, 240, 1)",
-            // angle
-            transform: "rotate(0deg)",
-            // border, it is different from the "alarmBorder" below,
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // text
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: true,
-            invisibleInOperation: false,
-            // default, decimal, exponential, hexadecimal
-            format: "default",
-            // scale, >= 0
-            scale: 0,
-            // actually "alarm outline"
-            alarmBorder: true,
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-            path: "",
-            permission: "WRITE", // READ, WRITE
-            modal: false,
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
+        const defaultTdl: type_FileBrowser_tdl = {
+            type: "FileBrowser",
+            widgetKey: "", // "key" is a reserved keyword
+            key: "",
+            style: {
+                // basics
+                position: "absolute",
+                display: "inline-flex",
+                // dimensions
+                left: 100,
+                top: 100,
+                width: 100,
+                height: 100,
+                backgroundColor: "rgba(240, 240, 240, 1)",
+                // angle
+                transform: "rotate(0deg)",
+                // border, it is different from the "alarmBorder" below,
+                borderStyle: "solid",
+                borderWidth: 0,
+                borderColor: "rgba(0, 0, 0, 1)",
+                // font
+                color: "rgba(0,0,0,1)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: GlobalVariables.defaultFontSize,
+                fontStyle: GlobalVariables.defaultFontStyle,
+                fontWeight: GlobalVariables.defaultFontWeight,
+                // shows when the widget is selected
+                outlineStyle: "none",
+                outlineWidth: 1,
+                outlineColor: "black",
+            },
+            text: {
+                // text
+                horizontalAlign: "flex-start",
+                verticalAlign: "flex-start",
+                wrapWord: false,
+                showUnit: true,
+                invisibleInOperation: false,
+                // default, decimal, exponential, hexadecimal
+                format: "default",
+                // scale, >= 0
+                scale: 0,
+                // actually "alarm outline"
+                alarmBorder: true,
+                alarmText: false,
+                alarmBackground: false,
+                alarmLevel: "MINOR",
+                path: "",
+                permission: "WRITE", // READ, WRITE
+                modal: false,
+            },
+            channelNames: [],
+            groupNames: [],
+            rules: [],
+        };
+        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): Record<string, any> => {
-        const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        return result;
-    };
+    generateDefaultTdl: () => any = FileBrowser.generateDefaultTdl;
 
     // static method for generating a widget tdl with external PV name
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_FileBrowser_tdl => {
-        const result = this.generateDefaultTdl("FileBrowser");
+        const result = this.generateDefaultTdl();
         // result.channelNames = utilityOptions.channelNames as string[];
         result["style"]["left"] = 0;
         result["style"]["top"] = 0;
         result["text"]["path"] = utilityOptions['path'];
         result["text"]["modal"] = utilityOptions['modal'];
 
-        // result.recordTypesFieldNames = utilityOptions.recordTypesFieldNames as Record<string, string[]>;
-        // result.recordTypesMenus = utilityOptions.recordTypesMenus as Record<string, string[]>;
-        // result.recordTypes = utilityOptions.recordTypes as Record<string, any>;
-        // result.menus = utilityOptions.menus as Record<string, any>;
         return result as type_FileBrowser_tdl;
     };
-    // defined in super class
-    // getTdlCopy()
-
-    // --------------------- getters -------------------------
-
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getUpdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-    // getRules()
-
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
 
     // --------------------- sidebar --------------------------
     createSidebar = () => {

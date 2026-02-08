@@ -305,287 +305,287 @@ export class Widgets {
                 tdl.style.top = y;
                 break;
             case "TextUpdate":
-                tdl = TextUpdate.generateDefaultTdl("TextUpdate");
+                tdl = TextUpdate.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Terminal":
-                tdl = Terminal.generateDefaultTdl("Terminal");
+                tdl = Terminal.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Calculator":
-                tdl = Calculator.generateDefaultTdl("Calculator");
+                tdl = Calculator.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "TextEntry":
-                tdl = TextEntry.generateDefaultTdl("TextEntry");
+                tdl = TextEntry.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "ScaledSlider":
-                tdl = ScaledSlider.generateDefaultTdl("ScaledSlider");
+                tdl = ScaledSlider.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Spinner":
-                tdl = Spinner.generateDefaultTdl("Spinner");
+                tdl = Spinner.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "ThumbWheel":
-                tdl = ThumbWheel.generateDefaultTdl("ThumbWheel");
+                tdl = ThumbWheel.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "ChoiceButton":
-                tdl = ChoiceButton.generateDefaultTdl("ChoiceButton");
+                tdl = ChoiceButton.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "CheckBox":
-                tdl = CheckBox.generateDefaultTdl("CheckBox");
+                tdl = CheckBox.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "SlideButton":
-                tdl = SlideButton.generateDefaultTdl("SlideButton");
+                tdl = SlideButton.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "BooleanButton":
-                tdl = BooleanButton.generateDefaultTdl("BooleanButton");
+                tdl = BooleanButton.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "RadioButton":
-                tdl = RadioButton.generateDefaultTdl("RadioButton");
+                tdl = RadioButton.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "ComboBox":
-                tdl = ComboBox.generateDefaultTdl("ComboBox");
+                tdl = ComboBox.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "BinaryImage":
-                tdl = BinaryImage.generateDefaultTdl("BinaryImage");
+                tdl = BinaryImage.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Image":
-                tdl = Image.generateDefaultTdl("Image");
+                tdl = Image.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Repeater":
-                tdl = Repeater.generateDefaultTdl("Repeater");
+                tdl = Repeater.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Table":
-                tdl = Repeater.generateDefaultTdl("Table");
+                tdl = Repeater.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Polyline":
-                tdl = Polyline.generateDefaultTdl("Polyline");
+                tdl = Polyline.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Arc":
-                tdl = Arc.generateDefaultTdl("Arc");
+                tdl = Arc.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Rectangle":
-                tdl = Rectangle.generateDefaultTdl("Rectangle");
+                tdl = Rectangle.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Media":
-                tdl = Media.generateDefaultTdl("Media");
+                tdl = Media.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Symbol":
-                tdl = Symbol.generateDefaultTdl("Symbol");
+                tdl = Symbol.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "TextSymbol":
-                tdl = TextSymbol.generateDefaultTdl("TextSymbol");
+                tdl = TextSymbol.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "LED":
-                tdl = LED.generateDefaultTdl("LED");
+                tdl = LED.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "LEDMultiState":
-                tdl = LEDMultiState.generateDefaultTdl("LEDMultiState");
+                tdl = LEDMultiState.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "ByteMonitor":
-                tdl = ByteMonitor.generateDefaultTdl("ByteMonitor");
+                tdl = ByteMonitor.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Meter":
-                tdl = Meter.generateDefaultTdl("Meter");
+                tdl = Meter.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Tank":
-                tdl = Tank.generateDefaultTdl("Tank");
+                tdl = Tank.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "PvMonitor":
-                tdl = PvMonitor.generateDefaultTdl("PvMonitor");
+                tdl = PvMonitor.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "FileBrowser":
-                tdl = FileBrowser.generateDefaultTdl("FileBrowser");
+                tdl = FileBrowser.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Thermometer":
-                tdl = Thermometer.generateDefaultTdl("Thermometer");
+                tdl = Thermometer.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Label":
-                tdl = Label.generateDefaultTdl("Label");
+                tdl = Label.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "EmbeddedDisplay":
-                tdl = EmbeddedDisplay.generateDefaultTdl("EmbeddedDisplay");
+                tdl = EmbeddedDisplay.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Group":
-                tdl = Group.generateDefaultTdl("Group");
+                tdl = Group.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "ActionButton":
-                tdl = ActionButton.generateDefaultTdl("ActionButton");
+                tdl = ActionButton.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "Probe":
-                tdl = Probe.generateDefaultTdl("Probe");
+                tdl = Probe.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "DataViewer":
-                tdl = DataViewer.generateDefaultTdl("DataViewer");
+                tdl = DataViewer.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "XYPlot":
-                tdl = XYPlot.generateDefaultTdl("XYPlot");
+                tdl = XYPlot.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "ChannelGraph":
-                tdl = ChannelGraph.generateDefaultTdl("ChannelGraph");
+                tdl = ChannelGraph.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "SeqGraph":
-                tdl = SeqGraph.generateDefaultTdl("SeqGraph");
+                tdl = SeqGraph.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
                 tdl.style.height = height;
                 break;
             case "PvTable":
-                tdl = PvTable.generateDefaultTdl("PvTable");
+                tdl = PvTable.generateDefaultTdl();
                 tdl.style.left = x;
                 tdl.style.top = y;
                 tdl.style.width = width;
