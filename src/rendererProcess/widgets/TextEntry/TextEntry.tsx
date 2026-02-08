@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS, GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -21,7 +21,6 @@ export type type_TextEntry_tdl = {
 
 export class TextEntry extends BaseWidget {
     _rules: TextEntryRules;
-    private _focusStatus = false;
 
     constructor(widgetTdl: type_TextEntry_tdl) {
         super(widgetTdl);
@@ -46,105 +45,158 @@ export class TextEntry extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-
                 {
-                    // skip _ElementBody in operating mode
-                    // the re-render efficiency can be improved by 10% by doing this
-                    // this technique is used on a few most re-rendered widgets, like TextUpdate and TextEntry
                     g_widgets1?.isEditing() ?
-                        <>
-                            <div style={this.getElementBodyRawStyle()}>
-                                {/* <this._ElementArea></this._ElementArea> */}
-                                <this._ElementAreaRaw></this._ElementAreaRaw>
-                                {this.showResizers() ? <this._ElementResizer /> : null}
-                            </div>
-                            {this.showSidebar() ? this.getSidebar()?.getElement() : null}
-                        </>
+                        // in editing mode, show everything
+                        <div style={this.getElementBodyRawStyle()}>
+                            <this._ElementArea></this._ElementArea>
+                            {this.showResizers() ? <this._ElementResizer /> : null}
+                        </div>
                         :
+                        // in operating mode, skip the body layer
+                        // the CPU usage is reduced by 10% 
+                        // this trick is only used in TextUpdate and TextEntry
                         <this._ElementArea></this._ElementArea>
                 }
+                {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                {/* <this._ElementArea></this._ElementArea> */}
-                <this._ElementAreaRaw></this._ElementAreaRaw>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
-
-        let style: React.CSSProperties = {};
-        if (g_widgets1.isEditing()) {
-            style = {
-                display: "inline-flex",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                userSelect: "none",
-                overflow: "visible",
-                whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                justifyContent: this.getAllText().horizontalAlign,
-                alignItems: this.getAllText().verticalAlign,
-                fontFamily: this.getAllText().fontFamily,
-                fontSize: this.getAllText().fontSize,
-                fontStyle: this.getAllText().fontStyle,
-                outline: this._getElementAreaRawOutlineStyle(),
-            };
-        } else {
-            style = {
-                // display: "inline-flex",
-                // top: 0,
-                // left: 0,
-                // width: "100%",
-                // height: "100%",
-                userSelect: "none",
-                overflow: "visible",
-                whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                justifyContent: this.getAllText().horizontalAlign,
-                alignItems: this.getAllText().verticalAlign,
-                fontFamily: this.getAllText().fontFamily,
-                fontSize: this.getAllText().fontSize,
-                fontStyle: this.getAllText().fontStyle,
-                ...this.getElementBodyRawStyle(),
-                outline: this._getElementAreaRawOutlineStyle(),
-                backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
-            };
-        }
+        const outline = this._getElementAreaRawOutlineStyle();
+        const backgroundColor = this._getElementAreaRawBackgroundStyle();
+        const additionalStyle = g_widgets1.isEditing() ? {} : this.getElementBodyRawStyle();
 
         return (
-            // <div
             <div
-                style={style}
-                // title={"tooltip"}
+                // similar to TextUpdate style, the text appearance is controlled by <_ValueInputForm />
+                style={{
+                    display: "inline-flex",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    // in operation mode, the appearance is defined in here as body layer is skipped
+                    // the runtime appearance is after this
+                    ...additionalStyle,
+                    outline: outline,
+                    backgroundColor: backgroundColor,
+                }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                <this._ValueInputForm
-                ></this._ValueInputForm>
+                <this._ValueInputForm></this._ValueInputForm>
             </div>
         );
     };
 
     _ValueInputForm = () => {
-        const valueRaw = this.parseValue();
-
+        // style
         const shadowWidth = 2;
+        const allText = this.getAllText();
+        const allStyle = this.getAllStyle();
+        const appearance = allText["appearance"];
+        const outline = appearance === "traditional" ? "solid 1px rgba(100, 100, 250, 0.5)" : "none"
+        const borderRight = appearance === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none";
+        const borderBottom = appearance === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none";
+        const borderLeft = appearance === "traditional" ? `solid ${shadowWidth}px rgba(100,100,100,1)` : "none";
+        const borderTop = appearance === "traditional" ? `solid ${shadowWidth}px rgba(100,100,100,1)` : "none";
+        const width = appearance === "contemporary" ? "100%" : `calc(100% - ${shadowWidth * 2}px)`;
+        const height = appearance === "contemporary" ? "100%" : `calc(100% - ${shadowWidth * 2}px)`;
+        const fontFamily = allStyle["fontFamily"];
+        const fontSize = allStyle["fontSize"];
+        const fontStyle = allStyle["fontStyle"];
+        const fontWeight = allStyle["fontWeight"];
+        const color = this._getElementAreaRawTextStyle();
+        const textAlign = allText.horizontalAlign === "flex-start"
+            ? "left"
+            : allText.horizontalAlign === "center"
+                ? "center"
+                : "right";
 
-        const [value, setValue] = React.useState(`${valueRaw}`);
+        // value
+        const valueRaw = this.getFormattedChannelValue(true);
+        const [value, setValue] = React.useState<string>(valueRaw);
         const isFocused = React.useRef<boolean>(false);
         const keyRef = React.useRef<HTMLInputElement>(null);
         const keyRefForm = React.useRef<HTMLFormElement>(null);
 
+        // event handlers
+        /**
+         * submit the new value
+         */
+        const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            (event.currentTarget.elements[0] as HTMLInputElement).blur();
+            if (this._getChannelAccessRight() < Channel_ACCESS_RIGHTS.WRITE_ONLY) {
+                // no write access, do not write
+                return;
+            }
+            this.putChannelValue(this.getChannelNames()[0], value);
+        };
+
+        /**
+         * when the element is not focused
+         *  (1) update the display every time when the value is changed
+         * 
+         * when the element is focused, 
+         *  (1) prevent updating the display each time when the value is changed
+         *  (2) change background color
+         */
+        const handleFocus = (event: any) => {
+            isFocused.current = true;
+            if (keyRef.current !== null) {
+                keyRef.current.select();
+                keyRef.current.style["backgroundColor"] = allText["highlightBackgroundColor"];
+            }
+        }
+
+        const handleChange = (event: any) => {
+            event.preventDefault();
+            if (this._getChannelAccessRight() < 1.5) {
+                // no write access, do not update
+                return;
+            }
+            setValue(event.target.value);
+        };
+
+        /**
+         * when the input is blurred, the displayed value goes back to the 
+         * current channel value
+         */
+        const handleBlur = (event: any) => {
+            isFocused.current = false;
+            setValue(this.getFormattedChannelValue(true));
+            if (keyRef.current !== null) {
+                keyRef.current.style["backgroundColor"] = allText["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle();
+            }
+        };
+
+        /**
+         * change mouse shape based upon write permission and editing status
+         */
+        const handleMouseOver = (event: any) => {
+            event.preventDefault();
+            if (!g_widgets1.isEditing()) {
+                if (this._getChannelAccessRight() >= Channel_ACCESS_RIGHTS.READ_WRITE) {
+                    event.target.style["cursor"] = "text";
+                } else {
+                    event.target.style["cursor"] = "not-allowed";
+                }
+            } else {
+                event.target.style["cursor"] = "default";
+            }
+        };
+
+        const handleMouseOut = (event: any) => {
+            event.preventDefault();
+            event.target.style["cursor"] = "default";
+        };
+
+        /**
+         * when the value is changed, update the input display if the widget is not focused
+         */
         React.useEffect(() => {
             setValue((oldValue: string) => {
                 if (isFocused.current) {
@@ -154,28 +206,6 @@ export class TextEntry extends BaseWidget {
                 }
             });
         }, [valueRaw]);
-
-        const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-
-            (event.currentTarget.elements[0] as HTMLInputElement).blur();
-            if (this._getChannelAccessRight() < 1.5) {
-                // no write access, do not write
-                return;
-            }
-
-            this.putChannelValue(this.getChannelNames()[0], value);
-        };
-
-        const calcInputSize = () => {
-            const width = this.getAllStyle()["width"];
-            const height = this.getAllStyle()["height"];
-            if (this.getAllText()["appearance"] === "traditional") {
-                return [width - shadowWidth * 2, height - shadowWidth * 2];
-            } else {
-                return [width, height];
-            }
-        }
 
         // press escape key to blur input box
         React.useEffect(() => {
@@ -197,126 +227,45 @@ export class TextEntry extends BaseWidget {
                 style={{
                     width: "100%",
                     height: "100%",
-                    opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
                 }}
             >
                 <input
                     ref={keyRef}
                     style={{
                         backgroundColor: "rgba(0,0,0,0)",
-                        // border: "none",
-                        width: calcInputSize()[0],
-                        height: calcInputSize()[1],
                         padding: 0,
                         margin: 0,
+                        width: width,
+                        height: height,
                         textOverflow: "ellipsis",
-                        overflow: "visible",
                         whiteSpace: "nowrap",
-                        outline: this.getAllText()["appearance"] === "traditional" ? "solid 1px rgba(100, 100, 250, 0.5)" : "none",
-                        textAlign:
-                            this.getAllText().horizontalAlign === "flex-start"
-                                ? "left"
-                                : this.getAllText().horizontalAlign === "center"
-                                    ? "center"
-                                    : "right",
-                        // color: this.getAllStyle()["color"],
-                        color: this._getElementAreaRawTextStyle(),
-                        fontFamily: this.getAllStyle()["fontFamily"],
-                        fontSize: this.getAllStyle()["fontSize"],
-                        fontStyle: this.getAllStyle()["fontStyle"],
-                        fontWeight: this.getAllStyle()["fontWeight"],
-                        // padding: 10,
-                        borderRight: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none",
-                        borderBottom: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none",
-                        borderLeft: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(100,100,100,1)` : "none",
-                        borderTop: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(100,100,100,1)` : "none",
-                    }}
-                    onMouseOver={(event: any) => {
-                        event.preventDefault();
-                        if (!g_widgets1.isEditing()) {
-                            if (this._getChannelAccessRight() > 1.5) {
-                                event.target.style["cursor"] = "text";
-                            } else {
-                                event.target.style["cursor"] = "not-allowed";
-                            }
-                        } else {
-                            event.target.style["cursor"] = "default";
-                        }
-                    }}
-                    onMouseOut={(event: any) => {
-                        event.preventDefault();
-                        event.target.style["cursor"] = "default";
+                        outline: outline,
+                        textAlign: textAlign,
+                        color: color,
+                        fontFamily: fontFamily,
+                        fontSize: fontSize,
+                        fontStyle: fontStyle,
+                        fontWeight: fontWeight,
+                        borderRight: borderRight,
+                        borderBottom: borderBottom,
+                        borderLeft: borderLeft,
+                        borderTop: borderTop,
                     }}
                     type="text"
                     name="value"
+                    onMouseOver={handleMouseOver}
+                    onMouseOut={handleMouseOut}
                     value={value}
-                    onFocus={(event: any) => {
-                        isFocused.current = true;
-                        this.setFocusStatus(true);
-                        keyRef.current?.select();
-
-                        if (keyRef.current !== null) {
-                            keyRef.current.style["backgroundColor"] = this.getAllText()["highlightBackgroundColor"];
-                        }
-                    }}
-                    onChange={(event: any) => {
-                        event.preventDefault();
-                        if (this._getChannelAccessRight() < 1.5) {
-                            // no write access, do not update
-                            return;
-                        }
-                        setValue(event.target.value);
-                    }}
-                    onBlur={(event: any) => {
-                        isFocused.current = false;
-                        this.setFocusStatus(false);
-                        setValue(`${this.parseValue()}`);
-                        if (keyRef.current !== null) {
-                            // keyRef.current.style["backgroundColor"] = `rgba(0,0,0,0)`;
-                            keyRef.current.style["backgroundColor"] = this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle();
-                        }
-                    }}
+                    onFocus={handleFocus}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
                 />
             </form>
         );
     };
 
-
-    // concretize abstract method
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-
-    // -------------------- helper functions ----------------
-
-    parseValue = () => {
-        const value = this._getChannelValue();
-        let unit = ` ${this._getChannelUnit()}`;
-        if (this._getChannelUnit() === undefined || this._getChannelUnit().trim() === "") {
-            unit = "";
-        }
-        if (g_widgets1.isEditing()) {
-            if (this.getChannelNames()[0] === undefined) {
-                return "";
-            } else {
-                return this.getChannelNames()[0];
-            }
-        }
-        if (value === undefined) {
-            if (this.getChannelNames()[0] === undefined) {
-                return "";
-            } else {
-                return this.getChannelNames()[0];
-            }
-        } else {
-            if (this.getAllText()["showUnit"] === true) {
-                return `${value}${unit}`;
-            } else {
-                return `${value}`;
-            }
-        }
-    };
 
     // -------------------------- tdl -------------------------------
 
@@ -385,17 +334,6 @@ export class TextEntry extends BaseWidget {
     };
 
     generateDefaultTdl = TextEntry.generateDefaultTdl;
-
-    // --------------------- getters -------------------------
-
-    getFocusStatus = () => {
-        return this._focusStatus;
-    }
-
-    // ---------------------- setters -------------------------
-    setFocusStatus = (newStatus: boolean) => {
-        this._focusStatus = newStatus;
-    }
 
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {

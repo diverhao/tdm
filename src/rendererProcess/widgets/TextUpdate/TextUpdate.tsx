@@ -35,37 +35,33 @@ export class TextUpdate extends BaseWidget {
 
     // Body + sidebar
     _ElementRaw = () => {
-        // guard the widget from double rendering
+
         this.widgetBeingRendered = true;
         React.useEffect(() => {
             this.widgetBeingRendered = false;
         });
         g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-
         this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()} >
-                <>
-                    {
-                        g_widgets1.isEditing() ?
-                            // in editing mode, show everything
-                            <div style={this.getElementBodyRawStyle()}>
-                                <this._ElementArea></this._ElementArea>
-                                {this.showResizers() ? <this._ElementResizer /> : null}
-                            </div>
-                            :
-                            // in operating mode, skip the body layer
-                            // the CPU usage is reduced by 10% 
-                            // this trick is only used in TextUpdate and TextEntry
+                {
+                    g_widgets1.isEditing() ?
+                        // in editing mode, show everything
+                        <div style={this.getElementBodyRawStyle()}>
                             <this._ElementArea></this._ElementArea>
-                    }
-                    {this.showSidebar() ? this._sidebar?.getElement() : null}
-                </>
+                            {this.showResizers() ? <this._ElementResizer /> : null}
+                        </div>
+                        :
+                        // in operating mode, skip the body layer
+                        // the CPU usage is reduced by 10% 
+                        // this trick is only used in TextUpdate and TextEntry
+                        <this._ElementArea></this._ElementArea>
+                }
+                {this.showSidebar() ? this._sidebar?.getElement() : null}
             </ErrorBoundary>
         );
     };
-
 
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         const allText = this.getAllText();
@@ -78,10 +74,6 @@ export class TextUpdate extends BaseWidget {
         const color = this._getElementAreaRawTextStyle();
 
         const additionalStyle = g_widgets1.isEditing() ? {} : this.getElementBodyRawStyle();
-
-        // unit
-        const unit = this._getChannelUnit().trim();
-        const unitShown = this.getAllText()["showUnit"] === true ? unit === "" ? "" : " " + unit : "";
 
         return (
             <div
@@ -106,7 +98,7 @@ export class TextUpdate extends BaseWidget {
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                {`${this.getFormattedChannelValue()}${unitShown}`}
+                {this.getFormattedChannelValue(true)}
             </div>
         );
     };

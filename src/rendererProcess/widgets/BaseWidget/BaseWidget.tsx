@@ -2071,12 +2071,19 @@ export abstract class BaseWidget {
     /**
      * Get the formatted channel value (in string format)
      */
-    getFormattedChannelValue = () => {
+    getFormattedChannelValue = (withUnit: boolean = false) => {
         const value = this._getChannelValue();
+
+        let unit = "";
+        if (withUnit) {
+            const unitRaw = this._getChannelUnit();
+            unit = unitRaw === "" ? "" : ` ${unitRaw}`;
+        }
+
         if (Array.isArray(value)) {
-            return this.formatArrayValue(value);
+            return `${this.formatArrayValue(value)}${unit}`;
         } else {
-            return this.formatScalarValue(value);
+            return `${this.formatScalarValue(value)}${unit}`;
         }
     }
 
