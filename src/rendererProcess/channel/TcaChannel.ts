@@ -219,31 +219,6 @@ export class TcaChannel {
             }
 
         }
-
-        // if (channelName?.startsWith("ca"))
-
-        //     if (channelName === undefined) {
-        //         return undefined;
-        //     } else {
-        //         const resultLocal = channelName.match(this.regexLocalChannelName);
-        //         const resultGlobal = channelName.match(this.regexGlobalChannelName);
-        //         const resultCa = channelName.match(this.regexEpicsChannelName);
-        //         const resultPva = channelName.match(this.regexPvaChannelName);
-        //         if (resultLocal === null && resultCa === null && resultGlobal === null && resultPva === null) {
-        //             return undefined;
-        //         }
-        //         else if (resultLocal !== null) {
-        //             return "local";
-        //         } else if (resultCa !== null) {
-        //             return "ca";
-        //         } else if (resultGlobal !== null) {
-        //             return "global";
-        //         } else if (resultPva !== null) {
-        //             return "pva";
-        //         } else {
-        //             return undefined;
-        //         }
-        //     }
     }
 
     /**
@@ -829,7 +804,6 @@ export class TcaChannel {
             valueTypeIndex = pvaType["typeIndex"];
 
             let dbrDataType = "";
-            console.log("this.isEnumType() ================", this.isEnumType(), dbrData)
             // enum is special: input could be a string or number, the string is converted back to number
             if (this.isEnumType()) {
 
@@ -1230,7 +1204,6 @@ export class TcaChannel {
                                 // } else {
                                 //     this.setEnumChoices(choices);
                                 // }
-                                console.log("choices, index", value)
                                 if (index !== undefined && choices !== undefined && typeof index === "number" && Array.isArray(choices)) {
                                     const choice = choices[index];
                                     return choice;
@@ -1475,7 +1448,7 @@ export class TcaChannel {
             if (units === undefined) {
                 return ""
             } else {
-                `${units}`;
+                return `${units}`;
             }
         }
         return "";
@@ -1791,7 +1764,7 @@ export class TcaChannel {
         if (this.getProtocol() === "ca") {
             return this.getDbrData()["precision"];
         } else if (this.getProtocol() === "pva") {
-            this.getPvaValue("display.precision") as number;
+            return this.getPvaValue("display.precision") as number;
         }
         return undefined;
     };
@@ -2031,6 +2004,7 @@ export class TcaChannel {
     getPvaValue = (subRequest: string = "") => {
         // dbr data is the full path to the data, e.g. 
         let data = this.getDbrData() as any;
+        // console.log(data)
 
         let pvRequest = this.getPvRequest();
 
@@ -2041,8 +2015,6 @@ export class TcaChannel {
         } else if (pvRequest !== "" && subRequest !== "") {
             pvRequest = pvRequest + "." + subRequest;
         }
-
-
         try {
             const pvRequestStrs = pvRequest.split(".");
             for (const pvRequestStr of pvRequestStrs) {

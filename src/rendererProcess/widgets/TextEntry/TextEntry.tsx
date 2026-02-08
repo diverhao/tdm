@@ -34,7 +34,6 @@ export class TextEntry extends BaseWidget {
 
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -54,7 +53,11 @@ export class TextEntry extends BaseWidget {
                     // this technique is used on a few most re-rendered widgets, like TextUpdate and TextEntry
                     g_widgets1?.isEditing() ?
                         <>
-                            <this._ElementBody></this._ElementBody>
+                            <div style={this.getElementBodyRawStyle()}>
+                                {/* <this._ElementArea></this._ElementArea> */}
+                                <this._ElementAreaRaw></this._ElementAreaRaw>
+                                {this.showResizers() ? <this._ElementResizer /> : null}
+                            </div>
                             {this.showSidebar() ? this.getSidebar()?.getElement() : null}
                         </>
                         :
@@ -132,9 +135,7 @@ export class TextEntry extends BaseWidget {
         );
     };
 
-    // _ValueInputForm = ({ valueRaw }: { valueRaw: string | number | string[] | number[] }) => {
     _ValueInputForm = () => {
-        // const [value, setValue] = React.useState(`${valueRaw}`);
         const valueRaw = this.parseValue();
 
         const shadowWidth = 2;
@@ -280,6 +281,15 @@ export class TextEntry extends BaseWidget {
         );
     };
 
+
+    // concretize abstract method
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
+    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
+
+
+    // -------------------- helper functions ----------------
+
     parseValue = () => {
         const value = this._getChannelValue();
         let unit = ` ${this._getChannelUnit()}`;
@@ -308,58 +318,9 @@ export class TextEntry extends BaseWidget {
         }
     };
 
-
-    // concretize abstract method
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-
-    // -------------------- helper functions ----------------
-
-    // only for TextUpdate and TextEntry
-    // they are suitable to display array data in various formats,
-    // other types of widgets, such as Meter, Spinner, Tanks, ProgressBar, Thermometer, ScaledSlider are not for array data
-    _getChannelValue = (raw: boolean = false) => {
-        const channelValue = this.getChannelValueForMonitorWidget(raw);
-
-        if (typeof channelValue === "number" || typeof channelValue === "string") {
-
-            return this._parseChannelValueElement(channelValue);
-        } else if (Array.isArray(channelValue)) {
-            const result: any[] = [];
-            for (let element of channelValue) {
-                result.push(this._parseChannelValueElement(element));
-            }
-            if (this.getAllText()["format"] === "string") {
-                return result.join("");
-            } else {
-                return result;
-            }
-        } else {
-            return channelValue;
-        }
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        return this._getFirstChannelUnit();
-    };
-
-    _getChannelAccessRight = () => {
-        return this._getFirstChannelAccessRight();
-    };
-
-
     // -------------------------- tdl -------------------------------
 
-
-    // override
     static generateDefaultTdl = () => {
-
         const defaultTdl: type_TextEntry_tdl = {
             type: "TextEntry",
             widgetKey: "", // "key" is a reserved keyword
@@ -427,18 +388,6 @@ export class TextEntry extends BaseWidget {
 
     // --------------------- getters -------------------------
 
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getUpdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-
     getFocusStatus = () => {
         return this._focusStatus;
     }
@@ -448,19 +397,6 @@ export class TextEntry extends BaseWidget {
         this._focusStatus = newStatus;
     }
 
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {

@@ -1,17 +1,12 @@
 import * as React from "react";
-import { MouseEvent } from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
-import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { TextUpdateSidebar } from "./TextUpdateSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { TextUpdateRules } from "./TextUpdateRules";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-// import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
-import { Log } from "../../../common/Log";
 
 
 export type type_TextUpdate_tdl = {
@@ -36,283 +31,89 @@ export class TextUpdate extends BaseWidget {
         this._rules = new TextUpdateRules(this, widgetTdl);
     }
 
-    // ------------------------- event ---------------------------------
-
-    // defined in widget, invoked in sidebar
-    // (1) determine which tdl property should be updated
-    // (2) calculate new value
-    // (3) assign new value
-    // (4) add this widget as well as "GroupSelection2" to g_widgets1.forceUpdateWidgets
-    // (5) flush
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
-
     // ------------------------------ elements ---------------------------------
-
-    // element = <> body (area + resizer) + sidebar </>
 
     // Body + sidebar
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+        // guard the widget from double rendering
         this.widgetBeingRendered = true;
         React.useEffect(() => {
             this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()} >
                 <>
                     {
-                        // skip _ElementBody in operating mode
-                        // the re-render efficiency can be improved by 10% by doing this
-                        // this technique is used on a few most re-rendered widgets, like TextUpdate and TextEntry
-                        g_widgets1.isEditing()
-                            ?
-                            <>
-                                <this._ElementBody></this._ElementBody>
-                                {this.showSidebar() ? this._sidebar?.getElement() : null}
-                            </>
+                        g_widgets1.isEditing() ?
+                            // in editing mode, show everything
+                            <div style={this.getElementBodyRawStyle()}>
+                                <this._ElementArea></this._ElementArea>
+                                {this.showResizers() ? <this._ElementResizer /> : null}
+                            </div>
                             :
+                            // in operating mode, skip the body layer
+                            // the CPU usage is reduced by 10% 
+                            // this trick is only used in TextUpdate and TextEntry
                             <this._ElementArea></this._ElementArea>
-
                     }
+                    {this.showSidebar() ? this._sidebar?.getElement() : null}
                 </>
             </ErrorBoundary>
         );
     };
 
 
-    getElementFallbackFunction = () => {
-        return this._ElementFallback;
-    }
-
-    // Text area and resizers
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={{
-                ...this.getElementBodyRawStyle(),
-                // outline: this._getElementAreaRawOutlineStyle(),
-            }}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
-        const allStyle = this.getAllStyle();
         const allText = this.getAllText();
-        let style: React.CSSProperties = {};
-        if (g_widgets1.isEditing()) {
-            style = {
-                display: this.getAllStyle()["display"],
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                userSelect: "none",
-                overflow: "hidden",
-                whiteSpace: allText.wrapWord ? "normal" : "pre",
-                justifyContent: allText.horizontalAlign,
-                alignItems: allText.verticalAlign,
-                fontFamily: allStyle.fontFamily,
-                fontSize: allStyle.fontSize,
-                fontStyle: allStyle.fontStyle,
-                fontWeight: allStyle.fontWeight,
-                outline: this._getElementAreaRawOutlineStyle(),
-                color: allStyle["color"],
-                opacity: 1,
-                // opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
 
-            } as React.CSSProperties;
-        } else {
-            style = {
-                // position: "relative",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                userSelect: "none",
-                overflow: "hidden",
-                whiteSpace: allText.wrapWord ? "normal" : "pre",
-                justifyContent: allText.horizontalAlign,
-                alignItems: allText.verticalAlign,
-                fontFamily: allStyle.fontFamily,
-                fontSize: allStyle.fontSize,
-                fontStyle: allStyle.fontStyle,
-                fontWeight: allStyle.fontWeight,
-                // color: allStyle["color"],
-                ...this.getElementBodyRawStyle(),
-                // display: "inline-flex",
-                display: this.getAllStyle()["display"],
-                backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
-                outline: this._getElementAreaRawOutlineStyle(),
-                // opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                color: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? "rgba(0,0,0,0)" : this._getElementAreaRawTextStyle(),
-            } as React.CSSProperties;
-        }
+        const whiteSpace = allText.wrapWord ? "normal" : "pre";
+        const justifyContent = allText.horizontalAlign;
+        const alignItems = allText.verticalAlign;
+        const outline = this._getElementAreaRawOutlineStyle();
+        const backgroundColor = this._getElementAreaRawBackgroundStyle();
+        const color = this._getElementAreaRawTextStyle();
 
+        const additionalStyle = g_widgets1.isEditing() ? {} : this.getElementBodyRawStyle();
+
+        // unit
+        const unit = this._getChannelUnit().trim();
+        const unitShown = this.getAllText()["showUnit"] === true ? unit === "" ? "" : " " + unit : "";
 
         return (
             <div
-                style={style}
+                style={{
+                    display: "inline-flex",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    // in operation mode, the appearance is defined in here as body layer is skipped
+                    // the runtime appearance is after this
+                    ...additionalStyle,
+                    userSelect: "none",
+                    overflow: "hidden",
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    outline: outline,
+                    backgroundColor: backgroundColor,
+                    color: color,
+                }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                {`${this.getChannelValueStrRepresentation()}${this.getAllText()["showUnit"] === true ? this._getChannelUnit().trim() === "" ? "" : " " + this._getChannelUnit() : ""}`}
+                {`${this.getFormattedChannelValue()}${unitShown}`}
             </div>
         );
     };
-
-    /**
-     * Nomrally we can display the channel value as `${this._getChannelValue()}`
-     * However, for string type data, this produces a lot of "," if the data is an array
-     */
-    getChannelValueStrRepresentation = () => {
-        const rawChannelValue = this._getChannelValue(false);
-        if (Array.isArray(rawChannelValue)) {
-            return '[' + rawChannelValue.join(",") + ']';
-        }
-        return rawChannelValue;
-    }
 
 
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
-
-    // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _parseChannelValueElement = (channelValueElement: number | string | boolean | undefined): string => {
-
-
-        if (typeof channelValueElement === "number") {
-            const scale = Math.max(this.getAllText()["scale"], 0);
-            const format = this.getAllText()["format"];
-            if (format === "decimal") {
-                return channelValueElement.toFixed(scale);
-            } else if (format === "default") {
-                // const channelName = this.getChannelNames()[0];
-                // const defaultScale = g_widgets1.getChannelPrecision(channelName);
-                // if (defaultScale !== undefined) {
-                //     return channelValueElement.toFixed(defaultScale);
-                // } else {
-                return channelValueElement.toFixed(scale);
-                // }
-            } else if (format === "exponential") {
-                return channelValueElement.toExponential(scale);
-            } else if (format === "hexadecimal") {
-                return `0x${channelValueElement.toString(16)}`;
-            } else if (format === "string") {
-                // use a number array to represent a string
-                // MacOS ignores the non-displayable characters, but Linux shows rectangle for these characters
-                if (channelValueElement >= 32 && channelValueElement <= 126) {
-                    return `${String.fromCharCode(channelValueElement)}`;
-                } else {
-                    return "";
-                }
-            } else {
-                return `${channelValueElement}`;
-            }
-        } else {
-            if (g_widgets1.isEditing() === true) {
-                return `${channelValueElement}`;
-            } else {
-                return `${channelValueElement}`;
-            }
-
-        }
-    };
-
-    // only for TextUpdate and TextEntry
-    // they are suitable to display array data in various formats,
-    // other types of widgets, such as Meter, Spinner, Tanks, ProgressBar, Thermometer, ScaledSlider are not for array data
-    _getChannelValue = (raw: boolean = false) => {
-
-        const channelValue = this.getChannelValueForMonitorWidget(raw);
-        if (typeof channelValue === "number" || typeof channelValue === "string") {
-            return this._parseChannelValueElement(channelValue);
-        } else if (Array.isArray(channelValue)) {
-            const result: any[] = [];
-            for (let element of channelValue) {
-                result.push(this._parseChannelValueElement(element));
-            }
-            if (this.getAllText()["format"] === "string" && typeof channelValue[0] === "number") {
-                return result.join("");
-            } else {
-                return result;
-            }
-        } else {
-            return channelValue;
-        }
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
-        }
-    };
 
     // -------------------------- tdl -------------------------------
 
@@ -375,13 +176,6 @@ export class TextUpdate extends BaseWidget {
     };
 
     generateDefaultTdl = TextUpdate.generateDefaultTdl;
-
-    // --------------------- getters -------------------------
-
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
 
     // --------------------- sidebar --------------------------
 

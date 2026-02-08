@@ -195,6 +195,12 @@ export abstract class BaseWidget {
      */
     _embeddedDisplayWidgetKey: string = "";
 
+    /**
+     * Formula channel
+     */
+    _eqChannelArray: (string | number)[] = [];
+    _eqChannelNameIndices: number[] = [];
+
 
     _macros: [string, string][] = [];
 
@@ -1210,16 +1216,11 @@ export abstract class BaseWidget {
 
             left: allStyle["left"] - allStyle["borderWidth"],
             top: allStyle["top"] - allStyle["borderWidth"],
+            opacity: allText["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
             // if it is a readback-type widget, we skip the mouse left-button-down event in operating mode, 
             // the "read" type widget is transparent to any mouse button
             // the right/mid-button-down event is handled in a global function in DisplayWindowClient
             pointerEvents: this.getReadWriteType() === "read" && !g_widgets1.isEditing() ? "none" : "auto",
-            backgroundColor:
-                allText["invisibleInOperation"] === true && g_widgets1.isEditing() === false
-                    ? "rgba(0,0,0,0)"
-                    : allStyle["backgroundColor"],
-            borderWidth:
-                allText["invisibleInOperation"] === true && g_widgets1.isEditing() === false ? 0 : allStyle["borderWidth"],
         };
         return result;
     };
@@ -1330,6 +1331,13 @@ export abstract class BaseWidget {
         return this._rulesText;
     };
 
+    getEmbeddedDisplayWidgetKey = () => {
+        return this._embeddedDisplayWidgetKey;
+    }
+
+    setEmbeddedDisplayWidgetKey = (newKey: string) => {
+        this._embeddedDisplayWidgetKey = newKey;
+    }
     // ---------------------- setters -------------------------
 
     setStyle = (newStyle: Record<string, any>) => {
@@ -1482,12 +1490,6 @@ export abstract class BaseWidget {
     }
 
     // ---------------------- formula channels ------------------------
-
-    // These methods depend on widget type, as there may be multiple channels in the widget. They should be implemented in concrete classes.
-    abstract _getChannelSeverity(): ChannelSeverity;
-    abstract _getChannelValue(raw?: boolean): number | number[] | string | string[] | undefined;
-    abstract _getChannelUnit(): string;
-
     /**
      * Get channel names in this widget. <br>
      *
@@ -1554,6 +1556,7 @@ export abstract class BaseWidget {
         }
         const tmp: any[] = [...this.getEqChannelArray()];
         const channelNames = this.getChannelNamesLevel4();
+        console.log("getEqChannelArray = ", this.getEqChannelArray())
 
         for (let index = 0; index < channelNames.length; index++) {
             const channelName = channelNames[index];
@@ -1590,9 +1593,6 @@ export abstract class BaseWidget {
         }
     };
 
-    _eqChannelArray: (string | number)[] = [];
-    _eqChannelNameIndices: number[] = [];
-
     getEqChannelArray = () => {
         return this._eqChannelArray;
     };
@@ -1617,66 +1617,6 @@ export abstract class BaseWidget {
         }
     };
 
-    // this function is used in monitor widgets: TextUpdate, ProgressBar, Meter, Tank, Thermometer, LED, LEDMultiState, ByteMonitor
-    getChannelValueForMonitorWidget = (raw: boolean = false) => {
-        let value = this._getFirstChannelValue(raw);
-
-        if (this.getEqChannelArray().length > 0) {
-            value = this.evaluateEqChannel();
-        }
-
-        if (value === undefined) {
-            return this.getChannelNamesLevel0()[0];
-        } else {
-            return value;
-        }
-    };
-
-
-    _parseChannelValueElement = (channelValueElement: number | string | boolean | undefined): string => {
-
-        if (typeof channelValueElement === "number") {
-            let scale = this.getAllText()["scale"];
-            if (typeof scale !== "number") {
-                scale = 0;
-            } else {
-                scale = Math.max(0, scale);
-            }
-            const format = this.getAllText()["format"];
-            if (format === "decimal") {
-                return channelValueElement.toFixed(scale);
-            } else if (format === "default") {
-                // const channelName = this.getChannelNames()[0];
-                // const defaultScale = g_widgets1.getChannelPrecision(channelName);
-                // if (defaultScale !== undefined) {
-                //     return channelValueElement.toFixed(defaultScale);
-                // } else {
-                return channelValueElement.toFixed(scale);
-                // }
-            } else if (format === "exponential") {
-                return channelValueElement.toExponential(scale);
-            } else if (format === "hexadecimal") {
-                return `0x${channelValueElement.toString(16)}`;
-            } else if (format === "string") {
-                // use a number array to represent a string
-                // MacOS ignores the non-displayable characters, but Linux shows rectangle for these characters
-                if (channelValueElement >= 32 && channelValueElement <= 126) {
-                    return `${String.fromCharCode(channelValueElement)}`;
-                } else {
-                    return "";
-                }
-            } else {
-                return `${channelValueElement}`;
-            }
-        } else {
-            if (g_widgets1.isEditing() === true) {
-                return `${channelValueElement}`;
-            } else {
-                return `${channelValueElement}`;
-            }
-
-        }
-    };
 
     /**
      * Input could be: abc$(SYS), loc://abc$(SYS), loc://abc$(SYS)<number[]>, loc://abc$(SYS)<string>(ABC), glb://abc$(SYS)<string>(ABC)
@@ -1952,19 +1892,56 @@ export abstract class BaseWidget {
         return this.getAllText()["selectedBackgroundColor"];
     }
 
+    // ------------------- first channel stuff -------------------
+
+    _getChannelSeverity = () => {
+        return this._getFirstChannelSeverity();
+    }
+
+    _getChannelUnit = () => {
+        return this._getFirstChannelUnit();
+    }
+
+    _getChannelValue = (raw?: boolean): number | number[] | string | string[] | undefined => {
+        return this._getFirstChannelValue();
+    }
+
+    _getChannelPrecision = () => {
+        return this._getFirstChannelPrecision();
+    }
+
+    _getChannelAccessRight = () => {
+        return this._getFirstChannelAccessRight();
+    }
 
     /**
-     * Most widgets has only one channel, invoke this function in these widgets' getChannelValue() method
+     * Get the first channel's value, this channel may be a ca://, pva://, loc://, glb://, or a formula channel
+     * 
+     * If in editing mode, return the channel name
      */
     _getFirstChannelValue = (raw: boolean = false): string | number | string[] | number[] | undefined => {
-        if (this.getChannelNames().length === 0) {
-            return undefined;
-        }
         const channelName = this.getChannelNames()[0];
+
         if (channelName === undefined) {
-            return undefined;
-        } else {
+            return channelName;
+        }
+
+        if (g_widgets1.isEditing()) {
+            return channelName;
+        }
+
+        if (TcaChannel.checkChannelName(channelName) !== undefined) {
+            // regular TCA channel
             return g_widgets1.getChannelValue(channelName, raw);
+        } else {
+            // may be a formula channel
+            if (this.getEqChannelArray().length > 0) {
+                const value = this.evaluateEqChannel();
+                if (value !== undefined) {
+                    return value;
+                }
+            }
+            return channelName;
         }
     };
 
@@ -2005,12 +1982,102 @@ export abstract class BaseWidget {
         return g_widgets1.getChannelAccessRight(channelName);
     };
 
-    getEmbeddedDisplayWidgetKey = () => {
-        return this._embeddedDisplayWidgetKey;
+
+    /**
+     * Actually the scale, not precision. Default 0
+     */
+    _getFirstChannelPrecision = (): number => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return 0;
+        }
+        if (this.getChannelNames().length === 0) {
+            return 0;
+        }
+        const channelName = this.getChannelNames()[0];
+        return g_widgets1.getChannelPrecision(channelName);
+    };
+
+    // this function is used in monitor widgets: TextUpdate, ProgressBar, Meter, Tank, Thermometer, LED, LEDMultiState, ByteMonitor
+    getChannelValueForMonitorWidget = (raw: boolean = false) => {
+        let value = this._getFirstChannelValue(raw);
+
+        if (this.getEqChannelArray().length > 0) {
+            value = this.evaluateEqChannel();
+        }
+
+        if (value === undefined) {
+            return this.getChannelNamesLevel0()[0];
+        } else {
+            return value;
+        }
+    };
+
+    /**
+     * Parse one scalar value to the desired format
+     * 
+     * For "number" type scalar data, format it to the desired format, e.g. decimal, exponential ...
+     * 
+     * For all other type scalar data, simply stringify it
+     */
+    formatScalarValue = (scalarValue: number | string | boolean | undefined): string => {
+        // text["scale"] is ignored if its value < 0
+        if (typeof scalarValue === "number") {
+
+            const allText = this.getAllText();
+            const format = allText["format"];
+
+            const precisionFromWidget = allText["scale"];
+            const precisionFromChannel = this._getChannelPrecision();
+            let precision = precisionFromChannel;
+            if (precisionFromWidget >= 0) {
+                precision = precisionFromWidget;
+            }
+            if (precision === undefined) {
+                precision = 0;
+            }
+
+            if (format === "default") {
+                return scalarValue.toFixed(precision);
+            } else if (format === "decimal") {
+                return scalarValue.toFixed(precision);
+            } else if (format === "exponential") {
+                return scalarValue.toExponential(precision);
+            } else if (format === "hexadecimal") {
+                return `0x${scalarValue.toString(16)}`;
+            } else if (format === "string") {
+                // use a number array to represent a string
+                // MacOS ignores the non-displayable characters, but Linux shows rectangle for these characters
+                if (scalarValue >= 32 && scalarValue <= 126) {
+                    return `${String.fromCharCode(scalarValue)}`;
+                } else {
+                    return "";
+                }
+            } else {
+                return scalarValue.toFixed(precision);
+            }
+        } else {
+            return `${scalarValue}`;
+        }
     }
 
-    setEmbeddedDisplayWidgetKey = (newKey: string) => {
-        this._embeddedDisplayWidgetKey = newKey;
+    formatArrayValue = (arrayValue: number[] | string[] | boolean[]): string => {
+        const result: string[] = [];
+        for (const element of arrayValue) {
+            result.push(this.formatScalarValue(element));
+        }
+        return result.join(", ");
+    }
+
+    /**
+     * Get the formatted channel value (in string format)
+     */
+    getFormattedChannelValue = () => {
+        const value = this._getChannelValue();
+        if (Array.isArray(value)) {
+            return this.formatArrayValue(value);
+        } else {
+            return this.formatScalarValue(value);
+        }
     }
 
     // -------------------- putters ----------------------------------

@@ -178,11 +178,11 @@ export class Talhk extends BaseWidget {
         const channelValue = this.getChannelValueForMonitorWidget(raw);
 
         if (typeof channelValue === "number" || typeof channelValue === "string") {
-            return this._parseChannelValueElement(channelValue);
+            return this.formatScalarValue(channelValue);
         } else if (Array.isArray(channelValue)) {
             const result: any[] = [];
             for (let element of channelValue) {
-                result.push(this._parseChannelValueElement(element));
+                result.push(this.formatScalarValue(element));
             }
             if (this.getAllText()["format"] === "string") {
                 return result.join("");

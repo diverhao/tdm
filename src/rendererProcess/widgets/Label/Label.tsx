@@ -71,8 +71,6 @@ export class Label extends BaseWidget {
         const outline = this._getElementAreaRawOutlineStyle();
         const color = this._getElementAreaRawTextStyle();
         const backgroundColor = this._getElementAreaRawBackgroundStyle();
-        const opacity = allText["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1;
-        const textAlign = allText["horizontalAlign"] === "flex-start" ? "left" : this.getAllText().horizontalAlign === "flex-end" ? "right" : "center";
 
         return (
             <div
@@ -90,8 +88,6 @@ export class Label extends BaseWidget {
                     outline: outline,
                     color: color,
                     backgroundColor: backgroundColor,
-                    opacity: opacity,
-                    textAlign: textAlign,
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
@@ -109,10 +105,17 @@ export class Label extends BaseWidget {
         );
     };
 
+    /**
+     * The text in Label honors:
+     *  - latex
+     *  - macros
+     *  - display window ID
+     *  - new line feed "\n"
+     */
     getTextText = () => {
         const rawText = this.getAllText()["text"];
+        // latex
         if (`${rawText}`.startsWith("latex://")) {
-            // no additional parsing, pure latex
             try {
                 const htmlContents = katex.renderToString(`${rawText}`.replace("latex://", ""), {
                     throwOnError: false,
@@ -124,14 +127,12 @@ export class Label extends BaseWidget {
             }
         } else {
             try {
-                // the "GroupSelection2" may have not been created yet
-                // const macros = (g_widgets1.getWidget2("Canvas") as Canvas).getAllMacros();
                 const macros = this.getAllMacros();
-                // "\\n" is "\n"
-                // expand with channel name
-                const expandedText = BaseWidget.expandChannelName(rawText, macros, true).replaceAll("\\n", "\n");
-                // convert "\n" to <br>
-                const textArray = expandedText.split("\n");
+                // macros
+                const expandedText = BaseWidget.expandChannelName(rawText, macros, true);
+                // new line feed
+                // user types "\n", it is saved as "\\n" in tdl file, in here we convert it back to "\n"
+                const textArray = expandedText.replaceAll("\\n", "\n").split("\n");
                 if (textArray.length <= 1) {
                     return expandedText;
                 } else {
@@ -222,7 +223,7 @@ export class Label extends BaseWidget {
                 verticalAlign: "flex-start",
                 wrapWord: false,
                 invisibleInOperation: false,
-                alarmBorder: true,
+                alarmBorder: false,
                 alarmBackground: false,
                 alarmText: false,
                 alarmLevel: "MINOR",

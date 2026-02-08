@@ -6524,7 +6524,7 @@ export class Image extends BaseWidget {
     // isSelected()
     // _getElementAreaRawOutlineStyle()
 
-    _parseChannelValueElement = (channelValueElement: number | string | boolean | undefined): string => {
+    formatScalarValue = (channelValueElement: number | string | boolean | undefined): string => {
 
 
         if (typeof channelValueElement === "number") {
@@ -6573,11 +6573,11 @@ export class Image extends BaseWidget {
         const channelValue = this.getChannelValueForMonitorWidget(raw);
 
         if (typeof channelValue === "number" || typeof channelValue === "string") {
-            return this._parseChannelValueElement(channelValue);
+            return this.formatScalarValue(channelValue);
         } else if (Array.isArray(channelValue)) {
             const result: any[] = [];
             for (let element of channelValue) {
-                result.push(this._parseChannelValueElement(element));
+                result.push(this.formatScalarValue(element));
             }
             if (this.getAllText()["format"] === "string" && typeof channelValue[0] === "number") {
                 return result.join("");

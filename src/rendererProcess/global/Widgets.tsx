@@ -2308,16 +2308,21 @@ export class Widgets {
      * In operating mode, if TcaChannel object does not exist or the channel is not connected, returns undefined.
      *
      */
-    getChannelPrecision = (channelName: string): number | undefined => {
+    getChannelPrecision = (channelName: string): number => {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
-            return undefined;
+            return 0;
         }
         try {
             const tcaChannel = this.getTcaChannel(channelName);
-            return tcaChannel.getPrecision();
+            const prec = tcaChannel.getPrecision();
+            if (prec === undefined) {
+                return 0;
+            } else {
+                return prec;
+            }
         } catch (e) {
             Log.error(e);
-            return undefined;
+            return 0;
         }
     };
 

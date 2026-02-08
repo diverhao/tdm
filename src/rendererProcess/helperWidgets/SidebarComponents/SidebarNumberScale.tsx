@@ -17,32 +17,32 @@ export class SidebarNumberScale extends SidebarComponent {
 	}
 
 	_Element = () => {
-		const [scale, setScale] = React.useState<number>(parseInt(this.getText()["scale"]));
-
-		this._updateFromWidget = (propertyValue: number) => {
-			setScale(propertyValue);
-		};
+		const [scale, setScale] = React.useState<string>(`${this.getText()["scale"]}`);
 
 		return (
 			<form
-				onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, scale)}
+				onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+                    const scaleNum = parseInt(scale);
+                    if (isNaN(scaleNum)) {
+                        return;
+                    }
+                    this.updateWidget(event, scaleNum);
+                }}
 				style={this.getFormStyle()}
 			>
 				<div>Scale:</div>
 				<input
 					style={{...this.getInputStyle(), width: "66%"}}
-					type="number"
-					name="left"
-                    min={0}
+					type="text"
 					value={scale}
 					onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
 						const newVal = event.target.value;
-						setScale(parseInt(newVal));
+						setScale(newVal);
 					}}
 					// must use enter to change the value
 					onBlur={(event: any) => {
-						if (parseInt(this.getText()["scale"]) !== scale) {
-							setScale(parseInt(this.getText()["scale"]));
+						if (`${this.getText()["scale"]}` !== scale) {
+							setScale(`${this.getText()["scale"]}`);
 						}
 					}}
 				/>
