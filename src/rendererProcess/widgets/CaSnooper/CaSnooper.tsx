@@ -1,3 +1,4 @@
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
@@ -1142,6 +1143,7 @@ export class CaSnooper extends BaseWidget {
             rules: [],
             macros: [],
         };
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

@@ -1,3 +1,4 @@
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
@@ -31,8 +32,6 @@ export class Rectangle extends BaseWidget {
         this.setReadWriteType("read");
 
         this._rules = new RectangleRules(this, widgetTdl);
-
-        this.setBorderType("inside");
     }
 
     // ------------------------------ elements ---------------------------------
@@ -69,10 +68,16 @@ export class Rectangle extends BaseWidget {
     };
     // Text area and resizers
     _ElementBodyRaw = (): React.JSX.Element => {
+        const allStyle = this.getAllStyle();
+
         return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={{ ...this.getElementBodyRawStyle() }}>
+            <div style={{
+                ...this.getElementBodyRawStyle(),
+                // Rectangle's border is inside the body, the "left" in html is the "left" in tdl
+                // unlike regular widget whose "left" in html is actually the "left" in tdl minus the border width
+                left: allStyle["left"],
+                top: allStyle["top"],
+            }}>
                 <this._ElementArea></this._ElementArea>
                 {this.showResizers() ? <this._ElementResizer /> : null}
             </div>
@@ -272,11 +277,12 @@ export class Rectangle extends BaseWidget {
             groupNames: [],
             rules: [],
         };
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 
     generateDefaultTdl: () => any = Rectangle.generateDefaultTdl;
-    
+
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {

@@ -69,16 +69,17 @@ export class LabelSidebar extends BaseWidgetSidebar {
                     {this.getSidebarAngle().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ---------------- channel -------------------------- */}
+                {/* ---------------- text -------------------------- */}
                 <this._BlockTitle>
-                    <b>Channel</b>
+                    <b>Text</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {this.getSidebarChannelName().getElement()}
-                    {this.getSidebarAlarmText().getElement()}
-                    {this.getSidebarAlarmBackground().getElement()}
-                    {this.getSidebarAlarmBorder().getElement()}
-                    {this.getSidebarAlarmLevel().getElement()}
+                    {/* color */}
+                    {this.getSidebarText().getElement()}
+                    {this.getSidebarTextColor().getElement()}
+                    {this.getSidebarXAlign().getElement()}
+                    {this.getSidebarYAlign().getElement()}
+                    {this.getSidebarWrapWord().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
@@ -91,17 +92,16 @@ export class LabelSidebar extends BaseWidgetSidebar {
                     {this.getSidebarInvisibleInOperation().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ---------------- text -------------------------- */}
+                {/* ---------------- channel -------------------------- */}
                 <this._BlockTitle>
-                    <b>Text</b>
+                    <b>Channel</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {/* color */}
-                    {this.getSidebarText().getElement()}
-                    {this.getSidebarTextColor().getElement()}
-                    {this.getSidebarXAlign().getElement()}
-                    {this.getSidebarYAlign().getElement()}
-                    {this.getSidebarWrapWord().getElement()}
+                    {this.getSidebarChannelName().getElement()}
+                    {this.getSidebarAlarmText().getElement()}
+                    {this.getSidebarAlarmBackground().getElement()}
+                    {this.getSidebarAlarmBorder().getElement()}
+                    {this.getSidebarAlarmLevel().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ----------------------- font --------------------------- */}

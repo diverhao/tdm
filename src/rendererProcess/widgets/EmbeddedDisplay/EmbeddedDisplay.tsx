@@ -1,3 +1,4 @@
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
@@ -392,6 +393,7 @@ export class EmbeddedDisplay extends BaseWidget {
             itemMacros: [],
             itemIsWebpage: [],
         };
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

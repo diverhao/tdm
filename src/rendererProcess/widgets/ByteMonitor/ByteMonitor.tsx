@@ -1,3 +1,4 @@
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
@@ -478,6 +479,7 @@ export class ByteMonitor extends BaseWidget {
             bitNames: [],
             itemColors: ["rgba(60, 100, 60, 1)", "rgba(60, 255, 60, 1)"],
         };
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

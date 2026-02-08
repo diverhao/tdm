@@ -1,3 +1,4 @@
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { GlobalVariables, calcSidebarWidth, getWindowHorizontalScrollBarWidth, type_dbrData } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
@@ -387,6 +388,7 @@ export class DataViewer extends BaseWidget {
             yAxes: [],
             rules: [],
         };
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

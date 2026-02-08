@@ -39,7 +39,7 @@ export class Label extends BaseWidget {
 
     // ------------------------------ elements ---------------------------------
 
-    // Body + sidebar
+    // area + resizer + sidebar
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -53,27 +53,27 @@ export class Label extends BaseWidget {
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
                 <>
-                    <this._ElementBody></this._ElementBody>
+                    <div style={this.getElementBodyRawStyle()}>
+                        <this._ElementArea></this._ElementArea>
+                        {this.showResizers() ? <this._ElementResizer /> : null}
+                    </div>
                     {this.showSidebar() ? this.getSidebar()?.getElement() : null}
                 </>
             </ErrorBoundary>
         );
     };
 
-    // area + resizers
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBody
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+        const allText = this.getAllText();
+        const whiteSpace = allText.wrapWord ? "normal" : "pre";
+        const justifyContent = allText.horizontalAlign;
+        const alignItems = allText.verticalAlign;
+        const outline = this._getElementAreaRawOutlineStyle();
+        const color = this._getElementAreaRawTextStyle();
+        const backgroundColor = this._getElementAreaRawBackgroundStyle();
+        const opacity = allText["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1;
+        const textAlign = allText["horizontalAlign"] === "flex-start" ? "left" : this.getAllText().horizontalAlign === "flex-end" ? "right" : "center";
+
         return (
             <div
                 style={{
@@ -83,19 +83,15 @@ export class Label extends BaseWidget {
                     width: "100%",
                     height: "100%",
                     userSelect: "none",
-                    // most widgets are "hidden"
                     overflow: "visible",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllStyle().fontFamily,
-                    fontSize: this.getAllStyle().fontSize,
-                    fontStyle: this.getAllStyle().fontStyle,
-                    fontWeight: this.getAllStyle().fontWeight,
-                    outline: this._getElementAreaRawOutlineStyle(),
-                    color: this._getElementAreaRawTextStyle(),
-                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
-
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    outline: outline,
+                    color: color,
+                    backgroundColor: backgroundColor,
+                    opacity: opacity,
+                    textAlign: textAlign,
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
@@ -107,15 +103,7 @@ export class Label extends BaseWidget {
 
     _ElementLabel = () => {
         return (
-            <div
-                style={{
-                    opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                    // display: "inline-flex",
-                    // flexDirection: "column",
-                    textAlign: this.getAllText().horizontalAlign === "flex-start" ? "left" : this.getAllText().horizontalAlign === "flex-end" ? "right" : "center",
-                    // textAlign: this.getAllText().horizontalAlign,
-                }}
-            >
+            <div>
                 {this.getTextText()}
             </div>
         );
@@ -167,9 +155,8 @@ export class Label extends BaseWidget {
 
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
 
-    // -------------------- helper functions ----------------
+    // -------------------- values ----------------
 
     _getChannelValue = () => {
         const value = this._getFirstChannelValue();
@@ -245,6 +232,7 @@ export class Label extends BaseWidget {
             rules: [],
         };
 
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

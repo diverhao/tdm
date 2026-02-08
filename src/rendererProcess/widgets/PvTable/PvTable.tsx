@@ -1432,6 +1432,7 @@ export class PvTable extends BaseWidget {
             channelValues: [],
             channelSelects: [],
         };
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

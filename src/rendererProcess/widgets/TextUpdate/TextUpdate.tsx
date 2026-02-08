@@ -370,6 +370,7 @@ export class TextUpdate extends BaseWidget {
             rules: [],
         };
 
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

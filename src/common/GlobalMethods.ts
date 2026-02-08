@@ -853,3 +853,7 @@ export const isValidRgbaColor = (color: string): boolean => {
 export const deepMerge = (obj1: any, obj2: any): any => {
     return JSON.parse(JSON.stringify({ ...obj1, ...obj2 }));
 };
+
+export const generateWidgetKey = (type: string) => {
+    return `${type}_${uuidv4()}`
+}

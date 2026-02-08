@@ -545,6 +545,7 @@ export class Polyline extends BaseWidget {
             pointsX: [],
             pointsY: [],
         };
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

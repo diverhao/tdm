@@ -1628,6 +1628,7 @@ export class FileBrowser extends BaseWidget {
             groupNames: [],
             rules: [],
         };
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

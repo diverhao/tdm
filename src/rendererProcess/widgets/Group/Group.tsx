@@ -669,6 +669,7 @@ export class Group extends BaseWidget {
             itemBackgroundColors: ["rgba(255,255,255,1)"],
             widgetKeys: [[]],
         };
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

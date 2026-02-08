@@ -1,3 +1,4 @@
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { MouseEvent } from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
@@ -1696,6 +1697,7 @@ ss volt_check {
             // menus: {},
 
         };
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

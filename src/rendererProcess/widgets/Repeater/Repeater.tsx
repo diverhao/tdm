@@ -654,6 +654,7 @@ export class Repeater extends BaseWidget {
             widgetKeys: [],
             macros: [],
         };
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

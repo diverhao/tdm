@@ -1,3 +1,4 @@
+import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { Channel_ACCESS_RIGHTS } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
@@ -1661,6 +1662,7 @@ export class Probe extends BaseWidget {
             menus: {},
         };
 
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

@@ -6687,6 +6687,7 @@ export class Image extends BaseWidget {
             rules: [],
             regionsOfInterest: [],
         };
+        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 

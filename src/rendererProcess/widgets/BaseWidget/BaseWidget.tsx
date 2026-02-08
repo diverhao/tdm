@@ -149,11 +149,6 @@ export abstract class BaseWidget {
     // type of the widget: a readback type, or write type
     // if it is a "read" type, in operating mode, the mouse events are ignored, but the right click still works (if there is no "write" element behind it)
     _readWriteType: "read" | "write" = "write";
-    // border type
-    // if "outside", the tdl's "top"/"left" are differed from their values on html page, by an amount of style["borderWidth"]
-    // the width and height in both tdl and html are the content's width and height, excluding the border
-    // most widget's are "outside"
-    _borderType: "outside" | "inside" = "outside";
 
     // setTimeout and setInterval in this widget
     _schedules: (NodeJS.Timeout | NodeJS.Timer)[] = [];
@@ -1211,10 +1206,10 @@ export abstract class BaseWidget {
         const allStyle = this.getAllStyle();
         const allText = this.getAllText();
         const result: Record<string, any> = {
-            ...this.getAllStyle(),
+            ...allStyle,
 
-            left: this.getBorderType() === "outside" ? allStyle["left"] - allStyle["borderWidth"] : allStyle["left"],
-            top: this.getBorderType() === "outside" ? allStyle["top"] - allStyle["borderWidth"] : allStyle["top"],
+            left: allStyle["left"] - allStyle["borderWidth"],
+            top: allStyle["top"] - allStyle["borderWidth"],
             // if it is a readback-type widget, we skip the mouse left-button-down event in operating mode, 
             // the "read" type widget is transparent to any mouse button
             // the right/mid-button-down event is handled in a global function in DisplayWindowClient
@@ -1327,10 +1322,6 @@ export abstract class BaseWidget {
         this._readWriteType = newType;
     };
 
-    getBorderType = () => {
-        return this._borderType;
-    };
-
     getRulesStyle = () => {
         return this._rulesStyle;
     };
@@ -1364,9 +1355,6 @@ export abstract class BaseWidget {
 
     setRulesText = (newText: Record<string, any>) => {
         this._rulesText = newText;
-    };
-    setBorderType = (newType: "outside" | "inside") => {
-        this._borderType = newType;
     };
 
     // -------------------------------------- channel names ---------------------------------
@@ -1794,9 +1782,6 @@ export abstract class BaseWidget {
     }
 
     _getElementAreaRawOutlineStyle = (): string => {
-        // if (!g_widgets1.isEditing() && this.getAllText()["invisibleInOperation"]) {
-        //     return AlarmOutlineStyle[ChannelSeverity.NO_ALARM];
-        // }
 
         const severity = this._getChannelSeverity();
         // if this channel is not connected, always show alarm border
