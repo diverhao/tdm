@@ -84,7 +84,7 @@ export class Talhk extends BaseWidget {
                 // outline: this._getElementAreaRawOutlineStyle(),
             }}>
                 <this._ElementArea></this._ElementArea>
-                {/* {this._showResizers() ? <this._ElementResizer /> : null} */}
+                {/* {this.showResizers() ? <this._ElementResizer /> : null} */}
             </div>
         );
     };
@@ -162,8 +162,8 @@ export class Talhk extends BaseWidget {
     // -------------------- helper functions ----------------
 
     // defined in super class
-    // _showSidebar()
-    // _showResizers()
+    // showSidebar()
+    // showResizers()
     // _useMemoedElement()
     // hasChannel()
     // isInGroup()

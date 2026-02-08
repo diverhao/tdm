@@ -54,7 +54,7 @@ export class TextEntry extends BaseWidget {
                     g_widgets1?.isEditing() ?
                         <>
                             <this._ElementBody></this._ElementBody>
-                            {this._showSidebar() ? this.getSidebar()?.getElement() : null}
+                            {this.showSidebar() ? this.getSidebar()?.getElement() : null}
                         </>
                         :
                         <this._ElementArea></this._ElementArea>
@@ -70,7 +70,7 @@ export class TextEntry extends BaseWidget {
             <div style={this.getElementBodyRawStyle()}>
                 {/* <this._ElementArea></this._ElementArea> */}
                 <this._ElementAreaRaw></this._ElementAreaRaw>
-                {this._showResizers() ? <this._ElementResizer /> : null}
+                {this.showResizers() ? <this._ElementResizer /> : null}
             </div>
         );
     };

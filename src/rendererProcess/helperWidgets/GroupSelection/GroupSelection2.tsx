@@ -580,7 +580,7 @@ export class GroupSelection2 {
                         return (widget as BaseWidget).getElement();
                     })}
                 </div>
-                {this._showSidebar() ? this.getSidebarElement() : null}
+                {this.showSidebar() ? this.getSidebarElement() : null}
             </>
         );
     };
@@ -601,7 +601,7 @@ export class GroupSelection2 {
 
     // -------------------- helper functions --------------------
 
-    private _showSidebar = (): boolean => {
+    private showSidebar = (): boolean => {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
 
         const result = g_widgets1.isEditing() && g_widgets1.getSidebarWidgetKey() === this.getWidgetKey();

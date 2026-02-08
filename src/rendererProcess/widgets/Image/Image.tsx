@@ -176,7 +176,7 @@ export class Image extends BaseWidget {
                             ?
                             <>
                                 <this._ElementBody></this._ElementBody>
-                                {this._showSidebar() ? this._sidebar?.getElement() : null}
+                                {this.showSidebar() ? this._sidebar?.getElement() : null}
                             </>
                             :
                             <this._ElementArea></this._ElementArea>
@@ -202,7 +202,7 @@ export class Image extends BaseWidget {
                 // outline: this._getElementAreaRawOutlineStyle(),
             }}>
                 <this._ElementArea></this._ElementArea>
-                {this._showResizers() ? <this._ElementResizer /> : null}
+                {this.showResizers() ? <this._ElementResizer /> : null}
             </div>
         );
     };
@@ -6516,8 +6516,8 @@ export class Image extends BaseWidget {
     // -------------------- helper functions ----------------
 
     // defined in super class
-    // _showSidebar()
-    // _showResizers()
+    // showSidebar()
+    // showResizers()
     // _useMemoedElement()
     // hasChannel()
     // isInGroup()

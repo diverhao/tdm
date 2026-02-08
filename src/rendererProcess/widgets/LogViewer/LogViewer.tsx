@@ -429,8 +429,8 @@ export class LogViewer extends BaseWidget {
     // -------------------- helper functions ----------------
 
     // defined in super class
-    // _showSidebar()
-    // _showResizers()
+    // showSidebar()
+    // showResizers()
     // _useMemoedElement()
     // hasChannel()
     // isInGroup()

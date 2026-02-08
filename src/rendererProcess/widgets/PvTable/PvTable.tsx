@@ -169,7 +169,7 @@ export class PvTable extends BaseWidget {
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
                 <>
                     <this._ElementBody></this._ElementBody>
-                    {this._showSidebar() ? this.getSidebar()?.getElement() : null}
+                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
                 </>
             </ErrorBoundary>
         );
@@ -199,7 +199,7 @@ export class PvTable extends BaseWidget {
                 <this._ElementArea></this._ElementArea>
                 {/* <this._BulkAddChannelsPage></this._BulkAddChannelsPage> */}
                 {/* <this._ElementSettings></this._ElementSettings> */}
-                {this._showResizers() ? <this._ElementResizer /> : null}
+                {this.showResizers() ? <this._ElementResizer /> : null}
             </div>
         );
     };

@@ -50,7 +50,7 @@ export class ThumbWheel extends BaseWidget {
         return (
             <>
                 <this._ElementBody></this._ElementBody>
-                {this._showSidebar() ? this.getSidebar()?.getElement() : null}
+                {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </>
         );
     };
@@ -66,7 +66,7 @@ export class ThumbWheel extends BaseWidget {
             >
                 {/* <this._ElementArea></this._ElementArea> */}
                 <this._ElementAreaRaw></this._ElementAreaRaw>
-                {this._showResizers() ? <this._ElementResizer /> : null}
+                {this.showResizers() ? <this._ElementResizer /> : null}
             </div>
         );
     };

@@ -207,7 +207,7 @@ export class DataViewer extends BaseWidget {
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
                 <>
                     <this._ElementBody></this._ElementBody>
-                    {this._showSidebar() ? this.getSidebar()?.getElement() : null}
+                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
                 </>
             </ErrorBoundary>
         );
@@ -222,7 +222,7 @@ export class DataViewer extends BaseWidget {
                 id="DataViewer"
             >
                 <this._ElementArea></this._ElementArea>
-                {this._showResizers() ? <this._ElementResizer /> : null}
+                {this.showResizers() ? <this._ElementResizer /> : null}
                 {this.getShowSettingsPage() === -1 && (!g_widgets1.isEditing()) ? this.getSettings().getElement() : null}
                 {this.getSettings().getElementTraceSetting(this.getShowSettingsPage())}
             </div>
@@ -300,8 +300,8 @@ export class DataViewer extends BaseWidget {
     // -------------------- helper functions ----------------
 
     // defined in super class
-    // _showSidebar()
-    // _showResizers()
+    // showSidebar()
+    // showResizers()
     // _useMemoedElement()
     // hasChannel()
     // isInGroup()

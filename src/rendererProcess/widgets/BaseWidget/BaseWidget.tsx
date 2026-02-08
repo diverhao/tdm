@@ -845,13 +845,13 @@ export abstract class BaseWidget {
     };
 
     // -------------------- helper functions ----------------
-    // only show the sidebar of widget g_widgets1.sidebarWidgetKey
-    _showSidebar = (): boolean => {
+
+    showSidebar = (): boolean => {
         const result = g_widgets1.isEditing() && g_widgets1.getSidebarWidgetKey() === this.getWidgetKey();
         return result;
     };
 
-    _showResizers = (): boolean => {
+    showResizers = (): boolean => {
         return this.isSelected();
     };
 

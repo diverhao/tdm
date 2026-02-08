@@ -121,7 +121,7 @@ export class ActionButton extends BaseWidget {
             <ErrorBoundary style={{ ...this.getStyle(), backgroundColor: "rgba(0,0,0,0)" }} widgetKey={this.getWidgetKey()}>
                 <>
                     <this._ElementBody></this._ElementBody>
-                    {this._showSidebar() ? this._sidebar?.getElement() : null}
+                    {this.showSidebar() ? this._sidebar?.getElement() : null}
                 </>
             </ErrorBoundary>
         );
@@ -134,7 +134,7 @@ export class ActionButton extends BaseWidget {
             // TextUpdateResizer does not update if it is .memo
             <div style={{ ...this.getElementBodyRawStyle(), borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 3, overflow: "visible" }}>
                 <this._ElementArea></this._ElementArea>
-                {this._showResizers() ? <this._ElementResizer /> : null}
+                {this.showResizers() ? <this._ElementResizer /> : null}
             </div>
         );
     };
@@ -771,8 +771,8 @@ export class ActionButton extends BaseWidget {
     // -------------------- helper functions ----------------
 
     // defined in super class
-    // _showSidebar()
-    // _showResizers()
+    // showSidebar()
+    // showResizers()
     // _useMemoedElement()
     // hasChannel()
     // isInGroup()

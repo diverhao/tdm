@@ -12,7 +12,7 @@ interface State {
 	hasError: boolean;
 }
 
-class ErrorBoundaryClass extends Component<Props, State> {
+export class ErrorBoundary extends Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
 		this.state = { hasError: false };
@@ -80,5 +80,3 @@ const ErrorFallback = ({ style, widgetKey }: { style: Record<string, any>; widge
 		</div>
 	);
 };
-
-export const ErrorBoundary = ErrorBoundaryClass;

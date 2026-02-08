@@ -251,7 +251,7 @@ export class Canvas {
         return (
             <>
                 <this._BodyElement></this._BodyElement>
-                {this._showSidebar() ? this._sidebar.getElement() : null}
+                {this.showSidebar() ? this._sidebar.getElement() : null}
             </>
         );
     };
@@ -377,7 +377,7 @@ export class Canvas {
     };
 
     // only show the sidebar of widget g_widgets1.sidebarWidgetKey
-    private _showSidebar = (): boolean => {
+    private showSidebar = (): boolean => {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
 
         const result = g_widgets1.isEditing() && g_widgets1.getSidebarWidgetKey() === this.getWidgetKey();

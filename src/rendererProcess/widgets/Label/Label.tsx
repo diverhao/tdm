@@ -34,10 +34,8 @@ export class Label extends BaseWidget {
         this.initStyle(widgetTdl);
         this.initText(widgetTdl);
         this.setReadWriteType("read");
-
         this._rules = new LabelRules(this, widgetTdl);
     }
-
 
     // ------------------------------ elements ---------------------------------
 
@@ -56,25 +54,25 @@ export class Label extends BaseWidget {
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
                 <>
                     <this._ElementBody></this._ElementBody>
-                    {this._showSidebar() ? this.getSidebar()?.getElement() : null}
+                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
                 </>
             </ErrorBoundary>
         );
     };
 
-    // Text area and resizers
+    // area + resizers
     _ElementBodyRaw = (): React.JSX.Element => {
         return (
             // always update the div below no matter the TextUpdateBody is .memo or not
             // TextUpdateResizer does not update if it is .memo
             <div style={this.getElementBodyRawStyle()}>
                 <this._ElementArea></this._ElementArea>
-                {this._showResizers() ? <this._ElementResizer /> : null}
+                {this.showResizers() ? <this._ElementResizer /> : null}
             </div>
         );
     };
 
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
+    // only shows the text, all other style properties are held by upper level _ElementBody
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         return (
             <div
