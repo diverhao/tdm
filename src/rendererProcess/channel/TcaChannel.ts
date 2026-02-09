@@ -1197,13 +1197,11 @@ export class TcaChannel {
                                 this.setPvaValueDisplayType(pvaValueDisplayType.OBJECT_VALUE_FIELD);
                                 // if this channel is an nt enum, the value contains 2 fields "int index" and "string[] choices"
                                 const index = (value as any)["value"]["index"];
+                                if (raw) {
+                                    return index;
+                                }
                                 // the data may not carry "string[] choices", but the first time data must carry it
                                 let choices = (value as any)["value"]["choices"];
-                                // if (choices === undefined) {
-                                //     choices = this.getEnumChoices();
-                                // } else {
-                                //     this.setEnumChoices(choices);
-                                // }
                                 if (index !== undefined && choices !== undefined && typeof index === "number" && Array.isArray(choices)) {
                                     const choice = choices[index];
                                     return choice;
@@ -2004,7 +2002,6 @@ export class TcaChannel {
     getPvaValue = (subRequest: string = "") => {
         // dbr data is the full path to the data, e.g. 
         let data = this.getDbrData() as any;
-        // console.log(data)
 
         let pvRequest = this.getPvRequest();
 

@@ -851,7 +851,13 @@ export const isValidRgbaColor = (color: string): boolean => {
 
 
 export const deepMerge = (obj1: any, obj2: any): any => {
-    return JSON.parse(JSON.stringify({ ...obj1, ...obj2 }));
+    if (Array.isArray(obj1) && Array.isArray(obj2)) {
+        const result = [...obj1];
+        obj2.forEach((val, i) => result[i] = val);
+        return result;
+    } else {
+        return JSON.parse(JSON.stringify({ ...obj1, ...obj2 }));
+    }
 };
 
 export const generateWidgetKey = (type: string) => {

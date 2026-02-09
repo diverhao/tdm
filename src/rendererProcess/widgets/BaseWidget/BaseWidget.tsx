@@ -1902,7 +1902,7 @@ export abstract class BaseWidget {
     }
 
     _getChannelValue = (raw?: boolean): number | number[] | string | string[] | undefined => {
-        return this._getFirstChannelValue();
+        return this._getFirstChannelValue(raw);
     }
 
     _getChannelPrecision = () => {

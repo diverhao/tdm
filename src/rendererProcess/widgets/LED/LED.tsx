@@ -19,6 +19,7 @@ export type type_LED_tdl = {
     channelNames: string[];
     groupNames: string[];
     rules: type_rules_tdl;
+    // LED specific data
     itemNames: string[];
     itemColors: string[];
     itemValues: (number | string | number[] | string[] | undefined)[];
@@ -37,15 +38,16 @@ export class LED extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("read");
 
-        this._itemNames = deepMerge(widgetTdl.itemNames, this.generateDefaultTdl().itemNames);
-        this._itemColors = deepMerge(widgetTdl.itemColors, this.generateDefaultTdl().itemColors);
-        this._itemValues = deepMerge(widgetTdl.itemValues, this.generateDefaultTdl().itemValues);
-        this._itemNames.splice(2, this._itemNames.length - 2);
-        this._itemColors.splice(2, this._itemColors.length - 2);
-        this._itemValues.splice(2, this._itemValues.length - 2);
+        const defaultTdl = this.generateDefaultTdl();
+        this._itemNames = deepMerge(widgetTdl.itemNames, defaultTdl.itemNames);
+        this._itemColors = deepMerge(widgetTdl.itemColors, defaultTdl.itemColors);
+        this._itemValues = deepMerge(widgetTdl.itemValues, defaultTdl.itemValues);
+        // there has to be only 2 items
+        this._itemNames.splice(2);
+        this._itemColors.splice(2);
+        this._itemValues.splice(2);
 
         this._rules = new LEDRules(this, widgetTdl);
-
     }
 
     // ------------------------------ elements ---------------------------------
@@ -60,33 +62,25 @@ export class LED extends BaseWidget {
 
         this.updateAllStyleAndText();
 
-
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this._sidebar?.getElement() : null}
-                </>
+                <div style={this.getElementBodyRawStyle()}>
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this._sidebar?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    // Text area and resizers
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+        const allText = this.getAllText();
+        const whiteSpace = allText.wrapWord ? "normal" : "pre";
+        const justifyContent = "center";
+        const alignItems = "center";
+        const outline = this._getElementAreaRawOutlineStyle();
+
         return (
-            // <div
             <div
                 style={{
                     display: "inline-flex",
@@ -97,87 +91,253 @@ export class LED extends BaseWidget {
                     userSelect: "none",
                     position: "absolute",
                     overflow: "visible",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllStyle().fontFamily,
-                    fontSize: this.getAllStyle().fontSize,
-                    fontStyle: this.getAllStyle().fontStyle,
-                    fontWeight: this.getAllStyle().fontWeight,
-                    outline: this._getElementAreaRawOutlineStyle(),
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    outline: outline,
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                {this.getAllText()["shape"] === "round" ? (
-                    <this._ElementLEDRound></this._ElementLEDRound>
-                ) : (
-                    <this._ElementLEDSquare></this._ElementLEDSquare>
-                )}
+                <this._ElementLED></this._ElementLED>
                 <this._ElementText></this._ElementText>
             </div>
         );
     };
 
-    calcIndex = (): number => {
-        const channelValue = this._getChannelValue(true);
-        const bit = this.getAllText()["bit"];
-        if (typeof channelValue === "number") {
-            if (bit < 0) {
-                // use whole value
-                const index = this.getItemValues().indexOf(channelValue);
-                return index;
-            } else {
-                const value = (Math.floor(Math.abs(channelValue)) >> bit) & 0x1;
-                const index = this.getItemValues().indexOf(value);
-                return index;
-            }
-        }
-        return -1;
-    };
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
-    calcItemColor = () => {
-        const index = this.calcIndex();
-        if (index > -1 && index < this.getItemColors().length) {
-            return this.getItemColors()[index];
+    _ElementLED = () => {
+        const allText = this.getAllText();
+        const shape = allText["shape"];
+        if (shape === "round") {
+            return (
+                <this._ElementLEDRound></this._ElementLEDRound>
+            )
         } else {
-            return this.getAllText()["fallbackColor"];
+            return (
+                <this._ElementLEDSquare></this._ElementLEDSquare>
+            )
+        }
+    }
+
+    _ElementLEDSquare = () => {
+        if (g_widgets1.isEditing()) {
+            return (
+                <this._ElementLEDSquareEditing></this._ElementLEDSquareEditing>
+            )
+        } else {
+            return (
+                <this._ElementLEDSquareOperating></this._ElementLEDSquareOperating>
+            )
         }
     };
 
-    calcItemText = (): string => {
-        if (g_widgets1.isEditing()) {
-            return this.getItemNames().join("|");
-        }
+    _ElementLEDSquareEditing = () => {
+        const allStyle = this.getAllStyle();
+        const allText = this.getAllText();
+        const width = allStyle["width"];
+        const height = allStyle["height"];
 
-        const index = this.calcIndex();
-        if (index > -1) {
-            if (this.getAllText()["useChannelItems"] === true) {
-                try {
-                    const channelName = this.getChannelNames()[0];
-                    const channel = g_widgets1.getTcaChannel(channelName);
-                    const strs = channel.getEnumChoices();
-                    const numberOfStringsUsed = channel.getNumerOfStringsUsed();
-                    if (numberOfStringsUsed && strs.length > 0) {
-                        if (index < numberOfStringsUsed) {
-                            return strs[index];
-                        }
-                    }
-                } catch (e) {
-                    Log.error(e);
-                    return "";
-                }
-            } else {
-                return `${this.getItemNames()[index]}`;
-            }
+        const point1X = width;
+        const point1Y = 0;
+        const point2X = width;
+        const point2Y = height;
+        const point3X = 0;
+        const point3Y = height;
+        const point4X = 0;
+        const point4Y = 0;
+
+        const d0 = `M ${point1X} ${point1Y} L ${point4X} ${point4Y} L ${point3X} ${point3Y}`;
+        const d1 = `M ${point1X} ${point1Y} L ${point2X} ${point2Y} L ${point3X} ${point3Y}`;
+
+        const lineWidth = allText["lineWidth"];
+        const lineColor = allText["lineColor"];
+        const itemColors = this.getItemColors();
+        const fillColor0 = itemColors[0];
+        const fillColor1 = itemColors[1];
+
+        // outline
+        const outlineColor = this.calcOutlineColor();
+        const outlineWidth = this.isSelected() ? "1" : "0";
+
+        return (
+            <svg
+                width="100%"
+                height="100%"
+                x="0"
+                y="0"
+                style={{
+                    position: "absolute",
+                    overflow: "visible",
+                }}
+            >
+                {/* half a square (a triange) for state 0 */}
+                <path
+                    d={d0}
+                    strokeWidth={`${lineWidth}`}
+                    stroke={lineColor}
+                    fill={fillColor0}
+                ></path>
+                {/* half a square (a triange) for state 1 */}
+                <path
+                    d={d1}
+                    strokeWidth={`${lineWidth}`}
+                    stroke={lineColor}
+                    fill={fillColor1}
+                ></path>
+                {/* outline, enabled upon selection */}
+                <rect
+                    width={`${width}`}
+                    height={`${height}`}
+                    strokeWidth={`${outlineWidth}`}
+                    stroke={outlineColor}
+                    fill="none"
+                ></rect>
+            </svg>
+        );
+    };
+
+    _ElementLEDSquareOperating = () => {
+        const allStyle = this.getAllStyle();
+        const allText = this.getAllText();
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+
+        const lineWidth = allText["lineWidth"];
+        const lineColor = allText["lineColor"];
+        const fillColor = this.calcItemColor();
+
+        return (
+            <svg
+                width="100%"
+                height="100%"
+                x="0"
+                y="0"
+                style={{
+                    position: "absolute",
+                    overflow: "visible",
+                }}
+            >
+                <rect
+                    width={`${width}`}
+                    height={`${height}`}
+                    strokeWidth={`${lineWidth}`}
+                    stroke={lineColor}
+                    fill={fillColor}
+                ></rect>
+            </svg>
+        );
+
+    };
+
+    _ElementLEDRound = () => {
+        if (g_widgets1.isEditing()) {
+            return <this._ElementLEDRoundEditing></this._ElementLEDRoundEditing>
+        } else {
+            return <this._ElementLEDRoundOperating></this._ElementLEDRoundOperating>
         }
-        return this.getAllText()["fallbackText"];
+    };
+
+    _ElementLEDRoundEditing = () => {
+        const allStyle = this.getAllStyle();
+        const allText = this.getAllText();
+
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+        const lineWidth = allText["lineWidth"];
+        const lineColor = allText["lineColor"];
+
+
+        // for half circles
+        const rX = width / 2;
+        const rY = height / 2;
+        const point1X = width / 2 + (width / 2) * 0.70711;
+        const point1Y = height / 2 - (height / 2) * 0.70711;
+        const point2X = width / 2 - (width / 2) * 0.70711;
+        const point2Y = height / 2 + (height / 2) * 0.70711;
+
+        const fillColor0 = this.getItemColors()[0];
+        const fillColor1 = this.getItemColors()[1];
+
+        const d0 = `M ${point1X} ${point1Y} A ${rX} ${rY} 0 0 0 ${point2X} ${point2Y}`;
+        const d1 = `M ${point2X} ${point2Y} A ${rX} ${rY} 0 0 0 ${point1X} ${point1Y}`;
+
+        return (
+            <svg
+                width="100%"
+                height="100%"
+                x="0"
+                y="0"
+                style={{
+                    position: "absolute",
+                    overflow: "visible",
+                }}
+            >
+                {/* half a circle for state 0 */}
+                <path
+                    d={d0}
+                    strokeWidth={`${lineWidth}`}
+                    stroke={lineColor}
+                    fill={fillColor0}
+                ></path>
+                {/* half a circle for state 1*/}
+                <path
+                    d={d1}
+                    strokeWidth={`${lineWidth}`}
+                    stroke={lineColor}
+                    fill={fillColor1}
+                ></path>
+            </svg>
+        );
+
+    }
+
+    _ElementLEDRoundOperating = () => {
+        const allStyle = this.getAllStyle();
+        const allText = this.getAllText();
+
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+        const lineWidth = allText["lineWidth"];
+        const lineColor = allText["lineColor"];
+
+        const rX = width / 2;
+        const rY = height / 2;
+        const cX = width / 2;
+        const cY = height / 2;
+        const fillColor = this.calcItemColor();
+
+        return (
+            <svg
+                width="100%"
+                height="100%"
+                x="0"
+                y="0"
+                style={{
+                    position: "absolute",
+                    overflow: "visible",
+                }}
+            >
+                <ellipse
+                    cx={`${cX}`}
+                    cy={`${cY}`}
+                    rx={`${rX}`}
+                    ry={`${rY}`}
+                    strokeWidth={lineWidth}
+                    stroke={lineColor}
+                    fill={fillColor}
+                ></ellipse>
+            </svg>
+        );
+
     };
 
     _ElementText = () => {
         return (
             <div
+                // the shape and text are all "absolute" position
                 style={{
                     display: "inline-flex",
                     position: "absolute",
@@ -185,15 +345,111 @@ export class LED extends BaseWidget {
                     height: "100%",
                     justifyContent: "center",
                     alignItems: "center",
-                    // color: this.calcItemTextcolor(),
-                    color: this.getAllStyle()["color"],
-                    opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
                 }}
             >
-                <div>{this.calcItemText()}</div>
+                {this.calcItemText()}
             </div>
         );
     };
+
+    // -------------------- helper functions ----------------
+
+    /**
+     * find the index that corresponds to the channel value
+     * 
+     * reutrns 0, 1 or undefined
+     */
+    calcIndex = (): 0 | 1 | undefined => {
+        const itemValues = this.getItemValues();
+        const channelValue = this._getChannelValue(true);
+        // if bit < 0, use whole number
+        // if bit >= 0, use this bit
+        const bit = this.getAllText()["bit"];
+        if (typeof channelValue === "number") {
+            if (bit < 0) {
+                // use whole value
+                const index = itemValues.indexOf(channelValue);
+                if (index === 0 || index === 1) {
+                    return index;
+                } else {
+                    return undefined;
+                }
+            } else {
+                const value = (Math.floor(Math.abs(channelValue)) >> bit) & 0x1;
+                const index = itemValues.indexOf(value);
+                if (index === 0 || index === 1) {
+                    return index;
+                } else {
+                    return undefined;
+                }
+            }
+        }
+        return undefined;
+    };
+
+    /**
+     * find the color that corresponds to the channel value
+     */
+    calcItemColor = () => {
+        const index = this.calcIndex();
+
+        if (index === 0 || index === 1) {
+            const color = this.getItemColors()[index];
+            if (GlobalMethods.isValidRgbaColor(color)) {
+                return color;
+            }
+        } else {
+            return this.getAllText()["fallbackColor"];
+        }
+
+    };
+
+    /**
+     * find the text that corresponds to the channel value
+     * 
+     * the text may be defined by user or from the channel
+     */
+    calcItemText = (): string => {
+
+        const allText = this.getAllText();
+        const useChannelItems = allText["useChannelItems"];
+        const fallbackText = allText["fallbackText"];
+        const itemNames = this.getItemNames();
+
+        if (g_widgets1.isEditing()) {
+            if (useChannelItems) {
+                return "";
+            } else {
+                return itemNames.join("|");
+            }
+        }
+
+        const index = this.calcIndex();
+        if (index === 0 || index === 1) {
+            if (useChannelItems === true) {
+                try {
+                    // find enum choices
+                    const channelName = this.getChannelNames()[0];
+                    const channel = g_widgets1.getTcaChannel(channelName);
+                    const strs = channel.getEnumChoices();
+                    const numberOfStringsUsed = channel.getNumerOfStringsUsed();
+                    if (typeof (numberOfStringsUsed) === "number" && index < numberOfStringsUsed && strs.length >= numberOfStringsUsed) {
+                        return strs[index];
+                    } else {
+                        return fallbackText;
+                    }
+                } catch (e) {
+                    Log.error(e);
+                    return fallbackText;
+                }
+            } else {
+                return itemNames[index];
+            }
+        } else {
+            return fallbackText;
+        }
+    };
+
     calcOutlineColor = () => {
         const lineColor = rgbaStrToRgbaArray(this.getAllText()["lineColor"]);
         // same as color collapsible title
@@ -201,178 +457,6 @@ export class LED extends BaseWidget {
             return "rgba(30, 30, 30, 1)";
         } else {
             return "rgba(230,230,230,1)";
-        }
-    };
-
-    _ElementLEDSquare = () => {
-        const point1X = this.getAllStyle()["width"];
-        const point1Y = 0;
-        const point2X = this.getAllStyle()["width"];
-        const point2Y = this.getAllStyle()["height"];
-        const point3X = 0;
-        const point3Y = this.getAllStyle()["height"];
-        const point4X = 0;
-        const point4Y = 0;
-
-        if (g_widgets1.isEditing()) {
-            return (
-                <svg
-                    width="100%"
-                    height="100%"
-                    x="0"
-                    y="0"
-                    style={{
-                        position: "absolute",
-                        overflow: "visible",
-                        opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                    }}
-                >
-                    <path
-                        d={`M ${point1X} ${point1Y} L ${point2X} ${point2Y} L ${point3X} ${point3Y}`}
-                        strokeWidth={this.getAllText()["lineWidth"]}
-                        stroke={this.getAllText()["lineColor"]}
-                        fill={`${this.getItemColors()[1]}`}
-                    ></path>
-                    <path
-                        d={`M ${point1X} ${point1Y} L ${point4X} ${point4Y} L ${point3X} ${point3Y}`}
-                        strokeWidth={this.getAllText()["lineWidth"]}
-                        stroke={this.getAllText()["lineColor"]}
-                        fill={`${this.getItemColors()[0]}`}
-                    ></path>
-                    {/* outline, enabled upon selection */}
-                    <rect
-                        width={`${this.getAllStyle()["width"]}`}
-                        height={`${this.getAllStyle()["height"]}`}
-                        strokeWidth={`${this.isSelected() ? "1" : "0"}`}
-                        stroke={`${this.calcOutlineColor()}`}
-                        fill="none"
-                    ></rect>
-                </svg>
-            );
-        } else {
-            return (
-                <svg
-                    width="100%"
-                    height="100%"
-                    x="0"
-                    y="0"
-                    style={{
-                        position: "absolute",
-                        overflow: "visible",
-                        opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                    }}
-                >
-                    <rect
-                        width={`${this.getAllStyle()["width"]}`}
-                        height={`${this.getAllStyle()["height"]}`}
-                        strokeWidth={this.getAllText()["lineWidth"]}
-                        stroke={this.getAllText()["lineColor"]}
-                        fill={this.calcItemColor()}
-                    ></rect>
-                </svg>
-            );
-        }
-    };
-
-    _ElementLEDRound = () => {
-        const rX = this.getAllStyle()["width"] / 2;
-        const rY = this.getAllStyle()["height"] / 2;
-        const point1X = this.getAllStyle()["width"] / 2 + (this.getAllStyle()["width"] / 2) * 0.7071067811865475244;
-        const point1Y = this.getAllStyle()["height"] / 2 - (this.getAllStyle()["height"] / 2) * 0.7071067811865475244;
-        const point2X = this.getAllStyle()["width"] / 2 - (this.getAllStyle()["width"] / 2) * 0.7071067811865475244;
-        const point2Y = this.getAllStyle()["height"] / 2 + (this.getAllStyle()["height"] / 2) * 0.7071067811865475244;
-
-        if (g_widgets1.isEditing()) {
-            return (
-                <svg
-                    width="100%"
-                    height="100%"
-                    x="0"
-                    y="0"
-                    style={{
-                        position: "absolute",
-                        overflow: "visible",
-                        opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                    }}
-                >
-                    <path
-                        d={`M ${point1X} ${point1Y} A ${rX} ${rY} 0 0 0 ${point2X} ${point2Y}`}
-                        strokeWidth={this.getAllText()["lineWidth"]}
-                        stroke={this.getAllText()["lineColor"]}
-                        fill={`${this.getItemColors()[0]}`}
-                    ></path>
-                    <path
-                        d={`M ${point2X} ${point2Y} A ${rX} ${rY} 0 0 0 ${point1X} ${point1Y}`}
-                        strokeWidth={this.getAllText()["lineWidth"]}
-                        stroke={this.getAllText()["lineColor"]}
-                        fill={`${this.getItemColors()[1]}`}
-                    ></path>
-                </svg>
-            );
-        } else {
-            return (
-                <svg
-                    width="100%"
-                    height="100%"
-                    x="0"
-                    y="0"
-                    style={{
-                        position: "absolute",
-                        overflow: "visible",
-                        opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                    }}
-                >
-                    <ellipse
-                        cx={`${this.getAllStyle()["width"] / 2}`}
-                        cy={`${this.getAllStyle()["height"] / 2}`}
-                        rx={`${this.getAllStyle()["width"] / 2}`}
-                        ry={`${this.getAllStyle()["height"] / 2}`}
-                        strokeWidth={this.getAllText()["lineWidth"]}
-                        stroke={this.getAllText()["lineColor"]}
-                        fill={this.calcItemColor()}
-                    ></ellipse>
-                </svg>
-            );
-        }
-    };
-
-    // ------------------------- rectangle ------------------------------------
-
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
-
-    // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = (raw: boolean = false) => {
-        return this.getChannelValueForMonitorWidget(raw);
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
         }
     };
 
@@ -393,7 +477,7 @@ export class LED extends BaseWidget {
                 top: 0,
                 width: 100,
                 height: 100,
-                backgroundColor: "rgba(240, 240, 240, 0.2)",
+                backgroundColor: "rgba(240, 240, 240, 0)",
                 // angle
                 transform: "rotate(0deg)",
                 // font
@@ -434,7 +518,8 @@ export class LED extends BaseWidget {
             channelNames: [],
             groupNames: [],
             rules: [],
-            itemNames: ["", ""],
+            // LED specific
+            itemNames: ["ZERO", "ONE"],
             itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
             itemValues: [0, 1],
         };

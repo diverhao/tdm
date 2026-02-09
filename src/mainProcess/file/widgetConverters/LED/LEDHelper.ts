@@ -37,7 +37,7 @@ export class LEDHelper extends BaseWidgetHelper {
 			top: 0,
 			width: 100,
 			height: 100,
-			backgroundColor: "rgba(240, 240, 240, 0.2)",
+			backgroundColor: "rgba(240, 240, 240, 0)",
 			// angle
 			transform: "rotate(0deg)",
 			// font
@@ -78,7 +78,7 @@ export class LEDHelper extends BaseWidgetHelper {
 		channelNames: [],
 		groupNames: [],
 		rules: [],
-		itemNames: ["", ""],
+		itemNames: ["ZERO", "ONE"],
 		itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
 		itemValues: [0, 1],
 	};
