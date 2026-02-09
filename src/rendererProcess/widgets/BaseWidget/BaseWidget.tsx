@@ -1796,7 +1796,6 @@ export abstract class BaseWidget {
         if (alarmShape === true) {
             const alarmLevelStr = this.getText()["alarmLevel"];
             const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
-            // console.log("alarm shape = ", alarmShape, alarmLevel, alarmLevelStr)
 
             if (severity >= alarmLevel) {
                 return AlarmShapeStyle[severity];

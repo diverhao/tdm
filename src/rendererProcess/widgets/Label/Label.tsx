@@ -92,18 +92,16 @@ export class Label extends BaseWidget {
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                <this._ElementLabel></this._ElementLabel>
-            </div>
-        );
-    };
-
-    _ElementLabel = () => {
-        return (
-            <div>
+                {/* skip the <_ElementLabel /> */}
                 {this.getTextText()}
             </div>
         );
     };
+
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
+
+    // -------------------- helper function -------------------------
 
     /**
      * The text in Label honors:
@@ -120,6 +118,7 @@ export class Label extends BaseWidget {
                 const htmlContents = katex.renderToString(`${rawText}`.replace("latex://", ""), {
                     throwOnError: false,
                 });
+                console.log(htmlContents)
                 return <div dangerouslySetInnerHTML={{ __html: htmlContents }}></div>;
             } catch (e) {
                 Log.error(e);
@@ -151,33 +150,6 @@ export class Label extends BaseWidget {
                 Log.error(e);
                 return ""
             }
-        }
-    };
-
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-
-    // -------------------- values ----------------
-
-    _getChannelValue = () => {
-        const value = this._getFirstChannelValue();
-        if (value === undefined) {
-            return "";
-        } else {
-            return value;
-        }
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
         }
     };
 

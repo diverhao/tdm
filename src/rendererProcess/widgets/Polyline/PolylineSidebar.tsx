@@ -96,6 +96,50 @@ export class PolylineSidebar extends BaseWidgetSidebar {
                     {this.getSidebarAngle().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
+
+                {/* ---------------- line -------------------------- */}
+                <this._BlockTitle>
+                    <b>Line</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarPolylineSmootherize().getElement()}
+                    {this.getSidebarPolylineClosed().getElement()}
+                    {this.getSidebarLineWidth().getElement()}
+                    {this.getSidebarLineStyle().getElement()}
+                    {this.getSidebarLineColor().getElement()}
+
+                </this._BlockBody>
+                <this._HorizontalLine />
+                
+                {/* ------------------- arrow ----------------------------- */}
+                {this.getSidebarLineArrowStyle().getElement()}
+                <this._HorizontalLine />
+                
+                {/* ---------------- points table -------------------------- */}
+                {this.getSidebarPolylinePointsTable().getElement()}
+                <this._HorizontalLine />
+
+                {/* ---------------- background -------------------------- */}
+                <this._BlockTitle>
+                    <b>Background</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {/* color */}
+                    {this.getSidebarBackgroundColor().getElement()}
+                    {this.getSidebarInvisibleInOperation().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
+                
+                {/* ---------------- filling -------------------------- */}
+                <this._BlockTitle>
+                    <b>Filling</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarPolylineFill().getElement()}
+                    {this.getSidebarFillColor().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
+
                 {/* ---------------- channel -------------------------- */}
                 <this._BlockTitle>
 					<b>Channel</b>
@@ -109,65 +153,7 @@ export class PolylineSidebar extends BaseWidgetSidebar {
 					{this.getSidebarAlarmLevel().getElement()}
 				</this._BlockBody>
 				<this._HorizontalLine />
-                {/* ---------------- background -------------------------- */}
-                <this._BlockTitle>
-                    <b>Background</b>
-                </this._BlockTitle>
-                <this._BlockBody>
-                    {/* color */}
-                    {this.getSidebarBackgroundColor().getElement()}
-                    {this.getSidebarInvisibleInOperation().getElement()}
-                </this._BlockBody>
-                <this._HorizontalLine />
-                {/* ---------------- line -------------------------- */}
-                <this._BlockTitle>
-                    <b>Line</b>
-                </this._BlockTitle>
-                <this._BlockBody>
-                    {this.getSidebarPolylineSmootherize().getElement()}
-                    {this.getSidebarPolylineClosed().getElement()}
-                    {this.getSidebarLineWidth().getElement()}
-                    {this.getSidebarLineStyle().getElement()}
-                    {/* {this.getSidebarTextColor().getElement()} */}
-                    {this.getSidebarLineColor().getElement()}
 
-                </this._BlockBody>
-                <this._HorizontalLine />
-                {/* ---------------- filling -------------------------- */}
-                <this._BlockTitle>
-                    <b>Filling</b>
-                </this._BlockTitle>
-                <this._BlockBody>
-                    {this.getSidebarPolylineFill().getElement()}
-                    {this.getSidebarFillColor().getElement()}
-                </this._BlockBody>
-                <this._HorizontalLine />
-                {/* ------------------- arrow ----------------------------- */}
-                {this.getSidebarLineArrowStyle().getElement()}
-                {/* ---------------- points table -------------------------- */}
-                {this.getSidebarPolylinePointsTable().getElement()}
-
-                {/* ---------------- text -------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Text</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarXAlign().getElement()}
-					{this.getSidebarYAlign().getElement()}
-					{this.getSidebarWrapWord().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
-                {/* ----------------------- font --------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Font</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarFontFamily().getElement()}
-					{this.getSidebarFontSize().getElement()}
-					{this.getSidebarFontStyle().getElement()}
-					{this.getSidebarFontWeight().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
                 {/* ---------------- border -------------------------- */}
                 <this._BlockTitle>
                     <b>Border</b>
@@ -186,27 +172,4 @@ export class PolylineSidebar extends BaseWidgetSidebar {
             </div>
         );
     };
-
-    // defined in super class
-    // getElement()
-    // _HorizontalLine()
-    // _BlockBody()
-    // _BlockTitle()
-
-    // ---------------------- getters --------------------------
-
-    // defined in super class
-    // getWidgetKey()
-    // getMainWidget()
-    // getUpdateFromSidebar()
-    // getStyle()
-    // getFormStyle()
-    // getInputStyle()
-
-    // ------------------------- style -------------------------
-
-    // defined in super class
-    // _style
-    // _inputStyle
-    // _formStyle
 }

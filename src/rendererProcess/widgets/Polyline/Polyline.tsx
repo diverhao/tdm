@@ -27,10 +27,22 @@ export type type_Polyline_tdl = {
 export class Polyline extends BaseWidget {
 
     _rules: PolylineRules;
-    _pointsRelativeX: number[];
-    _pointsRelativeY: number[];
 
-    minWidth: number = 5;
+    /**
+     * normalized relative positions of points inside this widget, the widget's width and height 
+     * are used to normalized the value
+     * 
+     * they are the only representation of points in this class
+     * 
+     * using this representation, we can easily resize the widget
+     */
+    _pointsRelativeX: number[] = [];
+    _pointsRelativeY: number[] = [];
+
+    selectedPointIndex: number = -1;
+
+    // minimum width or height of the widget
+    readonly minSize: number = 5;
 
     constructor(widgetTdl: type_Polyline_tdl) {
         super(widgetTdl);
@@ -40,23 +52,25 @@ export class Polyline extends BaseWidget {
 
         this._rules = new PolylineRules(this, widgetTdl);
 
-        // points
+        // resize the widget to contain the line
         const maxX = Math.max(...widgetTdl.pointsX);
         const maxY = Math.max(...widgetTdl.pointsY);
-        this.getStyle()["width"] = Math.max(maxX, this.minWidth);
-        this.getStyle()["height"] = Math.max(maxY, this.minWidth);
-        this._pointsRelativeX = [];
-        this._pointsRelativeY = [];
+        const width = Math.max(maxX, this.minSize);
+        const height = Math.max(maxY, this.minSize);
+        this.getStyle()["width"] = width;
+        this.getStyle()["height"] = height;
 
-        for (let ii = 0; ii < widgetTdl.pointsX.length; ii++) {
-            this._pointsRelativeX.push(maxX <= 0 ? 0 : widgetTdl.pointsX[ii] / this.getStyle()["width"]);
-            this._pointsRelativeY.push(maxY <= 0 ? 0 : widgetTdl.pointsY[ii] / this.getStyle()["height"]);
+        // relative points X and Y
+        const pointsX = widgetTdl.pointsX;
+        const pointsY = widgetTdl.pointsY;
+        for (let ii = 0; ii < Math.min(widgetTdl.pointsX.length, widgetTdl.pointsY.length); ii++) {
+            this._pointsRelativeX.push(maxX <= 0 ? 0 : pointsX[ii] / width);
+            this._pointsRelativeY.push(maxY <= 0 ? 0 : pointsY[ii] / height);
         }
     }
 
     // ------------------------------ elements ---------------------------------
 
-    // Body + sidebar
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -69,30 +83,22 @@ export class Polyline extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this._sidebar?.getElement() : null}
-                </>
+                <div style={this.getElementBodyRawStyle()}>
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this._sidebar?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    // Text area and resizers
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+        const outline = this._getElementAreaRawOutlineStyle();
+        const position = "absolute";
+        const overflow = "visible";
+        const backgroundColor = this._getElementAreaRawBackgroundStyle();
+
         return (
-            // <div
             <div
                 style={{
                     display: "inline-flex",
@@ -100,13 +106,10 @@ export class Polyline extends BaseWidget {
                     left: 0,
                     width: "100%",
                     height: "100%",
-                    userSelect: "none",
-                    position: "absolute",
-                    overflow: "visible",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    outline: this._getElementAreaRawOutlineStyle(),
+                    position: position, // we must use absolute
+                    overflow: overflow,
+                    outline: outline,
+                    backgroundColor: backgroundColor,
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
@@ -116,11 +119,225 @@ export class Polyline extends BaseWidget {
         );
     };
 
-    // ------------------------- polyline ------------------------------------
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
-    calcStrokeDasharray = () => {
-        const lineWidth = this.getAllText()["lineWidth"];
-        switch (this.getAllText()["lineStyle"]) {
+    _ElementLine = () => {
+        const allText = this.getAllText();
+        const smootherize = allText["smootherize"];
+
+        if (this.isSelected() === false && g_widgets1.isEditing() === true) {
+            this.selectedPointIndex = -1;
+        }
+
+        return (
+            <svg
+                width="100%"
+                height="100%"
+                x="0"
+                y="0"
+                style={{
+                    overflow: "visible",
+                }}
+            >
+                {/* arrows */}
+                <this._ElementArrows></this._ElementArrows>
+
+                {/* line */}
+                {smootherize ? (
+                    <this._ElementLineSmootherized></this._ElementLineSmootherized>
+                ) : (
+                    <this._ElementLineSegments></this._ElementLineSegments>
+                )}
+
+                {this.selectedPointIndex === -1 ?
+                    null :
+                    this.isSelected() === false ?
+                        null :
+                        <circle
+                            r={this.getAllText()["lineWidth"] + 3}
+                            cx={this.calcPolylinePoint(this.selectedPointIndex).split(",")[0]}
+                            cy={this.calcPolylinePoint(this.selectedPointIndex).split(",")[1]}
+                            fill={"red"} />
+                }
+
+            </svg>
+        );
+    };
+
+    _ElementArrows = () => {
+        const widgetKey = this.getWidgetKey();
+        const allText = this.getAllText();
+        const length = allText["arrowLength"];
+        const width = allText["arrowWidth"];
+
+        return (
+            <defs>
+                <marker
+                    id={`arrowTail-${widgetKey}`}
+                    viewBox={`0 0 ${length} ${width}`}
+                    refX="0"
+                    refY={`${width / 2}`}
+                    markerUnits="strokeWidth"
+                    markerWidth={`${length}`}
+                    markerHeight={`${width}`}
+                    orient="auto"
+                >
+                    <path
+                        d={`M 0 0 L ${length} ${width / 2} L 0 ${width} z`}
+                        fill={`${this._getElementAreaRawShapeStyle()}`}
+                    />
+                </marker>
+                <marker
+                    id={`arrowHead-${widgetKey}`}
+                    viewBox={`${-1 * length} ${-1 * width} ${2 * length} ${2 * width}`}
+                    refX="0"
+                    refY={`${width / 2}`}
+                    markerUnits="strokeWidth"
+                    markerWidth={`${2 * length}`}
+                    markerHeight={`${2 * width}`}
+                    orient="auto"
+                >
+                    <path
+                        d={`M 0 0 L ${-1 * length} ${width / 2} L 0 ${width} z`}
+                        fill={`${this._getElementAreaRawShapeStyle()}`}
+                    />
+                </marker>
+            </defs>
+
+        )
+    }
+
+    /**
+     * when the line is smootherized, it handles closed and non-closed cases
+     */
+    _ElementLineSmootherized = () => {
+        const allText = this.getAllText();
+        const widgetKey = this.getWidgetKey();
+
+        // line
+        const points = this.generateSmoothPolylinePoints();
+        const lineClosed = allText["closed"];
+        const lineWidth = allText["lineWidth"];
+        const lineColor = this._getElementAreaRawShapeStyle();
+        const dashArray = this.generateStrokeDasharray();
+
+        // arrow
+        const showArrowHead = allText["showArrowHead"];
+        const showArrowTail = allText["showArrowTail"];
+        const markerEnd = showArrowHead ? `url(#arrowTail-${widgetKey})` : "";
+        const markerStart = showArrowTail ? `url(#arrowHead-${widgetKey})` : ""
+
+        // fill
+        const fill = allText["fill"];
+        const fillColor = fill ? this._getElementAreaRawFillStyle() : "none";
+
+        return (
+            <path
+                d={`${points} ${lineClosed ? " z" : ""}`}
+                strokeWidth={lineWidth}
+                stroke={lineColor}
+                strokeDasharray={dashArray}
+                markerEnd={markerEnd}
+                markerStart={markerStart}
+                strokeLinecap={"butt"}
+                fill={fillColor}
+            />
+        )
+    }
+    /**
+     * When line is not smootherized, and closed
+     */
+    _ElementLineSegments = () => {
+
+        const allText = this.getAllText();
+        const widgetKey = this.getWidgetKey();
+
+        // if the line is closed
+        const lineClosed = allText["closed"];
+
+        // line
+        const points = `${this.generatePolylinePoints()}`;
+        const lineWidth = allText["lineWidth"];
+        const lineColor = this._getElementAreaRawShapeStyle();
+        const dashArray = this.generateStrokeDasharray();
+
+        // arrow
+        const showArrowHead = allText["showArrowHead"];
+        const showArrowTail = allText["showArrowTail"];
+        const markerEnd = showArrowHead ? `url(#arrowTail-${widgetKey})` : "";
+        const markerStart = showArrowTail ? `url(#arrowHead-${widgetKey})` : "";
+
+        // fill
+        const fill = allText["fill"];
+        const fillColor = fill ? this._getElementAreaRawFillStyle() : "none"
+
+        if (lineClosed) {
+            return (
+                <polygon
+                    points={points}
+                    strokeWidth={lineWidth}
+                    stroke={lineColor}
+                    strokeDasharray={dashArray}
+                    markerEnd={markerEnd}
+                    markerStart={markerStart}
+                    strokeLinecap={"butt"}
+                    fill={fillColor}
+                ></polygon>
+            )
+        } else {
+            return (
+                <polyline
+                    points={points}
+                    strokeWidth={lineWidth}
+                    stroke={lineColor}
+                    strokeDasharray={dashArray}
+                    markerEnd={markerEnd}
+                    markerStart={markerStart}
+                    strokeLinecap={"butt"}
+                    fill={fillColor}
+                ></polyline>
+            )
+        }
+    }
+
+    /**
+     * indicator for the selected point
+     */
+    _ElementSelectedPoint = () => {
+        if (this.isSelected() === false) {
+            return null;
+        }
+
+        if (g_widgets1.isEditing()) {
+            return null;
+        }
+
+        if (this.selectedPointIndex < 0 || this.selectedPointIndex > this.getPointsRelativeX().length) {
+            return null;
+        }
+
+        return (
+            <circle
+                r={this.getAllText()["lineWidth"] + 3}
+                cx={this.calcPolylinePoint(this.selectedPointIndex).split(",")[0]}
+                cy={this.calcPolylinePoint(this.selectedPointIndex).split(",")[1]}
+                fill={"red"} />
+        )
+    }
+
+    // -------------------- helper functions ----------------
+
+    /**
+     * generate a string that represents the line pattern
+     */
+    generateStrokeDasharray = () => {
+
+        const allText = this.getAllText();
+        const lineWidth = allText["lineWidth"];
+        const lineStyle = allText["lineStyle"];
+
+        switch (lineStyle) {
             case "solid":
                 return ``;
             case "dotted":
@@ -136,32 +353,52 @@ export class Polyline extends BaseWidget {
         }
     };
 
-    generatePolylinePoint = (ii: number): string => {
-        let result = "";
-        const width = this.getAllStyle()["width"];
-        const height = this.getAllStyle()["height"];
-        const coordinate = `${width * this.getPointsRelativeX()[ii]},${height * this.getPointsRelativeY()[ii]}`;
-        result = `${coordinate}`;
-        return result;
+    /**
+     * calculate one point coordinate (in unit of px) inside the widget
+     */
+    calcPolylinePoint = (ii: number): string => {
+        const allStyle = this.getAllStyle();
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+
+        return `${width * this.getPointsRelativeX()[ii]},${height * this.getPointsRelativeY()[ii]}`;
     };
 
 
-    // reading the overall style, use getAllStyle()
+    /**
+     * generate a long string that contains the X and Y coordinates of all points
+     * 
+     * the coordinates are the pixel locations inside the widget
+     */
     generatePolylinePoints = (): string => {
         let result = "";
-        const width = this.getAllStyle()["width"];
-        const height = this.getAllStyle()["height"];
-        for (let ii = 0; ii < this.getPointsRelativeX().length; ii++) {
-            const coordinate = `${width * this.getPointsRelativeX()[ii]},${height * this.getPointsRelativeY()[ii]}`;
-            result = `${result} ${coordinate}`;
+
+        const allStyle = this.getAllStyle();
+
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+        const pointsX = this.getPointsRelativeX();
+        const pointsY = this.getPointsRelativeY();
+
+        for (let ii = 0; ii < pointsX.length; ii++) {
+            const x = width * pointsX[ii];
+            const y = height * pointsY[ii];
+            result = `${result} ${x},${y}`;
         }
         return result;
     };
 
-    // reading the overall style, use getAllStyle()
+    /**
+     * generate a long string that contains the X and Y coordinates of all points
+     * for smooth curve
+     * 
+     * the coordinates are the pixel locations inside the widget
+     */
     generateSmoothPolylinePoints = (): string => {
-        const width = this.getAllStyle()["width"];
-        const height = this.getAllStyle()["height"];
+        const allStyle = this.getAllStyle();
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+
         const pointsX = [];
         const pointsY = [];
         for (let ii = 0; ii < this.getPointsRelativeX().length; ii++) {
@@ -171,178 +408,71 @@ export class Polyline extends BaseWidget {
         return PolylineSmoother.resize(pointsX, pointsY, width, height);
     };
 
-    _ElementLine = () => {
-        const length = this.getAllText()["arrowLength"];
-        const width = this.getAllText()["arrowWidth"];
-        if (this.isSelected() === false && g_widgets1.isEditing() === true) {
-            this.selectedPointIndex = -1;
+    /**
+     * add a new point, the new points are described by global X and Y
+     * 
+     * the widget's top, left, width and height is changed if the new point is beyond the current widget
+     * 
+     * the relative normalized coordinates of points are changed if the widget's width or height is changed
+     */
+    updateWidgetAddPoint = (pointGlobalX: number, pointGlobalY: number, recordHistory: boolean = false) => {
+
+        if (!g_widgets1.isEditing()) {
+            return;
         }
 
-        return (
-            <svg
-                width="100%"
-                height="100%"
-                x="0"
-                y="0"
-                style={{
-                    position: "absolute",
-                    overflow: "visible",
-                    backgroundColor: this._getElementAreaRawBackgroundStyle(),
-                    opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                }}
-            >
-                <defs>
-                    <marker
-                        id={`arrowTail-${this.getWidgetKey()}`}
-                        viewBox={`0 0 ${length} ${width}`}
-                        refX="0"
-                        refY={`${width / 2}`}
-                        markerUnits="strokeWidth"
-                        markerWidth={`${length}`}
-                        markerHeight={`${width}`}
-                        orient="auto"
-                    >
-                        <path
-                            d={`M 0 0 L ${length} ${width / 2} L 0 ${width} z`}
-                            // fill={`${this.getAllText()["lineColor"]}`}
-                            fill={`${this._getElementAreaRawShapeStyle()}`}
-                        />
-                    </marker>
-                    <marker
-                        id={`arrowHead-${this.getWidgetKey()}`}
-                        viewBox={`${-1 * length} ${-1 * width} ${2 * length} ${2 * width}`}
-                        refX="0"
-                        refY={`${width / 2}`}
-                        markerUnits="strokeWidth"
-                        markerWidth={`${2 * length}`}
-                        markerHeight={`${2 * width}`}
-                        orient="auto"
-                    >
-                        <path
-                            d={`M 0 0 L ${-1 * length} ${width / 2} L 0 ${width} z`}
-                            // fill={`${this.getAllText()["lineColor"]}`}
-                            fill={`${this._getElementAreaRawShapeStyle()}`}
-                        />
-                    </marker>
-                </defs>
-                {this.getAllText()["smootherize"] ? (
-                    <path
-                        d={`${this.generateSmoothPolylinePoints()} ${this.getAllText()["closed"] ? " z" : ""}`}
-                        strokeWidth={this.getAllText()["lineWidth"]}
-                        // stroke={this.getAllText()["lineColor"]}
-                        stroke={this._getElementAreaRawShapeStyle()}
-                        strokeDasharray={this.calcStrokeDasharray()}
-                        markerEnd={this.getAllText()["showArrowHead"] ? `url(#arrowTail-${this.getWidgetKey()})` : ""}
-                        markerStart={this.getAllText()["showArrowTail"] ? `url(#arrowHead-${this.getWidgetKey()})` : ""}
-                        strokeLinecap={"butt"}
-                        // fill={this.getAllText()["fill"] ? this.getAllText()["fillColor"] : "none"}
-                        fill={this.getAllText()["fill"] ? this._getElementAreaRawFillStyle() : "none"}
-                    />
-                ) : this.getAllText()["closed"] ? (
-                    <polygon
-                        // points={`${this.generatePolylinePoints()} ${this.getAllText()["closed"] ? " z" : ""}`}
-                        points={`${this.generatePolylinePoints()}`}
-                        strokeWidth={this.getAllText()["lineWidth"]}
-                        // stroke={this.getAllText()["lineColor"]}
-                        stroke={this._getElementAreaRawShapeStyle()}
-                        strokeDasharray={this.calcStrokeDasharray()}
-                        markerEnd={this.getAllText()["showArrowHead"] ? `url(#arrowTail-${this.getWidgetKey()})` : ""}
-                        markerStart={this.getAllText()["showArrowTail"] ? `url(#arrowHead-${this.getWidgetKey()})` : ""}
-                        strokeLinecap={"butt"}
-                        // fill={this.getAllText()["fill"] ? this.getAllText()["fillColor"] : "none"}
-                        fill={this.getAllText()["fill"] ? this._getElementAreaRawFillStyle() : "none"}
-                    ></polygon>
-                ) : (
-                    <polyline
-                        // points={`${this.generatePolylinePoints()} ${this.getAllText()["closed"] ? " z" : ""}`}
-                        points={`${this.generatePolylinePoints()}`}
-                        strokeWidth={this.getAllText()["lineWidth"]}
-                        // stroke={this.getAllText()["lineColor"]}
-                        stroke={this._getElementAreaRawShapeStyle()}
-                        strokeDasharray={this.calcStrokeDasharray()}
-                        markerEnd={this.getAllText()["showArrowHead"] ? `url(#arrowTail-${this.getWidgetKey()})` : ""}
-                        markerStart={this.getAllText()["showArrowTail"] ? `url(#arrowHead-${this.getWidgetKey()})` : ""}
-                        strokeLinecap={"butt"}
-                        // fill={this.getAllText()["fill"] ? this.getAllText()["fillColor"] : "none"}
-                        fill={this.getAllText()["fill"] ? this._getElementAreaRawFillStyle() : "none"}
-                    ></polyline>
-                )}
-                {this.selectedPointIndex === -1 ?
-                    null :
-                    this.isSelected() === false ?
-                        null :
-                        <circle
-                            r={this.getAllText()["lineWidth"] + 3}
-                            cx={this.generatePolylinePoint(this.selectedPointIndex).split(",")[0]}
-                            cy={this.generatePolylinePoint(this.selectedPointIndex).split(",")[1]}
-                            fill={"red"} />
-                }
-
-            </svg>
-        );
-    };
-
-    selectedPointIndex: number = -1;
-
-    // change 2 things for each direction: this.getStyle()["width"], this.getPointsRelativeX()
-    // flush widget
-    // we are changing the style, use this.getStyle() through this function
-    updateWidgetAddPoint = (pointGlobalX: number, pointGlobalY: number, recordHistory: boolean = false) => {
-        const pointX = pointGlobalX - this.getStyle()["left"];
-        const pointY = pointGlobalY - this.getStyle()["top"];
-        const width = this.getStyle()["width"];
-        const height = this.getStyle()["height"];
-
-        // x
-        const maxX = Math.max(width, pointX);
-        if (maxX > width) {
-            const newWidth = maxX;
+        const style = this.getStyle();
+        const pointX = pointGlobalX - style["left"];
+        const pointY = pointGlobalY - style["top"];
+        const width = style["width"];
+        const height = style["height"];
+        console.log(pointX, width, pointY, height)
+        // x, resize the widget 
+        if (pointX > width) {
+            // if new point is on right side of widget
+            const newWidth = pointX;
             this.getStyle()["width"] = newWidth;
             const ratio = width / newWidth;
             for (let ii = 0; ii < this.getPointsRelativeX().length; ii++) {
                 this.getPointsRelativeX()[ii] = this.getPointsRelativeX()[ii] * ratio;
             }
-        }
-
-        if (pointX < 0) {
+            this.getPointsRelativeX().push(1);
+        } else if (pointX < 0) {
+            // if new point is on left side of widget
             this.getStyle()["left"] = this.getStyle()["left"] + pointX;
-            const newWidth = this.getStyle()["width"] - pointX;
+            const newWidth = width - pointX;
             this.getStyle()["width"] = newWidth;
-            const ratio = width / newWidth;
             for (let ii = 0; ii < this.getPointsRelativeX().length; ii++) {
                 this.getPointsRelativeX()[ii] = (this.getPointsRelativeX()[ii] * width - pointX) / newWidth;
             }
             this.getPointsRelativeX().push(0);
         } else {
-            this.getPointsRelativeX().push(pointX / this.getStyle()["width"]);
+            // new point is inside the widget
+            this.getPointsRelativeX().push(pointX / width);
         }
 
         // y
-        const maxY = Math.max(height, pointY);
-        if (maxY >= height) {
-            const newHeight = maxY;
+        if (pointY > height) {
+            const newHeight = pointY;
             this.getStyle()["height"] = newHeight;
             const ratio = height / newHeight;
             for (let ii = 0; ii < this.getPointsRelativeY().length; ii++) {
                 this.getPointsRelativeY()[ii] = this.getPointsRelativeY()[ii] * ratio;
             }
-        }
-
-        if (pointY < 0) {
+            this.getPointsRelativeY().push(1);
+        } else if (pointY < 0) {
             this.getStyle()["top"] = this.getStyle()["top"] + pointY;
-            const newHeight = this.getStyle()["height"] - pointY;
+            const newHeight = height - pointY;
             this.getStyle()["height"] = newHeight;
-            const ratio = height / newHeight;
             for (let ii = 0; ii < this.getPointsRelativeY().length; ii++) {
                 this.getPointsRelativeY()[ii] = (this.getPointsRelativeY()[ii] * height - pointY) / newHeight;
-                // this.getPointsRelativeY()[ii] = this.getPointsRelativeY()[ii] * ratio;
             }
             this.getPointsRelativeY().push(0);
         } else {
-            this.getPointsRelativeY().push(pointY / this.getStyle()["height"]);
+            this.getPointsRelativeY().push(pointY / height);
         }
-        // no history
 
+        // history
         if (recordHistory) {
             const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
             history.registerAction();
@@ -355,19 +485,34 @@ export class Polyline extends BaseWidget {
         g_flushWidgets();
     };
 
-    // change 2 things for each direction: this.getStyle()["width"], this.getPointsRelativeX()
-    // flush widget
-    // we are changing the style, use this.getStyle() through this function
+    /**
+     * delete a point, this point is provided by index in the table
+     * 
+     * widget's left, top, width, and height may be changed if the point was at widget boundary
+     * 
+     * the relative normalized coordinates of points are changed if the widget's width or height is changed
+     */
     updateWidgetRemovePoint = (index: number | undefined = undefined, recordHistory: boolean = false) => {
+
+        if (!g_widgets1.isEditing()) {
+            return;
+        }
+
+        // remove the last point
         if (index === undefined) {
             index = this.getPointsRelativeX().length - 1;
         }
-        const width = this.getStyle()["width"];
-        const height = this.getStyle()["height"];
-        // const pointRelativeX = this.getPointsRelativeX()[this.getPointsRelativeX().length - 1];
-        // const pointRelativeY = this.getPointsRelativeY()[this.getPointsRelativeY().length - 1];
-        // this.getPointsRelativeX().splice(this.getPointsRelativeX().length - 1, 1);
-        // this.getPointsRelativeY().splice(this.getPointsRelativeY().length - 1, 1);
+
+        // index beyond range
+        if (index < 0 || index > this.getPointsRelativeX().length) {
+            return;
+        }
+
+        const style = this.getStyle();
+        const width = style["width"];
+        const height = style["height"];
+        const left = style["left"];
+        const top = style["top"];
         const pointRelativeX = this.getPointsRelativeX()[index];
         const pointRelativeY = this.getPointsRelativeY()[index];
         this.getPointsRelativeX().splice(index, 1);
@@ -375,23 +520,21 @@ export class Polyline extends BaseWidget {
 
         if (pointRelativeX >= 0.999999) {
             let newWidth = width * Math.max(...this.getPointsRelativeX());
-            if (newWidth < this.minWidth) {
-                newWidth = this.minWidth;
+            if (newWidth < this.minSize) {
+                newWidth = this.minSize;
             }
             this.getStyle()["width"] = newWidth;
             const ratio = width / newWidth;
             for (let ii = 0; ii < this.getPointsRelativeX().length; ii++) {
                 this.getPointsRelativeX()[ii] = this.getPointsRelativeX()[ii] * ratio;
             }
-        }
-
-        if (pointRelativeX <= 0.000001) {
+        } else if (pointRelativeX <= 0.000001) {
             let newWidth = width * (1 - Math.min(...this.getPointsRelativeX()));
-            if (newWidth < this.minWidth) {
-                newWidth = this.minWidth;
+            if (newWidth < this.minSize) {
+                newWidth = this.minSize;
             }
 
-            const newLeft = this.getStyle()["left"] + Math.min(...this.getPointsRelativeX()) * width;
+            const newLeft = left + Math.min(...this.getPointsRelativeX()) * width;
             this.getStyle()["width"] = newWidth;
             this.getStyle()["left"] = newLeft;
             const minRelativeX = Math.min(...this.getPointsRelativeX());
@@ -402,8 +545,8 @@ export class Polyline extends BaseWidget {
 
         if (pointRelativeY >= 0.999999) {
             let newHeight = height * Math.max(...this.getPointsRelativeY());
-            if (newHeight < this.minWidth) {
-                newHeight = this.minWidth;
+            if (newHeight < this.minSize) {
+                newHeight = this.minSize;
             }
 
             this.getStyle()["height"] = newHeight;
@@ -411,14 +554,12 @@ export class Polyline extends BaseWidget {
             for (let ii = 0; ii < this.getPointsRelativeY().length; ii++) {
                 this.getPointsRelativeY()[ii] = this.getPointsRelativeY()[ii] * ratio;
             }
-        }
-
-        if (pointRelativeY <= 0.000001) {
+        } else if (pointRelativeY <= 0.000001) {
             let newHeight = height * (1 - Math.min(...this.getPointsRelativeY()));
-            if (newHeight < this.minWidth) {
-                newHeight = this.minWidth;
+            if (newHeight < this.minSize) {
+                newHeight = this.minSize;
             }
-            const newTop = this.getStyle()["top"] + Math.min(...this.getPointsRelativeY()) * height;
+            const newTop = top + Math.min(...this.getPointsRelativeY()) * height;
             this.getStyle()["height"] = newHeight;
             this.getStyle()["top"] = newTop;
             const minRelativeY = Math.min(...this.getPointsRelativeY());
@@ -428,7 +569,6 @@ export class Polyline extends BaseWidget {
             }
         }
 
-        // no history
         if (recordHistory) {
             const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
             history.registerAction();
@@ -441,50 +581,7 @@ export class Polyline extends BaseWidget {
         g_flushWidgets();
     };
 
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
-
-    // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = () => {
-        const value = this._getFirstChannelValue();
-        if (value === undefined) {
-            return "";
-        } else {
-            return value;
-        }
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
-        }
-    };
-
-    // -------------------------- tdl -------------------------------
+    // ---------------------- tdl ---------------------------
 
     static generateDefaultTdl = (): Record<string, any> => {
 
@@ -565,43 +662,17 @@ export class Polyline extends BaseWidget {
         }
         return result;
     }
-    // --------------------- getters -------------------------
 
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getUpdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-    // getRules()
+    // --------------------- getters -------------------------
 
     getPointsRelativeX = (): number[] => {
         return this._pointsRelativeX;
     };
+
     getPointsRelativeY = (): number[] => {
         return this._pointsRelativeY;
     };
 
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {
