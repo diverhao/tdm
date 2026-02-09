@@ -160,7 +160,7 @@ export class LED extends BaseWidget {
 
         // outline
         const outlineColor = this.calcOutlineColor();
-        const outlineWidth = this.isSelected() ? "1" : "0";
+        const outlineWidth = this.isSelected() ? 1 : 0;
 
         return (
             <svg
@@ -187,7 +187,6 @@ export class LED extends BaseWidget {
                     stroke={lineColor}
                     fill={fillColor1}
                 ></path>
-                {/* outline, enabled upon selection */}
                 <rect
                     width={`${width}`}
                     height={`${height}`}
@@ -357,9 +356,9 @@ export class LED extends BaseWidget {
     /**
      * find the index that corresponds to the channel value
      * 
-     * reutrns 0, 1 or undefined
+     * reutrns a number or undefined
      */
-    calcIndex = (): 0 | 1 | undefined => {
+    calcIndex = (): number | undefined => {
         const itemValues = this.getItemValues();
         const channelValue = this._getChannelValue(true);
         // if bit < 0, use whole number
@@ -369,7 +368,7 @@ export class LED extends BaseWidget {
             if (bit < 0) {
                 // use whole value
                 const index = itemValues.indexOf(channelValue);
-                if (index === 0 || index === 1) {
+                if (index >= 0) {
                     return index;
                 } else {
                     return undefined;
@@ -377,7 +376,7 @@ export class LED extends BaseWidget {
             } else {
                 const value = (Math.floor(Math.abs(channelValue)) >> bit) & 0x1;
                 const index = itemValues.indexOf(value);
-                if (index === 0 || index === 1) {
+                if (index >= 0) {
                     return index;
                 } else {
                     return undefined;
@@ -390,18 +389,16 @@ export class LED extends BaseWidget {
     /**
      * find the color that corresponds to the channel value
      */
-    calcItemColor = () => {
+    calcItemColor = (): string => {
         const index = this.calcIndex();
 
-        if (index === 0 || index === 1) {
+        if (index !== undefined) {
             const color = this.getItemColors()[index];
             if (GlobalMethods.isValidRgbaColor(color)) {
                 return color;
             }
-        } else {
-            return this.getAllText()["fallbackColor"];
         }
-
+        return this.getAllText()["fallbackColor"];
     };
 
     /**
@@ -413,7 +410,6 @@ export class LED extends BaseWidget {
 
         const allText = this.getAllText();
         const useChannelItems = allText["useChannelItems"];
-        const fallbackText = allText["fallbackText"];
         const itemNames = this.getItemNames();
 
         if (g_widgets1.isEditing()) {
@@ -425,7 +421,7 @@ export class LED extends BaseWidget {
         }
 
         const index = this.calcIndex();
-        if (index === 0 || index === 1) {
+        if (typeof (index) === "number") {
             if (useChannelItems === true) {
                 try {
                     // find enum choices
@@ -435,21 +431,20 @@ export class LED extends BaseWidget {
                     const numberOfStringsUsed = channel.getNumerOfStringsUsed();
                     if (typeof (numberOfStringsUsed) === "number" && index < numberOfStringsUsed && strs.length >= numberOfStringsUsed) {
                         return strs[index];
-                    } else {
-                        return fallbackText;
                     }
                 } catch (e) {
                     Log.error(e);
-                    return fallbackText;
                 }
             } else {
                 return itemNames[index];
             }
-        } else {
-            return fallbackText;
         }
+        return allText["fallbackText"];
     };
 
+    /**
+     * When the square LED is selected, we want to let the outline standout
+     */
     calcOutlineColor = () => {
         const lineColor = rgbaStrToRgbaArray(this.getAllText()["lineColor"]);
         // same as color collapsible title

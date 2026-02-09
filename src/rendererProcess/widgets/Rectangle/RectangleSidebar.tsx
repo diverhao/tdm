@@ -5,7 +5,7 @@ import { SidebarPolylineFill } from "../../helperWidgets/SidebarComponents/Sideb
 import { SidebarRectangleCornerWidth } from "../../helperWidgets/SidebarComponents/SidebarRectangleCornerWidth";
 import { SidebarRectangleCornerHeight } from "../../helperWidgets/SidebarComponents/SidebarRectangleCornerHeight";
 import { SidebarAlarmBorder } from "../../helperWidgets/SidebarComponents/SidebarAlarmBorder";
-import {Log} from "../../../common/Log";
+import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
@@ -90,28 +90,6 @@ export class RectangleSidebar extends BaseWidgetSidebar {
                     {this.getSidebarAngle().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ---------------- channel -------------------------- */}
-                <this._BlockTitle>
-					<b>Channel</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-                {this.getSidebarChannelName().getElement()}
-					{this.getSidebarAlarmShape().getElement()}
-					{this.getSidebarAlarmFill().getElement()}
-					{this.getSidebarAlarmBackground().getElement()}
-					{this.getSidebarAlarmBorder().getElement()}
-					{this.getSidebarAlarmLevel().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine />
-                {/* ---------------- background -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Background</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* color */}
-                {/* {this.getSidebarBackgroundColor().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
                 {/* ---------------- line -------------------------- */}
                 <this._BlockTitle>
                     <b>Line</b>
@@ -124,16 +102,6 @@ export class RectangleSidebar extends BaseWidgetSidebar {
                     {this.getSidebarLineColor().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* -------------------- Corner radius -------- */}
-                <this._BlockTitle>
-                    <b>Corner</b>
-                </this._BlockTitle>
-                <this._BlockBody>
-                    {this.getSidebarRectangleCornerWidth().getElement()}
-                    {this.getSidebarRectangleCornerHeight().getElement()}
-                </this._BlockBody>
-                <this._HorizontalLine />
-
                 {/* ---------------- filling -------------------------- */}
                 <this._BlockTitle>
                     <b>Filling</b>
@@ -144,49 +112,31 @@ export class RectangleSidebar extends BaseWidgetSidebar {
                     {this.getSidebarInvisibleInOperation().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ------------------- arrow ----------------------------- */}
-                {/* {this.getSidebarLineArrowStyle().getElement()} */}
-                {/* ---------------- points table -------------------------- */}
-                {/* {this.getSidebarPolylinePointsTable().getElement()} */}
-                {/* ---------------- angle -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Angle</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* {this.getSidebarArcAngleStart().getElement()} */}
-                {/* {this.getSidebarArcAngleRange().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
-                {/* ---------------- text -------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Text</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarXAlign().getElement()}
-					{this.getSidebarYAlign().getElement()}
-					{this.getSidebarWrapWord().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
-                {/* ----------------------- font --------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Font</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarFontFamily().getElement()}
-					{this.getSidebarFontSize().getElement()}
-					{this.getSidebarFontStyle().getElement()}
-					{this.getSidebarFontWeight().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
-                {/* ---------------- border -------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Border</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarBorderWidth().getElement()}
-					{this.getSidebarBorderColor().getElement()}
-				</this._BlockBody>{" "}
-				<this._HorizontalLine /> */}
+
+                {/* -------------------- Corner radius -------- */}
+                <this._BlockTitle>
+                    <b>Corner</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarRectangleCornerWidth().getElement()}
+                    {this.getSidebarRectangleCornerHeight().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
+
+                {/* ---------------- channel -------------------------- */}
+                <this._BlockTitle>
+                    <b>Channel</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarChannelName().getElement()}
+                    {this.getSidebarAlarmShape().getElement()}
+                    {this.getSidebarAlarmFill().getElement()}
+                    {this.getSidebarAlarmBackground().getElement()}
+                    {this.getSidebarAlarmBorder().getElement()}
+                    {this.getSidebarAlarmLevel().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
+
                 {/* ------------------------- rules ---------------------------- */}
                 {this.getMainWidget().getRules()?.getElement()}
                 <this._HorizontalLine />
