@@ -3,11 +3,8 @@ import { ByteMonitor } from "./ByteMonitor";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
-// import { SidebarLEDItems } from "../../helperWidgets/SidebarComponents/SidebarLEDItems";
 import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
 import { SidebarLEDShape } from "../../helperWidgets/SidebarComponents/SidebarLEDShape";
-// import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
-// import { SidebarLEDBit } from "../../helperWidgets/SidebarComponents/SidebarLEDBit";
 import { SidebarByteMonitorBitStart } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorBitStart";
 import { SidebarByteMonitorBitLength } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorBitLength";
 import { SidebarByteMonitorBitValueColors } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorBitValueColors";
@@ -153,35 +150,17 @@ export class ByteMonitorSidebar extends BaseWidgetSidebar {
                     {/* color */}
                     {this.getSidebarBackgroundColor().getElement()}
                     {this.getSidebarInvisibleInOperation().getElement()}
-                    {/* {this.getSidebarPictureStretchToFit().getElement()} */}
-                    {/* {this.getSidebarPictureOpacity().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ------------------- File -------------------------- */}
-                {/* {this.getSidebarOpenFile().getElement()} */}
-                {/* <this._HorizontalLine /> */}
                 {/* ---------------- line -------------------------- */}
                 <this._BlockTitle>
                     <b>Line</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {/* {this.getSidebarArcShowRadius().getElement()} */}
-                    {/* {this.getSidebarPolylineClosed().getElement()} */}
                     {this.getSidebarLineWidth().getElement()}
-                    {/* {this.getSidebarLineStyle().getElement()} */}
-                    {/* {this.getSidebarTextColor().getElement()} */}
                     {this.getSidebarLineColor().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ---------------- filling -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Filling</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* {this.getSidebarPolylineFill().getElement()} */}
-                {/* {this.getSidebarPolylineFillColor().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
                 {/* ------------------ appearance ---------------------- */}
                 <this._BlockTitle>
                     <b>Appearance</b>
@@ -193,37 +172,10 @@ export class ByteMonitorSidebar extends BaseWidgetSidebar {
                     {this.getSidebarLEDFallbackColor().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ------------------- arrow ----------------------------- */}
-                {/* {this.getSidebarLineArrowStyle().getElement()} */}
-                {/* ---------------- points table -------------------------- */}
-                {/* {this.getSidebarPolylinePointsTable().getElement()} */}
-                {/* ---------------- angle -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Angle</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* {this.getSidebarArcAngleStart().getElement()} */}
-                {/* {this.getSidebarArcAngleRange().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
-                {/* ---------------- text -------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Text</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarTextColor().getElement()}
-					{this.getSidebarXAlign().getElement()}
-					{this.getSidebarYAlign().getElement()}
-					{this.getSidebarWrapWord().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
                 {/* --------------------------- items -------------------------- */}
                 <this._BlockTitle>
                     <b>Bits</b>
                 </this._BlockTitle>
-                {/* {this.getSidebarChoiceButtonItems().getElement()} */}
-                {/* {this.getSidebarLEDItems().getElement()} */}
-                {/* {this.getSidebarChoiceButtonUseChannelItems().getElement()} */}
                 {this.getSidebarByteMonitorBitStart().getElement()}
                 {this.getSidebarByteMonitorBitLength().getElement()}
                 {this.getSidebarByteMonitorBitValueColors().getElement()}

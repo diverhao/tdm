@@ -13,8 +13,6 @@ export class SymbolSidebar extends BaseWidgetSidebar {
     _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
     _sidebarPictureOpacity: SidebarPictureOpacity;
     _sidebarSymbolItems: SidebarSymbolItems;
-    // _sidebarPolylineFillColor: SidebarPolylineFillColor;
-    // _sidebarPolylineFill: SidebarPolylineFill;
     _sidebarMediaOpenFile: SidebarMediaOpenFile;
 
     beingUpdatedItemIndex: number = -1;
@@ -25,8 +23,6 @@ export class SymbolSidebar extends BaseWidgetSidebar {
         this._sidebarPictureOpacity = new SidebarPictureOpacity(this);
         this._sidebarSymbolItems = new SidebarSymbolItems(this);
         this._sidebarMediaOpenFile = new SidebarMediaOpenFile(this);
-        // this._sidebarPolylineFillColor = new SidebarPolylineFillColor(this);
-        // this._sidebarPolylineFill = new SidebarPolylineFill(this);
     }
 
     getSidebarPictureStretchToFit = () => {
@@ -44,15 +40,7 @@ export class SymbolSidebar extends BaseWidgetSidebar {
     setBeingUpdatedItemIndex = (newIndex: number) => {
         this.beingUpdatedItemIndex = newIndex;
     }
-
-    // getSidebarPolylineFillColor = () => {
-    // 	return this._sidebarPolylineFillColor;
-    // };
-
-    // getSidebarPolylineFill = () => {
-    // 	return this._sidebarPolylineFill;
-    // };
-
+    
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
     updateFromWidget = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => { };
@@ -129,18 +117,6 @@ export class SymbolSidebar extends BaseWidgetSidebar {
                     {this.getSidebarShowPvValue().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ---------------- background -------------------------- */}
-                <this._BlockTitle>
-                    <b>Background</b>
-                </this._BlockTitle>
-                <this._BlockBody>
-                    {/* color */}
-                    {this.getSidebarBackgroundColor().getElement()}
-                    {this.getSidebarPictureStretchToFit().getElement()}
-                    {this.getSidebarPictureOpacity().getElement()}
-                    {this.getSidebarInvisibleInOperation().getElement()}
-                </this._BlockBody>
-                <this._HorizontalLine />
                 {/* ------------------ fallback image ------------------- */}
                 <this._BlockTitle>
                     <b>Fallback image</b>
@@ -157,50 +133,18 @@ export class SymbolSidebar extends BaseWidgetSidebar {
                 {this.getSidebarSymbolItems().getElement()}
                 <this._HorizontalLine />
 
-                {/* ---------------- line -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Line</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* {this.getSidebarArcShowRadius().getElement()} */}
-                {/* {this.getSidebarPolylineClosed().getElement()} */}
-                {/* {this.getSidebarLineWidth().getElement()} */}
-                {/* {this.getSidebarLineStyle().getElement()} */}
-                {/* {this.getSidebarTextColor().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
-                {/* ---------------- filling -------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Filling</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarPolylineFill().getElement()}
-					{this.getSidebarPolylineFillColor().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
-                {/* ------------------- arrow ----------------------------- */}
-                {/* {this.getSidebarLineArrowStyle().getElement()} */}
-                {/* ---------------- points table -------------------------- */}
-                {/* {this.getSidebarPolylinePointsTable().getElement()} */}
-                {/* ---------------- angle -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Angle</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* {this.getSidebarArcAngleStart().getElement()} */}
-                {/* {this.getSidebarArcAngleRange().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
-                {/* ---------------- text -------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Text</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarXAlign().getElement()}
-					{this.getSidebarYAlign().getElement()}
-					{this.getSidebarWrapWord().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
+                {/* ---------------- background -------------------------- */}
+                <this._BlockTitle>
+                    <b>Background</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {/* color */}
+                    {this.getSidebarBackgroundColor().getElement()}
+                    {this.getSidebarPictureStretchToFit().getElement()}
+                    {this.getSidebarPictureOpacity().getElement()}
+                    {this.getSidebarInvisibleInOperation().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
                 {/* ----------------------- font --------------------------- */}
                 <this._BlockTitle>
                     <b>Font</b>
@@ -231,30 +175,10 @@ export class SymbolSidebar extends BaseWidgetSidebar {
         );
     };
 
-    // defined in super class
-    // getElement()
-    // _HorizontalLine()
-    // _BlockBody()
-    // _BlockTitle()
-
     // ---------------------- getters --------------------------
 
-    // defined in super class
-    // getWidgetKey()
-    // getMainWidget()
-    // getUpdateFromSidebar()
-    // getStyle()
-    // getFormStyle()
-    // getInputStyle()
 
     getSidebarMediaOpenFile = () => {
         return this._sidebarMediaOpenFile;
     }
-
-    // ------------------------- style -------------------------
-
-    // defined in super class
-    // _style
-    // _inputStyle
-    // _formStyle
 }

@@ -147,6 +147,7 @@ export const ElementMacrosTableSingleColumnData = (
         headlineName2,
         macrosData, // string[]
         widgetKey,
+        indexOffset,
     }: any
 ) => {
     const [, forceUpdate] = React.useState({});
@@ -210,7 +211,7 @@ export const ElementMacrosTableSingleColumnData = (
                         <ElementMacroTr key={`macros-${item}-${index}`} index={index + 1}>
                             {/* column 1, name */}
                             <ElementMacroTd style={{ width: "40%" }}>
-                                {index}
+                                {index + indexOffset}
                             </ElementMacroTd>
                             {/* column 2, value */}
                             <ElementMacroTd

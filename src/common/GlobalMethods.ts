@@ -863,3 +863,10 @@ export const deepMerge = (obj1: any, obj2: any): any => {
 export const generateWidgetKey = (type: string) => {
     return `${type}_${uuidv4()}`
 }
+
+export const truncateString = (str: string, length: number = 3) => {
+    if (str && str.length > length) {
+        return str.substring(0, length) + '...';
+    }
+    return str;
+};

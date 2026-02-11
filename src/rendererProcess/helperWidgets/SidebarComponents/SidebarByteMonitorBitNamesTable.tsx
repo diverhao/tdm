@@ -42,6 +42,7 @@ export class SidebarByteMonitorBitNamesTable extends SidebarComponent {
                             headlineName2={"Bit name"}
                             macrosData={mainWidget.getBitNames()}
                             widgetKey={this.getWidgetKey()}
+                            indexOffset={this.getMainWidget().getAllText()["bitStart"]}
                         >
                         </ElementMacrosTableSingleColumnData>
                     </div>

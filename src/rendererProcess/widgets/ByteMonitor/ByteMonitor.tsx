@@ -488,6 +488,9 @@ export class ByteMonitor extends BaseWidget {
         return result;
     };
 
+    /**
+     * For square LED: when the widget is selected, the outline should be highlighted
+     */
     calcOutlineColor = () => {
         const lineColor = rgbaStrToRgbaArray(this.getAllText()["lineColor"]);
         // same as color collapsible title
