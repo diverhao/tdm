@@ -2086,6 +2086,47 @@ export abstract class BaseWidget {
         }
     }
 
+
+    /**
+     * calculate the first PV's limits for display
+     * 
+     * the widget must have minPvValue, maxPvValue and usePvLimits fields
+     * 
+     * default return value is [0, 100]
+     */
+    calcPvLimits = (): [number, number] => {
+        const allText = this.getAllText();
+
+        let minPvValue = allText["minPvValue"];
+        let maxPvValue = allText["maxPvValue"];
+        const usePvLimits = allText["usePvLimits"];
+
+        if (typeof minPvValue !== "number" || typeof maxPvValue !== "number" || typeof usePvLimits !== "boolean") {
+            return [0, 100];
+        }
+
+        if (usePvLimits === true) {
+            const channelName = this.getChannelNames()[0];
+            try {
+                const channel = g_widgets1.getTcaChannel(channelName);
+                const upper_display_limit = channel.getUpperDisplayLimit();
+                if (typeof upper_display_limit === "number") {
+                    maxPvValue = upper_display_limit;
+                }
+                const lower_display_limit = channel.getLowerDisplayLimit();
+                if (typeof lower_display_limit === "number") {
+                    minPvValue = lower_display_limit;
+                }
+            } catch (e) {
+                Log.error(e);
+            }
+
+        }
+
+        return [minPvValue, maxPvValue];
+    };
+
+
     // -------------------- putters ----------------------------------
 
     /**

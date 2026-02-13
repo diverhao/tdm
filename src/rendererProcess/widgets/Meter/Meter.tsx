@@ -429,7 +429,7 @@ export class Meter extends BaseWidget {
         // }
         // return result;
         const numTickIntervals = this.getAllText()["numTickIntervals"] + 1;
-        return calcTicks(valueMin, valueMax, numTickIntervals + 1, "linear");
+        return calcTicks(valueMin, valueMax, numTickIntervals + 1, {scale: "Linear"});
     };
 
 

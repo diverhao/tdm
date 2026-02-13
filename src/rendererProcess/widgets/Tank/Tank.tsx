@@ -1,17 +1,12 @@
 import * as React from "react";
-import { MouseEvent } from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
-import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { TankSidebar } from "./TankSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { TankRules } from "./TankRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../common/Log";
-import { ChannelSeverity } from "../../channel/TcaChannel";
 import { refineTicks, calcTicks } from "../../../common/GlobalMethods";
 
 
@@ -29,8 +24,6 @@ export type type_Tank_tdl = {
 export class Tank extends BaseWidget {
     _rules: TankRules;
 
-    readonly pi = 3.1415926;
-
     constructor(widgetTdl: type_Tank_tdl) {
         super(widgetTdl);
         this.initStyle(widgetTdl);
@@ -42,7 +35,6 @@ export class Tank extends BaseWidget {
 
     // ------------------------------ elements ---------------------------------
 
-    // Body + sidebar
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -55,30 +47,23 @@ export class Tank extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this._sidebar?.getElement() : null}
-                </>
+                <div style={this.getElementBodyRawStyle()}>
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this._sidebar?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    // Text area and resizers
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+        const allText = this.getAllText();
+        const whiteSpace = allText.wrapWord ? "normal" : "pre";
+        const outline = this._getElementAreaRawOutlineStyle();
+        const color = this._getElementAreaRawTextStyle();
+        const backgroundColor = this._getElementAreaRawBackgroundStyle();
+
         return (
-            // <div
             <div
                 style={{
                     display: "inline-flex",
@@ -87,64 +72,38 @@ export class Tank extends BaseWidget {
                     width: "100%",
                     height: "100%",
                     userSelect: "none",
-                    // overflow: "show",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    // justifyContent: this.getAllText().horizontalAlign,
-                    // alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllStyle().fontFamily,
-                    fontSize: this.getAllStyle().fontSize,
-                    fontStyle: this.getAllStyle().fontStyle,
-                    fontWeight: this.getAllStyle().fontWeight,
-                    outline: this._getElementAreaRawOutlineStyle(),
-                    color: this._getElementAreaRawTextStyle(),
-                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
+                    whiteSpace: whiteSpace,
+                    outline: outline,
+                    color: color,
+                    backgroundColor: backgroundColor,
+                    position: "relative",
+                    flexDirection: "row",
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                <this._ElementTank></this._ElementTank>
+                <this._ElementScaleLeft></this._ElementScaleLeft>
+                <this._ElementWater></this._ElementWater>
+                <this._ElementScaleRight></this._ElementScaleRight>
             </div>
-            // </div>
         );
     };
 
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    _ElementTank = () => {
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    position: "relative",
-                    flexDirection: "row",
-                    width: "100%",
-                    height: "100%",
-                    opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                }}
-            >
-                {this.getAllText()["scalePosition"] === "left" ? this.getAllText()["showLabels"] === true ? <this._ElementScaleLeft></this._ElementScaleLeft> : null : null}
-                <this._ElementWater></this._ElementWater>
-                {this.getAllText()["scalePosition"] === "left" ? null : this.getAllText()["showLabels"] === true ? <this._ElementScaleRight></this._ElementScaleRight> : null}
-            </div>
-        );
-    };
 
 
     _ElementWater = () => {
-        const severity = g_widgets1.getChannelSeverity(this.getChannelNames()[0]);
-        // let waterColor = this.getAllText()["fillColor"];
-        // if (severity === ChannelSeverity.INVALID) {
-        //     waterColor = this.getAllText()["fillColorInvalid"];;
-        // }
-        // else if (severity === ChannelSeverity.MAJOR) {
-        //     waterColor = this.getAllText()["fillColorMajor"];;
-        // }
-        // else if (severity === ChannelSeverity.MINOR) {
-        //     waterColor = this.getAllText()["fillColorMinor"];;
-        // }
+        const allText = this.getAllText();
+        const allStyle = this.getAllStyle();
+        const width = allStyle["width"];
+        const fontSize = allStyle["fontSize"];
+        const showLabels = allText["showLabels"];
+        const tankColor = this._getElementAreaRawContainerStyle();
+        const tankWidth = showLabels === true ? width - (fontSize + 10 + 2) : "100%";
+        const waterColor = this._getElementAreaRawFillStyle();
+        const waterHeight = this.calcWaterLevel();
+
         return (
             <div
                 style={{
@@ -154,20 +113,19 @@ export class Tank extends BaseWidget {
                     justifyContent: "flex-end",
                     alignItems: "flex-start",
                     height: "100%",
-                    // 10 is scaleTickSize, 2 is extra space for scale line
-                    width: this.getAllText()["showLabels"] === true ? this.getAllStyle()["width"] - (this.getAllStyle()["fontSize"] + 10 + 2) : "100%",
-                    // backgroundColor: this.getAllText()["backgroundColor"],
-                    backgroundColor: this._getElementAreaRawContainerStyle(),
+                    width: tankWidth,
+                    backgroundColor: tankColor,
                     borderRadius: 0,
+                    // use all available space
+                    flex: 1,
+                    minWidth: 0,
                 }}
             >
-                {/* water */}
                 <div
                     style={{
-                        height: this.calcWaterLevel(),
+                        height: waterHeight,
                         width: "100%",
-                        // backgroundColor: waterColor,
-                        backgroundColor: this._getElementAreaRawFillStyle(),
+                        backgroundColor: waterColor,
                         borderRadius: 0,
                     }}
                 ></div>
@@ -175,383 +133,244 @@ export class Tank extends BaseWidget {
         );
     };
 
-    /**
-     * Line, ticks, and values
-     */
     _ElementScaleLeft = () => {
+        const allText = this.getAllText();
+        const allStyle = this.getAllStyle();
+        const scalePosition = allText["scalePosition"];
+        const showLabels = allText["showLabels"];
 
-        // including: 2px blank on top, horizontal line width, and ticks
-        const scaleTickSize = 10;
-        const fontSize = this.getAllStyle()["fontSize"];
-        const fullSize = this.getAllStyle()["height"];
-        const numTickIntervals = this.getAllText()["numTickIntervals"];
-        const elementRef = React.useRef<any>(null);
-
-        const calcTickValues = () => {
-            const result: number[] = [];
-            const [valueMin, valueMax] = this.calcPvLimits();
-            // const dValue = (valueMax - valueMin) / numTickIntervals;
-            // for (let ii = 0; ii <= numTickIntervals; ii++) {
-            //     result.push(valueMin + dValue * ii);
-            // }
-            // return result;
-            return calcTicks(valueMin, valueMax, numTickIntervals + 1, "linear");
+        // if position not on left or not showing label, return null
+        if (!(scalePosition === "left" && showLabels === true)) {
+            return null;
         }
 
-        /**
-         * Calculate tick position in unit of pixel
-         * 
-         * Small tick value has larger position value, the position has larger value on the bottom
-         */
+        const elementRef = React.useRef<any>(null);
 
-        const calcTickPositions = (): number[] => {
-            let useLog10Scale = this.getAllText()["scale"] === "Log10" ? true : false;
-            const result: number[] = [];
+        const fontSize = allStyle["fontSize"];
+        const scaleLength = allStyle["height"];
+        const numTickIntervals = allText["numTickIntervals"];
+        const scale = allText["scale"];
 
-            if (useLog10Scale) {
-                const tickValues = calcTickValues();
-                let [minPvValue, maxPvValue] = this.calcPvLimits();
-                minPvValue = Math.log10(minPvValue);
-                maxPvValue = Math.log10(maxPvValue);
-                for (let tickValue of tickValues) {
-                    tickValue = Math.log10(tickValue);
-                    if (minPvValue === Infinity || minPvValue === -Infinity || isNaN(minPvValue)) {
-                        minPvValue = 0
-                    }
-                    if (maxPvValue === Infinity || maxPvValue === -Infinity || isNaN(maxPvValue)) {
-                        maxPvValue = 0
-                    }
-                    if (tickValue === Infinity || tickValue === -Infinity || isNaN(tickValue)) {
-                        tickValue = 0
-                    }
-                    result.push((1 - ((tickValue - minPvValue) / (maxPvValue - minPvValue))) * fullSize);
-                }
-            } else {
-                const d = fullSize / numTickIntervals;
-                for (let ii = 0; ii <= numTickIntervals; ii++) {
-                    result.push(fullSize - ii * d);
-                }
-            }
-            return result;
-        };
-
-
-        const refinedTicks = refineTicks(calcTickValues(), this.getAllStyle()["fontSize"] * 0.5, elementRef, "vertical");
-
+        const [valueMin, valueMax] = this.calcPvLimits();
+        const tickValues = calcTicks(valueMin, valueMax, numTickIntervals + 1, { scale: scale });
+        const tickPositions = GlobalMethods.calcTickPositions(tickValues, valueMin, valueMax, scaleLength, { scale: scale });
+        const refinedTicks = refineTicks(tickValues, fontSize * 0.5, elementRef, "vertical");
         return (
             <div
                 ref={elementRef}
                 style={{
                     height: "100%",
-                    // scale height, it is used in calculating the tank container height
-                    width: this.getAllStyle()["fontSize"] + scaleTickSize + 2,
                     position: "relative",
                     display: "inline-flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
+                    flexDirection: "row",
+                    justifyContent: "flex-end",
                     alignItems: "center",
                 }}
             >
-                {/* ticks and line */}
-                <svg
-                    width="100%"
-                    height="100%"
-                    x="0"
-                    y="0"
-                    style={{
-                        position: "absolute",
-                        overflow: "visible",
-                    }}
-                >
-                    {/* line, 2px gap above */}
-                    <path
-                        d={`M ${scaleTickSize + fontSize} 0 L ${scaleTickSize + fontSize} ${fullSize}`}
-                        strokeWidth="2"
-                        stroke={this._getElementAreaRawTextStyle()}
-                        fill="none"
-                    ></path>
 
-                    {/* ticks */}
-                    {calcTickPositions().map((position: number, index: number) => {
-                        if (this.getAllText()["compactScale"]) {
-                            if (!(index === 0 || index === this.getAllText()["numTickIntervals"])) {
-                                return null;
-                            }
-                        }
-
-                        return (
-                            <>
-                                <path
-                                    d={`M ${2 + fontSize} ${position} L ${scaleTickSize + fontSize} ${position}`}
-                                    strokeWidth="2"
-                                    stroke={this._getElementAreaRawTextStyle()}
-                                    fill="none"
-                                ></path>
-                            </>
-                        );
-                    })}
-                </svg>
                 {/* labels */}
-                {calcTickPositions().map((value: number, index: number) => {
-                    if (this.getAllText()["compactScale"]) {
-                        if (!(index === 0 || index === this.getAllText()["numTickIntervals"])) {
-                            return null;
-                        }
-                    }
+                <this._ElementLabels
+                    tickPositions={tickPositions}
+                    refinedTicks={refinedTicks}
+                >
+                </this._ElementLabels>
 
-                    return (
-                        <div
-                            style={{
-                                position: "absolute",
-                                transform: "rotate(270deg)",
-                                top: value,
-                                // left: scaleTickSize,
-                                left: 2,
-                                width: 0,
-                                height: 0,
-                                display: "inline-flex",
-                                alignItems: "flex-start",
-                                justifyContent: index === 0 ? "flex-start" : index === this.getAllText()["numTickIntervals"] ? "flex-end" : "center",
-                                // color: this._getElementAreaRawTextStyle(),
-                            }}
-                        >
-                            {this.getAllText()["showScaleInnerLabel"] === true ? refinedTicks[index] : (index === 0 || index === this.getAllText()["numTickIntervals"]) ? refinedTicks[index] : ""}
-                        </div>
-                    );
-                })}
-                {(() => {
-                    if (this.getAllText()["compactScale"]) {
-                        return (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    transform: "rotate(270deg)",
-                                    top: fullSize / 2,
-                                    left: scaleTickSize,
-                                    width: 0,
-                                    height: 0,
-                                    display: "inline-flex",
-                                    alignItems: "flex-start",
-                                    justifyContent: "center",
-                                    // color: this._getElementAreaRawTextStyle(),
-                                }}
-                            >
-                                {`${this._getChannelValue()}`}
-                            </div>
-                        );
-                    } else {
-                        return null;
-                    }
-                })()}
+                {/* ticks */}
+                <this._ElementTicks
+                    tickPositions={tickPositions}
+                >
+                </this._ElementTicks>
 
+                {/* base axis */}
+                <this._ElementAxis></this._ElementAxis>
             </div>
         );
     };
 
     /**
-     * Line, ticks, and values
+     * the only difference with _ElementScaleLeft is the sequence of labels, ticks and axis
      */
     _ElementScaleRight = () => {
+        const allText = this.getAllText();
+        const allStyle = this.getAllStyle();
+        const scalePosition = allText["scalePosition"];
+        const showLabels = allText["showLabels"];
 
-        // including: 2px blank on top, horizontal line width, and ticks
-        const scaleTickSize = 10;
-        const fullSize = this.getAllStyle()["height"];
-        const numTickIntervals = this.getAllText()["numTickIntervals"];
-        const elementRef = React.useRef<any>(null);
-
-        const calcTickValues = () => {
-            const result: number[] = [];
-            const [valueMin, valueMax] = this.calcPvLimits();
-            // const dValue = (valueMax - valueMin) / numTickIntervals;
-            // for (let ii = 0; ii <= numTickIntervals; ii++) {
-            //     result.push(valueMin + dValue * ii);
-            // }
-            // return result;
-            return calcTicks(valueMin, valueMax, numTickIntervals + 1, "linear");
+        // if position not on left or not showing label, return null
+        if (!(scalePosition === "right" && showLabels === true)) {
+            return null;
         }
 
-        /**
-         * Calculate tick position in unit of pixel
-         * 
-         * Small tick value has larger position value, the position has larger value on the bottom
-         */
-        const calcTickPositions = (): number[] => {
+        const elementRef = React.useRef<any>(null);
 
-            let useLog10Scale = this.getAllText()["scale"] === "Log10" ? true : false;
-            const result: number[] = [];
+        const fontSize = allStyle["fontSize"];
+        const scaleLength = allStyle["height"];
+        const numTickIntervals = allText["numTickIntervals"];
+        const scale = allText["scale"];
 
-            if (useLog10Scale) {
-                const tickValues = calcTickValues();
-                let [minPvValue, maxPvValue] = this.calcPvLimits();
-                minPvValue = Math.log10(minPvValue);
-                maxPvValue = Math.log10(maxPvValue);
-                for (let tickValue of tickValues) {
-                    tickValue = Math.log10(tickValue);
-                    if (minPvValue === Infinity || minPvValue === -Infinity || isNaN(minPvValue)) {
-                        minPvValue = 0
-                    }
-                    if (maxPvValue === Infinity || maxPvValue === -Infinity || isNaN(maxPvValue)) {
-                        maxPvValue = 0
-                    }
-                    if (tickValue === Infinity || tickValue === -Infinity || isNaN(tickValue)) {
-                        tickValue = 0
-                    }
-                    result.push((1 - ((tickValue - minPvValue) / (maxPvValue - minPvValue))) * fullSize);
-                }
-            } else {
-                const d = fullSize / numTickIntervals;
-                for (let ii = 0; ii <= numTickIntervals; ii++) {
-                    result.push(fullSize - ii * d);
-                }
-            }
-            return result;
-        };
-
-        const refinedTicks = refineTicks(calcTickValues(), this.getAllStyle()["fontSize"] * 0.5, elementRef, "vertical");
+        const [valueMin, valueMax] = this.calcPvLimits();
+        const tickValues = calcTicks(valueMin, valueMax, numTickIntervals + 1, { scale: scale });
+        const tickPositions = GlobalMethods.calcTickPositions(tickValues, valueMin, valueMax, scaleLength, { scale: scale });
+        const refinedTicks = refineTicks(tickValues, fontSize * 0.5, elementRef, "vertical");
 
         return (
             <div
                 ref={elementRef}
                 style={{
                     height: "100%",
-                    // scale height, it is used in calculating the tank container height
-                    width: this.getAllStyle()["fontSize"] + scaleTickSize,
                     position: "relative",
                     display: "inline-flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
+                    flexDirection: "row",
+                    justifyContent: "flex-end",
                     alignItems: "center",
                 }}
             >
-                {/* ticks and line */}
-                <svg
-                    width="100%"
-                    height="100%"
-                    x="0"
-                    y="0"
-                    style={{
-                        position: "absolute",
-                        overflow: "visible",
-                    }}
+
+                {/* base axis */}
+                <this._ElementAxis></this._ElementAxis>
+
+                {/* ticks */}
+                <this._ElementTicks
+                    tickPositions={tickPositions}
                 >
-                    {/* line, 2px gap above */}
-                    <path
-                        d={`M 2 0 L 2 ${fullSize}`}
-                        strokeWidth="2"
-                        // stroke={this.getAllStyle()["color"]}
-                        stroke={this._getElementAreaRawTextStyle()}
-                        fill="none"
-                    ></path>
+                </this._ElementTicks>
 
-                    {/* ticks */}
-                    {calcTickPositions().map((position: number, index: number) => {
-                        if (this.getAllText()["compactScale"]) {
-                            if (!(index === 0 || index === this.getAllText()["numTickIntervals"])) {
-                                return null;
-                            }
-                        }
-
-                        return (
-                            <>
-                                <path
-                                    d={`M 2 ${position} L ${scaleTickSize} ${position}`}
-                                    strokeWidth="2"
-                                    // stroke={this.getAllStyle()["color"]}
-                                    stroke={this._getElementAreaRawTextStyle()}
-                                    fill="none"
-                                ></path>
-                            </>
-                        );
-                    })}
-                </svg>
                 {/* labels */}
-                {calcTickPositions().map((value: number, index: number) => {
-                    if (this.getAllText()["compactScale"]) {
-                        if (!(index === 0 || index === this.getAllText()["numTickIntervals"])) {
-                            return null;
-                        }
-                    }
-
-                    return (
-                        <div
-                            style={{
-                                position: "absolute",
-                                transform: "rotate(270deg)",
-                                top: value,
-                                left: scaleTickSize,
-                                width: 0,
-                                height: 0,
-                                display: "inline-flex",
-                                alignItems: "flex-start",
-                                justifyContent: index === 0 ? "flex-start" : index === this.getAllText()["numTickIntervals"] ? "flex-end" : "center",
-                                // color: this.getAllStyle()["color"],
-                            }}
-                        >
-                            {this.getAllText()["showScaleInnerLabel"] === true ? refinedTicks[index] : (index === 0 || index === this.getAllText()["numTickIntervals"]) ? refinedTicks[index] : ""}
-                            {/* {refinedTicks[index]} */}
-                        </div>
-                    );
-                })}
-                {(() => {
-                    if (this.getAllText()["compactScale"]) {
-                        return (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    transform: "rotate(270deg)",
-                                    top: fullSize / 2,
-                                    left: scaleTickSize,
-                                    width: 0,
-                                    height: 0,
-                                    display: "inline-flex",
-                                    alignItems: "flex-start",
-                                    justifyContent: "center",
-                                    // color: this.getAllStyle()["color"],
-                                }}
-                            >
-                                {`${this._getChannelValue()}`}
-                            </div>
-                        );
-                    } else {
-                        return null;
-                    }
-                })()}
+                <this._ElementLabels
+                    tickPositions={tickPositions}
+                    refinedTicks={refinedTicks}
+                >
+                </this._ElementLabels>
 
             </div>
         );
     };
 
-    // -------------------------- Meter stuff ----------------------
+    _ElementAxis = () => {
+        const scaleColor = this._getElementAreaRawTextStyle();
+        const scaleLength = this.getAllStyle()["height"];
+        return (
+            <svg
+                width={`2px`}
+                height="100%"
+                style={{
+                    overflow: "visible",
+                }}
+            >
+                <path
+                    d={`M 1 0 L 1 ${scaleLength}`}
+                    strokeWidth="2"
+                    stroke={scaleColor}
+                    fill="none"
+                >
+                </path>
+            </svg>
+        )
+    }
 
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
+    _ElementTicks = ({ tickPositions }: any) => {
+        return (
+            <svg
+                width={`10px`}
+                height="100%"
+                style={{
+                    overflow: "visible",
+                }}
+            >
+                {tickPositions.map((position: number, index: number) => {
+                    return (
+                        <this._ElementTick
+                            position={position}
+                        ></this._ElementTick>
+                    )
+                })}
+            </svg>
 
-    // ------------------ element helper functions -----------
+        )
+    }
 
-    calcPvLimits = (): [number, number] => {
-        let minPvValue = this.getAllText()["minPvValue"];
-        let maxPvValue = this.getAllText()["maxPvValue"];
-        const channelName = this.getChannelNames()[0];
-        try {
-            const channel = g_widgets1.getTcaChannel(channelName);
-            if (this.getAllText()["usePvLimits"]) {
-                const upper_display_limit = channel.getUpperDisplayLimit();
-                if (upper_display_limit !== undefined && typeof upper_display_limit === "number") {
-                    maxPvValue = upper_display_limit;
-                }
-                const lower_display_limit = channel.getLowerDisplayLimit();
-                if (lower_display_limit !== undefined && typeof lower_display_limit === "number") {
-                    minPvValue = lower_display_limit;
-                }
+    _ElementTick = ({ position }: any) => {
+        const scaleTickSize = 10;
+        const scaleColor = this._getElementAreaRawTextStyle();
+
+        return (
+            <path
+                d={`M 0 ${position} L ${scaleTickSize} ${position}`}
+                strokeWidth="2"
+                stroke={scaleColor}
+                fill="none"
+            ></path>
+        )
+    }
+
+    _ElementLabels = ({ tickPositions, refinedTicks }: any) => {
+        const allStyle = this.getAllStyle();
+        const fontSize = allStyle["fontSize"];
+
+        return (
+            <div
+                style={{
+                    width: fontSize + 10,
+                    height: "100%",
+                    position: "relative",
+                }}
+            >
+                {tickPositions.map((position: number, index: number) => {
+                    const text = refinedTicks[index];
+                    const numTicks = tickPositions.length;
+                    return (
+                        <this._ElementLabel
+                            position={position}
+                            text={text}
+                            index={index}
+                            numTicks={numTicks}
+                        ></this._ElementLabel>
+                    )
+                })}
+            </div>
+
+        )
+    }
+
+    _ElementLabel = ({ position, text, index, numTicks }: any) => {
+
+        const allText = this.getAllText();
+        const compactScale = allText["compactScale"];
+        const scaleColor = this._getElementAreaRawTextStyle();
+
+        if (compactScale) {
+            if (!(index === 0 || index === numTicks - 1)) {
+                return null;
             }
-        } catch (e) {
-            Log.error(e);
         }
-        return [minPvValue, maxPvValue];
-    };
+
+        // the first and last label are within the tick area
+        const justifyContent = index === 0 ? "flex-start" : index === numTicks - 1 ? "flex-end" : "center";
+
+        return (
+            <div
+                style={{
+                    position: "absolute",
+                    transform: "rotate(270deg)",
+                    top: position,
+                    left: 2,
+                    width: 0,
+                    height: 0,
+                    display: "inline-flex",
+                    alignItems: "flex-start",
+                    justifyContent: justifyContent,
+                    color: scaleColor,
+                }}
+            >
+                {text}
+            </div>
+
+        )
+    }
+
+
+
+    // ------------------  helper functions -----------
 
     /**
      * Calculate water level, return pixel <br>
@@ -563,22 +382,22 @@ export class Tank extends BaseWidget {
             return this.getAllStyle()["height"] * 0.33;
         }
 
-        let useLog10Scale = this.getAllText()["scale"] === "Log10" ? true : false;
+        const allStyle = this.getAllStyle();
+        const allText = this.getAllText();
+        const height = allStyle["height"];
+        const scale = allText["scale"];
 
+        let useLog10Scale = scale === "Log10" ? true : false;
         let result: number = 0;
-        const fullSize = this.getAllStyle()["height"];
-
+        
         let channelValue = this._getChannelValue(true);
 
         if (typeof channelValue === "number") {
             let [minPvValue, maxPvValue] = this.calcPvLimits();
-            // Log10
             if (useLog10Scale) {
                 minPvValue = Math.log10(minPvValue);
                 maxPvValue = Math.log10(maxPvValue);
                 channelValue = Math.log10(channelValue);
-            }
-            if (useLog10Scale) {
                 if (minPvValue === Infinity || minPvValue === -Infinity || isNaN(minPvValue)) {
                     minPvValue = 0
                 }
@@ -589,80 +408,13 @@ export class Tank extends BaseWidget {
                     channelValue = 0
                 }
             }
-            result = ((channelValue - minPvValue) / (maxPvValue - minPvValue)) * fullSize;
+            result = ((channelValue - minPvValue) / (maxPvValue - minPvValue)) * height;
         }
-        result = Math.min(Math.max(result, 0), fullSize);
+        result = Math.min(Math.max(result, 0), height);
 
         return result;
     };
 
-
-    // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    // _getChannelValue = (raw: boolean = false) => {
-    //     return this.getChannelValueForMonitorWidget(raw);
-    // };
-
-    // what is it used for?
-    _getChannelValue1 = (raw: boolean = false) => {
-        const channelValue = this.getChannelValueForMonitorWidget(raw);
-        if (typeof channelValue === "number") {
-            const scale = Math.max(this.getAllText()["scale"], 0);
-            const format = this.getAllText()["format"];
-            if (format === "decimal") {
-                return channelValue.toFixed(scale);
-            } else if (format === "default") {
-                const channelName = this.getChannelNames()[0];
-                const defaultScale = g_widgets1.getChannelPrecision(channelName);
-                if (defaultScale !== undefined) {
-                    return channelValue.toFixed(defaultScale);
-                } else {
-                    return channelValue.toFixed(scale);
-                }
-            } else if (format === "exponential") {
-                return channelValue.toExponential(scale);
-            } else if (format === "hexadecimal") {
-                return `0x${channelValue.toString(16)}`;
-            } else {
-                return channelValue;
-            }
-        } else {
-            return channelValue;
-        }
-    };
-
-
-    _getChannelValue = (raw: boolean = false) => {
-        const value = this._getFirstChannelValue(raw);
-        if (value === undefined) {
-            return "";
-        } else {
-            return value;
-        }
-    };
-
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
-        }
-    };
 
     // -------------------------- tdl -------------------------------
 
@@ -708,32 +460,15 @@ export class Tank extends BaseWidget {
                 useLogScale: false,
                 // tank and water colors
                 fillColor: "rgba(0,200,0,1)",
-                // fillColorMinor: "rgba(255, 150, 100, 1)",
-                // fillColorMajor: "rgba(255,0,0,1)",
-                // fillColorInvalid: "rgba(200,0,200,1)",
                 containerColor: "rgba(210,210,210,1)",
-                // layout
-                // direction: "vertical",
-                // dialPercentage: 75,
-                // labelPositionPercentage: 15,
-                // tick config
                 showLabels: true,
-                // dialFontColor: "rgba(0,0,255,1)",
-                // dialFontFamily: "Liberation Sans",
-                // dialFontSize: 14,
-                // dialFontStyle: "normal",
-                // dialFontWeight: "normal",
                 invisibleInOperation: false,
                 // decimal, exponential, hexadecimal
                 format: "default",
-                // scale, >= 0
-                // scale: 0,
                 numTickIntervals: 5,
                 compactScale: false,
                 // "left" | "right"
                 scalePosition: "right",
-                // show inner labels
-                showScaleInnerLabel: true,
                 displayScale: "Linear", // "Linear" | "Log10"
                 alarmContainer: false,
                 alarmFill: false,

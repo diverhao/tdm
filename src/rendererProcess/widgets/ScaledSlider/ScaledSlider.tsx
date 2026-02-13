@@ -971,7 +971,7 @@ export class ScaledSlider extends BaseWidget {
 
         const calcTickValues = () => {
             const [valueMin, valueMax] = pvLimits;
-            return calcTicks(valueMin, valueMax, this.getAllText()["numTickIntervals"] + 1, "linear");
+            return calcTicks(valueMin, valueMax, this.getAllText()["numTickIntervals"] + 1, {scale: "Linear"});
         };
         const tickValues = calcTickValues();
 
@@ -1116,7 +1116,7 @@ export class ScaledSlider extends BaseWidget {
         // the number of ticks may be different from the (this.getAllText()["numTickIntervals"] + 1)
         const calcTickValues = () => {
             const [valueMin, valueMax] = pvLimits;
-            return calcTicks(valueMin, valueMax, this.getAllText()["numTickIntervals"] + 1, "linear");
+            return calcTicks(valueMin, valueMax, this.getAllText()["numTickIntervals"] + 1, {scale: "Linear"});
         };
         const tickValues = calcTickValues();
 

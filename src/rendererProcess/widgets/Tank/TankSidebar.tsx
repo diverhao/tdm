@@ -18,7 +18,6 @@ export class TankSidebar extends BaseWidgetSidebar {
     _sidebarProgressBarBackgroundColor: SidebarProgressBarBackgroundColor;
     _sidebarScaledSliderNumTickIntervals: SidebarScaledSliderNumTickIntervals;
     _sidebarTankShowLabels: SidebarTankShowLabels;
-    // _sidebarScaledSliderShowScale: SidebarScaledSliderShowScale;
     _sidebarScaledSliderCompactScale: SidebarScaledSliderCompactScale;
     _sidebarTankScalePosition: SidebarTankScalePosition;
     _sidebarTankShowScaleInnerLabel: SidebarTankShowScaleInnerLabel;
@@ -29,7 +28,6 @@ export class TankSidebar extends BaseWidgetSidebar {
         this._sidebarProgressBarBackgroundColor = new SidebarProgressBarBackgroundColor(this);
         this._sidebarScaledSliderNumTickIntervals = new SidebarScaledSliderNumTickIntervals(this);
         this._sidebarTankShowLabels = new SidebarTankShowLabels(this);
-        // this._sidebarScaledSliderShowScale = new SidebarScaledSliderShowScale(this);
         this._sidebarScaledSliderCompactScale = new SidebarScaledSliderCompactScale(this);
         this._sidebarTankScalePosition = new SidebarTankScalePosition(this);
         this._sidebarTankShowScaleInnerLabel = new SidebarTankShowScaleInnerLabel(this);
@@ -144,9 +142,6 @@ export class TankSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarFillColor().getElement()}
-                    {/* {this.getSidebarFillColorMinor().getElement()} */}
-                    {/* {this.getSidebarFillColorMajor().getElement()} */}
-                    {/* {this.getSidebarFillColorInvalid().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- ticks -------------------- */}
@@ -154,11 +149,10 @@ export class TankSidebar extends BaseWidgetSidebar {
                     <b>Ticks</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {this.getSidebarTankShowScaleInnerLabel().getElement()}
+                    {this.getSidebarTankShowLabels().getElement()}
+                    {this.getSidebarScaledSliderCompactScale().getElement()}
                     {this.getSidebarTankScalePosition().getElement()}
                     {this.getSidebarScaledSliderNumTickIntervals().getElement()}
-                    {this.getSidebarScaledSliderCompactScale().getElement()}
-                    {this.getSidebarTankShowLabels().getElement()}
                     {this.getSidebarMinPvValue().getElement()}
                     {this.getSidebarMaxPvValue().getElement()}
                     {this.getSidebarUsePvLimits().getElement()}
@@ -184,21 +178,8 @@ export class TankSidebar extends BaseWidgetSidebar {
         );
     };
 
-    // defined in super class
-    // getElement()
-    // _HorizontalLine()
-    // _BlockBody()
-    // _BlockTitle()
-
     // ---------------------- getters --------------------------
 
-    // defined in super class
-    // getWidgetKey()
-    // getMainWidget()
-    // getUpdateFromSidebar()
-    // getStyle()
-    // getFormStyle()
-    // getInputStyle()
 
     getSidebarProgressBarBackgroundColor = () => {
         return this._sidebarProgressBarBackgroundColor;
@@ -209,9 +190,6 @@ export class TankSidebar extends BaseWidgetSidebar {
         return this._sidebarScaledSliderNumTickIntervals;
     }
 
-    // getSidebarScaledSliderShowScale = () => {
-    //     return this._sidebarScaledSliderShowScale;
-    // }
     getSidebarTankShowLabels = () => {
         return this._sidebarTankShowLabels;
     }
@@ -231,12 +209,4 @@ export class TankSidebar extends BaseWidgetSidebar {
     getSidebarDisplayScale = () => {
         return this._sidebarDisplayScale;
     }
-
-
-    // ------------------------- style -------------------------
-
-    // defined in super class
-    // _style
-    // _inputStyle
-    // _formStyle
 }

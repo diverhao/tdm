@@ -245,19 +245,190 @@ const roundNumber = (num: number) => {
 };
 
 /**
- * Given min and max values of the ticks, as well as the number of ticks, calculate the tick values.
+ * Generate tick values for any range and number of ticks
  * 
- * The key is reducing the artificial trailing numbers, e.g. 6.9000000000001 or 6.899999999999999 should be 6.9
+ * @param valMin - minimum value
+ * @param valMax - maximum value
+ * @param numTicks - desired number of ticks (can vary ±20%)
+ * @param options - optional configuration:
+ *   - scale: "linear" (default) or "log10"
+ * @returns array of tick values with nice numbers (±20% range and tick count flexibility)
  */
-export const calcTicks = (valMin: number, valMax: number, numTicks: number = 11, scale: "linear" | "log10" = "linear"): number[] => {
-    const dValArray = roundNumber((valMax - valMin) / (Math.max(numTicks, 2) - 1));
-    const dVal = parseFloat(`${dValArray[0]}e${dValArray[1]}`);
-    const fixedDigit = Math.max(-1 * dValArray[1], 0);
-    const valMinInt = Math.ceil(valMin / dVal);
-    const valMaxInt = Math.floor(valMax / dVal);
+type TickOptions = {
+    scale: "Linear" | "Log10";
+}
+
+export const calcTicks = (
+    valMin: number,
+    valMax: number,
+    numTicks: number = 11,
+    options: TickOptions = {scale: "Linear"}
+): number[] => {
+    const { scale = "Linear" } = options;
+
+    if (scale === "Log10") {
+        return calcTicksLog10(valMin, valMax, numTicks);
+    }
+
+    return calcTicksLinear(valMin, valMax, numTicks);
+};
+
+/**
+ * Linear scale tick generation with nice numbers within ±20% flexibility
+ */
+const calcTicksLinear = (
+    valMin: number,
+    valMax: number,
+    numTicks: number
+): number[] => {
+    const range = valMax - valMin;
+    const roughTickSize = range / Math.max(numTicks - 1, 1);
+
+    // Find best nice step size with ±20% flexibility
+    const step = findBestNiceStepSize(roughTickSize);
+
+    if (step <= 0) {
+        return [valMin, valMax];
+    }
+
     const result: number[] = [];
-    for (let ii = valMinInt; ii <= valMaxInt; ii++) {
-        result.push(parseFloat((ii * dVal).toFixed(fixedDigit)));
+
+    // Determine decimal places needed
+    const fixedDigit = getDecimalPlaces(step);
+
+    // Start from the first tick at or before valMin
+    const tickMin = Math.floor(valMin / step) * step;
+    const tickMax = Math.ceil(valMax / step) * step;
+
+    for (let tickValue = tickMin; tickValue <= tickMax + 1e-10; tickValue += step) {
+        const roundedValue = parseFloat(tickValue.toFixed(fixedDigit));
+        if (roundedValue >= valMin - 1e-10 && roundedValue <= valMax + 1e-10) {
+            result.push(roundedValue);
+        }
+    }
+
+    return result.length > 0 ? result : [valMin, valMax];
+};
+
+/**
+ * Find the best nice step size that keeps decimals minimal
+ * Tries step sizes that are 0.8x to 1.2x the rough size
+ */
+const findBestNiceStepSize = (roughSize: number): number => {
+    const tolerance = 0.2; // ±20% tolerance
+    const candidates: number[] = [];
+
+    // Generate candidate step sizes by testing nearby nice numbers
+    const baseUnit = Math.pow(10, Math.floor(Math.log10(roughSize)));
+
+    // Test multipliers: 1, 2, 5, 10 at current and adjacent magnitude levels
+    const testMultipliers = [1, 2, 5, 10];
+    const testUnits = [baseUnit / 10, baseUnit, baseUnit * 10];
+
+    for (const unit of testUnits) {
+        for (const mult of testMultipliers) {
+            const candidate = unit * mult;
+            // Check if this step is within ±20% of rough size
+            const ratio = candidate / roughSize;
+            if (ratio >= 1 - tolerance && ratio <= 1 + tolerance) {
+                candidates.push(candidate);
+            }
+        }
+    }
+
+    // If we have candidates, return the one closest to roughSize
+    if (candidates.length > 0) {
+        return candidates.reduce((best, current) => {
+            const bestDiff = Math.abs(best - roughSize);
+            const currentDiff = Math.abs(current - roughSize);
+            return currentDiff < bestDiff ? current : best;
+        });
+    }
+
+    // Fallback to the original algorithm if no candidates found
+    const unitSize = Math.pow(10, Math.floor(Math.log10(roughSize)));
+    const ratio = roughSize / unitSize;
+
+    if (ratio > 5) {
+        return unitSize * 10;
+    } else if (ratio > 2) {
+        return unitSize * 5;
+    } else if (ratio > 1) {
+        return unitSize * 2;
+    } else {
+        return unitSize;
+    }
+};
+
+/**
+ * Calculate decimal places needed to represent a step size compactly
+ */
+const getDecimalPlaces = (step: number): number => {
+    if (step >= 1) {
+        return 0; // No decimals needed
+    }
+
+    // For steps < 1, determine decimal places
+    return Math.max(-Math.floor(Math.log10(step)), 0);
+};
+
+/**
+ * Log10 scale tick generation
+ */
+const calcTicksLog10 = (valMin: number, valMax: number, numTicks: number): number[] => {
+    if (valMin <= 0 || valMax <= 0) {
+        console.warn("Log10 scale requires positive values");
+        return [valMin, valMax];
+    }
+
+    const result: number[] = [];
+    const logMin = Math.log10(valMin);
+    const logMax = Math.log10(valMax);
+
+    // Generate ticks at powers of 10
+    for (let ii = Math.floor(logMin); ii <= Math.ceil(logMax); ii++) {
+        const tickValue = Math.pow(10, ii);
+        if (tickValue >= valMin - 1e-10 && tickValue <= valMax + 1e-10) {
+            result.push(tickValue);
+        }
+    }
+
+    return result.length > 0 ? result : [valMin, valMax];
+};
+
+/**
+ * Calculate tick position in unit of pixel
+ * 
+ * Small tick value has larger position value, the position has larger value on the bottom
+ */
+
+export const calcTickPositions = (tickValues: number[], minPvValue: number, maxPvValue: number, fullSize: number, options: TickOptions = { scale: "Linear" }): number[] => {
+    const { scale } = options;
+    let useLog10Scale = scale === "Log10" ? true : false;
+    const result: number[] = [];
+
+    if (useLog10Scale) {
+        minPvValue = Math.log10(minPvValue);
+        maxPvValue = Math.log10(maxPvValue);
+        for (let tickValue of tickValues) {
+            tickValue = Math.log10(tickValue);
+            if (minPvValue === Infinity || minPvValue === -Infinity || isNaN(minPvValue)) {
+                minPvValue = 0
+            }
+            if (maxPvValue === Infinity || maxPvValue === -Infinity || isNaN(maxPvValue)) {
+                maxPvValue = 0
+            }
+            if (tickValue === Infinity || tickValue === -Infinity || isNaN(tickValue)) {
+                tickValue = 0
+            }
+            result.push((1 - ((tickValue - minPvValue) / (maxPvValue - minPvValue))) * fullSize);
+        }
+    } else {
+        const numTickIntervals = tickValues.length - 1;
+        const d = fullSize / numTickIntervals;
+        for (let ii = 0; ii <= numTickIntervals; ii++) {
+            result.push(fullSize - ii * d);
+        }
     }
     return result;
 };

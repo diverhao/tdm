@@ -85,6 +85,7 @@ export class Symbol extends BaseWidget {
                     height: "100%",
                     position: "absolute",
                     overflow: "visible",
+                    userSelect: "none",
                     justifyContent: justifyContent,
                     alignItems: alignItems,
                     outline: outline,

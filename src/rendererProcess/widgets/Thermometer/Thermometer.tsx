@@ -220,7 +220,7 @@ export class Thermometer extends BaseWidget {
             //     result.push(valueMin + dValue * ii);
             // }
             // return result;
-            return calcTicks(valueMin, valueMax, numTickIntervals + 1, "linear");
+            return calcTicks(valueMin, valueMax, numTickIntervals + 1, {scale: "Linear"});
         };
 
         /**

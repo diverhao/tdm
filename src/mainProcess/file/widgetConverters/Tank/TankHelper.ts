@@ -83,8 +83,6 @@ export class TankHelper extends BaseWidgetHelper {
             compactScale: false,
             // "left" | "right"
             scalePosition: "right",
-            // show inner labels
-            showScaleInnerLabel: true,
             displayScale: "Linear", // "Linear" | "Log10"
             alarmContainer: false,
             alarmFill: false,
@@ -161,8 +159,6 @@ export class TankHelper extends BaseWidgetHelper {
         tdl["text"]["alarmBorder"] = false;
         tdl["text"]["showLabels"] = false;
         tdl["style"]["transform"] = "rotate(90deg)";
-        tdl["text"]["showScaleInnerLabel"] = false;
-
 
         const alarmPropertyNames: string[] = [];
 

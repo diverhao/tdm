@@ -745,9 +745,9 @@ export class XYPlotPlot {
             valMax = valMax + dx;
             valMin = valMin - dx;
 
-            return calcTicks(valMin, valMax, this.xAxis["numGrids"] + 1, "linear");
+            return calcTicks(valMin, valMax, this.xAxis["numGrids"] + 1, {scale: "Linear"});
         } catch (e) {
-            return calcTicks(0, 10, 5 + 1, "linear");
+            return calcTicks(0, 10, 5 + 1, {scale: "Linear"});
         }
     };
     calcYTicks = (yIndex: number) => {
@@ -773,9 +773,9 @@ export class XYPlotPlot {
             valMax = valMax + dy;
             valMin = valMin - dy;
 
-            return calcTicks(valMin, valMax, this.yAxes[yIndex]["numGrids"] + 1, "linear");
+            return calcTicks(valMin, valMax, this.yAxes[yIndex]["numGrids"] + 1, {scale: "Linear"});
         } catch (e) {
-            return calcTicks(0, 10, 5 + 1, "linear");
+            return calcTicks(0, 10, 5 + 1, {scale: "Linear"});
         }
     };
 
