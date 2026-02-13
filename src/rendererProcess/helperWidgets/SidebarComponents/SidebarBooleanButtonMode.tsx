@@ -27,10 +27,9 @@ export class SidebarBooleanButtonMode extends SidebarComponent {
                         this.updateWidget(event, event.target.value);
                     }}
                 >
-                    <option selected={mode === "toggle"}>{`Toggle`}</option>
-                    <option selected={mode === "push and reset"}>{`Push and reset`}</option>
-                    <option selected={mode === "push no reset"}>{`Push no reset`}</option>
-                    <option selected={mode === "push nothing and set"}>{`Push nothing and set`}</option>
+                    <option selected={mode === "Toggle"}>{`Toggle`}</option>
+                    <option selected={mode === "Push"}>{`Push`}</option>
+                    <option selected={mode === "Push (inverted)"}>{`Push (inverted)`}</option>
                 </select>
             </form>
         );
@@ -43,7 +42,7 @@ export class SidebarBooleanButtonMode extends SidebarComponent {
         if (propertyValue === oldVal) {
             return;
         } else {
-            this.getText()["mode"] = `${propertyValue}`.toLowerCase();
+            this.getText()["mode"] = propertyValue;
         }
 
         const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();

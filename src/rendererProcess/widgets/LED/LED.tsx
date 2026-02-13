@@ -22,7 +22,7 @@ export type type_LED_tdl = {
     // LED specific data
     itemNames: string[];
     itemColors: string[];
-    itemValues: (number | string | number[] | string[] | undefined)[];
+    itemValues: number[];
 };
 
 export class LED extends BaseWidget {
@@ -30,7 +30,7 @@ export class LED extends BaseWidget {
     _rules: LEDRules;
     _itemNames: string[];
     _itemColors: string[];
-    _itemValues: (number | string | number[] | string[] | undefined)[];
+    _itemValues: number[];
 
     constructor(widgetTdl: type_LED_tdl) {
         super(widgetTdl);
@@ -354,43 +354,11 @@ export class LED extends BaseWidget {
     // -------------------- helper functions ----------------
 
     /**
-     * find the index that corresponds to the channel value
-     * 
-     * reutrns a number or undefined
-     */
-    calcIndex = (): number | undefined => {
-        const itemValues = this.getItemValues();
-        const channelValue = this._getChannelValue(true);
-        // if bit < 0, use whole number
-        // if bit >= 0, use this bit
-        const bit = this.getAllText()["bit"];
-        if (typeof channelValue === "number") {
-            if (bit < 0) {
-                // use whole value
-                const index = itemValues.indexOf(channelValue);
-                if (index >= 0) {
-                    return index;
-                } else {
-                    return undefined;
-                }
-            } else {
-                const value = (Math.floor(Math.abs(channelValue)) >> bit) & 0x1;
-                const index = itemValues.indexOf(value);
-                if (index >= 0) {
-                    return index;
-                } else {
-                    return undefined;
-                }
-            }
-        }
-        return undefined;
-    };
-
-    /**
      * find the color that corresponds to the channel value
      */
     calcItemColor = (): string => {
-        const index = this.calcIndex();
+        const itemValues = this.getItemValues();
+        const index = this.calcItemIndex(itemValues);
 
         if (index !== undefined) {
             const color = this.getItemColors()[index];
@@ -411,6 +379,7 @@ export class LED extends BaseWidget {
         const allText = this.getAllText();
         const useChannelItems = allText["useChannelItems"];
         const itemNames = this.getItemNames();
+        const itemValues = this.getItemValues();
 
         if (g_widgets1.isEditing()) {
             if (useChannelItems) {
@@ -420,7 +389,7 @@ export class LED extends BaseWidget {
             }
         }
 
-        const index = this.calcIndex();
+        const index = this.calcItemIndex(itemValues);
         if (typeof (index) === "number") {
             if (useChannelItems === true) {
                 try {

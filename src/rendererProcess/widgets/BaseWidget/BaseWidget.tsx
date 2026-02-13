@@ -1891,6 +1891,36 @@ export abstract class BaseWidget {
         return this.getAllText()["selectedBackgroundColor"];
     }
 
+
+    /**
+     * Show a thick light gray outline when mouse enters the write widget
+     */
+    hanldeMouseEnterWriteWidget = (event: any, elementRef: any) => {
+        event.preventDefault();
+        if (!g_widgets1.isEditing() && elementRef.current !== null) {
+            elementRef.current.style["outlineStyle"] = "solid";
+            elementRef.current.style["outlineWidth"] = "3px";
+            elementRef.current.style["outlineColor"] = "rgba(105,105,105,1)";
+            if (this._getChannelAccessRight() < 1.5) {
+                elementRef.current.style["cursor"] = "not-allowed";
+            } else {
+                elementRef.current.style["cursor"] = "pointer";
+            }
+        }
+    };
+
+    /**
+     * hide the thick light gray outline when mouse leaves the write widget
+     */
+    handleMouseLeaveWriteWidget = (event: any, elementRef: any) => {
+        event.preventDefault();
+        if (!g_widgets1.isEditing() && elementRef.current !== null) {
+            // elementRef.current.style["outline"] = calcOutline();
+            elementRef.current.style["outline"] = "none";
+            elementRef.current.style["cursor"] = "default";
+        }
+    };
+
     // ------------------- first channel stuff -------------------
 
     _getChannelSeverity = () => {
@@ -2125,6 +2155,109 @@ export abstract class BaseWidget {
 
         return [minPvValue, maxPvValue];
     };
+
+
+    /**
+     * Find the index that corresponds to the current channel value within a list of item values
+     * 
+     * The widget must contain a "bit" field
+     * 
+     * Supports two modes based on the "bit" property:
+     * - If bit < 0: compares the entire channel value against the item values list
+     * - If bit >= 0: extracts a specific bit from the channel value and compares it
+     * 
+     * @param itemValues - array of values to search for the channel value
+     * @returns the index of the matching value, or undefined if no match is found
+     */
+    calcItemIndex = (itemValues: number[]): number | undefined => {
+        const channelValue = this._getChannelValue(true);
+        // if bit < 0, use whole number
+        // if bit >= 0, use this bit
+        const bit = this.getAllText()["bit"];
+        if (typeof bit !== "number") {
+            return undefined;
+        }
+        if (typeof channelValue === "number") {
+            if (bit < 0) {
+                // use whole value
+                const index = itemValues.indexOf(channelValue);
+                if (index >= 0) {
+                    return index;
+                } else {
+                    return undefined;
+                }
+            } else {
+                const value = (Math.floor(Math.abs(channelValue)) >> bit) & 0x1;
+                const index = itemValues.indexOf(value);
+                if (index >= 0) {
+                    return index;
+                } else {
+                    return undefined;
+                }
+            }
+        }
+        return undefined;
+    };
+
+    /**
+     * calculate the 3d button style
+     * 
+     * this is used for widgets with traditional button, such as BooleanButton, ActionButton
+     */
+    get3dButtonStyle = (buttonPressed: boolean) => {
+        const allText = this.getAllText();
+        const allStyle = this.getAllStyle();
+        const appearance = allText["appearance"];
+        console.log("appearance", appearance)
+        if (appearance !== "traditional") {
+            return {
+                width: "",
+                height: "",
+                borderBottom: "none",
+                borderTop: "none",
+                borderRight: "none",
+                borderLeft: "none",
+
+            };
+        }
+
+        const shadowWidth = 2;
+        const highlightColor = "rgba(255,255,255,1)";
+        const shadowColor = "rgba(100,100,100,1)";
+
+
+        let width = allStyle["width"] - 2 * shadowWidth;
+        let height = allStyle["height"] - 2 * shadowWidth;
+
+        let borderBottomAndRight = "none";
+        let borderTopAndLeft = "none";
+        // dark border
+        const border0 = `solid ${shadowWidth}px ${shadowColor}`;
+        // bright border
+        const border1 = `solid ${shadowWidth}px ${highlightColor}`;
+
+        if (buttonPressed) {
+            borderBottomAndRight = border1;
+        } else {
+            borderBottomAndRight = border0;
+        }
+
+        if (borderBottomAndRight === border1) {
+            borderTopAndLeft = border0;
+        } else if (borderBottomAndRight === border0) {
+            borderTopAndLeft = border1;
+        }
+
+        return {
+            width: width,
+            height: height,
+            borderBottom: borderBottomAndRight,
+            borderTop: borderTopAndLeft,
+            borderRight: borderBottomAndRight,
+            borderLeft: borderTopAndLeft,
+        }
+
+    }
 
 
     // -------------------- putters ----------------------------------
