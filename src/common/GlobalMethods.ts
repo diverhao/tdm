@@ -439,7 +439,7 @@ export const calcTickPositions = (tickValues: number[], minPvValue: number, maxP
  * This function reduces the ticks by calculating the spacing between 2 adjacent ticks, making sure their spacing is 
  * less than the unitLength, which is typically half of the font size 
  */
-export const refineTicks = (rawTicks: number[], unitLength: number, elementRef: any, direction: "horizontal" | "vertical"): string[] => {
+export const refineTicks = (rawTicks: number[], unitLength: number, length: number, direction: "horizontal" | "vertical"): string[] => {
     let result: string[] = [];
     // use exponential or regular expression, take whichever is shorter
     for (let ii = 0; ii < rawTicks.length; ii++) {
@@ -452,16 +452,17 @@ export const refineTicks = (rawTicks: number[], unitLength: number, elementRef: 
         }
     }
 
-    let elementHeight = 100;
-    if (elementRef.current !== null) {
-        if (direction === "horizontal") {
-            elementHeight = elementRef.current.offsetWidth;
-        } else {
-            elementHeight = elementRef.current.offsetHeight;
-        }
-    } else {
-        return result;
-    }
+    let elementHeight = length;
+    // if (elementRef.current !== null) {
+    //     if (direction === "horizontal") {
+    //         elementHeight = elementRef.current.offsetWidth;
+    //     } else {
+    //         elementHeight = elementRef.current.offsetHeight;
+    //     }
+    // } else {
+    //     return result;
+    // }
+
     // first and last ticks must be kept
     const result1: string[] = [];
     const spacing = elementHeight / (result.length - 1);

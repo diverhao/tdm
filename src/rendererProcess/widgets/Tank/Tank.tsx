@@ -138,6 +138,7 @@ export class Tank extends BaseWidget {
         const allStyle = this.getAllStyle();
         const scalePosition = allText["scalePosition"];
         const showLabels = allText["showLabels"];
+        const length = allStyle["height"];
 
         // if position not on left or not showing label, return null
         if (!(scalePosition === "left" && showLabels === true)) {
@@ -154,7 +155,8 @@ export class Tank extends BaseWidget {
         const [valueMin, valueMax] = this.calcPvLimits();
         const tickValues = calcTicks(valueMin, valueMax, numTickIntervals + 1, { scale: scale });
         const tickPositions = GlobalMethods.calcTickPositions(tickValues, valueMin, valueMax, scaleLength, { scale: scale });
-        const refinedTicks = refineTicks(tickValues, fontSize * 0.5, elementRef, "vertical");
+        const refinedTicks = refineTicks(tickValues, fontSize * 0.5, length, "vertical");
+
         return (
             <div
                 ref={elementRef}
@@ -195,6 +197,7 @@ export class Tank extends BaseWidget {
         const allStyle = this.getAllStyle();
         const scalePosition = allText["scalePosition"];
         const showLabels = allText["showLabels"];
+        const length = allStyle["height"];
 
         // if position not on left or not showing label, return null
         if (!(scalePosition === "right" && showLabels === true)) {
@@ -211,7 +214,7 @@ export class Tank extends BaseWidget {
         const [valueMin, valueMax] = this.calcPvLimits();
         const tickValues = calcTicks(valueMin, valueMax, numTickIntervals + 1, { scale: scale });
         const tickPositions = GlobalMethods.calcTickPositions(tickValues, valueMin, valueMax, scaleLength, { scale: scale });
-        const refinedTicks = refineTicks(tickValues, fontSize * 0.5, elementRef, "vertical");
+        const refinedTicks = refineTicks(tickValues, fontSize * 0.5, length, "vertical");
 
         return (
             <div
@@ -368,10 +371,7 @@ export class Tank extends BaseWidget {
         )
     }
 
-
-
     // ------------------  helper functions -----------
-
     /**
      * Calculate water level, return pixel <br>
      * 
