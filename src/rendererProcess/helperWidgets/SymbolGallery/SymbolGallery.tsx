@@ -22,6 +22,9 @@ export class SymbolGallery {
     _holderWidgetKey: string = "";
     _pageNames: string[] = [];
     _pageImages: Record<string, string> = {};
+    _selectedPage: number = 0;
+    _selectedImageName: string = "";
+
     forceUpdate = (input: any) => { console.log("force update???") };
 
     constructor(displayWindowClient: DisplayWindowClient) {
@@ -85,7 +88,7 @@ export class SymbolGallery {
             const ipcManager = this.displayWindowClient.getIpcManager();
             const displayWindowId = this.displayWindowClient.getWindowId();
             ipcManager.sendFromRendererProcess("get-symbol-gallery", {
-                page: 1,
+                page: 0,
                 displayWindowId: displayWindowId,
                 widgetKey: this.getHolderWidgetKey(),
             })
@@ -94,9 +97,13 @@ export class SymbolGallery {
         return (
             <div
                 style={{
+                    display: "inline-flex",
                     width: "100%",
                     height: "100%",
                     backgroundColor: "rgba(255,255,255,1)",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
                 }}
             >
                 <this._ElementPageNames></this._ElementPageNames>
@@ -104,10 +111,15 @@ export class SymbolGallery {
 
                 <ElementRectangleButton
                     handleMouseDown={(event: any) => {
-                        selectCallback({
-                            symbolName: "ABC",
-                            symbolContent: "DEF",
-                        });
+                        const symbolName = this.getSelectedImageName();
+                        if (symbolName === "") {
+                            return;
+                        }
+                        const symbolContent = this.getPageImages()[symbolName];
+                        if (symbolContent === undefined) {
+                            return;
+                        }
+                        selectCallback(symbolName, symbolContent);
                         this.removeElement();
                     }}
                 >
@@ -124,18 +136,38 @@ export class SymbolGallery {
         )
     }
 
-    _ElementPageNames = (props: any) => {
-        // const pageNames = props.pageNames || this.getPageNames();
+    _ElementPageNames = () => {
         const pageNames = this.getPageNames();
+        const selectedPage = this.getSelectedPage();
         return (
-            <div>
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                }}
+            >
                 {
                     pageNames.map((pageName: string, index: number) => {
+                        const border = index === selectedPage ? "2px solid green" : "2px solid rgba(0,0,0,0)";
                         return (
                             <ElementRectangleButton
+                                additionalStyle={{
+                                    border: border,
+                                    margin: 10,
+                                }}
                                 key={index}
                                 handleMouseDown={(event: any) => {
+                                    if (index === selectedPage) {
+                                        return;
+                                    }
                                     // select this page
+                                    const ipcManager = this.displayWindowClient.getIpcManager();
+                                    const displayWindowId = this.displayWindowClient.getWindowId();
+                                    ipcManager.sendFromRendererProcess("get-symbol-gallery", {
+                                        page: index,
+                                        displayWindowId: displayWindowId,
+                                        widgetKey: this.getHolderWidgetKey(),
+                                    })
                                 }}
                             >
                                 {pageName}
@@ -148,9 +180,10 @@ export class SymbolGallery {
         )
     }
 
-    _ElementPageImages = (props: any) => {
+    _ElementPageImages = () => {
         const pageImages = this.getPageImages();
-        
+        const [selectedImageName, setSelectedImageName] = React.useState("");
+
         return (
             <div style={{
                 display: "inline-flex",
@@ -158,7 +191,7 @@ export class SymbolGallery {
             }}>
                 {
                     Object.entries(pageImages).map(([imageName, imageContent]: [string, string], index: number) => {
-                        console.log(imageContent)
+                        const border = selectedImageName === imageName ? "solid 2px green" : "solid 2px rgba(180,180,180,1)";
                         return (
                             <div
                                 key={index}
@@ -174,13 +207,25 @@ export class SymbolGallery {
                                         width: 100,
                                         height: 100,
                                         objectFit: "contain",
-                                        border: "1px solid #ddd",
                                         borderRadius: "4px",
                                         backgroundColor: "#f9f9f9",
+                                        border: border,
                                     }}
                                     onError={(e) => {
                                         // Fallback for broken images
                                         (e.target as HTMLImageElement).style.display = "none";
+                                    }}
+                                    onMouseDown={(event: any) => {
+                                        event.preventDefault();
+                                        if (this.getSelectedImageName() === imageName) {
+                                            // deselect the image
+                                            setSelectedImageName("");
+                                            this.setSelectedImageName("");
+                                        } else {
+                                            // select the image
+                                            setSelectedImageName(imageName);
+                                            this.setSelectedImageName(imageName);
+                                        }
                                     }}
                                 />
                                 <div style={{
@@ -208,6 +253,10 @@ export class SymbolGallery {
             document.body.removeChild(oldElement);
         }
         this.setHolderWidgetKey("");
+        this.setPageImages({});
+        this.setPageNames([]);
+        this.setSelectedPage(0);
+
     }
 
     removeElementOnEscKey = (event: KeyboardEvent) => {
@@ -238,6 +287,22 @@ export class SymbolGallery {
 
     setPageImages = (newImages: Record<string, string>) => {
         this._pageImages = newImages;
+    }
+
+    getSelectedPage = () => {
+        return this._selectedPage;
+    }
+
+    setSelectedPage = (newPage: number) => {
+        this._selectedPage = newPage;
+    }
+
+    getSelectedImageName = () => {
+        return this._selectedImageName;
+    }
+
+    setSelectedImageName = (newName: string) => {
+        this._selectedImageName = newName;
     }
 
     getId = () => {

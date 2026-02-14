@@ -219,7 +219,7 @@ export class SidebarLEDItem {
                     Log.error(e);
                 }
             } else {
-                mainWidget.getItemValues()[this.getIndex()] = `${propertyValue}`;
+                return;
             }
         }
 

@@ -20,31 +20,6 @@ export class SidebarBooleanButtonUsePictures extends SidebarComponent {
 
         return (
             <this._BlockBody>
-
-                <div
-                    style={{
-                        width: 10,
-                        height: 10,
-                        backgroundColor: "red",
-                    }}
-                    onMouseDown={() => {
-                        const mainWidget = this.getMainWidget();
-                        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient()
-                        const symbolGallery = displayWindowClient.getSymbolGallery();
-                        symbolGallery.createElement((
-                            symbolName: string,
-                            symbolContent: string
-                        ) => {
-                            console.log(symbolName, symbolContent, this.getMainWidget().getWidgetKey());
-                        },
-                            mainWidget.getWidgetKey()
-                        )
-                    }}
-                >
-
-                </div>
-
-
                 <form onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, usePictures)} style={this.getFormStyle()}>
                     <div>Use Pictures:</div>
                     <input

@@ -45,14 +45,6 @@ export class SidebarMediaOpenFile extends SidebarComponent {
                         }}
                     >
                         {this.getMainWidget() instanceof Media ? <b>File</b> : "File"}
-                        {/* <div
-                            style={{
-                                display: g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "web" ? "" : "none",
-                                color: "rgba(255,0,0,1)",
-                            }}
-                        >
-                            NA in web browser.
-                        </div> */}
                         <div
                             onClick={() => {
                                 // to get the file name

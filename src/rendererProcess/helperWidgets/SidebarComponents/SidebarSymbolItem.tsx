@@ -65,8 +65,42 @@ export class SidebarSymbolItem {
                         }}
                     >
                         <div
+
+                            onClick={() => {
+                                const mainWidget = this.getMainWidget();
+                                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient()
+                                const symbolGallery = displayWindowClient.getSymbolGallery();
+                                symbolGallery.createElement(
+                                    // callback function when we click Select button
+                                    (
+                                        symbolName: string,
+                                        symbolContent: string
+                                    ) => {
+                                        console.log(symbolName, symbolContent, this.getMainWidget().getWidgetKey());
+                                        this.updateWidgetName(undefined, symbolContent);
+                                    },
+                                    mainWidget.getWidgetKey()
+                                )
+                            }}
                             style={{
-                                // display: g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "web" ? "none" : "inline-flex",
+                                display: "inline-flex",
+                                flexDirection: "row",
+                                justifyContent: "center",
+                                alignItems: "center",
+                            }}
+                        >
+                            <img
+                                src={`../../../webpack/resources/webpages/gallery.svg`}
+                                style={{
+                                    width: 20,
+                                    height: 15,
+                                    objectFit: "scale-down",
+                                }}
+                            ></img>
+                        </div>
+
+                        <div
+                            style={{
                                 display: "inline-flex",
                                 flexDirection: "row",
                                 justifyContent: "center",
@@ -250,9 +284,10 @@ export class SidebarSymbolItem {
                 } catch (e) {
                     Log.error(e);
                 }
-            } else {
-                mainWidget.getItemValues()[this.getIndex()] = `${propertyValue}`;
             }
+            // else {
+            //     mainWidget.getItemValues()[this.getIndex()] = `${propertyValue}`;
+            // }
         }
 
         const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();

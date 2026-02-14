@@ -1555,14 +1555,14 @@ export class IpcManagerOnDisplayWindow {
         const {widgetKey, page, pageImages, pageNames} = data;
         const symbolGallery = this.getDisplayWindowClient().getSymbolGallery();
         const symbolGalleryHolderWidgetKey = symbolGallery.getHolderWidgetKey();
-        console.log("--------->",widgetKey, symbolGalleryHolderWidgetKey, pageNames);
         if (widgetKey === symbolGalleryHolderWidgetKey) {
             // the widget is still holding the symbol gallery
             symbolGallery.setPageImages(pageImages);
             symbolGallery.setPageNames(pageNames);
+            symbolGallery.setSelectedPage(page);
             symbolGallery.forceUpdate({});
         } else {
-            // todo: close the page, clean up data
+            // close the page, clean up data
             symbolGallery.removeElement();
         }
     }

@@ -17,7 +17,7 @@ import { spawn } from "child_process";
 import { SqlState } from "../archive/Sql";
 import { Environment, type_network_stats } from "epics-tca";
 import { IpcEventArgType, type_DialogMessageBox } from "../../common/IpcEventArgType";
-import { generateKeyAndCert } from "../global/GlobalMethods";
+import { generateKeyAndCert, scanSymbolGallery } from "../global/GlobalMethods";
 import { SshServer } from "./SshServer";
 import https from "https";
 import { WebSocketServer, WebSocket, RawData } from "ws";
@@ -2824,8 +2824,7 @@ export class IpcManagerOnMainProcess {
             // Built-in gallery folder - scans its immediate subfolders
             const builtInGalleryFolder = path.join(__dirname, "../../common/resources/symbolGallery");
 
-            const galleryData = this.scanSymbolGallery(customFolders, builtInGalleryFolder);
-            console.log("Gallery data:", galleryData);
+            const galleryData = scanSymbolGallery(customFolders, builtInGalleryFolder);
             mainProcess.setSymbolGalleryData(galleryData);
         }
 
@@ -2836,12 +2835,12 @@ export class IpcManagerOnMainProcess {
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             const pageNames = Object.keys(galleryData);
             const pageName = pageNames[page];
-            console.log("page names:", pageNames)
             let pageImages: Record<string, string> = {};
             if (typeof pageName === "string") {
                 pageImages = galleryData[pageName];
             }
 
+            // send back the current page data to client
             displayWindowAgent.sendFromMainProcess("get-symbol-gallery", {
                 displayWindowId: displayWindowId,
                 widgetKey: widgetKey, 
@@ -2850,149 +2849,6 @@ export class IpcManagerOnMainProcess {
                 pageImages: pageImages,
             })
         }
-        mainProcess.getIpcManager()
-
-        // store them permanently
-
-        // send back to client
-    }
-
-    /**
-     * Scan symbol gallery folders and read all image files.
-     * 
-     * @param folderPaths Array of folder paths to scan directly for image files (not scanning subfolders)
-     * @param galleryFolder Path to gallery folder - scans its immediate subfolders for image files
-     * @returns Object with structure: { folderName: { fileName: dataUri, ... }, subfolder: { fileName: dataUri, ... }, ... }
-     *          All files are encoded as base64 data URIs for reliable <img src> compatibility.
-     * 
-     * @example
-     * // If folderPaths = ["/custom/icons", "/custom/symbols"]
-     * // and galleryFolder = "/builtin" with subfolders ["shapes", "connectors"]
-     * // Returns:
-     * // {
-     * //   "icons": { 
-     * //     "circle.svg": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0i...",
-     * //     "square.png": "data:image/png;base64,iVBORw0KG..."
-     * //   },
-     * //   "symbols": { ... },
-     * //   "shapes": { ... },
-     * //   "connectors": { ... }
-     * // }
-     */
-    private scanSymbolGallery = (folderPaths: string[], galleryFolder: string): Record<string, Record<string, string>> => {
-        const result: Record<string, Record<string, string>> = {};
-
-        // Image file extensions to look for
-        const imageExtensions = new Set(['.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp']);
-
-        // Maximum file size in bytes (50 KB)
-        const maxFileSizeBytes = 50 * 1024;
-
-        /**
-         * Helper function to scan a folder directly for image files
-         */
-        const scanFolder = (folderPath: string, keyName: string) => {
-            try {
-                if (!fs.existsSync(folderPath)) {
-                    Log.warn("0", `Folder does not exist: ${folderPath}`);
-                    return;
-                }
-
-                result[keyName] = {};
-                const files = fs.readdirSync(folderPath);
-
-                for (const file of files) {
-                    const filePath = path.join(folderPath, file);
-                    const fileStats = fs.statSync(filePath);
-
-                    // Skip directories
-                    if (fileStats.isDirectory()) {
-                        continue;
-                    }
-
-                    // Check file extension
-                    const ext = path.extname(file).toLowerCase();
-                    if (!imageExtensions.has(ext)) {
-                        continue;
-                    }
-
-                    // Check file size (< 50 kB)
-                    if (fileStats.size > maxFileSizeBytes) {
-                        Log.warn("0", `Skipping large image file: ${filePath} (${Math.round(fileStats.size / 1024)} KB)`);
-                        continue;
-                    }
-
-                    // Read file and encode
-                    try {
-                        const fileBuffer = fs.readFileSync(filePath);
-
-                        if (ext === '.svg') {
-                            // SVG encoded as base64 for reliable data URI compatibility
-                            const base64String = fileBuffer.toString('base64');
-                            result[keyName][file] = `data:image/svg+xml;base64,${base64String}`;
-                        } else {
-                            // Binary formats (png, jpg, gif, etc.) encode as base64
-                            const base64String = fileBuffer.toString('base64');
-                            const mimeType = this.getMimeType(ext);
-                            result[keyName][file] = `data:${mimeType};base64,${base64String}`;
-                        }
-
-                        Log.debug("0", `Loaded image: ${keyName}/${file}`);
-                    } catch (err) {
-                        Log.error("0", `Failed to read image file: ${filePath}`, err);
-                    }
-                }
-            } catch (err) {
-                Log.error("0", `Failed to scan folder: ${folderPath}`, err);
-            }
-        };
-
-        try {
-            // Scan folders from folderPaths array directly
-            for (const folderPath of folderPaths) {
-                const folderName = path.basename(folderPath);
-                scanFolder(folderPath, folderName);
-            }
-
-            // Scan subfolders from galleryFolder
-            if (fs.existsSync(galleryFolder)) {
-                const subfolders = fs.readdirSync(galleryFolder);
-
-                for (const subfolder of subfolders) {
-                    const subfolderPath = path.join(galleryFolder, subfolder);
-                    const stats = fs.statSync(subfolderPath);
-
-                    // Only process directories
-                    if (stats.isDirectory()) {
-                        scanFolder(subfolderPath, subfolder);
-                    }
-                }
-            } else {
-                Log.warn("0", `Gallery folder does not exist: ${galleryFolder}`);
-            }
-        } catch (err) {
-            Log.error("0", `Failed to scan gallery folders`, err);
-        }
-
-        return result;
-    }
-
-    /**
-     * Get MIME type for image file extension
-     * @param ext File extension with leading dot (e.g., '.png')
-     * @returns MIME type string (e.g., 'image/png')
-     */
-    private getMimeType = (ext: string): string => {
-        const mimeTypes: Record<string, string> = {
-            '.svg': 'image/svg+xml',
-            '.png': 'image/png',
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.gif': 'image/gif',
-            '.webp': 'image/webp',
-            '.bmp': 'image/bmp',
-        };
-        return mimeTypes[ext.toLowerCase()] || 'image/octet-stream';
     }
 
     // -------------------- embedded display events ----------------------

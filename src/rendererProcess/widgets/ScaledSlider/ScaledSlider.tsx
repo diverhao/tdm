@@ -989,7 +989,7 @@ export class ScaledSlider extends BaseWidget {
         }
 
         const tickPositions = calcTickPositions();
-        const refinedTicks = refineTicks(tickValues, this.getAllStyle()["fontSize"] * 0.5, elementRef, "horizontal");
+        const refinedTicks = refineTicks(tickValues, this.getAllStyle()["fontSize"] * 0.5, fullSize, "horizontal");
         return (
             <div
                 ref={elementRef}
@@ -1141,7 +1141,7 @@ export class ScaledSlider extends BaseWidget {
         }
 
         const tickPositions = calcTickPositions();
-        const refinedTicks = refineTicks(calcTickValues(), this.getAllStyle()["fontSize"] * 0.5, elementRef, "horizontal");
+        const refinedTicks = refineTicks(calcTickValues(), this.getAllStyle()["fontSize"] * 0.5, fullSize, "horizontal");
 
         return (
             <div

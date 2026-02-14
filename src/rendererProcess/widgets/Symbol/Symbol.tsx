@@ -20,13 +20,15 @@ export type type_Symbol_tdl = {
     rules: type_rules_tdl;
     // Symbol specific
     itemNames: string[]; // imageNames
-    itemValues: (number | string | number[] | string[] | undefined)[]; // PV value
+    itemValues: number[]; // PV value
+    itemContents: string[]; // images contents
 };
 
 export class Symbol extends BaseWidget {
     _rules: SymbolRules;
     _itemNames: string[];
-    _itemValues: (number | string | number[] | string[] | undefined)[];
+    _itemValues: number[];
+    _itemContents: string[];
 
     constructor(widgetTdl: type_Symbol_tdl) {
         super(widgetTdl);
@@ -36,6 +38,7 @@ export class Symbol extends BaseWidget {
 
         this._itemNames = JSON.parse(JSON.stringify(widgetTdl.itemNames));
         this._itemValues = JSON.parse(JSON.stringify(widgetTdl.itemValues));
+        this._itemContents = JSON.parse(JSON.stringify(widgetTdl.itemContents));
 
         // itemNames and itemValues must match
         const count = Math.min(this._itemNames.length, this._itemValues.length);
@@ -172,9 +175,15 @@ export class Symbol extends BaseWidget {
      * resolve a file name, do not check if the file exists, this is handled in
      * on-error event
      * 
+     * if the file name is a URI type image (e.g., data:image/...), return directly.
      * if the file name is relative, it is expanded with respect to the tdl file location.
      */
     resolveFileName = (fileName: string): string => {
+        // if it's a URI type image (e.g., data:image/svg+xml;base64,...), return directly
+        if (fileName.startsWith('data:')) {
+            return fileName;
+        }
+
         let absoluteFileName = fileName;
 
         // if a relative path, use TDL file foler as base path
@@ -205,6 +214,13 @@ export class Symbol extends BaseWidget {
             };
         } else {
             const channelValue = this._getChannelValue(true);
+            if (typeof channelValue !== "number") {
+                return {
+                    index: 0,
+                    value: undefined,
+                    fileName: this.resolveFileName(`${this.getItemNames()[0]}`),
+                }
+            }
             const index = this.getItemValues().indexOf(channelValue);
             return {
                 index: index,
@@ -282,6 +298,7 @@ export class Symbol extends BaseWidget {
             rules: [],
             itemNames: [],
             itemValues: [],
+            itemContents: [],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
@@ -293,6 +310,7 @@ export class Symbol extends BaseWidget {
         const result = super.getTdlCopy(newKey);
         result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
         result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
+        result["itemContents"] = JSON.parse(JSON.stringify(this.getItemContents()));
         return result;
     }
 
@@ -304,6 +322,9 @@ export class Symbol extends BaseWidget {
     getItemValues = () => {
         return this._itemValues;
     };
+    getItemContents = () => {
+        return this._itemContents;
+    }
 
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {

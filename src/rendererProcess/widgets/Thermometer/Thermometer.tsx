@@ -260,7 +260,8 @@ export class Thermometer extends BaseWidget {
             return result;
         };
 
-        const refinedTicks = refineTicks(calcTickValues(), this.getAllStyle()["fontSize"] * 0.5, elementRef, "vertical");
+        const height = elementRef.current?.offsetHeight;
+        const refinedTicks = refineTicks(calcTickValues(), this.getAllStyle()["fontSize"] * 0.5, height, "vertical");
 
         return (
             <div

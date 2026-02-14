@@ -1349,7 +1349,8 @@ export class XYPlotPlot {
     _ElementXTicks = () => {
         const elementRef = React.useRef<any>(null);
         const xTicks = this.calcXTicks();
-        const refinedTicks = refineTicks(xTicks, this.getMainWidget().getAllStyle()["fontSize"] * 0.5, elementRef, "horizontal");
+        const width = elementRef.current?.offsetWidth;
+        const refinedTicks = refineTicks(xTicks, this.getMainWidget().getAllStyle()["fontSize"] * 0.5, width, "horizontal");
 
         return (
             <div
@@ -1463,8 +1464,8 @@ export class XYPlotPlot {
     _ElementYTicks = () => {
         // the ticks area
         const elementRef = React.useRef<any>(null);
-
-        const refinedTicks = refineTicks(this.calcYTicks(this.selectedTraceIndex), this.getMainWidget().getAllStyle()["fontSize"] * 0.5, elementRef, "vertical");
+        const height = elementRef.current?.offsetHeight;
+        const refinedTicks = refineTicks(this.calcYTicks(this.selectedTraceIndex), this.getMainWidget().getAllStyle()["fontSize"] * 0.5, height, "vertical");
 
         return (
             <div
