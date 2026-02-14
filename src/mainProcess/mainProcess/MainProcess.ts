@@ -109,6 +109,9 @@ export class MainProcess {
     // we are connecting to ssh
     private _connectingToSsh: boolean = false;
 
+    // symbol gallery data
+    private _symbolGalleryData: Record<string, Record<string, string>> = {};
+
     constructor(
         // mainProcesses: MainProcesses,
         args: type_args,
@@ -555,7 +558,7 @@ export class MainProcess {
     setEdlFileConverterThread = (newEdlFileConverterThread: EdlFileConverterThread) => {
         this._edlFileConverterThread = newEdlFileConverterThread;
     }
-    
+
     getLocalFontNames = () => {
         return this._localFontNames;
     }
@@ -578,6 +581,14 @@ export class MainProcess {
 
     getProfiles = () => {
         return this._profiles;
+    }
+
+    getSymbolGalleryData = () => {
+        return this._symbolGalleryData;
+    }
+
+    setSymbolGalleryData = (newData: Record<string, Record<string, string>>) => {
+        this._symbolGalleryData = newData;
     }
 
     setProfiles = (newProfiles: Profiles) => {

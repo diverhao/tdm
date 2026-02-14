@@ -121,6 +121,13 @@ export type IpcEventArgType = {
 
     },
 
+    "get-symbol-gallery": {
+        page: number,
+        displayWindowId: string;
+        widgetKey: string;
+        update?: boolean
+    }
+
 
     "load-db-file-contents": {
         dbFileName?: string;
@@ -582,6 +589,14 @@ export type IpcEventArgType2 = {
         subcommand?: string | string[] | [string, boolean]
     },
 
+    "get-symbol-gallery": {
+        displayWindowId: string,
+        widgetKey: string,
+        pageNames: string[],
+        page: number,
+        pageImages: Record<string, string>,
+    }
+
     "load-db-file-contents": {
         dbFileName: string;
         displayWindowId: string;
@@ -841,7 +856,7 @@ export type IpcEventArgType2 = {
     },
 
     "update-profiles": {
-        windowId: string, 
+        windowId: string,
         profilesJson: Record<string, any>,
         profilesFullFileName: string,
     }
@@ -911,7 +926,7 @@ export type IpcEventArgType3 = {
     },
 
     "update-profiles": {
-        windowId: string, 
+        windowId: string,
         profilesJson: Record<string, any>,
         profilesFullFileName: string,
     },

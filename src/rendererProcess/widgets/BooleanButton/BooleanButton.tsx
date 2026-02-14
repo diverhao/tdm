@@ -21,9 +21,9 @@ export type type_BooleanButton_tdl = {
 };
 
 export class BooleanButton extends BaseWidget {
-    channelItemsUpdated: boolean = false;
 
     _rules: BooleanButtonRules;
+    // used for indicating if the mouse button is down
     buttonPressed: boolean = false;
     forceUpdateButton = (input: any) => { };
 
@@ -96,23 +96,26 @@ export class BooleanButton extends BaseWidget {
         const [, forceUpdate] = React.useState({});
         this.forceUpdateButton = forceUpdate;
 
-        const calcLedFullSize = () => {
-            return Math.min(this.getAllStyle()["width"], this.getAllStyle()["height"]) * 0.5;
-        }
-
-        const ledFullSize = calcLedFullSize();
-
-
-        // --------- styles --------------
+        // styles
         const allText = this.getAllText();
         const allStyle = this.getAllStyle();
         const showLED = allText["showLED"];
+        const width = allStyle["width"];
+        const height = allStyle["height"];
 
+        // LED circle
+        const alignItems = allText["verticalAlign"];
+        const justifyContent = allText["horizontalAlign"];
+        const ledCircleDiameter = Math.min(width, height) * 0.5;
+
+        // color and text
         const itemColor = this.calcItemColor();
+        const itemText = this.calcItemText();
         const buttonColor = showLED === true ? "rgba(0,0,0,0)" : itemColor;
         const ledColor = showLED === true ? itemColor : "rgba(0,0,0,0)";
 
 
+        // 3D shadow
         let threeDStyle = {};
         if (this.buttonPressed) {
             // force change when mouse down
@@ -128,13 +131,10 @@ export class BooleanButton extends BaseWidget {
             }
         }
 
-        // location of LED inside the Boolean Button widget
-        const alignItems = allText["verticalAlign"];
-        const justifyContent = allText["horizontalAlign"];
-
         return (
             <div
                 ref={elementRef}
+                // 3D shadow, background color
                 style={{
                     display: "inline-flex",
                     alignItems: alignItems,
@@ -151,28 +151,17 @@ export class BooleanButton extends BaseWidget {
             >
                 <div
                     style={{
-                        position: "relative",
+                        width: ledCircleDiameter,
+                        height: ledCircleDiameter,
                         display: "inline-flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        borderRadius: ledCircleDiameter / 2,
+                        backgroundColor: ledColor,
+                        border: "solid 1px rgba(30,30,30,1)",
+                        opacity: showLED === true ? 1 : 0,
                     }}
-                >
-                    {showLED === true ? (
-                        <div
-                            style={{
-                                width: ledFullSize,
-                                height: ledFullSize,
-                                display: "inline-flex",
-                                borderRadius: ledFullSize / 2,
-                                backgroundColor: ledColor,
-                                border: "solid 1px rgba(30,30,30,1)",
-                            }}
-                        ></div>
-                    ) : null}
-
-                    <div>&nbsp;{this.calcItemText()}</div>
-                </div>
+                ></div>
+                &nbsp;
+                {itemText}
             </div>
         );
     };
@@ -234,6 +223,7 @@ export class BooleanButton extends BaseWidget {
         const itemValues = [allText["offValue"], allText["onValue"]];
         const itemColors = [allText["offColor"], allText["onColor"]]
         const index = this.calcItemIndex(itemValues);
+        console.log(index)
 
         if (index !== undefined) {
             const color = itemColors[index];
@@ -245,7 +235,7 @@ export class BooleanButton extends BaseWidget {
     };
 
     /**
-     * when the mouse is down on the button, do something
+     * when the mouse is down or up on the button, do something
      */
     handleMouseActionOnButton = (event: any, direction: "down" | "up") => {
         event.preventDefault();
@@ -264,8 +254,6 @@ export class BooleanButton extends BaseWidget {
 
         if (direction === "down") {
             this.buttonPressed = true;
-        } else {
-            this.buttonPressed = false;
         }
 
         const allText = this.getAllText();
@@ -375,7 +363,6 @@ export class BooleanButton extends BaseWidget {
                 // which bit to show, -1 means using the channel value
                 bit: 0,
                 alarmBorder: true,
-                // toggle/push and reset/push no reset/push nothing and set/
                 // Toggle/Push/Push (inverted)
                 mode: "Toggle",
                 // when the channel is not connected

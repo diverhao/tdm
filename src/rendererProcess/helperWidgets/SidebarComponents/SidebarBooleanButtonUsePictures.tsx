@@ -11,48 +11,73 @@ import { SidebarComponent } from "./SidebarComponent";
  * update this sidebar component from widget.
  */
 export class SidebarBooleanButtonUsePictures extends SidebarComponent {
-	constructor(sidebar: BaseWidgetSidebar) {
-		super(sidebar);
-	}
+    constructor(sidebar: BaseWidgetSidebar) {
+        super(sidebar);
+    }
 
-	_Element = () => {
-		const [usePictures, setUsePictures] = React.useState<boolean>(this.getMainWidget().getText()["usePictures"]);
+    _Element = () => {
+        const [usePictures, setUsePictures] = React.useState<boolean>(this.getMainWidget().getText()["usePictures"]);
 
-		return (
-			<this._BlockBody>
-				<form onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, usePictures)} style={this.getFormStyle()}>
-					<div>Use Pictures:</div>
-					<input
-						type="checkbox"
-						checked={usePictures}
-						onChange={(event: any) => {
-							this.updateWidget(event, !usePictures);
-							setUsePictures((prevVal: boolean) => {
-								return !prevVal;
-							});
-						}}
-					/>
-				</form>
-			</this._BlockBody>
-		);
-	};
+        return (
+            <this._BlockBody>
 
-	updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-		// do not preventDefault()
+                <div
+                    style={{
+                        width: 10,
+                        height: 10,
+                        backgroundColor: "red",
+                    }}
+                    onMouseDown={() => {
+                        const mainWidget = this.getMainWidget();
+                        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient()
+                        const symbolGallery = displayWindowClient.getSymbolGallery();
+                        symbolGallery.createElement((
+                            symbolName: string,
+                            symbolContent: string
+                        ) => {
+                            console.log(symbolName, symbolContent, this.getMainWidget().getWidgetKey());
+                        },
+                            mainWidget.getWidgetKey()
+                        )
+                    }}
+                >
 
-		const oldVal = this.getText()["usePictures"];
-		if (propertyValue === oldVal) {
-			return;
-		} else {
-			this.getText()["usePictures"] = propertyValue;
-		}
+                </div>
 
-		const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-		history.registerAction();
 
-		g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-		g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+                <form onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidget(event, usePictures)} style={this.getFormStyle()}>
+                    <div>Use Pictures:</div>
+                    <input
+                        type="checkbox"
+                        checked={usePictures}
+                        onChange={(event: any) => {
+                            this.updateWidget(event, !usePictures);
+                            setUsePictures((prevVal: boolean) => {
+                                return !prevVal;
+                            });
+                        }}
+                    />
+                </form>
+            </this._BlockBody>
+        );
+    };
 
-		g_flushWidgets();
-	};
+    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        // do not preventDefault()
+
+        const oldVal = this.getText()["usePictures"];
+        if (propertyValue === oldVal) {
+            return;
+        } else {
+            this.getText()["usePictures"] = propertyValue;
+        }
+
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
+
+        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+
+        g_flushWidgets();
+    };
 }

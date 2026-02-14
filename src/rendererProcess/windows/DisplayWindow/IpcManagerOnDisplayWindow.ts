@@ -244,6 +244,8 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("local-font-names", this.handleLocalFontNames);
         this.ipcRenderer.on("load-db-file-contents", this.handleLoadDbFileContents);
 
+        this.ipcRenderer.on("get-symbol-gallery", this.handleGetSymbolGallery);
+
         this.ipcRenderer.on("start-record-video", this.handleStartRecordVideo);
 
         this.ipcRenderer.on("window-will-be-closed", this.handleWindowWillBeClosed);
@@ -1546,6 +1548,22 @@ export class IpcManagerOnDisplayWindow {
                 widget.loadDbFile(data["dbFileName"], data["dbFileContents"]);
                 break;
             }
+        }
+    }
+
+    handleGetSymbolGallery = (event: any, data: IpcEventArgType2["get-symbol-gallery"]) => {
+        const {widgetKey, page, pageImages, pageNames} = data;
+        const symbolGallery = this.getDisplayWindowClient().getSymbolGallery();
+        const symbolGalleryHolderWidgetKey = symbolGallery.getHolderWidgetKey();
+        console.log("--------->",widgetKey, symbolGalleryHolderWidgetKey, pageNames);
+        if (widgetKey === symbolGalleryHolderWidgetKey) {
+            // the widget is still holding the symbol gallery
+            symbolGallery.setPageImages(pageImages);
+            symbolGallery.setPageNames(pageNames);
+            symbolGallery.forceUpdate({});
+        } else {
+            // todo: close the page, clean up data
+            symbolGallery.removeElement();
         }
     }
 

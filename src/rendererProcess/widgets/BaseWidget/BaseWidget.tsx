@@ -1901,7 +1901,7 @@ export abstract class BaseWidget {
             elementRef.current.style["outlineStyle"] = "solid";
             elementRef.current.style["outlineWidth"] = "3px";
             elementRef.current.style["outlineColor"] = "rgba(105,105,105,1)";
-            if (this._getChannelAccessRight() < 1.5) {
+            if (this._getChannelAccessRight() < Channel_ACCESS_RIGHTS.READ_WRITE) {
                 elementRef.current.style["cursor"] = "not-allowed";
             } else {
                 elementRef.current.style["cursor"] = "pointer";

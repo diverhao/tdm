@@ -47,6 +47,7 @@ import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 import { toBlob } from "dom-to-image-more";
 import { ChannelNameHint } from "../../../rendererProcess/helperWidgets/ChannelNameHint/ChannelNameHint";
 import { Table } from "../../widgets/Table/Table";
+import { SymbolGallery } from "../../helperWidgets/SymbolGallery/SymbolGallery";
 
 console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Finished loading modules.")
 
@@ -95,6 +96,7 @@ export class DisplayWindowClient {
     private _hostname: string = "127.0.0.1";
 
     private _prompt: PromptOnDisplayWindow;
+    private _symbolGallery: SymbolGallery;
     private _channelNameHint: ChannelNameHint;
 
     private _textEditorModified: boolean = false;
@@ -143,6 +145,7 @@ export class DisplayWindowClient {
         this.startToListenMouseEvents();
 
         this._prompt = new PromptOnDisplayWindow(this);
+        this._symbolGallery = new SymbolGallery(this);
         this._channelNameHint = new ChannelNameHint();
 
         if (hostname === undefined) {
@@ -1657,6 +1660,10 @@ export class DisplayWindowClient {
 
     getPrompt = () => {
         return this._prompt;
+    }
+
+    getSymbolGallery = () => {
+        return this._symbolGallery;
     }
 
     getTextEditorModified = () => {
