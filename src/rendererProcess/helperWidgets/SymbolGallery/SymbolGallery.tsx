@@ -1,57 +1,69 @@
 import ReactDOM from "react-dom/client";
 import * as React from "react";
 import { GlobalVariables } from "../../../common/GlobalVariables";
-import { ElementRectangleButton } from "../SharedElements/RectangleButton";
-import { Log } from "../../../common/Log";
-import { type_DialogInputBox, type_DialogMessageBox, type_DialogMessageBoxButton } from "../../../common/IpcEventArgType";
-import { TdmLogo } from "../../global/Images";
+import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor, ElementRectangleButtonHighlightBackgroundColor } from "../SharedElements/RectangleButton";
 import { DisplayWindowClient } from "../../windows/DisplayWindow/DisplayWindowClient";
-import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
-
 
 
 /**
- * Customized prompt for all modes. The electron.js does not support native prompt. <br>
+ * Symbol Gallery Modal Dialog
  * 
- * Each display window has one such class.
+ * Provides a gallery UI for selecting symbol/image files from organized folders.
+ * Features include:
+ * - Tab-based page navigation (Chrome-like tabs)
+ * - Image grid display with selection indicator (checkmark)
+ * - Base64-encoded image support (SVG, PNG, JPG, etc.)
+ * - Image name truncation with ellipsis for long names
+ * - Select/Cancel buttons for dialog control
+ * 
+ * Each display window has one SymbolGallery instance that manages gallery state
+ * and communicates with the main process via IPC to fetch gallery data.
  */
 export class SymbolGallery {
 
     private readonly _id = "element-symbol-gallery";
     displayWindowClient: DisplayWindowClient;
-    _holderWidgetKey: string = "";
-    _pageNames: string[] = [];
-    _pageImages: Record<string, string> = {};
-    _selectedPage: number = 0;
-    _selectedImageName: string = "";
+    _holderWidgetKey: string = ""; // The widget key of the Symbol widget that opened this gallery
+    _pageNames: string[] = []; // List of category/folder names (tabs)
+    _pageImages: Record<string, string> = {}; // Maps image name to base64 data URI content
+    _selectedPage: number = 0; // Currently selected page/tab index
+    _selectedImageName: string = ""; // Currently selected image name
 
-    forceUpdate = (input: any) => { console.log("force update???") };
+    forceUpdate = (input: any) => { }; // Callback to trigger re-render of main frame
+    forceUpdateButtons = (input: any) => { }; // Callback to trigger re-render of buttons
 
     constructor(displayWindowClient: DisplayWindowClient) {
         this.displayWindowClient = displayWindowClient;
         this.startEventListeners();
     }
 
+    /**
+     * Start listening to keyboard events for closing the gallery via Escape key
+     */
     startEventListeners = () => {
         window.addEventListener("keydown", this.removeElementOnEscKey)
     }
 
     /**
-     * If we remove these event listeners, the prompt won't disappear when we click blank area or 
-     * press Esc key. 
+     * Stop listening to keyboard and mouse events
      */
     removeEventListeners = () => {
         window.removeEventListener("mousedown", this.removeElement)
         window.removeEventListener("keydown", this.removeElementOnEscKey)
     }
 
+    /**
+     * Create and display the symbol gallery modal dialog
+     * @param selectCallback - Callback invoked when user selects an image: (symbolName, symbolContent) => void
+     * @param holderWidgetKey - The widget key of the Symbol widget that owns this gallery
+     */
     createElement = (selectCallback: (symbolName: string, symbolContent: string) => void, holderWidgetKey: string) => {
 
         this.removeElement();
 
         this.setHolderWidgetKey(holderWidgetKey);
 
-        // transparent backdrop
+        // Create full-screen transparent backdrop
         const newElement = document.createElement('div');
         newElement.id = this._id;
 
@@ -64,26 +76,28 @@ export class SymbolGallery {
         newElement.style.alignItems = "flex-start";
         newElement.style.justifyContent = "center";
 
-        // let the wrapper div include the contents
+        // Render the React component tree into the backdrop
         ReactDOM.createRoot(newElement).render(
             <this._ElementFrame
                 selectCallback={selectCallback}
             >
             </this._ElementFrame>
         );
-        // append wrapper element
+        // Append to document body to display the modal
         document.body.appendChild(newElement);
     }
 
     /**
-     * Frame for symbol gallery, contains `Select` and `Cancel` buttons
+     * Main frame component: contains page tabs, image grid, and action buttons
+     * Initializes IPC request for gallery data on mount
      */
     _ElementFrame = ({ selectCallback }: any) => {
 
         const [, forceUpdate] = React.useState({});
-        // Update the state when class instance data changes
+        // Store the state setter so class methods can trigger re-renders
         this.forceUpdate = forceUpdate;
 
+        // On mount: request gallery data from main process for initial page (page 0)
         React.useEffect(() => {
             const ipcManager = this.displayWindowClient.getIpcManager();
             const displayWindowId = this.displayWindowClient.getWindowId();
@@ -97,7 +111,7 @@ export class SymbolGallery {
         return (
             <div
                 style={{
-                    display: "inline-flex",
+                    display: "flex",
                     width: "100%",
                     height: "100%",
                     backgroundColor: "rgba(255,255,255,1)",
@@ -106,10 +120,277 @@ export class SymbolGallery {
                     justifyContent: "flex-start",
                 }}
             >
+                {/* Tab bar with page/folder names */}
                 <this._ElementPageNames></this._ElementPageNames>
+                {/* Grid of images for current page */}
                 <this._ElementPageImages></this._ElementPageImages>
+                {/* Select and Close buttons */}
+                <this._ElementButtons selectCallback={selectCallback}></this._ElementButtons>
+            </div>
+        )
+    }
 
+    /**
+     * Page tab bar: displays folder/category names as clickable tabs
+     * Active tab is highlighted; clicking a tab loads that page's images
+     */
+    _ElementPageNames = () => {
+        const pageNames = this.getPageNames();
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    marginTop: 10,
+                    height: GlobalVariables.defaultFontSize * 2,
+                }}
+            >
+                {
+                    pageNames.map((pageName: string, index: number) => {
+                        return (
+                            <this._ElementPageName
+                                index={index}
+                                pageName={pageName}
+                            >
+                            </this._ElementPageName>
+                        )
+                    })
+                }
+            </div>
+        )
+    }
+
+    /**
+     * Individual page tab: Chrome-like tab style with selection highlight
+     * On click: fetches images for selected page via IPC
+     */
+    _ElementPageName = ({ index, pageName }: any) => {
+        const selectedPage = this.getSelectedPage();
+        const isSelected = index === selectedPage;
+
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: isSelected ? "white" : "rgba(200, 200, 200, 0.5)",
+                    color: isSelected ? "#333" : "#666",
+                    borderTop: "1px solid #e0e0e0",
+                    borderLeft: "1px solid #e0e0e0",
+                    borderRight: "1px solid #e0e0e0",
+                    borderTopLeftRadius: "8px",
+                    borderTopRightRadius: "8px",
+                    marginRight: 2,
+                    paddingLeft: 5,
+                    paddingRight: 5,
+                    cursor: "pointer",
+                    fontWeight: isSelected ? "600" : "400",
+                    fontSize: "14px",
+                    textAlign: "center",
+                    borderBottom: isSelected ? "none" : "1px solid #e0e0e0",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                }}
+                onMouseDown={(event: any) => {
+                    if (isSelected) {
+                        return;
+                    }
+                    // Request gallery data for this page from main process
+                    const ipcManager = this.displayWindowClient.getIpcManager();
+                    const displayWindowId = this.displayWindowClient.getWindowId();
+                    ipcManager.sendFromRendererProcess("get-symbol-gallery", {
+                        page: index,
+                        displayWindowId: displayWindowId,
+                        widgetKey: this.getHolderWidgetKey(),
+                    })
+                    // Deselect any previously selected image
+                    this.setSelectedImageName("");
+                }}
+                onMouseEnter={(e) => {
+                    if (!isSelected) {
+                        (e.target as HTMLElement).style.backgroundColor = "rgba(220, 220, 220, 0.8)";
+                    }
+                }}
+                onMouseLeave={(e) => {
+                    if (!isSelected) {
+                        (e.target as HTMLElement).style.backgroundColor = "rgba(200, 200, 200, 0.5)";
+                    }
+                }}
+            >
+                {pageName}
+            </div>
+        )
+    }
+
+    /**
+     * Image grid container: displays all images for the current page
+     * Supports scrolling if too many images to fit
+     */
+    _ElementPageImages = () => {
+        const pageImages = this.getPageImages();
+        const [, forceUpdate] = React.useState({});
+
+        return (
+            <div style={{
+                display: "inline-flex",
+                padding: 16,
+                border: "solid 2px rgba(200, 200, 200, 1)",
+                borderRadius: 6,
+                width: "90%",
+                maxHeight: "calc(100% - 150px)",
+                flexWrap: "wrap",
+                overflow: "auto",
+                alignContent: "flex-start",
+            }}>
+                {
+                    Object.entries(pageImages).map(([imageName, imageContent]: [string, string], index: number) => {
+                        const selected = this.getSelectedImageName() === imageName;
+                        console.log(selected)
+                        return (
+                            <this._ElementImage
+                                key={`${imageName}-${index}`}
+                                imageName={imageName}
+                                imageContent={imageContent}
+                                index={index}
+                                selected={selected}
+                                forceUpdateImages={forceUpdate}
+                            ></this._ElementImage>
+                        )
+                    })
+                }
+            </div>
+        )
+    }
+
+    /**
+     * Individual image tile: displays image with name below
+     * Shows green checkmark when selected; border highlights on hover
+     * On click: toggles selection state
+     */
+    _ElementImage = ({ imageName, index, imageContent, selected, forceUpdateImages }: any) => {
+        const border = selected ? "2px solid green" : "2px solid rgba(0,0,0,0)";
+
+        return (
+
+            <div
+                key={index}
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: 5,
+                }}
+            >
+                {/* Image container with checkmark overlay */}
+                <div style={{
+                    position: "relative",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    maxWidth: 80,
+                    minWidth: 80,
+                    maxHeight: 80,
+                    minHeight: 80,
+                    boxSizing: "border-box",
+
+                }}
+                    onMouseDown={(event: any) => {
+                        event.preventDefault();
+                        if (this.getSelectedImageName() === imageName) {
+                            // Deselect the image
+                            this.setSelectedImageName("");
+                        } else {
+                            // Select the image
+                            this.setSelectedImageName(imageName);
+                        }
+                        this.forceUpdateButtons({});
+                        forceUpdateImages({});
+                    }}
+                >
+                    {/* Base64 encoded image (SVG, PNG, JPG, etc.) */}
+                    <img
+                        src={imageContent}
+                        style={{
+                            maxWidth: "100%",
+                            maxHeight: "100%",
+                            objectFit: "contain",
+                            display: "block",
+                            backgroundColor: "rgba(240, 240, 240, 1)",
+                            border: border,
+                            borderRadius: 4,
+                            boxSizing: "border-box",
+                        }}
+                        onError={(e) => {
+                            // Fallback for broken/invalid images
+                            (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                    />
+                    {/* Green checkmark indicator for selected image */}
+                    {selected ?
+                        <div style={{
+                            position: "absolute",
+                            top: "4px",
+                            right: "4px",
+                            width: "24px",
+                            height: "24px",
+                            backgroundColor: "#4CAF50",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <polyline points="20 6 9 17 4 12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </div>
+                        :
+                        null
+                    }
+
+                </div>
+                {/* Image name (truncated with ellipsis if too long) */}
+                <div style={{
+                    fontSize: 12,
+                    marginTop: 5,
+                    color: "#333",
+                    textAlign: "center",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: 80,
+                }}>
+                    {imageName}
+                </div>
+            </div>
+        )
+    }
+
+    /**
+     * Action buttons: "Select" (enabled only when image selected) and "Close"
+     */
+    _ElementButtons = ({ selectCallback }: any) => {
+        const [, updateButtons] = React.useState({});
+        this.forceUpdateButtons = updateButtons;
+        const defaultBackgroundColor = this.getSelectedImageName() === "" ? "rgba(180, 180, 180, 1)" : ElementRectangleButtonDefaultBackgroundColor;
+        const highlightBackgroundColor = this.getSelectedImageName() === "" ? "rgba(180, 180, 180, 1)" : ElementRectangleButtonHighlightBackgroundColor;
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginTop: 10,
+                    marginBottom: 20,
+                }}
+            >
+                {/* Select button: disabled (grayed out) if no image selected */}
                 <ElementRectangleButton
+                    defaultBackgroundColor={defaultBackgroundColor}
+                    highlightBackgroundColor={highlightBackgroundColor}
                     handleMouseDown={(event: any) => {
                         const symbolName = this.getSelectedImageName();
                         if (symbolName === "") {
@@ -119,134 +400,32 @@ export class SymbolGallery {
                         if (symbolContent === undefined) {
                             return;
                         }
+                        // Invoke callback with selected symbol name and content
                         selectCallback(symbolName, symbolContent);
                         this.removeElement();
                     }}
                 >
                     Select
                 </ElementRectangleButton>
+                {/* Close button: closes gallery without selecting */}
                 <ElementRectangleButton
+                    marginLeft={20}
                     handleMouseDown={(event: any) => {
                         this.removeElement();
                     }}
                 >
-                    Cancel
+                    Close
                 </ElementRectangleButton>
             </div>
         )
     }
 
-    _ElementPageNames = () => {
-        const pageNames = this.getPageNames();
-        const selectedPage = this.getSelectedPage();
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    flexDirection: "row",
-                }}
-            >
-                {
-                    pageNames.map((pageName: string, index: number) => {
-                        const border = index === selectedPage ? "2px solid green" : "2px solid rgba(0,0,0,0)";
-                        return (
-                            <ElementRectangleButton
-                                additionalStyle={{
-                                    border: border,
-                                    margin: 10,
-                                }}
-                                key={index}
-                                handleMouseDown={(event: any) => {
-                                    if (index === selectedPage) {
-                                        return;
-                                    }
-                                    // select this page
-                                    const ipcManager = this.displayWindowClient.getIpcManager();
-                                    const displayWindowId = this.displayWindowClient.getWindowId();
-                                    ipcManager.sendFromRendererProcess("get-symbol-gallery", {
-                                        page: index,
-                                        displayWindowId: displayWindowId,
-                                        widgetKey: this.getHolderWidgetKey(),
-                                    })
-                                }}
-                            >
-                                {pageName}
-                            </ElementRectangleButton>
 
-                        )
-                    })
-                }
-            </div>
-        )
-    }
+    // ======================== Helper Methods ========================
 
-    _ElementPageImages = () => {
-        const pageImages = this.getPageImages();
-        const [selectedImageName, setSelectedImageName] = React.useState("");
-
-        return (
-            <div style={{
-                display: "inline-flex",
-                padding: 16,
-            }}>
-                {
-                    Object.entries(pageImages).map(([imageName, imageContent]: [string, string], index: number) => {
-                        const border = selectedImageName === imageName ? "solid 2px green" : "solid 2px rgba(180,180,180,1)";
-                        return (
-                            <div
-                                key={index}
-                                style={{
-                                    display: "inline-flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                }}
-                            >
-                                <img
-                                    src={imageContent}
-                                    style={{
-                                        width: 100,
-                                        height: 100,
-                                        objectFit: "contain",
-                                        borderRadius: "4px",
-                                        backgroundColor: "#f9f9f9",
-                                        border: border,
-                                    }}
-                                    onError={(e) => {
-                                        // Fallback for broken images
-                                        (e.target as HTMLImageElement).style.display = "none";
-                                    }}
-                                    onMouseDown={(event: any) => {
-                                        event.preventDefault();
-                                        if (this.getSelectedImageName() === imageName) {
-                                            // deselect the image
-                                            setSelectedImageName("");
-                                            this.setSelectedImageName("");
-                                        } else {
-                                            // select the image
-                                            setSelectedImageName(imageName);
-                                            this.setSelectedImageName(imageName);
-                                        }
-                                    }}
-                                />
-                                <div style={{
-                                    fontSize: "12px",
-                                    color: "#333",
-                                    textAlign: "center",
-                                    wordBreak: "break-word",
-                                    maxWidth: "100%",
-                                }}>
-                                    {imageName}
-                                </div>
-                            </div>
-                        )
-                    })
-                }
-            </div>
-        )
-    }
-
-    // ------------------------ methods -----------------------------------
-
+    /**
+     * Remove the gallery modal from DOM and reset state
+     */
     removeElement = () => {
         const oldElement = document.getElementById(this._id);
         if (oldElement !== null) {
@@ -259,11 +438,16 @@ export class SymbolGallery {
 
     }
 
+    /**
+     * Close gallery when Escape key is pressed
+     */
     removeElementOnEscKey = (event: KeyboardEvent) => {
         if (event.key === "Escape" || event.key === "Esc") {
             this.removeElement();
         }
     }
+
+    // ======================== Getters & Setters ========================
 
     getHolderWidgetKey = () => {
         return this._holderWidgetKey;

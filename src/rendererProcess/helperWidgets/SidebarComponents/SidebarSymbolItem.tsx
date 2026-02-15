@@ -64,8 +64,8 @@ export class SidebarSymbolItem {
                             alignItems: "center",
                         }}
                     >
+                        {/* select image from gallery */}
                         <div
-
                             onClick={() => {
                                 const mainWidget = this.getMainWidget();
                                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient()
@@ -99,6 +99,7 @@ export class SidebarSymbolItem {
                             ></img>
                         </div>
 
+                        {/* select image from file */}
                         <div
                             style={{
                                 display: "inline-flex",
@@ -107,7 +108,7 @@ export class SidebarSymbolItem {
                                 alignItems: "center",
                             }}
                             onClick={() => {
-                                // to get the file name
+                                // get the file name
                                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                 const displayWindowId = displayWindowClient.getWindowId();
                                 displayWindowClient.getIpcManager().sendFromRendererProcess("select-a-file", {

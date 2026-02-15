@@ -21,14 +21,12 @@ export type type_Symbol_tdl = {
     // Symbol specific
     itemNames: string[]; // imageNames
     itemValues: number[]; // PV value
-    itemContents: string[]; // images contents
 };
 
 export class Symbol extends BaseWidget {
     _rules: SymbolRules;
     _itemNames: string[];
     _itemValues: number[];
-    _itemContents: string[];
 
     constructor(widgetTdl: type_Symbol_tdl) {
         super(widgetTdl);
@@ -38,7 +36,6 @@ export class Symbol extends BaseWidget {
 
         this._itemNames = JSON.parse(JSON.stringify(widgetTdl.itemNames));
         this._itemValues = JSON.parse(JSON.stringify(widgetTdl.itemValues));
-        this._itemContents = JSON.parse(JSON.stringify(widgetTdl.itemContents));
 
         // itemNames and itemValues must match
         const count = Math.min(this._itemNames.length, this._itemValues.length);
@@ -108,9 +105,10 @@ export class Symbol extends BaseWidget {
     _ElementSymbol = () => {
         const allText = this.getAllText();
         const allStyle = this.getAllStyle();
-        const objectFit = allText["stretchToFit"] ? "fill" : "scale-down";
+        const objectFit = allText["stretchToFit"] ? "fill" : "contain";
         const width = allStyle["width"];
         const height = allStyle["height"];
+        console.log("width", width)
 
         // find the corresponding image for current PV value
         let { index, value, fileName } = this.calcFileName();
@@ -155,6 +153,8 @@ export class Symbol extends BaseWidget {
                 <img
                     src={fileName}
                     style={{
+                        width: "100%",
+                        height: "100%",
                         objectFit: objectFit,
                     }}
                     onError={(e) => {
@@ -162,8 +162,6 @@ export class Symbol extends BaseWidget {
                         setImageError(true);
                     }}
                     alt="..."
-                    width={width}
-                    height={height}
                 ></img>
             )
         }
@@ -298,7 +296,6 @@ export class Symbol extends BaseWidget {
             rules: [],
             itemNames: [],
             itemValues: [],
-            itemContents: [],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
@@ -310,7 +307,6 @@ export class Symbol extends BaseWidget {
         const result = super.getTdlCopy(newKey);
         result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
         result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
-        result["itemContents"] = JSON.parse(JSON.stringify(this.getItemContents()));
         return result;
     }
 
@@ -322,9 +318,6 @@ export class Symbol extends BaseWidget {
     getItemValues = () => {
         return this._itemValues;
     };
-    getItemContents = () => {
-        return this._itemContents;
-    }
 
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
