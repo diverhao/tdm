@@ -59,6 +59,8 @@ export class SidebarMediaOpenFile extends SidebarComponent {
                                     const mainWidget = this.getMainWidget();
                                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient()
                                     const symbolGallery = displayWindowClient.getSymbolGallery();
+                                    const fileName = mainWidget.getAllText()["fileName"];
+
                                     symbolGallery.createElement(
                                         // callback function when we click Select button
                                         (
@@ -67,7 +69,8 @@ export class SidebarMediaOpenFile extends SidebarComponent {
                                         ) => {
                                             this.updateWidget(undefined, symbolContent);
                                         },
-                                        mainWidget.getWidgetKey()
+                                        mainWidget.getWidgetKey(),
+                                        fileName,
                                     )
                                 }}
                                 style={{

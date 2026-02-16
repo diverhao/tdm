@@ -2833,7 +2833,6 @@ export class IpcManagerOnMainProcess {
             const builtInGalleryFolder = path.join(__dirname, "../../common/resources/symbolGallery");
 
             const galleryData = scanSymbolGallery(customFolders, builtInGalleryFolder);
-            console.log(galleryData)
             mainProcess.setSymbolGalleryData(galleryData);
         }
 

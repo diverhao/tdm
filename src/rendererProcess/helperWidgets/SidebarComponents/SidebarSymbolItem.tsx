@@ -70,6 +70,7 @@ export class SidebarSymbolItem {
                                 const mainWidget = this.getMainWidget();
                                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient()
                                 const symbolGallery = displayWindowClient.getSymbolGallery();
+                                const fileName = mainWidget.getAllText()["fileName"];
                                 symbolGallery.createElement(
                                     // callback function when we click Select button
                                     (
@@ -79,7 +80,8 @@ export class SidebarSymbolItem {
                                         console.log(symbolName, symbolContent, this.getMainWidget().getWidgetKey());
                                         this.updateWidgetName(undefined, symbolContent);
                                     },
-                                    mainWidget.getWidgetKey()
+                                    mainWidget.getWidgetKey(),
+                                    fileName,
                                 )
                             }}
                             style={{

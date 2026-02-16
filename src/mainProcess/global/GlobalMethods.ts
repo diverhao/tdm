@@ -588,6 +588,9 @@ export const scanSymbolGallery = (folderPaths: string[], galleryFolder: string):
     // Maximum file size in bytes (50 KB)
     const maxFileSizeBytes = 50 * 1024;
 
+    // Maximum number of files
+    const maxFileNum = 300;
+
     /**
      * Helper function to scan a folder directly for image files
      */
@@ -600,10 +603,16 @@ export const scanSymbolGallery = (folderPaths: string[], galleryFolder: string):
 
             result[keyName] = {};
             const files = fs.readdirSync(folderPath);
+            let fileCount = 0;
 
             for (const file of files) {
                 const filePath = path.join(folderPath, file);
                 const fileStats = fs.statSync(filePath);
+                ++fileCount;
+
+                if (fileCount > maxFileNum) {
+                    break;
+                }
 
                 // Skip directories
                 if (fileStats.isDirectory()) {

@@ -28,6 +28,7 @@ export class SymbolGallery {
     _pageImages: Record<string, string> = {}; // Maps image name to base64 data URI content
     _selectedPage: number = 0; // Currently selected page/tab index
     _selectedImageName: string = ""; // Currently selected image name
+    _currentImage: string = "";
 
     forceUpdate = (input: any) => { }; // Callback to trigger re-render of main frame
     forceUpdateButtons = (input: any) => { }; // Callback to trigger re-render of buttons
@@ -57,11 +58,13 @@ export class SymbolGallery {
      * @param selectCallback - Callback invoked when user selects an image: (symbolName, symbolContent) => void
      * @param holderWidgetKey - The widget key of the Symbol widget that owns this gallery
      */
-    createElement = (selectCallback: (symbolName: string, symbolContent: string) => void, holderWidgetKey: string) => {
+    createElement = (selectCallback: (symbolName: string, symbolContent: string) => void, holderWidgetKey: string, currentImage: string) => {
 
         this.removeElement();
 
         this.setHolderWidgetKey(holderWidgetKey);
+
+        this.setCurrentImage(currentImage);
 
         // Create full-screen transparent backdrop
         const newElement = document.createElement('div');
@@ -120,12 +123,65 @@ export class SymbolGallery {
                     justifyContent: "flex-start",
                 }}
             >
+                <this._ElementTitle></this._ElementTitle>
                 {/* Tab bar with page/folder names */}
                 <this._ElementPageNames></this._ElementPageNames>
                 {/* Grid of images for current page */}
                 <this._ElementPageImages></this._ElementPageImages>
                 {/* Select and Close buttons */}
                 <this._ElementButtons selectCallback={selectCallback}></this._ElementButtons>
+            </div>
+        )
+    }
+
+    _ElementTitle = () => {
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginTop: 10,
+                    // gap: 40,
+                    position: "relative",
+                    width: "90%",
+                }}
+            >
+                {/* Title and description on the left */}
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <div
+                        style={{
+                            fontSize: GlobalVariables.defaultFontSize * 2,
+                            marginBottom: 10,
+                            fontWeight: "600",
+                        }}
+                    >
+                        Symbol Gallery
+                    </div>
+                    <div
+                        style={{
+                            opacity: 0.5,
+                            fontSize: GlobalVariables.defaultFontSize * 0.9,
+                            width: "60%",
+                            textAlign: "center",
+                            lineHeight: "1.4",
+                        }}
+                    >
+                        Select from built-in and custom symbols. Your selection will be embedded into the TDM display for maximum portability.
+                        You can add your own symbol galleries in TDM settings.
+                        Constraints: 50 kB per symbol file, 300 symbols maximum per folder.
+                    </div>
+                </div>
+                {/* Current image on the right */}
+                <this._ElementCurrentImage></this._ElementCurrentImage>
             </div>
         )
     }
@@ -139,10 +195,15 @@ export class SymbolGallery {
         return (
             <div
                 style={{
-                    display: "inline-flex",
+                    display: "flex",
                     flexDirection: "row",
                     marginTop: 10,
-                    height: GlobalVariables.defaultFontSize * 2,
+                    maxHeight: GlobalVariables.defaultFontSize * 2,
+                    minHeight: GlobalVariables.defaultFontSize * 2,
+                    maxWidth: "90%",
+                    overflowX: "auto",
+                    overflowY: "hidden",
+                    scrollbarGutter: "stable",
                 }}
             >
                 {
@@ -182,16 +243,15 @@ export class SymbolGallery {
                     borderTopLeftRadius: "8px",
                     borderTopRightRadius: "8px",
                     marginRight: 2,
-                    paddingLeft: 5,
-                    paddingRight: 5,
+                    paddingLeft: 8,
+                    paddingRight: 8,
                     cursor: "pointer",
                     fontWeight: isSelected ? "600" : "400",
                     fontSize: "14px",
-                    textAlign: "center",
                     borderBottom: isSelected ? "none" : "1px solid #e0e0e0",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
+                    minWidth: "30px",
+                    maxWidth: "150px",
+                    flex: "0 1 auto",
                 }}
                 onMouseDown={(event: any) => {
                     if (isSelected) {
@@ -219,7 +279,16 @@ export class SymbolGallery {
                     }
                 }}
             >
-                {pageName}
+                <span
+                    style={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        textAlign: "left",
+                    }}
+                >
+                    {pageName}
+                </span>
             </div>
         )
     }
@@ -368,6 +437,59 @@ export class SymbolGallery {
         )
     }
 
+
+    _ElementCurrentImage = () => {
+
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: 5,
+                    position: "absolute",
+                    right: 0,
+                    top: 0,
+                }}
+            >
+                {/* Image container with checkmark overlay */}
+                <div style={{
+                    position: "relative",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    maxWidth: 80,
+                    minWidth: 80,
+                    maxHeight: 80,
+                    minHeight: 80,
+                    boxSizing: "border-box",
+
+                }}
+                >
+                    {/* Base64 encoded image (SVG, PNG, JPG, etc.) */}
+                    <img
+                        src={this.getCurrentImage()}
+                        style={{
+                            maxWidth: "100%",
+                            maxHeight: "100%",
+                            objectFit: "contain",
+                            display: "block",
+                            backgroundColor: "rgba(240, 240, 240, 1)",
+                            border: "none",
+                            borderRadius: 4,
+                            boxSizing: "border-box",
+                        }}
+                        onError={(e) => {
+                            // Fallback for broken/invalid images
+                            (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                    />
+                </div>
+            </div>
+        )
+    }
+
     /**
      * Action buttons: "Select" (enabled only when image selected) and "Close"
      */
@@ -487,6 +609,14 @@ export class SymbolGallery {
 
     setSelectedImageName = (newName: string) => {
         this._selectedImageName = newName;
+    }
+
+    getCurrentImage = () => {
+        return this._currentImage;
+    }
+
+    setCurrentImage = (img: string) => {
+        this._currentImage = img;
     }
 
     getId = () => {

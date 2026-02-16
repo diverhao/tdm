@@ -120,6 +120,9 @@ export class Media extends BaseWidget {
 
         if (mediaType === "image") {
             return <this._ElementImage></this._ElementImage>;
+        } else if (g_widgets1.isEditing()) {
+            // a mask for all types below in editing mode
+            return <this._ElementEditing text={fileName}></this._ElementEditing>
         } else if (mediaType === "pdf") {
             return <this._ElementPdf></this._ElementPdf>;
         } else if (mediaType === "video-local-file") {
@@ -127,7 +130,6 @@ export class Media extends BaseWidget {
         } else if (mediaType === "video-mjpeg") {
             return <this._ElementVideoMJPEG></this._ElementVideoMJPEG>;
         } else if (mediaType === "video-hls") {
-            // return <this._ElementVideoRemoteStream></this._ElementVideoRemoteStream>;
             return <this._ElementVideoHLS></this._ElementVideoHLS>;
         } else if (mediaType === "video-rtsp") {
             return <this._ElementError></this._ElementError>;
@@ -168,6 +170,25 @@ export class Media extends BaseWidget {
         );
     };
 
+    _ElementEditing = ({ text }: { text: string }) => {
+        return (
+            <div
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    backgroundColor: "rgba(0,0,0,0)",
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                }}
+            >
+                {text}
+            </div>
+        )
+    }
     _ElementPdf = () => {
 
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
@@ -178,40 +199,32 @@ export class Media extends BaseWidget {
         const fileName = allText["fileName"];
         const fullFileName = displayWindowClient.resolvePath(fileName);
 
-        if (g_widgets1.isEditing()) {
-            return (
-                <div>
-                    {fullFileName}
-                </div>
-            )
-        } else {
-            const data = mainProcessMode === "ssh-client" || mainProcessMode === "web" ? this.getBase64Content() : fullFileName;
-            return (
-                <object
-                    data={data}
-                    type="application/pdf"
-                    width="100%"
-                    height="100%"
-                >
-                    <p>Unable to display PDF file.</p>
-                </object>
-            );
-        }
+        const data = mainProcessMode === "ssh-client" || mainProcessMode === "web" ? this.getBase64Content() : fullFileName;
+        return (
+            <object
+                data={data}
+                type="application/pdf"
+                width="100%"
+                height="100%"
+            >
+                <p>Unable to display PDF file.</p>
+            </object>
+        );
     };
 
     /**
      * local video file
+     * 
+     * supports local .mp4, .ogg, .webm, .mp3, .mov
+     * 
+     *  not supported: .avi, .wmv
      */
-    // supports local .mp4, .ogg, .webm, .mp3, .mov
-    // not supported: local .mkv, .avi, .wmv
     _ElementVideoLocalFile = () => {
-        // so that the mouse can control video
 
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const allText = this.getAllText();
         const fileName = allText["fileName"];
         const src = displayWindowClient.resolvePath(fileName);
-
 
         return (
             <video preload="none" width="100%" height="100%" controls>
@@ -221,40 +234,24 @@ export class Media extends BaseWidget {
     };
 
     _ElementVideoRemoteStream = () => {
-        if (g_widgets1.isEditing() === true) {
-            return (
-                <div
-                    style={{
-                        width: "100%",
-                        height: "100%",
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        backgroundColor: "rgba(0,0,0,0)",
-                    }}
-                ></div>
-            )
-        } else {
-            return (
-                <iframe
-                    width="100%"
-                    height="100%"
-                    src={this.getAllText()["fileName"]}
-                    // frameBorder="0"
-                    // allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    // allowFullScreen
-                    // title="Embedded video"
-                    style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                    }}
-                />
+        return (
+            <iframe
+                width="100%"
+                height="100%"
+                src={this.getAllText()["fileName"]}
+                // frameBorder="0"
+                // allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                // allowFullScreen
+                // title="Embedded video"
+                style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                }}
+            />
 
-            )
-        }
+        )
     };
-
 
 
     // MJPEG video stream (Axis, Hikvision cameras)
@@ -342,12 +339,13 @@ export class Media extends BaseWidget {
         )
     }
 
+
     // -------------------- helper functions ----------------
 
     getMediaType = (fileName: string): "image" | "pdf" | "video-local-file" | "video-remote-stream" | "video-mjpeg" | "video-rtsp" | "video-hls" | undefined => {
         const imageTypes = ["jpg", "jpeg", "bmp", "png", "gif"];
         const pdfTypes = ["pdf"];
-        const localVideoFileTypes = ["mp4", "ogg", "webm", "mp3", "mov"];
+        const localVideoFileTypes = ["mp4", "ogg", "webm", "mp3", "mov", "mkv"];
 
         const fileNameArray = fileName.split(".");
         const fileType = fileNameArray[fileNameArray.length - 1].toLowerCase();
@@ -475,8 +473,6 @@ export class Media extends BaseWidget {
         if (base64Content !== `data:image/png;base64,${contents}` && base64Content !== `data:image/svg+xml;utf8,${encodeURIComponent(contents)}` && base64Content !== `data:application/pdf;base64, ${encodeURI(contents)}`) {
             if (mediaType === "image") {
                 this.setBase64Content(`data:image/png;base64,${contents}`);
-                // } else if (this.getMediaType(fileName) === "vector-picture") {
-                //     this.setBase64Content(`data:image/svg+xml;utf8,${encodeURIComponent(contents)}`);
             } else if (this.getMediaType(fileName) === "pdf") {
                 this.setBase64Content(`data:application/pdf;base64, ${encodeURI(contents)}`);
             } else {
@@ -494,6 +490,13 @@ export class Media extends BaseWidget {
     handleSelectAFile = (options: Record<string, any>, fileName: string) => {
         this.getSidebar()?.updateFromWidget(undefined, "select-a-file", fileName);
     };
+
+    /**
+     * truncate the file name
+     */
+    trucateText = (text: string) => {
+        return text.substring(0, 120);
+    }
 
     fileNameChanged = () => {
         const allText = this.getAllText();
