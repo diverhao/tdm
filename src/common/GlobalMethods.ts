@@ -262,7 +262,7 @@ export const calcTicks = (
     valMin: number,
     valMax: number,
     numTicks: number = 11,
-    options: TickOptions = {scale: "Linear"}
+    options: TickOptions = { scale: "Linear" }
 ): number[] => {
     const { scale = "Linear" } = options;
 
@@ -1041,4 +1041,62 @@ export const truncateString = (str: string, length: number = 3) => {
         return str.substring(0, length) + '...';
     }
     return str;
+};
+
+
+/**
+ * Check if a string is a data URI (e.g., data:image/png;base64,...)
+ */
+export const isDataUri = (str: string): boolean => {
+    return str.startsWith('data:');
+};
+
+/**
+ * Extract MIME type from a data URI
+ * Example: "data:image/png;base64,..." returns "image/png"
+ */
+export const getDataUriMimeType = (dataUri: string): string => {
+    if (!isDataUri(dataUri)) {
+        return "";
+    }
+    // Format: data:[<mediatype>][;base64],<data>
+    const match = dataUri.match(/^data:([^;,]+)/);
+    return match ? match[1] : "";
+};
+
+/**
+ * Determine if a data URI is an image (png, jpg, svg, gif, webp, etc.)
+ */
+export const isImageDataUri = (dataUri: string): boolean => {
+    const mimeType = getDataUriMimeType(dataUri);
+    return mimeType.startsWith('image/');
+};
+
+/**
+ * Determine if a data URI is a PDF
+ */
+export const isPdfDataUri = (dataUri: string): boolean => {
+    const mimeType = getDataUriMimeType(dataUri);
+    return mimeType === 'application/pdf';
+};
+
+/**
+ * Get the specific image type from a data URI
+ * Example: "data:image/png;base64,..." returns "png"
+ */
+export const getImageTypeFromDataUri = (dataUri: string): string => {
+    const mimeType = getDataUriMimeType(dataUri);
+    if (!mimeType.startsWith('image/')) {
+        return "";
+    }
+    return mimeType.split('/')[1]; // e.g., "png", "svg+xml"
+};
+
+
+export const isRemotePath = (path: string) => {
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+        return true;
+    } else {
+        return false;
+    }
 };

@@ -17,8 +17,6 @@ export type type_CheckBox_tdl = {
     text: Record<string, any>;
     channelNames: string[];
     groupNames: string[];
-    // itemLabels: string[];
-    // itemValues: number[];
     rules: type_rules_tdl;
 };
 
@@ -37,7 +35,6 @@ export class CheckBox extends BaseWidget {
 
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -50,30 +47,18 @@ export class CheckBox extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
-                </>
+                <div style={this.getElementBodyRawStyle()}>
+                    {/* <this._ElementArea></this._ElementArea> */}
+                    <this._ElementAreaRaw></this._ElementAreaRaw>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                {/* <this._ElementArea></this._ElementArea> */}
-                <this._ElementAreaRaw></this._ElementAreaRaw>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         return (
-            // <div
             <div
                 style={{
                     display: "inline-flex",
@@ -91,7 +76,6 @@ export class CheckBox extends BaseWidget {
                     fontStyle: this.getAllText().fontStyle,
                     outline: this._getElementAreaRawOutlineStyle(),
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
@@ -99,6 +83,9 @@ export class CheckBox extends BaseWidget {
             </div>
         );
     };
+
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
     _ElementCheckBox = () => {
         const elementRef = React.useRef<any>(null);
@@ -156,6 +143,8 @@ export class CheckBox extends BaseWidget {
             </form>
         );
     };
+
+    // -------------------- helper functions ----------------
 
     getCheckedState = () => {
         const bitValue = this.getBitValue();
@@ -311,53 +300,6 @@ export class CheckBox extends BaseWidget {
     };
 
 
-    // concretize abstract method
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
-
-    // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = (raw: boolean = false) => {
-        const value = this._getFirstChannelValue(raw);
-        if (value === undefined) {
-            return "";
-        } else {
-            return value;
-        }
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
-        }
-    };
-    _getChannelAccessRight = () => {
-        return this._getFirstChannelAccessRight();
-    };
-
     // -------------------------- tdl -------------------------------
 
     static generateDefaultTdl = () => {
@@ -422,7 +364,7 @@ export class CheckBox extends BaseWidget {
 
     generateDefaultTdl: () => any = CheckBox.generateDefaultTdl;
 
-    
+
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
         return result;

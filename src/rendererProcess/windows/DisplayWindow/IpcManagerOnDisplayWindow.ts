@@ -438,6 +438,9 @@ export class IpcManagerOnDisplayWindow {
 
             event.stopPropagation();
 
+            const displayWindowClient = this.getDisplayWindowClient();
+            const mode = displayWindowClient.getMainProcessMode();
+
             // `TextEditor` utility window
             const canvas = g_widgets1.getWidget("Canvas");
             let windowName = "";
@@ -1672,25 +1675,17 @@ export class IpcManagerOnDisplayWindow {
         window.open(href, "_blank", "noopener, noreferrer")
     }
 
+    /**
+     * the data coming in is a data uri, in form of "data:image..." or "data:application/...."
+     * 
+     * the svg file is converted to uri instead of raw file content
+     */
     handleGetMediaContent = (event: any, data: IpcEventArgType2["get-media-content"]) => {
         const { content, widgetKey } = data;
         const widget = g_widgets1.getWidget(widgetKey);
         if (widget instanceof Media) {
+            widget.setBase64Content(content);
 
-
-            if (data["content"] !== "") {
-                if (widget.getMediaType(widget.mediaFileName) === "picture") {
-                    widget.base64Content = `data:image/png;base64,${data["content"]}`;
-                } else if (widget.getMediaType(widget.mediaFileName) === "vector-picture") {
-                    widget.base64Content = `data:image/svg+xml;utf8,${encodeURIComponent(data["content"])}`;
-                } else if (widget.getMediaType(widget.mediaFileName) === "pdf") {
-                    widget.base64Content = `data:application/pdf;base64, ${encodeURI(data["content"])}`;
-                } else {
-                    widget.base64Content = "";
-                }
-            } else {
-                widget.base64Content = "";
-            }
             g_widgets1.addToForceUpdateWidgets(widgetKey);
             g_widgets1.addToForceUpdateWidgets("GroupSelection2");
             g_flushWidgets();

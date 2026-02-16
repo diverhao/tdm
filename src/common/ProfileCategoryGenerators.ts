@@ -203,6 +203,10 @@ export const generateDefaultProfile = (): Record<string, any> => {
                 "value": [],
                 "type": "[string,string][]"
             },
+            "Symbol Library": {
+                "DESCRIPTION": "Folders for symbols",
+                "value": []
+            },
             // speical type for "Macros"
             Macros: { value: [], DESCRIPTION: "Macros for default tdl files. Left column is the macro name, right column is the macro value.", type: "[string,string][]" },
             "EPICS Log Level": { value: "error", DESCRIPTION: "The log level for EPICS library (epics-tca).", choices: ["trace", "debug", "info", "warn", "error", "fatal"] },

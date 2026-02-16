@@ -4,7 +4,7 @@ import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
 import { SidebarMediaOpenFile } from "../../helperWidgets/SidebarComponents/SidebarMediaOpenFile";
-import {Log} from "../../../common/Log";
+import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
@@ -12,16 +12,12 @@ export class MediaSidebar extends BaseWidgetSidebar {
     _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
     _sidebarPictureOpacity: SidebarPictureOpacity;
     _sidebarMediaOpenFile: SidebarMediaOpenFile;
-    // _sidebarPolylineFillColor: SidebarPolylineFillColor;
-    // _sidebarPolylineFill: SidebarPolylineFill;
 
     constructor(media: Media) {
         super(media);
         this._sidebarPictureStretchToFit = new SidebarPictureStretchToFit(this);
         this._sidebarPictureOpacity = new SidebarPictureOpacity(this);
         this._sidebarMediaOpenFile = new SidebarMediaOpenFile(this);
-        // this._sidebarPolylineFillColor = new SidebarPolylineFillColor(this);
-        // this._sidebarPolylineFill = new SidebarPolylineFill(this);
     }
 
     getSidebarPictureStretchToFit = () => {
@@ -34,14 +30,6 @@ export class MediaSidebar extends BaseWidgetSidebar {
     getSidebarMediaOpenFile = () => {
         return this._sidebarMediaOpenFile;
     };
-
-    // getSidebarPolylineFillColor = () => {
-    // 	return this._sidebarPolylineFillColor;
-    // };
-
-    // getSidebarPolylineFill = () => {
-    // 	return this._sidebarPolylineFill;
-    // };
 
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
@@ -105,16 +93,15 @@ export class MediaSidebar extends BaseWidgetSidebar {
                 <this._HorizontalLine />
                 {/* ---------------- channel -------------------------- */}
                 <this._BlockTitle>
-					<b>Channel</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarChannelName().getElement()}
-					{/* {this.getSidebarShowUnit().getElement()} */}
-					{this.getSidebarAlarmBackground().getElement()}
-					{this.getSidebarAlarmBorder().getElement()}
-					{this.getSidebarAlarmLevel().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine />
+                    <b>Channel</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarChannelName().getElement()}
+                    {this.getSidebarAlarmBackground().getElement()}
+                    {this.getSidebarAlarmBorder().getElement()}
+                    {this.getSidebarAlarmLevel().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
                 <this._BlockTitle>
                     <b>Background</b>
@@ -128,63 +115,8 @@ export class MediaSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ------------------- File -------------------------- */}
-                {this.getMainWidget().getAllText()["fileContents"] === "" ? this.getSidebarMediaOpenFile().getElement() : "Image is embedded in TDM file, cannot be edited."}
+                {this.getSidebarMediaOpenFile().getElement()}
                 <this._HorizontalLine />
-                {/* ---------------- line -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Line</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* {this.getSidebarArcShowRadius().getElement()} */}
-                {/* {this.getSidebarPolylineClosed().getElement()} */}
-                {/* {this.getSidebarLineWidth().getElement()} */}
-                {/* {this.getSidebarLineStyle().getElement()} */}
-                {/* {this.getSidebarTextColor().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
-                {/* ---------------- filling -------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Filling</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarPolylineFill().getElement()}
-					{this.getSidebarPolylineFillColor().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
-                {/* ------------------- arrow ----------------------------- */}
-                {/* {this.getSidebarLineArrowStyle().getElement()} */}
-                {/* ---------------- points table -------------------------- */}
-                {/* {this.getSidebarPolylinePointsTable().getElement()} */}
-                {/* ---------------- angle -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Angle</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* {this.getSidebarArcAngleStart().getElement()} */}
-                {/* {this.getSidebarArcAngleRange().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
-                {/* ---------------- text -------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Text</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarXAlign().getElement()}
-					{this.getSidebarYAlign().getElement()}
-					{this.getSidebarWrapWord().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
-                {/* ----------------------- font --------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Font</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarFontFamily().getElement()}
-					{this.getSidebarFontSize().getElement()}
-					{this.getSidebarFontStyle().getElement()}
-					{this.getSidebarFontWeight().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
                 {/* ---------------- border -------------------------- */}
                 <this._BlockTitle>
                     <b>Border</b>
@@ -203,27 +135,4 @@ export class MediaSidebar extends BaseWidgetSidebar {
             </div>
         );
     };
-
-    // defined in super class
-    // getElement()
-    // _HorizontalLine()
-    // _BlockBody()
-    // _BlockTitle()
-
-    // ---------------------- getters --------------------------
-
-    // defined in super class
-    // getWidgetKey()
-    // getMainWidget()
-    // getUpdateFromSidebar()
-    // getStyle()
-    // getFormStyle()
-    // getInputStyle()
-
-    // ------------------------- style -------------------------
-
-    // defined in super class
-    // _style
-    // _inputStyle
-    // _formStyle
 }

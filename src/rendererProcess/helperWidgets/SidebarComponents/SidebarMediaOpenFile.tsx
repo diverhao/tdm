@@ -46,32 +46,76 @@ export class SidebarMediaOpenFile extends SidebarComponent {
                     >
                         {this.getMainWidget() instanceof Media ? <b>File</b> : "File"}
                         <div
-                            onClick={() => {
-                                // to get the file name
-                                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                                const displayWindowId = displayWindowClient.getWindowId();
-                                displayWindowClient
-                                    .getIpcManager()
-                                    .sendFromRendererProcess("select-a-file", {
-                                        options: {
-                                            displayWindowId: displayWindowId,
-                                            widgetKey: this.getMainWidget().getWidgetKey(),
-                                            filterType: "media",
-                                        }
-                                    });
-                            }}
                             style={{
-                                // display: g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "web" ? "none" : "",
+                                display: "inline-flex",
+                                flexDirection: "row",
+                                justifyContent: "center",
+                                alignItems: "center",
                             }}
                         >
-                            <img
-                                src={`../../../webpack/resources/webpages/open-file-symbol.svg`}
-                                style={{
-                                    width: 20,
-                                    height: 15,
-                                    objectFit: "scale-down",
+                            {/* select image from gallery */}
+                            <div
+                                onClick={() => {
+                                    const mainWidget = this.getMainWidget();
+                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient()
+                                    const symbolGallery = displayWindowClient.getSymbolGallery();
+                                    symbolGallery.createElement(
+                                        // callback function when we click Select button
+                                        (
+                                            symbolName: string,
+                                            symbolContent: string
+                                        ) => {
+                                            this.updateWidget(undefined, symbolContent);
+                                        },
+                                        mainWidget.getWidgetKey()
+                                    )
                                 }}
-                            ></img>
+                                style={{
+                                    display: "inline-flex",
+                                    flexDirection: "row",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                }}
+                            >
+                                <img
+                                    src={`../../../webpack/resources/webpages/gallery.svg`}
+                                    style={{
+                                        width: 20,
+                                        height: 15,
+                                        objectFit: "scale-down",
+                                    }}
+                                ></img>
+                            </div>
+
+
+                            <div
+                                onClick={() => {
+                                    // to get the file name
+                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                    const displayWindowId = displayWindowClient.getWindowId();
+                                    displayWindowClient
+                                        .getIpcManager()
+                                        .sendFromRendererProcess("select-a-file", {
+                                            options: {
+                                                displayWindowId: displayWindowId,
+                                                widgetKey: this.getMainWidget().getWidgetKey(),
+                                                filterType: "media",
+                                            }
+                                        });
+                                }}
+                                style={{
+                                    // display: g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "web" ? "none" : "",
+                                }}
+                            >
+                                <img
+                                    src={`../../../webpack/resources/webpages/open-file-symbol.svg`}
+                                    style={{
+                                        width: 20,
+                                        height: 15,
+                                        objectFit: "scale-down",
+                                    }}
+                                ></img>
+                            </div>
                         </div>
                     </div>
                 </this._BlockTitle>

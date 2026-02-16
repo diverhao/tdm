@@ -3279,6 +3279,13 @@ export class Widgets {
     };
 
 
+    /**
+     * paste the clipboard stuff, follwing this order:
+     *  - if the clipboard contains widget tdls, then create the widgets
+     *  - if the clipboard contains image or pdf data uri, create a Media widget, embed the uri
+     *  - otherwise, do nothing
+     * 
+     */
     // (1) deselect all widgets
     // (2) read from clipboard
     // (3) calculate the selected widget's boundaries, it is an array of widgetTdls
@@ -3345,7 +3352,7 @@ export class Widgets {
                         const dataType = blob.type;
                         if (imageTypes.includes(dataType)) {
                             const base64Prefix = `data:${dataType};base64,`;
-                            widgetTdl["text"]["fileContents"] = `${base64Prefix}${GlobalMethods.arrayBufferToBase64(await blob.arrayBuffer())}`;
+                            widgetTdl["text"]["fileName"] = `${base64Prefix}${GlobalMethods.arrayBufferToBase64(await blob.arrayBuffer())}`;
                             const widget = this.createWidget(widgetTdl, true);
                             if (widget instanceof BaseWidget) {
                                 widget.createSidebar();

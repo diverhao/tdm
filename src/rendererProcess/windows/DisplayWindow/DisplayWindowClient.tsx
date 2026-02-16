@@ -32,7 +32,7 @@ import { TextUpdate } from "../../../rendererProcess/widgets/TextUpdate/TextUpda
 import { PvMonitor } from "../../../rendererProcess/widgets/PvMonitor/PvMonitor";
 import { Casw } from "../../../rendererProcess/widgets/Casw/Casw";
 import { TextEditor } from "../../../rendererProcess/widgets/TextEditor/TextEditor";
-import { convertEpochTimeToString } from "../../../common/GlobalMethods";
+import { convertEpochTimeToString, isDataUri, isRemotePath } from "../../../common/GlobalMethods";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
 import path from "path";
 
@@ -1762,6 +1762,43 @@ export class DisplayWindowClient {
             }
         }
         return "";
+    }
+
+    /**
+     * Resolve a path name for, mostly images
+     * 
+     * a path may be 
+     *  - a relative path
+     *  - an absolute path
+     *  - a http/https path
+     *  - a data uri, data:xxx
+     */
+    resolvePath = (pathName: string): string => {
+
+        if (isDataUri(pathName)) {
+            return pathName;
+        } else if (isRemotePath(pathName)) {
+            return pathName;
+        } else if (path.isAbsolute(pathName)) {
+            return pathName;
+        } else {
+            // relative path name
+            const mainProcessMode = this.getMainProcessMode();
+            if (mainProcessMode === "desktop") {
+                // w.r.t. the tdl file
+                const tdlFileFullName = this.getTdlFileName();
+                if (path.isAbsolute(tdlFileFullName)) {
+                    // if tdl file is located on hard drive
+                    const tdlDirName = tdlFileFullName
+                    return path.join(tdlDirName, pathName);
+                } else {
+                    // good luck
+                    return pathName;
+                }
+            } else {
+                return pathName;
+            }
+        }
     }
 
 }

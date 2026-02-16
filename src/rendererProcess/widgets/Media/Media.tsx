@@ -1,3 +1,4 @@
+import HLS from 'hls.js';
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
@@ -9,6 +10,7 @@ import * as path from "path";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Log } from "../../../common/Log";
+import { resolvePath } from "react-router-dom";
 
 export type type_Media_tdl = {
     type: string;
@@ -24,8 +26,17 @@ export type type_Media_tdl = {
 export class Media extends BaseWidget {
 
     _rules: MediaRules;
-    base64Content: string = "";
-    mediaFileName: string = "";
+
+    /**
+     * in Desktop mode, the `src` or `data` for image or pdf is from text["fileName"], it could be 
+     * a relative/absolute/http file name, or a data uri
+     * 
+     * in Web mode, the `src` or `data` is from _base64Content, because we may need to fetch
+     * the image everytime the widget is re-rendered, we use _oldFileName (hence the this.fileNameChanged()) 
+     * to indicate if the file name has been modified
+     */
+    private _base64Content: string = "";
+    private _oldFileName: string = "";
 
     constructor(widgetTdl: type_Media_tdl) {
         super(widgetTdl);
@@ -39,7 +50,6 @@ export class Media extends BaseWidget {
 
     // ------------------------------ elements ---------------------------------
 
-    // Body + sidebar
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -52,30 +62,24 @@ export class Media extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this._sidebar?.getElement() : null}
-                </>
+                <div style={this.getElementBodyRawStyle()}>
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this._sidebar?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    // Text area and resizers
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+        const allText = this.getAllText();
+        const whiteSpace = allText.wrapWord ? "normal" : "pre";
+        const justifyContent = allText.horizontalAlign;
+        const alignItems = allText.verticalAlign;
+        const outline = this._getElementAreaRawOutlineStyle();
+        const backgroundColor = this._getElementAreaRawBackgroundStyle();
+
         return (
-            // <div
             <div
                 style={{
                     display: "inline-flex",
@@ -86,17 +90,12 @@ export class Media extends BaseWidget {
                     userSelect: "none",
                     position: "absolute",
                     overflow: "visible",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllStyle().fontFamily,
-                    fontSize: this.getAllStyle().fontSize,
-                    fontStyle: this.getAllStyle().fontStyle,
-                    fontWeight: this.getAllStyle().fontWeight,
-                    outline: this._getElementAreaRawOutlineStyle(),
-                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    outline: outline,
+                    backgroundColor: backgroundColor,
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
@@ -105,266 +104,138 @@ export class Media extends BaseWidget {
         );
     };
 
-    calcPictureWidth = () => { };
-
-    handleSelectAFile = (options: Record<string, any>, fileName: string) => {
-        this.getSidebar()?.updateFromWidget(undefined, "select-a-file", fileName);
-    };
-
-    // picture, local or remote: <img />
-    // pdf, local or remote: <object />
-    // video, local file: <video />
-    // video, remote file: <video />
-    // video, remote stream: <iframe />
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
     _ElementMedia = () => {
+        const allText = this.getAllText();
+        const fileName = allText["fileName"];
+        const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
 
-        this.resolveFileName();
+        // fetch the file from server 
+        if (mainProcessMode === "web" || mainProcessMode === "ssh-client") {
+            this.fetchMediaContent();
+        }
+        const mediaType = this.getMediaType(fileName);
 
-        const fileType = this.getMediaType(this.getAllText()["fileName"]);
-        if (fileType === "picture" || fileType === "vector-picture") {
-            return <this._ElementPicture></this._ElementPicture>;
-        } else if (fileType === "pdf") {
+        if (mediaType === "image") {
+            return <this._ElementImage></this._ElementImage>;
+        } else if (mediaType === "pdf") {
             return <this._ElementPdf></this._ElementPdf>;
-        } else if (fileType === "video-local-file") {
+        } else if (mediaType === "video-local-file") {
             return <this._ElementVideoLocalFile></this._ElementVideoLocalFile>;
-        } else if (fileType === "video-remote-stream") {
+        } else if (mediaType === "video-mjpeg") {
+            return <this._ElementVideoMJPEG></this._ElementVideoMJPEG>;
+        } else if (mediaType === "video-hls") {
+            // return <this._ElementVideoRemoteStream></this._ElementVideoRemoteStream>;
+            return <this._ElementVideoHLS></this._ElementVideoHLS>;
+        } else if (mediaType === "video-rtsp") {
+            return <this._ElementError></this._ElementError>;
+        } else if (mediaType === "video-remote-stream") {
             return <this._ElementVideoRemoteStream></this._ElementVideoRemoteStream>;
         } else {
-            return (
-                <div
-                    style={{
-                        width: "100%",
-                        height: "100%",
-                        backgroundColor: "red",
-                        opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : this.getAllText()["opacity"],
-                    }}
-                >
-                    Error
-                </div>
-            );
+            return <this._ElementError></this._ElementError>
         }
     };
 
-    getMediaType = (fileName: string): "picture" | "vector-picture" | "pdf" | "video-local-file" | "video-remote-stream" | "NA" => {
-        const pictureTypes = ["jpg", "jpeg", "bmp", "png", "gif"];
-        const vectorPictureTypes = ["svg"];
-        const pdfTypes = ["pdf"];
-        const localVideoFileTypes = ["mp4", "ogg", "webm", "mp3", "mov"];
+    _ElementImage = () => {
 
-        const fileNameArray = fileName.split(".");
-        const fileType = fileNameArray[fileNameArray.length - 1].toLowerCase();
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const mainProcessMode = displayWindowClient.getMainProcessMode();
 
-        if (pictureTypes.includes(fileType)) {
-            return "picture";
-        } else if (vectorPictureTypes.includes(fileType)) {
-            return "vector-picture";
-        } else if (pdfTypes.includes(fileType)) {
-            return "pdf";
-        } else if (localVideoFileTypes.includes(fileType)) {
-            return "video-local-file";
-        } else {
-            if (fileName.substring(0, 4) === "http") {
-                return "video-remote-stream";
-            } else {
-                return "NA";
-            }
-        }
-    };
+        const allText = this.getAllText();
+        const allStyle = this.getAllStyle();
+        const stretchToFit = allText["stretchToFit"];
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+        const opacity = allText["opacity"];
+        const objectFit = stretchToFit ? "fill" : "contain";
 
-    _ElementPicture = () => {
+        const fileName = allText["fileName"];
+        const fullFileName = displayWindowClient.resolvePath(fileName);
+        const src = mainProcessMode === "ssh-client" || mainProcessMode === "web" ? this.getBase64Content() : fullFileName;
         return (
             <img
-                src={g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client" || g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "web" ?
-                    this.base64Content : this.resolveFileName()}
+                src={src}
                 style={{
-                    objectFit: this.getAllText()["stretchToFit"] ? "fill" : "contain",
-                    opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : this.getAllText()["opacity"],
+                    objectFit: objectFit,
+                    opacity: opacity,
                 }}
                 alt="..."
-                width={this.getAllStyle()["width"]}
-                height={this.getAllStyle()["height"]}
+                width={width}
+                height={height}
             ></img>
         );
     };
 
-    _ElementSvgImage = ({ svgString }: { svgString: string }) => {
-        const encoded = encodeURIComponent(svgString);
-        const dataUrl = `data:image/svg+xml;utf8,${encoded}`;
-
-        return <img src={dataUrl} alt="SVG" />;
-    }
-
-    isRemotePath = (path: string) => {
-        if (path.startsWith("http://") || path.startsWith("https://")) {
-            return true;
-        } else {
-            return false;
-        }
-    };
-
-    resolveFileName = () => {
-        const rawFileName = this.getAllText()["fileName"];
-
-        // in web mode, when this.mediaFileName is different from this.getAllText["fileName"], we fetch the media file
-        if ((g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "web" && this.mediaFileName !== rawFileName) || (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client" && this.mediaFileName !== rawFileName)) {
-            // full image path
-            let fullFileName = "";
-
-            if (this.isRemotePath(rawFileName)) {
-                this.mediaFileName = rawFileName;
-                this.base64Content = rawFileName;
-                return;
-            }
-
-            if (path.isAbsolute(rawFileName)) {
-                fullFileName = rawFileName;
-            } else {
-                const tdlFileName = g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName();
-                if (!path.isAbsolute(tdlFileName)) {
-                    Log.error("Error in resolving image file name");
-                    this.base64Content = "";
-                    return;
-                }
-                fullFileName = path.join(path.dirname(tdlFileName), rawFileName);
-            }
-            this.mediaFileName = rawFileName;
-
-            if (this.getMediaType(this.mediaFileName) !== "picture" && this.getMediaType(this.mediaFileName) !== "vector-picture" && this.getMediaType(this.mediaFileName) !== "pdf") {
-                this.base64Content = "";
-                g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-                g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-                g_flushWidgets();
-                return;
-            }
-
-            if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "web") {
-                g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("get-media-content", {
-                    fullFileName: fullFileName,
-                    widgetKey: this.getWidgetKey(),
-                    displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                })
-            } else if ((g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client")) {
-                //todo: what is this? get-ssh-file does not exist on main process
-                // Log.info("try to obtain file from ssh host")
-                // g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("get-ssh-file", {
-                //     displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                //     widgetKey: this.getWidgetKey(),
-                //     fullFileName: fullFileName,
-                // })
-            }
-        } else { // "desktop" mode
-            // image file contents, base64 format
-            if (this.getAllText()["fileContents"] !== "" && this.getAllText()["fileContents"] !== undefined) {
-                return `${this.getAllText()["fileContents"]}`;
-            }
-
-            const rawFileName = this.getAllText()["fileName"];
-
-            if (this.isRemotePath(this.getAllText()["fileName"])) {
-                return rawFileName;
-            }
-
-            if (path.isAbsolute(rawFileName)) {
-                return rawFileName;
-            }
-
-            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-            // full name
-            const currentTdlFileFullName = displayWindowClient.getTdlFileName();
-            if (path.isAbsolute(currentTdlFileFullName)) {
-                return path.join(path.dirname(currentTdlFileFullName), rawFileName);
-            } else {
-                const tdlFullFileName = g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName();
-                if (tdlFullFileName !== "") {
-                    const dirName = path.dirname(tdlFullFileName);
-                    return path.join(dirName, rawFileName);
-                } else {
-                    // we cannot determine the current file's path
-                    return rawFileName;
-                }
-            }
-        }
-    };
-
-    updateFileContents = (contents: string) => {
-        if (this.base64Content !== `data:image/png;base64,${contents}` && this.base64Content !== `data:image/svg+xml;utf8,${encodeURIComponent(contents)}` && this.base64Content !== `data:application/pdf;base64, ${encodeURI(contents)}`) {
-            if (this.getMediaType(this.getAllText()["fileName"]) === "picture") {
-                this.base64Content = `data:image/png;base64,${contents}`;
-            } else if (this.getMediaType(this.getAllText()["fileName"]) === "vector-picture") {
-                this.base64Content = `data:image/svg+xml;utf8,${encodeURIComponent(contents)}`;
-            } else if (this.getMediaType(this.getAllText()["fileName"]) === "pdf") {
-                this.base64Content = `data:application/pdf;base64, ${encodeURI(contents)}`;
-            } else {
-                this.base64Content = "";
-            }
-            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-            g_flushWidgets();
-        } else {
-            Log.debug("image is the same, do not update");
-        }
-    }
-
     _ElementPdf = () => {
-        // so that the mouse can control pdf
-        this.setReadWriteType("write");
-        return (
-            <>
-                {/* <object data={`${this.getAllText()["fileName"]}`} type="application/pdf" width="100%" height="100%"> */}
+
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const mainProcessMode = displayWindowClient.getMainProcessMode();
+
+        const allText = this.getAllText();
+
+        const fileName = allText["fileName"];
+        const fullFileName = displayWindowClient.resolvePath(fileName);
+
+        if (g_widgets1.isEditing()) {
+            return (
+                <div>
+                    {fullFileName}
+                </div>
+            )
+        } else {
+            const data = mainProcessMode === "ssh-client" || mainProcessMode === "web" ? this.getBase64Content() : fullFileName;
+            return (
                 <object
-                    data={g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "web" ? this.base64Content : this.resolveFileName()}
+                    data={data}
                     type="application/pdf"
                     width="100%"
                     height="100%"
                 >
                     <p>Unable to display PDF file.</p>
                 </object>
-                {/* mask in editing mode */}
-                {g_widgets1.isEditing() ? (
-                    <div
-                        style={{
-                            width: g_widgets1.isEditing() ? "100%" : "0px",
-                            height: g_widgets1.isEditing() ? "100%" : "0px",
-                            // height: "100%",
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            backgroundColor: "rgba(0,0,0,0.5)",
-                        }}
-                    ></div>
-                ) : null}
-            </>
-        );
+            );
+        }
     };
 
+    /**
+     * local video file
+     */
     // supports local .mp4, .ogg, .webm, .mp3, .mov
     // not supported: local .mkv, .avi, .wmv
     _ElementVideoLocalFile = () => {
         // so that the mouse can control video
-        this.setReadWriteType("write");
+
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const allText = this.getAllText();
+        const fileName = allText["fileName"];
+        const src = displayWindowClient.resolvePath(fileName);
+
+
         return (
             <video preload="none" width="100%" height="100%" controls>
-                {/* <source src={this.getAllText()["fileName"]} type="video/mp4"></source> */}
-                <source src={this.resolveFileName()} type="video/mp4"></source>
+                <source src={src} type="video/mp4"></source>
             </video>
         );
     };
 
-    // not supported: .mov, .avi, mp4, ogg
-    // _ElementVideoRemoteFile = () => {
-    // 	return (
-    // 		<video preload="none" width="100%" height="100%" controls>
-    // 			<source src={this.getAllText()["fileName"]} type="video/mp4"></source>
-    // 		</video>
-    // 	);
-    // };
-
-    // supports: youtube,
-    // todo more tests, particularly axis camera
     _ElementVideoRemoteStream = () => {
-        return (
-            <>
+        if (g_widgets1.isEditing() === true) {
+            return (
+                <div
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        backgroundColor: "rgba(0,0,0,0)",
+                    }}
+                ></div>
+            )
+        } else {
+            return (
                 <iframe
                     width="100%"
                     height="100%"
@@ -375,68 +246,281 @@ export class Media extends BaseWidget {
                     // title="Embedded video"
                     style={{
                         position: "absolute",
+                        top: 0,
+                        left: 0,
                     }}
                 />
-                {g_widgets1.isEditing() ? (
-                    <div
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            backgroundColor: "rgba(0,0,0,0)",
-                        }}
-                    ></div>
-                ) : null}
-            </>
+
+            )
+        }
+    };
+
+
+
+    // MJPEG video stream (Axis, Hikvision cameras)
+    _ElementVideoMJPEG = () => {
+        const allText = this.getAllText();
+        const fileName = allText["fileName"];
+
+        return (
+            <img
+                src={fileName}
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                }}
+                alt="Video camera"
+            />
         );
     };
 
-    // ------------------------- rectangle ------------------------------------
+    // HLS video stream
+    _ElementVideoHLS = () => {
+        const videoRef = React.useRef<HTMLVideoElement>(null);
+        const allText = this.getAllText();
+        const fileName = allText["fileName"];
 
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
+        React.useEffect(() => {
+            if (!videoRef.current) return;
 
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
+            // HLS.js setup
+            if (HLS.isSupported()) {
+                const hls = new HLS({
+                    debug: false,
+                    enableWorker: true,
+                });
+
+                hls.loadSource(fileName);
+                hls.attachMedia(videoRef.current);
+
+                hls.on(HLS.Events.MANIFEST_PARSED, () => {
+                    // console.log("HLS manifest loaded");
+                    // Optional: auto-play
+                    // videoRef.current?.play();
+                });
+
+                hls.on(HLS.Events.ERROR, (event, data) => {
+                    if (data.fatal) {
+                        // console.error("HLS fatal error:", data);
+                    }
+                });
+
+                // Cleanup
+                return () => {
+                    hls.destroy();
+                };
+            } else if (videoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+                // Fallback for Safari
+                videoRef.current.src = fileName;
+            }
+            return;
+        }, [fileName]);
+
+        return (
+            <video
+                ref={videoRef}
+                controls
+                width="100%"
+                height="100%"
+                style={{ width: '100%', height: '100%' }}
+            />
+        );
+    };
+
+    _ElementError = () => {
+        return (
+            <div
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "red",
+                }}
+            >
+                Error
+            </div>
+        )
+    }
 
     // -------------------- helper functions ----------------
 
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
+    getMediaType = (fileName: string): "image" | "pdf" | "video-local-file" | "video-remote-stream" | "video-mjpeg" | "video-rtsp" | "video-hls" | undefined => {
+        const imageTypes = ["jpg", "jpeg", "bmp", "png", "gif"];
+        const pdfTypes = ["pdf"];
+        const localVideoFileTypes = ["mp4", "ogg", "webm", "mp3", "mov"];
 
-    _getChannelValue = () => {
-        const value = this._getFirstChannelValue();
-        if (value === undefined) {
+        const fileNameArray = fileName.split(".");
+        const fileType = fileNameArray[fileNameArray.length - 1].toLowerCase();
+
+        if (imageTypes.includes(fileType)) {
+            return "image";
+        } else if (GlobalMethods.isImageDataUri(fileName)) {
+            return "image";
+        } else if (pdfTypes.includes(fileType)) {
+            return "pdf";
+        } else if (localVideoFileTypes.includes(fileType)) {
+            return "video-local-file";
+        }
+
+        // Remote streams
+        if (fileName.substring(0, 4) === "http") {
+            // MJPEG stream (camera stream)
+            if (fileName.includes('.mjpeg') || fileName.includes('.mjpg') || fileName.includes(':8081')) {
+                return "video-mjpeg";
+            }
+            // HLS stream
+            else if (fileName.includes('.m3u8')) {
+                return "video-hls";
+            }
+            // RTSP stream (would need conversion)
+            else if (fileName.includes('rtsp://')) {
+                return "video-rtsp";
+            }
+            // YouTube, Vimeo, etc.
+            else if (fileName.includes('youtube') || fileName.includes('vimeo')) {
+                return "video-remote-stream";
+            }
+            // fallback
+            else {
+                return "video-remote-stream";
+            }
+        } else if (fileName.substring(0, 5) === "rtsp:") {
+            return "video-rtsp";
+        }
+
+        return undefined;
+    };
+
+    /**
+     * Fetch image or pdf file content from server
+     * 
+     * invoked only in web mode
+     * 
+     * the file name might be
+     *  - data uri, data:xxx
+     *  - relative path, ../abc.jpg
+     *  - absolute path, /abc.jpg
+     *  - http/https path, https://abc.org/abc.jpg
+     */
+    fetchMediaContent = () => {
+        const allText = this.getAllText();
+        const fileName = allText["fileName"];
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const mainProcessMode = displayWindowClient.getMainProcessMode();
+
+        if (mainProcessMode === "desktop") {
+            return;
+        }
+
+        // in web mode, we proceed to fetch the file content only if the file name is changed, 
+        // it will save quite some network traffic
+        if (!this.fileNameChanged()) {
+            return;
+        } else {
+            this.setOldFileName(fileName);
+        }
+
+        // http..., web browser can directly use it
+        if (GlobalMethods.isRemotePath(fileName)) {
+            this.setBase64Content(fileName);
+            return;
+        }
+
+        // data:xxx, web browser can directly use it
+        if (GlobalMethods.isDataUri(fileName)) {
+            this.setBase64Content(fileName);
+            return;
+        }
+
+        // full image path, /home/ics/xxx.jpg
+        const fullFileName = displayWindowClient.resolvePath(fileName);
+
+        // if the file name indicates that is it not an image or pdf file
+        const mediaType = this.getMediaType(fileName);
+        if (mediaType !== "image" && mediaType !== "pdf") {
+            this.setBase64Content("");
+            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+            g_flushWidgets();
+            return;
+        }
+
+
+        // if the file name is a file name
+
+        if (mainProcessMode === "web") {
+            g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("get-media-content", {
+                fullFileName: fullFileName,
+                widgetKey: this.getWidgetKey(),
+                displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+            })
+        } else if ((g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client")) {
+            //todo: what is this? get-ssh-file does not exist on main process
+            // Log.info("try to obtain file from ssh host")
+            // g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("get-ssh-file", {
+            //     displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+            //     widgetKey: this.getWidgetKey(),
+            //     fullFileName: fullFileName,
+            // })
+        }
+    }
+
+    /**
+     * todo: do we really need it?
+     */
+    updateFileContents = (contents: string) => {
+        const base64Content = this.getBase64Content();
+        const fileName = this.getAllText()["fileName"];
+        const mediaType = this.getMediaType(fileName);
+        if (base64Content !== `data:image/png;base64,${contents}` && base64Content !== `data:image/svg+xml;utf8,${encodeURIComponent(contents)}` && base64Content !== `data:application/pdf;base64, ${encodeURI(contents)}`) {
+            if (mediaType === "image") {
+                this.setBase64Content(`data:image/png;base64,${contents}`);
+                // } else if (this.getMediaType(fileName) === "vector-picture") {
+                //     this.setBase64Content(`data:image/svg+xml;utf8,${encodeURIComponent(contents)}`);
+            } else if (this.getMediaType(fileName) === "pdf") {
+                this.setBase64Content(`data:application/pdf;base64, ${encodeURI(contents)}`);
+            } else {
+                this.setBase64Content("");
+            }
+            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+            g_flushWidgets();
+        } else {
+            Log.debug("image is the same, do not update");
+        }
+    }
+
+
+    handleSelectAFile = (options: Record<string, any>, fileName: string) => {
+        this.getSidebar()?.updateFromWidget(undefined, "select-a-file", fileName);
+    };
+
+    fileNameChanged = () => {
+        const allText = this.getAllText();
+        return this._oldFileName !== allText["fileName"];
+    }
+
+    getBase64Content = () => {
+        const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
+        if (mainProcessMode === "desktop") {
             return "";
         } else {
-            return value;
+            return this._base64Content;
         }
-    };
+    }
 
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
+    setBase64Content = (newContent: string) => {
+        return this._base64Content = newContent;
+    }
 
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
-        }
-    };
+    getOldFileName = () => {
+        return this._oldFileName;
+    }
+
+    setOldFileName = (fileName: string) => {
+        this._oldFileName = fileName;
+    }
+
 
     // -------------------------- tdl -------------------------------
 
@@ -475,7 +559,6 @@ export class Media extends BaseWidget {
                 // for picture
                 stretchToFit: false,
                 invisibleInOperation: false,
-                fileContents: "",
                 // actually "alarm outline"
                 alarmBorder: true,
                 alarmBackground: false,
@@ -498,8 +581,10 @@ export class Media extends BaseWidget {
     };
 
     jobsAsOperatingModeBegins() {
-        const fileType = this.getMediaType(this.getText()["fileName"]);
-        if (fileType === "picture" || fileType === "vector-picture") {
+        const text = this.getText();
+        const fileName = text["fileName"];
+        const fileType = this.getMediaType(fileName);
+        if (fileType === "image") {
             this.setReadWriteType("read");
         } else {
             this.setReadWriteType("write");

@@ -633,7 +633,8 @@ export const scanSymbolGallery = (folderPaths: string[], galleryFolder: string):
                     } else {
                         // Binary formats (png, jpg, gif, etc.) encode as base64
                         const base64String = fileBuffer.toString('base64');
-                        const mimeType = getMimeType(ext);
+                        const extWithoutDot = ext.slice(1); // Remove the leading dot
+                        const mimeType = getMimeType(extWithoutDot);
                         result[keyName][file] = `data:${mimeType};base64,${base64String}`;
                     }
 
@@ -682,15 +683,89 @@ export const scanSymbolGallery = (folderPaths: string[], galleryFolder: string):
  * @param ext File extension with leading dot (e.g., '.png')
  * @returns MIME type string (e.g., 'image/png')
  */
+
+
+/**
+ * Map file extension to MIME type
+ */
 export const getMimeType = (ext: string): string => {
-    const mimeTypes: Record<string, string> = {
-        '.svg': 'image/svg+xml',
-        '.png': 'image/png',
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.gif': 'image/gif',
-        '.webp': 'image/webp',
-        '.bmp': 'image/bmp',
+    const mimeMap: Record<string, string> = {
+        // Images
+        'png': 'image/png',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+        'bmp': 'image/bmp',
+        'svg': 'image/svg+xml',
+        // PDF
+        'pdf': 'application/pdf',
+        // Video
+        'mp4': 'video/mp4',
+        'webm': 'video/webm',
+        'ogg': 'video/ogg',
+        'mov': 'video/quicktime',
     };
-    return mimeTypes[ext.toLowerCase()] || 'image/octet-stream';
-}
+    return mimeMap[ext] || "";
+};
+
+
+/**
+ * Convert file to data URI with validation and error handling
+ * Supports: images (PNG, JPG, SVG, GIF, WebP, BMP), PDF
+ * 
+ * @param filePath - Absolute path to the file
+ * @param maxSizeKb - Maximum file size in kilobytes (default: 50 KB for images, 10 MB for PDF)
+ * @returns Data URI string (e.g., "data:image/png;base64,...") or empty string if error
+ * 
+ * @example
+ * const uri = fileToDataUri("/path/to/image.png");
+ * // Returns: "data:image/png;base64,iVBORw0KGgo..."
+ */
+export const fileToDataUri = (filePath: string, maxSizeKb?: number): string => {
+    try {
+        // Validate file exists
+        if (!fs.existsSync(filePath)) {
+            Log.error("0", `File does not exist: ${filePath}`);
+            return "";
+        }
+
+        // Get file stats
+        const fileStats = fs.statSync(filePath);
+        const fileSizeKb = fileStats.size / 1024;
+
+        // Determine max size based on file type
+        const ext = path.extname(filePath).toLowerCase().slice(1);
+        const isPdf = ext === 'pdf';
+        const defaultMaxSize = isPdf ? 10 * 1024 : 50; // 10 MB for PDF, 50 KB for images
+        const limit = maxSizeKb ?? defaultMaxSize;
+
+        // Check file size
+        if (fileSizeKb > limit) {
+            Log.warn("0", `File too large: ${filePath} (${Math.round(fileSizeKb)} KB, limit: ${limit} KB)`);
+            return "";
+        }
+
+        // Get MIME type
+        const mimeType = getMimeType(ext);
+        if (!mimeType) {
+            Log.warn("0", `Unsupported file type: ${ext}`);
+            return "";
+        }
+
+        // Read file as buffer
+        const fileBuffer = fs.readFileSync(filePath);
+        
+        // Convert to base64
+        const base64String = fileBuffer.toString('base64');
+        
+        // Create and return data URI
+        const dataUri = `data:${mimeType};base64,${base64String}`;
+        Log.debug("0", `Converted file to data URI: ${filePath} (${Math.round(fileSizeKb)} KB, ${mimeType})`);
+        return dataUri;
+
+    } catch (error) {
+        Log.error("0", `Error converting file to data URI: ${filePath}`, error);
+        return "";
+    }
+};

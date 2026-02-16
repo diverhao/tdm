@@ -17,7 +17,7 @@ import { spawn } from "child_process";
 import { SqlState } from "../archive/Sql";
 import { Environment, type_network_stats } from "epics-tca";
 import { IpcEventArgType, type_DialogMessageBox } from "../../common/IpcEventArgType";
-import { generateKeyAndCert, scanSymbolGallery } from "../global/GlobalMethods";
+import { fileToDataUri, generateKeyAndCert, scanSymbolGallery } from "../global/GlobalMethods";
 import { SshServer } from "./SshServer";
 import https from "https";
 import { WebSocketServer, WebSocket, RawData } from "ws";
@@ -2819,12 +2819,21 @@ export class IpcManagerOnMainProcess {
 
         if (update === true || Object.keys(mainProcess.getSymbolGalleryData()).length === 0) {
             // Custom folder paths to scan directly (from options or empty array if not provided)
-            const customFolders: string[] = ["/Users/1h7/Downloads"];
+            const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+
+            let customFolders: string[] = [];
+            if (selectedProfile !== undefined) {
+                const symbolLibrarySetting = selectedProfile.getEntry("EPICS Custom Environment", "Symbol Library");
+                if (Array.isArray(symbolLibrarySetting)) {
+                    customFolders = symbolLibrarySetting;
+                }
+            }
 
             // Built-in gallery folder - scans its immediate subfolders
             const builtInGalleryFolder = path.join(__dirname, "../../common/resources/symbolGallery");
 
             const galleryData = scanSymbolGallery(customFolders, builtInGalleryFolder);
+            console.log(galleryData)
             mainProcess.setSymbolGalleryData(galleryData);
         }
 
@@ -2843,7 +2852,7 @@ export class IpcManagerOnMainProcess {
             // send back the current page data to client
             displayWindowAgent.sendFromMainProcess("get-symbol-gallery", {
                 displayWindowId: displayWindowId,
-                widgetKey: widgetKey, 
+                widgetKey: widgetKey,
                 pageNames: pageNames,
                 page: page,
                 pageImages: pageImages,
@@ -4070,12 +4079,8 @@ export class IpcManagerOnMainProcess {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             try {
-                const fileBuffer = fs.readFileSync(fullFileName);
-                let fileBase64Str = fileBuffer.toString("base64");
-                if (fullFileName.endsWith(".svg")) {
-                    fileBase64Str = fileBuffer.toString();
-                }
-                // response.send(JSON.stringify({ content: fileBase64Str }));
+                // size limit 10 MB
+                const fileBase64Str = fileToDataUri(fullFileName, 10240);
                 displayWindowAgent.sendFromMainProcess("get-media-content", {
                     content: fileBase64Str,
                     displayWindowId: displayWindowId,
@@ -4083,8 +4088,7 @@ export class IpcManagerOnMainProcess {
                 })
 
             } catch (e) {
-                // Log.error("-1", "Cannot read file", data["imageFileName"])
-                // response.send(JSON.stringify({ image: "" }));
+                Log.error("-1", "Cannot read file", fullFileName)
             }
         }
 
