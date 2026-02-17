@@ -1,5 +1,6 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { GlobalVariables } from "../../../common/GlobalVariables";
+import { deepMerge } from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -34,13 +35,13 @@ export class Symbol extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._itemNames = JSON.parse(JSON.stringify(widgetTdl.itemNames));
-        this._itemValues = JSON.parse(JSON.stringify(widgetTdl.itemValues));
-
-        // itemNames and itemValues must match
-        const count = Math.min(this._itemNames.length, this._itemValues.length);
-        this._itemNames.splice(count);
-        this._itemValues.splice(count);
+        const defaultTdl = this.generateDefaultTdl();
+        this._itemNames = deepMerge(widgetTdl.itemNames, defaultTdl.itemNames);
+        this._itemValues = deepMerge(widgetTdl.itemValues, defaultTdl.itemValues);
+        // ensure the same number of states
+        const numStates = Math.min(this._itemNames.length, this._itemValues.length);
+        this._itemNames.splice(numStates);
+        this._itemValues.splice(numStates);
 
         this._rules = new SymbolRules(this, widgetTdl);
     }
@@ -312,10 +313,12 @@ export class Symbol extends BaseWidget {
 
     // --------------------- getters -------------------------
 
-    getItemNames = () => {
+    // override
+    getItemNames() {
         return this._itemNames;
     };
-    getItemValues = () => {
+    
+    getItemValues() {
         return this._itemValues;
     };
 

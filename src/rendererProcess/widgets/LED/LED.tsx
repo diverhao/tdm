@@ -42,10 +42,13 @@ export class LED extends BaseWidget {
         this._itemNames = deepMerge(widgetTdl.itemNames, defaultTdl.itemNames);
         this._itemColors = deepMerge(widgetTdl.itemColors, defaultTdl.itemColors);
         this._itemValues = deepMerge(widgetTdl.itemValues, defaultTdl.itemValues);
-        // there has to be only 2 items
-        this._itemNames.splice(2);
-        this._itemColors.splice(2);
-        this._itemValues.splice(2);
+        // ensure the same number of states
+        const numStates = 2;
+        this._itemNames.splice(numStates);
+        this._itemColors.splice(numStates);
+        this._itemValues.splice(numStates);
+
+
 
         this._rules = new LEDRules(this, widgetTdl);
     }
@@ -206,6 +209,7 @@ export class LED extends BaseWidget {
 
         const lineWidth = allText["lineWidth"];
         const lineColor = allText["lineColor"];
+
         const fillColor = this.calcItemColor();
 
         return (
@@ -306,6 +310,7 @@ export class LED extends BaseWidget {
         const rY = height / 2;
         const cX = width / 2;
         const cY = height / 2;
+
         const fillColor = this.calcItemColor();
 
         return (
@@ -334,6 +339,7 @@ export class LED extends BaseWidget {
     };
 
     _ElementText = () => {
+        const text = this.calcItemText();
         return (
             <div
                 // the shape and text are all "absolute" position
@@ -346,70 +352,12 @@ export class LED extends BaseWidget {
                     alignItems: "center",
                 }}
             >
-                {this.calcItemText()}
+                {text}
             </div>
         );
     };
 
     // -------------------- helper functions ----------------
-
-    /**
-     * find the color that corresponds to the channel value
-     */
-    calcItemColor = (): string => {
-        const itemValues = this.getItemValues();
-        const index = this.calcItemIndex(itemValues);
-
-        if (index !== undefined) {
-            const color = this.getItemColors()[index];
-            if (GlobalMethods.isValidRgbaColor(color)) {
-                return color;
-            }
-        }
-        return this.getAllText()["fallbackColor"];
-    };
-
-    /**
-     * find the text that corresponds to the channel value
-     * 
-     * the text may be defined by user or from the channel
-     */
-    calcItemText = (): string => {
-
-        const allText = this.getAllText();
-        const useChannelItems = allText["useChannelItems"];
-        const itemNames = this.getItemNames();
-        const itemValues = this.getItemValues();
-
-        if (g_widgets1.isEditing()) {
-            if (useChannelItems) {
-                return "";
-            } else {
-                return itemNames.join("|");
-            }
-        }
-
-        const index = this.calcItemIndex(itemValues);
-        if (typeof (index) === "number") {
-            if (useChannelItems === true) {
-                try {
-                    // find enum choices
-                    const channelName = this.getChannelNames()[0];
-                    const channel = g_widgets1.getTcaChannel(channelName);
-                    const strs = channel.getEnumChoices();
-                    const numberOfStringsUsed = channel.getNumerOfStringsUsed();
-                    if (typeof (numberOfStringsUsed) === "number" && index < numberOfStringsUsed && strs.length >= numberOfStringsUsed) {
-                        return strs[index];
-                    }
-                } catch (e) {
-                    Log.error(e);
-                }
-            } else {
-                return itemNames[index];
-            }
-        }
-        return allText["fallbackText"];
-    };
 
     /**
      * When the square LED is selected, we want to let the outline standout
@@ -467,17 +415,13 @@ export class LED extends BaseWidget {
                 lineWidth: 2,
                 lineStyle: "solid",
                 lineColor: "rgba(50, 50, 50, 0.698)",
-                // round or square
                 shape: "round",
-                // use channel value
+                invisibleInOperation: false,
+                // discrete states
                 bit: -1,
-                // if the value is not valid
+                useChannelItems: false,
                 fallbackColor: "rgba(255,0,255,1)",
                 fallbackText: "Err",
-                // use channel's value and label, only valid for EPICS enum channels
-                // that has "strings" property
-                useChannelItems: false,
-                invisibleInOperation: false,
             },
             channelNames: [],
             groupNames: [],
@@ -503,13 +447,14 @@ export class LED extends BaseWidget {
 
     // --------------------- getters -------------------------
 
-    getItemNames = () => {
+    // override
+    getItemNames() {
         return this._itemNames;
     };
-    getItemColors = () => {
+    getItemColors() {
         return this._itemColors;
     };
-    getItemValues = () => {
+    getItemValues() {
         return this._itemValues;
     };
 

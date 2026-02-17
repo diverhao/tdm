@@ -8,6 +8,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { BooleanButtonRules } from "./BooleanButtonRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
+import { deepMerge } from "../../../common/GlobalMethods";
 
 export type type_BooleanButton_tdl = {
     type: string;
@@ -18,11 +19,19 @@ export type type_BooleanButton_tdl = {
     channelNames: string[];
     groupNames: string[];
     rules: type_rules_tdl;
+    // Boolean Button specific
+    itemNames: string[];
+    itemColors: string[];
+    itemValues: number[];
 };
 
 export class BooleanButton extends BaseWidget {
 
     _rules: BooleanButtonRules;
+    _itemNames: string[];
+    _itemColors: string[];
+    _itemValues: number[];
+
     // used for indicating if the mouse button is down
     buttonPressed: boolean = false;
     forceUpdateButton = (input: any) => { };
@@ -32,6 +41,17 @@ export class BooleanButton extends BaseWidget {
         this.initStyle(widgetTdl);
         this.initText(widgetTdl);
         this.setReadWriteType("write");
+
+
+        const defaultTdl = this.generateDefaultTdl();
+        this._itemNames = deepMerge(widgetTdl.itemNames, defaultTdl.itemNames);
+        this._itemColors = deepMerge(widgetTdl.itemColors, defaultTdl.itemColors);
+        this._itemValues = deepMerge(widgetTdl.itemValues, defaultTdl.itemValues);
+        // ensure the same number of states
+        const numStates = 2;
+        this._itemNames.splice(numStates);
+        this._itemColors.splice(numStates);
+        this._itemValues.splice(numStates);
 
         this._rules = new BooleanButtonRules(this, widgetTdl);
     }
@@ -123,7 +143,7 @@ export class BooleanButton extends BaseWidget {
             this.buttonPressed = false;
         } else {
             // use PV value
-            const itemIndex = this.calcItemIndex([allText['offValue'], allText['onValue']]);
+            const itemIndex = this.calcItemIndex();
             if (itemIndex === 0) {
                 threeDStyle = this.get3dButtonStyle(false);
             } else {
@@ -167,72 +187,6 @@ export class BooleanButton extends BaseWidget {
     };
 
     // -------------------- helper functions ----------------
-
-    /**
-     * Similar to LED.calcItemText()
-     * 
-     * find the text that corresponds to the channel value
-     * 
-     * the text may be defined by user or from the channel
-     */
-    calcItemText = (): string => {
-
-        const allText = this.getAllText();
-        const useChannelItems = allText["useChannelItems"];
-        const itemNames = [allText["offLabel"], allText["onLabel"]];
-        const itemValues = [allText["offValue"], allText["onValue"]];
-
-        if (g_widgets1.isEditing()) {
-            if (useChannelItems) {
-                return "";
-            } else {
-                return itemNames.join("|");
-            }
-        }
-
-        const index = this.calcItemIndex(itemValues);
-        if (typeof (index) === "number") {
-            if (useChannelItems === true) {
-                try {
-                    // find enum choices
-                    const channelName = this.getChannelNames()[0];
-                    const channel = g_widgets1.getTcaChannel(channelName);
-                    const strs = channel.getEnumChoices();
-                    const numberOfStringsUsed = channel.getNumerOfStringsUsed();
-                    if (typeof (numberOfStringsUsed) === "number" && index < numberOfStringsUsed && strs.length >= numberOfStringsUsed) {
-                        return strs[index];
-                    }
-                } catch (e) {
-                    Log.error(e);
-                }
-            } else {
-                return itemNames[index];
-            }
-        }
-        return allText["fallbackText"];
-    };
-
-
-    /**
-     * Similar to LED.calcItemColor()
-     * 
-     * find the color that corresponds to the channel value
-     */
-    calcItemColor = (): string => {
-        const allText = this.getAllText();
-        const itemValues = [allText["offValue"], allText["onValue"]];
-        const itemColors = [allText["offColor"], allText["onColor"]]
-        const index = this.calcItemIndex(itemValues);
-        console.log(index)
-
-        if (index !== undefined) {
-            const color = itemColors[index];
-            if (GlobalMethods.isValidRgbaColor(color)) {
-                return color;
-            }
-        }
-        return this.getAllText()["fallbackColor"];
-    };
 
     /**
      * when the mouse is down or up on the button, do something
@@ -355,28 +309,14 @@ export class BooleanButton extends BaseWidget {
                 // text styles
                 wrapWord: false,
                 showUnit: false,
-                // if we want to use the itemLabels and itemValues from channel
-                useChannelItems: false,
                 // use picture instead of colors
                 usePictures: false,
                 showLED: true,
-                // which bit to show, -1 means using the channel value
-                bit: 0,
                 alarmBorder: true,
                 // Toggle/Push/Push (inverted)
                 mode: "Toggle",
-                // when the channel is not connected
-                fallbackColor: "rgba(255,0,255,1)",
-                fallbackText: "Wrong State",
                 // becomes not visible in operation mode, but still clickable
                 invisibleInOperation: false,
-                // items, each category has 2 items
-                onLabel: "On",
-                offLabel: "Off",
-                onValue: 1,
-                offValue: 0,
-                onColor: "rgba(60, 255, 60, 1)",
-                offColor: "rgba(60, 100, 60, 1)",
                 onPicture: "", // not implemented yet
                 offPicture: "",
                 // "contemporary" | "traditional"
@@ -384,16 +324,47 @@ export class BooleanButton extends BaseWidget {
                 confirmOnWrite: false,
                 confirmOnWriteUsePassword: false,
                 confirmOnWritePassword: "",
+                // discrete states
+                bit: 0,
+                useChannelItems: false,
+                fallbackColor: "rgba(255,0,255,1)",
+                fallbackText: "Wrong state",
             },
             channelNames: [],
             groupNames: [],
             rules: [],
+            // discrete states
+            itemNames: ["False", "True"],
+            itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
+            itemValues: [0, 1],
+
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
     };
 
     generateDefaultTdl: () => any = BooleanButton.generateDefaultTdl;
+
+    // overload
+    getTdlCopy(newKey: boolean = true): Record<string, any> {
+        const result = super.getTdlCopy(newKey);
+        result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
+        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
+        result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
+        return result;
+    }
+    // --------------------- getters -------------------------
+
+    // override
+    getItemNames() {
+        return this._itemNames;
+    };
+    getItemColors() {
+        return this._itemColors;
+    };
+    getItemValues() {
+        return this._itemValues;
+    };
 
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {

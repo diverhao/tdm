@@ -2156,6 +2156,19 @@ export abstract class BaseWidget {
         return [minPvValue, maxPvValue];
     };
 
+    // --------------------- bit/binary ----------------------
+
+    getItemNames(): string[] {
+        return [];
+    }
+
+    getItemColors(): string[] {
+        return [];
+    }
+
+    getItemValues(): number[] {
+        return [];
+    }
 
     /**
      * Find the index that corresponds to the current channel value within a list of item values
@@ -2169,7 +2182,9 @@ export abstract class BaseWidget {
      * @param itemValues - array of values to search for the channel value
      * @returns the index of the matching value, or undefined if no match is found
      */
-    calcItemIndex = (itemValues: number[]): number | undefined => {
+    calcItemIndex = (): number | undefined => {
+        const itemValues = this.calcItemValues();
+
         const channelValue = this._getChannelValue(true);
         // if bit < 0, use whole number
         // if bit >= 0, use this bit
@@ -2198,6 +2213,111 @@ export abstract class BaseWidget {
         }
         return undefined;
     };
+
+    /**
+     * provided an array of numeric values
+     * 
+     * if we use the channel items, try to find the values defined by the PV,
+     * otherwise return the provided values
+     */
+    calcItemValues = () => {
+        const allText = this.getAllText();
+        const defaultValues: number[] = this.getItemValues();
+        const useChannelItems = allText["useChannelItems"];
+
+        if (useChannelItems === true) {
+            try {
+                const channelName = this.getChannelNames()[0];
+                const channel = g_widgets1.getTcaChannel(channelName);
+                const numberOfStringsUsed = channel.getNumerOfStringsUsed();
+                if (typeof (numberOfStringsUsed) === "number") {
+                    return Array.from({ length: numberOfStringsUsed }, (_, i) => i);
+                }
+            } catch (e) {
+                Log.error(e);
+            }
+        }
+        return defaultValues;
+    }
+
+    /**
+     * provided an array of strings
+     * 
+     * if we use the channel item, try to find the strings provided by the PV,
+     * otherwise return the provided strings
+     */
+    calcItemTexts = (): string[] => {
+        const allText = this.getAllText();
+        const defaultTexts = this.getItemNames();
+        const useChannelItems = allText["useChannelItems"];
+        if (useChannelItems === true) {
+            try {
+                const channelName = this.getChannelNames()[0];
+                const channel = g_widgets1.getTcaChannel(channelName);
+                const numberOfStringsUsed = channel.getNumerOfStringsUsed();
+                const strs = channel.getEnumChoices();
+                if (typeof (numberOfStringsUsed) === "number" && numberOfStringsUsed >= defaultTexts.length) {
+                    return strs.slice(0, defaultTexts.length);
+                }
+            } catch (e) {
+                Log.error(e);
+            }
+        }
+        return defaultTexts;
+    }
+
+
+    /**
+     * find the color that corresponds to the channel value
+     */
+    calcItemColor = (): string => {
+        const allText = this.getAllText();
+        const fallbackColor = allText["fallbackColor"];
+        const index = this.calcItemIndex();
+        const itemColors = this.getItemColors();
+
+        if (index !== undefined) {
+            const color = itemColors[index];
+            if (GlobalMethods.isValidRgbaColor(color)) {
+                return color;
+            }
+        }
+        return fallbackColor;
+    };
+
+
+    /**
+     * find the text that corresponds to the channel value
+     * 
+     * the text may be defined by user or from the channel
+     */
+    calcItemText = (): string => {
+
+        const allText = this.getAllText();
+        const fallbackText = allText["fallbackText"];
+        const itemTexts = this.calcItemTexts();
+        const useChannelItems = allText["useChannelItems"];
+
+        if (g_widgets1.isEditing()) {
+            if (useChannelItems) {
+                return "";
+            } else {
+                return itemTexts.join("|");
+            }
+        }
+
+        const index = this.calcItemIndex();
+
+        if (index !== undefined) {
+            const itemText = itemTexts[index];
+            if (typeof itemText === "string") {
+                return itemText;
+            }
+        }
+        return fallbackText;
+
+    };
+
 
     /**
      * calculate the 3d button style

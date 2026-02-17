@@ -22,7 +22,7 @@ export type type_LEDMultiState_tdl = {
     // LEDMultiState specific
     itemNames: string[];
     itemColors: string[];
-    itemValues: (number | string | number[] | string[] | undefined)[];
+    itemValues: number[];
 };
 
 export class LEDMultiState extends BaseWidget {
@@ -30,7 +30,7 @@ export class LEDMultiState extends BaseWidget {
     _rules: LEDMultiStateRules;
     _itemNames: string[];
     _itemColors: string[];
-    _itemValues: (number | string | number[] | string[] | undefined)[];
+    _itemValues: number[];
 
     constructor(widgetTdl: type_LEDMultiState_tdl) {
         super(widgetTdl);
@@ -340,61 +340,6 @@ export class LEDMultiState extends BaseWidget {
     };
 
     /**
-     * find the index that corresponds to the channel value
-     * 
-     * reutrns a number or undefined
-     */
-    calcIndex = (): number | undefined => {
-        const channelValue = this._getChannelValue(true);
-        if (typeof channelValue === "number") {
-            const index = this.getItemValues().indexOf(channelValue);
-            if (index >= 0) {
-                return index;
-            }
-        }
-        return undefined;
-    };
-
-
-    /**
-     * find the color that corresponds to the channel value
-     */
-    calcItemColor = () => {
-        const index = this.calcIndex();
-
-        if (index !== undefined) {
-            const color = this.getItemColors()[index];
-            if (GlobalMethods.isValidRgbaColor(color)) {
-                return color;
-            }
-        }
-        return this.getAllText()["fallbackColor"];
-    };
-
-    /**
-     * find the text that corresponds to the channel value
-     * 
-     * the text is defined by user, this is different from the LED widget where
-     * the text may be from channel
-     */
-    calcItemText = (): string => {
-
-        const allText = this.getAllText();
-        const itemNames = this.getItemNames();
-
-        if (g_widgets1.isEditing()) {
-            return itemNames.join("|");
-        }
-
-        const index = this.calcIndex();
-        if (index !== undefined) {
-            return itemNames[index];
-        } else {
-            return allText["fallbackText"];
-        }
-    };
-
-    /**
      * calculate coordinate for one point on square LED
      */
     calcLEDSquarePointXY = (theta: number, rX: number, rY: number) => {
@@ -522,13 +467,17 @@ export class LEDMultiState extends BaseWidget {
                 // LED shape: round or square
                 shape: "round",
                 // if the value is not valid
+                invisibleInOperation: false,
+                // discrete states
+                bit: -1, // always -1 for LEDMultiState
+                useChannelItems: false,
                 fallbackColor: "rgba(255,0,255,1)",
                 fallbackText: "Err",
-                invisibleInOperation: false,
             },
             channelNames: [],
             groupNames: [],
             rules: [],
+            // discrete states
             itemNames: ["False", "True"],
             itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
             itemValues: [0, 1],
@@ -550,13 +499,14 @@ export class LEDMultiState extends BaseWidget {
 
     // --------------------- getters -------------------------
 
-    getItemNames = () => {
+    // override
+    getItemNames() {
         return this._itemNames;
     };
-    getItemColors = () => {
+    getItemColors() {
         return this._itemColors;
     };
-    getItemValues = () => {
+    getItemValues() {
         return this._itemValues;
     };
 

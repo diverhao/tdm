@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS, GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -8,6 +8,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { CheckBoxRules } from "./CheckBoxRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
+import { deepMerge } from "../../../common/GlobalMethods";
 
 export type type_CheckBox_tdl = {
     type: string;
@@ -18,17 +19,34 @@ export type type_CheckBox_tdl = {
     channelNames: string[];
     groupNames: string[];
     rules: type_rules_tdl;
+    // Check Box specific
+    itemNames: string[];
+    itemColors: string[];
+    itemValues: number[];
 };
 
 export class CheckBox extends BaseWidget {
 
     _rules: CheckBoxRules;
+    _itemNames: string[];
+    _itemColors: string[];
+    _itemValues: number[];
 
     constructor(widgetTdl: type_CheckBox_tdl) {
         super(widgetTdl);
         this.initStyle(widgetTdl);
         this.initText(widgetTdl);
         this.setReadWriteType("write");
+
+        const defaultTdl = this.generateDefaultTdl();
+        this._itemNames = deepMerge(widgetTdl.itemNames, defaultTdl.itemNames);
+        this._itemColors = deepMerge(widgetTdl.itemColors, defaultTdl.itemColors);
+        this._itemValues = deepMerge(widgetTdl.itemValues, defaultTdl.itemValues);
+        // ensure the same number of states
+        const numStates = 2;
+        this._itemNames.splice(numStates);
+        this._itemColors.splice(numStates);
+        this._itemValues.splice(numStates);
 
         this._rules = new CheckBoxRules(this, widgetTdl);
     }
@@ -48,7 +66,6 @@ export class CheckBox extends BaseWidget {
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
                 <div style={this.getElementBodyRawStyle()}>
-                    {/* <this._ElementArea></this._ElementArea> */}
                     <this._ElementAreaRaw></this._ElementAreaRaw>
                     {this.showResizers() ? <this._ElementResizer /> : null}
                 </div>
@@ -58,6 +75,13 @@ export class CheckBox extends BaseWidget {
     };
 
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+        const allText = this.getAllText();
+
+        const whiteSpace = allText.wrapWord ? "normal" : "pre";
+        const justifyContent = allText.horizontalAlign;
+        const alignItems = allText.verticalAlign;
+        const outline = this._getElementAreaRawOutlineStyle();
+
         return (
             <div
                 style={{
@@ -68,13 +92,10 @@ export class CheckBox extends BaseWidget {
                     height: "100%",
                     userSelect: "none",
                     overflow: "visible",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllText().fontFamily,
-                    fontSize: this.getAllText().fontSize,
-                    fontStyle: this.getAllText().fontStyle,
-                    outline: this._getElementAreaRawOutlineStyle(),
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    outline: outline,
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
@@ -89,6 +110,12 @@ export class CheckBox extends BaseWidget {
 
     _ElementCheckBox = () => {
         const elementRef = React.useRef<any>(null);
+        const allText = this.getAllText();
+        const size = allText["size"];
+        const widgetKey = this.getWidgetKey();
+        const showLabels = allText["showLabels"];
+        const text = showLabels === true ? this.calcItemText() : "";
+
         return (
             <form
                 ref={elementRef}
@@ -96,209 +123,99 @@ export class CheckBox extends BaseWidget {
                     display: "inline-flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
                 }}
-                onMouseEnter={(event: any) => {
-                    if (!g_widgets1.isEditing()) {
-                        if (elementRef.current !== null) {
-                            elementRef.current.style["outlineStyle"] = "solid";
-                            elementRef.current.style["outlineWidth"] = "3px";
-                            elementRef.current.style["outlineColor"] = "rgba(105,105,105,1)";
-                            if (this._getChannelAccessRight() < 1.5) {
-                                elementRef.current.style["cursor"] = "not-allowed";
-                            } else {
-                                elementRef.current.style["cursor"] = "pointer";
-                            }
-                        }
-                    }
-                }}
-                onMouseLeave={(event: any) => {
-                    if (!g_widgets1.isEditing()) {
-                        if (elementRef.current !== null) {
-                            elementRef.current.style["outlineStyle"] = this.getAllStyle()["outlineStyle"];
-                            elementRef.current.style["outlineWidth"] = this.getAllStyle()["outlineWidth"];
-                            elementRef.current.style["outlineColor"] = this.getAllStyle()["outlineColor"];
-                            elementRef.current.style["cursor"] = "default";
-                        }
-                    }
-                }}
+                onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                onMouseLeave={(event: any) => this.handleMouseLeaveWriteWidget(event, elementRef)}
             >
                 <input
                     type="checkbox"
                     name="checkbox"
-                    id={this.getWidgetKey()}
+                    id={widgetKey}
                     onClick={(event: any) => {
-                        // this.onCheckBoxClick(event);
-                        this.handleOnClick(event);
+                        this.handleMouseClick(event);
                     }}
                     style={{
-                        width: this.getAllText()["size"],
-                        height: this.getAllText()["size"],
+                        width: size,
+                        height: size,
                     }}
-                    // checked={this.getBitValue()}
-                    checked={this.getCheckedState()}
+                    checked={this.calcCheckState()}
                 ></input>
-                {/* <label htmlFor={this.getWidgetKey()}>{this.getAllText()["text"]}</label> */}
-                <label htmlFor={this.getWidgetKey()}>{this.getLabel()}</label>
+                <label htmlFor={widgetKey}>{text}</label>
             </form>
         );
     };
 
     // -------------------- helper functions ----------------
 
-    getCheckedState = () => {
-        const bitValue = this.getBitValue();
-
-        if (bitValue === undefined) {
+    /**
+     * check the box only when the index is not 0
+     */
+    calcCheckState = () => {
+        const index = this.calcItemIndex();
+        console.log("calc check state", index)
+        if (index === 0) {
             return false;
+        } else if (index === 1) {
+            return true;
         } else {
-            if (this.getAllText()["bit"] > -1) {
-                if (bitValue === 0) {
-                    return false;
-                } else if (bitValue === 1) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                if (bitValue === this.getAllText()["onValue"]) {
-                    return true;
-                } else {
-                    return false;
-                }
-                // const index = this.getItemValues().indexOf(bitValue);
-                // if (index === 0) {
-                // 	return false;
-                // } else if (index === 1) {
-                // 	return true;
-                // } else {
-                // 	return false;
-                // }
-            }
+            return true;
         }
-    };
+    }
 
     /**
-     * If the channel does not exist, return undefined.
-     *
-     * If we use the whole value (bit === -1), return the whole value anyway, do not compare with itemValues <br>
-     *
-     * If we use the bit value (bit >= 0), return this bit's value (0 or 1). <br>
+     * when the mouse is down or up on the button, do something
      */
-    getBitValue = (): number | undefined => {
-        // bot position
-        const bit = this.getAllText()["bit"];
-        try {
-            const channelValue = this._getChannelValue(true);
-
-            if (typeof channelValue === "number") {
-                if (bit < 0) {
-                    return channelValue;
-                } else if (bit >= 0) {
-                    // must be 0 or 1
-                    return (channelValue >> bit) & 0x1;
-                    // let bitValue = (channelValue >> bit) & 0x1;
-                    // const index = this.getItemValues().indexOf(bitValue);
-                    // if (index < 0) {
-                    // 	return undefined;
-                    // } else {
-                    // 	return this.getItemValues()[index];
-                    // }
-                }
-            }
-        } catch (e) {
-            Log.error(e);
-        }
-        return undefined;
-    };
-
-    getLabel = () => {
-        if (g_widgets1.isEditing()) {
-            return this.getAllText()["text"];
-        }
-
-        const bitValue = this.getBitValue();
-        if (bitValue === undefined) {
-            return "";
-        } else {
-            if (this.getAllText()["bit"] > -1) {
-                // bitValue must be 0 or 1, which can be the index
-                if (bitValue === this.getAllText()["onValue"]) {
-                    return this.getAllText()["onLabel"];
-                } else {
-                    return this.getAllText()["offLabel"];
-                }
-                // return this.getItemLabels()[bitValue];
-            } else {
-                // bitValue is the whole channel value
-                if (bitValue === this.getAllText()["onValue"]) {
-                    return this.getAllText()["onLabel"];
-                } else if (bitValue === this.getAllText()["offValue"]) {
-                    return this.getAllText()["offLabel"];
-                } else {
-                    return `${bitValue}`;
-                }
-                // const index = this.getItemValues().indexOf(bitValue);
-                // if (index > -1) {
-                // 	return this.getItemLabels()[index];
-                // } else {
-
-                // }
-            }
-        }
-    };
-
-    handleOnClick = (event: any) => {
+    handleMouseClick = (event: any) => {
         event.preventDefault();
-
+        // left button only
+        if (event.button !== 0) {
+            return;
+        }
+        // do nothing during editing
         if (g_widgets1.isEditing()) {
             return;
         }
-        if (this._getChannelAccessRight() < 1.5) {
+        // write permission
+        if (this._getChannelAccessRight() < Channel_ACCESS_RIGHTS.READ_WRITE) {
             return;
         }
 
-        const oldBitValue = this.getBitValue();
-        const bit = this.getAllText()["bit"];
-        const oldChannelValue = this._getChannelValue(true);
-        let newChannelValue = this.getAllText()["offValue"]; // this.getItemValues()[0];
+        const itemValues = this.calcItemValues();
+        const onValue = itemValues[1];
+        const offValue = itemValues[0];
+        let targetValue = onValue;
 
-
-        if (oldBitValue === undefined || typeof oldChannelValue !== "number") {
-            // write to channel anyway
-            newChannelValue = this.getAllText()["offValue"]; // this.getItemValues()[0];
-        } else {
-            if (bit > -1) {
-                // oldBitValue and newBitValue must be 0 or 1 in this case
-                const newBitValue = Math.abs(oldBitValue - 1);
-                if (newBitValue === 1) {
-                    newChannelValue = Math.floor(oldChannelValue) | (1 << bit);
-                } else {
-                    newChannelValue = Math.floor(oldChannelValue) & ~(1 << bit);
-                }
-            } else {
-                if (oldBitValue === this.getAllText()["onValue"]) {
-                    newChannelValue = this.getAllText()["offValue"];
-                } else if (oldBitValue === this.getAllText()["offValue"]) {
-                    newChannelValue = this.getAllText()["onValue"];
-                } else {
-                    newChannelValue = this.getAllText()["offValue"];
-                }
-                // whole value, oldBitValue could be any number
-                // const index = this.getItemValues().indexOf(oldBitValue);
-                // if (index < 0) {
-                // 	// fallback to 0-th value
-                // 	console.log("fallback to 0th value", this.getItemValues()[0]);
-                // 	newChannelValue = this.getItemValues()[0];
-                // } else {
-                // 	newChannelValue = this.getItemValues()[Math.abs(index - 1)];
-                // }
-            }
+        let currentValue = this._getChannelValue(true);
+        if (typeof currentValue !== "number") {
+            return;
+        }
+        if (currentValue !== offValue) {
+            currentValue = onValue;
         }
 
-        this.putChannelValue(this.getChannelNames()[0], newChannelValue);
+        if (currentValue === offValue) {
+            targetValue = onValue;
+        } else {
+            targetValue = offValue;
+        }
+
+        const channelName = this.getChannelNames()[0];
+        this.putChannelValue(channelName, targetValue);
     };
 
+
+    // --------------------- getters -------------------------
+
+    // override
+    getItemNames() {
+        return this._itemNames;
+    };
+    getItemColors() {
+        return this._itemColors;
+    };
+    getItemValues() {
+        return this._itemValues;
+    };
 
     // -------------------------- tdl -------------------------------
 
@@ -341,22 +258,28 @@ export class CheckBox extends BaseWidget {
                 wrapWord: false,
                 showUnit: false,
                 alarmBorder: true,
-                bit: 0,
                 // round button size
                 size: 12,
                 text: "Label",
                 invisibleInOperation: false,
-                onLabel: "On",
-                offLabel: "Off",
-                onValue: 1,
-                offValue: 0,
                 confirmOnWrite: false,
                 confirmOnWriteUsePassword: false,
                 confirmOnWritePassword: "",
+                showLabels: true,
+
+                // discrete states
+                bit: 0,
+                useChannelItems: false,
+                fallbackColor: "rgba(255,0,255,1)",
+                fallbackText: "Err",
             },
             channelNames: [],
             groupNames: [],
             rules: [],
+            // discrete states
+            itemNames: ["False", "True"],
+            itemValues: [0, 1],
+            itemColors: ["rgba(210, 210, 210, 1)", "rgba(0, 255, 0, 1)"], // not used in this widget
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
@@ -364,9 +287,12 @@ export class CheckBox extends BaseWidget {
 
     generateDefaultTdl: () => any = CheckBox.generateDefaultTdl;
 
-
+    // overload
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
+        result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
+        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
+        result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
         return result;
     }
 

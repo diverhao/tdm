@@ -1,58 +1,48 @@
 import * as React from "react";
 import { SlideButton } from "./SlideButton";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-// import { SidebarChoiceButtonItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonItems";
-// import { SidebarChoiceButtonSelectedBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonSelectedBackgroundColor";
-// import { SidebarChoiceButtonUnselectedBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUnselectedBackgroundColor";
-// import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
 import { SidebarLEDBit } from "../../helperWidgets/SidebarComponents/SidebarLEDBit";
-// import { SidebarCheckBoxSize } from "../../helperWidgets/SidebarComponents/SidebarCheckBoxSize";
 import { SidebarSlideButtonBoxWidth } from "../../helperWidgets/SidebarComponents/SidebarSlideButtonBoxWidth";
-import { SidebarSlideButtonBoxRatio } from "../../helperWidgets/SidebarComponents/SidebarSlideButtonBoxRatio";
-// import { SidebarBooleanButtonItems } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonItems";
 import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems"
-import { SidebarSlideButtonItems } from "../../helperWidgets/SidebarComponents/SidebarSlideButtonItems";
 import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { SidebarBooleanButtonOnColor } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOnColor";
+import { SidebarBooleanButtonOnValue } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOnValue";
+import { SidebarBooleanButtonOnLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOnLabel";
+import { SidebarBooleanButtonOffLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffLabel";
+import { SidebarBooleanButtonOffValue } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffValue";
+import { SidebarBooleanButtonOffColor } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffColor";
+import { SidebarLEDItems } from "../../helperWidgets/SidebarComponents/SidebarLEDItems";
 
 export class SlideButtonSidebar extends BaseWidgetSidebar {
-    // _sidebarChoiceButtonItems: SidebarChoiceButtonItems;
-    // _sidebarChoiceButtonSelectedBackgroundColor: SidebarChoiceButtonSelectedBackgroundColor;
-    // _sidebarChoiceButtonUnselectedBackgroundColor: SidebarChoiceButtonUnselectedBackgroundColor;
-    // _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
     _sidebarLEDBit: SidebarLEDBit;
-    // _sidebarCheckBoxSize: SidebarCheckBoxSize;
     _sidebarSlideButtonBoxWidth: SidebarSlideButtonBoxWidth;
-    _sidebarSlideButtonBoxRatio: SidebarSlideButtonBoxRatio;
-    // _sidebarBooleanButtonItems: SidebarBooleanButtonItems;
     _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
-    _sidebarSlideButtonItems: SidebarSlideButtonItems;
     _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
+    _sidebarBooleanButtonOnColor: SidebarBooleanButtonOnColor;
+    _sidebarBooleanButtonOffColor: SidebarBooleanButtonOffColor;
+    _sidebarBooleanButtonOnValue: SidebarBooleanButtonOnValue;
+    _sidebarBooleanButtonOffValue: SidebarBooleanButtonOffValue;
+    _sidebarBooleanButtonOnLabel: SidebarBooleanButtonOnLabel;
+    _sidebarBooleanButtonOffLabel: SidebarBooleanButtonOffLabel;
+    _sidebarLEDItems: SidebarLEDItems;
 
     constructor(slideButton: SlideButton) {
         super(slideButton);
-        // this._sidebarChoiceButtonItems = new SidebarChoiceButtonItems(this);
-        // this._sidebarChoiceButtonSelectedBackgroundColor = new SidebarChoiceButtonSelectedBackgroundColor(this);
-        // this._sidebarChoiceButtonUnselectedBackgroundColor = new SidebarChoiceButtonUnselectedBackgroundColor(this);
-        // this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
         this._sidebarLEDBit = new SidebarLEDBit(this);
-        // this._sidebarCheckBoxSize = new SidebarCheckBoxSize(this);
         this._sidebarSlideButtonBoxWidth = new SidebarSlideButtonBoxWidth(this);
-        this._sidebarSlideButtonBoxRatio = new SidebarSlideButtonBoxRatio(this);
-        // this._sidebarBooleanButtonItems = new SidebarBooleanButtonItems(this);
         this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
-        this._sidebarSlideButtonItems = new SidebarSlideButtonItems(this);
         this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
+        this._sidebarBooleanButtonOnColor = new SidebarBooleanButtonOnColor(this);
+        this._sidebarBooleanButtonOffColor = new SidebarBooleanButtonOffColor(this);
+        this._sidebarBooleanButtonOnValue = new SidebarBooleanButtonOnValue(this);
+        this._sidebarBooleanButtonOffValue = new SidebarBooleanButtonOffValue(this);
+        this._sidebarBooleanButtonOnLabel = new SidebarBooleanButtonOnLabel(this);
+        this._sidebarBooleanButtonOffLabel = new SidebarBooleanButtonOffLabel(this);
+        this._sidebarLEDItems = new SidebarLEDItems(this);
     }
-    // getSidebarChoiceButtonUnselectedBackgroundColor = () => {
-    // 	return this._sidebarChoiceButtonUnselectedBackgroundColor;
-    // };
-
-    // getSidebarChoiceButtonSelectedBackgroundColor = () => {
-    // 	return this._sidebarChoiceButtonSelectedBackgroundColor;
-    // };
 
     getSidebarChoiceButtonUseChannelItems = () => {
         return this._sidebarChoiceButtonUseChannelItems;
@@ -62,28 +52,37 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
         return this._sidebarLEDBit;
     }
 
-    // getSidebarCheckBoxSize = () => {
-    //     return this._sidebarCheckBoxSize;
-    // }
-
     getSidebarSlideButtonBoxWidth = () => {
         return this._sidebarSlideButtonBoxWidth;
     }
 
-    getSidebarSlideButtonBoxRatio = () => {
-        return this._sidebarSlideButtonBoxRatio;
-    }
-
-    // getSidebarBooleanButtonItems = () => {
-    //     return this._sidebarBooleanButtonItems;
-    // }
-
-    getSidebarSlideButtonItems = () => {
-        return this._sidebarSlideButtonItems;
-    }
-
     getSidebarLEDFallbackColor = () => {
         return this._sidebarLEDFallbackColor;
+    }
+
+    getSidebarBooleanButtonOnColor = () => {
+        return this._sidebarBooleanButtonOnColor;
+    }
+
+    getSidebarBooleanButtonOffColor = () => {
+        return this._sidebarBooleanButtonOffColor;
+    }
+
+    getSidebarBooleanButtonOnValue = () => {
+        return this._sidebarBooleanButtonOnValue;
+    }
+    getSidebarBooleanButtonOffValue = () => {
+        return this._sidebarBooleanButtonOffValue;
+    }
+    getSidebarBooleanButtonOnLabel = () => {
+        return this._sidebarBooleanButtonOnLabel;
+    }
+    getSidebarBooleanButtonOffLabel = () => {
+        return this._sidebarBooleanButtonOffLabel;
+    }
+
+    getSidebarLEDItems = () => {
+        return this._sidebarLEDItems;
     }
 
     // ------------------------------------- elements --------------------------------------
@@ -155,6 +154,23 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarAlarmBackground().getElement()}
                     {this.getSidebarAlarmBorder().getElement()}
                     {this.getSidebarAlarmLevel().getElement()}
+                    {this.getSidebarLEDBit().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
+
+                {/* --------------------------- items -------------------------- */}
+                {this.getSidebarLEDItems().getElement()}
+                {this.getSidebarChoiceButtonUseChannelItems().getElement()}
+
+                <this._HorizontalLine />
+                {/* ----------------- Box ---------------------------- */}
+                <this._BlockTitle>
+                    <b>Box</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarSlideButtonBoxWidth().getElement()}
+                    {this.getSidebarLEDBit().getElement()}
+                    {this.getSidebarLEDFallbackColor().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
@@ -165,20 +181,6 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
                     {/* color */}
                     {this.getSidebarBackgroundColor().getElement()}
                     {this.getSidebarInvisibleInOperation().getElement()}
-                    {/* {this.getSidebarChoiceButtonSelectedBackgroundColor().getElement()}
-					{this.getSidebarChoiceButtonUnselectedBackgroundColor().getElement()} */}
-                </this._BlockBody>
-                {/* <this._BlockBody>{this.getSidebarHighlightBackgroundColor().getElement()}</this._BlockBody> */}
-                <this._HorizontalLine />
-                {/* ----------------- Box ---------------------------- */}
-                <this._BlockTitle>
-                    <b>Box</b>
-                </this._BlockTitle>
-                <this._BlockBody>
-                    {this.getSidebarSlideButtonBoxWidth().getElement()}
-                    {this.getSidebarSlideButtonBoxRatio().getElement()}
-                    {this.getSidebarLEDBit().getElement()}
-                    {this.getSidebarLEDFallbackColor().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
 
@@ -187,14 +189,7 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
                     <b>Text</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {/* {this.getSidebarText().getElement()} */}
-                    {/* {this.getSidebarWrapWord().getElement()} */}
-                    {/* {this.getSidebarXAlign().getElement()} */}
-                    {/* {this.getSidebarYAlign().getElement()} */}
                     {this.getSidebarTextColor().getElement()}
-                    {/* {this.getSidebarXAlign().getElement()} */}
-                    {/* todo: {this.getSidebarYAlign().getElement()} */}
-                    {/* todo: {this.getSidebarWrapWord().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ----------------------- font --------------------------- */}
@@ -217,15 +212,7 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarBorderColor().getElement()}
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
-                {/* --------------------------- items -------------------------- */}
-                {/* --------------------------- items -------------------------- */}
-                <this._BlockBody>
-                    {this.getSidebarSlideButtonItems().getElement()}
-                    {this.getSidebarChoiceButtonUseChannelItems().getElement()}
-                </this._BlockBody>
-                {/* {this.getSidebarChoiceButtonItems().getElement()} */}
-                {/* {this.getSidebarChoiceButtonUseChannelItems().getElement()} */}
-                <this._HorizontalLine />
+
                 {/* ---------------- confirm on write -------------------- */}
                 {this.getSidebarWriteConfirmation().getElement()}
                 <this._HorizontalLine />
@@ -239,30 +226,4 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
         );
     };
 
-    // defined in super class
-    // getElement()
-    // _HorizontalLine()
-    // _BlockBody()
-    // _BlockTitle()
-
-    // ---------------------- getters --------------------------
-
-    // defined in super class
-    // getWidgetKey()
-    // getMainWidget()
-    // getUpdateFromSidebar()
-    // getStyle()
-    // getFormStyle()
-    // getInputStyle()
-
-    // getSidebarChoiceButtonItems = () => {
-    // 	return this._sidebarChoiceButtonItems;
-    // };
-
-    // ------------------------- style -------------------------
-
-    // defined in super class
-    // _style
-    // _inputStyle
-    // _formStyle
 }

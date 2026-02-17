@@ -18,17 +18,23 @@ export type type_ChoiceButton_tdl = {
     channelNames: string[];
     groupNames: string[];
     rules: type_rules_tdl;
-    itemLabels: string[];
-    itemValues: (number | string | number[] | string[] | undefined)[];
+    // Slide Button specific
+    itemNames: string[];
+    itemColors: string[];
+    itemValues: number[];
 };
 
 export class ChoiceButton extends BaseWidget {
-    _itemLabels: string[];
-    _itemValues: (number | string | number[] | string[] | undefined)[];
-    _itemNamesFromChannel: string[];
-    _itemValuesFromChannel: (number | string | number[] | string[] | undefined)[];
-    channelItemsUpdated: boolean = false;
+    // _itemLabels: string[];
+    // _itemValues: (number | string | number[] | string[] | undefined)[];
+    // _itemNamesFromChannel: string[];
+    // _itemValuesFromChannel: (number | string | number[] | string[] | undefined)[];
+    _itemNames: string[];
+    _itemColors: string[];
+    _itemValues: number[];
 
+
+    channelItemsUpdated: boolean = false;
     _rules: ChoiceButtonRules;
 
     constructor(widgetTdl: type_ChoiceButton_tdl) {
@@ -494,10 +500,14 @@ export class ChoiceButton extends BaseWidget {
 
     // --------------------- getters -------------------------
 
-    getItemLabels = () => {
-        return this._itemLabels;
+    // override
+    getItemNames() {
+        return this._itemNames;
     };
-    getItemValues = () => {
+    getItemColors() {
+        return this._itemColors;
+    };
+    getItemValues() {
         return this._itemValues;
     };
 

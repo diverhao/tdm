@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS, GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -7,7 +7,7 @@ import { SlideButtonSidebar } from "./SlideButtonSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { SlideButtonRules } from "./SlideButtonRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../common/Log";
+import { deepMerge } from "../../../common/GlobalMethods";
 
 export type type_SlideButton_tdl = {
     type: string;
@@ -18,17 +18,18 @@ export type type_SlideButton_tdl = {
     channelNames: string[];
     groupNames: string[];
     rules: type_rules_tdl;
-    itemLabels: string[];
-    itemValues: number[];
+    // Slide Button specific
+    itemNames: string[];
     itemColors: string[];
+    itemValues: number[];
 };
 
 export class SlideButton extends BaseWidget {
-    _itemLabels: string[];
-    _itemValues: number[];
-    _itemColors: string[];
 
     _rules: SlideButtonRules;
+    _itemNames: string[];
+    _itemColors: string[];
+    _itemValues: number[];
 
     constructor(widgetTdl: type_SlideButton_tdl) {
         super(widgetTdl);
@@ -36,51 +37,22 @@ export class SlideButton extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
+        const defaultTdl = this.generateDefaultTdl();
+        this._itemNames = deepMerge(widgetTdl.itemNames, defaultTdl.itemNames);
+        this._itemColors = deepMerge(widgetTdl.itemColors, defaultTdl.itemColors);
+        this._itemValues = deepMerge(widgetTdl.itemValues, defaultTdl.itemValues);
+        // ensure the same number of states
+        const numStates = 2;
+        this._itemNames.splice(numStates);
+        this._itemColors.splice(numStates);
+        this._itemValues.splice(numStates);
+
         this._rules = new SlideButtonRules(this, widgetTdl);
-
-        // items, number of items must be esactly 2
-        this._itemLabels = JSON.parse(JSON.stringify(widgetTdl.itemLabels));
-        this._itemValues = JSON.parse(JSON.stringify(widgetTdl.itemValues));
-        this._itemColors = JSON.parse(JSON.stringify(widgetTdl.itemColors));
-
-        if (this._itemLabels.length === 0) {
-            this._itemLabels.push("False");
-            this._itemLabels.push("True");
-        }
-        if (this._itemLabels.length === 1) {
-            this._itemLabels.push("True");
-        }
-        if (this._itemLabels.length >= 2) {
-            this._itemLabels.splice(2);
-        }
-
-        if (this._itemColors.length === 0) {
-            this._itemColors.push("rgba(60,100,60,1)");
-            this._itemColors.push("rgba(60,255,60,1)");
-        }
-        if (this._itemColors.length === 1) {
-            this._itemColors.push("rgba(60,255,60,1)");
-        }
-        if (this._itemColors.length >= 2) {
-            this._itemColors.splice(2);
-        }
-
-        if (this._itemValues.length === 0) {
-            this._itemValues.push(0);
-            this._itemValues.push(1);
-        }
-        if (this._itemValues.length === 1) {
-            this._itemValues.push(1);
-        }
-        if (this._itemValues.length >= 2) {
-            this._itemValues.splice(2);
-        }
     }
 
 
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -93,30 +65,24 @@ export class SlideButton extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
-                </>
+                <div style={this.getElementBodyRawStyle()}>
+                    <this._ElementAreaRaw></this._ElementAreaRaw>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                {/* <this._ElementArea></this._ElementArea> */}
-                <this._ElementAreaRaw></this._ElementAreaRaw>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+        const allText = this.getAllText();
+
+        const whiteSpace = allText.wrapWord ? "normal" : "pre";
+        const justifyContent = allText.horizontalAlign;
+        const alignItems = allText.verticalAlign;
+        const outline = this._getElementAreaRawOutlineStyle();
+
         return (
-            // <div
             <div
                 style={{
                     display: "inline-flex",
@@ -126,15 +92,11 @@ export class SlideButton extends BaseWidget {
                     height: "100%",
                     userSelect: "none",
                     overflow: "visible",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllText().fontFamily,
-                    fontSize: this.getAllText().fontSize,
-                    fontStyle: this.getAllText().fontStyle,
-                    outline: this._getElementAreaRawOutlineStyle(),
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    outline: outline,
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
@@ -143,10 +105,17 @@ export class SlideButton extends BaseWidget {
         );
     };
 
-    _ElementSlideButton = () => {
-        const height = this.getAllText()["boxWidth"] / this.getAllText()["boxRatio"];
-        const elementRef = React.useRef<any>(null);
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
+
+    _ElementSlideButton = () => {
+        const boxHeight = this.getAllText()["boxWidth"] / 3;
+        const elementRef = React.useRef<any>(null);
+        const backgroundColor = this.calcItemColor();
+        const buttonPosition = this.calcButtonPosition();
+        const border = "solid 1px rgba(30,30,30,1)";
+        const text = this.calcItemText();
 
         return (
             <div
@@ -157,262 +126,100 @@ export class SlideButton extends BaseWidget {
                     alignItems: "center",
                     justifyContent: "center",
                 }}
-                onMouseEnter={(event: any) => {
-                    if (!g_widgets1.isEditing()) {
-                        if (elementRef.current !== null) {
-                            elementRef.current.style["outlineStyle"] = "solid";
-                            elementRef.current.style["outlineWidth"] = "3px";
-                            elementRef.current.style["outlineColor"] = "rgba(105,105,105,1)";
-                            if (this._getChannelAccessRight() < 1.5) {
-                                elementRef.current.style["cursor"] = "not-allowed";
-                            } else {
-                                elementRef.current.style["cursor"] = "pointer";
-                            }
-                        }
-                    }
-                }}
-                onMouseLeave={(event: any) => {
-                    if (!g_widgets1.isEditing()) {
-                        if (elementRef.current !== null) {
-                            elementRef.current.style["outlineStyle"] = this.getAllStyle()["outlineStyle"];
-                            elementRef.current.style["outlineWidth"] = this.getAllStyle()["outlineWidth"];
-                            elementRef.current.style["outlineColor"] = this.getAllStyle()["outlineColor"];
-                            elementRef.current.style["cursor"] = "default";
-                        }
-                    }
-                }}
+                onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                onMouseLeave={(event: any) => this.handleMouseLeaveWriteWidget(event, elementRef)}
             >
+                {/* sliding area */}
                 <div
+                    onClick={(event: any) => {
+                        this.handleMouseClick(event);
+                    }}
                     style={{
-                        position: "relative",
+                        width: this.getAllText()["boxWidth"],
+                        height: boxHeight,
                         display: "inline-flex",
+                        borderRadius: boxHeight / 2,
+                        backgroundColor: backgroundColor,
+                        flexDirection: "row",
+                        justifyContent: buttonPosition,
                         alignItems: "center",
-                        justifyContent: "center",
-                        opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
+                        border: border,
                     }}
                 >
+                    {/* slide knob */}
                     <div
-                        onClick={(event: any) => {
-                            this.handleOnClick(event);
-                        }}
                         style={{
-                            width: this.getAllText()["boxWidth"],
-                            height: height,
-                            display: "inline-flex",
-                            borderRadius: height / 2,
-                            // backgroundColor: g_widgets1.isEditing() ? "" : this.getButtonBackgroundColor(),
-                            // backgroundColor: "rgba(0,0,255,1)",
-                            background: g_widgets1.isEditing()
-                                ? `linear-gradient(to right, ${this.getItemColors()[0]}, ${this.getItemColors()[1]})`
-                                : this.getButtonBackgroundColor(),
-
-                            flexDirection: "row",
-                            justifyContent: this.getButtonPosition(),
-                            alignItems: "center",
-                            border: "solid 1px rgba(30,30,30,1)",
+                            width: boxHeight,
+                            height: boxHeight,
+                            borderRadius: boxHeight / 2,
+                            backgroundColor: "rgba(210,210,210,1)",
+                            border: border,
                         }}
-                    >
-                        <div
-                            style={{
-                                width: height,
-                                height: height,
-                                borderRadius: height / 2,
-                                backgroundColor: "rgba(210,210,210,1)",
-                                border: "solid 1px rgba(30,30,30,1)",
-                            }}
-                        ></div>
-                    </div>
-                    <div>{this.getLabel()}</div>
-                </div>{" "}
+                    ></div>
+                </div>
+                {/* text */}
+                <div>{text}</div>
             </div>
         );
     };
 
-    getLabel = () => {
-        if (g_widgets1.isEditing()) {
-            return "Label";
-        }
-
-        const bitValue = this.getBitValue();
-        if (bitValue === undefined) {
-            return "Error";
-        } else {
-            if (this.getAllText()["bit"] > -1) {
-                // bitValue must be 0 or 1, which can be the index
-                return this.getItemLabels()[bitValue];
-            } else {
-                // bitValue is the whole channel value
-                const index = this.getItemValues().indexOf(bitValue);
-                if (index > -1) {
-                    return this.getItemLabels()[index];
-                } else {
-                    return `${bitValue}`;
-                }
-            }
-        }
-    };
-
-    getButtonPosition = () => {
-        const bitValue = this.getBitValue();
-
-        if (bitValue === undefined) {
-            return "center";
-        } else {
-            if (this.getAllText()["bit"] > -1) {
-                if (bitValue === 0) {
-                    return "flex-start";
-                } else if (bitValue === 1) {
-                    return "flex-end";
-                } else {
-                    return "center";
-                }
-            } else {
-                const index = this.getItemValues().indexOf(bitValue);
-                if (index === 0) {
-                    return "flex-start";
-                } else if (index === 1) {
-                    return "flex-end";
-                } else {
-                    return "center";
-                }
-            }
-        }
-    };
-
-    getButtonBackgroundColor = () => {
-
-        const bitValue = this.getBitValue();
-        if (bitValue === undefined) {
-            return this.getAllText()["fallbackColor"];
-        } else {
-            if (this.getAllText()["bit"] > -1) {
-                // bitValue must be 0 or 1, which can be the index
-                return this.getItemColors()[bitValue];
-            } else {
-                // bitValue is the whole channel value
-                const index = this.getItemValues().indexOf(bitValue);
-                if (index > -1) {
-                    return this.getItemColors()[index];
-                } else {
-                    return this.getAllText()["fallbackColor"];
-                }
-            }
-        }
-    };
-
-    handleOnClick = (event: any) => {
-        event.preventDefault();
-
-        if (g_widgets1.isEditing()) {
-            return;
-        }
-
-        if (this._getChannelAccessRight() < 1.5) {
-            return;
-        }
-
-        const oldBitValue = this.getBitValue();
-        const bit = this.getAllText()["bit"];
-        const oldChannelValue = this._getChannelValue(true);
-        let newChannelValue = this.getItemValues()[0];
-
-        if (oldBitValue === undefined || typeof oldChannelValue !== "number") {
-            // write to channel anyway
-            newChannelValue = this.getItemValues()[0];
-        } else {
-            if (bit > -1) {
-                // oldBitValue and newBitValue must be 0 or 1 in this case
-                const newBitValue = Math.abs(oldBitValue - 1);
-                if (newBitValue === 1) {
-                    newChannelValue = Math.floor(oldChannelValue) | (1 << bit);
-                } else {
-                    newChannelValue = Math.floor(oldChannelValue) & ~(1 << bit);
-                }
-            } else {
-                // whole value, oldBitValue could be any number
-                const index = this.getItemValues().indexOf(oldBitValue);
-                if (index < 0) {
-                    // fallback to 0-th value
-                    newChannelValue = this.getItemValues()[0];
-                } else {
-                    newChannelValue = this.getItemValues()[Math.abs(index - 1)];
-                }
-            }
-        }
-
-        this.putChannelValue(this.getChannelNames()[0], newChannelValue);
-    };
-
-    /**
-     * If the channel does not exist, return undefined.
-     *
-     * If we use the whole value (bit === -1), return the whole value anyway, do not compare with itemValues <br>
-     *
-     * If we use the bit value (bit >= 0), return this bit's value (0 or 1). <br>
-     */
-    getBitValue = (): number | undefined => {
-        // bot position
-        const bit = this.getAllText()["bit"];
-        try {
-            const channelValue = this._getChannelValue(true);
-
-            if (typeof channelValue === "number") {
-                if (bit < 0) {
-                    return channelValue;
-                } else if (bit >= 0) {
-                    // must be 0 or 1
-                    return (channelValue >> bit) & 0x1;
-                    // let bitValue = (channelValue >> bit) & 0x1;
-                    // const index = this.getItemValues().indexOf(bitValue);
-                    // if (index < 0) {
-                    // 	return undefined;
-                    // } else {
-                    // 	return this.getItemValues()[index];
-                    // }
-                }
-            }
-        } catch (e) {
-            Log.error(e);
-        }
-        return undefined;
-    };
-
-
-    // concretize abstract method
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
     // -------------------- helper functions ----------------
 
-    _getChannelValue = (raw: boolean = false) => {
-        const value = this._getFirstChannelValue(raw);
-        if (value === undefined) {
-            return "";
+    calcButtonPosition = () => {
+        const index = this.calcItemIndex();
+        if (index === 0) {
+            return "flex-start";
+        } else if (index === 1) {
+            return "flex-end";
         } else {
-            return value;
+            return "center";
         }
-    };
+    }
 
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
+    /**
+     * when the mouse is down or up on the button, do something
+     */
+    handleMouseClick = (event: any) => {
+        event.preventDefault();
+        // left button only
+        if (event.button !== 0) {
+            return;
+        }
+        // do nothing during editing
+        if (g_widgets1.isEditing()) {
+            return;
+        }
+        // write permission
+        if (this._getChannelAccessRight() < Channel_ACCESS_RIGHTS.READ_WRITE) {
+            return;
+        }
 
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
+        const allText = this.getAllText();
+        const itemValues = this.calcItemValues();
+        const onValue = itemValues[1];
+        const offValue = itemValues[0];
+        let targetValue = onValue;
+
+        let currentValue = this._getChannelValue(true);
+        if (typeof currentValue !== "number") {
+            return;
+        }
+        if (currentValue !== offValue) {
+            currentValue = onValue;
+        }
+
+        if (currentValue === offValue) {
+            targetValue = onValue;
         } else {
-            return unit;
+            targetValue = offValue;
         }
-    };
-    _getChannelAccessRight = () => {
-        return this._getFirstChannelAccessRight();
+
+        const channelName = this.getChannelNames()[0];
+        this.putChannelValue(channelName, targetValue);
     };
 
     // -------------------------- tdl -------------------------------
 
-    // override
     static generateDefaultTdl = () => {
 
         const defaultTdl: type_SlideButton_tdl = {
@@ -451,23 +258,23 @@ export class SlideButton extends BaseWidget {
                 wrapWord: false,
                 showUnit: false,
                 alarmBorder: true,
-                selectedBackgroundColor: "rgba(100, 100, 100, 1)",
-                unselectedBackgroundColor: "rgba(200, 200, 200, 1)",
-                useChannelItems: true,
-                bit: 0,
                 boxWidth: 100,
-                boxRatio: 3,
+
                 text: "Label",
-                fallbackColor: "rgba(255,0,255,1)",
                 invisibleInOperation: false,
                 confirmOnWrite: false,
                 confirmOnWriteUsePassword: false,
                 confirmOnWritePassword: "",
+                // discrete states
+                bit: 0,
+                useChannelItems: false,
+                fallbackColor: "rgba(255,0,255,1)",
+                fallbackText: "Wrong state",
             },
             channelNames: [],
             groupNames: [],
             rules: [],
-            itemLabels: ["False", "True"],
+            itemNames: ["False", "True"],
             itemValues: [0, 1],
             itemColors: ["rgba(210, 210, 210, 1)", "rgba(0, 255, 0, 1)"],
         };
@@ -480,51 +287,24 @@ export class SlideButton extends BaseWidget {
     // overload
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
-        result["itemLabels"] = JSON.parse(JSON.stringify(this.getItemLabels()));
         result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
+        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
+        result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
         return result;
     }
-
     // --------------------- getters -------------------------
 
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getUpdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-
-    getItemLabels = () => {
-        return this._itemLabels;
+    // override
+    getItemNames() {
+        return this._itemNames;
     };
-    getItemValues = () => {
-        return this._itemValues;
-    };
-    getItemColors = () => {
+    getItemColors() {
         return this._itemColors;
     };
+    getItemValues() {
+        return this._itemValues;
+    };
 
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {
