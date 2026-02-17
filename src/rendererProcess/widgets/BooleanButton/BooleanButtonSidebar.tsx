@@ -14,6 +14,7 @@ import { SidebarBooleanButtonOffValue } from "../../helperWidgets/SidebarCompone
 import { SidebarBooleanButtonOnLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOnLabel";
 import { SidebarBooleanButtonOffLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffLabel";
 import { SidebarBooleanButtonMode } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonMode";
+import { SidebarLEDItems } from "../../helperWidgets/SidebarComponents/SidebarLEDItems";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
@@ -32,6 +33,7 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
     _sidebarBooleanButtonOnLabel: SidebarBooleanButtonOnLabel;
     _sidebarBooleanButtonOffLabel: SidebarBooleanButtonOffLabel;
     _sidebarBooleanButtonMode: SidebarBooleanButtonMode;
+    _sidebarLEDItems: SidebarLEDItems;
 
     beingUpdatedItemIndex: number = -1;
 
@@ -50,6 +52,7 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
         this._sidebarBooleanButtonOnLabel = new SidebarBooleanButtonOnLabel(this);
         this._sidebarBooleanButtonOffLabel = new SidebarBooleanButtonOffLabel(this);
         this._sidebarBooleanButtonMode = new SidebarBooleanButtonMode(this);
+        this._sidebarLEDItems = new SidebarLEDItems(this);
     }
 
     getSidebarLEDBit = () => {
@@ -104,6 +107,11 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
     getSidebarBooleanButtonMode = () => {
         return this._sidebarBooleanButtonMode;
     }
+
+    getSidebarLEDItems = () => {
+        return this._sidebarLEDItems;
+    }
+
 
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
@@ -186,7 +194,6 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarInvisibleInOperation().getElement()}
                     {this.getSidebarWidgetAppearance().getElement()}
                 </this._BlockBody>
-                {/* <this._BlockBody>{this.getSidebarHighlightBackgroundColor().getElement()}</this._BlockBody> */}
                 <this._HorizontalLine />
                 {/* ----------------- Box ---------------------------- */}
                 <this._BlockTitle>
@@ -201,7 +208,12 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
                 <this._HorizontalLine />
 
                 {/* --------------------------- items -------------------------- */}
-                <this._BlockTitle>
+                {this.getSidebarLEDItems().getElement()}
+                {this.getSidebarChoiceButtonUseChannelItems().getElement()}
+                <this._HorizontalLine />
+
+                {/* --------------------------- items -------------------------- */}
+                {/* <this._BlockTitle>
                     <b>On</b>
                 </this._BlockTitle>
                 <this._BlockBody>
@@ -219,7 +231,7 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarBooleanButtonOffColor().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {this.getSidebarChoiceButtonUseChannelItems().getElement()}
+                {this.getSidebarChoiceButtonUseChannelItems().getElement()} */}
                 {this.getSidebarBooleanButtonUsePictures().getElement()}
                 <this._HorizontalLine />
                 {/* ---------------- text -------------------------- */}

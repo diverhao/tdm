@@ -274,6 +274,7 @@ export class SlideButton extends BaseWidget {
             channelNames: [],
             groupNames: [],
             rules: [],
+            // discrete states
             itemNames: ["False", "True"],
             itemValues: [0, 1],
             itemColors: ["rgba(210, 210, 210, 1)", "rgba(0, 255, 0, 1)"],

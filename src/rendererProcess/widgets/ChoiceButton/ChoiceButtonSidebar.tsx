@@ -1,27 +1,28 @@
 import * as React from "react";
 import { ChoiceButton } from "./ChoiceButton";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarChoiceButtonItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonItems";
 import { SidebarChoiceButtonSelectedBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonSelectedBackgroundColor";
 import { SidebarChoiceButtonUnselectedBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUnselectedBackgroundColor";
 import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
-import {Log} from "../../../common/Log";
+import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { SidebarLEDMultiStateItems } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateItems";
 
 export class ChoiceButtonSidebar extends BaseWidgetSidebar {
-    _sidebarChoiceButtonItems: SidebarChoiceButtonItems;
     _sidebarChoiceButtonSelectedBackgroundColor: SidebarChoiceButtonSelectedBackgroundColor;
     _sidebarChoiceButtonUnselectedBackgroundColor: SidebarChoiceButtonUnselectedBackgroundColor;
     _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
+    _sidebarLEDMultiStateItems: SidebarLEDMultiStateItems;
 
     constructor(choiceButton: ChoiceButton) {
         super(choiceButton);
-        this._sidebarChoiceButtonItems = new SidebarChoiceButtonItems(this);
         this._sidebarChoiceButtonSelectedBackgroundColor = new SidebarChoiceButtonSelectedBackgroundColor(this);
         this._sidebarChoiceButtonUnselectedBackgroundColor = new SidebarChoiceButtonUnselectedBackgroundColor(this);
         this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
+        this._sidebarLEDMultiStateItems = new SidebarLEDMultiStateItems(this);
     }
+
     getSidebarChoiceButtonUnselectedBackgroundColor = () => {
         return this._sidebarChoiceButtonUnselectedBackgroundColor;
     };
@@ -34,6 +35,10 @@ export class ChoiceButtonSidebar extends BaseWidgetSidebar {
         return this._sidebarChoiceButtonUseChannelItems;
     };
 
+
+    getSidebarLEDMultiStateItems = () => {
+        return this._sidebarLEDMultiStateItems;
+    }
 
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
@@ -107,6 +112,10 @@ export class ChoiceButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarAlarmLevel().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
+                {/* --------------------------- items -------------------------- */}
+                {this.getSidebarLEDMultiStateItems().getElement()}
+                {this.getSidebarChoiceButtonUseChannelItems().getElement()}
+                <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
                 <this._BlockTitle>
                     <b>Background</b>
@@ -119,7 +128,6 @@ export class ChoiceButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarDirection().getElement()}
                     {this.getSidebarWidgetAppearance().getElement()}
                 </this._BlockBody>
-                {/* <this._BlockBody>{this.getSidebarHighlightBackgroundColor().getElement()}</this._BlockBody> */}
                 <this._HorizontalLine />
                 {/* ---------------- text -------------------------- */}
                 <this._BlockTitle>
@@ -127,9 +135,6 @@ export class ChoiceButtonSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarTextColor().getElement()}
-                    {/* {this.getSidebarXAlign().getElement()} */}
-                    {/* todo: {this.getSidebarYAlign().getElement()} */}
-                    {/* todo: {this.getSidebarWrapWord().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ----------------------- font --------------------------- */}
@@ -152,10 +157,6 @@ export class ChoiceButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarBorderColor().getElement()}
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
-                {/* --------------------------- items -------------------------- */}
-                {this.getSidebarChoiceButtonItems().getElement()}
-                {this.getSidebarChoiceButtonUseChannelItems().getElement()}
-                <this._HorizontalLine />
                 {/* ---------------- confirm on write -------------------- */}
                 {this.getSidebarWriteConfirmation().getElement()}
                 <this._HorizontalLine />
@@ -169,30 +170,4 @@ export class ChoiceButtonSidebar extends BaseWidgetSidebar {
         );
     };
 
-    // defined in super class
-    // getElement()
-    // _HorizontalLine()
-    // _BlockBody()
-    // _BlockTitle()
-
-    // ---------------------- getters --------------------------
-
-    // defined in super class
-    // getWidgetKey()
-    // getMainWidget()
-    // getUpdateFromSidebar()
-    // getStyle()
-    // getFormStyle()
-    // getInputStyle()
-
-    getSidebarChoiceButtonItems = () => {
-        return this._sidebarChoiceButtonItems;
-    };
-
-    // ------------------------- style -------------------------
-
-    // defined in super class
-    // _style
-    // _inputStyle
-    // _formStyle
 }

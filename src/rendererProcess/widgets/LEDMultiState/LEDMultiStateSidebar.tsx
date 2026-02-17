@@ -10,8 +10,7 @@ import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarCom
 import {Log} from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
-// import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
-// import { SidebarLEDBit } from "../../helperWidgets/SidebarComponents/SidebarLEDBit";
+import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
 
 export class LEDMultiStateSidebar extends BaseWidgetSidebar {
     _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
@@ -20,9 +19,7 @@ export class LEDMultiStateSidebar extends BaseWidgetSidebar {
     _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
     _sidebarLEDShape: SidebarLEDShape;
     _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
-    // _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
-    // _sidebarLEDBit: SidebarLEDBit;
-    // _sidebarPolylineFill: SidebarPolylineFill;
+    _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
 
     beingUpdatedItemIndex: number = -1;
 
@@ -34,9 +31,7 @@ export class LEDMultiStateSidebar extends BaseWidgetSidebar {
         this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
         this._sidebarLEDShape = new SidebarLEDShape(this);
         this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
-        // this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
-        // this._sidebarLEDBit = new SidebarLEDBit(this);
-        // this._sidebarPolylineFill = new SidebarPolylineFill(this);
+        this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
     }
 
     getSidebarPictureStretchToFit = () => {
@@ -63,13 +58,9 @@ export class LEDMultiStateSidebar extends BaseWidgetSidebar {
         return this._sidebarLEDMultiStateFallbackText;
     }
 
-    // getSidebarChoiceButtonUseChannelItems = () => {
-    //     return this._sidebarChoiceButtonUseChannelItems;
-    // }
-
-    // getSidebarLEDBit = () => {
-    //     return this._sidebarLEDBit;
-    // }
+    getSidebarChoiceButtonUseChannelItems = () => {
+        return this._sidebarChoiceButtonUseChannelItems;
+    }
 
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
@@ -134,49 +125,22 @@ export class LEDMultiStateSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarChannelName().getElement()}
-                    {/* {this.getSidebarShowUnit().getElement()} */}
                     {this.getSidebarAlarmBorder().getElement()}
-                    {/* {this.getSidebarLEDBit().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ---------------- background -------------------------- */}
-                <this._BlockTitle>
-                    <b>Background</b>
-                </this._BlockTitle>
-                <this._BlockBody>
-                    {/* color */}
-                    {this.getSidebarBackgroundColor().getElement()}
-                    {this.getSidebarLEDShape().getElement()}
-                    {this.getSidebarInvisibleInOperation().getElement()}
-                    {/* {this.getSidebarPictureStretchToFit().getElement()} */}
-                    {/* {this.getSidebarPictureOpacity().getElement()} */}
-                </this._BlockBody>
+                {/* --------------------------- items -------------------------- */}
+                {this.getSidebarLEDMultiStateItems().getElement()}
+                {this.getSidebarChoiceButtonUseChannelItems().getElement()}
                 <this._HorizontalLine />
-                {/* ------------------- File -------------------------- */}
-                {/* {this.getSidebarOpenFile().getElement()} */}
-                {/* <this._HorizontalLine /> */}
                 {/* ---------------- line -------------------------- */}
                 <this._BlockTitle>
                     <b>Line</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {/* {this.getSidebarArcShowRadius().getElement()} */}
-                    {/* {this.getSidebarPolylineClosed().getElement()} */}
                     {this.getSidebarLineWidth().getElement()}
-                    {/* {this.getSidebarLineStyle().getElement()} */}
-                    {/* {this.getSidebarTextColor().getElement()} */}
                     {this.getSidebarLineColor().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ---------------- filling -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Filling</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* {this.getSidebarPolylineFill().getElement()} */}
-                {/* {this.getSidebarPolylineFillColor().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
                 {/* ------------------ fallback color and text ---------------------- */}
                 <this._BlockTitle>
                     <b>Fallback Color</b>
@@ -186,31 +150,6 @@ export class LEDMultiStateSidebar extends BaseWidgetSidebar {
                     {this.getSidebarLEDMultiStateFallbackText().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-
-                {/* ------------------- arrow ----------------------------- */}
-                {/* {this.getSidebarLineArrowStyle().getElement()} */}
-                {/* ---------------- points table -------------------------- */}
-                {/* {this.getSidebarPolylinePointsTable().getElement()} */}
-                {/* ---------------- angle -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Angle</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* {this.getSidebarArcAngleStart().getElement()} */}
-                {/* {this.getSidebarArcAngleRange().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
-                {/* ---------------- text -------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Text</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarTextColor().getElement()}
-					{this.getSidebarXAlign().getElement()}
-					{this.getSidebarYAlign().getElement()}
-					{this.getSidebarWrapWord().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
                 {/* ----------------------- font --------------------------- */}
                 <this._BlockTitle>
                     <b>Font</b>
@@ -223,6 +162,17 @@ export class LEDMultiStateSidebar extends BaseWidgetSidebar {
                     {this.getSidebarTextColor().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
+                {/* ---------------- background -------------------------- */}
+                <this._BlockTitle>
+                    <b>Background</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {/* color */}
+                    {this.getSidebarBackgroundColor().getElement()}
+                    {this.getSidebarLEDShape().getElement()}
+                    {this.getSidebarInvisibleInOperation().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
                 {/* ---------------- border -------------------------- */}
                 <this._BlockTitle>
                     <b>Border</b>
@@ -231,12 +181,6 @@ export class LEDMultiStateSidebar extends BaseWidgetSidebar {
                     {this.getSidebarBorderWidth().getElement()}
                     {this.getSidebarBorderColor().getElement()}
                 </this._BlockBody>{" "}
-                <this._HorizontalLine />
-                {/* --------------------------- items -------------------------- */}
-                {/* {this.getSidebarChoiceButtonItems().getElement()} */}
-                {/* {this.getSidebarLEDItems().getElement()} */}
-                {this.getSidebarLEDMultiStateItems().getElement()}
-                {/* {this.getSidebarChoiceButtonUseChannelItems().getElement()} */}
                 <this._HorizontalLine />
 
                 {/* ------------------------- rules ---------------------------- */}

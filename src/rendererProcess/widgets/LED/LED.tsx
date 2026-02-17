@@ -48,8 +48,6 @@ export class LED extends BaseWidget {
         this._itemColors.splice(numStates);
         this._itemValues.splice(numStates);
 
-
-
         this._rules = new LEDRules(this, widgetTdl);
     }
 

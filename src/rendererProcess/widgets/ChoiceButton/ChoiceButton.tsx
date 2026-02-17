@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS, GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -8,6 +8,7 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ChoiceButtonRules } from "./ChoiceButtonRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
+import { deepMerge } from "../../../common/GlobalMethods";
 
 export type type_ChoiceButton_tdl = {
     type: string;
@@ -25,16 +26,11 @@ export type type_ChoiceButton_tdl = {
 };
 
 export class ChoiceButton extends BaseWidget {
-    // _itemLabels: string[];
-    // _itemValues: (number | string | number[] | string[] | undefined)[];
-    // _itemNamesFromChannel: string[];
-    // _itemValuesFromChannel: (number | string | number[] | string[] | undefined)[];
+
     _itemNames: string[];
     _itemColors: string[];
     _itemValues: number[];
 
-
-    channelItemsUpdated: boolean = false;
     _rules: ChoiceButtonRules;
 
     constructor(widgetTdl: type_ChoiceButton_tdl) {
@@ -43,19 +39,16 @@ export class ChoiceButton extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        // items
-        this._itemLabels = JSON.parse(JSON.stringify(widgetTdl.itemLabels));
-        this._itemValues = JSON.parse(JSON.stringify(widgetTdl.itemValues));
 
-        if (this._itemLabels.length === 0) {
-            this._itemLabels.push("Label 0");
-        }
-        if (this._itemValues.length === 0) {
-            this._itemValues.push(0);
-        }
-
-        this._itemNamesFromChannel = [];
-        this._itemValuesFromChannel = [];
+        const defaultTdl = this.generateDefaultTdl();
+        this._itemNames = deepMerge(widgetTdl.itemNames, defaultTdl.itemNames);
+        this._itemColors = deepMerge(widgetTdl.itemColors, defaultTdl.itemColors);
+        this._itemValues = deepMerge(widgetTdl.itemValues, defaultTdl.itemValues);
+        // ensure the same number of states
+        const numStates = Math.min(this._itemNames.length, this._itemColors.length, this._itemValues.length);
+        this._itemNames.splice(numStates);
+        this._itemColors.splice(numStates);
+        this._itemValues.splice(numStates);
 
         this._rules = new ChoiceButtonRules(this, widgetTdl);
     }
@@ -73,30 +66,24 @@ export class ChoiceButton extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
-                </>
+                <div style={this.getElementBodyRawStyle()}>
+                    <this._ElementAreaRaw></this._ElementAreaRaw>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                {/* <this._ElementArea></this._ElementArea> */}
-                <this._ElementAreaRaw></this._ElementAreaRaw>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
+    _ElementAreaRaw = (): React.JSX.Element => {
 
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+        const allText = this.getAllText();
+        const whiteSpace = allText.wrapWord ? "normal" : "pre";
+        const justifyContent = allText.horizontalAlign;
+        const alignItems = allText.verticalAlign;
+        const outline = this._getElementAreaRawOutlineStyle();
+
         return (
-            // <div
             <div
                 style={{
                     display: "inline-flex",
@@ -106,15 +93,11 @@ export class ChoiceButton extends BaseWidget {
                     height: "100%",
                     userSelect: "none",
                     overflow: "visible",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllText().fontFamily,
-                    fontSize: this.getAllText().fontSize,
-                    fontStyle: this.getAllText().fontStyle,
-                    outline: this._getElementAreaRawOutlineStyle(),
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    outline: outline,
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
@@ -123,303 +106,194 @@ export class ChoiceButton extends BaseWidget {
         );
     };
 
-    updateItemsFromChannel = (channelName: string) => {
-        let itemNames = this.getItemLabels();
-        let itemValues = this.getItemValues();
-
-        if (!g_widgets1.isEditing()) {
-            if (this.channelItemsUpdated === false) {
-                try {
-                    const channel = g_widgets1.getTcaChannel(channelName);
-                    let strs = channel.getEnumChoices();
-                    let numberOfStringsUsed = channel.getNumerOfStringsUsed();
-                    // if (channel.getChannelName().startsWith("pva") && channel.isEnumType()) {
-                    //     strs = channel.getEnumChoices();
-                    //     numberOfStringsUsed = strs.length;
-                    // }
-
-                    if (this.getAllText()["useChannelItems"] === true && strs.length > 0 && numberOfStringsUsed !== undefined) {
-                        // update itemNames and itemValues
-                        this._itemNamesFromChannel.length = 0;
-                        this._itemValuesFromChannel.length = 0;
-                        for (let ii = 0; ii < numberOfStringsUsed; ii++) {
-                            this._itemNamesFromChannel.push(strs[ii]);
-                            this._itemValuesFromChannel.push(ii);
-                        }
-                        itemNames = this._itemNamesFromChannel;
-                        itemValues = this._itemValuesFromChannel;
-                        this.channelItemsUpdated = true;
-                    }
-                } catch (e) {
-                    Log.error(e);
-                    return [itemNames, itemValues];
-                }
-            } else {
-                // display window is operating, and the channel items are upated, then simply assign
-                itemNames = this._itemNamesFromChannel;
-                itemValues = this._itemValuesFromChannel;
-            }
-        } else {
-            this._itemNamesFromChannel.length = 0;
-            this._itemValuesFromChannel.length = 0;
-            this.channelItemsUpdated = false;
-        }
-        return [itemNames, itemValues];
-    };
-
     _ElementChoiceButton = () => {
-        const shadowWidth = 2;
-        const itemMarginWidth = 1;
         const elementRef = React.useRef<any>(null);
 
-        const channelName = this.getChannelNames()[0];
+        const allText = this.getAllText();
+        const direction = allText["direction"];
 
-        const [itemNames, itemValues] = this.updateItemsFromChannel(channelName);
-        console.log("++++++++++++++++++++++", channelName, itemNames, itemValues)
-        const calcItemWidth = () => {
-            if (this.getAllText()["appearance"] === "traditional") {
-                if (this.getAllText()["direction"] === "horizontal") {
-                    return Math.floor(1 / itemNames.length * this.getAllStyle()["width"] - 2 * shadowWidth - 2 * itemMarginWidth);
-                } else {
-                    return this.getAllStyle()["width"] - 2 * shadowWidth - 2 * itemMarginWidth;
-                }
-            } else {
-                if (this.getAllText()["direction"] === "horizontal") {
-                    return Math.floor(1 / itemNames.length * this.getAllStyle()["width"] - 2 * itemMarginWidth);
-                } else {
-                    return this.getAllStyle()["width"] - 2 * itemMarginWidth;
-                }
-            }
-        }
-        const calcItemHeight = () => {
-            if (this.getAllText()["appearance"] === "traditional") {
-                if (this.getAllText()["direction"] === "horizontal") {
-                    return this.getAllStyle()["height"] - 2 * shadowWidth - 2 * itemMarginWidth;
-                } else {
-                    return Math.floor(1 / itemNames.length * this.getAllStyle()["height"] - 2 * shadowWidth - 2 * itemMarginWidth);
-                }
-            } else {
-                if (this.getAllText()["direction"] === "horizontal") {
-                    return this.getAllStyle()["height"] - 2 * itemMarginWidth;
-                } else {
-                    return Math.floor(1 / itemNames.length * this.getAllStyle()["height"] - 2 * itemMarginWidth);
-                }
-            }
-        }
-
-        const highlightColor = (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false) ? "rgba(0,0,0,0)" : "rgba(255,255,255,1)";
-        const shadowColor = (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false) ? "rgba(0,0,0,0)" : "rgba(100,100,100,1)";
-        const calcBorderBottomRight = (isSelected: boolean) => {
-            if (this.getAllText()["appearance"] === "traditional") {
-                if (isSelected) {
-                    return `solid ${shadowWidth}px ${highlightColor}`;
-                } else {
-                    return `solid ${shadowWidth}px ${shadowColor}`;
-                }
-            } else {
-                return "none";
-            }
-        }
-
-        const calcBorderTopLeft = (isSelected: boolean) => {
-            if (this.getAllText()["appearance"] === "traditional") {
-                if (isSelected) {
-                    return `solid ${shadowWidth}px ${shadowColor}`;
-                } else {
-                    return `solid ${shadowWidth}px ${highlightColor}`;
-                }
-            } else {
-                return "none";
-            }
-        }
-
-        const calcOutline = (isSelected: boolean) => {
-            if (this.getAllText()["appearance"] === "traditional") {
-                if (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false) {
-                    return "none";
-                } else {
-                    return "solid 1px rgba(100, 100, 100, 0.5)";
-                }
-            } else {
-                return "none";
-            }
-        }
-
+        const itemNames = this.calcItemTexts();
+        const flexDirection = direction === "horizontal" ? "row" : "column";
 
         return (
             <div
                 ref={elementRef}
                 style={{
                     display: "inline-flex",
-                    flexDirection: "row",
+                    // flexDirection: "row",
+                    flexDirection: flexDirection,
                     position: "relative",
                     width: "100%",
                     height: "100%",
                     backgroundColor: "rgba(0,0,0,0)",
                 }}
-                // outline is not affected by opacity of the ElementBody
-                onMouseEnter={(event: any) => {
-                    if (!g_widgets1.isEditing()) {
-                        if (elementRef.current !== null) {
-                            elementRef.current.style["outlineStyle"] = "solid";
-                            elementRef.current.style["outlineWidth"] = "3px";
-                            elementRef.current.style["outlineColor"] = "rgba(105,105,105,1)";
-                            if (this._getChannelAccessRight() < 1.5) {
-                                elementRef.current.style["cursor"] = "not-allowed";
-                            } else {
-                                elementRef.current.style["cursor"] = "pointer";
-                            }
-                        }
-                    }
-                }}
-                onMouseLeave={(event: any) => {
-                    if (!g_widgets1.isEditing()) {
-                        if (elementRef.current !== null) {
-                            // elementRef.current.style["outlineStyle"] = this.getAllStyle()["outlineStyle"];
-                            // elementRef.current.style["outlineWidth"] = this.getAllStyle()["outlineWidth"];
-                            // elementRef.current.style["outlineColor"] = this.getAllStyle()["outlineColor"];
-                            elementRef.current.style["outline"] = "none";
-                            elementRef.current.style["cursor"] = "default";
-                        }
-                    }
-                }}
+                onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                onMouseLeave={(event: any) => this.handleMouseLeaveWriteWidget(event, elementRef)}
             >
-                <div
-                    style={{
-                        display: "inline-flex",
-                        overflow: "visible",
-                        flexDirection: this.getAllText()["direction"] === "horizontal" ? "row" : "column",
-                        position: "relative",
-                        width: "100%",
-                        height: "100%",
-                        opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                    }}
-                >
-                    {(itemNames as string[]).map((name: string, index: number) => {
-                        let isSelected = false;
-                        if (!g_widgets1.isEditing()) {
-                            try {
-                                const channel = g_widgets1.getTcaChannel(channelName);
-                                if (channel.getProtocol() === "pva") {
-                                    const dbrData = channel.getDbrData() as any;
-                                    if (dbrData["value"]["index"] === index) {
-                                        isSelected = true;
-                                    }
-                                } else {
-                                    if (channel.getDbrData()["value"] === itemValues[index]) {
-                                        isSelected = true;
-                                    }
+                {itemNames.map((name: string, index: number) => {
 
-                                }
-                            } catch (e) {
-                                Log.error(e);
-                            }
-                        }
-
-                        return (
-                            <div
-                                style={{
-                                    margin: itemMarginWidth,
-                                    display: "inline-flex",
-                                    position: "relative",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    outline: calcOutline(isSelected),
-                                    borderRight: calcBorderBottomRight(isSelected),
-                                    borderBottom: calcBorderBottomRight(isSelected),
-                                    borderLeft: calcBorderTopLeft(isSelected),
-                                    borderTop: calcBorderTopLeft(isSelected),
-                                    width: calcItemWidth(),
-                                    height: calcItemHeight(),
-                                    color: isSelected
-                                        ? this._getElementAreaRawTextStyle()
-                                        : this.getAllStyle()["color"],
-                                    backgroundColor: isSelected
-                                        // ? this.getAllText()["selectedBackgroundColor"]
-                                        ? this._getElementAreaRawSelectedBackgroundStyle()
-                                        : this.getAllText()["unselectedBackgroundColor"],
-                                    borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 3,
-                                    overflow: "visible",
-                                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                                }}
-                                onClick={(event: any) => {
-                                    this.handleClick(event, index);
-                                }}
-                            >
-                                {name}
-                            </div>
-                        );
-                    })}
-                </div>
+                    return (
+                        <this._ElementChoiceButtonItem
+                            name={name}
+                            index={index}
+                        ></this._ElementChoiceButtonItem>
+                    );
+                })}
             </div>
         );
     };
 
-    handleClick = (event: any, index: number) => {
-        event.preventDefault();
-        const channelName = this.getChannelNames()[0];
-        if (g_widgets1.isEditing()) {
-            return;
-        } else {
-            if (this._getChannelAccessRight() < 1.5) {
-                return;
-            }
-            // write value
-            let value = this.getItemValues()[index];
-            if (this.getAllText()["useChannelItems"] === true) {
-                value = this._itemValuesFromChannel[index];
-            }
-            this.putChannelValue(this.getChannelNames()[0], value);
-        }
-    };
+    _ElementChoiceButtonItem = ({ name, index }: any) => {
 
-    // concretize abstract method
+        let isSelected = this.calcIsSelected(index);
+        const itemMarginWidth = 1;
+
+        const outline = this.calcOutline();
+        const width = this.calcItemWidth();
+        const height = this.calcItemHeight();
+        const allStyle = this.getAllStyle();
+        const allText = this.getAllText();
+        const styleColor = allStyle["color"];
+        const unselectedBackgroundColor = allText["unselectedBackgroundColor"];
+        const appearance = allText["appearance"];
+
+        // calculate the style for each item
+        const threeDButtonStyle = this.get3dButtonStyle(isSelected);
+        // if the item is selected, honor the severity color
+        const color = isSelected
+            ? this._getElementAreaRawTextStyle()
+            : styleColor;
+        const backgroundColor = isSelected
+            ? this._getElementAreaRawSelectedBackgroundStyle()
+            : unselectedBackgroundColor;
+        const borderRadius = appearance === "traditional" ? 0 : 3;
+        const whiteSpace = this.getAllText().wrapWord ? "normal" : "pre";
+
+        return (
+            <div
+                style={{
+                    margin: itemMarginWidth,
+                    display: "inline-flex",
+                    position: "relative",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: color,
+                    backgroundColor: backgroundColor,
+                    borderRadius: borderRadius,
+                    overflow: "visible",
+                    whiteSpace: whiteSpace,
+                    outline: outline,
+                    ...threeDButtonStyle, // width and height are changed below
+                    width: width,
+                    height: height,
+                }}
+                onClick={(event: any) => {
+                    this.handleMouseClick(event, index);
+                }}
+            >
+                {name}
+            </div>
+        )
+    }
+
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
 
     // -------------------- helper functions ----------------
 
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = (raw: boolean = false) => {
-        const value = this._getFirstChannelValue(raw);
-        if (value === undefined) {
-            return "";
-        } else {
-            return value;
+    /**
+     * when the mouse is down or up on the button, do something
+     */
+    handleMouseClick = (event: any, index: number) => {
+        event.preventDefault();
+        // left button only
+        if (event.button !== 0) {
+            return;
         }
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
+        // do nothing during editing
+        if (g_widgets1.isEditing()) {
+            return;
         }
+        // write permission
+        if (this._getChannelAccessRight() < Channel_ACCESS_RIGHTS.READ_WRITE) {
+            return;
+        }
+
+        const itemValues = this.calcItemValues();
+        const itemValue = itemValues[index];
+        if (typeof itemValue !== "number") {
+            return;
+        }
+
+        const channelName = this.getChannelNames()[0];
+        this.putChannelValue(channelName, itemValue);
     };
 
-    _getChannelAccessRight = () => {
-        return this._getFirstChannelAccessRight();
-    };
+    calcIsSelected = (index: number) => {
+        const selectedIndex = this.calcItemIndex();
+        return index === selectedIndex;
+    }
+
+    calcItemWidth = () => {
+        const itemNames = this.calcItemTexts();
+        const shadowWidth = 2;
+        const itemMarginWidth = 1;
+        const allText = this.getAllText();
+        const allStyle = this.getAllStyle();
+        const appearance = allText["appearance"];
+        const direction = allText["direction"];
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+
+        if (appearance === "traditional") {
+            if (direction === "horizontal") {
+                return Math.floor(1 / itemNames.length * width - 2 * shadowWidth - 2 * itemMarginWidth);
+            } else {
+                return width - 2 * shadowWidth - 2 * itemMarginWidth;
+            }
+        } else {
+            if (direction === "horizontal") {
+                return Math.floor(1 / itemNames.length * width - 2 * itemMarginWidth);
+            } else {
+                return width - 2 * itemMarginWidth;
+            }
+        }
+    }
+    calcItemHeight = () => {
+        const itemNames = this.calcItemTexts();
+        const shadowWidth = 2;
+        const itemMarginWidth = 1;
+        const allText = this.getAllText();
+        const allStyle = this.getAllStyle();
+        const appearance = allText["appearance"];
+        const direction = allText["direction"];
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+
+        if (appearance === "traditional") {
+            if (direction === "horizontal") {
+                return height - 2 * shadowWidth - 2 * itemMarginWidth;
+            } else {
+                return Math.floor(1 / itemNames.length * height - 2 * shadowWidth - 2 * itemMarginWidth);
+            }
+        } else {
+            if (direction === "horizontal") {
+                return height - 2 * itemMarginWidth;
+            } else {
+                return Math.floor(1 / itemNames.length * height - 2 * itemMarginWidth);
+            }
+        }
+    }
+
+    calcOutline = () => {
+        const allText = this.getAllText();
+        const appearance = allText["appearance"];
+        if (appearance === "traditional") {
+            return "solid 1px rgba(100, 100, 100, 0.5)";
+        } else {
+            return "none";
+        }
+    }
 
     // -------------------------- tdl -------------------------------
 
@@ -466,7 +340,6 @@ export class ChoiceButton extends BaseWidget {
                 // colors
                 selectedBackgroundColor: "rgba(218, 218, 218, 1)",
                 unselectedBackgroundColor: "rgba(200, 200, 200, 1)",
-                useChannelItems: true,
                 invisibleInOperation: false,
                 direction: "horizontal",
                 // "contemporary" | "traditional"
@@ -477,13 +350,20 @@ export class ChoiceButton extends BaseWidget {
                 confirmOnWrite: false,
                 confirmOnWriteUsePassword: false,
                 confirmOnWritePassword: "",
+
+                // discrete states
+                bit: -1,
+                useChannelItems: false,
+                fallbackColor: "rgba(255,0,255,1)",
+                fallbackText: "Wrong state",
             },
             channelNames: [],
             groupNames: [],
             rules: [],
-            // could be more than two labels
-            itemLabels: ["Label 0", "Label 1"],
+            // discrete states
+            itemNames: ["False", "True"],
             itemValues: [0, 1],
+            itemColors: ["rgba(210, 210, 210, 1)", "rgba(0, 255, 0, 1)"],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
@@ -493,8 +373,9 @@ export class ChoiceButton extends BaseWidget {
 
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
+        result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
+        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
         result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
-        result["itemLabels"] = JSON.parse(JSON.stringify(this.getItemLabels()));
         return result;
     }
 

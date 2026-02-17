@@ -2256,8 +2256,8 @@ export abstract class BaseWidget {
                 const channel = g_widgets1.getTcaChannel(channelName);
                 const numberOfStringsUsed = channel.getNumerOfStringsUsed();
                 const strs = channel.getEnumChoices();
-                if (typeof (numberOfStringsUsed) === "number" && numberOfStringsUsed >= defaultTexts.length) {
-                    return strs.slice(0, defaultTexts.length);
+                if (typeof (numberOfStringsUsed) === "number") {
+                    return strs.slice(0, numberOfStringsUsed);
                 }
             } catch (e) {
                 Log.error(e);

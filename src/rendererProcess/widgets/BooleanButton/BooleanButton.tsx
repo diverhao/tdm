@@ -150,6 +150,7 @@ export class BooleanButton extends BaseWidget {
                 threeDStyle = this.get3dButtonStyle(true);
             }
         }
+        const outline = this.calcOutline();
 
         return (
             <div
@@ -160,6 +161,7 @@ export class BooleanButton extends BaseWidget {
                     alignItems: alignItems,
                     justifyContent: justifyContent,
                     backgroundColor: buttonColor,
+                    outline: outline,
                     ...threeDStyle,
                 }}
                 onMouseDown={(event: any) => { this.handleMouseActionOnButton(event, "down") }}
@@ -267,6 +269,15 @@ export class BooleanButton extends BaseWidget {
     };
 
 
+    calcOutline = () => {
+        const allText = this.getAllText();
+        const appearance = allText["appearance"];
+        if (appearance === "traditional") {
+            return "solid 1px rgba(100, 100, 100, 0.5)";
+        } else {
+            return "none";
+        }
+    }
     // -------------------------- tdl -------------------------------
 
     static generateDefaultTdl = () => {
