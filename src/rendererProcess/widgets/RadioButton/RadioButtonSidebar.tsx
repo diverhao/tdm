@@ -1,117 +1,37 @@
 import * as React from "react";
 import { RadioButton } from "./RadioButton";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-// import { SidebarChoiceButtonItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonItems";
-// import { SidebarChoiceButtonSelectedBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonSelectedBackgroundColor";
-// import { SidebarChoiceButtonUnselectedBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUnselectedBackgroundColor";
-// import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
-// import { SidebarLEDBit } from "../../helperWidgets/SidebarComponents/SidebarLEDBit";
-// import { SidebarCheckBoxSize } from "../../helperWidgets/SidebarComponents/SidebarCheckBoxSize";
-// import { SidebarCheckBoxText } from "../../helperWidgets/SidebarComponents/SidebarCheckBoxText";
 import { SidebarSlideButtonBoxWidth } from "../../helperWidgets/SidebarComponents/SidebarSlideButtonBoxWidth";
-// import { SidebarSlideButtonBoxRatio } from "../../helperWidgets/SidebarComponents/SidebarSlideButtonBoxRatio";
-// import { SidebarBooleanButtonItems } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonItems";
 import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
-// import { SidebarBooleanButtonUsePictures } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonUsePictures";
-// import { SidebarRadioButtonItems } from "../../helperWidgets/SidebarComponents/SidebarRadioButtonItems";
-import { SidebarChoiceButtonItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonItems";
-import {Log} from "../../../common/Log";
+import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { SidebarLEDMultiStateItems } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateItems";
 
 
 export class RadioButtonSidebar extends BaseWidgetSidebar {
-    // _sidebarChoiceButtonItems: SidebarChoiceButtonItems;
-    // _sidebarChoiceButtonSelectedBackgroundColor: SidebarChoiceButtonSelectedBackgroundColor;
-    // _sidebarChoiceButtonUnselectedBackgroundColor: SidebarChoiceButtonUnselectedBackgroundColor;
-    // _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
-    // _sidebarLEDBit: SidebarLEDBit;
-    // _sidebarCheckBoxSize: SidebarCheckBoxSize;
-    // _sidebarCheckBoxText: SidebarCheckBoxText;
     _sidebarSlideButtonBoxWidth: SidebarSlideButtonBoxWidth;
-    // _sidebarSlideButtonBoxRatio: SidebarSlideButtonBoxRatio;
-    // _sidebarBooleanButtonItems: SidebarBooleanButtonItems;
     _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
-    // _sidebarBooleanButtonUsePictures: SidebarBooleanButtonUsePictures;
-    // _sidebarRadioButtonItems: SidebarRadioButtonItems;
-    _sidebarChoiceButtonItems: SidebarChoiceButtonItems;
+    _sidebarLEDMultiStateItems: SidebarLEDMultiStateItems;
 
-    // beingUpdatedItemIndex: number = -1;
 
     constructor(radioButton: RadioButton) {
         super(radioButton);
-        // this._sidebarChoiceButtonItems = new SidebarChoiceButtonItems(this);
-        // this._sidebarChoiceButtonSelectedBackgroundColor = new SidebarChoiceButtonSelectedBackgroundColor(this);
-        // this._sidebarChoiceButtonUnselectedBackgroundColor = new SidebarChoiceButtonUnselectedBackgroundColor(this);
-        // this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
-        // this._sidebarLEDBit = new SidebarLEDBit(this);
-        // this._sidebarCheckBoxSize = new SidebarCheckBoxSize(this);
-        // this._sidebarCheckBoxText = new SidebarCheckBoxText(this);
         this._sidebarSlideButtonBoxWidth = new SidebarSlideButtonBoxWidth(this);
-        // this._sidebarSlideButtonBoxRatio = new SidebarSlideButtonBoxRatio(this);
-        // this._sidebarBooleanButtonItems = new SidebarBooleanButtonItems(this);
         this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
-        // this._sidebarBooleanButtonUsePictures = new SidebarBooleanButtonUsePictures(this);
-        // this._sidebarRadioButtonItems = new SidebarRadioButtonItems(this);
-        this._sidebarChoiceButtonItems = new SidebarChoiceButtonItems(this);
+        this._sidebarLEDMultiStateItems = new SidebarLEDMultiStateItems(this);
     }
-    // getSidebarChoiceButtonUnselectedBackgroundColor = () => {
-    // 	return this._sidebarChoiceButtonUnselectedBackgroundColor;
-    // };
-
-    // getSidebarChoiceButtonSelectedBackgroundColor = () => {
-    // 	return this._sidebarChoiceButtonSelectedBackgroundColor;
-    // };
-
-    // getSidebarChoiceButtonUseChannelItems = () => {
-    // 	return this._sidebarChoiceButtonUseChannelItems;
-    // };
-
-    // getSidebarLEDBit = () => {
-    // 	return this._sidebarLEDBit;
-    // };
-
-    // getSidebarCheckBoxSize = () => {
-    //     return this._sidebarCheckBoxSize;
-    // }
-
-    // getSidebarCheckBoxText = () => {
-    // 	return this._sidebarCheckBoxText;
-    // };
-
     getSidebarSlideButtonBoxWidth = () => {
         return this._sidebarSlideButtonBoxWidth;
     };
-
-    // getSidebarSlideButtonBoxRatio = () => {
-    // 	return this._sidebarSlideButtonBoxRatio;
-    // };
-
-    // getSidebarBooleanButtonItems = () => {
-    // 	return this._sidebarBooleanButtonItems;
-    // };
 
     getSidebarChoiceButtonUseChannelItems = () => {
         return this._sidebarChoiceButtonUseChannelItems;
     };
 
-    // getSidebarBooleanButtonUsePictures = () => {
-    //     return this._sidebarBooleanButtonUsePictures;
-    // }
-
-    // getSidebarRadioButtonItems = () => {
-    //     return this._sidebarRadioButtonItems;
-    // }
-
-    // setBeingUpdatedItemIndex = (newIndex: number) => {
-    // 	this.beingUpdatedItemIndex = newIndex;
-    // };
-
-    getSidebarChoiceButtonItems = () => {
-        return this._sidebarChoiceButtonItems;
+    getSidebarLEDMultiStateItems = () => {
+        return this._sidebarLEDMultiStateItems;
     }
-
-
 
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
@@ -248,14 +168,8 @@ export class RadioButtonSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
                 {/* --------------------------- items -------------------------- */}
-                <this._BlockBody></this._BlockBody>
-                {/* {this.getSidebarBooleanButtonItems().getElement()} */}
-                {/* {this.getSidebarRadioButtonItems().getElement()} */}
-                {this.getSidebarChoiceButtonItems().getElement()}
+                {this.getSidebarLEDMultiStateItems().getElement()}
                 {this.getSidebarChoiceButtonUseChannelItems().getElement()}
-                {/* {this.getSidebarBooleanButtonUsePictures().getElement()} */}
-                {/* {this.getSidebarChoiceButtonItems().getElement()} */}
-                {/* {this.getSidebarChoiceButtonUseChannelItems().getElement()} */}
                 <this._HorizontalLine />
                 {/* ---------------- confirm on write -------------------- */}
                 {this.getSidebarWriteConfirmation().getElement()}
@@ -269,31 +183,4 @@ export class RadioButtonSidebar extends BaseWidgetSidebar {
             </div>
         );
     };
-
-    // defined in super class
-    // getElement()
-    // _HorizontalLine()
-    // _BlockBody()
-    // _BlockTitle()
-
-    // ---------------------- getters --------------------------
-
-    // defined in super class
-    // getWidgetKey()
-    // getMainWidget()
-    // getUpdateFromSidebar()
-    // getStyle()
-    // getFormStyle()
-    // getInputStyle()
-
-    // getSidebarChoiceButtonItems = () => {
-    // 	return this._sidebarChoiceButtonItems;
-    // };
-
-    // ------------------------- style -------------------------
-
-    // defined in super class
-    // _style
-    // _inputStyle
-    // _formStyle
 }

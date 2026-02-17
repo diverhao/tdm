@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS, GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -7,7 +7,7 @@ import { RadioButtonSidebar } from "./RadioButtonSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { RadioButtonRules } from "./RadioButtonRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../common/Log";
+import { deepMerge } from "../../../common/GlobalMethods";
 
 export type type_RadioButton_tdl = {
     type: string;
@@ -18,19 +18,19 @@ export type type_RadioButton_tdl = {
     channelNames: string[];
     groupNames: string[];
     rules: type_rules_tdl;
-    itemLabels: string[];
-    itemValues: (number | string | number[] | string[] | undefined)[];
+    // Radio Button specific
+    itemNames: string[];
+    itemColors: string[];
+    itemValues: number[];
 };
 
 export class RadioButton extends BaseWidget {
-    _itemLabels: string[];
-    _itemLabelsFromChannel: string[] = [];
-    _itemValues: (number | string | number[] | string[] | undefined)[];
-    channelItemsUpdated: boolean = false;
-    _itemNamesFromChannel: string[];
-    _itemValuesFromChannel: (number | string | number[] | string[] | undefined)[];
 
     _rules: RadioButtonRules;
+
+    _itemNames: string[];
+    _itemColors: string[];
+    _itemValues: number[];
 
     constructor(widgetTdl: type_RadioButton_tdl) {
         super(widgetTdl);
@@ -38,26 +38,22 @@ export class RadioButton extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
+
+        const defaultTdl = this.generateDefaultTdl();
+        this._itemNames = deepMerge(widgetTdl.itemNames, defaultTdl.itemNames);
+        this._itemColors = deepMerge(widgetTdl.itemColors, defaultTdl.itemColors);
+        this._itemValues = deepMerge(widgetTdl.itemValues, defaultTdl.itemValues);
+        // ensure the same number of states
+        const numStates = Math.min(this._itemNames.length, this._itemColors.length, this._itemValues.length);
+        this._itemNames.splice(numStates);
+        this._itemColors.splice(numStates);
+        this._itemValues.splice(numStates);
+
         this._rules = new RadioButtonRules(this, widgetTdl);
-
-        // items
-        this._itemLabels = JSON.parse(JSON.stringify(widgetTdl.itemLabels));
-        this._itemValues = JSON.parse(JSON.stringify(widgetTdl.itemValues));
-        if (this._itemLabels.length === 0) {
-            this._itemLabels.push("Label 0");
-        }
-        if (this._itemValues.length === 0) {
-            this._itemValues.push(0);
-        }
-        this._itemNamesFromChannel = [];
-        this._itemValuesFromChannel = [];
-
-
     }
 
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -70,30 +66,26 @@ export class RadioButton extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
-                </>
+                <div style={this.getElementBodyRawStyle()}>
+                    {/* <this._ElementArea></this._ElementArea> */}
+                    <this._ElementAreaRaw></this._ElementAreaRaw>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                {/* <this._ElementArea></this._ElementArea> */}
-                <this._ElementAreaRaw></this._ElementAreaRaw>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+
+        const allText = this.getAllText();
+        const whiteSpace = allText.wrapWord ? "normal" : "pre";
+
+        const justifyContent = allText.horizontalAlign;
+        const alignItems = allText.verticalAlign;
+        const outline = this._getElementAreaRawOutlineStyle();
+
         return (
-            // <div
             <div
                 style={{
                     display: "inline-flex",
@@ -103,15 +95,11 @@ export class RadioButton extends BaseWidget {
                     height: "100%",
                     userSelect: "none",
                     overflow: "visible",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllText().fontFamily,
-                    fontSize: this.getAllText().fontSize,
-                    fontStyle: this.getAllText().fontStyle,
-                    outline: this._getElementAreaRawOutlineStyle(),
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    outline: outline,
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
@@ -120,56 +108,18 @@ export class RadioButton extends BaseWidget {
         );
     };
 
-    updateItemsFromChannel = (channelName: string) => {
-        let itemNames = this.getItemLabels();
-        let itemValues = this.getItemValues();
-
-        if (!g_widgets1.isEditing()) {
-            if (this.channelItemsUpdated === false) {
-                try {
-                    const channel = g_widgets1.getTcaChannel(channelName);
-                    let strs = channel.getEnumChoices();
-                    let numberOfStringsUsed = channel.getNumerOfStringsUsed();
-                    // if (channel.getChannelName().startsWith("pva") && channel.isEnumType()) {
-                    //     strs = channel.getEnumChoices();
-                    //     numberOfStringsUsed = strs.length;
-                    // }
-
-                    if (this.getAllText()["useChannelItems"] === true && strs.length > 0 && numberOfStringsUsed !== undefined) {
-                        // update itemNames and itemValues
-                        this._itemNamesFromChannel.length = 0;
-                        this._itemValuesFromChannel.length = 0;
-                        for (let ii = 0; ii < numberOfStringsUsed; ii++) {
-                            this._itemNamesFromChannel.push(strs[ii]);
-                            this._itemValuesFromChannel.push(ii);
-                        }
-                        itemNames = this._itemNamesFromChannel;
-                        itemValues = this._itemValuesFromChannel;
-                        this.channelItemsUpdated = true;
-                    }
-                } catch (e) {
-                    Log.error(e);
-                    return [itemNames, itemValues];
-                }
-            } else {
-                // display window is operating, and the channel items are upated, then simply assign
-                itemNames = this._itemNamesFromChannel;
-                itemValues = this._itemValuesFromChannel;
-            }
-        } else {
-            this._itemNamesFromChannel.length = 0;
-            this._itemValuesFromChannel.length = 0;
-            this.channelItemsUpdated = false;
-        }
-        return [itemNames, itemValues];
-    };
-
     _ElementRadioButton = () => {
 
-        const channelName = this.getChannelNames()[0];
-        const [itemNames, itemValues] = this.updateItemsFromChannel(channelName) as any;
-
         const elementRef = React.useRef<any>(null);
+
+        const itemNames = this.calcItemTexts();
+
+        const allText = this.getAllText();
+        const flexDirection = allText["direction"] === "horizontal" ? "row" : "column";
+        const justifyContent = allText["verticalAlign"];
+        const alignItems = allText["horizontalAlign"];
+        const backgroundColor = this._getElementAreaRawBackgroundStyle();
+
 
         return (
             <div
@@ -178,168 +128,113 @@ export class RadioButton extends BaseWidget {
                     width: "100%",
                     height: "100%",
                     display: "inline-flex",
-                    flexDirection: this.getAllText()["direction"] === "horizontal" ? "row" : "column",
-                    justifyContent: this.getAllText()["verticalAlign"],
-                    alignItems: this.getAllText()["horizontalAlign"],
                     cursor: "pointer",
-                    opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
-                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
+                    flexDirection: flexDirection,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    backgroundColor: backgroundColor,
                 }}
             >
                 <form
                     ref={elementRef}
                     style={{
                         display: "inline-flex",
-                        flexDirection: this.getAllText()["direction"] === "horizontal" ? "row" : "column",
+                        flexDirection: flexDirection,
                         justifyContent: "flex-start",
                         alignItems: "flex-start",
                     }}
-                    onMouseEnter={(event: any) => {
-                        event.preventDefault();
-                        if (!g_widgets1.isEditing() && elementRef.current !== null) {
-                            elementRef.current.style["outlineStyle"] = "solid";
-                            elementRef.current.style["outlineWidth"] = "3px";
-                            elementRef.current.style["outlineColor"] = "rgba(105,105,105,1)";
-                            // the cursor won't become "pointer"
-                            if (this._getChannelAccessRight() < 1.5) {
-                                elementRef.current.style["cursor"] = "not-allowed";
-                            } else {
-                                elementRef.current.style["cursor"] = "pointer";
-                            }
-                        }
-                    }}
-                    // do not use onMouseOut
-                    onMouseLeave={(event: any) => {
-                        event.preventDefault();
-                        if (!g_widgets1.isEditing() && elementRef.current !== null) {
-                            elementRef.current.style["outlineStyle"] = this.getAllStyle()["outlineStyle"];
-                            elementRef.current.style["outlineWidth"] = this.getAllStyle()["outlineWidth"];
-                            elementRef.current.style["outlineColor"] = this.getAllStyle()["outlineColor"];
-                            elementRef.current.style["cursor"] = "default";
-                        }
-                    }}
+                    onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                    onMouseLeave={(event: any) => this.handleMouseLeaveWriteWidget(event, elementRef)}
                 >
 
                     {itemNames.map((name: string, index: number) => {
-                        const value = itemValues[index];
-                        let isSelected = false;
-                        if (!g_widgets1.isEditing()) {
-                            try {
-                                const channel = g_widgets1.getTcaChannel(channelName);
-                                if (channel.getProtocol() === "pva") {
-                                    const dbrData = channel.getDbrData() as any;
-                                    if (dbrData["value"]["index"] === index) {
-                                        isSelected = true;
-                                    }
-                                } else {
-                                    if (channel.getDbrData()["value"] === itemValues[index]) {
-                                        isSelected = true;
-                                    }
-
-                                }
-                            } catch (e) {
-                                Log.error(e);
-                            }
-                        }
-
-                        return (
-                            <div
-                                key={`${name}-${index}`}
-                                style={{
-                                    display: "inline-flex",
-                                    flexDirection: "row",
-                                    justifyContent: "flex-start",
-                                    alignItems: "center",
-                                    cursor: "pointer",
-                                    pointerEvents: this._getChannelAccessRight() < 1.5 ? "none" : "auto",
-                                    color: isSelected ? this._getElementAreaRawTextStyle() : this.getAllStyle()["color"],
-                                }}
-                            >
-                                <input
-                                    type="radio"
-                                    name="radio"
-                                    id={`${this.getWidgetKey()}-${name}-${index}`}
-                                    onChange={(event: any) => {
-                                        this.handleChange(event, index);
-                                    }}
-                                    checked={isSelected}
-                                    value={`${value}`}
-                                    style={{
-                                        width: this.getAllText()["boxWidth"],
-                                        height: this.getAllText()["boxWidth"],
-                                        cursor: "pointer",
-                                    }}
-                                ></input>
-                                <label htmlFor={`${this.getWidgetKey()}-${name}-${index}`}>{name}</label>
-                            </div>
-                        );
+                        return (<this._ElementRadioButtonItem index={index} name={name}></this._ElementRadioButtonItem>);
                     })}
                 </form>
             </div>
         );
     };
 
+    _ElementRadioButtonItem = ({ index, name }: { index: number, name: string }) => {
 
-    handleChange = (event: any, index: number) => {
-        event.preventDefault();
-        const channelName = this.getChannelNames()[0];
-        if (g_widgets1.isEditing()) {
-            return;
-        } else {
-            if (this._getChannelAccessRight() < 1.5) {
-                return;
-            }
-            // write value
-            let value = this.getItemValues()[index];
-            if (this.getAllText()["useChannelItems"] === true) {
-                value = this._itemValuesFromChannel[index];
-            }
-            this.putChannelValue(channelName, value);
-        }
-    };
+        const isSelected = this.calcIsSelected(index);
+        const itemValue = this.calcItemValues()[index];
 
-    // concretize abstract method
+        return (
+            <div
+                key={`${name}-${index}`}
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    pointerEvents: this._getChannelAccessRight() < 1.5 ? "none" : "auto",
+                    color: isSelected ? this._getElementAreaRawTextStyle() : this.getAllStyle()["color"],
+                }}
+            >
+                <input
+                    type="radio"
+                    name="radio-group"
+                    id={`${this.getWidgetKey()}-${name}-${index}`}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                        if (event.target.checked) {
+                            this.handleMouseClick(index);
+                        }
+                    }}
+                    checked={isSelected}
+                    value={String(itemValue)}
+                    style={{
+                        width: this.getAllText()["boxWidth"],
+                        height: this.getAllText()["boxWidth"],
+                        cursor: "pointer",
+                    }}
+                ></input>
+                <label
+                    htmlFor={`${this.getWidgetKey()}-${name}-${index}`}
+                    style={{
+                        marginLeft: "8px",
+                        cursor: "pointer",
+                    }}
+                >
+                    {name}
+                </label>
+            </div>
+        )
+    }
+
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
 
     // -------------------- helper functions ----------------
 
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
+    calcIsSelected = (index: number) => {
+        const selectedIndex = this.calcItemIndex();
+        return index === selectedIndex;
+    }
 
-    _getChannelValue = (raw: boolean = false) => {
-        const value = this._getFirstChannelValue(raw);
-        if (value === undefined) {
-            return "";
-        } else {
-            return value;
+    /**
+     * when the radio button is selected, send the corresponding value to channel
+     */
+    handleMouseClick = (index: number) => {
+        // do nothing during editing
+        if (g_widgets1.isEditing()) {
+            return;
         }
-    };
 
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
+        // write permission
+        if (this._getChannelAccessRight() < Channel_ACCESS_RIGHTS.READ_WRITE) {
+            return;
         }
+
+        const itemValues = this.calcItemValues();
+        const itemValue = itemValues[index];
+        if (typeof itemValue !== "number") {
+            return;
+        }
+
+        const channelName = this.getChannelNames()[0];
+        this.putChannelValue(channelName, itemValue);
     };
 
     // -------------------------- tdl -------------------------------
@@ -381,7 +276,6 @@ export class RadioButton extends BaseWidget {
                 verticalAlign: "flex-start",
                 wrapWord: false,
                 alarmBorder: true,
-                useChannelItems: true,
                 boxWidth: 13,
                 invisibleInOperation: false,
                 alarmText: false,
@@ -391,14 +285,20 @@ export class RadioButton extends BaseWidget {
                 confirmOnWriteUsePassword: false,
                 confirmOnWritePassword: "",
                 direction: "vertical", // "horizontal"
+
+                // discrete states
+                bit: -1,
+                useChannelItems: false,
+                fallbackColor: "rgba(255,0,255,1)",
+                fallbackText: "Wrong state",
             },
             channelNames: [],
             groupNames: [],
             rules: [],
-            itemLabels: ["Label 0", "Label 1"],
+            // discrete states
+            itemNames: ["False", "True"],
             itemValues: [0, 1],
-            // itemPictures: ["", ""],
-            // itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
+            itemColors: ["rgba(210, 210, 210, 1)", "rgba(0, 255, 0, 1)"],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
@@ -406,64 +306,27 @@ export class RadioButton extends BaseWidget {
 
     generateDefaultTdl: () => any = RadioButton.generateDefaultTdl;
 
-    // overload
+
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
+        result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
+        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
         result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
-        result["itemLabels"] = JSON.parse(JSON.stringify(this.getItemLabels()));
-        // result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
-        // result["itemPictures"] = JSON.parse(JSON.stringify(this.getItemPictures()));
         return result;
     }
 
     // --------------------- getters -------------------------
 
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getUpdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-
-    getItemLabels = () => {
-        return this._itemLabels;
+    // override
+    getItemNames() {
+        return this._itemNames;
     };
-    getItemValues = () => {
+    getItemColors() {
+        return this._itemColors;
+    };
+    getItemValues() {
         return this._itemValues;
     };
-
-    _getChannelAccessRight = () => {
-        return this._getFirstChannelAccessRight();
-    };
-
-    // getItemPictures = () => {
-    // 	return this._itemPictures;
-    // };
-
-    // getItemColors = () => {
-    // 	return this._itemColors;
-    // };
-
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {
