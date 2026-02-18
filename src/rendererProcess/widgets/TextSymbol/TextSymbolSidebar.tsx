@@ -3,30 +3,36 @@ import { TextSymbol } from "./TextSymbol";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
-import { SidebarChoiceButtonItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonItems";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarTextSymbolShowPvValue } from "../../helperWidgets/SidebarComponents/SidebarTextSymbolShowPvValue";
+import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
+import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
+import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
+import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
 
 export class TextSymbolSidebar extends BaseWidgetSidebar {
     _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
     _sidebarPictureOpacity: SidebarPictureOpacity;
-    _sidebarChoiceButtonItems: SidebarChoiceButtonItems;
-    // _sidebarPolylineFillColor: SidebarPolylineFillColor;
-    // _sidebarPolylineFill: SidebarPolylineFill;
     _sidebarTextSymbolShowPvValue: SidebarTextSymbolShowPvValue;
+    _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
+    _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
+    _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
+    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
 
-    beingUpdatedItemIndex: number = -1;
+    useItemColor: boolean = true;
+    variableItems: boolean = true;
 
     constructor(symbol: TextSymbol) {
         super(symbol);
         this._sidebarPictureStretchToFit = new SidebarPictureStretchToFit(this);
         this._sidebarPictureOpacity = new SidebarPictureOpacity(this);
-        this._sidebarChoiceButtonItems = new SidebarChoiceButtonItems(this);
-        // this._sidebarPolylineFillColor = new SidebarPolylineFillColor(this);
-        // this._sidebarPolylineFill = new SidebarPolylineFill(this);
         this._sidebarTextSymbolShowPvValue = new SidebarTextSymbolShowPvValue(this);
+        this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
+        this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
+        this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
+        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
     }
 
     getSidebarPictureStretchToFit = () => {
@@ -37,13 +43,26 @@ export class TextSymbolSidebar extends BaseWidgetSidebar {
         return this._sidebarPictureOpacity;
     };
 
-    getSidebarChoiceButtonItems = () => {
-        return this._sidebarChoiceButtonItems;
-    };
-
     getSidebarTextSymbolShowPvValue = () => {
         return this._sidebarTextSymbolShowPvValue;
     }
+
+    getSidebarDiscreteStateItems = () => {
+        return this._sidebarDiscreteStateItems;
+    }
+
+    getSidebarLEDMultiStateFallbackText = () => {
+        return this._sidebarLEDMultiStateFallbackText;
+    }
+
+    getSidebarChoiceButtonUseChannelItems = () => {
+        return this._sidebarChoiceButtonUseChannelItems;
+    }
+
+    getSidebarLEDFallbackColor = () => {
+        return this._sidebarLEDFallbackColor;
+    }
+
 
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
@@ -124,47 +143,8 @@ export class TextSymbolSidebar extends BaseWidgetSidebar {
                     {/* color */}
                     {this.getSidebarBackgroundColor().getElement()}
                     {this.getSidebarInvisibleInOperation().getElement()}
-                    {/* {this.getSidebarPictureStretchToFit().getElement()} */}
-                    {/* {this.getSidebarPictureOpacity().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ------------------- File -------------------------- */}
-                {/* {this.getSidebarOpenFile().getElement()} */}
-                {/* <this._HorizontalLine /> */}
-                {/* ---------------- line -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Line</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* {this.getSidebarArcShowRadius().getElement()} */}
-                {/* {this.getSidebarPolylineClosed().getElement()} */}
-                {/* {this.getSidebarLineWidth().getElement()} */}
-                {/* {this.getSidebarLineStyle().getElement()} */}
-                {/* {this.getSidebarTextColor().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
-                {/* ---------------- filling -------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Filling</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarPolylineFill().getElement()}
-					{this.getSidebarPolylineFillColor().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
-                {/* ------------------- arrow ----------------------------- */}
-                {/* {this.getSidebarLineArrowStyle().getElement()} */}
-                {/* ---------------- points table -------------------------- */}
-                {/* {this.getSidebarPolylinePointsTable().getElement()} */}
-                {/* ---------------- angle -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Angle</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* {this.getSidebarArcAngleStart().getElement()} */}
-                {/* {this.getSidebarArcAngleRange().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
                 {/* ---------------- text -------------------------- */}
                 <this._BlockTitle>
                     <b>Text</b>
@@ -201,12 +181,13 @@ export class TextSymbolSidebar extends BaseWidgetSidebar {
                     <b>Fallback</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {this.getSidebarText().getElement()}
+                    {this.getSidebarLEDMultiStateFallbackText().getElement()}
+                    {this.getSidebarLEDFallbackColor().getElement()}
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
-
                 {/* --------------------------- items -------------------------- */}
-                {this.getSidebarChoiceButtonItems().getElement()}
+                {this.getSidebarDiscreteStateItems().getElement()}
+                {this.getSidebarChoiceButtonUseChannelItems().getElement()}
                 <this._HorizontalLine />
 
                 {/* ------------------------- rules ---------------------------- */}
@@ -219,26 +200,4 @@ export class TextSymbolSidebar extends BaseWidgetSidebar {
         );
     };
 
-    // defined in super class
-    // getElement()
-    // _HorizontalLine()
-    // _BlockBody()
-    // _BlockTitle()
-
-    // ---------------------- getters --------------------------
-
-    // defined in super class
-    // getWidgetKey()
-    // getMainWidget()
-    // getUpdateFromSidebar()
-    // getStyle()
-    // getFormStyle()
-    // getInputStyle()
-
-    // ------------------------- style -------------------------
-
-    // defined in super class
-    // _style
-    // _inputStyle
-    // _formStyle
 }

@@ -151,6 +151,7 @@ export class BooleanButton extends BaseWidget {
             }
         }
         const outline = this.calcOutline();
+        console.log("outline ==========", outline);
 
         return (
             <div
@@ -169,7 +170,13 @@ export class BooleanButton extends BaseWidget {
                 // do not use onMouseOver, which also applies to the children elements
                 onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
                 // do not use onMouseOut
-                onMouseLeave={(event: any) => this.handleMouseLeaveWriteWidget(event, elementRef)}
+                onMouseLeave={(event: any) => {
+                    this.handleMouseLeaveWriteWidget(event, elementRef);
+                    if (elementRef.current !== null) {
+                        elementRef.current.style["outline"] = outline;
+                    }
+
+                }}
             >
                 <div
                     style={{
@@ -213,8 +220,8 @@ export class BooleanButton extends BaseWidget {
         }
 
         const allText = this.getAllText();
-        const onValue = allText["onValue"];
-        const offValue = allText["offValue"];
+        const onValue = this.getItemValues()[1];
+        const offValue = this.getItemValues()[0];
         const buttonMode = allText["mode"];
         let targetValue = allText["onValue"];
 
@@ -337,15 +344,15 @@ export class BooleanButton extends BaseWidget {
                 confirmOnWritePassword: "",
                 // discrete states
                 bit: 0,
-                useChannelItems: false,
+                useChannelItems: true,
                 fallbackColor: "rgba(255,0,255,1)",
-                fallbackText: "Wrong state",
+                fallbackText: "Wrong State",
             },
             channelNames: [],
             groupNames: [],
             rules: [],
             // discrete states
-            itemNames: ["False", "True"],
+            itemNames: ["ZERO", "ONE"],
             itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
             itemValues: [0, 1],
 

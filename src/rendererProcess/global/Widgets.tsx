@@ -138,6 +138,8 @@ export type type_widgetType =
     | "FileBrowser"
     | "ActionButton";
 
+export type DiscreteStateWidget = LED | LEDMultiState | Symbol | TextSymbol | BooleanButton | SlideButton | CheckBox | ChoiceButton | ComboBox | RadioButton;
+
 /**
  * Widget's z direction
  */

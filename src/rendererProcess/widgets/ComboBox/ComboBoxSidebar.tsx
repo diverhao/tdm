@@ -5,24 +5,35 @@ import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarC
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
-import { SidebarLEDMultiStateItems } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateItems";
+import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
+import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
 
 export class ComboBoxSidebar extends BaseWidgetSidebar {
     _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
-    _sidebarLEDMultiStateItems: SidebarLEDMultiStateItems;
+    _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
+    _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
+
+    useItemColor: boolean = false;
+    variableItems: boolean = true;
+
 
     constructor(comboBox: ComboBox) {
         super(comboBox);
         this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
-        this._sidebarLEDMultiStateItems = new SidebarLEDMultiStateItems(this);
+        this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
+        this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
     }
 
     getSidebarChoiceButtonUseChannelItems = () => {
         return this._sidebarChoiceButtonUseChannelItems;
     };
 
-    getSidebarLEDMultiStateItems = () => {
-        return this._sidebarLEDMultiStateItems;
+    getSidebarDiscreteStateItems = () => {
+        return this._sidebarDiscreteStateItems;
+    }
+
+    getSidebarLEDMultiStateFallbackText = () => {
+        return this._sidebarLEDMultiStateFallbackText;
     }
 
     // ------------------------------------- elements --------------------------------------
@@ -100,6 +111,14 @@ export class ComboBoxSidebar extends BaseWidgetSidebar {
                     {this.getSidebarAlarmLevel().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
+                {/* ------------------ fallback color ---------------------- */}
+                <this._BlockTitle>
+                    <b>Fallback</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarLEDMultiStateFallbackText().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
                 <this._BlockTitle>
                     <b>Background</b>
@@ -140,7 +159,7 @@ export class ComboBoxSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
                 {/* --------------------------- items -------------------------- */}
-                {this.getSidebarLEDMultiStateItems().getElement()}
+                {this.getSidebarDiscreteStateItems().getElement()}
                 {this.getSidebarChoiceButtonUseChannelItems().getElement()}
                 <this._HorizontalLine />
                 {/* ---------------- confirm on write -------------------- */}

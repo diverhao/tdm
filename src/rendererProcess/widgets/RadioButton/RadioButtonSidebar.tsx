@@ -6,20 +6,24 @@ import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarC
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
-import { SidebarLEDMultiStateItems } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateItems";
-
+import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
+import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
 
 export class RadioButtonSidebar extends BaseWidgetSidebar {
     _sidebarSlideButtonBoxWidth: SidebarSlideButtonBoxWidth;
     _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
-    _sidebarLEDMultiStateItems: SidebarLEDMultiStateItems;
+    _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
+    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
 
+    useItemColor: boolean = true;
+    variableItems: boolean = true;
 
     constructor(radioButton: RadioButton) {
         super(radioButton);
         this._sidebarSlideButtonBoxWidth = new SidebarSlideButtonBoxWidth(this);
         this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
-        this._sidebarLEDMultiStateItems = new SidebarLEDMultiStateItems(this);
+        this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
+        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
     }
     getSidebarSlideButtonBoxWidth = () => {
         return this._sidebarSlideButtonBoxWidth;
@@ -29,8 +33,12 @@ export class RadioButtonSidebar extends BaseWidgetSidebar {
         return this._sidebarChoiceButtonUseChannelItems;
     };
 
-    getSidebarLEDMultiStateItems = () => {
-        return this._sidebarLEDMultiStateItems;
+    getSidebarDiscreteStateItems = () => {
+        return this._sidebarDiscreteStateItems;
+    }
+
+    getSidebarLEDFallbackColor = () => {
+        return this._sidebarLEDFallbackColor;
     }
 
     // ------------------------------------- elements --------------------------------------
@@ -108,6 +116,14 @@ export class RadioButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarAlarmLevel().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
+                {/* ------------------ fallbacks ---------------------- */}
+                <this._BlockTitle>
+                    <b>Fallback</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarLEDFallbackColor().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
                 <this._BlockTitle>
                     <b>Background</b>
@@ -116,8 +132,6 @@ export class RadioButtonSidebar extends BaseWidgetSidebar {
                     {/* color */}
                     {this.getSidebarBackgroundColor().getElement()}
                     {this.getSidebarInvisibleInOperation().getElement()}
-                    {/* {this.getSidebarChoiceButtonSelectedBackgroundColor().getElement()}
-					{this.getSidebarChoiceButtonUnselectedBackgroundColor().getElement()} */}
                 </this._BlockBody>
                 {/* <this._BlockBody>{this.getSidebarHighlightBackgroundColor().getElement()}</this._BlockBody> */}
                 <this._HorizontalLine />
@@ -127,8 +141,6 @@ export class RadioButtonSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarSlideButtonBoxWidth().getElement()}
-                    {/* {this.getSidebarSlideButtonBoxRatio().getElement()} */}
-                    {/* {this.getSidebarLEDBit().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- text -------------------------- */}
@@ -136,15 +148,11 @@ export class RadioButtonSidebar extends BaseWidgetSidebar {
                     <b>Text</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {/* {this.getSidebarCheckBoxText().getElement()} */}
                     {this.getSidebarWrapWord().getElement()}
                     {this.getSidebarXAlign().getElement()}
                     {this.getSidebarYAlign().getElement()}
                     {this.getSidebarTextColor().getElement()}
                     {this.getSidebarDirection().getElement()}
-                    {/* {this.getSidebarXAlign().getElement()} */}
-                    {/* todo: {this.getSidebarYAlign().getElement()} */}
-                    {/* todo: {this.getSidebarWrapWord().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ----------------------- font --------------------------- */}
@@ -168,7 +176,7 @@ export class RadioButtonSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
                 {/* --------------------------- items -------------------------- */}
-                {this.getSidebarLEDMultiStateItems().getElement()}
+                {this.getSidebarDiscreteStateItems().getElement()}
                 {this.getSidebarChoiceButtonUseChannelItems().getElement()}
                 <this._HorizontalLine />
                 {/* ---------------- confirm on write -------------------- */}

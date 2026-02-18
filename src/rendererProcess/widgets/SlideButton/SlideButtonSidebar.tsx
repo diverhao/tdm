@@ -14,7 +14,8 @@ import { SidebarBooleanButtonOnLabel } from "../../helperWidgets/SidebarComponen
 import { SidebarBooleanButtonOffLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffLabel";
 import { SidebarBooleanButtonOffValue } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffValue";
 import { SidebarBooleanButtonOffColor } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffColor";
-import { SidebarLEDItems } from "../../helperWidgets/SidebarComponents/SidebarLEDItems";
+import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
+import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
 
 export class SlideButtonSidebar extends BaseWidgetSidebar {
     _sidebarLEDBit: SidebarLEDBit;
@@ -27,7 +28,11 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
     _sidebarBooleanButtonOffValue: SidebarBooleanButtonOffValue;
     _sidebarBooleanButtonOnLabel: SidebarBooleanButtonOnLabel;
     _sidebarBooleanButtonOffLabel: SidebarBooleanButtonOffLabel;
-    _sidebarLEDItems: SidebarLEDItems;
+    _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
+    _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
+
+    useItemColor: boolean = true;
+    variableItems: boolean = false;
 
     constructor(slideButton: SlideButton) {
         super(slideButton);
@@ -41,7 +46,8 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
         this._sidebarBooleanButtonOffValue = new SidebarBooleanButtonOffValue(this);
         this._sidebarBooleanButtonOnLabel = new SidebarBooleanButtonOnLabel(this);
         this._sidebarBooleanButtonOffLabel = new SidebarBooleanButtonOffLabel(this);
-        this._sidebarLEDItems = new SidebarLEDItems(this);
+        this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
+        this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
     }
 
     getSidebarChoiceButtonUseChannelItems = () => {
@@ -81,8 +87,12 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
         return this._sidebarBooleanButtonOffLabel;
     }
 
-    getSidebarLEDItems = () => {
-        return this._sidebarLEDItems;
+    getSidebarDiscreteStateItems = () => {
+        return this._sidebarDiscreteStateItems;
+    }
+
+    getSidebarLEDMultiStateFallbackText = () => {
+        return this._sidebarLEDMultiStateFallbackText;
     }
 
     // ------------------------------------- elements --------------------------------------
@@ -154,14 +164,12 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarAlarmBackground().getElement()}
                     {this.getSidebarAlarmBorder().getElement()}
                     {this.getSidebarAlarmLevel().getElement()}
-                    {this.getSidebarLEDBit().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
 
                 {/* --------------------------- items -------------------------- */}
-                {this.getSidebarLEDItems().getElement()}
+                {this.getSidebarDiscreteStateItems().getElement()}
                 {this.getSidebarChoiceButtonUseChannelItems().getElement()}
-
                 <this._HorizontalLine />
                 {/* ----------------- Box ---------------------------- */}
                 <this._BlockTitle>
@@ -171,6 +179,7 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarSlideButtonBoxWidth().getElement()}
                     {this.getSidebarLEDBit().getElement()}
                     {this.getSidebarLEDFallbackColor().getElement()}
+                    {this.getSidebarLEDMultiStateFallbackText().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}

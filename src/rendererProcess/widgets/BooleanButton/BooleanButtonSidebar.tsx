@@ -14,10 +14,11 @@ import { SidebarBooleanButtonOffValue } from "../../helperWidgets/SidebarCompone
 import { SidebarBooleanButtonOnLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOnLabel";
 import { SidebarBooleanButtonOffLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffLabel";
 import { SidebarBooleanButtonMode } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonMode";
-import { SidebarLEDItems } from "../../helperWidgets/SidebarComponents/SidebarLEDItems";
+import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
 
 export class BooleanButtonSidebar extends BaseWidgetSidebar {
     _sidebarLEDBit: SidebarLEDBit;
@@ -33,7 +34,11 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
     _sidebarBooleanButtonOnLabel: SidebarBooleanButtonOnLabel;
     _sidebarBooleanButtonOffLabel: SidebarBooleanButtonOffLabel;
     _sidebarBooleanButtonMode: SidebarBooleanButtonMode;
-    _sidebarLEDItems: SidebarLEDItems;
+    _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
+    _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
+
+    useItemColor: boolean = true;
+    variableItems: boolean = false;
 
     beingUpdatedItemIndex: number = -1;
 
@@ -52,7 +57,8 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
         this._sidebarBooleanButtonOnLabel = new SidebarBooleanButtonOnLabel(this);
         this._sidebarBooleanButtonOffLabel = new SidebarBooleanButtonOffLabel(this);
         this._sidebarBooleanButtonMode = new SidebarBooleanButtonMode(this);
-        this._sidebarLEDItems = new SidebarLEDItems(this);
+        this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
+        this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
     }
 
     getSidebarLEDBit = () => {
@@ -108,11 +114,14 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
         return this._sidebarBooleanButtonMode;
     }
 
-    getSidebarLEDItems = () => {
-        return this._sidebarLEDItems;
+    getSidebarDiscreteStateItems = () => {
+        return this._sidebarDiscreteStateItems;
     }
 
-
+    getSidebarLEDMultiStateFallbackText = () => {
+        return this._sidebarLEDMultiStateFallbackText;
+    }
+    
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
     updateFromWidget = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => { };
@@ -203,35 +212,14 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
                     {this.getSidebarLEDBit().getElement()}
                     {this.getSidebarBooleanButtonShowLED().getElement()}
                     {this.getSidebarLEDFallbackColor().getElement()}
+                    {this.getSidebarLEDMultiStateFallbackText().getElement()}
                     {this.getSidebarBooleanButtonMode().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
 
                 {/* --------------------------- items -------------------------- */}
-                {this.getSidebarLEDItems().getElement()}
+                {this.getSidebarDiscreteStateItems().getElement()}
                 {this.getSidebarChoiceButtonUseChannelItems().getElement()}
-                <this._HorizontalLine />
-
-                {/* --------------------------- items -------------------------- */}
-                {/* <this._BlockTitle>
-                    <b>On</b>
-                </this._BlockTitle>
-                <this._BlockBody>
-                    {this.getSidebarBooleanButtonOnLabel().getElement()}
-                    {this.getSidebarBooleanButtonOnValue().getElement()}
-                    {this.getSidebarBooleanButtonOnColor().getElement()}
-                </this._BlockBody>
-                <this._HorizontalLine />
-                <this._BlockTitle>
-                    <b>Off</b>
-                </this._BlockTitle>
-                <this._BlockBody>
-                    {this.getSidebarBooleanButtonOffLabel().getElement()}
-                    {this.getSidebarBooleanButtonOffValue().getElement()}
-                    {this.getSidebarBooleanButtonOffColor().getElement()}
-                </this._BlockBody>
-                <this._HorizontalLine />
-                {this.getSidebarChoiceButtonUseChannelItems().getElement()} */}
                 {this.getSidebarBooleanButtonUsePictures().getElement()}
                 <this._HorizontalLine />
                 {/* ---------------- text -------------------------- */}

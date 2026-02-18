@@ -115,6 +115,7 @@ export class CheckBox extends BaseWidget {
         const widgetKey = this.getWidgetKey();
         const showLabels = allText["showLabels"];
         const text = showLabels === true ? this.calcItemText() : "";
+        const backgroundColor = this.calcItemColor();
 
         return (
             <form
@@ -123,6 +124,7 @@ export class CheckBox extends BaseWidget {
                     display: "inline-flex",
                     justifyContent: "center",
                     alignItems: "center",
+                    backgroundColor: backgroundColor,
                 }}
                 onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
                 onMouseLeave={(event: any) => this.handleMouseLeaveWriteWidget(event, elementRef)}
@@ -269,17 +271,17 @@ export class CheckBox extends BaseWidget {
 
                 // discrete states
                 bit: 0,
-                useChannelItems: false,
-                fallbackColor: "rgba(255,0,255,1)",
-                fallbackText: "Err",
+                useChannelItems: true,
+                fallbackColor: "rgba(255,0,255,0)",
+                fallbackText: "Wrong State",
             },
             channelNames: [],
             groupNames: [],
             rules: [],
             // discrete states
-            itemNames: ["False", "True"],
+            itemNames: ["ZERO", "ONE"],
+            itemColors: ["rgba(60, 100, 60, 0)", "rgba(0, 255, 0, 0)"],
             itemValues: [0, 1],
-            itemColors: ["rgba(210, 210, 210, 1)", "rgba(0, 255, 0, 1)"], // not used in this widget
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));

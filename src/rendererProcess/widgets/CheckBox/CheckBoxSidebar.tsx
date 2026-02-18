@@ -8,11 +8,13 @@ import { SidebarBooleanButtonOnLabel } from "../../helperWidgets/SidebarComponen
 import { SidebarBooleanButtonOffLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffLabel";
 import { SidebarBooleanButtonOnValue } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOnValue";
 import { SidebarBooleanButtonOffValue } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffValue";
-import {Log} from "../../../common/Log";
+import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
-import { SidebarLEDItems } from "../../helperWidgets/SidebarComponents/SidebarLEDItems";
+import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
 import { SidebarTankShowLabels } from "../../helperWidgets/SidebarComponents/SidebarTankShowLabels";
+import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
+import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
 
 export class CheckBoxSidebar extends BaseWidgetSidebar {
     _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
@@ -22,8 +24,14 @@ export class CheckBoxSidebar extends BaseWidgetSidebar {
     _sidebarBooleanButtonOffLabel: SidebarBooleanButtonOffLabel;
     _sidebarBooleanButtonOnValue: SidebarBooleanButtonOnValue;
     _sidebarBooleanButtonOffValue: SidebarBooleanButtonOffValue;
-    _sidebarLEDItems: SidebarLEDItems;
     _sidebarTankShowLabels: SidebarTankShowLabels;
+    _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
+    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
+    _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
+
+    useItemColor: boolean = true;
+    variableItems: boolean = false;
+
 
     constructor(checkBox: CheckBox) {
         super(checkBox);
@@ -34,8 +42,10 @@ export class CheckBoxSidebar extends BaseWidgetSidebar {
         this._sidebarBooleanButtonOffLabel = new SidebarBooleanButtonOffLabel(this);
         this._sidebarBooleanButtonOnValue = new SidebarBooleanButtonOnValue(this);
         this._sidebarBooleanButtonOffValue = new SidebarBooleanButtonOffValue(this);
-        this._sidebarLEDItems = new SidebarLEDItems(this);
         this._sidebarTankShowLabels = new SidebarTankShowLabels(this);
+        this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
+        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
+        this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
     }
 
     getSidebarChoiceButtonUseChannelItems = () => {
@@ -63,13 +73,22 @@ export class CheckBoxSidebar extends BaseWidgetSidebar {
         return this._sidebarBooleanButtonOffValue;
     };
 
-    getSidebarLEDItems = () => {
-        return this._sidebarLEDItems;
+    getSidebarDiscreteStateItems = () => {
+        return this._sidebarDiscreteStateItems;
     }
 
     getSidebarTankShowLabels = () => {
         return this._sidebarTankShowLabels;
     }
+
+    getSidebarLEDMultiStateFallbackText = () => {
+        return this._sidebarLEDMultiStateFallbackText;
+    }
+
+    getSidebarLEDFallbackColor = () => {
+        return this._sidebarLEDFallbackColor;
+    }
+
 
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
@@ -141,8 +160,17 @@ export class CheckBoxSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* --------------------------- items -------------------------- */}
-                {this.getSidebarLEDItems().getElement()}
+                {this.getSidebarDiscreteStateItems().getElement()}
                 {this.getSidebarChoiceButtonUseChannelItems().getElement()}
+                <this._HorizontalLine />
+                {/* ------------------ fallback ---------------------- */}
+                <this._BlockTitle>
+                    <b>Fallback</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarLEDFallbackColor().getElement()}
+                    {this.getSidebarLEDMultiStateFallbackText().getElement()}
+                </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}
                 <this._BlockTitle>

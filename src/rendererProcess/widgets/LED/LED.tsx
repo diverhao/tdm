@@ -8,7 +8,6 @@ import { LEDSidebar } from "./LEDSidebar";
 import { deepMerge, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 import { LEDRules } from "./LEDRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../common/Log";
 
 export type type_LED_tdl = {
     type: string;
@@ -416,10 +415,10 @@ export class LED extends BaseWidget {
                 shape: "round",
                 invisibleInOperation: false,
                 // discrete states
-                bit: -1,
-                useChannelItems: false,
+                bit: 0,
+                useChannelItems: true,
                 fallbackColor: "rgba(255,0,255,1)",
-                fallbackText: "Err",
+                fallbackText: "Wrong State",
             },
             channelNames: [],
             groupNames: [],

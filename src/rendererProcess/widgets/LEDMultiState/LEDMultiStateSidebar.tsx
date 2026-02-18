@@ -3,7 +3,7 @@ import { LEDMultiState } from "./LEDMultiState";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
-import { SidebarLEDMultiStateItems } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateItems";
+// import { SidebarLEDMultiStateItems } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateItems";
 import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
 import { SidebarLEDShape } from "../../helperWidgets/SidebarComponents/SidebarLEDShape";
 import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
@@ -11,27 +11,29 @@ import {Log} from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
+import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
 
 export class LEDMultiStateSidebar extends BaseWidgetSidebar {
     _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
     _sidebarPictureOpacity: SidebarPictureOpacity;
-    _sidebarLEDMultiStateItems: SidebarLEDMultiStateItems;
     _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
     _sidebarLEDShape: SidebarLEDShape;
     _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
     _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
+    _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
 
-    beingUpdatedItemIndex: number = -1;
+    useItemColor: boolean = true;
+    variableItems: boolean = true;
 
     constructor(ledMultiState: LEDMultiState) {
         super(ledMultiState);
         this._sidebarPictureStretchToFit = new SidebarPictureStretchToFit(this);
         this._sidebarPictureOpacity = new SidebarPictureOpacity(this);
-        this._sidebarLEDMultiStateItems = new SidebarLEDMultiStateItems(this);
         this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
         this._sidebarLEDShape = new SidebarLEDShape(this);
         this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
         this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
+        this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
     }
 
     getSidebarPictureStretchToFit = () => {
@@ -41,10 +43,6 @@ export class LEDMultiStateSidebar extends BaseWidgetSidebar {
     getSidebarPictureOpacity = () => {
         return this._sidebarPictureOpacity;
     };
-
-    getSidebarLEDMultiStateItems = () => {
-        return this._sidebarLEDMultiStateItems;
-    }
 
     getSidebarLEDFallbackColor = () => {
         return this._sidebarLEDFallbackColor;
@@ -60,6 +58,10 @@ export class LEDMultiStateSidebar extends BaseWidgetSidebar {
 
     getSidebarChoiceButtonUseChannelItems = () => {
         return this._sidebarChoiceButtonUseChannelItems;
+    }
+
+    getSidebarDiscreteStateItems = () => {
+        return this._sidebarDiscreteStateItems;
     }
 
     // ------------------------------------- elements --------------------------------------
@@ -129,7 +131,7 @@ export class LEDMultiStateSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* --------------------------- items -------------------------- */}
-                {this.getSidebarLEDMultiStateItems().getElement()}
+                {this.getSidebarDiscreteStateItems().getElement()}
                 {this.getSidebarChoiceButtonUseChannelItems().getElement()}
                 <this._HorizontalLine />
                 {/* ---------------- line -------------------------- */}

@@ -7,20 +7,24 @@ import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarC
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
-import { SidebarLEDMultiStateItems } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateItems";
+import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
 
 export class ChoiceButtonSidebar extends BaseWidgetSidebar {
     _sidebarChoiceButtonSelectedBackgroundColor: SidebarChoiceButtonSelectedBackgroundColor;
     _sidebarChoiceButtonUnselectedBackgroundColor: SidebarChoiceButtonUnselectedBackgroundColor;
     _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
-    _sidebarLEDMultiStateItems: SidebarLEDMultiStateItems;
+    _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
+
+    useItemColor: boolean = false;
+    variableItems: boolean = true;
+
 
     constructor(choiceButton: ChoiceButton) {
         super(choiceButton);
         this._sidebarChoiceButtonSelectedBackgroundColor = new SidebarChoiceButtonSelectedBackgroundColor(this);
         this._sidebarChoiceButtonUnselectedBackgroundColor = new SidebarChoiceButtonUnselectedBackgroundColor(this);
         this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
-        this._sidebarLEDMultiStateItems = new SidebarLEDMultiStateItems(this);
+        this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
     }
 
     getSidebarChoiceButtonUnselectedBackgroundColor = () => {
@@ -35,10 +39,10 @@ export class ChoiceButtonSidebar extends BaseWidgetSidebar {
         return this._sidebarChoiceButtonUseChannelItems;
     };
 
-
-    getSidebarLEDMultiStateItems = () => {
-        return this._sidebarLEDMultiStateItems;
+    getSidebarDiscreteStateItems = () => {
+        return this._sidebarDiscreteStateItems;
     }
+
 
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
@@ -113,7 +117,7 @@ export class ChoiceButtonSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* --------------------------- items -------------------------- */}
-                {this.getSidebarLEDMultiStateItems().getElement()}
+                {this.getSidebarDiscreteStateItems().getElement()}
                 {this.getSidebarChoiceButtonUseChannelItems().getElement()}
                 <this._HorizontalLine />
                 {/* ---------------- background -------------------------- */}

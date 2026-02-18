@@ -38,7 +38,6 @@ export class RadioButton extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-
         const defaultTdl = this.generateDefaultTdl();
         this._itemNames = deepMerge(widgetTdl.itemNames, defaultTdl.itemNames);
         this._itemColors = deepMerge(widgetTdl.itemColors, defaultTdl.itemColors);
@@ -119,7 +118,7 @@ export class RadioButton extends BaseWidget {
         const justifyContent = allText["verticalAlign"];
         const alignItems = allText["horizontalAlign"];
         const backgroundColor = this._getElementAreaRawBackgroundStyle();
-
+        const formBackgroundColor = this.calcItemColor();
 
         return (
             <div
@@ -142,6 +141,7 @@ export class RadioButton extends BaseWidget {
                         flexDirection: flexDirection,
                         justifyContent: "flex-start",
                         alignItems: "flex-start",
+                        backgroundColor: formBackgroundColor,
                     }}
                     onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
                     onMouseLeave={(event: any) => this.handleMouseLeaveWriteWidget(event, elementRef)}
@@ -287,18 +287,18 @@ export class RadioButton extends BaseWidget {
                 direction: "vertical", // "horizontal"
 
                 // discrete states
-                bit: -1,
-                useChannelItems: false,
-                fallbackColor: "rgba(255,0,255,1)",
+                bit: -1, // always -1
+                useChannelItems: true,
+                fallbackColor: "rgba(255,0,255,0)",
                 fallbackText: "Wrong state",
             },
             channelNames: [],
             groupNames: [],
             rules: [],
             // discrete states
-            itemNames: ["False", "True"],
+            itemNames: ["ZERO", "ONE"],
+            itemColors: ["rgba(60, 100, 60, 0)", "rgba(0, 255, 0, 0)"],
             itemValues: [0, 1],
-            itemColors: ["rgba(210, 210, 210, 1)", "rgba(0, 255, 0, 1)"],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));

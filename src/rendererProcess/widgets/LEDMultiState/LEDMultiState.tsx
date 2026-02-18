@@ -469,16 +469,16 @@ export class LEDMultiState extends BaseWidget {
                 // if the value is not valid
                 invisibleInOperation: false,
                 // discrete states
-                bit: -1, // always -1 for LEDMultiState
-                useChannelItems: false,
+                bit: -1, // always -1
+                useChannelItems: true,
                 fallbackColor: "rgba(255,0,255,1)",
-                fallbackText: "Err",
+                fallbackText: "Wrong State",
             },
             channelNames: [],
             groupNames: [],
             rules: [],
             // discrete states
-            itemNames: ["False", "True"],
+            itemNames: ["ZERO", "ONE"],
             itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
             itemValues: [0, 1],
         };

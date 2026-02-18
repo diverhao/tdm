@@ -4,37 +4,41 @@ import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
 import { SidebarLEDItems } from "../../helperWidgets/SidebarComponents/SidebarLEDItems";
-import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
 import { SidebarLEDShape } from "../../helperWidgets/SidebarComponents/SidebarLEDShape";
-import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
 import { SidebarLEDBit } from "../../helperWidgets/SidebarComponents/SidebarLEDBit";
+import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
+import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
 import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
 import {Log} from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
 
 export class LEDSidebar extends BaseWidgetSidebar {
     _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
     _sidebarPictureOpacity: SidebarPictureOpacity;
     _sidebarLEDItems: SidebarLEDItems;
-    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
     _sidebarLEDShape: SidebarLEDShape;
     _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
     _sidebarLEDBit: SidebarLEDBit;
+    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
     _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
+    _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
 
-    beingUpdatedItemIndex: number = -1;
+    useItemColor: boolean = true;
+    variableItems: boolean = false;
 
     constructor(led: LED) {
         super(led);
         this._sidebarPictureStretchToFit = new SidebarPictureStretchToFit(this);
         this._sidebarPictureOpacity = new SidebarPictureOpacity(this);
         this._sidebarLEDItems = new SidebarLEDItems(this);
-        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
         this._sidebarLEDShape = new SidebarLEDShape(this);
         this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
         this._sidebarLEDBit = new SidebarLEDBit(this);
+        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
         this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
+        this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
     }
 
     getSidebarPictureStretchToFit = () => {
@@ -67,6 +71,10 @@ export class LEDSidebar extends BaseWidgetSidebar {
 
     getSidebarLEDMultiStateFallbackText = () => {
         return this._sidebarLEDMultiStateFallbackText;
+    }
+
+    getSidebarDiscreteStateItems = () => {
+        return this._sidebarDiscreteStateItems;
     }
 
     // ------------------------------------- elements --------------------------------------
@@ -188,7 +196,7 @@ export class LEDSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
                 {/* --------------------------- items -------------------------- */}
-                {this.getSidebarLEDItems().getElement()}
+                {this.getSidebarDiscreteStateItems().getElement()}
                 {this.getSidebarChoiceButtonUseChannelItems().getElement()}
                 <this._HorizontalLine />
 

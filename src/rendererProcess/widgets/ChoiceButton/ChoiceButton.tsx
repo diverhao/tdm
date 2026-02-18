@@ -352,18 +352,18 @@ export class ChoiceButton extends BaseWidget {
                 confirmOnWritePassword: "",
 
                 // discrete states
-                bit: -1,
-                useChannelItems: false,
+                bit: -1, // always -1
+                useChannelItems: true,
                 fallbackColor: "rgba(255,0,255,1)",
-                fallbackText: "Wrong state",
+                fallbackText: "Wrong State",
             },
             channelNames: [],
             groupNames: [],
             rules: [],
             // discrete states
-            itemNames: ["False", "True"],
+            itemNames: ["ZERO", "ONE"],
+            itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
             itemValues: [0, 1],
-            itemColors: ["rgba(210, 210, 210, 1)", "rgba(0, 255, 0, 1)"],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
