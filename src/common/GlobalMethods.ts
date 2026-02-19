@@ -402,7 +402,7 @@ const calcTicksLog10 = (valMin: number, valMax: number, numTicks: number): numbe
  * Small tick value has larger position value, the position has larger value on the bottom
  */
 
-export const calcTickPositions = (tickValues: number[], minPvValue: number, maxPvValue: number, fullSize: number, options: TickOptions = { scale: "Linear" }): number[] => {
+export const calcTickPositions = (tickValues: number[], minPvValue: number, maxPvValue: number, fullSize: number, options: TickOptions = { scale: "Linear" }, direction: "horizontal" | "vertical"): number[] => {
     const { scale } = options;
     let useLog10Scale = scale === "Log10" ? true : false;
     const result: number[] = [];
@@ -429,6 +429,10 @@ export const calcTickPositions = (tickValues: number[], minPvValue: number, maxP
         for (let ii = 0; ii <= numTickIntervals; ii++) {
             result.push(fullSize - ii * d);
         }
+    }
+    if (direction === "horizontal") {
+        console.log("value, length", result, length)
+        result.forEach((value, index) => {result[index] = fullSize - value});
     }
     return result;
 };

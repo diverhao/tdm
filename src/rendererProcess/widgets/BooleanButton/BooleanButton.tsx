@@ -151,7 +151,6 @@ export class BooleanButton extends BaseWidget {
             }
         }
         const outline = this.calcOutline();
-        console.log("outline ==========", outline);
 
         return (
             <div

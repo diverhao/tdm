@@ -7,7 +7,7 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { TankRules } from "./TankRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { refineTicks, calcTicks } from "../../../common/GlobalMethods";
+import { Scale } from "../../helperWidgets/SharedElements/Scale";
 
 
 export type type_Tank_tdl = {
@@ -62,6 +62,9 @@ export class Tank extends BaseWidget {
         const outline = this._getElementAreaRawOutlineStyle();
         const color = this._getElementAreaRawTextStyle();
         const backgroundColor = this._getElementAreaRawBackgroundStyle();
+        const scaleParam = this.calcScaleParam();
+        const position = scaleParam["position"];
+        const showScale = scaleParam["show"];
 
         return (
             <div
@@ -82,10 +85,33 @@ export class Tank extends BaseWidget {
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                <this._ElementScaleLeft></this._ElementScaleLeft>
+
+                <Scale
+                    min={scaleParam["min"]}
+                    max={scaleParam["max"]}
+                    numIntervals={scaleParam["numIntervals"]}
+                    position={scaleParam["position"]}
+                    show={position === "left" ? true : false}
+                    length={scaleParam["length"]}
+                    scale={scaleParam["scale"]}
+                    color={scaleParam["color"]}
+                    compact={scaleParam["compact"]}
+                >
+                </Scale>
                 <this._ElementWater></this._ElementWater>
-                <this._ElementScaleRight></this._ElementScaleRight>
-            </div>
+                <Scale
+                    min={scaleParam["min"]}
+                    max={scaleParam["max"]}
+                    numIntervals={scaleParam["numIntervals"]}
+                    position={scaleParam["position"]}
+                    show={position === "right" ? true : false}
+                    length={scaleParam["length"]}
+                    scale={scaleParam["scale"]}
+                    color={scaleParam["color"]}
+                    compact={scaleParam["compact"]}
+                >
+                </Scale>
+            </div >
         );
     };
 
@@ -133,243 +159,6 @@ export class Tank extends BaseWidget {
         );
     };
 
-    _ElementScaleLeft = () => {
-        const allText = this.getAllText();
-        const allStyle = this.getAllStyle();
-        const scalePosition = allText["scalePosition"];
-        const showLabels = allText["showLabels"];
-        const length = allStyle["height"];
-
-        // if position not on left or not showing label, return null
-        if (!(scalePosition === "left" && showLabels === true)) {
-            return null;
-        }
-
-        const elementRef = React.useRef<any>(null);
-
-        const fontSize = allStyle["fontSize"];
-        const scaleLength = allStyle["height"];
-        const numTickIntervals = allText["numTickIntervals"];
-        const scale = allText["scale"];
-
-        const [valueMin, valueMax] = this.calcPvLimits();
-        const tickValues = calcTicks(valueMin, valueMax, numTickIntervals + 1, { scale: scale });
-        const tickPositions = GlobalMethods.calcTickPositions(tickValues, valueMin, valueMax, scaleLength, { scale: scale });
-        const refinedTicks = refineTicks(tickValues, fontSize * 0.5, length, "vertical");
-
-        return (
-            <div
-                ref={elementRef}
-                style={{
-                    height: "100%",
-                    position: "relative",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                }}
-            >
-
-                {/* labels */}
-                <this._ElementLabels
-                    tickPositions={tickPositions}
-                    refinedTicks={refinedTicks}
-                >
-                </this._ElementLabels>
-
-                {/* ticks */}
-                <this._ElementTicks
-                    tickPositions={tickPositions}
-                >
-                </this._ElementTicks>
-
-                {/* base axis */}
-                <this._ElementAxis></this._ElementAxis>
-            </div>
-        );
-    };
-
-    /**
-     * the only difference with _ElementScaleLeft is the sequence of labels, ticks and axis
-     */
-    _ElementScaleRight = () => {
-        const allText = this.getAllText();
-        const allStyle = this.getAllStyle();
-        const scalePosition = allText["scalePosition"];
-        const showLabels = allText["showLabels"];
-        const length = allStyle["height"];
-
-        // if position not on left or not showing label, return null
-        if (!(scalePosition === "right" && showLabels === true)) {
-            return null;
-        }
-
-        const elementRef = React.useRef<any>(null);
-
-        const fontSize = allStyle["fontSize"];
-        const scaleLength = allStyle["height"];
-        const numTickIntervals = allText["numTickIntervals"];
-        const scale = allText["scale"];
-
-        const [valueMin, valueMax] = this.calcPvLimits();
-        const tickValues = calcTicks(valueMin, valueMax, numTickIntervals + 1, { scale: scale });
-        const tickPositions = GlobalMethods.calcTickPositions(tickValues, valueMin, valueMax, scaleLength, { scale: scale });
-        const refinedTicks = refineTicks(tickValues, fontSize * 0.5, length, "vertical");
-
-        return (
-            <div
-                ref={elementRef}
-                style={{
-                    height: "100%",
-                    position: "relative",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                }}
-            >
-
-                {/* base axis */}
-                <this._ElementAxis></this._ElementAxis>
-
-                {/* ticks */}
-                <this._ElementTicks
-                    tickPositions={tickPositions}
-                >
-                </this._ElementTicks>
-
-                {/* labels */}
-                <this._ElementLabels
-                    tickPositions={tickPositions}
-                    refinedTicks={refinedTicks}
-                >
-                </this._ElementLabels>
-
-            </div>
-        );
-    };
-
-    _ElementAxis = () => {
-        const scaleColor = this._getElementAreaRawTextStyle();
-        const scaleLength = this.getAllStyle()["height"];
-        return (
-            <svg
-                width={`2px`}
-                height="100%"
-                style={{
-                    overflow: "visible",
-                }}
-            >
-                <path
-                    d={`M 1 0 L 1 ${scaleLength}`}
-                    strokeWidth="2"
-                    stroke={scaleColor}
-                    fill="none"
-                >
-                </path>
-            </svg>
-        )
-    }
-
-    _ElementTicks = ({ tickPositions }: any) => {
-        return (
-            <svg
-                width={`10px`}
-                height="100%"
-                style={{
-                    overflow: "visible",
-                }}
-            >
-                {tickPositions.map((position: number, index: number) => {
-                    return (
-                        <this._ElementTick
-                            position={position}
-                        ></this._ElementTick>
-                    )
-                })}
-            </svg>
-
-        )
-    }
-
-    _ElementTick = ({ position }: any) => {
-        const scaleTickSize = 10;
-        const scaleColor = this._getElementAreaRawTextStyle();
-
-        return (
-            <path
-                d={`M 0 ${position} L ${scaleTickSize} ${position}`}
-                strokeWidth="2"
-                stroke={scaleColor}
-                fill="none"
-            ></path>
-        )
-    }
-
-    _ElementLabels = ({ tickPositions, refinedTicks }: any) => {
-        const allStyle = this.getAllStyle();
-        const fontSize = allStyle["fontSize"];
-
-        return (
-            <div
-                style={{
-                    width: fontSize + 10,
-                    height: "100%",
-                    position: "relative",
-                }}
-            >
-                {tickPositions.map((position: number, index: number) => {
-                    const text = refinedTicks[index];
-                    const numTicks = tickPositions.length;
-                    return (
-                        <this._ElementLabel
-                            position={position}
-                            text={text}
-                            index={index}
-                            numTicks={numTicks}
-                        ></this._ElementLabel>
-                    )
-                })}
-            </div>
-
-        )
-    }
-
-    _ElementLabel = ({ position, text, index, numTicks }: any) => {
-
-        const allText = this.getAllText();
-        const compactScale = allText["compactScale"];
-        const scaleColor = this._getElementAreaRawTextStyle();
-
-        if (compactScale) {
-            if (!(index === 0 || index === numTicks - 1)) {
-                return null;
-            }
-        }
-
-        // the first and last label are within the tick area
-        const justifyContent = index === 0 ? "flex-start" : index === numTicks - 1 ? "flex-end" : "center";
-
-        return (
-            <div
-                style={{
-                    position: "absolute",
-                    transform: "rotate(270deg)",
-                    top: position,
-                    left: 2,
-                    width: 0,
-                    height: 0,
-                    display: "inline-flex",
-                    alignItems: "flex-start",
-                    justifyContent: justifyContent,
-                    color: scaleColor,
-                }}
-            >
-                {text}
-            </div>
-
-        )
-    }
 
     // ------------------  helper functions -----------
     /**
@@ -389,7 +178,7 @@ export class Tank extends BaseWidget {
 
         let useLog10Scale = scale === "Log10" ? true : false;
         let result: number = 0;
-        
+
         let channelValue = this._getChannelValue(true);
 
         if (typeof channelValue === "number") {
@@ -414,6 +203,35 @@ export class Tank extends BaseWidget {
 
         return result;
     };
+
+    /**
+     * calculate parameters for scale
+     */
+    calcScaleParam = () => {
+        const allText = this.getAllText();
+        const allStyle = this.getAllStyle();
+        const scalePosition = allText["scalePosition"];
+        const showLabels = allText["showLabels"];
+        const color = this._getElementAreaRawTextStyle();
+        const compact = allText["compactScale"];
+
+        const scaleLength = allStyle["height"];
+        const numTickIntervals = allText["numTickIntervals"];
+        const scale = allText["scale"];
+        const [valueMin, valueMax] = this.calcPvLimits();
+
+        return {
+            min: valueMin,
+            max: valueMax,
+            numIntervals: numTickIntervals,
+            position: scalePosition as "left" | "top" | "bottom" | "right",
+            show: showLabels,
+            length: scaleLength,
+            scale: scale,
+            color: color,
+            compact: compact,
+        }
+    }
 
 
     // -------------------------- tdl -------------------------------

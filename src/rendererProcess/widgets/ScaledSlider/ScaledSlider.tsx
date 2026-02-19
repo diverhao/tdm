@@ -1,6 +1,6 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
-import { getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS, getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -8,10 +8,10 @@ import { ScaledSliderSidebar } from "./ScaledSliderSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ScaledSliderRules } from "./ScaledSliderRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { rgbaStrToRgbaArray, parseIntAngle, rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
+import { parseIntAngle } from "../../../common/GlobalMethods";
 import { Log } from "../../../common/Log";
-import { calcTicks, refineTicks } from "../../../common/GlobalMethods";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
+import { Scale } from "../../helperWidgets/SharedElements/Scale";
 
 export type type_ScaledSlider_tdl = {
     type: string;
@@ -57,30 +57,30 @@ export class ScaledSlider extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
-                </>
+
+                <div style={this.getElementBodyRawStyle()}>
+                    {/* <this._ElementArea></this._ElementArea> */}
+                    <this._ElementAreaRaw></this._ElementAreaRaw>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this.getSidebar()?.getElement() : null}
+
             </ErrorBoundary>
         );
     };
 
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                {/* <this._ElementArea></this._ElementArea> */}
-                <this._ElementAreaRaw></this._ElementAreaRaw>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+        const whiteSpace = this.getAllText().wrapWord ? "normal" : "pre";
+        const justifyContent = this.getAllText().horizontalAlign;
+        const alignItems = this.getAllText().verticalAlign;
+        const fontFamily = this.getAllText().fontFamily;
+        const fontSize = this.getAllText().fontSize;
+        const fontStyle = this.getAllText().fontStyle;
+        const outline = this._getElementAreaRawOutlineStyle();
+        const position = "relative";
+        const backgroundColor = this._getElementAreaRawBackgroundStyle();
+
         return (
-            // <div
             <div
                 style={{
                     display: "inline-flex",
@@ -90,28 +90,31 @@ export class ScaledSlider extends BaseWidget {
                     height: "100%",
                     userSelect: "none",
                     overflow: "visible",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllText().fontFamily,
-                    fontSize: this.getAllText().fontSize,
-                    fontStyle: this.getAllText().fontStyle,
-                    outline: this._getElementAreaRawOutlineStyle(),
-                    position: "relative",
-                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    fontFamily: fontFamily,
+                    fontSize: fontSize,
+                    fontStyle: fontStyle,
+                    outline: outline,
+                    position: position,
+                    backgroundColor: backgroundColor,
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
                 <this._ElementScaledSlider></this._ElementScaledSlider>
-                {this.showSettings === true ? <this._ElementSettings></this._ElementSettings> : null}
+                <this._ElementSettings></this._ElementSettings>
             </div>
         );
     };
 
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
+
     _ElementScaledSlider = () => {
-        if (this.getAllText()["appearance"] === "contemporary") {
+        const appearance = this.getAllText()["appearance"];
+        if (appearance === "contemporary") {
             return <this._ElementScaledSliderContemporary></this._ElementScaledSliderContemporary>
         } else {
             return <this._ElementScaledSliderTraditional></this._ElementScaledSliderTraditional>
@@ -133,12 +136,11 @@ export class ScaledSlider extends BaseWidget {
                     justifyContent: "flex-start",
                     alignItems: "center",
                     flexShrink: "0",
-                    opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
                     color: this._getElementAreaRawTextStyle(),
                 }}
             >
-                {this.getAllText()["showPvValue"] === true ? <this._ElementValue></this._ElementValue> : null}
-                {this.getAllText()["showLabels"] === true ? <this._ElementScaleTraditional></this._ElementScaleTraditional> : null}
+                <this._ElementValue></this._ElementValue>
+                <this._ElementScaleTraditional></this._ElementScaleTraditional>
                 <this._ElementSliderTraditional></this._ElementSliderTraditional>
             </div>
         );
@@ -170,48 +172,11 @@ export class ScaledSlider extends BaseWidget {
         );
     };
 
-    changeChannelValue = (direction: "positive" | "negative" | "nomove") => {
-        const channelName = this.getChannelNames()[0];
-        try {
-            const channel = g_widgets1.getTcaChannel(channelName);
-            // const channelValue = channel.getValue();
-            const channelValue = g_widgets1.getChannelValue(channelName); // do not use raw = true option, enum choice should not be expanded
-            if (typeof channelValue === "number") {
-                let newChannelValue = channelValue;
-                if (direction === "negative") {
-                    newChannelValue = channelValue - this.getAllText()["stepSize"];
-                } else if (direction === "positive") {
-                    newChannelValue = channelValue + this.getAllText()["stepSize"];
-                } else {
-                    // no move
-                    return;
-                }
-                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                const dbrData = {
-                    value: newChannelValue,
-                };
-                channel.put(displayWindowId, dbrData, 1);
-            }
-        } catch (e) {
-            Log.error(e);
-        }
-    };
-
-    openSettings = () => {
-        this.showSettings = true;
-        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-        g_flushWidgets();
-    };
-
-    closeSettings = () => {
-        this.showSettings = false;
-        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-        g_flushWidgets();
-    };
-
     _ElementSettings = () => {
+        if (this.showSettings === false) {
+            return null;
+        }
+
         const [channelValue, setChannelValue] = React.useState<number>(parseFloat(this._getChannelValue(true) as string));
         const [stepSize, setStepSize] = React.useState<number>(this.getAllText()["stepSize"]);
         const elementRef = React.useRef<any>(null);
@@ -379,11 +344,424 @@ export class ScaledSlider extends BaseWidget {
         );
     };
 
-    handleMouseUp = () => {
-        clearInterval(this.mouseDownIntervalTimer);
-        this.mouseDownIntervalTimer = undefined;
+    /**
+     * Displays the current channel (PV) value and step size in a horizontal row.
+     * 
+     * Layout: [step=<stepSize>]  ............  [<pvValue>]
+     * 
+     * - Left side: step size (e.g. "step=0.1"), indicating how much each click changes the value
+     * - Right side: formatted PV value with optional unit (e.g. "3.14 mm")
+     * - Hidden if showPvValue is false
+     * - Uses flexShrink: 0 to maintain its height regardless of container sizing
+     * - Text color follows the alarm-aware color from the channel
+     */
+    _ElementValue = () => {
+        const allText = this.getAllText();
+        const showPvValue = allText["showPvValue"];
+
+        if (showPvValue === false) {
+            return null;
+        }
+
+        const color = this._getElementAreaRawTextStyle();
+        const showUnit = allText["showUnit"];
+        const pvValue = this.getFormattedChannelValue(showUnit);
+        return (
+            // container
+            <div
+                style={{
+                    width: "100%",
+                    paddingTop: 2,
+                    paddingBottom: 2,
+                    position: "relative",
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexShrink: 0, // do not shrink
+                    boxSizing: "border-box",
+                    color: color,
+                }}
+            >
+                {/* step size */}
+                <div>
+                    {`step=${this.getAllText()["stepSize"]}`}
+                </div>
+                {/* pv value */}
+                <div>
+                    {pvValue}
+                </div>
+            </div>
+        );
     };
 
+    _ElementScaleContemporary = () => {
+        const scaleParam = this.calcScaleParam();
+        return (
+            <Scale
+                min={scaleParam["min"]}
+                max={scaleParam["max"]}
+                numIntervals={scaleParam["numIntervals"]}
+                position={"bottom"}
+                show={scaleParam["showLabels"]}
+                length={scaleParam["length"]}
+                scale={scaleParam["scale"]}
+                color={scaleParam["color"]}
+                compact={scaleParam["compact"]}
+
+            ></Scale>
+        )
+    };
+
+    _ElementScaleTraditional = () => {
+        const scaleParam = this.calcScaleParam();
+        return (
+            <Scale
+                min={scaleParam["min"]}
+                max={scaleParam["max"]}
+                numIntervals={scaleParam["numIntervals"]}
+                position={"top"}
+                show={scaleParam["showLabels"]}
+                length={scaleParam["length"]}
+                scale={scaleParam["scale"]}
+                color={scaleParam["color"]}
+                compact={scaleParam["compact"]}
+
+            ></Scale>
+
+        )
+    };
+
+    _ElementSliderContemporary = () => {
+        const sliderRef = React.useRef<any>(null);
+        const blockRef = React.useRef<any>(null);
+        const blockSize = 14;
+        let blockColor = "rgba(255, 255, 255 ,1)";
+        let blockHighlightColor = "rgba(0, 100, 255, 1)";
+        blockHighlightColor = "rgba(255, 255, 255, 1)";
+
+        return (
+            <div
+                ref={sliderRef}
+                tabIndex={0}
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "100%",
+                    height: blockSize,
+                    position: "relative",
+                    overflow: "visible",
+                    flexShrink: "0",
+                }}
+                onKeyDown={(event: any) => {
+                    this.handleKeyDown(event);
+                }}
+                onMouseDown={(event: any) => {
+                    this.handleMouseDown(event, blockRef);
+                }}
+                onMouseUp={(event: any) => {
+                    this.handleMouseUp(event);
+                }}
+                // focus the element so that we can use keyboard event
+                onMouseEnter={(event: any) => {
+                    this.handleMouseEnter(event, sliderRef);
+                }}
+                onMouseLeave={(event: any) => {
+                    this.handleMouseLeave(event, sliderRef, "none");
+                }}
+            >
+                {/* slider bar */}
+                <div
+                    style={{
+                        width: "100%",
+                        height: blockSize / 3,
+                        backgroundColor: this._getElementAreaRawFillStyle(),
+                        borderRadius: blockSize / 2,
+                    }}
+                ></div>
+                {/* slider bar -- value highlight region */}
+                <div
+                    style={{
+                        position: "absolute",
+                        top: blockSize / 3,
+                        left: 0,
+                        width: this.calcSliderBlockPosition(blockSize) + blockSize / 2,
+                        height: blockSize / 3,
+                        backgroundColor: this._getElementAreaRawFillStyle(),
+                        borderRadius: blockSize / 2,
+                        border: "solid 0px black",
+                    }}
+                ></div>
+                {/* slider block */}
+                <div
+                    ref={blockRef}
+                    onMouseDown={(event: any) => {
+                        this.handleMouseDownOnBlock(event, blockRef, blockHighlightColor, blockSize, blockColor);
+                    }}
+                    style={{
+                        position: "absolute",
+                        left: this.calcSliderBlockPosition(blockSize),
+                        top: 0,
+                        width: blockSize,
+                        height: blockSize,
+                        backgroundColor: "white",
+                        borderRadius: blockSize / 2,
+                        border: "solid 0px rgba(0,0,0,1)",
+                        boxShadow: "0px 0px 5px 1px black",
+                    }}
+                ></div>
+            </div>
+        );
+    };
+
+    _ElementSliderTraditional = () => {
+        const shadowWidth = 2;
+        const blockWidth = 20;
+        const width = this.getAllStyle()["width"] - 2 * shadowWidth;
+
+        const sliderRef = React.useRef<any>(null);
+        const blockRef = React.useRef<any>(null);
+        let blockColor = "rgba(200, 200, 200, 1)";
+        let blockHighlightColor = "rgba(215, 215, 215, 1)";
+
+        const threeDStyleBar = this.atRegularAngle() ? this.get3dButtonStyle(true) as any : this.get3dButtonStyle(false) as any;
+        delete threeDStyleBar.width;
+        delete threeDStyleBar.height;
+
+        const threeDStyleBlock = this.atRegularAngle() ? this.get3dButtonStyle(false) as any : this.get3dButtonStyle(true) as any;
+        delete threeDStyleBlock.width;
+        delete threeDStyleBlock.height;
+
+        const outline = "solid 1px rgba(100, 100, 250, 0.5)";
+
+        return (
+            <div
+                ref={sliderRef}
+                // for key down
+                tabIndex={0}
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    ...threeDStyleBar,
+                    width: width,
+                    outline: outline,
+                    position: "relative",
+                    overflow: "visible",
+                    flexGrow: 1,
+                    flexShrink: 1,
+                    flexBasis: 0,
+                    boxSizing: "border-box",
+                }}
+                onKeyDown={(event: any) => {
+                    this.handleKeyDown(event);
+                }}
+                onMouseDown={(event: any) => {
+                    this.handleMouseDown(event, blockRef);
+                }}
+                onMouseUp={(event: any) => {
+                    this.handleMouseUp(event);
+                }}
+                // focus the element so that we can use keyboard event
+                onMouseEnter={(event: any) => {
+                    this.handleMouseEnter(event, sliderRef);
+                }}
+                onMouseLeave={(event: any) => {
+                    this.handleMouseLeave(event, sliderRef, outline);
+                }}
+            >
+                {/* slider bar */}
+                <div
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        backgroundColor: this._getElementAreaRawFillStyle(),
+                    }}
+                ></div>
+                {/* slider block */}
+                <div
+                    ref={blockRef}
+                    onMouseDown={(event: any) => {
+                        this.handleMouseDownOnBlock(event, blockRef, blockHighlightColor, blockWidth, blockColor);
+                    }}
+                    style={{
+                        position: "absolute",
+                        left: this.calcSliderBlockPosition(blockWidth),
+                        top: 0,
+                        width: blockWidth - 2 * shadowWidth,
+                        height: "100%",
+                        boxSizing: 'border-box',
+                        backgroundColor: blockColor,
+                        ...threeDStyleBlock,
+                    }}
+                ></div>
+            </div>
+        );
+    };
+
+
+    // -------------------- helper functions ----------------
+
+    /**
+     * when you click 
+     */
+    calcMotionDirection = (clientX: number, clientY: number, blockRef: any): "positive" | "negative" | "nomove" => {
+        if (blockRef.current === null) {
+            return "positive";
+        }
+        const rect = blockRef.current.getBoundingClientRect();
+        const blockCenterX = rect.left + rect.width / 2;
+        const blockCenterY = rect.top + rect.height / 2;
+        const dx = clientX - blockCenterX;
+        const dy = clientY - blockCenterY;
+        const blockWidth = rect.width;
+
+        let theta = (parseIntAngle(this.getAllStyle()["transform"]) * 3.14159) / 180;
+
+        const x1 = dx * Math.cos(theta) + dy * Math.sin(theta);
+        const y1 = -1 * dx * Math.sin(theta) + dy * Math.cos(theta);
+
+        if (x1 > blockWidth / 2) {
+            return "positive";
+        } else if (x1 < (-1 * blockWidth) / 2) {
+            return "negative";
+        } else {
+            return "nomove";
+        }
+    };
+
+    handleKeyDown = (event: any) => {
+        // only when this div is focused
+        if (this._getChannelAccessRight() < Channel_ACCESS_RIGHTS.READ_WRITE) {
+            return;
+        }
+        if (event.key === "ArrowRight") {
+            this.changeChannelValue("positive");
+        } else if (event.key === "ArrowLeft") {
+            this.changeChannelValue("negative");
+        }
+    }
+
+    handleMouseDown = (event: any, blockRef: any) => {
+        event.preventDefault();
+
+        if (event.button !== 0) {
+            return;
+        }
+        if (this._getChannelAccessRight() < 1.5) {
+            return;
+        }
+
+        const direction = this.calcMotionDirection(getMouseEventClientX(event), getMouseEventClientY(event), blockRef);
+        this.changeChannelValue(direction);
+        this.mouseDownIntervalTimer = setTimeout(() => {
+            const direction = this.calcMotionDirection(getMouseEventClientX(event), getMouseEventClientY(event), blockRef);
+            this.changeChannelValue(direction);
+            clearInterval(this.mouseDownIntervalTimer);
+            clearTimeout(this.mouseDownIntervalTimer);
+            this.mouseDownIntervalTimer = setInterval(() => {
+                const direction = this.calcMotionDirection(getMouseEventClientX(event), getMouseEventClientY(event), blockRef);
+                this.changeChannelValue(direction);
+            }, this.mouseDownDelay / 4);
+        }, this.mouseDownDelay);
+    }
+
+    handleMouseUp = (event: any) => {
+        clearInterval(this.mouseDownIntervalTimer);
+        clearTimeout(this.mouseDownIntervalTimer);
+        this.mouseDownIntervalTimer = undefined;
+    }
+
+    // focus the element so that we can use keyboard event
+    handleMouseEnter = (event: any, sliderRef: any) => {
+        event.preventDefault();
+        if (g_widgets1.isEditing()) {
+            return;
+        }
+        // focus the element for key events
+        (sliderRef.current as any).focus();
+        // outline: thick light grey
+        this.hanldeMouseEnterWriteWidget(event, sliderRef)
+
+    }
+
+    handleMouseLeave = (event: any, sliderRef: any, outline: string) => {
+        // unfocus the element so that keys do not apply
+        (sliderRef.current as any).blur();
+        // key stroke intervals
+        clearInterval(this.mouseDownIntervalTimer);
+        clearTimeout(this.mouseDownIntervalTimer);
+        this.mouseDownIntervalTimer = undefined;
+        // outline: thick light grey disappear
+        this.handleMouseLeaveWriteWidget(event, sliderRef);
+        // keep the thin outline for 3D effect
+        if (sliderRef.current !== null) {
+            sliderRef.current.style["outline"] = outline;
+        }
+    }
+
+    handleMouseDownOnBlock = (event: any, blockRef: any, blockHighlightColor: string, blockWidth: number, blockColor: string) => {
+        // do not propagate up
+
+        if (event.button !== 0) {
+            return;
+        }
+
+        event.stopPropagation();
+
+        const clientX0 = getMouseEventClientX(event);
+        const clientY0 = getMouseEventClientY(event);
+        const channelValue0 = this._getChannelValue(true);
+        if (typeof channelValue0 !== "number") {
+            return;
+        }
+        // block color
+        if (blockRef.current !== null) {
+            blockRef.current.style["backgroundColor"] = blockHighlightColor;
+        }
+
+        this._tmp_handleMouseMove = (event: any) => {
+            this.handleMouseMoveOnSlider(event, clientX0, clientY0, channelValue0, blockWidth);
+        };
+        this._tmp_handleMouseUp = (event: any) => {
+            this.handleMouseUpOnSlider(event, blockRef, blockColor);
+        };
+
+        window.addEventListener("mousemove", this._tmp_handleMouseMove);
+        window.addEventListener("mouseup", this._tmp_handleMouseUp);
+    }
+
+    changeChannelValue = (direction: "positive" | "negative" | "nomove") => {
+        const channelName = this.getChannelNames()[0];
+        try {
+            const channel = g_widgets1.getTcaChannel(channelName);
+            // const channelValue = channel.getValue();
+            const channelValue = g_widgets1.getChannelValue(channelName); // do not use raw = true option, enum choice should not be expanded
+            if (typeof channelValue === "number") {
+                let newChannelValue = channelValue;
+                if (direction === "negative") {
+                    newChannelValue = channelValue - this.getAllText()["stepSize"];
+                } else if (direction === "positive") {
+                    newChannelValue = channelValue + this.getAllText()["stepSize"];
+                } else {
+                    // no move
+                    return;
+                }
+                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+                const dbrData = {
+                    value: newChannelValue,
+                };
+                channel.put(displayWindowId, dbrData, 1);
+            }
+        } catch (e) {
+            Log.error(e);
+        }
+    };
+
+    
     handleMouseUpOnSlider = (event: any, blockRef: any, blockColor: string) => {
         if (blockRef.current !== null) {
             blockRef.current.style["backgroundColor"] = blockColor;
@@ -393,8 +771,7 @@ export class ScaledSlider extends BaseWidget {
     };
 
     handleMouseMoveOnSlider = (event: any, clientX0: number, clientY0: number, channelValue0: number, blockSize: number) => {
-        // const clinetX = event.clientX;
-        // const clinetY = event.clientY;
+
         const clinetX = getMouseEventClientX(event);
         const clinetY = getMouseEventClientY(event);
         const dX0 = clinetX - clientX0;
@@ -422,30 +799,8 @@ export class ScaledSlider extends BaseWidget {
         }
     };
 
-    calcPvLimits = (): [number, number] => {
-        let minPvValue = this.getAllText()["minPvValue"];
-        let maxPvValue = this.getAllText()["maxPvValue"];
-        const channelName = this.getChannelNames()[0];
-        try {
-            const channel = g_widgets1.getTcaChannel(channelName);
-            if (this.getAllText()["usePvLimits"]) {
-                const upper_display_limit = channel.getUpperDisplayLimit();
-                if (upper_display_limit !== undefined && typeof upper_display_limit === "number") {
-                    maxPvValue = upper_display_limit;
-                }
-                const lower_display_limit = channel.getLowerDisplayLimit();
-                if (lower_display_limit !== undefined && typeof lower_display_limit === "number") {
-                    minPvValue = lower_display_limit;
-                }
-            }
-        } catch (e) {
-            Log.error(e);
-        }
-        return [minPvValue, maxPvValue];
-    };
-
     /**
-     * Calculate slider block position in unit of pixel
+     * Calculate slider block position in unit of pixel, used in left:
      */
     calcSliderBlockPosition = (sliderBlockSize: number): number => {
         if (g_widgets1.isEditing()) {
@@ -465,265 +820,6 @@ export class ScaledSlider extends BaseWidget {
         return result;
     };
 
-    /**
-     * Channel value and step size, click to change step size
-     */
-    _ElementValue = () => {
-        // height
-        const valueRegionSize = this.getAllStyle()["fontSize"] + 4;
-        return (
-            <div
-                style={{
-                    // fixed size
-                    width: "100%",
-                    height: valueRegionSize,
-                    position: "relative",
-                    display: "inline-flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    flexShrink: "0",
-                }}
-            >
-                {/* channel value */}
-                <div
-                    style={{
-                        display: "inline-flex",
-                        position: "relative",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        width: "100%",
-                    }}
-                >
-                    <div
-                        style={{
-                            // color: this.getAllStyle()["color"],
-                            color: this._getElementAreaRawTextStyle(),
-                        }}
-                    >{`step=${this.getAllText()["stepSize"]}`}</div>
-                    <div
-                        style={{
-                            // color: this.getAllStyle()["color"],
-                            color: this._getElementAreaRawTextStyle(),
-                        }}
-                    >{`${this._getChannelValueForReadback()} ${this.getAllText().showUnit ? this._getChannelUnit() : ""}`}</div>
-                </div>
-            </div>
-        );
-    };
-
-    _ElementSliderContemporary = () => {
-        const sliderRef = React.useRef<any>(null);
-        const blockRef = React.useRef<any>(null);
-        const blockSize = 14;
-        let blockColor = "rgba(255, 255, 255 ,1)";
-        let blockHighlightColor = "rgba(0, 100, 255, 1)";
-        blockHighlightColor = "rgba(255, 255, 255, 1)";
-        // const backgroundRgbaArray = rgbaStrToRgbaArray(this.getAllStyle()["backgroundColor"]);
-        // if (backgroundRgbaArray[0] + backgroundRgbaArray[1] + backgroundRgbaArray[2] > 384) {
-        // blockColor = "rgba(100, 100, 100, 1)";
-        // }
-        // if (backgroundRgbaArray[0] < 100 && backgroundRgbaArray[1] > 50 && backgroundRgbaArray[1] < 150 && backgroundRgbaArray[2] > 200) {
-        // blockHighlightColor = "rgba(255, 100, 0, 1)";
-        // }
-
-        const calcDirection = (clientX: number, clientY: number): "positive" | "negative" | "nomove" => {
-            if (blockRef.current === null) {
-                return "positive";
-            }
-            const rect = blockRef.current.getBoundingClientRect();
-            const blockCenterX = rect.left + rect.width / 2;
-            const blockCenterY = rect.top + rect.height / 2;
-            const dx = clientX - blockCenterX;
-            const dy = clientY - blockCenterY;
-
-            let theta = (parseIntAngle(this.getAllStyle()["transform"]) * 3.14159) / 180;
-
-            const x1 = dx * Math.cos(theta) + dy * Math.sin(theta);
-            const y1 = -1 * dx * Math.sin(theta) + dy * Math.cos(theta);
-
-            if (x1 > blockSize / 2) {
-                return "positive";
-            } else if (x1 < (-1 * blockSize) / 2) {
-                return "negative";
-            } else {
-                return "nomove";
-            }
-        };
-
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: "100%",
-                    height: blockSize,
-                    position: "relative",
-                    overflow: "visible",
-                    flexShrink: "0",
-                }}
-                onFocus={(event: any) => {
-                    event.preventDefault();
-                    if (!g_widgets1.isEditing()) {
-                        if (sliderRef.current !== null) {
-                            sliderRef.current.style["outlineStyle"] = "solid";
-                            sliderRef.current.style["outlineWidth"] = "3px";
-                            sliderRef.current.style["outlineColor"] = "rgba(105,105,105,1)";
-                            sliderRef.current.style["cursor"] = "pointer";
-                        }
-                    }
-                    // event.target.style["outline"] = "solid 1px red";
-                }}
-                onBlur={(event: any) => {
-                    event.preventDefault();
-                    if (!g_widgets1.isEditing()) {
-                        if (sliderRef.current !== null) {
-                            sliderRef.current.style["outlineStyle"] = this.getAllStyle()["outlineStyle"];
-                            sliderRef.current.style["outlineWidth"] = this.getAllStyle()["outlineWidth"];
-                            sliderRef.current.style["outlineColor"] = this.getAllStyle()["outlineColor"];
-                            sliderRef.current.style["cursor"] = "default";
-                        }
-                    }
-                }}
-                tabIndex={0}
-                onKeyDown={(event: any) => {
-                    // only when this div is focused
-                    if (this._getChannelAccessRight() < 1.5) {
-                        return;
-                    }
-                    if (event.key === "ArrowRight") {
-                        this.changeChannelValue("positive");
-                    } else if (event.key === "ArrowLeft") {
-                        this.changeChannelValue("negative");
-                    }
-                }}
-                onMouseDown={(event: any) => {
-                    event.preventDefault();
-
-                    if (event.button !== 0) {
-                        return;
-                    }
-                    if (this._getChannelAccessRight() < 1.5) {
-                        return;
-                    }
-
-                    const direction = calcDirection(getMouseEventClientX(event), getMouseEventClientY(event));
-                    this.changeChannelValue(direction);
-                    this.mouseDownIntervalTimer = setTimeout(() => {
-                        const direction = calcDirection(getMouseEventClientX(event), getMouseEventClientY(event));
-                        this.changeChannelValue(direction);
-                        clearInterval(this.mouseDownIntervalTimer);
-                        clearTimeout(this.mouseDownIntervalTimer);
-                        this.mouseDownIntervalTimer = setInterval(() => {
-                            const direction = calcDirection(getMouseEventClientX(event), getMouseEventClientY(event));
-                            this.changeChannelValue(direction);
-                        }, this.mouseDownDelay / 4);
-                    }, this.mouseDownDelay);
-                }}
-                onMouseUp={(event: any) => {
-                    clearInterval(this.mouseDownIntervalTimer);
-                    clearTimeout(this.mouseDownIntervalTimer);
-                    this.mouseDownIntervalTimer = undefined;
-                }}
-                // focus the element so that we can use keyboard event
-                onMouseEnter={(event: any) => {
-                    if (!g_widgets1.isEditing()) {
-                        event.preventDefault();
-                        (sliderRef.current as any).focus();
-                        if (this._getChannelAccessRight() < 1.5) {
-                            event.target.style["cursor"] = "not-allowed";
-                        }
-                    }
-                }}
-                onMouseLeave={(event: any) => {
-                    // unfocus the element
-                    (sliderRef.current as any).blur();
-                    clearInterval(this.mouseDownIntervalTimer);
-                    clearTimeout(this.mouseDownIntervalTimer);
-                    this.mouseDownIntervalTimer = undefined;
-                }}
-                ref={sliderRef}
-            >
-                {/* slider bar */}
-                <div
-                    style={{
-                        width: "100%",
-                        height: blockSize / 3,
-                        // backgroundColor: "rgba(180,180,180,1)",
-                        // backgroundColor: this.getAllText()["fillColor"],
-                        backgroundColor: this._getElementAreaRawFillStyle(),
-                        borderRadius: blockSize / 2,
-                        border: "solid 0px black",
-                    }}
-                ></div>
-                {/* slider bar -- value highlight region */}
-                <div
-                    style={{
-                        position: "absolute",
-                        top: blockSize / 3,
-                        left: 0,
-                        width: this.calcSliderBlockPosition(blockSize) + blockSize / 2,
-                        height: blockSize / 3,
-                        // backgroundColor: "rgba(0, 200, 255, 1)",
-                        // backgroundColor: this.getAllText()["fillColor"],
-                        backgroundColor: this._getElementAreaRawFillStyle(),
-                        borderRadius: blockSize / 2,
-                        border: "solid 0px black",
-                    }}
-                ></div>
-                {/* slider block */}
-                <div
-                    ref={blockRef}
-                    onMouseDown={(event: any) => {
-                        // do not propagate up
-
-                        if (event.button !== 0) {
-                            return;
-                        }
-
-                        event.stopPropagation();
-
-                        const clientX0 = getMouseEventClientX(event);
-                        const clientY0 = getMouseEventClientY(event);
-                        const channelValue0 = this._getChannelValue(true);
-                        if (typeof channelValue0 !== "number") {
-                            return;
-                        }
-                        // block color
-                        if (blockRef.current !== null) {
-                            blockRef.current.style["backgroundColor"] = blockHighlightColor;
-                        }
-
-                        this._tmp_handleMouseMove = (event: any) => {
-                            this.handleMouseMoveOnSlider(event, clientX0, clientY0, channelValue0, blockSize);
-                        };
-                        this._tmp_handleMouseUp = (event: any) => {
-                            this.handleMouseUpOnSlider(event, blockRef, blockColor);
-                        };
-
-                        window.addEventListener("mousemove", this._tmp_handleMouseMove);
-                        window.addEventListener("mouseup", this._tmp_handleMouseUp);
-                    }}
-                    style={{
-                        position: "absolute",
-                        left: this.calcSliderBlockPosition(blockSize),
-                        top: 0,
-                        width: blockSize,
-                        height: blockSize,
-                        // backgroundColor: blockColor,
-                        backgroundColor: "white",
-                        borderRadius: blockSize / 2,
-                        border: "solid 0px rgba(0,0,0,1)",
-                        boxShadow: "0px 0px 5px 1px black",
-                    }}
-                ></div>
-            </div>
-        );
-    };
-
-
     atRegularAngle = () => {
         const angle = parseIntAngle(this.getAllStyle()["transform"]);
         if (angle >= 135 && angle < 135 + 180) {
@@ -733,588 +829,44 @@ export class ScaledSlider extends BaseWidget {
         }
     }
 
-    _ElementSliderTraditional = () => {
-        const shadowWidth = 2;
-        // calculate vertical size, fill in the region
-        // value
-        // this.getAllText()["showPvValue"] === true ? this.getAllStyle()["fontSize"] + 4 : 0
-        // label and ticks
-        // this.getAllText()["showLabels"] === true ? scaleTickSize + fontSize : 0
+    calcScaleParam = () => {
+        const allText = this.getAllText();
+        const allStyle = this.getAllStyle();
+        const position = "top";
+        const [min, max] = this.calcPvLimits();
+        const numTickIntervals = allText["numTickIntervals"];
+        const showLabels = allText["showLabels"];
+        const length = allStyle["width"];
+        const scale = "Linear" as "Linear" | "Log10";
+        const color = this._getElementAreaRawTextStyle();
+        const compact = allText["compactScale"];
 
-        const fontSize = this.getAllStyle()["fontSize"];
-        const scaleTickSize = 10 * 0; // fixed number
-        const widgetHeight = this.getAllStyle()["height"];
-        // value region height
-        const heightValue = this.getAllText()["showPvValue"] === true ? this.getAllStyle()["fontSize"] + 4 : 0;
-        // label and tick region height
-        const heightLabel = this.getAllText()["showLabels"] === true ? scaleTickSize + fontSize + 4 : 0;
-        // block height
-        const blockSize = widgetHeight - heightValue - heightLabel - 2 * shadowWidth;
-        // block width
-        const blockWidth = 20;
-
-        const sliderRef = React.useRef<any>(null);
-        const blockRef = React.useRef<any>(null);
-        let blockColor = "rgba(200, 200, 200, 1)";
-        let blockHighlightColor = "rgba(0, 100, 255, 1)";
-        blockHighlightColor = "rgba(215, 215, 215, 1)";
-
-        const calcDirection = (clientX: number, clientY: number): "positive" | "negative" | "nomove" => {
-            if (blockRef.current === null) {
-                return "positive";
-            }
-            const rect = blockRef.current.getBoundingClientRect();
-            const blockCenterX = rect.left + rect.width / 2;
-            const blockCenterY = rect.top + rect.height / 2;
-            const dx = clientX - blockCenterX;
-            const dy = clientY - blockCenterY;
-
-            let theta = (parseIntAngle(this.getAllStyle()["transform"]) * 3.14159) / 180;
-
-            const x1 = dx * Math.cos(theta) + dy * Math.sin(theta);
-            const y1 = -1 * dx * Math.sin(theta) + dy * Math.cos(theta);
-
-            if (x1 > blockWidth / 2) {
-                return "positive";
-            } else if (x1 < (-1 * blockWidth) / 2) {
-                return "negative";
-            } else {
-                return "nomove";
-            }
-        };
-
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: this.getAllStyle()["width"] - 2 * shadowWidth,
-                    height: blockSize,
-                    outline: "solid 1px rgba(100, 100, 250, 0.5)",
-                    borderRight: this.atRegularAngle() ? `solid ${shadowWidth}px rgba(255,255,255,1)` : `solid ${shadowWidth}px rgba(100,100,100,1)`,
-                    borderBottom: this.atRegularAngle() ? `solid ${shadowWidth}px rgba(255,255,255,1)` : `solid ${shadowWidth}px rgba(100,100,100,1)`,
-                    borderLeft: this.atRegularAngle() ? `solid ${shadowWidth}px rgba(100,100,100,1)` : `solid ${shadowWidth}px rgba(255,255,255,1)`,
-                    borderTop: this.atRegularAngle() ? `solid ${shadowWidth}px rgba(100,100,100,1)` : `solid ${shadowWidth}px rgba(255,255,255,1)`,
-                    position: "relative",
-                    overflow: "visible",
-                    flexShrink: "0",
-                }}
-                onFocus={(event: any) => {
-                    event.preventDefault();
-                    if (!g_widgets1.isEditing()) {
-                        if (sliderRef.current !== null) {
-                            sliderRef.current.style["outlineStyle"] = "solid";
-                            sliderRef.current.style["outlineWidth"] = "3px";
-                            sliderRef.current.style["outlineColor"] = "rgba(105,105,105,1)";
-                            sliderRef.current.style["cursor"] = "pointer";
-                        }
-                    }
-                    // event.target.style["outline"] = "solid 1px red";
-                }}
-                onBlur={(event: any) => {
-                    event.preventDefault();
-                    if (!g_widgets1.isEditing()) {
-                        if (sliderRef.current !== null) {
-                            sliderRef.current.style["outline"] = "solid 1px rgba(150,150,150,1)";
-                            sliderRef.current.style["cursor"] = "default";
-                        }
-                    }
-                }}
-                tabIndex={0}
-                onKeyDown={(event: any) => {
-                    // only when this div is focused
-                    if (this._getChannelAccessRight() < 1.5) {
-                        return;
-                    }
-                    if (event.key === "ArrowRight") {
-                        this.changeChannelValue("positive");
-                    } else if (event.key === "ArrowLeft") {
-                        this.changeChannelValue("negative");
-                    }
-                }}
-                onMouseDown={(event: any) => {
-                    event.preventDefault();
-
-                    if (event.button !== 0) {
-                        return;
-                    }
-                    if (this._getChannelAccessRight() < 1.5) {
-                        return;
-                    }
-
-                    const direction = calcDirection(getMouseEventClientX(event), getMouseEventClientY(event));
-                    this.changeChannelValue(direction);
-                    this.mouseDownIntervalTimer = setTimeout(() => {
-                        const direction = calcDirection(getMouseEventClientX(event), getMouseEventClientY(event));
-                        this.changeChannelValue(direction);
-                        clearInterval(this.mouseDownIntervalTimer);
-                        clearTimeout(this.mouseDownIntervalTimer);
-                        this.mouseDownIntervalTimer = setInterval(() => {
-                            const direction = calcDirection(getMouseEventClientX(event), getMouseEventClientY(event));
-                            this.changeChannelValue(direction);
-                        }, this.mouseDownDelay / 4);
-                    }, this.mouseDownDelay);
-                }}
-                onMouseUp={(event: any) => {
-                    clearInterval(this.mouseDownIntervalTimer);
-                    clearTimeout(this.mouseDownIntervalTimer);
-                    this.mouseDownIntervalTimer = undefined;
-                }}
-                // focus the element so that we can use keyboard event
-                onMouseEnter={(event: any) => {
-                    if (!g_widgets1.isEditing()) {
-                        event.preventDefault();
-                        (sliderRef.current as any).focus();
-                        if (this._getChannelAccessRight() < 1.5) {
-                            event.target.style["cursor"] = "not-allowed";
-                        }
-                    }
-                }}
-                onMouseLeave={(event: any) => {
-                    // unfocus the element
-                    (sliderRef.current as any).blur();
-                    clearInterval(this.mouseDownIntervalTimer);
-                    clearTimeout(this.mouseDownIntervalTimer);
-                    this.mouseDownIntervalTimer = undefined;
-                }}
-                ref={sliderRef}
-            >
-                {/* slider bar */}
-                <div
-                    style={{
-                        width: "100%",
-                        height: blockSize,
-                        // backgroundColor: "rgba(180,180,180,1)",
-                        // backgroundColor: this.getAllText()["fillColor"],
-                        backgroundColor: this._getElementAreaRawFillStyle(),
-                        // borderRadius: 2,
-                        border: "solid 0px black",
-                    }}
-                ></div>
-                {/* slider bar -- value highlight region */}
-                {/* <div
-                    style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: this.calcSliderBlockPosition(blockWidth) + blockWidth / 2,
-                        height: blockSize,
-                        backgroundColor: this.getAllText()["sliderBarBackgroundColor1"],
-                        border: "solid 0px black",
-                    }}
-                ></div> */}
-                {/* slider block */}
-                <div
-                    ref={blockRef}
-                    onMouseDown={(event: any) => {
-                        // do not propagate up
-
-                        if (event.button !== 0) {
-                            return;
-                        }
-
-                        event.stopPropagation();
-
-                        const clientX0 = getMouseEventClientX(event);
-                        const clientY0 = getMouseEventClientY(event);
-                        const channelValue0 = this._getChannelValue(true);
-                        if (typeof channelValue0 !== "number") {
-                            return;
-                        }
-                        // block color
-                        if (blockRef.current !== null) {
-                            blockRef.current.style["backgroundColor"] = blockHighlightColor;
-                        }
-
-                        this._tmp_handleMouseMove = (event: any) => {
-                            this.handleMouseMoveOnSlider(event, clientX0, clientY0, channelValue0, blockWidth);
-                        };
-                        this._tmp_handleMouseUp = (event: any) => {
-                            this.handleMouseUpOnSlider(event, blockRef, blockColor);
-                        };
-
-                        window.addEventListener("mousemove", this._tmp_handleMouseMove);
-                        window.addEventListener("mouseup", this._tmp_handleMouseUp);
-                    }}
-                    style={{
-                        position: "absolute",
-                        left: this.calcSliderBlockPosition(blockWidth),
-                        top: 0,
-                        width: blockWidth - 2 * shadowWidth,
-                        height: blockSize - 2 * shadowWidth,
-                        backgroundColor: blockColor,
-                        // borderRadius: 2,
-                        // border: "solid 0px rgba(0,0,0,1)",
-                        // boxShadow: "0px 0px 5px 1px black",
-                        borderLeft: this.atRegularAngle() ? `solid ${shadowWidth}px rgba(255,255,255,1)` : `solid ${shadowWidth}px rgba(100,100,100,1)`,
-                        borderTop: this.atRegularAngle() ? `solid ${shadowWidth}px rgba(255,255,255,1)` : `solid ${shadowWidth}px rgba(100,100,100,1)`,
-                        borderRight: this.atRegularAngle() ? `solid ${shadowWidth}px rgba(100,100,100,1)` : `solid ${shadowWidth}px rgba(255,255,255,1)`,
-                        borderBottom: this.atRegularAngle() ? `solid ${shadowWidth}px rgba(100,100,100,1)` : `solid ${shadowWidth}px rgba(255,255,255,1)`,
-                    }}
-                ></div>
-            </div>
-        );
-    };
-
-    /**
-     * Line, ticks, and values
-     */
-    _ElementScaleContemporary = () => {
-        // including: 2px blank on top, horizontal line width, and ticks
-        const scaleTickSize = 10;
-        const fullSize = this.getAllStyle()["width"];
-        const elementRef = React.useRef<any>(null);
-
-        const pvLimits = this.calcPvLimits();
-
-        const calcTickValues = () => {
-            const [valueMin, valueMax] = pvLimits;
-            return calcTicks(valueMin, valueMax, this.getAllText()["numTickIntervals"] + 1, {scale: "Linear"});
-        };
-        const tickValues = calcTickValues();
-
-        /**
-         * Calculate tick position in unit of pixel
-         */
-        const calcTickPositions = (): number[] => {
-            const result: number[] = [];
-            const [valueMin, valueMax] = pvLimits;
-            const k = fullSize / (valueMax - valueMin);
-            for (let tickValue of tickValues) {
-                result.push(k * (tickValue - valueMin));
-            }
-            return result;
+        return {
+            min: min,
+            max: max,
+            numIntervals: numTickIntervals,
+            position: position as "left" | "top" | "bottom" | "right",
+            showLabels: showLabels,
+            length: length,
+            scale: scale,
+            color: color,
+            compact: compact,
         }
 
-        const tickPositions = calcTickPositions();
-        const refinedTicks = refineTicks(tickValues, this.getAllStyle()["fontSize"] * 0.5, fullSize, "horizontal");
-        return (
-            <div
-                ref={elementRef}
-                style={{
-                    width: "100%",
-                    height: this.getAllStyle()["fontSize"] + scaleTickSize + 4,
-                    position: "relative",
-                    display: "inline-flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexShrink: "0",
-                }}
-            >
-                {/* ticks and line */}
-                <svg
-                    width="100%"
-                    height="100%"
-                    x="0"
-                    y="0"
-                    style={{
-                        position: "absolute",
-                        overflow: "visible",
-                    }}
-                >
-                    {/* line, 2px gap above */}
-                    <path
-                        d={`M 0 2 L ${fullSize} 2`}
-                        strokeWidth="2"
-                        //  stroke={this.getAllStyle()["color"]} 
-                        stroke={this._getElementAreaRawTextStyle()}
-                        fill="none"
-                    >
-                    </path>
+    }
 
-                    {/* ticks */}
-                    {tickPositions.map((position: number, index: number) => {
-                        if (this.getAllText()["compactScale"]) {
-                            if (!(index === 0 || index === tickPositions.length - 1)) {
-                                return null;
-                            }
-                        }
-
-                        return (
-                            <>
-                                <path
-                                    d={`M ${position} 2 L ${position} ${scaleTickSize}`}
-                                    strokeWidth="2"
-                                    // stroke={this.getAllStyle()["color"]}
-                                    stroke={this._getElementAreaRawTextStyle()}
-                                    fill="none"
-                                ></path>
-                            </>
-                        );
-                    })}
-                </svg>
-                {/* labels */}
-                {
-                    tickPositions.map((value: number, index: number) => {
-                        if (this.getAllText()["compactScale"]) {
-                            if (!(index === 0 || index === tickPositions.length - 1)) {
-                                return null;
-                            }
-                        }
-
-                        return (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    left: value,
-                                    // top: scaleTickSize,
-                                    top: 5 + this.getAllStyle()["fontSize"],
-                                    width: 0,
-                                    height: 0,
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: index === 0 ? "flex-start" : index === tickPositions.length - 1 ? "flex-end" : "center",
-                                    // color: this.getAllStyle()["color"],
-                                    color: this._getElementAreaRawTextStyle(),
-                                }}
-                            >
-                                {/* {calcTickValues()[index]} */}
-                                {refinedTicks[index]}
-                            </div>
-                        );
-                    })
-                }
-                {
-                    (() => {
-                        if (this.getAllText()["compactScale"]) {
-                            return (
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        left: this.getAllStyle()["width"] / 2,
-                                        top: scaleTickSize,
-                                        width: 0,
-                                        height: 0,
-                                        display: "inline-flex",
-                                        alignItems: "flex-start",
-                                        justifyContent: "center",
-                                        color: this.getAllStyle()["color"],
-                                    }}
-                                >
-                                    {`${this._getChannelValueForReadback()}`}
-                                </div>
-                            );
-                        } else {
-                            return null;
-                        }
-                    })()
-                }
-            </div >
-        );
+    openSettings = () => {
+        this.showSettings = true;
+        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+        g_flushWidgets();
     };
 
-
-    /**
-     * Line, ticks, and values
-     */
-    _ElementScaleTraditional = () => {
-
-        const pvLimits = this.calcPvLimits();
-        // the number of ticks may be different from the (this.getAllText()["numTickIntervals"] + 1)
-        const calcTickValues = () => {
-            const [valueMin, valueMax] = pvLimits;
-            return calcTicks(valueMin, valueMax, this.getAllText()["numTickIntervals"] + 1, {scale: "Linear"});
-        };
-        const tickValues = calcTickValues();
-
-        // including: 2px blank on top, horizontal line width, and ticks
-        // line height
-        const scaleTickSize = 10;
-        const fullSize = this.getAllStyle()["width"];
-        const elementRef = React.useRef<any>(null);
-        const fontSize = this.getAllStyle()["fontSize"];
-
-        /**
-         * Calculate tick position in unit of pixel
-         */
-        const calcTickPositions = (): number[] => {
-            const result: number[] = [];
-            const [valueMin, valueMax] = pvLimits;
-            const k = fullSize / (valueMax - valueMin);
-            for (let tickValue of tickValues) {
-                result.push(k * (tickValue - valueMin));
-            }
-            return result;
-        }
-
-        const tickPositions = calcTickPositions();
-        const refinedTicks = refineTicks(calcTickValues(), this.getAllStyle()["fontSize"] * 0.5, fullSize, "horizontal");
-
-        return (
-            <div
-                ref={elementRef}
-                style={{
-                    width: "100%",
-                    height: this.getAllStyle()["fontSize"] + scaleTickSize * 0 + 4,
-                    position: "relative",
-                    display: "inline-flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexShrink: "0",
-                }}
-            >
-                {/* ticks and line */}
-                <svg
-                    width="100%"
-                    height="100%"
-                    x="0"
-                    y="0"
-                    style={{
-                        position: "absolute",
-                        overflow: "visible",
-                    }}
-                >
-                    {/* long line, 2px gap above */}
-                    {/* <path d={`M 0 ${scaleTickSize + fontSize} L ${fullSize} ${scaleTickSize + fontSize}`} strokeWidth="2" stroke={this.getAllStyle()["color"]} fill="none"></path> */}
-
-                    {/* ticks */}
-                    {tickPositions.map((position: number, index: number) => {
-                        if (this.getAllText()["compactScale"]) {
-                            if (!(index === 0 || index === tickPositions.length - 1)) {
-                                return null;
-                            }
-                        }
-                        return null;
-                    })}
-                </svg>
-                {/* labels */}
-                {tickPositions.map((value: number, index: number) => {
-                    if (this.getAllText()["compactScale"]) {
-                        if (!(index === 0 || index === tickPositions.length - 1)) {
-                            return null;
-                        }
-                    }
-                    return (
-                        <div
-                            style={{
-                                position: "absolute",
-                                left: value,
-                                top: fontSize / 2,
-                                width: 0,
-                                height: 0,
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: index === 0 ? "flex-start" : index === this.getAllText()["numTickIntervals"] ? "flex-end" : "center",
-                                // color: this.getAllStyle()["color"],
-                                color: this._getElementAreaRawTextStyle(),
-                            }}
-                        >
-                            {/* {calcTickValues()[index]} */}
-                            {refinedTicks[index]}
-                        </div>
-                    );
-                })}
-                {(() => {
-                    if (this.getAllText()["compactScale"]) {
-                        return (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    left: this.getAllStyle()["width"] / 2,
-                                    // top: scaleTickSize,
-                                    top: fontSize / 2,
-                                    width: 0,
-                                    height: 0,
-                                    display: "inline-flex",
-                                    // alignItems: "flex-start",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    // color: this.getAllStyle()["color"],
-                                    color: this._getElementAreaRawTextStyle(),
-                                }}
-                            >
-                                {`${this._getChannelValueForReadback()}`}
-                            </div>
-                        );
-                    } else {
-                        return null;
-                    }
-                })()}
-            </div>
-        );
-    };
-
-    // concretize abstract method
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
-
-    // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = (raw: boolean = false) => {
-        const value = this._getFirstChannelValue(raw);
-        if (value === undefined) {
-            return "";
-        } else {
-            return value;
-        }
-    };
-
-    // special function for readback value
-    // the above _getChannelValue() is used for computing the slide bar position
-    _getChannelValueForReadback = (raw: boolean = false) => {
-        const channelValue = this._getFirstChannelValue(raw);
-        if (typeof channelValue === "number") {
-            const scale = Math.max(this.getAllText()["scale"], 0);
-            const format = this.getAllText()["format"];
-            if (format === "decimal") {
-                return channelValue.toFixed(scale);
-            } else if (format === "default") {
-                const channelName = this.getChannelNames()[0];
-                const defaultScale = g_widgets1.getChannelPrecision(channelName);
-                if (defaultScale !== undefined) {
-                    return channelValue.toFixed(defaultScale);
-                } else {
-                    return channelValue.toFixed(scale);
-                }
-            } else if (format === "exponential") {
-                return channelValue.toExponential(scale);
-            } else if (format === "hexadecimal") {
-                return `0x${channelValue.toString(16)}`;
-            } else {
-                return channelValue;
-            }
-        } else {
-            return channelValue;
-        }
-    };
-
-    // _getChannelValue = () => {
-    // 	return this._getFirstChannelValue();
-    // };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
-        }
-    };
-    _getChannelAccessRight = () => {
-        return this._getFirstChannelAccessRight();
+    closeSettings = () => {
+        this.showSettings = false;
+        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+        g_flushWidgets();
     };
 
     // -------------------------- tdl -------------------------------
