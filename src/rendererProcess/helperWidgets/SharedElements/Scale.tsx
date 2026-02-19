@@ -19,6 +19,8 @@ export const Scale = ({ min, max, numIntervals, position, show, length, scale, c
         return null;
     }
 
+    console.log("min max", min, max)
+
     if (position === "left") {
         return (
             <ScaleLeft

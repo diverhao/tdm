@@ -28,9 +28,13 @@ export class ScaledSlider extends BaseWidget {
     readonly sliderBlockPercentage = 50;
     showSettings: boolean = false;
     mouseDownIntervalTimer: any = undefined;
-    readonly mouseDownDelay: number = 500; // ms
+    keyDownIntervalTimer: any = undefined;
+    readonly mouseDownDelay: number = 1000; // ms
     _tmp_handleMouseMove: any;
     _tmp_handleMouseUp: any;
+    _dragThrottleTimer: any = undefined;
+    _pendingDragValue: number | undefined = undefined;
+    _isDragging: boolean = false;
 
     _rules: ScaledSliderRules;
 
@@ -458,6 +462,9 @@ export class ScaledSlider extends BaseWidget {
                 onKeyDown={(event: any) => {
                     this.handleKeyDown(event);
                 }}
+                onKeyUp={(event: any) => {
+                    this.handleKeyUp(event);
+                }}
                 onMouseDown={(event: any) => {
                     this.handleMouseDown(event, blockRef);
                 }}
@@ -559,6 +566,9 @@ export class ScaledSlider extends BaseWidget {
                 onKeyDown={(event: any) => {
                     this.handleKeyDown(event);
                 }}
+                onKeyUp={(event: any) => {
+                    this.handleKeyUp(event);
+                }}
                 onMouseDown={(event: any) => {
                     this.handleMouseDown(event, blockRef);
                 }}
@@ -606,7 +616,7 @@ export class ScaledSlider extends BaseWidget {
     // -------------------- helper functions ----------------
 
     /**
-     * when you click 
+     * calculate which direction the value should go when mouse is down
      */
     calcMotionDirection = (clientX: number, clientY: number, blockRef: any): "positive" | "negative" | "nomove" => {
         if (blockRef.current === null) {
@@ -633,54 +643,117 @@ export class ScaledSlider extends BaseWidget {
         }
     };
 
-    handleKeyDown = (event: any) => {
-        // only when this div is focused
-        if (this._getChannelAccessRight() < Channel_ACCESS_RIGHTS.READ_WRITE) {
+    changeChannelValue = (direction: "positive" | "negative" | "nomove") => {
+        const channelName = this.getChannelNames()[0];
+        const currentValue = this._getChannelValue();
+        if (typeof currentValue !== "number") {
             return;
         }
-        if (event.key === "ArrowRight") {
-            this.changeChannelValue("positive");
-        } else if (event.key === "ArrowLeft") {
-            this.changeChannelValue("negative");
+        const stepSize = this.getAllText()["stepSize"];
+        if (typeof stepSize !== "number") {
+            return;
         }
+        const dValue = direction === "positive" ? stepSize : direction === "negative" ? -1 * stepSize : 0;
+        if (dValue === 0) {
+            return;
+        }
+        const targetValue = currentValue + dValue;
+        this.putChannelValue(channelName, targetValue);
+    };
+
+    /**
+     * Handle arrow key press with custom repeat timing.
+     * 
+     * Ignores the browser's built-in key auto-repeat. Instead, on the first
+     * keydown, changes the value immediately, then after an initial delay
+     * (mouseDownDelay), repeats at a faster rate (mouseDownDelay / 4) — same
+     * timing as handleMouseDown.
+     */
+    handleKeyDown = (event: any) => {
+        const key = event.key;
+        if (key === undefined) {
+            return;
+        }
+
+        // ignore browser auto-repeat, we handle our own
+        if (event.repeat) {
+            return;
+        }
+
+        const accessRight = this._getChannelAccessRight();
+        if (accessRight < Channel_ACCESS_RIGHTS.READ_WRITE) {
+            return;
+        }
+
+        let direction: "positive" | "negative" | "nomove" = "nomove";
+        if (key === "ArrowRight") {
+            direction = "positive";
+        } else if (key === "ArrowLeft") {
+            direction = "negative";
+        } else {
+            return;
+        }
+
+        // immediate change
+        this.changeChannelValue(direction);
+
+        // after initial delay, repeat using recursive setTimeout
+        const repeat = () => {
+            this.changeChannelValue(direction);
+            this.keyDownIntervalTimer = setTimeout(repeat, this.mouseDownDelay / 4);
+        };
+        this.keyDownIntervalTimer = setTimeout(repeat, this.mouseDownDelay);
+    }
+
+    handleKeyUp = (event: any) => {
+        clearTimeout(this.keyDownIntervalTimer);
+        this.keyDownIntervalTimer = undefined;
     }
 
     handleMouseDown = (event: any, blockRef: any) => {
         event.preventDefault();
-
-        if (event.button !== 0) {
-            return;
-        }
-        if (this._getChannelAccessRight() < 1.5) {
-            return;
-        }
+        if (event.button !== 0) return;
+        if (this._getChannelAccessRight() < 1.5) return;
 
         const direction = this.calcMotionDirection(getMouseEventClientX(event), getMouseEventClientY(event), blockRef);
+
+        // Immediate change
         this.changeChannelValue(direction);
-        this.mouseDownIntervalTimer = setTimeout(() => {
-            const direction = this.calcMotionDirection(getMouseEventClientX(event), getMouseEventClientY(event), blockRef);
+
+        // After initial delay, repeat using recursive setTimeout
+        const repeat = () => {
             this.changeChannelValue(direction);
-            clearInterval(this.mouseDownIntervalTimer);
-            clearTimeout(this.mouseDownIntervalTimer);
-            this.mouseDownIntervalTimer = setInterval(() => {
-                const direction = this.calcMotionDirection(getMouseEventClientX(event), getMouseEventClientY(event), blockRef);
-                this.changeChannelValue(direction);
-            }, this.mouseDownDelay / 4);
-        }, this.mouseDownDelay);
-    }
+            this.mouseDownIntervalTimer = setTimeout(repeat, this.mouseDownDelay / 4);
+        };
+
+        this.mouseDownIntervalTimer = setTimeout(repeat, this.mouseDownDelay);
+    };
 
     handleMouseUp = (event: any) => {
-        clearInterval(this.mouseDownIntervalTimer);
         clearTimeout(this.mouseDownIntervalTimer);
         this.mouseDownIntervalTimer = undefined;
     }
 
-    // focus the element so that we can use keyboard event
+    /**
+     * Handle mouse entering the slider area.
+     * 
+     * Focuses the slider element so that it can receive keyboard events
+     * (ArrowRight/ArrowLeft). Also applies a thick outline via 
+     * hanldeMouseEnterWriteWidget() to visually indicate the slider is active.
+     * 
+     * Does nothing in editing mode (when the display is being designed).
+     */
     handleMouseEnter = (event: any, sliderRef: any) => {
         event.preventDefault();
+
         if (g_widgets1.isEditing()) {
             return;
         }
+
+        if (sliderRef.current === null) {
+            return;
+        }
+
         // focus the element for key events
         (sliderRef.current as any).focus();
         // outline: thick light grey
@@ -688,21 +761,45 @@ export class ScaledSlider extends BaseWidget {
 
     }
 
+    /**
+     * Handle mouse leaving the slider area. Cleans up all active state:
+     * 
+     * (1) Blur the slider element so it no longer receives keyboard events
+     * 
+     * (2) Clear any active mouse-hold or key-hold repeat timers
+     * 
+     * (3) Remove the thick active outline via handleMouseLeaveWriteWidget()
+     * 
+     * (4) Restore the default outline (e.g. thin 3D outline for traditional
+     *     appearance, or "none" for contemporary)
+     */
     handleMouseLeave = (event: any, sliderRef: any, outline: string) => {
-        // unfocus the element so that keys do not apply
+        if (sliderRef.current === null) {
+            return;
+        }
+        // (1)
         (sliderRef.current as any).blur();
-        // key stroke intervals
-        clearInterval(this.mouseDownIntervalTimer);
+        // (2)
         clearTimeout(this.mouseDownIntervalTimer);
+        clearTimeout(this.keyDownIntervalTimer);
         this.mouseDownIntervalTimer = undefined;
-        // outline: thick light grey disappear
+        this.keyDownIntervalTimer = undefined;
+        // (3)
         this.handleMouseLeaveWriteWidget(event, sliderRef);
-        // keep the thin outline for 3D effect
+        // (4)
         if (sliderRef.current !== null) {
             sliderRef.current.style["outline"] = outline;
         }
     }
 
+    /**
+     * Start dragging the slider block.
+     * 
+     * Sets `_isDragging = true` so that during the drag, the block position is
+     * controlled by direct DOM manipulation (immediate visual feedback) rather
+     * than by React re-renders from channel readback (which would lag behind).
+     * Channel value puts are throttled to `mouseDownDelay / 4` interval.
+     */
     handleMouseDownOnBlock = (event: any, blockRef: any, blockHighlightColor: string, blockWidth: number, blockColor: string) => {
         // do not propagate up
 
@@ -723,8 +820,11 @@ export class ScaledSlider extends BaseWidget {
             blockRef.current.style["backgroundColor"] = blockHighlightColor;
         }
 
+        this._isDragging = true;
+        this._pendingDragValue = undefined;
+
         this._tmp_handleMouseMove = (event: any) => {
-            this.handleMouseMoveOnSlider(event, clientX0, clientY0, channelValue0, blockWidth);
+            this.handleMouseMoveOnSlider(event, clientX0, clientY0, channelValue0, blockWidth, blockRef);
         };
         this._tmp_handleMouseUp = (event: any) => {
             this.handleMouseUpOnSlider(event, blockRef, blockColor);
@@ -734,73 +834,104 @@ export class ScaledSlider extends BaseWidget {
         window.addEventListener("mouseup", this._tmp_handleMouseUp);
     }
 
-    changeChannelValue = (direction: "positive" | "negative" | "nomove") => {
-        const channelName = this.getChannelNames()[0];
-        try {
-            const channel = g_widgets1.getTcaChannel(channelName);
-            // const channelValue = channel.getValue();
-            const channelValue = g_widgets1.getChannelValue(channelName); // do not use raw = true option, enum choice should not be expanded
-            if (typeof channelValue === "number") {
-                let newChannelValue = channelValue;
-                if (direction === "negative") {
-                    newChannelValue = channelValue - this.getAllText()["stepSize"];
-                } else if (direction === "positive") {
-                    newChannelValue = channelValue + this.getAllText()["stepSize"];
-                } else {
-                    // no move
-                    return;
-                }
-                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                const dbrData = {
-                    value: newChannelValue,
-                };
-                channel.put(displayWindowId, dbrData, 1);
-            }
-        } catch (e) {
-            Log.error(e);
-        }
-    };
-
-    
+    /**
+     * Finish dragging the slider block.
+     * 
+     * Puts the final pending value (if any), clears the throttle timer, and
+     * resets `_isDragging` so that subsequent re-renders sync the block
+     * position to the channel readback value.
+     */
     handleMouseUpOnSlider = (event: any, blockRef: any, blockColor: string) => {
+        // put the final pending value
+        if (this._pendingDragValue !== undefined) {
+            this.putDragValue(this._pendingDragValue);
+            this._pendingDragValue = undefined;
+        }
+        // clear throttle timer
+        clearTimeout(this._dragThrottleTimer);
+        this._dragThrottleTimer = undefined;
+        // reset drag state — next re-render will sync block to readback
+        this._isDragging = false;
+        // restore block color
         if (blockRef.current !== null) {
             blockRef.current.style["backgroundColor"] = blockColor;
         }
         window.removeEventListener("mousemove", this._tmp_handleMouseMove);
         window.removeEventListener("mouseup", this._tmp_handleMouseUp);
+        this._tmp_handleMouseMove = undefined;
+        this._tmp_handleMouseUp = undefined;
     };
 
-    handleMouseMoveOnSlider = (event: any, clientX0: number, clientY0: number, channelValue0: number, blockSize: number) => {
+    /**
+     * Handle mouse drag on the slider block.
+     * 
+     * (1) Calculates the new channel value from mouse displacement.
+     * (2) Moves the block position immediately via direct DOM manipulation
+     *     (`blockRef.current.style.left`) for instant visual feedback.
+     * (3) Throttles `channel.put()` calls to `mouseDownDelay / 4` interval
+     *     to avoid overwhelming the channel with too many writes.
+     */
+    handleMouseMoveOnSlider = (event: any, clientX0: number, clientY0: number, channelValue0: number, blockSize: number, blockRef: any) => {
 
-        const clinetX = getMouseEventClientX(event);
-        const clinetY = getMouseEventClientY(event);
-        const dX0 = clinetX - clientX0;
-        const dY0 = clinetY - clientY0;
+        const clientX = getMouseEventClientX(event);
+        const clientY = getMouseEventClientY(event);
+        const dX0 = clientX - clientX0;
+        const dY0 = clientY - clientY0;
 
         let theta = (parseIntAngle(this.getAllStyle()["transform"]) * 3.14159) / 180;
 
         const dX = dX0 * Math.cos(theta) + dY0 * Math.sin(theta);
-        const dY = -1 * dX0 * Math.sin(theta) + dY0 * Math.cos(theta);
 
+        const [minChannelValue, maxChannelValue] = this.calcPvLimits();
+        const fullSize = this.getAllStyle()["width"] - blockSize;
+        const dChannelValue = (dX * (maxChannelValue - minChannelValue)) / fullSize;
+        const newChannelValue = Math.min(Math.max(channelValue0 + dChannelValue, minChannelValue), maxChannelValue);
+
+        // (1) move block position immediately via DOM
+        if (blockRef.current !== null) {
+            const newLeft = ((newChannelValue - minChannelValue) / (maxChannelValue - minChannelValue)) * fullSize;
+            const clampedLeft = Math.min(Math.max(newLeft, 0), fullSize);
+            blockRef.current.style.left = `${clampedLeft}px`;
+        }
+
+        // (2) throttle channel puts
+        this._pendingDragValue = newChannelValue;
+        if (this._dragThrottleTimer === undefined) {
+            this.putDragValue(newChannelValue);
+            this._pendingDragValue = undefined;
+            this._dragThrottleTimer = setTimeout(() => {
+                this._dragThrottleTimer = undefined;
+                // if a newer value arrived while waiting, put it now
+                if (this._pendingDragValue !== undefined) {
+                    this.putDragValue(this._pendingDragValue);
+                    this._pendingDragValue = undefined;
+                }
+            }, this.mouseDownDelay / 4);
+        }
+    };
+
+    /**
+     * Put a channel value during drag. Extracted so it can be called from
+     * both the throttle callback and handleMouseUpOnSlider.
+     */
+    putDragValue = (value: number) => {
         try {
             const channelName = this.getChannelNames()[0];
             const channel = g_widgets1.getTcaChannel(channelName);
             const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-            let dChannelValue = 0;
-            const [minChannelValue, maxChannelValue] = this.calcPvLimits();
-            dChannelValue = (dX * (maxChannelValue - minChannelValue)) / (this.getAllStyle()["width"] - blockSize);
-            const newChannelValue = Math.min(Math.max(channelValue0 + dChannelValue, minChannelValue), maxChannelValue);
-            const dbrData = {
-                value: newChannelValue,
-            };
-            channel.put(displayWindowId, dbrData, 1);
+            channel.put(displayWindowId, { value: value }, 1);
         } catch (e) {
             Log.error(e);
         }
     };
 
     /**
-     * Calculate slider block position in unit of pixel, used in left:
+     * Calculate slider block position in unit of pixel, used in CSS left.
+     * 
+     * During a drag (`_isDragging === true`), returns -1 as a sentinel value.
+     * The block position is managed by direct DOM manipulation in
+     * handleMouseMoveOnSlider for immediate feedback. React re-renders during
+     * drag should not overwrite the DOM-set position.
      */
     calcSliderBlockPosition = (sliderBlockSize: number): number => {
         if (g_widgets1.isEditing()) {
@@ -829,6 +960,9 @@ export class ScaledSlider extends BaseWidget {
         }
     }
 
+    /**
+     * calculate the parameters for <Scale />
+     */
     calcScaleParam = () => {
         const allText = this.getAllText();
         const allStyle = this.getAllStyle();
@@ -840,7 +974,6 @@ export class ScaledSlider extends BaseWidget {
         const scale = "Linear" as "Linear" | "Log10";
         const color = this._getElementAreaRawTextStyle();
         const compact = allText["compactScale"];
-
         return {
             min: min,
             max: max,

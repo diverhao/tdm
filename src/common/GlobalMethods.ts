@@ -424,14 +424,11 @@ export const calcTickPositions = (tickValues: number[], minPvValue: number, maxP
             result.push((1 - ((tickValue - minPvValue) / (maxPvValue - minPvValue))) * fullSize);
         }
     } else {
-        const numTickIntervals = tickValues.length - 1;
-        const d = fullSize / numTickIntervals;
-        for (let ii = 0; ii <= numTickIntervals; ii++) {
-            result.push(fullSize - ii * d);
+        for (const tickValue of tickValues) {
+            result.push((1 - ((tickValue - minPvValue) / (maxPvValue - minPvValue))) * fullSize);
         }
     }
     if (direction === "horizontal") {
-        console.log("value, length", result, length)
         result.forEach((value, index) => {result[index] = fullSize - value});
     }
     return result;

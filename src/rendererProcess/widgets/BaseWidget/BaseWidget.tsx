@@ -2152,7 +2152,6 @@ export abstract class BaseWidget {
             }
 
         }
-
         return [minPvValue, maxPvValue];
     };
 
