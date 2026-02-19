@@ -174,7 +174,6 @@ export class BooleanButton extends BaseWidget {
                     if (elementRef.current !== null) {
                         elementRef.current.style["outline"] = outline;
                     }
-
                 }}
             >
                 <div

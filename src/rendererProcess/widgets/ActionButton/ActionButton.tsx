@@ -7,7 +7,6 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ActionButtonRules } from "./ActionButtonRules";
 import path from "path";
-import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
 
@@ -78,6 +77,7 @@ export type type_ActionButton_tdl = {
     channelNames: string[];
     groupNames: string[];
     rules: type_rules_tdl;
+    // ActionButton specific
     actions: type_actions_tdl;
 };
 
@@ -118,32 +118,33 @@ export class ActionButton extends BaseWidget {
 
         this.updateAllStyleAndText();
 
+        // in contemporary style, the button has round corners
+        const borderRadius = this.getAllText()["appearance"] === "traditional" ? 0 : 3;
+
         return (
-            <ErrorBoundary style={{ ...this.getStyle(), backgroundColor: "rgba(0,0,0,0)" }} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this._sidebar?.getElement() : null}
-                </>
+            <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
+                <div style={{ ...this.getElementBodyRawStyle(), borderRadius: borderRadius }}>
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this._sidebar?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    // Text area and resizers
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={{ ...this.getElementBodyRawStyle(), borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 3, overflow: "visible" }}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+
+        const allText = this.getAllText();
+
+        const whiteSpace = allText.wrapWord ? "normal" : "pre";
+        const justifyContent = allText.horizontalAlign;
+        const alignItems = allText.verticalAlign;
+        const outline = this._getElementAreaRawOutlineStyle();
+        const color = this._getElementAreaRawTextStyle();
+        const borderRadius = this.getAllText()["appearance"] === "traditional" ? 0 : 3;
+        const backgroundColor = this._getElementAreaRawBackgroundStyle();
+
         return (
-            // <div
             <div
                 style={{
                     display: "inline-flex",
@@ -153,19 +154,14 @@ export class ActionButton extends BaseWidget {
                     height: "100%",
                     userSelect: "none",
                     overflow: "visible",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllStyle().fontFamily,
-                    fontSize: this.getAllStyle().fontSize,
-                    fontStyle: this.getAllStyle().fontStyle,
-                    fontWeight: this.getAllStyle().fontWeight,
-                    outline: this._getElementAreaRawOutlineStyle(),
-                    color: this._getElementAreaRawTextStyle(),
-                    borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 3,
-                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    outline: outline,
+                    color: color,
+                    borderRadius: borderRadius,
+                    backgroundColor: backgroundColor,
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
@@ -173,6 +169,9 @@ export class ActionButton extends BaseWidget {
             </div>
         );
     };
+
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
     /**
      * If there is 0 action, show getAllText()["text"]. Click does not have any response. <br>
@@ -186,355 +185,217 @@ export class ActionButton extends BaseWidget {
     _ElementActionButton = () => {
         // const [showDropDown, setShowDropDown] = React.useState(false);
         const elementRef = React.useRef<any>(null);
-        const selectRef = React.useRef<any>(null);
-        const [dropDownActivated, setDropDownActivated] = React.useState(false);
-        this.setDropDownActivated = setDropDownActivated;
 
-        const shadowWidth = 2;
-        const calcWidth = () => {
-            const width = this.getAllStyle()["width"];
-            if (this.getAllText()["appearance"] === "traditional") {
-                return width - 2 * shadowWidth;
-            } else {
-                return width;
-            }
-        }
-        const calcHeight = () => {
-            const height = this.getAllStyle()["height"];
-            if (this.getAllText()["appearance"] === "traditional") {
-                return height - 2 * shadowWidth;
-            } else {
-                return height;
-            }
-        }
+        // 3D shadow
+        const threeDStyle = this.get3dButtonStyle(false);
 
-        const highlightColor = (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false) ? "rgba(0,0,0,0)" : "rgba(255,255,255,1)";
-        const shadowColor = (this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false) ? "rgba(0,0,0,0)" : "rgba(100,100,100,1)";
+        const outline = this.calcOutline();
 
-        const calcBorderBottomRight = () => {
-            if (this.getAllText()["appearance"] === "traditional") {
-                return `solid ${shadowWidth}px ${shadowColor}`;
-            } else {
-                return "none";
-            }
-        }
+        return (
+            <div
+                ref={elementRef}
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    ...threeDStyle,
+                    // override the threeDStyle width and height
+                    width: "100%",
+                    height: "100%",
+                    outline: outline,
+                    boxSizing: "border-box",
+                }}
+                // do not use onMouseOver, which also applies to the children elements
+                onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                // do not use onMouseOut
+                onMouseLeave={(event: any) => {
+                    this.handleMouseLeaveWriteWidget(event, elementRef);
+                    if (elementRef.current !== null) {
+                        elementRef.current.style["outline"] = outline;
+                    }
+                }}
+            >
+                < this._ElementActionButtonText ></this._ElementActionButtonText>
+                <this._ElementActionButtonMulti></this._ElementActionButtonMulti>
+            </div>
+        );
+    };
+    /** 
+     * label text, 
+     * 
+     * (possible) dropdown arrow, and 
+     * 
+     * mousedown event handler for single action 
+     */
+    _ElementActionButtonText = () => {
+        const allText = this.getAllText();
+        const appearance = allText["appearance"];
+        const numActions = this.getActions().length;
+        const dropDownArrowDisplay = appearance === "contemporary" && numActions > 1 ? "inline-flex" : "none";
+        const justifyContent = allText["horizontalAlign"];
+        const alignItems = allText["verticalAlign"];
 
-        const calcBorderTopLeft = () => {
-            if (this.getAllText()["appearance"] === "traditional") {
-                return `solid ${shadowWidth}px ${highlightColor}`;
-            } else {
-                return "none";
-            }
-        }
-
-        const calcOutline = () => {
-            if (this.getAllText()["appearance"] === "traditional") {
-                return "solid 1px rgba(100, 100, 100, 0.5)";
-            } else {
-                return "none";
-            }
-        }
+        // expand macros
+        const rawText = this.getAllText()["text"];
+        const macros = this.getAllMacros();
+        // "\\n" is "\n"
+        const buttonText = BaseWidget.expandChannelName(rawText, macros, true).replaceAll("\\n", "\n");
 
         return (
             <div
                 style={{
+                    outlineStyle: "none",
+                    outlineWidth: 0,
+                    outlineColor: "rgba(0,0,0,0)",
+                    display: "inline-flex",
                     width: "100%",
                     height: "100%",
-                    display: "inline-flex",
-                    flexDirection: "column",
-                    alignItems: "flex-start",
-                    justifyContent: "center",
-                    // position: "relative",
-                    // overflow: "visible",
-                    // textOverflow: "hidden",
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    backgroundColor: "rgba(0,0,0,0)",
+                }}
+                onMouseDown={(event: any) => {
+                    if (numActions !== 1) {
+                        return;
+                    }
+                    this.handleMouseDownOnSingleButton(event);
                 }}
             >
-                {/* <this._StyledSelectionBox> */}
-                <div
+                {/* text */}
+                {buttonText}
+                {/* dropdown arrow */}
+                <img src="../../../webpack/resources/webpages/arrowDown-thin.svg"
                     style={{
-                        width: "100%",
-                        height: "100%",
-                        backgroundColor: `rgba(0, 0, 0, 0)`,
-                        // overflow: `visible`,
+                        width: this.getAllStyle()["fontSize"] * 0.7,
+                        height: this.getAllStyle()["fontSize"] * 0.7,
+                        marginLeft: 5,
+                        display: dropDownArrowDisplay,
                     }}
-                >
-                    <div
-                        ref={elementRef}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            display: "inline-flex",
-                            textIndent: this.getActions().length > 1 ? "4px" : "0px",
-                            justifyContent: this.getActions().length > 1 ? "flex-start" : "center",
-                            alignItems: "center",
-                            backgroundColor: `rgba(0, 0, 0, 0)`,
-                            outline: "none",
-                            border: "none",
-                            // overflow: "visible",
-                            // textOverflow: "hidden",
-
-                            // outline: calcOutline(),
-                            // borderRight: calcBorderBottomRight(),
-                            // borderBottom: calcBorderBottomRight(),
-                            // borderLeft: calcBorderTopLeft(),
-                            // borderTop: calcBorderTopLeft(),
-
-                        }}
-                        // outline is not affected by opacity of the ElementBody
-                        onMouseEnter={(event: any) => {
-                            if (!g_widgets1.isEditing()) {
-                                if (elementRef.current !== null) {
-                                    console.log("okokok")
-                                    elementRef.current.style["outlineStyle"] = "solid";
-                                    elementRef.current.style["outlineWidth"] = "3px";
-                                    elementRef.current.style["outlineColor"] = "rgba(105,105,105,1)";
-                                    elementRef.current.style["cursor"] = "pointer";
-                                }
-                            }
-                        }}
-                        onMouseLeave={(event: any) => {
-                            if (!g_widgets1.isEditing()) {
-                                if (elementRef.current !== null) {
-                                    elementRef.current.style["outlineStyle"] = this.getAllStyle()["outlineStyle"];
-                                    elementRef.current.style["outlineWidth"] = this.getAllStyle()["outlineWidth"];
-                                    elementRef.current.style["outlineColor"] = this.getAllStyle()["outlineColor"];
-                                    elementRef.current.style["cursor"] = "default";
-                                }
-                            }
-                        }}
-                    >
-                        {this.getActions().length > 1 ? (
-                            <>
-                                {/* label */}
-                                <div
-                                    style={{
-                                        opacity: this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false ? 0 : 1,
-                                        outlineStyle: "none",
-                                        outlineWidth: 0,
-                                        outlineColor: "rgba(0,0,0,0)",
-                                        display: "inline-flex",
-                                        width: "100%",
-                                        height: "100%",
-                                        justifyContent: this.getAllText()["horizontalAlign"],
-                                        alignItems: "center",
-                                        fontSize: this.getAllStyle()["fontSize"],
-                                        fontFamily: this.getAllStyle()["fontFamily"],
-                                        fontWeight: this.getAllStyle()["fontWeight"],
-                                        fontStyle: this.getAllStyle()["fontStyle"],
-                                        backgroundColor: "rgba(0,0,0,0)",
-                                    }}
-                                >
-                                    {this.getButtonText()}
-                                    {this.getText()["appearance"] === "contemporary" ?
-                                        <>
-                                            &nbsp;
-                                            <img src="../../../webpack/resources/webpages/arrowDown-thin.svg"
-                                                style={{
-                                                    width: this.getAllStyle()["fontSize"] * 0.7,
-                                                    height: this.getAllStyle()["fontSize"] * 0.7,
-                                                }}
-                                            ></img>
-                                        </>
-                                        :
-                                        null
-                                    }
-                                </div>
-                                {dropDownActivated === true ?
-                                    <select
-                                        ref={selectRef}
-                                        style={{
-                                            position: "absolute",
-                                            top: 0,
-                                            left: 0,
-                                            outline: calcOutline(),
-                                            borderRight: calcBorderBottomRight(),
-                                            borderBottom: calcBorderBottomRight(),
-                                            borderLeft: calcBorderTopLeft(),
-                                            borderTop: calcBorderTopLeft(),
-                                            // the <select /> is different from <div />
-                                            // its "width" and "height" is the sum of border and body
-                                            // while the "width" and "height" in <div /> is the body's dimensions, its border is not counted in "width" or "height"
-                                            width: "100%",
-                                            height: "100%",
-                                            backgroundColor: "rgba(0,0,0,0)",
-                                            // outline: "none",
-                                            // borderRadius: this.getAllText()["appearance"] === "traditional" ? 0 : 10,
-                                            // do not show dropdown arrow
-                                            MozAppearance: "none",
-                                            WebkitAppearance: "none",
-                                            opacity: this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false ? 0 : 1,
-                                            overflow: "hidden",
-                                            textAlignLast:
-                                                this.getAllText()["horizontalAlign"] === "flex-start"
-                                                    ? "left"
-                                                    : this.getAllText()["horizontalAlign"] === "flex-end"
-                                                        ? "right"
-                                                        : "center",
-                                        }}
-                                        onChange={(event: any) => {
-                                            // setShowDropDown(false);
-                                            if (g_widgets1.isEditing()) {
-                                                return;
-                                            }
-                                            const index = parseInt(event.target.value);
-                                            if (index === -1) {
-                                                return;
-                                            }
-                                            const tdl = this.getActions()[index];
-                                            const type = tdl["type"];
-                                            if (type === "OpenDisplay") {
-                                                this.openDisplay(index);
-                                            } else if (type === "WritePV") {
-                                                this.writePv(index);
-                                            } else if (type === "OpenWebPage") {
-                                                this.openWebpage(index);
-                                            } else if (type === "ExecuteCommand") {
-                                                this.executeCommand(index);
-                                            } else if (type === "CloseDisplayWindow") {
-                                                this.closeDisplayWindow(index);
-                                            } else {
-                                                //todo: ExecuteScript
-                                            }
-                                            if (selectRef.current !== null) {
-                                                selectRef.current.value = "-1";
-                                            }
-                                        }}
-                                        defaultValue={"-1"}
-                                    >
-                                        <option
-                                            style={{
-                                                // width: "100%",
-                                                width: calcWidth(),
-                                                height: calcHeight(),
-                                            }}
-                                            // it hides the option, causing the <select> to choose the next option, does not help
-                                            // hidden
-                                            disabled
-                                            value={`-1`}
-                                        ></option>
-                                        {this.getActions().map(
-                                            (
-                                                action:
-                                                    | type_action_executecommand_tdl
-                                                    | type_action_opendisplay_tdl
-                                                    | type_action_openwebpage_tdl
-                                                    | type_action_writepv_tdl
-                                                    | type_action_executescript_tdl
-                                                    | type_action_closedisplaywindow,
-                                                index: number
-                                            ) => {
-                                                return (
-                                                    <option
-                                                        style={{
-                                                            width: calcWidth(),
-                                                            height: calcHeight(),
-                                                            // width: "100%",
-                                                        }}
-                                                        key={`${action["type"]}-${action["label"]}-${index}`}
-                                                        value={`${index}`}
-                                                    >
-                                                        {action["label"]}&nbsp;
-                                                    </option>
-                                                );
-                                            }
-                                        )}
-                                    </select>
-                                    :
-                                    <div
-                                        style={{
-                                            position: "absolute",
-                                            top: 0,
-                                            left: 0,
-                                            opacity: this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false ? 0 : 1,
-                                            outline: calcOutline(),
-                                            borderRight: calcBorderBottomRight(),
-                                            borderBottom: calcBorderBottomRight(),
-                                            borderLeft: calcBorderTopLeft(),
-                                            borderTop: calcBorderTopLeft(),
-                                            display: "inline-flex",
-                                            width: calcWidth(),
-                                            height: calcHeight(),
-                                            justifyContent: this.getAllText()["horizontalAlign"],
-                                            alignItems: this.getAllText()["verticalAlign"],
-                                            overflow: "hidden",
-                                        }}>
-                                    </div>
-                                }
-                            </>
-                        ) : (
-                            <div
-                                style={{
-                                    opacity: this.getAllText()["invisibleInOperation"] === true && g_widgets1.isEditing() === false ? 0 : 1,
-                                    // outlineStyle: "none",
-                                    // outlineWidth: 0,
-                                    // outlineColor: "rgba(255,0,0,1)",
-                                    // outline: this.getAllText()["appearance"] === "traditional" ? "solid 1px rgba(100, 100, 100, 0.5)" : "none",
-                                    outline: calcOutline(),
-                                    borderRight: calcBorderBottomRight(),
-                                    borderBottom: calcBorderBottomRight(),
-                                    borderLeft: calcBorderTopLeft(),
-                                    borderTop: calcBorderTopLeft(),
-                                    display: "inline-flex",
-                                    // width: "100%",
-                                    // height: "100%",
-                                    width: calcWidth(),
-                                    height: calcHeight(),
-                                    justifyContent: this.getAllText()["horizontalAlign"],
-                                    alignItems: this.getAllText()["verticalAlign"],
-                                    overflow: "hidden",
-                                }}
-                                onMouseDown={(event: React.MouseEvent) => {
-                                    event.preventDefault();
-                                    // left button only
-                                    if (g_widgets1.isEditing() || event.button !== 0) {
-                                        return;
-                                    }
-                                    if (this.getActions().length === 0) {
-                                        return;
-                                    }
-                                    const index = 0;
-                                    const tdl = this.getActions()[index];
-                                    const type = tdl["type"];
-                                    if (type === "OpenDisplay") {
-                                        this.openDisplay(index);
-                                    } else if (type === "WritePV") {
-                                        this.writePv(index);
-                                    } else if (type === "OpenWebPage") {
-                                        this.openWebpage(index);
-                                    } else if (type === "ExecuteCommand") {
-                                        this.executeCommand(index);
-                                    } else if (type === "CloseDisplayWindow") {
-                                        this.closeDisplayWindow(index);
-                                    } else {
-                                        //todo: ExecuteScript
-                                    }
-                                }}
-                            >
-                                {this.getButtonText()}
-                            </div>
-                        )}
-                    </div>
-                </div>
+                ></img>
             </div>
-        );
-    };
 
-    getButtonText = () => {
-        const rawText = this.getAllText()["text"];
-        const macros = this.getAllMacros();
-        // "\\n" is "\n"
-        const result = BaseWidget.expandChannelName(rawText, macros, true).replaceAll("\\n", "\n");
-        return result;
+        )
     }
 
-    handleSelectAFile = (options: Record<string, any>, fileName: string) => {
-        const itemIndex = options["itemIndex"];
-        const sidebar = this.getSidebar();
-        if (typeof itemIndex === "number" && sidebar !== undefined) {
-            (sidebar as ActionButtonSidebar).setBeingUpdatedItemIndex(itemIndex);
-            sidebar.updateFromWidget(undefined, "select-a-file", fileName);
+    _ElementActionButtonMulti = () => {
+        const selectRef = React.useRef<any>(null);
+        const [dropDownActivated, setDropDownActivated] = React.useState(false);
+        this.setDropDownActivated = setDropDownActivated;
+        const numActions = this.getActions().length;
+
+        if (numActions <= 1) {
+            return null;
         }
-    };
+
+        if (dropDownActivated === false) {
+            return null;
+        }
+
+        return (
+            <select
+                ref={selectRef}
+                defaultValue={"-1"}
+                style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    outline: "none",
+                    border: "none",
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0,0,0,0)",
+                    MozAppearance: "none",
+                    WebkitAppearance: "none",
+                    overflow: "hidden",
+                }}
+                onChange={(event: any) => {
+                    this.handleChangeOnSelect(event);
+                    // go back to empty option (value = -1) after executing the option
+                    if (selectRef.current !== null) {
+                        selectRef.current.value = "-1";
+                    }
+                }}
+            >
+
+                {/* empty option */}
+                <option
+                    disabled
+                    value={`-1`}
+                ></option>
+
+                {/* actions */}
+                {this.getActions().map(
+                    (
+                        action:
+                            | type_action_executecommand_tdl
+                            | type_action_opendisplay_tdl
+                            | type_action_openwebpage_tdl
+                            | type_action_writepv_tdl
+                            | type_action_executescript_tdl
+                            | type_action_closedisplaywindow,
+                        index: number
+                    ) => {
+                        return (
+                            <option
+                                key={`${action["type"]}-${action["label"]}-${index}`}
+                                value={`${index}`}
+                            >
+                                {action["label"]}
+                            </option>
+                        );
+                    }
+                )}
+            </select>
+
+        )
+    }
+
+    // -------------------- helper functions ----------------
+
+    handleMouseDownOnSingleButton = (event: React.MouseEvent) => {
+        event.preventDefault();
+        // left button only
+        if (g_widgets1.isEditing() || event.button !== 0) {
+            return;
+        }
+        this.executeAction(0);
+    }
+
+    handleChangeOnSelect = (event: any) => {
+
+        if (g_widgets1.isEditing()) {
+            return;
+        }
+        const index = parseInt(event.target.value);
+        if (isNaN(index)) {
+            return;
+        }
+        this.executeAction(index);
+    }
+
+    executeAction = (index: number) => {
+
+        const tdl = this.getActions()[index];
+        if (tdl === undefined) {
+            return;
+        }
+
+        const type = tdl["type"];
+        if (type === "OpenDisplay") {
+            this.openDisplay(index);
+        } else if (type === "WritePV") {
+            this.writePv(index);
+        } else if (type === "OpenWebPage") {
+            this.openWebpage(index);
+        } else if (type === "ExecuteCommand") {
+            this.executeCommand(index);
+        } else if (type === "CloseDisplayWindow") {
+            this.closeDisplayWindow(index);
+        } else {
+            // do nothing
+        }
+    }
+
 
     openDisplay = (index: number) => {
         const displayConfig = this.getActions()[index] as type_action_opendisplay_tdl;
@@ -585,7 +446,6 @@ export class ActionButton extends BaseWidget {
                         macros: externalMacros,
                         replaceMacros: true, // not used
                         currentTdlFolder: currentTdlFolder,
-                        // openInSameWindow: openInSameWindow,
                         windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
                     }
                 });
@@ -600,24 +460,7 @@ export class ActionButton extends BaseWidget {
         const tdl = this.getActions()[index] as type_action_writepv_tdl;
         const channelName = tdl["channelName"];
         const channelValue = tdl["channelValue"];
-
-        try {
-            // we need this line
-            const channel = g_widgets1.getTcaChannel(channelName);
-            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-            // channel.put(displayWindowId, { value: channelValue }, 1);
-            this.putChannelValue(channelName, channelValue, this.getActions()[index]);
-        } catch (e) {
-            const channel = g_widgets1.createTcaChannel(channelName, this.getWidgetKey());
-            if (channel !== undefined) {
-                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                await channel.getMeta(this.getWidgetKey(), 1);
-                // channel.put(displayWindowId, { value: channelValue }, 1);
-                this.putChannelValue(channelName, channelValue, this.getActions()[index]);
-                // no need to manually destroy the channel, the client will check on it
-                // channel.destroy(this.getWidgetKey());
-            }
-        }
+        this.putChannelValue(channelName, channelValue, this.getActions()[index]);
     };
 
     openWebpage = (index: number) => {
@@ -759,56 +602,25 @@ export class ActionButton extends BaseWidget {
         }
     };
 
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
 
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
-
-    // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = () => {
-        const value = this._getFirstChannelValue();
-        if (value === undefined) {
-            return "";
-        } else {
-            return value;
+    handleSelectAFile = (options: Record<string, any>, fileName: string) => {
+        const itemIndex = options["itemIndex"];
+        const sidebar = this.getSidebar();
+        if (typeof itemIndex === "number" && sidebar !== undefined) {
+            (sidebar as ActionButtonSidebar).setBeingUpdatedItemIndex(itemIndex);
+            sidebar.updateFromWidget(undefined, "select-a-file", fileName);
         }
     };
 
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
+    calcOutline = () => {
+        const allText = this.getAllText();
+        const appearance = allText["appearance"];
+        if (appearance === "traditional") {
+            return "solid 1px rgba(100, 100, 100, 0.5)";
         } else {
-            return unit;
+            return "none";
         }
-    };
-
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
+    }
 
     // -------------------------- tdl -------------------------------
 
@@ -870,8 +682,6 @@ export class ActionButton extends BaseWidget {
 
     generateDefaultTdl = ActionButton.generateDefaultTdl;
 
-    // defined in super class
-    // getTdlCopy()
     getTdlCopy(newKey: boolean = true) {
         const result = super.getTdlCopy(newKey);
         result["actions"] = JSON.parse(JSON.stringify(this.getActions()));
@@ -880,38 +690,10 @@ export class ActionButton extends BaseWidget {
 
     // --------------------- getters -------------------------
 
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getUpdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-    // getRules()
-
     getActions = () => {
         return this._actions;
     };
 
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {
