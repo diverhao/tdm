@@ -96,6 +96,9 @@ export class Tank extends BaseWidget {
                     scale={scaleParam["scale"]}
                     color={scaleParam["color"]}
                     compact={scaleParam["compact"]}
+                    showTicks={true}
+                    showLabels={true}
+                    showAxis={false}
                 >
                 </Scale>
                 <this._ElementWater></this._ElementWater>
@@ -109,6 +112,9 @@ export class Tank extends BaseWidget {
                     scale={scaleParam["scale"]}
                     color={scaleParam["color"]}
                     compact={scaleParam["compact"]}
+                    showTicks={true}
+                    showLabels={true}
+                    showAxis={false}
                 >
                 </Scale>
             </div >

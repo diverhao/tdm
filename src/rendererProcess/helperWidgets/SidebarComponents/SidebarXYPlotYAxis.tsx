@@ -454,7 +454,7 @@ export class SidebarXYPlotYAxis {
                     readableText={"Y Axis channel name"}
                     updater={(newValue: string) => { this.updateWidgetYChannelName(undefined, newValue) }}
                 >
-                    Y Channel:
+                    Y Channel
                 </this.ElementInputLabel>
                 <input
                     style={{ ...this._styleInput }}

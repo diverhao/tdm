@@ -3,7 +3,7 @@ import * as React from "react";
 import { calcTicks } from "../../../common/GlobalMethods";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 
-export const Scale = ({ min, max, numIntervals, position, show, length, scale, color, compact }:
+export const Scale = ({ min, max, numIntervals, position, show, length, scale, color, compact, showTicks, showLabels, showAxis }:
     {
         min: number,
         max: number,
@@ -13,13 +13,14 @@ export const Scale = ({ min, max, numIntervals, position, show, length, scale, c
         length: number,
         scale: "Linear" | "Log10",
         color: string,
-        compact: boolean
+        compact: boolean,
+        showTicks: boolean,
+        showLabels: boolean,
+        showAxis: boolean,
     }) => {
     if (show === false) {
         return null;
     }
-
-    console.log("min max", min, max)
 
     if (position === "left") {
         return (
@@ -31,6 +32,9 @@ export const Scale = ({ min, max, numIntervals, position, show, length, scale, c
                 scale={scale}
                 color={color}
                 compact={compact}
+                showTicks={showTicks}
+                showLabels={showLabels}
+                showAxis={showAxis}
             ></ScaleLeft>
         )
     } else if (position === "right") {
@@ -43,6 +47,9 @@ export const Scale = ({ min, max, numIntervals, position, show, length, scale, c
                 scale={scale}
                 color={color}
                 compact={compact}
+                showTicks={showTicks}
+                showLabels={showLabels}
+                showAxis={showAxis}
             ></ScaleRight>
         )
     } else if (position === "top") {
@@ -55,6 +62,9 @@ export const Scale = ({ min, max, numIntervals, position, show, length, scale, c
                 scale={scale}
                 color={color}
                 compact={compact}
+                showTicks={showTicks}
+                showLabels={showLabels}
+                showAxis={showAxis}
             ></ScaleTop>
         )
     } else if (position === "bottom") {
@@ -67,6 +77,9 @@ export const Scale = ({ min, max, numIntervals, position, show, length, scale, c
                 scale={scale}
                 color={color}
                 compact={compact}
+                showTicks={showTicks}
+                showLabels={showLabels}
+                showAxis={showAxis}
             ></ScaleBottom>
         )
     } else {
@@ -74,7 +87,7 @@ export const Scale = ({ min, max, numIntervals, position, show, length, scale, c
     }
 }
 
-export const ScaleLeft = ({ min, max, numIntervals, length, scale, color, compact }:
+export const ScaleLeft = ({ min, max, numIntervals, length, scale, color, compact, showTicks, showLabels, showAxis }:
     {
         min: number,
         max: number,
@@ -82,7 +95,10 @@ export const ScaleLeft = ({ min, max, numIntervals, length, scale, color, compac
         length: number,
         scale: "Linear" | "Log10",
         color: string,
-        compact: boolean
+        compact: boolean,
+        showTicks: boolean,
+        showLabels: boolean,
+        showAxis: boolean,
     }
 ) => {
 
@@ -113,6 +129,7 @@ export const ScaleLeft = ({ min, max, numIntervals, length, scale, color, compac
                 fontSize={fontSize}
                 compact={compact}
                 color={color}
+                showLabels={showLabels}
             >
             </Labels>
 
@@ -120,16 +137,17 @@ export const ScaleLeft = ({ min, max, numIntervals, length, scale, color, compac
             <Ticks
                 tickPositions={tickPositions}
                 color={color}
+                showTicks={showTicks}
             >
             </Ticks>
 
             {/* base axis */}
-            <Axis color={color} length={length}></Axis>
+            <Axis color={color} length={length} showAxis={showAxis}></Axis>
         </div>
     );
 };
 
-export const ScaleRight = ({ min, max, numIntervals, length, scale, color, compact }:
+export const ScaleRight = ({ min, max, numIntervals, length, scale, color, compact, showTicks, showLabels, showAxis }:
     {
         min: number,
         max: number,
@@ -137,7 +155,10 @@ export const ScaleRight = ({ min, max, numIntervals, length, scale, color, compa
         length: number,
         scale: "Linear" | "Log10",
         color: string,
-        compact: boolean
+        compact: boolean,
+        showTicks: boolean,
+        showLabels: boolean,
+        showAxis: boolean,
     }
 ) => {
 
@@ -161,12 +182,13 @@ export const ScaleRight = ({ min, max, numIntervals, length, scale, color, compa
             }}
         >
             {/* base axis */}
-            <Axis color={color} length={length}></Axis>
+            <Axis color={color} length={length} showAxis={showAxis}></Axis>
 
             {/* ticks */}
             <Ticks
                 tickPositions={tickPositions}
                 color={color}
+                showTicks={showTicks}
             >
             </Ticks>
 
@@ -177,13 +199,14 @@ export const ScaleRight = ({ min, max, numIntervals, length, scale, color, compa
                 fontSize={fontSize}
                 compact={compact}
                 color={color}
+                showLabels={showLabels}
             >
             </Labels>
         </div>
     );
 };
 
-export const ScaleTop = ({ min, max, numIntervals, length, scale, color, compact }:
+export const ScaleTop = ({ min, max, numIntervals, length, scale, color, compact, showTicks, showLabels, showAxis }:
     {
         min: number,
         max: number,
@@ -191,7 +214,10 @@ export const ScaleTop = ({ min, max, numIntervals, length, scale, color, compact
         length: number,
         scale: "Linear" | "Log10",
         color: string,
-        compact: boolean
+        compact: boolean,
+        showTicks: boolean,
+        showLabels: boolean,
+        showAxis: boolean,
     }
 ) => {
 
@@ -222,6 +248,7 @@ export const ScaleTop = ({ min, max, numIntervals, length, scale, color, compact
                 fontSize={fontSize}
                 compact={compact}
                 color={color}
+                showLabels={showLabels}
             >
             </LabelsTopBottom>
 
@@ -229,16 +256,17 @@ export const ScaleTop = ({ min, max, numIntervals, length, scale, color, compact
             <TicksTopBottom
                 tickPositions={tickPositions}
                 color={color}
+                showTicks={showTicks}
             >
             </TicksTopBottom>
 
             {/* base axis */}
-            <AxisTopBottom color={color} length={length}></AxisTopBottom>
+            <AxisTopBottom color={color} length={length} showAxis={showAxis}></AxisTopBottom>
         </div>
     );
 };
 
-export const ScaleBottom = ({ min, max, numIntervals, length, scale, color, compact }:
+export const ScaleBottom = ({ min, max, numIntervals, length, scale, color, compact, showTicks, showLabels, showAxis }:
     {
         min: number,
         max: number,
@@ -246,7 +274,10 @@ export const ScaleBottom = ({ min, max, numIntervals, length, scale, color, comp
         length: number,
         scale: "Linear" | "Log10",
         color: string,
-        compact: boolean
+        compact: boolean,
+        showTicks: boolean,
+        showLabels: boolean,
+        showAxis: boolean,
     }
 ) => {
 
@@ -271,12 +302,13 @@ export const ScaleBottom = ({ min, max, numIntervals, length, scale, color, comp
         >
 
             {/* base axis */}
-            <AxisTopBottom color={color} length={length}></AxisTopBottom>
+            <AxisTopBottom color={color} length={length} showAxis={showAxis}></AxisTopBottom>
 
             {/* ticks */}
             <TicksTopBottom
                 tickPositions={tickPositions}
                 color={color}
+                showTicks={showTicks}
             >
             </TicksTopBottom>
 
@@ -287,6 +319,7 @@ export const ScaleBottom = ({ min, max, numIntervals, length, scale, color, comp
                 fontSize={fontSize}
                 compact={compact}
                 color={color}
+                showLabels={showLabels}
             >
             </LabelsTopBottom>
         </div>
@@ -294,7 +327,12 @@ export const ScaleBottom = ({ min, max, numIntervals, length, scale, color, comp
 };
 
 
-const Axis = ({ color, length }: any) => {
+const Axis = ({ color, length, showAxis }: any) => {
+
+    if (showAxis === false) {
+        return null;
+    }
+
     return (
         <svg
             width={`2px`}
@@ -314,7 +352,12 @@ const Axis = ({ color, length }: any) => {
     )
 }
 
-const AxisTopBottom = ({ color, length }: any) => {
+const AxisTopBottom = ({ color, length, showAxis }: any) => {
+
+    if (showAxis === false) {
+        return null;
+    }
+
     return (
         <svg
             height={`2px`}
@@ -334,7 +377,12 @@ const AxisTopBottom = ({ color, length }: any) => {
     )
 }
 
-const Ticks = ({ tickPositions, color }: any) => {
+const Ticks = ({ tickPositions, color, showTicks }: any) => {
+
+    if (showTicks === false) {
+        return null;
+    }
+
     return (
         <svg
             width={`10px`}
@@ -356,7 +404,12 @@ const Ticks = ({ tickPositions, color }: any) => {
     )
 }
 
-const TicksTopBottom = ({ tickPositions, color }: any) => {
+const TicksTopBottom = ({ tickPositions, color, showTicks }: any) => {
+
+    if (showTicks === false) {
+        return null;
+    }
+
     return (
         <svg
             height={`10px`}
@@ -402,7 +455,10 @@ const TickTopBottom = ({ position, color }: any) => {
     )
 }
 
-const Labels = ({ tickPositions, refinedTicks, fontSize, compact, color }: any) => {
+const Labels = ({ tickPositions, refinedTicks, fontSize, compact, color, showLabels }: any) => {
+    if (showLabels === false) {
+        return null;
+    }
 
     return (
         <div
@@ -431,7 +487,11 @@ const Labels = ({ tickPositions, refinedTicks, fontSize, compact, color }: any) 
     )
 }
 
-const LabelsTopBottom = ({ tickPositions, refinedTicks, fontSize, compact, color }: any) => {
+const LabelsTopBottom = ({ tickPositions, refinedTicks, fontSize, compact, color, showLabels }: any) => {
+
+    if (showLabels === false) {
+        return null;
+    }
 
     return (
         <div

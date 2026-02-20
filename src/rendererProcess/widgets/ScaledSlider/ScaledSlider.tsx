@@ -412,7 +412,9 @@ export class ScaledSlider extends BaseWidget {
                 scale={scaleParam["scale"]}
                 color={scaleParam["color"]}
                 compact={scaleParam["compact"]}
-
+                showTicks={true}  
+                showLabels={true}  
+                showAxis={false}
             ></Scale>
         )
     };
@@ -430,9 +432,10 @@ export class ScaledSlider extends BaseWidget {
                 scale={scaleParam["scale"]}
                 color={scaleParam["color"]}
                 compact={scaleParam["compact"]}
-
+                showTicks={true}  
+                showLabels={true}  
+                showAxis={false}
             ></Scale>
-
         )
     };
 

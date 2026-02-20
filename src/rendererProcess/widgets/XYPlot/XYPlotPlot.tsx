@@ -4,17 +4,13 @@ import katex from "katex";
 import { type_dbrData } from "epics-tca";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { calcTicks, refineTicks } from "../../../common/GlobalMethods";
+import { calcTickPositions, calcTicks, refineTicks } from "../../../common/GlobalMethods";
 import { getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import * as GlobalMethods from "../../../common/GlobalMethods";
-import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
-// import * as THREE from 'three';
-import { OrthographicCamera, Scene, WebGLRenderer, BufferGeometry, BufferAttribute, ShaderMaterial, Points, Color, Vector2 } from "three";
-import { Line2 } from 'three/examples/jsm/lines/Line2';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
-import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
+import { XYPlotPlotSettings } from "./XYPlotPlotSettings";
+import { XYPlotPlotWebGl } from "./XYPlotPlotWebGl";
+import { Scale } from "../../helperWidgets/SharedElements/Scale";
 
 
 export type type_yAxis = {
@@ -45,24 +41,63 @@ export type type_xAxis = {
     numGrids: number;
 };
 
+/**
+ * 
+ * ------------------------------------------------------------------------
+ * |                                                                       |
+ * |                          ElementTitle                                 |
+ * |                                                                       |
+ * -------------------------------------------------------------------------
+ * |    |   |                                                              |
+ * | E  | E |                                                              |
+ * | l  | l |                                                              |
+ * | e  | e |                                                              |
+ * | m  | m |                                                              |
+ * | e  | e |                                                              |
+ * | n  | n |                                                              |
+ * | t  | t |                      ElementPlot                             |
+ * | Y  | Y |                                                              |
+ * | L  | T |                                                              |
+ * | a  | i |                                                              |
+ * | b  | c |                                                              |
+ * | e  | k |                                                              |
+ * | l  | s |                                                              |
+ * |    |   |                                                              |
+ * -------------------------------------------------------------------------
+ * | E B e  |                                                              |
+ * | l l a  |                      ElementXTicks                           |
+ * | e a    |                                                              |
+ * | m n    |--------------------------------------------------------------
+ * | e k    |                                                              |
+ * | n A    |   ElementControls   ElementXLabel   ElementCursorPosition    |
+ * | t r    |                                                              |
+ * -------------------------------------------------------------------------
+ */
+
 export class XYPlotPlot {
     _mainWidget: XYPlot;
 
-    // plot region dimensions
-    plotWidth: number;
-    plotHeight: number;
+    // helper classes for extracted rendering / UI
+    _settings: XYPlotPlotSettings;
+    _webgl: XYPlotPlotWebGl;
+
 
     // layout
-    readonly titleHeight = 50 * 0 + 20;
+    readonly titleHeight = 20;
     readonly yAxisLabelWidth = 30;
     readonly yAxisTickWidth = 30;
     readonly xAxisLabelHeight = 30;
     readonly xAxisTickHeight = 30;
-    readonly toolbarHeight = 30 * 0;
-    readonly legendWidth = 170 * 0 + 30;
+    readonly toolbarHeight = 0;
+    readonly legendWidth = 30;
+    // trace region dimensions, determined by above numbers
+    plotWidth: number = 0;
+    plotHeight: number = 0;
+
     // extend x direction plot area by 20% on both positive and negative directions
-    readonly xPlotRangeExtension = 10;
-    readonly yPlotRangeExtension = 10;
+    readonly xPlotRangeExtension = 0;
+    readonly yPlotRangeExtension = 0;
+
     setCursorValue: any;
     lastCursorPointXY: [number, number] = [-100000, -100000];
 
@@ -79,6 +114,35 @@ export class XYPlotPlot {
         numGrids: 5,
     };
 
+    ticksInfo: {
+        scale: "Linear" | "Log10",
+        xValMin: number,
+        xValMax: number,
+        yValMin: number,
+        yValMax: number,
+        xLength: number,
+        yLength: number,
+        numXgrid: number,
+        numYgrid: number,
+        xTickValues: number[],
+        xTickPositions: number[],
+        yTickValues: number[],
+        yTickPositions: number[],
+    } = {
+            scale: "Linear",
+            xValMin: 0,
+            xValMax: 0,
+            yValMin: 0,
+            yValMax: 0,
+            xLength: 0,
+            yLength: 0,
+            numXgrid: 0,
+            numYgrid: 0,
+            xTickValues: [],
+            xTickPositions: [],
+            yTickValues: [],
+            yTickPositions: [],
+        }
     forceUpdate: any;
 
     // showLegend: boolean = false;
@@ -93,7 +157,14 @@ export class XYPlotPlot {
     // multiple y axes
     yAxes: type_yAxis[] = [];
 
-    // if there is no such a data, the element is "undefined"
+    /**
+     * [
+     *   [1st trace x data, 1st trace y data],
+     *   [2nd trace x data, 2nd trace y data],
+     *   ...
+     *   [last trace x data, last trace y data],
+     * ]
+     */
     xy: number[][] = [];
 
     readonly presetColors: string[] = [
@@ -107,444 +178,23 @@ export class XYPlotPlot {
         "rgba(255, 128, 0, 1)",
     ];
 
-    getANewColor = () => {
-        const len = this.yAxes.length;
-        const index = len % this.presetColors.length;
-        return this.presetColors[index];
-    };
-
-    generateDefaultYAxis = (index: number): type_yAxis => {
-        return {
-            label: `y${index}`,
-            valMin: 0,
-            valMax: 100,
-            lineWidth: 2,
-            lineColor: this.getANewColor(),
-            ticks: [0, 50, 100],
-            ticksText: [0, 50, 100],
-            autoScale: false,
-            lineStyle: "solid",
-            pointType: "none",
-            pointSize: 5,
-            showGrid: true,
-            numGrids: 5,
-            displayScale: "Linear",
-        };
-    };
-
-    initXY = () => {
-        this.xy = [];
-        for (let ii = 0; ii < this.getMainWidget().getChannelNamesLevel0().length; ii++) {
-            this.xy.push([]);
-            this.tracesHide = [];
-        }
-    };
 
     constructor(mainWidget: XYPlot) {
         this._mainWidget = mainWidget;
-        if (this.getMainWidget().getAllText()["showFrame"] === true) {
-            this.plotWidth = this.getStyle().width - this.yAxisLabelWidth - this.yAxisTickWidth - this.legendWidth;
-            this.plotHeight = this.getStyle().height - this.titleHeight - this.xAxisLabelHeight - this.xAxisTickHeight - this.toolbarHeight;
-        } else {
-            this.plotWidth = this.getStyle().width - this.yAxisLabelWidth * 0 - this.yAxisTickWidth * 0 - this.legendWidth * 0;
-            this.plotHeight = this.getStyle().height - this.titleHeight * 0 - this.xAxisLabelHeight * 0 - this.xAxisTickHeight * 0 - this.toolbarHeight * 0;
-        }
+
         this.initXY();
 
+        // initialize helper classes
+        this._settings = new XYPlotPlotSettings(this);
+        this._webgl = new XYPlotPlotWebGl(this);
     }
 
-    // --------------------------- plot calculation ---------------------------
-
-    mapXYsToPointsWebGl = (index: number): Float32Array => {
-        // x and y data are odd and even indices
-        let xData = this.xy[index];
-        let yData = this.xy[index + 1];
-
-        let yIndex = this.getYIndex(index);
-
-        let useLog10Scale = false;
-        if (this.yAxes[yIndex] !== undefined) {
-            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
-        }
-
-        // if there is no xData (undefined) or the x PV is empty ("")
-        if (this.getMainWidget().getChannelNames()[index] === "" || xData.length === 0) {
-            const dataSize = yData.length;
-            xData = [...Array(dataSize).keys()];
-        }
-        // xData and yData must be same size
-        if (xData.length !== yData.length) {
-            const positions = new Float32Array(3);
-            return positions;
-        }
-
-        if (xData.length === 0) {
-            const positions = new Float32Array(3);
-            return positions;
-        }
-
-
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-        let valYmin = this.yAxes[yIndex].valMin;
-        let valYmax = this.yAxes[yIndex].valMax;
-
-        // x autoScale is valid only if there is only one x-y pair
-        // if (this.xAxis.autoScale && this.getMainWidget().getChannelNamesLevel0().length === 2) {
-        if (this.xAxis.autoScale) {
-            valXmin = Math.min(...xData);
-            valXmax = Math.max(...xData);
-        }
-
-        if (this.yAxes[yIndex].autoScale) {
-            valYmin = Math.min(...yData);
-            valYmax = Math.max(...yData);
-        }
-
-        // extra space in x and y directions
-        if (!useLog10Scale) {
-            const dx = Math.abs(valXmax - valXmin) * this.xPlotRangeExtension / 100;
-            const dy = Math.abs(valYmax - valYmin) * this.yPlotRangeExtension / 100;
-            valXmax = valXmax + dx;
-            valXmin = valXmin - dx;
-            valYmax = valYmax + dy;
-            valYmin = valYmin - dy;
-        }
-
-        const len = Math.min(xData.length, yData.length);
-        const positions = new Float32Array(len * 3);
-
-        for (let ii = 0; ii < len; ii++) {
-            const valX = xData[ii];
-            const valY = yData[ii];
-            const pointX = this.mapXToPointWebGl(index, [valX, valY], [valXmin, valXmax, valYmin, valYmax]);
-            const pointY = this.mapYToPointWebGl(index, [valX, valY], [valXmin, valXmax, valYmin, valYmax]);
-            if (pointX === undefined || pointY === undefined || isNaN(pointX) || isNaN(pointY)) {
-                continue;
-            }
-            // const [pointX, pointY] = pointXY;
-            // result = result + `${pointX}` + "," + `${pointY} `;
-            positions[3 * ii] = pointX;
-            positions[3 * ii + 1] = -1 * pointY;
-            positions[3 * ii + 2] = 0;
-        }
-        return positions;
-    };
-
-    mapXToPointWebGl = (
-        index: number,
-        [valX, valY]: [number, number],
-        [valXmin, valXmax, valYmin, valYmax]: [number, number, number, number]
-    ): number => {
-
-        let yIndex = this.getYIndex(index);
-
-        if (this.yAxes[yIndex] === undefined) {
-            return 0;
-        }
-        const pointXmin = -1;
-        const pointXmax = 1;
-        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
-        // const pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
-        return pointX;
-    };
-
-    mapYToPointWebGl = (
-        index: number,
-        [valX, valY]: [number, number],
-        [valXmin, valXmax, valYmin, valYmax]: [number, number, number, number]
-    ): number => {
-
-        let yIndex = this.getYIndex(index);
-        let useLog10Scale = false;
-        if (this.yAxes[yIndex] !== undefined) {
-            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
-        }
-
-        if (this.yAxes[yIndex] === undefined) {
-            return 0;
-        }
-        const pointYmin = -1;
-        const pointYmax = 1;
-
-        // valY, valYmin, valYmax for Log10
-        // if we use Log10Scale, do not use extra space
-        if (useLog10Scale) {
-            valYmin = Math.log10(valYmin);
-            valYmax = Math.log10(valYmax);
-            valY = Math.log10(valY);
-        }
-        if (useLog10Scale) {
-            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
-                valY = -20
-            }
-            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
-                valYmin = -20
-            }
-            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
-                valYmax = 0
-            }
-        }
-
-        // const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
-        const pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
-        return pointY;
-    };
-
-    mapXYsToPoints = (index: number): string => {
-        let result = "";
-        // x and y data are odd and even indices
-        let xData = this.xy[index];
-        let yData = this.xy[index + 1];
-
-        let yIndex = this.getYIndex(index);
-
-        let useLog10Scale = false;
-        if (this.yAxes[yIndex] !== undefined) {
-            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
-        }
-
-        // if there is no xData (undefined) or the x PV is empty ("")
-        if (this.getMainWidget().getChannelNames()[index] === "" || xData.length === 0) {
-            const dataSize = yData.length;
-            xData = [...Array(dataSize).keys()];
-        }
-        // xData and yData must be same size
-        if (xData.length !== yData.length) {
-            return result;
-        }
-
-        if (xData.length === 0) {
-            return result;
-        }
-
-
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-        let valYmin = this.yAxes[yIndex].valMin;
-        let valYmax = this.yAxes[yIndex].valMax;
-
-        // x autoScale is valid only if there is only one x-y pair
-        // if (this.xAxis.autoScale && this.getMainWidget().getChannelNamesLevel0().length === 2) {
-        if (this.xAxis.autoScale) {
-            valXmin = Math.min(...xData);
-            valXmax = Math.max(...xData);
-        }
-
-        if (this.yAxes[yIndex].autoScale) {
-            valYmin = Math.min(...yData);
-            valYmax = Math.max(...yData);
-        }
-
-        // extra space in x and y directions
-        if (!useLog10Scale) {
-            const dx = Math.abs(valXmax - valXmin) * this.xPlotRangeExtension / 100;
-            const dy = Math.abs(valYmax - valYmin) * this.yPlotRangeExtension / 100;
-            valXmax = valXmax + dx;
-            valXmin = valXmin - dx;
-            valYmax = valYmax + dy;
-            valYmin = valYmin - dy;
-        }
-
-        for (let ii = 0; ii < xData.length; ii++) {
-            const valX = xData[ii];
-            const valY = yData[ii];
-            const pointXY = this.mapXYToPoint(index, [valX, valY], [valXmin, valXmax, valYmin, valYmax]);
-            if (pointXY === undefined || isNaN(pointXY[0]) || isNaN(pointXY[1])) {
-                continue;
-            }
-            const [pointX, pointY] = pointXY;
-            result = result + `${pointX}` + "," + `${pointY} `;
-        }
-        return result;
-    };
-
-    mapXYsToPointsArray = (index: number): [number, number][] => {
-        let result: [number, number][] = [];
-        // x and y data are odd and even indices
-        let xData = this.xy[index];
-        let yData = this.xy[index + 1];
-
-
-        let yIndex = this.getYIndex(index);
-
-        let useLog10Scale = false;
-        if (this.yAxes[yIndex] !== undefined) {
-            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
-        }
-
-        // if there is no xData (undefined) or the x PV is empty ("")
-        if (this.getMainWidget().getChannelNames()[index] === "") {
-            const dataSize = yData.length;
-            xData = [...Array(dataSize).keys()];
-        }
-        // xData and yData must be same size
-        if (xData.length !== yData.length) {
-            return result;
-        }
-
-        if (xData.length === 0) {
-            return result;
-        }
-
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-        let valYmin = this.yAxes[yIndex].valMin;
-        let valYmax = this.yAxes[yIndex].valMax;
-
-        // x autoScale is valid only if there is only one x-y pair
-        // if (this.xAxis.autoScale && this.getMainWidget().getChannelNamesLevel0().length === 2) {
-        if (this.xAxis.autoScale) {
-            valXmin = Math.min(...xData);
-            valXmax = Math.max(...xData);
-        }
-
-        if (this.yAxes[yIndex].autoScale) {
-            valYmin = Math.min(...yData);
-            valYmax = Math.max(...yData);
-        }
-
-        // extra space in x and y directions
-        if (!useLog10Scale) {
-            const dx = Math.abs(valXmax - valXmin) * this.xPlotRangeExtension / 100;
-            const dy = Math.abs(valYmax - valYmin) * this.yPlotRangeExtension / 100;
-            valXmax = valXmax + dx;
-            valXmin = valXmin - dx;
-            valYmax = valYmax + dy;
-            valYmin = valYmin - dy;
-        }
-
-        for (let ii = 0; ii < xData.length; ii++) {
-            const valX = xData[ii];
-            const valY = yData[ii];
-            const pointXY = this.mapXYToPoint(index, [valX, valY], [valXmin, valXmax, valYmin, valYmax]);
-            if (pointXY === undefined || isNaN(pointXY[0]) || isNaN(pointXY[1])) {
-                continue;
-            }
-            // const [pointX, pointY] = pointXY;
-            // result = result + `${pointX}` + "," + `${pointY} `;
-            result.push(pointXY);
-        }
-        return result;
-    };
-
-    mapXYToPoint = (
-        index: number,
-        [valX, valY]: [number, number],
-        [valXmin, valXmax, valYmin, valYmax]: [number, number, number, number]
-    ): [number, number] => {
-
-        let yIndex = this.getYIndex(index);
-        let useLog10Scale = false;
-        if (this.yAxes[yIndex] !== undefined) {
-            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
-        }
-
-        if (this.yAxes[yIndex] === undefined) {
-            return [0, 0];
-            // this.yAxes[yIndex] = this.generateDefaultYAxis(yIndex);
-        }
-        const pointXmin = 0;
-        const pointXmax = this.plotWidth;
-        const pointYmin = 0;
-        const pointYmax = this.plotHeight;
-
-        // valY, valYmin, valYmax for Log10
-        // if we use Log10Scale, do not use extra space
-        if (useLog10Scale) {
-            valYmin = Math.log10(valYmin);
-            valYmax = Math.log10(valYmax);
-            valY = Math.log10(valY);
-        }
-        if (useLog10Scale) {
-            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
-                valY = -20
-            }
-            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
-                valYmin = -20
-            }
-            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
-                valYmax = 0
-            }
-        }
-
-        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
-        const pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
-        return [pointX, pointY];
-    };
-
-    // pointX, pointY are the coordinates inside Plot element
-    mapPointToXY = (index: number,
-        [pointX, pointY]: [number, number],
-        [valXmin, valXmax, valYmin, valYmax]: [number, number, number, number]
-    ): [number, number] => {
-        if (index >= this.getMainWidget().getChannelNames().length) {
-            return [0, 0];
-        }
-        let xData = this.xy[index];
-        let yData = this.xy[index + 1];
-
-
-        let yIndex = this.getYIndex(index);
-        let useLog10Scale = false;
-        if (this.yAxes[yIndex] !== undefined) {
-            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
-        }
-
-        const pointXmin = 0;
-        const pointXmax = this.plotWidth;
-        const pointYmin = 0;
-        const pointYmax = this.plotHeight;
-
-        if (this.xAxis.autoScale) {
-            valXmin = Math.min(...xData);
-            valXmax = Math.max(...xData);
-        }
-
-        if (this.yAxes[yIndex].autoScale) {
-            valYmin = Math.min(...yData);
-            valYmax = Math.max(...yData);
-        }
-
-        if (useLog10Scale) {
-            valYmin = Math.log10(valYmin);
-            valYmax = Math.log10(valYmax);
-        }
-
-        if (useLog10Scale) {
-            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
-                valYmin = -20;
-            }
-            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
-                valYmax = 0
-            }
-        }
-
-        const valX = valXmin + ((pointX - pointXmin) * (valXmax - valXmin)) / (pointXmax - pointXmin);
-
-        if (useLog10Scale) {
-            let valY = valYmin - (pointY - pointYmax) / ((pointYmax - pointYmin) / (valYmax - valYmin));
-            valY = Math.pow(10, valY);
-            return [valX, valY];
-        } else {
-            const valY = valYmin - ((pointY - pointYmax) * (valYmax - valYmin)) / (pointYmax - pointYmin);
-            return [valX, valY];
-        }
-    };
-
-    // --------------------------- element ------------------------------------
+    // -------------- element ----------------------------
 
     _Element = () => {
-        const showFrame = this.getMainWidget().getAllText()["showFrame"];
-        if (showFrame === true) {
-            this.plotWidth = this.getStyle().width - this.yAxisLabelWidth - this.yAxisTickWidth - this.legendWidth;
-            this.plotHeight = this.getStyle().height - this.titleHeight - this.xAxisLabelHeight - this.xAxisTickHeight - this.toolbarHeight;
-        } else {
-            this.plotWidth = this.getStyle().width;
-            this.plotHeight = this.getStyle().height;
-        }
 
-        // const [title, setTitle] = React.useState(this.getText().title);
+        // update ticks, plot region width, height information, for grid lines and ticks
+        this.updateWidthHeightTicksInfo();
 
         const [, forceUpdate] = React.useState({});
         this.forceUpdate = forceUpdate;
@@ -560,112 +210,74 @@ export class XYPlotPlot {
                     display: "inline-flex",
                     flexFlow: "column",
                     justifyContent: "flex-start",
-                    alignItems: "center",
+                    alignItems: "flex-end",
                     overflow: "visible",
                 }}
             >
-                {/* extra space on top, not the title */}
-                {showFrame ? <this._ElementTitle></this._ElementTitle> : null}
+                <this._ElementTitle></this._ElementTitle>
                 <div
                     style={{
-                        height: showFrame ? `${this.getStyle().height - this.titleHeight - this.toolbarHeight}px` : `${this.getStyle().height}px`,
-                        width: `100%`,
                         display: "inline-flex",
+                        width: `100%`,
+                        backgroundColor: "magenta",
+                        flexGrow: 0,
+                        flexShrink: 0,
                         flexFlow: "row",
                         justifyContent: "flex-start",
+                        alignItems: "center",
+                    }}
+                >
+                    {/* y axis label area */}
+                    <this._ElementYLabel></this._ElementYLabel>
+                    {/* y axis ticks */}
+                    <this._ElementYTicks></this._ElementYTicks>
+                    {/* plot */}
+                    <this._ElementPlot></this._ElementPlot>
+                </div>
+                <div
+                    style={{
+                        position: "relative",
+                        width: this.plotWidth,
+                        display: "inline-flex",
+                        backgroundColor: "rgba(255, 100, 100, 0.5)",
+                        flexGrow: 0,
+                        flexShrink: 0,
+                        flexFlow: "column",
+                        justifyContent: "flex-end",
                         alignItems: "flex-start",
                     }}
                 >
+                    <this._ElementXTicks></this._ElementXTicks>
                     <div
                         style={{
-                            width: showFrame ? `${this.getStyle().width - this.legendWidth}px` : `${this.getStyle().width}px`,
-                            height: `100%`,
+                            position: "relative",
+                            width: `100%`,
+                            height: this.xAxisLabelHeight,
                             display: "inline-flex",
-                            flexFlow: "column",
-                            justifyContent: "flex-start",
-                            alignItems: "center",
+                            flexFlow: "row",
+                            justifyContent: "flex-end",
+                            alignItems: "flex-end",
                         }}
                     >
-                        <div
-                            style={{
-                                width: `100%`,
-                                height: `${this.plotHeight}px`,
-                                display: "inline-flex",
-                                flexFlow: "row",
-                                justifyContent: "flex-start",
-                                alignItems: "center",
-                                backgroundColor: "rgba(0, 255, 128, 0)",
-                            }}
-                        >
-                            {/* y axis label area */}
-                            {showFrame ? <this._ElementYLabel></this._ElementYLabel> : null}
-                            {/* y axis ticks */}
-                            {showFrame ? <this._ElementYTicks></this._ElementYTicks> : null}
-                            {/* plot */}
-                            <this._ElementPlot></this._ElementPlot>
-                        </div>
-                        {showFrame ?
-                            <>
-                                <div
-                                    style={{
-                                        width: `100%`,
-                                        height: `${this.xAxisTickHeight}px`,
-                                        display: "inline-flex",
-                                        flexFlow: "row",
-                                        justifyContent: "flex-start",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    {/* blank area */}
-                                    <this._ElementBlankArea></this._ElementBlankArea>
-                                    {/* x axis ticks */}
-                                    <this._ElementXTicks></this._ElementXTicks>
-                                </div>
-
-                                <div
-                                    style={{
-                                        width: `100%`,
-                                        height: `${this.xAxisLabelHeight}px`,
-                                        display: "inline-flex",
-                                        flexFlow: "row",
-                                        justifyContent: "flex-start",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    {/* blank area */}
-                                    <this._ElementBlankArea></this._ElementBlankArea>
-                                    {/* x aixs label */}
-                                    <div
-                                        style={{
-                                            position: "relative",
-                                            width: `100%`,
-                                            height: `${this.xAxisLabelHeight}px`,
-                                            display: "inline-flex",
-                                            flexFlow: "row",
-                                            justifyContent: "flex-start",
-                                            alignItems: "center",
-                                        }}
-                                    >
-                                        {/* must be under the ElementControls */}
-                                        <this._ElementCursorPosition></this._ElementCursorPosition>
-                                        <this._ElementXLabel></this._ElementXLabel>
-                                        <this._ElementControls></this._ElementControls>
-                                    </div>
-                                </div>
-                            </> : null}
+                        {/* must be under the ElementControls */}
+                        <this._ElementCursorPosition></this._ElementCursorPosition>
+                        <this._ElementXLabel></this._ElementXLabel>
+                        <this._ElementControls></this._ElementControls>
                     </div>
-                    {/* legend */}
-                    {/* <this._ElementLegend></this._ElementLegend> */}
                 </div>
-                {/* control area */}
-                {/* <this._ElementControls></this._ElementControls> */}
             </div>
         );
     };
 
-    // ----------------------------- elements components -----------------------
+    // ---------------- title element --------------------
 
     _ElementTitle = () => {
+        const allText = this.getMainWidget().getAllText();
+        const showFrame = allText["showFramee"];
+        if (showFrame === false) {
+            return null;
+        }
+
         return (
             <div
                 style={{
@@ -682,746 +294,124 @@ export class XYPlotPlot {
         );
     };
 
-    _ElementXYTickLines = () => {
-        return (
-            <svg
-                width={`${this.plotWidth}`}
-                height={`${this.plotHeight}`}
-                x="0"
-                y="0"
-                style={{
-                    position: "absolute",
-                }}
-            >
-                {this.calcXTicks().map((tickValue: number, index: number) => {
-                    return (
-                        <this._ElementXtickLine
-                            key={`x-${tickValue}-${index}`}
-                            tickValue={tickValue}
-                            lineIndex={this.selectedTraceIndex}
-                        ></this._ElementXtickLine>
-                    );
-                })}
-                {this.calcYTicks(this.selectedTraceIndex).map((tickValue: number, index: number) => {
-                    return (
-                        <this._ElementYtickLine
-                            key={`y-${tickValue}-${index}`}
-                            tickValue={tickValue}
-                            lineIndex={this.selectedTraceIndex}
-                        ></this._ElementYtickLine>
-                    );
-                })}
-            </svg>
-        );
-    };
+    // ----------- X, Y ticks and labels elements --------
+    _ElementYLabel = () => {
 
-    calcXTicks = () => {
-        try {
-            let valMin = this.xAxis["valMin"];
-            let valMax = this.xAxis["valMax"];
-            // auto scale
-            // if (this.xAxis["autoScale"] && this.getChannelNames().length <= 2) {
-            if (this.xAxis["autoScale"]) {
-                const xData = this.xy[0];
-                const yData = this.xy[1];
-                if (xData !== undefined && yData !== undefined && yData.length > 0) {
-                    if (xData.length > 0) {
-                        valMin = Math.min(...xData);
-                        valMax = Math.max(...xData);
-                    } else {
-                        valMin = 0;
-                        valMax = yData.length;
-                    }
-                }
-            }
-            // manual scale
-            else {
-                // do nothing
-            }
-
-            // extra space in x direction
-            // there is no tick in the extra space
-            const dx = Math.abs(valMax - valMin) * this.xPlotRangeExtension / 100;
-            valMax = valMax + dx;
-            valMin = valMin - dx;
-
-            return calcTicks(valMin, valMax, this.xAxis["numGrids"] + 1, {scale: "Linear"});
-        } catch (e) {
-            return calcTicks(0, 10, 5 + 1, {scale: "Linear"});
-        }
-    };
-    calcYTicks = (yIndex: number) => {
-        try {
-            const yAxis = this.yAxes[yIndex];
-            let valMin = yAxis["valMin"];
-            let valMax = yAxis["valMax"];
-            // auto scale
-            if (yAxis["autoScale"]) {
-                const xData = this.xy[2 * yIndex];
-                const yData = this.xy[2 * yIndex + 1];
-                if (xData !== undefined && yData !== undefined && yData.length > 0) {
-                    valMin = Math.min(...yData);
-                    valMax = Math.max(...yData);
-                }
-            }
-            // manual scale
-            else {
-                // do nothing
-            }
-            // extra space in y direction
-            const dy = Math.abs(valMax - valMin) * this.yPlotRangeExtension / 100;
-            valMax = valMax + dy;
-            valMin = valMin - dy;
-
-            return calcTicks(valMin, valMax, this.yAxes[yIndex]["numGrids"] + 1, {scale: "Linear"});
-        } catch (e) {
-            return calcTicks(0, 10, 5 + 1, {scale: "Linear"});
-        }
-    };
-
-
-    _ElementXtickLine = ({ tickValue, lineIndex }: any) => {
-        if (this.yAxes[lineIndex] === undefined) {
-            return null;
+        const allText = this.getMainWidget().getAllText();
+        const showFrame = allText["showFramee"];
+        if (showFrame === false) {
+            return null
         }
 
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-        let valYmin = this.yAxes[lineIndex].valMin;
-        let valYmax = this.yAxes[lineIndex].valMax;
-
-        if (this.xAxis["autoScale"]) {
-            const xData = this.xy[lineIndex * 2];
-            if (xData !== undefined && xData.length > 0) {
-                valXmin = Math.min(...xData);
-                valXmax = Math.max(...xData);
-            }
-        }
-        // extra space in x and y directions
-        const dx = Math.abs(valXmax - valXmin) * this.xPlotRangeExtension / 100;
-        const dy = Math.abs(valYmax - valYmin) * this.yPlotRangeExtension / 100;
-        valXmax = valXmax + dx;
-        valXmin = valXmin - dx;
-        valYmax = valYmax + dy;
-        valYmin = valYmin - dy;
-
-        const XYPoint1 = this.mapXYToPoint(lineIndex, [tickValue, valYmin], [valXmin, valXmax, valYmin, valYmax]);
-        const XYPoint2 = this.mapXYToPoint(lineIndex, [tickValue, valYmax], [valXmin, valXmax, valYmin, valYmax]);
-        const XYPoint3 = [XYPoint1[0], XYPoint1[1] - 10];
-        const XYPoint4 = [XYPoint2[0], XYPoint2[1] + 10];
-        return (
-            <>
-                {this.xAxis["showGrid"] ? (
-                    <polyline
-                        points={`${XYPoint1} ${XYPoint2}`}
-                        strokeWidth="1"
-                        stroke="rgb(190,190,190)"
-                        strokeDasharray={"5, 5"}
-                        fill="none"
-                    ></polyline>
-                ) : null}
-                <polyline points={`${XYPoint1} ${XYPoint3}`} strokeWidth="2" stroke="rgb(0,0,0)" fill="none"></polyline>
-                <polyline points={`${XYPoint2} ${XYPoint4}`} strokeWidth="2" stroke="rgb(0,0,0)" fill="none"></polyline>
-            </>
-        );
-    };
-
-    _ElementYtickLine = ({ tickValue, lineIndex }: any) => {
-        if (this.yAxes[lineIndex] === undefined) {
-            return null;
-        }
-
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-        let valYmin = this.yAxes[lineIndex].valMin;
-        let valYmax = this.yAxes[lineIndex].valMax;
-
-        if (this.yAxes[lineIndex]["autoScale"]) {
-            const yData = this.xy[lineIndex * 2 + 1];
-            if (yData !== undefined && yData.length > 0) {
-                valYmin = Math.min(...yData);
-                valYmax = Math.max(...yData);
-            }
-        }
-
-        // extra space in x and y directions
-        const dx = Math.abs(valXmax - valXmin) * this.xPlotRangeExtension / 100;
-        const dy = Math.abs(valYmax - valYmin) * this.yPlotRangeExtension / 100;
-        valXmax = valXmax + dx;
-        valXmin = valXmin - dx;
-        valYmax = valYmax + dy;
-        valYmin = valYmin - dy;
-
-        const XYPoint1 = this.mapXYToPoint(
-            lineIndex,
-            // [this.xAxis.valMin, this.yAxes[lineIndex].ticks[tickIndex]],
-            [valXmin, tickValue],
-            [valXmin, valXmax, valYmin, valYmax]
-        );
-        const XYPoint2 = this.mapXYToPoint(
-            lineIndex,
-            // [this.xAxis.valMax, this.yAxes[lineIndex].ticks[tickIndex]],
-            [valXmax, tickValue],
-            [valXmin, valXmax, valYmin, valYmax]
-        );
-        const XYPoint3 = [XYPoint1[0] + 10, XYPoint1[1]];
-        const XYPoint4 = [XYPoint2[0] - 10, XYPoint2[1]];
-
-        return (
-            <>
-                {this.yAxes[lineIndex]["showGrid"] ? (
-                    <polyline
-                        points={`${XYPoint1} ${XYPoint2}`}
-                        strokeWidth="1"
-                        stroke="rgb(190,190,190)"
-                        strokeDasharray={"5, 5"}
-                        fill="none"
-                    ></polyline>
-                ) : null}
-                <polyline points={`${XYPoint1} ${XYPoint3}`} strokeWidth="2" stroke="rgb(0,0,0)" fill="none"></polyline>
-                <polyline points={`${XYPoint2} ${XYPoint4}`} strokeWidth="2" stroke="rgb(0,0,0)" fill="none"></polyline>
-            </>
-        );
-    };
-
-    _ElementLines = () => {
-        const canUseWebGl = g_widgets1.getRoot().getDisplayWindowClient().canUseWebGl();
-        if (canUseWebGl) {
-            // canvas with webgl
-            return (
-                <this._ElementLinesWebGl></this._ElementLinesWebGl>
-            )
-        } else {
-            // svg
-            return (
-                <this._ElementLinesSvg></this._ElementLinesSvg>
-            )
-        }
-    }
-
-    _ElementLinesSvg = () => {
-        return (
-            <>
-                {this.xy.map((xyData: number[], index: number) => {
-                    if (index % 2 === 0 && this.getTraceHidden(this.getYIndex(index)) === false) {
-                        // return <this._ElementLine key={`${xyData[0]}-${index}`} index={index}></this._ElementLine>;
-                        return (<this._ElementLineSvg key={`${xyData[0]}-${index}`} index={index}></this._ElementLineSvg>)
-                    } else {
-                        return null;
-                    }
-                })}
-
-            </>
-        )
-    }
-
-    _ElementLineSvg = ({ index }: { index: number }) => {
-        return (
-            <svg
-                width={`${this.plotWidth}`}
-                height={`${this.plotHeight}`}
-                x="0"
-                y="0"
-                style={{
-                    position: "absolute",
-                }}
-            >
-                {this.yAxes[this.getYIndex(index)]["lineStyle"] === "none" ? null : (
-                    <polyline
-                        points={this.mapXYsToPoints(index)}
-                        strokeWidth={`${this.yAxes[this.getYIndex(index)].lineWidth}`}
-                        strokeDasharray={this.calcStrokeDasharray(index)}
-                        stroke={this.yAxes[this.getYIndex(index)].lineColor}
-                        fill="none"
-                    ></polyline>
-                )}
-
-                {this.mapXYsToPointsArray(index).map((pointXY: [number, number]) => {
-                    const pointType = this.yAxes[this.getYIndex(index)]["pointType"];
-                    const pointSize = this.yAxes[this.getYIndex(index)]["pointSize"];
-                    if (pointType === "circle") {
-                        return (
-                            <circle
-                                key={`circle-${pointXY}`}
-                                cx={pointXY[0]}
-                                cy={pointXY[1]}
-                                r={pointSize / 2}
-                                fill={this.yAxes[this.getYIndex(index)].lineColor}
-                            ></circle>
-                        );
-                    } else if (pointType === "square") {
-                        return (
-                            <rect
-                                key={`rect-${pointXY}`}
-                                x={pointXY[0] - pointSize / 2}
-                                y={pointXY[1] - pointSize / 2}
-                                width={pointSize}
-                                height={pointSize}
-                                fill={this.yAxes[this.getYIndex(index)].lineColor}
-                            ></rect>
-                        );
-                    } else if (pointType === "x") {
-                        const pointSize = this.yAxes[this.getYIndex(index)]["pointSize"];
-                        const point1X = pointXY[0] - pointSize / 2;
-                        const point1Y = pointXY[1] - pointSize / 2;
-                        const point2X = pointXY[0] + pointSize / 2;
-                        const point2Y = pointXY[1] + pointSize / 2;
-                        const point3X = pointXY[0] + pointSize / 2;
-                        const point3Y = pointXY[1] - pointSize / 2;
-                        const point4X = pointXY[0] - pointSize / 2;
-                        const point4Y = pointXY[1] + pointSize / 2;
-                        const pointsA = `${point1X},${point1Y} ${point2X},${point2Y}`;
-                        const pointsB = `${point3X},${point3Y} ${point4X},${point4Y}`;
-
-                        return (
-                            <>
-                                <polyline
-                                    points={pointsA}
-                                    strokeWidth={2}
-                                    stroke={this.yAxes[this.getYIndex(index)].lineColor}
-                                    fill="none"
-                                ></polyline>
-                                <polyline
-                                    points={pointsB}
-                                    strokeWidth={2}
-                                    stroke={this.yAxes[this.getYIndex(index)].lineColor}
-                                    fill="none"
-                                ></polyline>
-                            </>
-                        );
-                    } else if (pointType === "asterisk") {
-                        const pointSize = this.yAxes[this.getYIndex(index)]["pointSize"];
-                        const point1X = pointXY[0] - ((pointSize / 2) * 1.717) / 2;
-                        const point1Y = pointXY[1] - ((pointSize / 2) * 1) / 2;
-                        const point2X = pointXY[0] + ((pointSize / 2) * 1.717) / 2;
-                        const point2Y = pointXY[1] + ((pointSize / 2) * 1) / 2;
-                        const point3X = pointXY[0] + ((pointSize / 2) * 1.717) / 2;
-                        const point3Y = pointXY[1] - ((pointSize / 2) * 1) / 2;
-                        const point4X = pointXY[0] - ((pointSize / 2) * 1.717) / 2;
-                        const point4Y = pointXY[1] + ((pointSize / 2) * 1) / 2;
-                        const point5X = pointXY[0];
-                        const point5Y = pointXY[1] + pointSize / 2;
-                        const point6X = pointXY[0];
-                        const point6Y = pointXY[1] - pointSize / 2;
-                        const pointsA = `${point1X},${point1Y} ${point2X},${point2Y}`;
-                        const pointsB = `${point3X},${point3Y} ${point4X},${point4Y}`;
-                        const pointsC = `${point5X},${point5Y} ${point6X},${point6Y}`;
-
-                        return (
-                            <>
-                                <polyline
-                                    points={pointsA}
-                                    strokeWidth={2}
-                                    stroke={this.yAxes[this.getYIndex(index)].lineColor}
-                                    fill="none"
-                                ></polyline>
-                                <polyline
-                                    points={pointsB}
-                                    strokeWidth={2}
-                                    stroke={this.yAxes[this.getYIndex(index)].lineColor}
-                                    fill="none"
-                                ></polyline>
-                                <polyline
-                                    points={pointsC}
-                                    strokeWidth={2}
-                                    stroke={this.yAxes[this.getYIndex(index)].lineColor}
-                                    fill="none"
-                                ></polyline>
-                            </>
-                        );
-                    } else if (pointType === "diamond") {
-                        return (
-                            <rect
-                                key={`diamond-${pointXY}`}
-                                transform={`rotate(45 ${pointXY[0]} ${pointXY[1]})`}
-                                x={pointXY[0] - pointSize / 2}
-                                y={pointXY[1] - pointSize / 2}
-                                width={pointSize}
-                                height={pointSize}
-                                fill={this.yAxes[this.getYIndex(index)].lineColor}
-                            ></rect>
-                        );
-                    } else if (pointType === "triangle") {
-                        const pointSize = this.yAxes[this.getYIndex(index)]["pointSize"];
-                        const point1X = pointXY[0];
-                        const point1Y = pointXY[1] - pointSize / 1.717;
-                        const point2X = pointXY[0] + pointSize / 2;
-                        const point2Y = pointXY[1] + pointSize / 1.717 / 2;
-                        const point3X = pointXY[0] - pointSize / 2;
-                        const point3Y = pointXY[1] + pointSize / 1.717 / 2;
-                        const points = `${point1X},${point1Y} ${point2X},${point2Y} ${point3X},${point3Y}`;
-                        return <polyline key={`triangle-${pointXY}`} points={points} fill={this.yAxes[this.getYIndex(index)].lineColor}></polyline>;
-                    } else if (pointType === "none") {
-                        return null;
-                    } else {
-                        return null;
-                    }
-                })}
-            </svg>
-        );
-    }
-
-    // ------------------------- webgl ----------------------
-
-    calcWebGlShadeColor = (rgbaColor: string) => {
-        // "rgba(255, 0, 0, 1)" --> "1.0, 0.0, 0.0, 1.0"
-        const color1 = rgbaColor.replace("rgba", "").replace("rgb", "").replace("(", "").replace(")", "");
-        const colorStrs = color1.split(",");
-
-        let result: string = "";
-        if (colorStrs.length !== 4) {
-            return "0.0, 0.0, 0.0, 1.0";
-        }
-
-        for (let ii = 0; ii < colorStrs.length; ii++) {
-            const colorStr = colorStrs[ii];
-            const colorNum = parseFloat(colorStr);
-            if (isNaN(colorNum)) {
-                return "0.0, 0.0, 0.0, 1.0";
-            }
-            if (ii < 3) {
-                result = result + `${colorNum / 255}` + ", ";
-            } else {
-                result = result + `${colorNum}`;
-            }
-        }
-        return result;
-    }
-
-    _ElementLinesWebGl = () => {
-        const mountRef = React.useRef<HTMLDivElement>(null);
-
-        const fun1 = () => {
-            const scene = new Scene();
-            const camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
-
-            camera.position.z = 1;
-            const containerWidth = this.plotWidth;
-            const containerHeight = this.plotHeight;
-
-            const pixelWorldUnitRatioX = containerWidth / 2;
-            const pixelWorldUnitRatioY = containerHeight / 2;
-
-            const renderer = new WebGLRenderer({ alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(containerWidth, containerHeight);
-            mountRef.current!.appendChild(renderer.domElement);
-
-            // for test
-            // const leng = 50000;
-            // const randomArray = Array.from({ length: leng }, () => Math.random() * 10);
-            // this.xy[0] = [];
-            // this.xy[1] = randomArray;
-
-            // const randomArray1 = Array.from({ length: leng }, () => 10 + Math.random() * 10);
-            // this.xy[2] = [];
-            // this.xy[3] = randomArray1;
-
-            // const randomArray2 = Array.from({ length: leng }, () => 20 + Math.random() * 10);
-            // this.xy[4] = [];
-            // this.xy[5] = randomArray2;
-
-            // const randomArray3 = Array.from({ length: leng }, () => 30 + Math.random() * 10);
-            // this.xy[6] = [];
-            // this.xy[7] = randomArray3;
-
-            this.xy.forEach((XorYData: number[], index: number) => {
-                if (index % 2 === 1 || this.getTraceHidden(this.getYIndex(index)) === true) {
-                    return;
-                }
-
-                // for both points and lines
-                const positions = this.mapXYsToPointsWebGl(index);
-                const color = this.yAxes[this.getYIndex(index)].lineColor;
-
-                const showLine = this.yAxes[this.getYIndex(index)].lineStyle === "none" ? false : true;
-                const showPoint = this.yAxes[this.getYIndex(index)].pointType === "none" ? false : true;
-
-                // ---------------- points --------------
-                if (showPoint === true) {
-                    const pointGeometry = new BufferGeometry();
-                    pointGeometry.setAttribute('position', new BufferAttribute(positions, 3));
-                    const pointSize = this.yAxes[this.getYIndex(index)].pointSize;
-                    const pointType = this.yAxes[this.getYIndex(index)].pointType;
-
-                    const shadeTypeValue = pointType === "circle" ?
-                        1
-                        :
-                        pointType === "square" ?
-                            0
-                            :
-                            pointType === "diamond" ?
-                                2
-                                :
-                                pointType === "x" ?
-                                    4
-                                    :
-                                    pointType === "triangle" ?
-                                        3
-                                        :
-                                        pointType === "asterisk" ?
-                                            5
-                                            :
-                                            1;
-
-                    const pointMaterial = new ShaderMaterial({
-                        uniforms: {
-                            // for some shapes, the actual point size is different from pointSize value
-                            size: { value: pointSize },
-                            shapeType: { value: shadeTypeValue }
-                        },
-                        vertexShader: `
-                         uniform float size;
-                         void main() {
-                           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                           gl_PointSize = size;
-                         }
-                        `,
-                        fragmentShader: `
-                        uniform int shapeType;
-                        void main() {
-                          // Get coordinate within the point
-                          vec2 coord = gl_PointCoord - vec2(0.5);
-                          gl_FragColor = vec4(${this.calcWebGlShadeColor(color)});
-                    
-                          if (shapeType == 0) {
-                            // Default square (built-in behavior)
-                            // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-                          }
-                          else if (shapeType == 1) {
-                            // Circle - discard fragments outside radius
-                            float radius = length(coord);
-                            if (radius > 0.5) discard;
-                          }
-                          else if (shapeType == 2) {
-                            // Diamond
-                            float diamond = abs(coord.x) + abs(coord.y);
-                            if (diamond > 0.5) discard;
-                          }
-                          else if (shapeType == 3) {
-                            // Triangle
-                            if (coord.y < -0.25) discard; // Bottom cutoff
-                            if (abs(coord.x) > 0.5 * (0.5 - coord.y)) discard; // Sides
-                          }
-                          else if (shapeType == 4) {
-                            // X
-                            float lineWidth = 0.1;
-                            float diagonal1 = abs(coord.x + coord.y);
-                            float diagonal2 = abs(coord.x - coord.y);
-                            if (diagonal1 > lineWidth && diagonal2 > lineWidth) discard;
-                          }
-                          else if (shapeType == 5) {
-                            // Asterisk
-                            float lineWidth = 0.08;
-                            float angle = atan(coord.y, coord.x);
-                            float radius = length(coord);
-                            
-                            // Main cross
-                            float cross1 = abs(coord.x);
-                            float cross2 = abs(coord.y);
-                            
-                            // Diagonal crosses (rotated by 45 degrees)
-                            float diag1 = abs(coord.x + coord.y) * 0.707; // 1/sqrt(2)
-                            float diag2 = abs(coord.x - coord.y) * 0.707;
-                            
-                            if (radius > 0.5) discard;
-                            if (cross1 > lineWidth && cross2 > lineWidth && 
-                                diag1 > lineWidth && diag2 > lineWidth) discard;
-                          }
-                        }
-                        `,
-                        transparent: true
-                    });
-
-
-                    const points = new Points(pointGeometry, pointMaterial);
-                    scene.add(points);
-                }
-
-                // ---------------- line ----------------
-                if (showLine === true) {
-                    const lineGeometry = new LineGeometry();
-                    lineGeometry.setPositions(positions);
-
-                    const lineWidth = this.yAxes[this.getYIndex(index)].lineWidth;
-
-                    const lineMaterial = new LineMaterial({
-                        worldUnits: false,
-                        color: new Color(color),
-                        linewidth: lineWidth,
-                        resolution: new Vector2(containerWidth, containerHeight),
-                        dashed: true,
-                        dashSize: this.calcDashSizeWebGl(index),
-                        gapSize: this.calcGapSizeWebGl(index),
-                    });
-
-                    const line = new Line2(lineGeometry, lineMaterial);
-                    line.computeLineDistances();
-                    scene.add(line);
-                }
-            });
-
-            renderer.render(scene, camera);
-
-            return () => {
-                mountRef.current?.removeChild(renderer.domElement);
-                renderer.dispose();
-            };
-        };
-
-        React.useEffect(fun1);
-
-        return <div ref={mountRef} style={{ width: this.plotWidth, height: this.plotWidth }} />;
-    };
-
-    calcDashSizeWebGl = (index: number) => {
-        const yIndex = this.getYIndex(index);
-        const yAxis = this.yAxes[yIndex];
-        const pixelWorldUnitRatioX = this.plotWidth / 2;
-        const pixelWorldUnitRatioY = this.plotHeight / 2;
-        const lineWidth = yAxis["lineWidth"] / pixelWorldUnitRatioX;
-        switch (yAxis["lineStyle"]) {
-            case "solid":
-                return 1;
-            case "dotted":
-                return lineWidth * 1;
-            case "dashed":
-                return lineWidth * 4;
-            case "dash-dot":
-                return 1;
-            case "dash-dot-dot":
-                return 1;
-            default:
-                return 0;
-        }
-    };
-
-    calcGapSizeWebGl = (index: number) => {
-        const yIndex = this.getYIndex(index);
-        const yAxis = this.yAxes[yIndex];
-        const pixelWorldUnitRatioX = this.plotWidth / 2;
-        const pixelWorldUnitRatioY = this.plotHeight / 2;
-        const lineWidth = yAxis["lineWidth"] / pixelWorldUnitRatioX;
-        switch (yAxis["lineStyle"]) {
-            case "solid":
-                return 0;
-            case "dotted":
-                return lineWidth * 2;
-            case "dashed":
-                return lineWidth * 2;
-            case "dash-dot":
-                return 0;
-            case "dash-dot-dot":
-                return 0;
-            default:
-                return 1;
-        }
-    };
-
-    // ---------------------- svg ------------------------
-
-    calcStrokeDasharray = (index: number) => {
-        const yIndex = this.getYIndex(index);
-        const yAxis = this.yAxes[yIndex];
-        const lineWidth = yAxis["lineWidth"];
-        switch (yAxis["lineStyle"]) {
-            case "solid":
-                return ``;
-            case "dotted":
-                return `${lineWidth},${lineWidth}`;
-            case "dashed":
-                return `${4 * lineWidth},${2 * lineWidth}`;
-            case "dash-dot":
-                return `${4 * lineWidth},${lineWidth},${lineWidth},${lineWidth}`;
-            case "dash-dot-dot":
-                return `${4 * lineWidth},${lineWidth},${lineWidth},${lineWidth},${lineWidth},${lineWidth}`;
-            default:
-                return "";
-        }
-    };
-
-
-
-    getYIndex = (index: number) => {
-        return Math.floor((index + 0.01) / 2);
-    };
-
-    _ElementXTicks = () => {
-        const elementRef = React.useRef<any>(null);
-        const xTicks = this.calcXTicks();
-        const width = elementRef.current?.offsetWidth;
-        const refinedTicks = refineTicks(xTicks, this.getMainWidget().getAllStyle()["fontSize"] * 0.5, width, "horizontal");
+        const color = this.calcColor();
 
         return (
             <div
                 style={{
-                    // necessary for absolute children elments
-                    position: "relative",
-                    width: `${this.plotWidth}px`,
-                    height: `100%`,
                     display: "inline-flex",
-                    flexFlow: "row",
-                    alignItems: "flex-start",
                     justifyContent: "center",
-                    // backgroundColor: "grey",
-                    backgroundColor: "rgba(180, 180, 180, 0)",
-                    overflow: "visible",
+                    alignItems: "center",
+                    width: this.yAxisLabelWidth,
+                    height: this.plotHeight,
+                    margin: "0px",
+                    padding: "0px",
+                    backgroundColor: "rgba(255, 0, 255, 0)",
+                    color: color,
                 }}
-                ref={elementRef}
             >
-                {xTicks.map((value: number, tickIndex: number) => {
-                    let valXmin = this.xAxis.valMin;
-                    let valXmax = this.xAxis.valMax;
-                    let valYmin = 0;
-                    let valYmax = 100;
-
-                    if (this.xAxis["autoScale"]) {
-                        const xData = this.xy[this.selectedTraceIndex * 2];
-                        if (xData !== undefined) {
-                            if (xData.length > 0) {
-                                valXmin = Math.min(...xData);
-                                valXmax = Math.max(...xData);
-                            } else {
-                                const yData = this.xy[this.selectedTraceIndex * 2 + 1];
-                                if (yData.length > 0) {
-                                    valXmin = 0;
-                                    valXmax = yData.length;
-                                }
-                            }
-                        }
-                    }
-
-                    // extra space in x and y directions
-                    const dx = Math.abs(valXmax - valXmin) * this.xPlotRangeExtension / 100;
-                    const dy = Math.abs(valYmax - valYmin) * this.yPlotRangeExtension / 100;
-                    valXmax = valXmax + dx;
-                    valXmin = valXmin - dx;
-                    valYmax = valYmax + dy;
-                    valYmin = valYmin - dy;
-
-                    const [pointX, pointY] = this.mapXYToPoint(0, [value, 1], [valXmin, valXmax, valYmin, valYmax]);
-                    return (
-                        <div
-                            key={`${value}-${tickIndex}`}
-                            style={{
-                                position: "absolute",
-                                left: `${pointX}px`,
-                                width: "0px",
-                                height: "100%",
-                                overflow: "visible",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            {/* {this.xAxis.ticksText[tickIndex]} */}
-                            {/* {`${value}`} */}
-                            {refinedTicks[tickIndex]}
-                        </div>
-                    );
-                })}
+                <div
+                    style={{
+                        transform: "rotate(-90deg)",
+                        overflow: "visible",
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {this.yAxes[this.selectedTraceIndex] === undefined ? "" : this.convertLatexSourceToDiv(this.yAxes[this.selectedTraceIndex].label)}
+                </div>
             </div>
         );
+    };
+
+    _ElementYTicks = () => {
+        const color = this.calcColor();
+        const { xValMin,
+            xValMax,
+            yValMin,
+            yValMax,
+            xLength,
+            yLength,
+            numXgrid,
+            numYgrid,
+            xTickValues,
+            xTickPositions,
+            yTickValues,
+            yTickPositions } = this.ticksInfo;
+
+        return (
+            <div
+                style={{
+                    position: "relative",
+                    width: this.yAxisTickWidth,
+                    height: "100%",
+                    display: "inline-flex",
+                    flexGrow: 0,
+                    flexShrink: 0,
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
+                <Scale
+                    min={yValMin}
+                    max={yValMax}
+                    numIntervals={numYgrid}
+                    position={"left"}
+                    show={true}
+                    length={this.plotHeight}
+                    scale={"Linear"}
+                    color={color}
+                    compact={false}
+                    showTicks={false}
+                    showLabels={true}
+                    showAxis={false}
+                >
+                </Scale>
+            </div>
+        )
+    };
+
+    _ElementXTicks = () => {
+        const { xValMin,
+            xValMax,
+            yValMin,
+            yValMax,
+            xLength,
+            yLength,
+            numXgrid,
+            numYgrid,
+            xTickValues,
+            xTickPositions,
+            yTickValues,
+            yTickPositions } = this.ticksInfo;
+
+        const color = this.calcColor();
+
+        return (
+            <Scale
+                min={xValMin}
+                max={xValMax}
+                numIntervals={numXgrid}
+                position={"bottom"}
+                show={true}
+                length={this.plotWidth}
+                scale={"Linear"}
+                color={color}
+                compact={false}
+                showTicks={false}
+                showLabels={true}
+                showAxis={false}
+            >
+            </Scale>
+        )
     };
 
     _ElementXLabel = () => {
@@ -1443,148 +433,107 @@ export class XYPlotPlot {
         );
     };
 
-    convertLatexSourceToDiv = (rawText: string) => {
-        // const rawText = this.getAllText()["text"];
-        if (`${rawText}`.startsWith("latex://")) {
-            // no additional parsing, pure latex
-            try {
-                const htmlContents = katex.renderToString(`${rawText}`.replace("latex://", ""), {
-                    throwOnError: false,
-                });
-                return <div dangerouslySetInnerHTML={{ __html: htmlContents }}></div>;
-            } catch (e) {
-                Log.error(e);
-                return `${rawText}`;
-            }
-        } else {
-            return `${rawText}`;
-        }
-    };
+    // ----------- plot region ---------------------
 
-    _ElementYTicks = () => {
-        // the ticks area
-        const elementRef = React.useRef<any>(null);
-        const height = elementRef.current?.offsetHeight;
-        const refinedTicks = refineTicks(this.calcYTicks(this.selectedTraceIndex), this.getMainWidget().getAllStyle()["fontSize"] * 0.5, height, "vertical");
+    _ElementPlot = () => {
 
         return (
             <div
-                ref={elementRef}
                 style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: `${this.yAxisTickWidth}px`,
-                    height: "100%",
-                    margin: "0px",
-                    padding: "0px",
-                    // backgroundColor: "pink",
-                    backgroundColor: "rgba(255, 192, 203, 0)",
+                    width: this.plotWidth,
+                    height: this.plotHeight,
+                    outline: "1px solid black",
                     position: "relative",
+                    backgroundColor: "rgba(0,255,0,1)",
+                }}
+                onMouseEnter={() => {
+                    if (!g_widgets1.isEditing()) {
+                        window.addEventListener("mousemove", this.updateCursorValue);
+                    }
+                }}
+                onMouseLeave={() => {
+                    this.lastCursorPointXY = [-100000, -100000];
+                    this.updateCursorValue(this.lastCursorPointXY);
+                    window.removeEventListener("mousemove", this.updateCursorValue);
                 }}
             >
-                {/* {this.yAxes[this.selectedTraceIndex]?.ticks.map((value: number, tickIndex: number) => { */}
-                {this.calcYTicks(this.selectedTraceIndex).map((value: number, tickIndex: number) => {
-                    if (this.yAxes.length < 1) {
-                        return null;
-                    }
-                    let valXmin = 0;
-                    let valXmax = 100;
-                    let valYmin = this.yAxes[this.selectedTraceIndex]["valMin"];
-                    let valYmax = this.yAxes[this.selectedTraceIndex]["valMax"];
+                {/* tick lines first */}
+                <this._ElementXYGridLines></this._ElementXYGridLines>
+                {/* data */}
+                <this._ElementLines></this._ElementLines>
+                {/* legend */}
+                <this._ElementLegends></this._ElementLegends>
+            </div>
+        );
+    };
 
-                    if (this.yAxes[this.selectedTraceIndex]["autoScale"]) {
-                        const yData = this.xy[this.selectedTraceIndex * 2 + 1];
-                        if (yData !== undefined && yData.length > 0) {
-                            valYmin = Math.min(...yData);
-                            valYmax = Math.max(...yData);
-                        }
-                    }
-                    // extra space in x and y directions
-                    const dx = Math.abs(valXmax - valXmin) * this.xPlotRangeExtension / 100;
-                    const dy = Math.abs(valYmax - valYmin) * this.yPlotRangeExtension / 100;
-                    valXmax = valXmax + dx;
-                    valXmin = valXmin - dx;
-                    valYmax = valYmax + dy;
-                    valYmin = valYmin - dy;
+    _ElementXYGridLines = () => {
+        const { xValMin,
+            xValMax,
+            yValMin,
+            yValMax,
+            xLength,
+            yLength,
+            numXgrid,
+            numYgrid,
+            xTickValues,
+            xTickPositions,
+            yTickValues,
+            yTickPositions } = this.ticksInfo;
+        const height = this.plotHeight;
+        const width = this.plotWidth;
 
-                    const [pointX, pointY] = this.mapXYToPoint(this.selectedTraceIndex, [1, value], [valXmin, valXmax, valYmin, valYmax]);
+        return (
+            <svg
+                width={`${this.plotWidth}`}
+                height={`${this.plotHeight}`}
+                x="0"
+                y="0"
+                style={{
+                    position: "absolute",
+                }}
+            >
+                {xTickPositions.map((tickPosition: number, index: number) => {
                     return (
-                        <div
-                            key={`yticks-${value}-${tickIndex}`}
-                            style={{
-                                position: "absolute",
-                                // right: "12px",
-                                right: parseInt(this.getMainWidget().getAllStyle()["fontSize"]) * 0.75,
-                                top: `${pointY}px`,
-                                // width: "100%",
-                                transform: "rotate(-90deg)",
-                                width: 0,
-                                height: "0px",
-                                overflow: "visible",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: this.yAxes[this.selectedTraceIndex]["lineColor"],
-                            }}
-                        >
-                            {/* {this.yAxes[this.selectedTraceIndex]?.ticksText[tickIndex]} */}
-                            {/* {`${value}`} */}
-                            {refinedTicks[tickIndex]}
-                        </div>
+                        <polyline
+                            key={`x-${tickPosition}-${index}`}
+                            points={`${tickPosition} 0 ${tickPosition} ${height}`}
+                            strokeWidth="1"
+                            stroke="rgb(190,190,190)"
+                            strokeDasharray={"5, 5"}
+                            fill="none"
+                        ></polyline>
                     );
                 })}
-            </div>
+                {yTickPositions.map((tickPosition: number, index: number) => {
+                    return (
+                        <polyline
+                            key={`y-${tickPosition}-${index}`}
+                            points={`0 ${tickPosition} ${width} ${tickPosition}`}
+                            strokeWidth="1"
+                            stroke="rgb(190,190,190)"
+                            strokeDasharray={"5, 5"}
+                            fill="none"
+                        ></polyline>
+                    );
+                })}
+            </svg>
         );
     };
 
-    _ElementYLabel = () => {
+    _ElementLines = () => {
         return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: `${this.yAxisLabelWidth}px`,
-                    height: "100%",
-                    margin: "0px",
-                    padding: "0px",
-                    // backgroundColor: "magenta",
-                    backgroundColor: "rgba(255, 0, 255, 0)",
-                    color: this.yAxes[this.selectedTraceIndex] === undefined ? "black" : this.yAxes[this.selectedTraceIndex].lineColor,
-                }}
-            >
-                <div
-                    style={{
-                        transform: "rotate(-90deg)",
-                        overflow: "visible",
-                        whiteSpace: "nowrap",
-                    }}
-                >
-                    {this.yAxes[this.selectedTraceIndex] === undefined ? "" : this.convertLatexSourceToDiv(this.yAxes[this.selectedTraceIndex].label)}
-                </div>
-            </div>
-        );
-    };
+            <this._webgl._ElementLinesWebGl></this._webgl._ElementLinesWebGl>
+        )
+    }
 
-    _ElementBlankArea = () => {
-        return (
-            <div
-                style={{
-                    width: `${this.yAxisLabelWidth + this.yAxisTickWidth}px`,
-                    height: `100%`,
-                    display: "inline-flex",
-                    flexFlow: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    // backgroundColor: "blue",
-                    backgroundColor: "rgba(0, 0, 255, 0)",
-                }}
-            ></div>
-        );
-    };
+    // -------------- legend elements --------------
 
     _ElementLegends = () => {
+        if (!(this.getMainWidget().getText()["showLegend"] === true || this.peekLegend === true)) {
+            return null;
+        }
+
         return (
             <div
                 style={{
@@ -1666,17 +615,15 @@ export class XYPlotPlot {
         }
 
         return (
-            <>
-                <line
-                    x1="0"
-                    y1={svgHeight / 2 + (0 * lineWidth) / 2}
-                    x2={svgWidth}
-                    y2={svgHeight / 2 + (0 * lineWidth) / 2}
-                    strokeWidth={lineWidth}
-                    stroke={color}
-                    strokeDasharray={strokeDasharray}
-                ></line>
-            </>
+            <line
+                x1="0"
+                y1={svgHeight / 2 + (0 * lineWidth) / 2}
+                x2={svgWidth}
+                y2={svgHeight / 2 + (0 * lineWidth) / 2}
+                strokeWidth={lineWidth}
+                stroke={color}
+                strokeDasharray={strokeDasharray}
+            ></line>
         );
     };
 
@@ -1960,806 +907,330 @@ export class XYPlotPlot {
         );
     };
 
-    // -------------------------------- settings page ------------------------------------------------
+    // --------------- plot calculation ------------
 
-    getElementSettings = () => {
-        if (g_widgets1.isEditing()) {
-            return null;
+    mapXYsToPointsWebGl = (index: number): Float32Array => {
+        // x and y data are odd and even indices
+        let xData = this.xy[index];
+        let yData = this.xy[index + 1];
+
+        let yIndex = this.getYIndex(index);
+
+        let useLog10Scale = false;
+        if (this.yAxes[yIndex] !== undefined) {
+            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
+        }
+
+        // if there is no xData (undefined) or the x PV is empty ("")
+        if (this.getMainWidget().getChannelNames()[index] === "" || xData.length === 0) {
+            const dataSize = yData.length;
+            xData = [...Array(dataSize).keys()];
+        }
+        // xData and yData must be same size
+        if (xData.length !== yData.length) {
+            const positions = new Float32Array(3);
+            return positions;
+        }
+
+        if (xData.length === 0) {
+            const positions = new Float32Array(3);
+            return positions;
+        }
+
+        let { xValMax, xValMin, yValMax, yValMin } = this.ticksInfo;
+
+        // extra space in x and y directions
+        if (!useLog10Scale) {
+            const dx = Math.abs(xValMax - xValMin) * this.xPlotRangeExtension / 100;
+            const dy = Math.abs(yValMax - yValMin) * this.yPlotRangeExtension / 100;
+            xValMax = xValMax + dx;
+            xValMin = xValMin - dx;
+            yValMax = yValMax + dy;
+            yValMin = yValMin - dy;
+        }
+
+        const len = Math.min(xData.length, yData.length);
+        const positions = new Float32Array(len * 3);
+
+        for (let ii = 0; ii < len; ii++) {
+            const valX = xData[ii];
+            const valY = yData[ii];
+            const pointX = this.mapXToPointWebGl(index, [valX, valY], [xValMin, xValMax, yValMin, yValMax]);
+            const pointY = this.mapYToPointWebGl(index, [valX, valY], [xValMin, xValMax, yValMin, yValMax]);
+            if (pointX === undefined || pointY === undefined || isNaN(pointX) || isNaN(pointY)) {
+                continue;
+            }
+            positions[3 * ii] = pointX;
+            positions[3 * ii + 1] = -1 * pointY;
+            positions[3 * ii + 2] = 0;
+        }
+        return positions;
+    };
+
+    mapXToPointWebGl = (
+        index: number,
+        [valX, valY]: [number, number],
+        [valXmin, valXmax, valYmin, valYmax]: [number, number, number, number]
+    ): number => {
+
+        let yIndex = this.getYIndex(index);
+
+        if (this.yAxes[yIndex] === undefined) {
+            return 0;
+        }
+        const pointXmin = -1;
+        const pointXmax = 1;
+        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
+        return pointX;
+    };
+
+    mapYToPointWebGl = (
+        index: number,
+        [valX, valY]: [number, number],
+        [valXmin, valXmax, valYmin, valYmax]: [number, number, number, number]
+    ): number => {
+
+        let yIndex = this.getYIndex(index);
+        let useLog10Scale = false;
+        if (this.yAxes[yIndex] !== undefined) {
+            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
+        }
+
+        if (this.yAxes[yIndex] === undefined) {
+            return 0;
+        }
+        const pointYmin = -1;
+        const pointYmax = 1;
+
+        // valY, valYmin, valYmax for Log10
+        // if we use Log10Scale, do not use extra space
+        if (useLog10Scale) {
+            valYmin = Math.log10(valYmin);
+            valYmax = Math.log10(valYmax);
+            valY = Math.log10(valY);
+        }
+        if (useLog10Scale) {
+            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
+                valY = -20
+            }
+            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
+                valYmin = -20
+            }
+            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
+                valYmax = 0
+            }
+        }
+
+        // const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
+        const pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
+        return pointY;
+    };
+
+    // pointX, pointY are the coordinates inside Plot element
+    mapPointToXY = (index: number,
+        [pointX, pointY]: [number, number],
+        [valXmin, valXmax, valYmin, valYmax]: [number, number, number, number]
+    ): [number, number] => {
+        if (index >= this.getMainWidget().getChannelNames().length) {
+            return [0, 0];
+        }
+
+        let yIndex = this.getYIndex(index);
+        let useLog10Scale = false;
+        if (this.yAxes[yIndex] !== undefined) {
+            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
+        }
+
+        const pointXmin = 0;
+        const pointXmax = this.plotWidth;
+        const pointYmin = 0;
+        const pointYmax = this.plotHeight;
+
+        if (useLog10Scale) {
+            valYmin = Math.log10(valYmin);
+            valYmax = Math.log10(valYmax);
+        }
+
+        if (useLog10Scale) {
+            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
+                valYmin = -20;
+            }
+            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
+                valYmax = 0
+            }
+        }
+
+        const valX = valXmin + ((pointX - pointXmin) * (valXmax - valXmin)) / (pointXmax - pointXmin);
+
+        if (useLog10Scale) {
+            let valY = valYmin - (pointY - pointYmax) / ((pointYmax - pointYmin) / (valYmax - valYmin));
+            valY = Math.pow(10, valY);
+            return [valX, valY];
         } else {
-            return <this._ElementSettings></this._ElementSettings>;
+            const valY = valYmin - ((pointY - pointYmax) * (valYmax - valYmin)) / (pointYmax - pointYmin);
+            return [valX, valY];
         }
     };
 
-    _ElementSettingLine = ({ children }: any) => {
-        const elementRef = React.useRef<any>(null);
+    getYIndex = (index: number) => {
+        return Math.floor((index + 0.01) / 2);
+    };
+    // ------------------- helper functions --------------
+
+    /**
+     * Recalculate the plot region dimensions and tick layout info.
+     *
+     * Called once per render. Computes `plotWidth` / `plotHeight` from the
+     * widget size and frame margins, then derives x/y tick values and pixel
+     * positions (stored in `this.ticksInfo`) so that tick lines, labels, and
+     * the WebGL canvas all share a consistent coordinate mapping.
+     */
+    updateWidthHeightTicksInfo = () => {
+        const allText = this.getMainWidget().getAllText();
+        const allStyle = this.getMainWidget().getAllStyle();
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+        const showFrame = allText["showFrame"];
+        if (showFrame === true) {
+            this.plotWidth = width - this.yAxisLabelWidth - this.yAxisTickWidth;
+            this.plotHeight = height - this.titleHeight - this.xAxisLabelHeight - this.xAxisTickHeight - this.toolbarHeight;
+        } else {
+            this.plotWidth = width;
+            this.plotHeight = height;
+        }
+
+        const scale = "Linear";
+        const { xValMin, xValMax, yValMin, yValMax } = this.calcXyValMinMax();
+        const xLength = this.plotWidth;
+        const yLength = this.plotHeight;
+        const numXgrid = this.xAxis["numGrids"];
+        const numYgrid = this.yAxes[this.selectedTraceIndex]["numGrids"];
+        const xTickValues = calcTicks(xValMin, xValMax, numXgrid + 1, { scale: scale });
+        const xTickPositions = calcTickPositions(xTickValues, xValMin, xValMax, xLength, { scale: scale }, "vertical");
+        const yTickValues = calcTicks(yValMin, yValMax, numYgrid + 1, { scale: scale });
+        const yTickPositions = calcTickPositions(yTickValues, yValMin, yValMax, yLength, { scale: scale }, "vertical");
+        this.ticksInfo = {
+            scale,
+            xValMin,
+            xValMax,
+            yValMin,
+            yValMax,
+            xLength,
+            yLength,
+            numXgrid,
+            numYgrid,
+            xTickValues,
+            xTickPositions,
+            yTickValues,
+            yTickPositions,
+        };
+    }
+
+    calcXyValMinMax = () => {
+        // x
+        let xValMin = this.xAxis["valMin"];
+        let xValMax = this.xAxis["valMax"];
+        // auto scale
+        const autoScale = this.xAxis["autoScale"];
+        if (autoScale === true) {
+            const xData = this.xy[0];
+            const yData = this.xy[1];
+            if (xData !== undefined && yData !== undefined && yData.length > 0) {
+                if (xData.length > 0) {
+                    xValMin = Math.min(...xData);
+                    xValMax = Math.max(...xData);
+                } else {
+                    xValMin = 0;
+                    xValMax = yData.length;
+                }
+            }
+        }
+
+        // y
+        const yIndex = this.selectedTraceIndex;
+        const yAxis = this.yAxes[yIndex];
+        let yValMin = yAxis["valMin"];
+        let yValMax = yAxis["valMax"];
+        // auto scale
+        if (yAxis["autoScale"]) {
+            const xData = this.xy[2 * yIndex];
+            const yData = this.xy[2 * yIndex + 1];
+            if (xData !== undefined && yData !== undefined && yData.length > 0) {
+                yValMin = Math.min(...yData);
+                yValMax = Math.max(...yData);
+            }
+        }
+
         return (
-            <div
-                ref={elementRef}
-                style={{
-                    width: "100%",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    justifyContent: 'flex-start',
-                    alignItems: "center",
-                }}
-                onMouseEnter={() => {
-                    if (elementRef.current !== null) {
-                        elementRef.current.style["backgroundColor"] = "rgba(230, 230, 230, 1)";
-                    }
-                }}
-                onMouseLeave={() => {
-                    if (elementRef.current !== null) {
-                        elementRef.current.style["backgroundColor"] = "rgba(230, 230, 230, 0)";
-                    }
-                }}
-            >
-                {children}
-            </div>
+            {
+                xValMin: xValMin,
+                xValMax: xValMax,
+                yValMin: yValMin,
+                yValMax: yValMax,
+            }
         )
     }
 
-    _ElementSettingCell = ({ children, width }: any) => {
-        return (<div
-            style={{
-                width: width,
-                display: "inline-flex",
-                flexDirection: "row",
-                justifyContent: 'flex-start',
-                alignItems: "center",
-                height: "100%",
-            }}
-        >
-            {children}
-        </div>)
+    convertLatexSourceToDiv = (rawText: string) => {
+        // const rawText = this.getAllText()["text"];
+        if (`${rawText}`.startsWith("latex://")) {
+            // no additional parsing, pure latex
+            try {
+                const htmlContents = katex.renderToString(`${rawText}`.replace("latex://", ""), {
+                    throwOnError: false,
+                });
+                return <div dangerouslySetInnerHTML={{ __html: htmlContents }}></div>;
+            } catch (e) {
+                Log.error(e);
+                return `${rawText}`;
+            }
+        } else {
+            return `${rawText}`;
+        }
+    };
+
+    getANewColor = () => {
+        const len = this.yAxes.length;
+        const index = len % this.presetColors.length;
+        return this.presetColors[index];
+    };
+
+    generateDefaultYAxis = (index: number): type_yAxis => {
+        return {
+            label: `y${index}`,
+            valMin: 0,
+            valMax: 100,
+            lineWidth: 2,
+            lineColor: this.getANewColor(),
+            ticks: [0, 50, 100],
+            ticksText: [0, 50, 100],
+            autoScale: false,
+            lineStyle: "solid",
+            pointType: "none",
+            pointSize: 5,
+            showGrid: true,
+            numGrids: 5,
+            displayScale: "Linear",
+        };
+    };
+
+    initXY = () => {
+        this.xy = [];
+        for (let ii = 0; ii < this.getMainWidget().getChannelNamesLevel0().length; ii++) {
+            this.xy.push([]);
+            this.tracesHide = [];
+        }
+    };
+
+    calcColor = () => {
+        const selectedYAxis = this.yAxes[this.selectedTraceIndex];
+        return selectedYAxis === undefined ? "rgba(0, 0, 0, 1)" : selectedYAxis.lineColor;
     }
 
-    _ElementSettings = () => {
-        return (
-            <div
-                style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: "white",
-                    overflowY: "scroll",
-                    padding: 15,
-                    display: "inline-flex",
-                    justifyContent: "flex-start",
-                    alignItems: "flex-start",
-                    boxSizing: "border-box",
-                    flexDirection: "column",
-                    border: "solid 1px rgba(0,0,0,1)",
-                    // always use default fonts
-                    fontFamily: GlobalVariables.defaultFontFamily,
-                    fontSize: GlobalVariables.defaultFontSize,
-                    fontStyle: GlobalVariables.defaultFontStyle,
-                    fontWeight: GlobalVariables.defaultFontWeight,
-                }}
-            >
-
-                <this._ElementSettingLine>
-                    <this._ElementSettingsSectionHead>
-                        X Axis
-                    </this._ElementSettingsSectionHead>
-                </this._ElementSettingLine>
-                <this._ElementSettingsXValMin></this._ElementSettingsXValMin>
-                <this._ElementSettingsXValMax></this._ElementSettingsXValMax>
-                <this._ElementSettingsXAutoScale></this._ElementSettingsXAutoScale>
-                <this._ElementSettingsXShowGrid></this._ElementSettingsXShowGrid>
-                <this._ElementSettingsXNumGrids></this._ElementSettingsXNumGrids>
-                {/* y axes */}
-                {this.yAxes.map((yAxis: type_yAxis, yIndex: number) => {
-                    return (
-                        <>
-                            <this._ElementSettingLine>
-                                <this._ElementSettingsSectionHead>
-                                    Trace {this.convertLatexSourceToDiv(yAxis["label"])}
-                                </this._ElementSettingsSectionHead>
-                            </this._ElementSettingLine>
-
-                            <this._ElementSettingsYValMin key={`${yAxis["label"]}-${yIndex}-min`} yIndex={yIndex}></this._ElementSettingsYValMin>
-                            <this._ElementSettingsYValMax key={`${yAxis["label"]}-${yIndex}-max`} yIndex={yIndex}></this._ElementSettingsYValMax>
-                            <this._ElementSettingsYAutoScale
-                                key={`${yAxis["label"]}-${yIndex}-autoscale`}
-                                yIndex={yIndex}
-                            ></this._ElementSettingsYAutoScale>
-                            <this._ElementSettingsYShowGrid
-                                key={`${yAxis["label"]}-${yIndex}-autoscale`}
-                                yIndex={yIndex}
-                            ></this._ElementSettingsYShowGrid>
-                            <this._ElementSettingsYNumGrids
-                                key={`${yAxis["label"]}-${yIndex}-numgrids`}
-                                yIndex={yIndex}
-                            ></this._ElementSettingsYNumGrids>
-                            <this._ElementSettingsYHideTrace
-                                key={`${yAxis["label"]}-${yIndex}-hidetrace`}
-                                yIndex={yIndex}
-                            ></this._ElementSettingsYHideTrace>
-                        </>
-                    );
-                })}
-                {/* <this._ElementSettingLine> */}
-                <this._ElementSettingsOKButton></this._ElementSettingsOKButton>
-                {/* </this._ElementSettingLine> */}
-            </div>
-        );
-    };
-
-    _styleInput = {
-        width: "55%",
-        border: "solid 1px rgba(0,0,0,0)",
-        outline: "none",
-        borderRadius: 0,
-        backgroundColor: "rgba(255, 255, 255, 0)",
-        // padding: 0,
-        // margin: 0,
-    };
-
-    _ElementSettingsOKButton = () => {
-        return (
-            <div style={{
-                display: "inline-flex",
-                width: "100%",
-                justifyContent: "center",
-                alignItems: "center",
-            }}>
-                <ElementRectangleButton
-                    marginTop={10}
-                    marginBottom={10}
-                    handleClick={() => {
-                        this.getMainWidget().showSettings = false;
-                        g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-                        g_flushWidgets();
-                    }
-                    }>
-                    OK
-                </ElementRectangleButton>
-            </div >
-
-        )
-    }
-
-    _ElementSettingsSectionHead = ({ children }: any) => {
-        return (
-            <div style={{
-                backgroundColor: "rgba(210, 210, 210, 1)",
-                width: "100%",
-                display: "inline-flex",
-                justifyContent: "center",
-                alignItems: "center",
-                boxSizing: "border-box",
-                paddingTop: 5,
-                paddingBottom: 5,
-            }}>
-                <b>{children}</b>
-            </div>
-
-        )
-    }
-
-    _ElementInput = ({ children, value, onChange, onBlur, onFocus }: any) => {
-        const elementRef = React.useRef<any>(null);
-        return (
-            <input
-                ref={elementRef}
-                style={{
-                    backgroundColor: 'rgba(0, 0, 0, 0)',
-                    width: "100%",
-                    height: "100%",
-                    padding: 0,
-                    margin: 0,
-                    /* explicit inherits */
-                    fontSize: "inherit",
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                    whiteSpace: "nowrap",
-                    boxSizing: "border-box",
-                    border: "solid 1px rgba(0,0,0,0)",
-                    borderRadius: 0,
-                    outline: "none",
-                }}
-                value={value}
-                type={"text"}
-                onChange={(event: any) => {
-                    event.preventDefault();
-                    if (onChange !== undefined) {
-                        onChange(event);
-                    }
-                }}
-                onBlur={(event: any) => {
-                    event.preventDefault();
-                    if (onBlur !== undefined) {
-                        onBlur(event);
-                    }
-                    if (elementRef.current !== null) {
-                        elementRef.current.style["border"] = "solid 1px rgba(0,0,0,0)";
-                        elementRef.current.style["backgroundColor"] = "rgba(255,255,255,0)";
-                    }
-                }}
-                onFocus={(event: any) => {
-                    event.preventDefault();
-                    if (onFocus !== undefined) {
-                        onFocus(event);
-                    }
-                    if (elementRef.current !== null) {
-                        elementRef.current.style["border"] = "solid 1px rgba(0,0,0,1)";
-                        elementRef.current.style["backgroundColor"] = "rgba(255,255,255,1)";
-                    }
-                }}
-                onMouseEnter={() => {
-                    if (elementRef.current !== null) {
-                        elementRef.current.style["border"] = "solid 1px rgba(0,0,0,1)";
-                        elementRef.current.style["backgroundColor"] = "rgba(255,255,255,1)";
-                    }
-                }}
-                onMouseLeave={() => {
-                    if (elementRef.current !== null && document.activeElement !== elementRef.current) {
-                        elementRef.current.style["border"] = "solid 1px rgba(0,0,0,0)";
-                        elementRef.current.style["backgroundColor"] = "rgba(255,255,255,0)";
-                    }
-                }}
-            >
-                {children}
-            </input>
-        )
-    }
-
-    _ElementSettingsXValMin = () => {
-        // always string
-        const [valMin, setValMin] = React.useState(`${this.xAxis["valMin"]}`);
-        const elementRefInput = React.useRef<any>(null);
-        return (
-            <this._ElementSettingLine>
-                <this._ElementSettingCell width={"30%"}>
-                    Min:
-                </this._ElementSettingCell>
-                <this._ElementSettingCell width={"70%"}>
-                    <form
-                        spellCheck={false}
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            event.preventDefault();
-                            const orig = this.xAxis["valMin"];
-                            const valMinNum = parseFloat(valMin);
-                            if (!isNaN(valMinNum)) {
-                                this.xAxis["valMin"] = valMinNum;
-                                setValMin(`${valMinNum}`);
-                                g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                                g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-                                g_flushWidgets();
-                            } else {
-                                setValMin(`${orig}`);
-                            }
-                        }}
-                    >
-                        <this._ElementInput
-                            value={valMin}
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                const newVal = event.target.value;
-                                setValMin(newVal);
-                            }}
-                            onBlur={(event: any) => {
-                                const orig = `${this.xAxis["valMin"]}`;
-                                if (orig !== valMin) {
-                                    setValMin(orig);
-                                }
-                            }}
-                        ></this._ElementInput>
-                    </form>
-                </this._ElementSettingCell>
-
-            </this._ElementSettingLine>
-        );
-    };
-
-    _ElementSettingsXValMax = () => {
-        // always string
-        const [valMax, setValMax] = React.useState(`${this.xAxis["valMax"]}`);
-        const elementRefInput = React.useRef<any>(null);
-        return (
-            <this._ElementSettingLine>
-                <this._ElementSettingCell width={"30%"}>
-                    Max:
-                </this._ElementSettingCell>
-                <this._ElementSettingCell width={"70%"}>
-                    <form
-                        spellCheck={false}
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            event.preventDefault();
-                            const orig = this.xAxis["valMax"];
-                            const valMaxNum = parseFloat(valMax);
-                            if (!isNaN(valMaxNum)) {
-                                this.xAxis["valMax"] = valMaxNum;
-                                setValMax(`${valMaxNum}`);
-                                g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                                g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-                                g_flushWidgets();
-                            } else {
-                                setValMax(`${orig}`);
-                            }
-                        }}
-                    >
-                        <this._ElementInput
-                            value={valMax}
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                const newVal = event.target.value;
-                                setValMax(newVal);
-                            }}
-                            onBlur={(event: any) => {
-                                const orig = `${this.xAxis["valMax"]}`;
-                                if (orig !== valMax) {
-                                    setValMax(orig);
-                                }
-                            }}
-                        ></this._ElementInput>
-                    </form>
-                </this._ElementSettingCell>
-
-            </this._ElementSettingLine>
-        );
-    };
-
-    _ElementSettingsXAutoScale = () => {
-        // boolean
-        const [autoScale, setAutoScale] = React.useState<boolean>(this.xAxis["autoScale"]);
-        return (
-            <this._ElementSettingLine>
-                <this._ElementSettingCell width={"30%"}>
-                    Auto scale:
-                </this._ElementSettingCell>
-                <this._ElementSettingCell width={"70%"}>
-                    <form
-                        spellCheck={false}
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            this.xAxis["autoScale"] = autoScale;
-
-                            g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                            g_flushWidgets();
-                        }}
-                    >
-                        <input
-                            type="checkbox"
-                            // uncheck if there are more than one traces
-                            // checked={this.getMainWidget().getChannelNamesLevel0().length > 2 ? false : autoScale}
-                            checked={autoScale}
-                            // greg out when there are more than one traces
-                            // disabled={this.getMainWidget().getChannelNamesLevel0().length > 2 ? true : false}
-                            onChange={(event: any) => {
-                                this.xAxis["autoScale"] = !autoScale;
-
-                                g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                                g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                                g_flushWidgets();
-                                setAutoScale((prevVal: boolean) => {
-                                    return !prevVal;
-                                });
-                            }}
-                        />
-                    </form>
-                </this._ElementSettingCell>
-
-            </this._ElementSettingLine>
-        );
-    };
-
-    _ElementSettingsYValMin = ({ yIndex }: any) => {
-        // always string
-        const [valMin, setValMin] = React.useState(`${this.yAxes[yIndex]["valMin"]}`);
-        const elementRefInput = React.useRef<any>(null);
-        return (
-            <this._ElementSettingLine>
-                <this._ElementSettingCell width={"30%"}>
-                    Min:
-                </this._ElementSettingCell>
-                <this._ElementSettingCell width={"70%"}>
-                    <form
-                        spellCheck={false}
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            event.preventDefault();
-                            const orig = this.yAxes[yIndex]["valMin"];
-                            const valMinNum = parseFloat(valMin);
-                            if (!isNaN(valMinNum)) {
-                                this.yAxes[yIndex]["valMin"] = valMinNum;
-                                setValMin(`${valMinNum}`);
-                                g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                                g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-                                g_flushWidgets();
-                            } else {
-                                setValMin(`${orig}`);
-                            }
-                        }}
-                    >
-                        <this._ElementInput
-                            value={valMin}
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                const newVal = event.target.value;
-                                setValMin(newVal);
-                            }}
-                            onBlur={(event: any) => {
-                                const orig = `${this.yAxes[yIndex]["valMin"]}`;
-                                if (orig !== valMin) {
-                                    setValMin(orig);
-                                }
-                            }}
-                        ></this._ElementInput>
-                    </form>
-                </this._ElementSettingCell>
-
-            </this._ElementSettingLine>
-        );
-    };
-
-    _ElementSettingsYValMax = ({ yIndex }: any) => {
-        // always string
-        const [valMax, setValMax] = React.useState(`${this.yAxes[yIndex]["valMax"]}`);
-        const elementRefInput = React.useRef<any>(null);
-        return (
-            <this._ElementSettingLine>
-                <this._ElementSettingCell width={"30%"}>
-                    Max:
-                </this._ElementSettingCell>
-                <this._ElementSettingCell width={"70%"}>
-                    <form
-                        spellCheck={false}
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            event.preventDefault();
-                            const orig = this.yAxes[yIndex]["valMax"];
-                            const valMaxNum = parseFloat(valMax);
-                            if (!isNaN(valMaxNum)) {
-                                this.yAxes[yIndex]["valMax"] = valMaxNum;
-                                setValMax(`${valMaxNum}`);
-                                g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                                g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-                                g_flushWidgets();
-                            } else {
-                                setValMax(`${orig}`);
-                            }
-                        }}
-                    >
-                        <this._ElementInput
-                            value={valMax}
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                const newVal = event.target.value;
-                                setValMax(newVal);
-                            }}
-                            onBlur={(event: any) => {
-                                const orig = `${this.yAxes[yIndex]["valMax"]}`;
-                                if (orig !== valMax) {
-                                    setValMax(orig);
-                                }
-                            }}
-                        ></this._ElementInput>
-                    </form>
-                </this._ElementSettingCell>
-
-            </this._ElementSettingLine>
-        );
-    };
-
-    _ElementSettingsYAutoScale = ({ yIndex }: any) => {
-        // boolean
-        const [autoScale, setAutoScale] = React.useState<boolean>(this.yAxes[yIndex]["autoScale"]);
-        return (
-            <this._ElementSettingLine>
-                <this._ElementSettingCell width={"30%"}>
-                    Auto scale:
-                </this._ElementSettingCell>
-                <this._ElementSettingCell width={"70%"}>
-                    <form
-                        spellCheck={false}
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            this.yAxes[yIndex]["autoScale"] = autoScale;
-
-                            g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                            g_flushWidgets();
-                        }}
-                    // style={{ ...(this._styleForm as any) }}
-                    >
-                        <input
-                            type="checkbox"
-                            checked={autoScale}
-                            onChange={(event: any) => {
-                                this.yAxes[yIndex]["autoScale"] = !autoScale;
-
-                                g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                                g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                                g_flushWidgets();
-                                setAutoScale((prevVal: boolean) => {
-                                    return !prevVal;
-                                });
-                            }}
-                        />
-                    </form>
-                </this._ElementSettingCell>
-
-            </this._ElementSettingLine>
-        );
-    };
-
-    _ElementSettingsXShowGrid = () => {
-        // boolean
-        const [showGrid, setShowGrid] = React.useState<boolean>(this.xAxis["showGrid"]);
-        return (
-            <this._ElementSettingLine>
-                <this._ElementSettingCell width={"30%"}>
-                    Show grids:
-                </this._ElementSettingCell>
-                <this._ElementSettingCell width={"70%"}>
-                    <form
-                        spellCheck={false}
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            this.xAxis["showGrid"] = showGrid;
-
-                            g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                            g_flushWidgets();
-                        }}
-                    // style={{ ...(this._styleForm as any) }}
-                    >
-                        <input
-                            type="checkbox"
-                            // uncheck if there are more than one traces
-                            checked={showGrid}
-                            // greg out when there are more than one traces
-                            onChange={(event: any) => {
-                                this.xAxis["showGrid"] = !showGrid;
-
-                                g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                                g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                                g_flushWidgets();
-                                setShowGrid((prevVal: boolean) => {
-                                    return !prevVal;
-                                });
-                            }}
-                        />
-                    </form>
-                </this._ElementSettingCell>
-
-            </this._ElementSettingLine>
-        );
-    };
-
-    _ElementSettingsYShowGrid = ({ yIndex }: any) => {
-        // boolean
-        const [showGrid, setShowGrid] = React.useState<boolean>(this.yAxes[yIndex]["showGrid"]);
-        return (
-            <this._ElementSettingLine>
-                <this._ElementSettingCell width={"30%"}>
-                    Show grids:
-                </this._ElementSettingCell>
-                <this._ElementSettingCell width={"70%"}>
-                    <form
-                        spellCheck={false}
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            this.yAxes[yIndex]["showGrid"] = showGrid;
-
-                            g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                            g_flushWidgets();
-                        }}
-                    // style={{ ...(this._styleForm as any) }}
-                    >
-                        <input
-                            type="checkbox"
-                            checked={showGrid}
-                            onChange={(event: any) => {
-                                this.yAxes[yIndex]["showGrid"] = !showGrid;
-
-                                g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                                g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                                g_flushWidgets();
-                                setShowGrid((prevVal: boolean) => {
-                                    return !prevVal;
-                                });
-                            }}
-                        />
-                    </form>
-                </this._ElementSettingCell>
-
-            </this._ElementSettingLine>
-        );
-    };
-
-    getTraceHidden = (yIndex: number) => {
-        return this.tracesHide[yIndex] === true ? true : false;
-    };
-
-    setTraceHidden = (yIndex: number, hide: boolean) => {
-        this.tracesHide[yIndex] = hide;
-    };
-
-
-    _ElementSettingsYHideTrace = ({ yIndex }: any) => {
-        // boolean
-        const [hideTrace, setHideTrace] = React.useState<boolean>(this.getTraceHidden(yIndex));
-        return (
-            <this._ElementSettingLine>
-                <this._ElementSettingCell width={"30%"}>
-                    Show trace:
-                </this._ElementSettingCell>
-                <this._ElementSettingCell width={"70%"}>
-                    <form
-                        spellCheck={false}
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            this.setTraceHidden(yIndex, hideTrace);
-
-                            g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                            g_flushWidgets();
-                        }}
-                    // style={{ ...(this._styleForm as any) }}
-                    >
-                        <input
-                            type="checkbox"
-                            checked={hideTrace}
-                            onChange={(event: any) => {
-                                this.setTraceHidden(yIndex, !hideTrace);
-
-                                g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                                g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                                g_flushWidgets();
-                                setHideTrace((prevVal: boolean) => {
-                                    return !prevVal;
-                                });
-                            }}
-                        />
-                    </form>
-                </this._ElementSettingCell>
-
-            </this._ElementSettingLine>
-        );
-    };
-
-    _ElementSettingsXNumGrids = () => {
-        // always string
-        const [numGrids, setNumGrids] = React.useState(`${this.xAxis["numGrids"]}`);
-        const elementRefInput = React.useRef<any>(null);
-        return (
-            <this._ElementSettingLine>
-                <this._ElementSettingCell width={"30%"}>
-                    Number of grids:
-                </this._ElementSettingCell>
-                <this._ElementSettingCell width={"70%"}>
-                    <form
-                        spellCheck={false}
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            event.preventDefault();
-                            const orig = this.xAxis["numGrids"];
-                            const numGridsNum = parseInt(numGrids);
-                            if (!isNaN(numGridsNum)) {
-                                this.xAxis["numGrids"] = numGridsNum;
-                                setNumGrids(`${numGridsNum}`);
-                                g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                                g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-                                g_flushWidgets();
-                            } else {
-                                setNumGrids(`${orig}`);
-                            }
-                        }}
-                    >
-                        <this._ElementInput
-                            value={numGrids}
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                const newVal = event.target.value;
-                                setNumGrids(newVal);
-                            }}
-                            onBlur={(event: any) => {
-                                const orig = `${this.xAxis["numGrids"]}`;
-                                if (orig !== numGrids) {
-                                    setNumGrids(orig);
-                                }
-                            }}
-                        ></this._ElementInput>
-                    </form>
-                </this._ElementSettingCell>
-
-            </this._ElementSettingLine>
-        );
-    };
-
-    _ElementSettingsYNumGrids = ({ yIndex }: any) => {
-        // always string
-        const [numGrids, setNumGrids] = React.useState(`${this.yAxes[yIndex]["numGrids"]}`);
-        const elementRefInput = React.useRef<any>(null);
-        return (
-            <this._ElementSettingLine>
-                <this._ElementSettingCell width={"30%"}>
-                    Number of grids:
-                </this._ElementSettingCell>
-                <this._ElementSettingCell width={"70%"}>
-                    <form
-                        spellCheck={false}
-                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                            event.preventDefault();
-                            const orig = this.yAxes[yIndex]["numGrids"];
-                            const numGridsNum = parseInt(numGrids);
-                            if (!isNaN(numGridsNum)) {
-                                this.yAxes[yIndex]["numGrids"] = numGridsNum;
-                                setNumGrids(`${numGridsNum}`);
-                                g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                                g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-                                g_flushWidgets();
-                            } else {
-                                setNumGrids(`${orig}`);
-                            }
-                        }}
-                    >
-                        <this._ElementInput
-                            value={numGrids}
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                const newVal = event.target.value;
-                                setNumGrids(newVal);
-                            }}
-                            onBlur={(event: any) => {
-                                const orig = `${this.yAxes[yIndex]["numGrids"]}`;
-                                if (orig !== numGrids) {
-                                    setNumGrids(orig);
-                                }
-                            }}
-                        ></this._ElementInput>
-                    </form>
-                </this._ElementSettingCell>
-
-            </this._ElementSettingLine>
-        );
-    };
-
-    // plot body
-    _ElementPlot = () => {
-        return (
-            <div
-                style={{
-                    width: `${this.plotWidth}px`,
-                    height: `${this.plotHeight}px`,
-                    outline: "1px solid black",
-                    // backgroundColor: "yellow",
-                    backgroundColor: "rgba(0, 255, 255, 0)",
-                    position: "relative",
-                }}
-                onMouseEnter={() => {
-                    if (!g_widgets1.isEditing()) {
-                        window.addEventListener("mousemove", this.getCursorValue);
-                    }
-                }}
-                onMouseLeave={() => {
-                    this.lastCursorPointXY = [-100000, -100000];
-                    this.getCursorValue(this.lastCursorPointXY);
-                    window.removeEventListener("mousemove", this.getCursorValue);
-                }}
-            >
-                {/* tick lines first */}
-                <this._ElementXYTickLines></this._ElementXYTickLines>
-                {/* data */}
-                <this._ElementLines></this._ElementLines>
-                {/* legend */}
-                {this.getMainWidget().getText()["showLegend"] === true || this.peekLegend === true ? (
-                    <this._ElementLegends></this._ElementLegends>
-                ) : null}
-            </div>
-        );
-    };
-
-    getCursorValue = (event: any) => {
+    updateCursorValue = (event: any) => {
         let pointX0 = -100000;
         let pointY0 = -100000;
         if (event.clientX !== undefined) {
-            // this.lastCursorPointXY = [event.clientX, event.clientY];
-            // pointX0 = event.clientX;
-            // pointY0 = event.clientY;
             this.lastCursorPointXY = [getMouseEventClientX(event), getMouseEventClientY(event)];
             pointX0 = getMouseEventClientX(event);
             pointY0 = getMouseEventClientY(event);
@@ -2775,8 +1246,10 @@ export class XYPlotPlot {
             return;
         }
 
+        // cursor location inside trace plot region
         const pointX = pointX0 - this.yAxisLabelWidth - this.yAxisTickWidth - this.getStyle().left;
         const pointY = pointY0 - this.titleHeight - this.getStyle().top;
+
         if (this.setCursorValue !== undefined) {
 
             const yIndex = this.selectedTraceIndex;
@@ -2789,23 +1262,10 @@ export class XYPlotPlot {
                 useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
             }
 
-            let valXmin = this.xAxis.valMin;
-            let valXmax = this.xAxis.valMax;
-            let valYmin = this.yAxes[yIndex].valMin;
-            let valYmax = this.yAxes[yIndex].valMax
+            const { xValMax, xValMin, yValMax, yValMin } = this.ticksInfo;
 
-            // extra space in x and y directions
-            if (!useLog10Scale) {
-                const dx = Math.abs(valXmax - valXmin) * this.xPlotRangeExtension / 100;
-                const dy = Math.abs(valYmax - valYmin) * this.yPlotRangeExtension / 100;
-                valXmax = valXmax + dx;
-                valXmin = valXmin - dx;
-                valYmax = valYmax + dy;
-                valYmin = valYmin - dy;
-            }
+            const [valX, valY] = this.mapPointToXY(yIndex, [pointX, pointY], [xValMin, xValMax, yValMin, yValMax]);
 
-            const [valX, valY] = this.mapPointToXY(this.selectedTraceIndex, [pointX, pointY], [valXmin, valXmax, valYmin, valYmax]);
-            // const timeStr = GlobalMethods.convertEpochTimeToString(valX);
             const valXStr = valX.toPrecision(4).toString();
             const valYStr = valY.toPrecision(4).toString();
             this.setCursorValue(`(${valXStr}, ${valYStr})`);
@@ -2887,10 +1347,6 @@ export class XYPlotPlot {
         return this.getMainWidget().getChannelNames();
     };
 
-    // getRawChannelNames = () => {
-    //     return this.getMainWidget().getRawChannelNames();
-    // };
-
     getElement = () => {
         return <this._Element></this._Element>;
     };
@@ -2903,4 +1359,20 @@ export class XYPlotPlot {
         // deep copy
         this.yAxes = JSON.parse(JSON.stringify(yAxes));
     };
+    getElementSettings = () => {
+        return this._settings.getElementSettings();
+    };
+
+    getTraceHidden = (yIndex: number) => {
+        return this.tracesHide[yIndex] === true ? true : false;
+    };
+
+    setTraceHidden = (yIndex: number, hide: boolean) => {
+        this.tracesHide[yIndex] = hide;
+    };
+
+    getSelectedYAxis = () => {
+        return this.yAxes[this.selectedTraceIndex];
+    }
+
 }

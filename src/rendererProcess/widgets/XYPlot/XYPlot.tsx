@@ -15,24 +15,23 @@ export type type_XYPlot_tdl = {
     key: string;
     style: Record<string, any>;
     text: Record<string, any>;
-    channelNames: string[]; // x and y axes channel names, x channel name might be an empty string ""
+    // 0th element is x axis, rest are y axes channel names
+    // x-axis channel name may be empty string
+    channelNames: string[];
     groupNames: string[];
-    xAxis: type_xAxis;
-    yAxes: type_yAxis[];
     rules: type_rules_tdl;
+    // XYPlot specific
+    xAxis: type_xAxis; // only one x-axis
+    yAxes: type_yAxis[]; // could be multiple y-axis
 };
+
 
 export class XYPlot extends BaseWidget {
 
     showSettingsPage: boolean = false;
-
     _plot: XYPlotPlot;
+    showSettings: boolean = false;
 
-    getPlot = () => {
-        return this._plot;
-    };
-
-    // updatingByInterval: boolean = true;
     constructor(widgetTdl: type_XYPlot_tdl) {
         super(widgetTdl);
         this.initStyle(widgetTdl);
@@ -42,18 +41,11 @@ export class XYPlot extends BaseWidget {
         this._plot = new XYPlotPlot(this);
         this.getPlot().setXAxis(deepMerge(this.generateDefaultTdl().xAxis, widgetTdl.xAxis));
         this.getPlot().setYAxes(deepMerge(this.generateDefaultTdl().yAxes, widgetTdl.yAxes));
-
-        // assign the sidebar
-        this._sidebar = new XYPlotSidebar(this);
     }
 
-    mapDbrDataWitNewData = (newChannelNames: string[]) => {
-        this.getPlot().mapDbrDataWitNewData(newChannelNames);
-    };
-    
+
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -66,36 +58,24 @@ export class XYPlot extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
-                </>
+                <div
+                    id="XYPlot"
+                    style={
+                        this.getElementBodyRawStyle()
+                    }
+                >
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                    {this.showSettings ? this.getPlot().getElementSettings() : null}
+                </div>
+                {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            <div
-                id="XYPlot"
-                style={
-                    this.getElementBodyRawStyle()
-                }
-            >
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-                {this.showSettings ? this.getPlot().getElementSettings() : null}
-            </div>
-        );
-    };
-
-    showSettings: boolean = false;
-
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
-        const xData = [-0.8, -0.4, 0.0, 0.4, 0.8];
-        const yData = [-0.5, 0.5, 0.0, -0.5, 0.5];
-
+        const overflow = this.getText().overflowVisible ? "visible" : "hidden";
         return (
             <div
                 style={{
@@ -105,74 +85,28 @@ export class XYPlot extends BaseWidget {
                     width: "100%",
                     height: "100%",
                     userSelect: "none",
-                    // different from regular widget
-                    overflow: this.getText().overflowVisible ? "visible" : "hidden",
+                    overflow: overflow,
                     flexDirection: "column",
-                    // whiteSpace: this.getText().wrapWord ? "pre-line" : "nowrap",
-                    // justifyContent: this.getText().horizontalAlign,
-                    // alignItems: this.getText().verticalAlign,
-                    fontFamily: this.getStyle().fontFamily,
-                    fontSize: this.getStyle().fontSize,
-                    fontStyle: this.getStyle().fontStyle,
-                    // outline: this._getElementAreaRawOutlineStyle(),
                     whiteSpace: "nowrap",
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
                 {this.getPlot().getElement()}
-                {/* <this._ElementWebGlPlot xData={xData} yData={yData}></this._ElementWebGlPlot> */}
             </div>
         );
     };
 
 
-    // concretize abstract method
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // _Element = React.memo(this._ElementRaw, () => {return false});
-    // _ElementArea = React.memo(this._ElementAreaRaw, () => {return false});
-    // _ElementBody = React.memo(this._ElementBodyRaw, () => {return false});
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
 
     // -------------------- helper functions ----------------
 
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = () => {
-        return this._getFirstChannelValue();
+    mapDbrDataWitNewData = (newChannelNames: string[]) => {
+        this.getPlot().mapDbrDataWitNewData(newChannelNames);
     };
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-    _getChannelUnit = () => {
-        return this._getFirstChannelUnit();
-    };
-
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
-
 
     static generateDefaultTdl = () => {
         const defaultTdl = {
@@ -247,40 +181,14 @@ export class XYPlot extends BaseWidget {
 
     // --------------------- getters -------------------------
 
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getupdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
+    getPlot = () => {
+        return this._plot;
+    };
 
     getYAxes = () => {
         return this.getPlot().yAxes;
     };
 
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
-
-    // ------------------------ customized plot --------------------------
     // --------------------- sidebar --------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {
