@@ -429,7 +429,7 @@ export const calcTickPositions = (tickValues: number[], minPvValue: number, maxP
         }
     }
     if (direction === "horizontal") {
-        result.forEach((value, index) => {result[index] = fullSize - value});
+        result.forEach((value, index) => { result[index] = fullSize - value });
     }
     return result;
 };
@@ -1101,3 +1101,110 @@ export const isRemotePath = (path: string) => {
         return false;
     }
 };
+
+export const mapXyToPointGl = (
+    x: number,
+    y: number,
+    xMin: number,
+    xMax: number,
+    yMin: number,
+    yMax: number,
+): [number, number, number] => {
+
+    // min point is -1, max point is 1
+    const pointX = -1 + (2 / (xMax - xMin)) * (x - xMin);
+    const pointY = -1 + (2 / (yMax - yMin)) * (y - yMin);
+
+    if (isNaN(pointX) || isNaN(pointY)) {
+        return [0, 0, 0];
+    }
+
+    return [pointX, pointY, 0];
+}
+
+export const mapXYsToPointsWebGl = (xData: number[], yData: number[], xMin: number, xMax: number, yMin: number, yMax: number,) => {
+
+    const len = Math.min(xData.length, yData.length);
+    const result = new Float32Array(len * 3);
+
+    for (let ii = 0; ii < len; ii++) {
+        const x = xData[ii];
+        const y = yData[ii];
+        let pointX = -1 + (2 / (xMax - xMin)) * (x - xMin);
+        let pointY = -1 + (2 / (yMax - yMin)) * (y - yMin);
+        if (isNaN(pointX) || isNaN(pointY)) {
+            pointX = 0;
+            pointY = 0;
+        }
+
+        result[3 * ii] = pointX;
+        result[3 * ii + 1] = pointY;
+        result[3 * ii + 2] = 0;
+    }
+    return result;
+
+}
+
+export const mapXyToPoint = (
+    x: number,
+    y: number,
+    xMin: number,
+    xMax: number,
+    yMin: number,
+    yMax: number,
+    width: number,
+    height: number,
+): [number, number] => {
+    const pointX = width * (x - xMin) / (xMax - xMin);
+    const pointY = height - height * (y - yMin) / (yMax - yMin);
+
+    if (isNaN(pointX) || isNaN(pointY)) {
+        return [0, 0];
+    }
+
+    return [pointX, pointY];
+}
+
+export const mapPointToXy = (
+    pointX: number,
+    pointY: number,
+    xMin: number,
+    xMax: number,
+    yMin: number,
+    yMax: number,
+    width: number,
+    height: number,
+): [number, number] => {
+    const x = pointX / width * (xMax - xMin);
+    const y = yMax - pointY / height * (yMax - yMin);
+
+    if (isNaN(x) || isNaN(y)) {
+        return [0, 0];
+    }
+    return [x, y];
+}
+
+export const calcWebGlShadeColor = (rgbaColor: string) => {
+    // "rgba(255, 0, 0, 1)" --> "1.0, 0.0, 0.0, 1.0"
+    const color1 = rgbaColor.replace("rgba", "").replace("rgb", "").replace("(", "").replace(")", "");
+    const colorStrs = color1.split(",");
+
+    let result: string = "";
+    if (colorStrs.length !== 4) {
+        return "0.0, 0.0, 0.0, 1.0";
+    }
+
+    for (let ii = 0; ii < colorStrs.length; ii++) {
+        const colorStr = colorStrs[ii];
+        const colorNum = parseFloat(colorStr);
+        if (isNaN(colorNum)) {
+            return "0.0, 0.0, 0.0, 1.0";
+        }
+        if (ii < 3) {
+            result = result + `${colorNum / 255}` + ", ";
+        } else {
+            result = result + `${colorNum}`;
+        }
+    }
+    return result;
+}

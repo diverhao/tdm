@@ -4,13 +4,41 @@ import katex from "katex";
 import { type_dbrData } from "epics-tca";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { calcTickPositions, calcTicks, refineTicks } from "../../../common/GlobalMethods";
+import { calcTickPositions, calcTicks, mapPointToXy, mapXYsToPointsWebGl, mapXyToPoint, mapXyToPointGl, refineTicks } from "../../../common/GlobalMethods";
 import { getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { XYPlotPlotSettings } from "./XYPlotPlotSettings";
 import { XYPlotPlotWebGl } from "./XYPlotPlotWebGl";
 import { Scale } from "../../helperWidgets/SharedElements/Scale";
+
+
+const presetColors: string[] = [
+    "rgba(0, 0, 0, 1)",
+    "rgba(255, 0, 0, 1)",
+    "rgba(0, 0, 255, 1)",
+    "rgba(0, 128, 0, 1)",
+    "rgba(128, 128, 0, 1)",
+    "rgba(0, 128, 128, 1)",
+    "rgba(128, 0, 128, 1)",
+    "rgba(255, 128, 0, 1)",
+];
+
+const defaultTicksInfo: type_ticksInfo = {
+    scale: "Linear",
+    xValMin: 0,
+    xValMax: 0,
+    yValMin: 0,
+    yValMax: 0,
+    xLength: 0,
+    yLength: 0,
+    numXgrid: 0,
+    numYgrid: 0,
+    xTickValues: [],
+    xTickPositions: [],
+    yTickValues: [],
+    yTickPositions: [],
+}
 
 
 export type type_yAxis = {
@@ -21,32 +49,54 @@ export type type_yAxis = {
     lineColor: string;
     ticks: number[];
     ticksText: (number | string)[];
-    autoScale: boolean;
     lineStyle: string;
     pointType: string;
     pointSize: number;
     showGrid: boolean;
+    autoScale: boolean;
     numGrids: number;
     displayScale: "Linear" | "Log10";
+    // runtime data, should not be included in tdl
+    xData: number[];
+    yData: number[];
+    ticksInfo: type_ticksInfo,
+};
+
+export type type_ticksInfo = {
+    scale: "Linear" | "Log10",
+    xValMin: number,
+    xValMax: number,
+    yValMin: number,
+    yValMax: number,
+    xLength: number,
+    yLength: number,
+    numXgrid: number,
+    numYgrid: number,
+    xTickValues: number[],
+    xTickPositions: number[],
+    yTickValues: number[],
+    yTickPositions: number[],
 };
 
 export type type_xAxis = {
     label: string;
+    autoScale: boolean;
     valMin: number;
     valMax: number;
     ticks: number[];
     ticksText: (number | string)[];
-    autoScale: boolean;
     showGrid: boolean;
     numGrids: number;
 };
 
+const yAxisLabelWidth = 30;
+const yAxisTickWidth = 30;
+const xAxisLabelHeight = 30;
+const xAxisTickHeight = 30;
+const toolbarHeight = 0;
+
 /**
  * 
- * ------------------------------------------------------------------------
- * |                                                                       |
- * |                          ElementTitle                                 |
- * |                                                                       |
  * -------------------------------------------------------------------------
  * |    |   |                                                              |
  * | E  | E |                                                              |
@@ -81,108 +131,35 @@ export class XYPlotPlot {
     _settings: XYPlotPlotSettings;
     _webgl: XYPlotPlotWebGl;
 
+    setCursorValue = (input: any) => { };
+    forceUpdate = (input: any) => { };
 
-    // layout
-    readonly titleHeight = 20;
-    readonly yAxisLabelWidth = 30;
-    readonly yAxisTickWidth = 30;
-    readonly xAxisLabelHeight = 30;
-    readonly xAxisTickHeight = 30;
-    readonly toolbarHeight = 0;
-    readonly legendWidth = 30;
     // trace region dimensions, determined by above numbers
-    plotWidth: number = 0;
-    plotHeight: number = 0;
-
-    // extend x direction plot area by 20% on both positive and negative directions
-    readonly xPlotRangeExtension = 0;
-    readonly yPlotRangeExtension = 0;
-
-    setCursorValue: any;
-    lastCursorPointXY: [number, number] = [-100000, -100000];
+    _plotWidth: number = 0;
+    _plotHeight: number = 0;
 
     // only one x axis
     xAxis: type_xAxis = {
         label: "x label",
+        autoScale: false, // always false
         // time since epoch, ms
         valMin: 0,
         valMax: 100,
         ticks: [],
         ticksText: [],
-        autoScale: false,
         showGrid: true,
         numGrids: 5,
     };
 
-    ticksInfo: {
-        scale: "Linear" | "Log10",
-        xValMin: number,
-        xValMax: number,
-        yValMin: number,
-        yValMax: number,
-        xLength: number,
-        yLength: number,
-        numXgrid: number,
-        numYgrid: number,
-        xTickValues: number[],
-        xTickPositions: number[],
-        yTickValues: number[],
-        yTickPositions: number[],
-    } = {
-            scale: "Linear",
-            xValMin: 0,
-            xValMax: 0,
-            yValMin: 0,
-            yValMax: 0,
-            xLength: 0,
-            yLength: 0,
-            numXgrid: 0,
-            numYgrid: 0,
-            xTickValues: [],
-            xTickPositions: [],
-            yTickValues: [],
-            yTickPositions: [],
-        }
-    forceUpdate: any;
-
-    // showLegend: boolean = false;
-    peekLegend: boolean = false;
-
-    selectedTraceIndex: number = 0;
-
-    // if undefined, the trace is shown
-    // modified by settings, not permanent
-    tracesHide: boolean[] = [];
-
     // multiple y axes
     yAxes: type_yAxis[] = [];
 
-    /**
-     * [
-     *   [1st trace x data, 1st trace y data],
-     *   [2nd trace x data, 2nd trace y data],
-     *   ...
-     *   [last trace x data, last trace y data],
-     * ]
-     */
-    xy: number[][] = [];
-
-    readonly presetColors: string[] = [
-        "rgba(0, 0, 0, 1)",
-        "rgba(255, 0, 0, 1)",
-        "rgba(0, 0, 255, 1)",
-        "rgba(0, 128, 0, 1)",
-        "rgba(128, 128, 0, 1)",
-        "rgba(0, 128, 128, 1)",
-        "rgba(128, 0, 128, 1)",
-        "rgba(255, 128, 0, 1)",
-    ];
-
+    selectedTraceIndex: number = 0;
 
     constructor(mainWidget: XYPlot) {
         this._mainWidget = mainWidget;
 
-        this.initXY();
+        this.initRuntimeData();
 
         // initialize helper classes
         this._settings = new XYPlotPlotSettings(this);
@@ -193,8 +170,7 @@ export class XYPlotPlot {
 
     _Element = () => {
 
-        // update ticks, plot region width, height information, for grid lines and ticks
-        this.updateWidthHeightTicksInfo();
+        this.updatePlotWidthHeight();
 
         const [, forceUpdate] = React.useState({});
         this.forceUpdate = forceUpdate;
@@ -214,12 +190,10 @@ export class XYPlotPlot {
                     overflow: "visible",
                 }}
             >
-                <this._ElementTitle></this._ElementTitle>
                 <div
                     style={{
                         display: "inline-flex",
                         width: `100%`,
-                        backgroundColor: "magenta",
                         flexGrow: 0,
                         flexShrink: 0,
                         flexFlow: "row",
@@ -237,9 +211,8 @@ export class XYPlotPlot {
                 <div
                     style={{
                         position: "relative",
-                        width: this.plotWidth,
+                        width: this.getPlotWidth(),
                         display: "inline-flex",
-                        backgroundColor: "rgba(255, 100, 100, 0.5)",
                         flexGrow: 0,
                         flexShrink: 0,
                         flexFlow: "column",
@@ -252,50 +225,44 @@ export class XYPlotPlot {
                         style={{
                             position: "relative",
                             width: `100%`,
-                            height: this.xAxisLabelHeight,
+                            height: xAxisLabelHeight,
                             display: "inline-flex",
                             flexFlow: "row",
-                            justifyContent: "flex-end",
-                            alignItems: "flex-end",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                         }}
                     >
-                        {/* must be under the ElementControls */}
-                        <this._ElementCursorPosition></this._ElementCursorPosition>
-                        <this._ElementXLabel></this._ElementXLabel>
                         <this._ElementControls></this._ElementControls>
+                        <this._ElementXLabel></this._ElementXLabel>
+                        <this._ElementCursorPosition></this._ElementCursorPosition>
                     </div>
                 </div>
             </div>
         );
     };
 
-    // ---------------- title element --------------------
-
-    _ElementTitle = () => {
-        const allText = this.getMainWidget().getAllText();
-        const showFrame = allText["showFramee"];
-        if (showFrame === false) {
-            return null;
-        }
-
-        return (
-            <div
-                style={{
-                    position: "relative",
-                    width: `100%`,
-                    height: `${this.titleHeight}px`,
-                    display: "inline-flex",
-                    flexFlow: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    backgroundColor: "rgba(68, 85, 90, 0)",
-                }}
-            ></div>
-        );
-    };
-
     // ----------- X, Y ticks and labels elements --------
+
     _ElementYLabel = () => {
+
+        if (g_widgets1.isEditing()) {
+            return (
+                <div
+                    style={{
+                        position: "relative",
+                        display: "inline-flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        width: yAxisLabelWidth,
+                        height: this.getPlotHeight(),
+                        margin: "0px",
+                        padding: "0px",
+                    }}
+                >
+                    Y
+                </div>
+            );
+        }
 
         const allText = this.getMainWidget().getAllText();
         const showFrame = allText["showFramee"];
@@ -303,7 +270,9 @@ export class XYPlotPlot {
             return null
         }
 
-        const color = this.calcColor();
+        const color = this.calcSelectedTraceColor();
+
+        const yAxis = this.getSelectedYAxis();
 
         return (
             <div
@@ -311,11 +280,10 @@ export class XYPlotPlot {
                     display: "inline-flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    width: this.yAxisLabelWidth,
-                    height: this.plotHeight,
+                    width: yAxisLabelWidth,
+                    height: this.getPlotHeight(),
                     margin: "0px",
                     padding: "0px",
-                    backgroundColor: "rgba(255, 0, 255, 0)",
                     color: color,
                 }}
             >
@@ -326,14 +294,37 @@ export class XYPlotPlot {
                         whiteSpace: "nowrap",
                     }}
                 >
-                    {this.yAxes[this.selectedTraceIndex] === undefined ? "" : this.convertLatexSourceToDiv(this.yAxes[this.selectedTraceIndex].label)}
+                    {yAxis === undefined ? "" : this.convertLatexSourceToDiv(yAxis.label)}
                 </div>
             </div>
         );
     };
 
     _ElementYTicks = () => {
-        const color = this.calcColor();
+
+        if (g_widgets1.isEditing()) {
+            return (
+                <div
+                    style={{
+                        position: "relative",
+                        width: yAxisTickWidth,
+                        height: this.getPlotHeight(),
+                        display: "inline-flex",
+                        flexGrow: 0,
+                        flexShrink: 0,
+                    }}
+                >
+                </div>
+            );
+        }
+
+        const color = this.calcSelectedTraceColor();
+
+        const yAxis = this.getSelectedYAxis();
+        if (yAxis === undefined) {
+            return null;
+        }
+
         const { xValMin,
             xValMax,
             yValMin,
@@ -345,19 +336,17 @@ export class XYPlotPlot {
             xTickValues,
             xTickPositions,
             yTickValues,
-            yTickPositions } = this.ticksInfo;
+            yTickPositions } = yAxis["ticksInfo"];
 
         return (
             <div
                 style={{
                     position: "relative",
-                    width: this.yAxisTickWidth,
-                    height: "100%",
+                    width: yAxisTickWidth,
+                    height: this.getPlotHeight(),
                     display: "inline-flex",
                     flexGrow: 0,
                     flexShrink: 0,
-                    justifyContent: "center",
-                    alignItems: "center",
                 }}
             >
                 <Scale
@@ -366,7 +355,7 @@ export class XYPlotPlot {
                     numIntervals={numYgrid}
                     position={"left"}
                     show={true}
-                    length={this.plotHeight}
+                    length={this.getPlotHeight()}
                     scale={"Linear"}
                     color={color}
                     compact={false}
@@ -380,6 +369,28 @@ export class XYPlotPlot {
     };
 
     _ElementXTicks = () => {
+
+        if (g_widgets1.isEditing()) {
+            return (
+                <div
+                    style={{
+                        position: "relative",
+                        height: xAxisTickHeight,
+                        width: this.getPlotWidth(),
+                        display: "inline-flex",
+                        flexGrow: 0,
+                        flexShrink: 0,
+                    }}
+                >
+                </div>
+            );
+        }
+
+        const yAxis = this.getSelectedYAxis();
+        if (yAxis === undefined) {
+            return null
+        }
+
         const { xValMin,
             xValMax,
             yValMin,
@@ -391,41 +402,59 @@ export class XYPlotPlot {
             xTickValues,
             xTickPositions,
             yTickValues,
-            yTickPositions } = this.ticksInfo;
+            yTickPositions } = yAxis["ticksInfo"];
 
-        const color = this.calcColor();
+        const color = this.calcSelectedTraceColor();
 
         return (
-            <Scale
-                min={xValMin}
-                max={xValMax}
-                numIntervals={numXgrid}
-                position={"bottom"}
-                show={true}
-                length={this.plotWidth}
-                scale={"Linear"}
-                color={color}
-                compact={false}
-                showTicks={false}
-                showLabels={true}
-                showAxis={false}
+            <div
+                style={{
+                    position: "relative",
+                    height: xAxisTickHeight,
+                    width: this.getPlotWidth(),
+                    display: "inline-flex",
+                    flexGrow: 0,
+                    flexShrink: 0,
+                }}
             >
-            </Scale>
+
+                <Scale
+                    min={xValMin}
+                    max={xValMax}
+                    numIntervals={numXgrid}
+                    position={"bottom"}
+                    show={true}
+                    length={this.getPlotWidth()}
+                    scale={"Linear"}
+                    color={color}
+                    compact={false}
+                    showTicks={false}
+                    showLabels={true}
+                    showAxis={false}
+                >
+                </Scale>
+            </div>
         )
     };
 
     _ElementXLabel = () => {
+
+        if (g_widgets1.isEditing()) {
+            return (
+                <div
+                    style={{
+                        display: "inline-flex",
+                    }}
+                >
+                    X
+                </div>
+            )
+        }
+
         return (
             <div
                 style={{
-                    width: `${this.plotWidth}px`,
-                    height: "100%",
                     display: "inline-flex",
-                    flexFlow: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    // backgroundColor: "yellow",
-                    backgroundColor: "rgba(255, 255, 0, 0)",
                 }}
             >
                 {this.convertLatexSourceToDiv(this.xAxis.label)}
@@ -437,14 +466,37 @@ export class XYPlotPlot {
 
     _ElementPlot = () => {
 
+        if (g_widgets1.isEditing()) {
+            // placeholder
+            return (
+                <div
+                    style={{
+                        width: this.getPlotWidth(),
+                        height: this.getPlotHeight(),
+                        outline: "1px solid black",
+                        position: "relative",
+                    }}
+                >
+                    <img
+                        src={"../../../webpack/resources/webpages/gridlines.svg"}
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                        }}
+                    >
+                    </img>
+
+                </div>
+            );
+        }
+
         return (
             <div
                 style={{
-                    width: this.plotWidth,
-                    height: this.plotHeight,
+                    width: this.getPlotWidth(),
+                    height: this.getPlotHeight(),
                     outline: "1px solid black",
                     position: "relative",
-                    backgroundColor: "rgba(0,255,0,1)",
                 }}
                 onMouseEnter={() => {
                     if (!g_widgets1.isEditing()) {
@@ -452,8 +504,7 @@ export class XYPlotPlot {
                     }
                 }}
                 onMouseLeave={() => {
-                    this.lastCursorPointXY = [-100000, -100000];
-                    this.updateCursorValue(this.lastCursorPointXY);
+                    this.setCursorValue("");
                     window.removeEventListener("mousemove", this.updateCursorValue);
                 }}
             >
@@ -468,6 +519,15 @@ export class XYPlotPlot {
     };
 
     _ElementXYGridLines = () => {
+
+
+        const yAxis = this.getSelectedYAxis();
+        if (yAxis === undefined) {
+            return null
+        }
+
+        const xAxis = this.xAxis;
+
         const { xValMin,
             xValMax,
             yValMin,
@@ -479,14 +539,14 @@ export class XYPlotPlot {
             xTickValues,
             xTickPositions,
             yTickValues,
-            yTickPositions } = this.ticksInfo;
-        const height = this.plotHeight;
-        const width = this.plotWidth;
+            yTickPositions } = yAxis["ticksInfo"];
+        const height = this.getPlotHeight();
+        const width = this.getPlotWidth();
 
         return (
             <svg
-                width={`${this.plotWidth}`}
-                height={`${this.plotHeight}`}
+                width={`${this.getPlotWidth()}`}
+                height={`${this.getPlotHeight()}`}
                 x="0"
                 y="0"
                 style={{
@@ -494,6 +554,11 @@ export class XYPlotPlot {
                 }}
             >
                 {xTickPositions.map((tickPosition: number, index: number) => {
+
+                    if (xAxis["showGrid"] === false) {
+                        return null;
+                    }
+
                     return (
                         <polyline
                             key={`x-${tickPosition}-${index}`}
@@ -506,6 +571,9 @@ export class XYPlotPlot {
                     );
                 })}
                 {yTickPositions.map((tickPosition: number, index: number) => {
+                    if (yAxis["showGrid"] === false) {
+                        return null;
+                    }
                     return (
                         <polyline
                             key={`y-${tickPosition}-${index}`}
@@ -527,10 +595,11 @@ export class XYPlotPlot {
         )
     }
 
-    // -------------- legend elements --------------
+    // -------------- legend and control elements --------------
 
     _ElementLegends = () => {
-        if (!(this.getMainWidget().getText()["showLegend"] === true || this.peekLegend === true)) {
+        const showLegend = this.getMainWidget().getText()["showLegend"];
+        if (showLegend === false) {
             return null;
         }
 
@@ -544,7 +613,6 @@ export class XYPlotPlot {
                     flexDirection: "column",
                     top: 5,
                     right: 5,
-                    backgroundColor: "rgba(255, 255, 255, 1)",
                     padding: 3,
                     border: "1px solid black",
                 }}
@@ -568,12 +636,13 @@ export class XYPlotPlot {
                                     return;
                                 }
                                 this.selectedTraceIndex = yIndex;
-                                if (this.forceUpdate !== undefined) {
-                                    this.forceUpdate({});
-                                }
+                                this.forceUpdate({});
                             }}
                         >
-                            <svg width={`40`} height={this.getMainWidget().getStyle()["fontSize"] + 2}>
+                            <svg
+                                width={`40`}
+                                height={this.getMainWidget().getStyle()["fontSize"] + 2}
+                            >
                                 <this._ElementLegendLine svgWidth={40} svgHeight={14} yIndex={yIndex}></this._ElementLegendLine>
                                 <this._ElementLegendPoint svgWidth={40} svgHeight={14} yIndex={yIndex}></this._ElementLegendPoint>
                             </svg>
@@ -593,7 +662,6 @@ export class XYPlotPlot {
     };
 
     _ElementLegendLine = ({ yIndex, svgWidth, svgHeight }: any) => {
-        // const strokeWidth = 2;
 
         const yAxis = this.yAxes[yIndex];
         const color = yAxis["lineColor"];
@@ -726,356 +794,241 @@ export class XYPlotPlot {
     };
 
     _ElementControls = () => {
+
+        if (g_widgets1.isEditing()) {
+            return (
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexFlow: "row",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                        width: 0,
+                        overflow: "visible",
+                    }}
+                >
+                    {" "}
+                </div>
+            );
+        }
+
         const copyElementRef = React.useRef<any>(null);
         const settingsElementRef = React.useRef<any>(null);
         const showLegendRef = React.useRef<any>(null);
         return (
             <div
                 style={{
-                    width: `100%`,
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    // height: `${this.toolbarHeight}`,
-                    height: this.getMainWidget().getAllStyle()["fontSize"] + 4,
-
                     display: "inline-flex",
                     flexFlow: "row",
                     justifyContent: "flex-start",
                     alignItems: "center",
-                    // backgroundColor: "green",
-                    backgroundColor: "rgba(0, 255, 0, 0)",
+                    width: 0,
+                    overflow: "visible",
                 }}
             >
                 <div
+                    ref={copyElementRef}
                     style={{
-                        height: "100%",
+                        marginLeft: 5,
+                        borderRadius: 2,
+                        padding: 3,
                         display: "inline-flex",
-                        flexDirection: "row",
-                        // justifyContent: "center",
+                        justifyContent: "center",
+                        height: "100%",
                         alignItems: "center",
-                        // height: "20px",
-                        padding: "0px",
-                        margin: "0px",
-                        // marginTop: "10px",
+                        opacity: 0.5,
+                    }}
+                    onMouseEnter={() => {
+                        if (g_widgets1.isEditing()) {
+                            return;
+                        }
+                        if (copyElementRef.current !== null) {
+                            copyElementRef.current.style["cursor"] = "pointer";
+                            copyElementRef.current.style["opacity"] = 1;
+                        }
+                    }}
+                    onMouseLeave={() => {
+                        if (g_widgets1.isEditing()) {
+                            return;
+                        }
+
+                        if (copyElementRef.current !== null) {
+                            copyElementRef.current.style["opacity"] = 0.25;
+                            copyElementRef.current.style["cursor"] = "default";
+                        }
+                    }}
+                    onMouseDown={() => {
+                        if (g_widgets1.isEditing()) {
+                            return;
+                        }
+                        const result: Record<string, type_dbrData | type_LocalChannel_data | undefined> = {};
+                        for (const channelName of this.getMainWidget().getChannelNames()) {
+                            try {
+                                const tcaChannel = g_widgets1.getTcaChannel(channelName);
+                                const dbrData = tcaChannel.getDbrData();
+                                result[channelName] = dbrData;
+                            } catch (e) {
+                                result[channelName] = undefined;
+                            }
+                        }
+                        navigator.clipboard.writeText(JSON.stringify(result, null, 4));
                     }}
                 >
-                    <div
-                        ref={copyElementRef}
-                        style={{
-                            marginLeft: 5,
-                            borderRadius: 2,
-                            padding: 3,
-                            display: "inline-flex",
-                            justifyContent: "center",
-                            height: "100%",
-                            alignItems: "center",
-                            opacity: 0.5,
-                        }}
-                        onMouseEnter={() => {
-                            if (g_widgets1.isEditing()) {
-                                return;
-                            }
+                    <img
+                        src={`../../../webpack/resources/webpages/copy-symbol.svg`}
+                        height={(this.getMainWidget().getAllStyle()["fontSize"] * 3) / 4}
+                    ></img>
+                </div>
+                <div
+                    ref={settingsElementRef}
+                    style={{
+                        borderRadius: 2,
+                        padding: 3,
+                        display: "inline-flex",
+                        justifyContent: "center",
+                        height: "100%",
+                        alignItems: "center",
+                        opacity: 0.25,
+                    }}
+                    onMouseEnter={() => {
+                        if (g_widgets1.isEditing()) {
+                            return;
+                        }
 
-                            if (copyElementRef.current !== null) {
-                                copyElementRef.current.style["cursor"] = "pointer";
-                                copyElementRef.current.style["opacity"] = 1;
-                            }
-                        }}
-                        onMouseLeave={() => {
-                            if (g_widgets1.isEditing()) {
-                                return;
-                            }
+                        if (settingsElementRef.current !== null) {
+                            settingsElementRef.current.style["cursor"] = "pointer";
+                            settingsElementRef.current.style["opacity"] = 1;
+                        }
+                    }}
+                    onMouseLeave={() => {
+                        if (g_widgets1.isEditing()) {
+                            return;
+                        }
 
-                            if (copyElementRef.current !== null) {
-                                copyElementRef.current.style["opacity"] = 0.25;
-                                copyElementRef.current.style["cursor"] = "default";
-                            }
-                        }}
-                        onMouseDown={() => {
-                            if (g_widgets1.isEditing()) {
-                                return;
-                            }
-                            const result: Record<string, type_dbrData | type_LocalChannel_data | undefined> = {};
-                            if (!g_widgets1.isEditing()) {
-                                for (const channelName of this.getChannelNames()) {
-                                    try {
-                                        const tcaChannel = g_widgets1.getTcaChannel(channelName);
-                                        const dbrData = tcaChannel.getDbrData();
-                                        result[channelName] = dbrData;
-                                    } catch (e) {
-                                        result[channelName] = undefined;
-                                    }
-                                }
-                                navigator.clipboard.writeText(JSON.stringify(result, null, 4));
-                            }
-                        }}
-                    >
-                        <img
-                            src={`../../../webpack/resources/webpages/copy-symbol.svg`}
-                            height={(this.getMainWidget().getAllStyle()["fontSize"] * 3) / 4}
-                        ></img>
-                    </div>
-                    <div
-                        ref={settingsElementRef}
-                        style={{
-                            borderRadius: 2,
-                            padding: 3,
-                            display: "inline-flex",
-                            justifyContent: "center",
-                            height: "100%",
-                            alignItems: "center",
-                            opacity: 0.25,
-                        }}
-                        onMouseEnter={() => {
-                            if (g_widgets1.isEditing()) {
-                                return;
-                            }
+                        if (settingsElementRef.current !== null) {
+                            settingsElementRef.current.style["opacity"] = 0.25;
+                            settingsElementRef.current.style["cursor"] = "default";
+                        }
+                    }}
+                    onClick={() => {
+                        if (g_widgets1.isEditing()) {
+                            return;
+                        }
+                        this.getMainWidget().showSettings = true;
+                        g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
+                        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
 
-                            if (settingsElementRef.current !== null) {
-                                settingsElementRef.current.style["cursor"] = "pointer";
-                                settingsElementRef.current.style["opacity"] = 1;
-                            }
-                        }}
-                        onMouseLeave={() => {
-                            if (g_widgets1.isEditing()) {
-                                return;
-                            }
-
-                            if (settingsElementRef.current !== null) {
-                                settingsElementRef.current.style["opacity"] = 0.25;
-                                settingsElementRef.current.style["cursor"] = "default";
-                            }
-                        }}
-                        onClick={() => {
-                            if (g_widgets1.isEditing()) {
-                                return;
-                            }
-                            this.getMainWidget().showSettings = true;
-                            g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                            g_flushWidgets();
-                        }}
-                    >
-                        <img
-                            src={`../../../webpack/resources/webpages/settings.svg`}
-                            height={this.getMainWidget().getAllStyle()["fontSize"]}
-                        ></img>
-                    </div>
-                    <div
-                        ref={showLegendRef}
-                        onMouseEnter={() => {
-                            if (g_widgets1.isEditing()) {
-                                return;
-                            }
-                            if (showLegendRef.current !== null) {
-                                showLegendRef.current.style["cursor"] = "pointer";
-                            }
-                            this.peekLegend = true;
-                            this.forceUpdate({});
-                        }}
-                        onMouseLeave={() => {
-                            if (g_widgets1.isEditing()) {
-                                return;
-                            }
-                            if (showLegendRef.current !== null) {
-                                showLegendRef.current.style["cursor"] = "default";
-                            }
-                            this.peekLegend = false;
-                            this.forceUpdate({});
-                        }}
-                        onMouseDown={() => {
-                            if (g_widgets1.isEditing()) {
-                                return;
-                            }
-                            // this.showLegend = !this.showLegend;
-                            this.getMainWidget().getText()["showLegend"] = !this.getMainWidget().getText()["showLegend"];
-                            this.forceUpdate({});
-                        }}
-                        style={{
-                            opacity: this.getMainWidget().getText()["showLegend"] ? 1 : this.peekLegend ? 0.5 : 0.25,
-                        }}
-                    >
-                        <img
-                            src={`../../../webpack/resources/webpages/legend-symbol.svg`}
-                            width={this.getMainWidget().getAllStyle()["fontSize"]}
-                        ></img>
-                    </div>
+                        g_flushWidgets();
+                    }}
+                >
+                    <img
+                        src={`../../../webpack/resources/webpages/settings.svg`}
+                        height={this.getMainWidget().getAllStyle()["fontSize"]}
+                    ></img>
+                </div>
+                <div
+                    ref={showLegendRef}
+                    onMouseEnter={() => {
+                        if (g_widgets1.isEditing()) {
+                            return;
+                        }
+                        if (showLegendRef.current !== null) {
+                            showLegendRef.current.style["cursor"] = "pointer";
+                            showLegendRef.current.style["opacity"] = 1;
+                        }
+                        this.forceUpdate({});
+                    }}
+                    onMouseLeave={() => {
+                        if (g_widgets1.isEditing()) {
+                            return;
+                        }
+                        if (showLegendRef.current !== null) {
+                            showLegendRef.current.style["cursor"] = "default";
+                            showLegendRef.current.style["opacity"] = 0.25;
+                        }
+                        this.forceUpdate({});
+                    }}
+                    onMouseDown={() => {
+                        if (g_widgets1.isEditing()) {
+                            return;
+                        }
+                        this.getMainWidget().getText()["showLegend"] = !this.getMainWidget().getText()["showLegend"];
+                        this.forceUpdate({});
+                    }}
+                    style={{
+                        opacity: 0.25,
+                    }}
+                >
+                    <img
+                        src={`../../../webpack/resources/webpages/legend-symbol.svg`}
+                        width={this.getMainWidget().getAllStyle()["fontSize"]}
+                    ></img>
                 </div>
             </div>
         );
     };
 
-    // --------------- plot calculation ------------
+    _ElementCursorPosition = () => {
+        if (g_widgets1.isEditing()) {
+            return (
+                <div
+                    style={{
+                        display: "inline-flex",
+                        width: 0,
+                        overflow: "visible",
+                        flexDirection: "row-reverse",
+                    }}
+                >
+                    {" "}
+                </div>
+            )
+        }
+
+        const yAxis = this.getSelectedYAxis();
+
+        if (yAxis === undefined) {
+            return null;
+        }
+
+        const [cursorValue, setCursorValue] = React.useState(" ");
+        this.setCursorValue = setCursorValue;
+        const color = yAxis["lineColor"];
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    width: 0,
+                    overflow: "visible",
+                    flexDirection: "row-reverse",
+                    color: color,
+                }}
+            >
+                {cursorValue}
+            </div>
+        );
+    };
+
+    // ------------------- helper functions --------------
 
     mapXYsToPointsWebGl = (index: number): Float32Array => {
+
+        const yAxis = this.getMainWidget().getYAxes()[index];
+        if (yAxis === undefined) {
+            return new Float32Array(0);
+        }
+
         // x and y data are odd and even indices
-        let xData = this.xy[index];
-        let yData = this.xy[index + 1];
+        let xData = yAxis["xData"];
+        let yData = yAxis["yData"];
 
-        let yIndex = this.getYIndex(index);
-
-        let useLog10Scale = false;
-        if (this.yAxes[yIndex] !== undefined) {
-            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
-        }
-
-        // if there is no xData (undefined) or the x PV is empty ("")
-        if (this.getMainWidget().getChannelNames()[index] === "" || xData.length === 0) {
-            const dataSize = yData.length;
-            xData = [...Array(dataSize).keys()];
-        }
-        // xData and yData must be same size
-        if (xData.length !== yData.length) {
-            const positions = new Float32Array(3);
-            return positions;
-        }
-
+        // patch xData
         if (xData.length === 0) {
-            const positions = new Float32Array(3);
-            return positions;
+            xData = [...Array(yData.length).keys()];
         }
-
-        let { xValMax, xValMin, yValMax, yValMin } = this.ticksInfo;
-
-        // extra space in x and y directions
-        if (!useLog10Scale) {
-            const dx = Math.abs(xValMax - xValMin) * this.xPlotRangeExtension / 100;
-            const dy = Math.abs(yValMax - yValMin) * this.yPlotRangeExtension / 100;
-            xValMax = xValMax + dx;
-            xValMin = xValMin - dx;
-            yValMax = yValMax + dy;
-            yValMin = yValMin - dy;
-        }
-
-        const len = Math.min(xData.length, yData.length);
-        const positions = new Float32Array(len * 3);
-
-        for (let ii = 0; ii < len; ii++) {
-            const valX = xData[ii];
-            const valY = yData[ii];
-            const pointX = this.mapXToPointWebGl(index, [valX, valY], [xValMin, xValMax, yValMin, yValMax]);
-            const pointY = this.mapYToPointWebGl(index, [valX, valY], [xValMin, xValMax, yValMin, yValMax]);
-            if (pointX === undefined || pointY === undefined || isNaN(pointX) || isNaN(pointY)) {
-                continue;
-            }
-            positions[3 * ii] = pointX;
-            positions[3 * ii + 1] = -1 * pointY;
-            positions[3 * ii + 2] = 0;
-        }
-        return positions;
+        const ticksInfo = yAxis["ticksInfo"];
+        let { xValMax, xValMin, yValMax, yValMin } = ticksInfo;
+        return mapXYsToPointsWebGl(xData, yData, xValMin, xValMax, yValMin, yValMax);
     };
-
-    mapXToPointWebGl = (
-        index: number,
-        [valX, valY]: [number, number],
-        [valXmin, valXmax, valYmin, valYmax]: [number, number, number, number]
-    ): number => {
-
-        let yIndex = this.getYIndex(index);
-
-        if (this.yAxes[yIndex] === undefined) {
-            return 0;
-        }
-        const pointXmin = -1;
-        const pointXmax = 1;
-        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
-        return pointX;
-    };
-
-    mapYToPointWebGl = (
-        index: number,
-        [valX, valY]: [number, number],
-        [valXmin, valXmax, valYmin, valYmax]: [number, number, number, number]
-    ): number => {
-
-        let yIndex = this.getYIndex(index);
-        let useLog10Scale = false;
-        if (this.yAxes[yIndex] !== undefined) {
-            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
-        }
-
-        if (this.yAxes[yIndex] === undefined) {
-            return 0;
-        }
-        const pointYmin = -1;
-        const pointYmax = 1;
-
-        // valY, valYmin, valYmax for Log10
-        // if we use Log10Scale, do not use extra space
-        if (useLog10Scale) {
-            valYmin = Math.log10(valYmin);
-            valYmax = Math.log10(valYmax);
-            valY = Math.log10(valY);
-        }
-        if (useLog10Scale) {
-            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
-                valY = -20
-            }
-            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
-                valYmin = -20
-            }
-            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
-                valYmax = 0
-            }
-        }
-
-        // const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
-        const pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
-        return pointY;
-    };
-
-    // pointX, pointY are the coordinates inside Plot element
-    mapPointToXY = (index: number,
-        [pointX, pointY]: [number, number],
-        [valXmin, valXmax, valYmin, valYmax]: [number, number, number, number]
-    ): [number, number] => {
-        if (index >= this.getMainWidget().getChannelNames().length) {
-            return [0, 0];
-        }
-
-        let yIndex = this.getYIndex(index);
-        let useLog10Scale = false;
-        if (this.yAxes[yIndex] !== undefined) {
-            useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
-        }
-
-        const pointXmin = 0;
-        const pointXmax = this.plotWidth;
-        const pointYmin = 0;
-        const pointYmax = this.plotHeight;
-
-        if (useLog10Scale) {
-            valYmin = Math.log10(valYmin);
-            valYmax = Math.log10(valYmax);
-        }
-
-        if (useLog10Scale) {
-            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
-                valYmin = -20;
-            }
-            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
-                valYmax = 0
-            }
-        }
-
-        const valX = valXmin + ((pointX - pointXmin) * (valXmax - valXmin)) / (pointXmax - pointXmin);
-
-        if (useLog10Scale) {
-            let valY = valYmin - (pointY - pointYmax) / ((pointYmax - pointYmin) / (valYmax - valYmin));
-            valY = Math.pow(10, valY);
-            return [valX, valY];
-        } else {
-            const valY = valYmin - ((pointY - pointYmax) * (valYmax - valYmin)) / (pointYmax - pointYmin);
-            return [valX, valY];
-        }
-    };
-
-    getYIndex = (index: number) => {
-        return Math.floor((index + 0.01) / 2);
-    };
-    // ------------------- helper functions --------------
 
     /**
      * Recalculate the plot region dimensions and tick layout info.
@@ -1085,31 +1038,27 @@ export class XYPlotPlot {
      * positions (stored in `this.ticksInfo`) so that tick lines, labels, and
      * the WebGL canvas all share a consistent coordinate mapping.
      */
-    updateWidthHeightTicksInfo = () => {
-        const allText = this.getMainWidget().getAllText();
-        const allStyle = this.getMainWidget().getAllStyle();
-        const width = allStyle["width"];
-        const height = allStyle["height"];
-        const showFrame = allText["showFrame"];
-        if (showFrame === true) {
-            this.plotWidth = width - this.yAxisLabelWidth - this.yAxisTickWidth;
-            this.plotHeight = height - this.titleHeight - this.xAxisLabelHeight - this.xAxisTickHeight - this.toolbarHeight;
-        } else {
-            this.plotWidth = width;
-            this.plotHeight = height;
-        }
+    updateTicksInfo = (index: number) => {
+
+        this.updatePlotWidthHeight();
 
         const scale = "Linear";
-        const { xValMin, xValMax, yValMin, yValMax } = this.calcXyValMinMax();
-        const xLength = this.plotWidth;
-        const yLength = this.plotHeight;
+        const yAxis = this.yAxes[index];
+
+        if (yAxis === undefined) {
+            return;
+        }
+
+        const { xValMin, xValMax, yValMin, yValMax } = this.calcXyValMinMax(index);
+        const xLength = this.getPlotWidth();
+        const yLength = this.getPlotHeight();
         const numXgrid = this.xAxis["numGrids"];
-        const numYgrid = this.yAxes[this.selectedTraceIndex]["numGrids"];
+        const numYgrid = yAxis["numGrids"];
         const xTickValues = calcTicks(xValMin, xValMax, numXgrid + 1, { scale: scale });
         const xTickPositions = calcTickPositions(xTickValues, xValMin, xValMax, xLength, { scale: scale }, "vertical");
         const yTickValues = calcTicks(yValMin, yValMax, numYgrid + 1, { scale: scale });
         const yTickPositions = calcTickPositions(yTickValues, yValMin, yValMax, yLength, { scale: scale }, "vertical");
-        this.ticksInfo = {
+        yAxis["ticksInfo"] = {
             scale,
             xValMin,
             xValMax,
@@ -1126,39 +1075,54 @@ export class XYPlotPlot {
         };
     }
 
-    calcXyValMinMax = () => {
-        // x
-        let xValMin = this.xAxis["valMin"];
-        let xValMax = this.xAxis["valMax"];
-        // auto scale
-        const autoScale = this.xAxis["autoScale"];
-        if (autoScale === true) {
-            const xData = this.xy[0];
-            const yData = this.xy[1];
-            if (xData !== undefined && yData !== undefined && yData.length > 0) {
-                if (xData.length > 0) {
-                    xValMin = Math.min(...xData);
-                    xValMax = Math.max(...xData);
-                } else {
-                    xValMin = 0;
-                    xValMax = yData.length;
-                }
+    updatePlotWidthHeight = () => {
+        const allText = this.getMainWidget().getAllText();
+        const allStyle = this.getMainWidget().getAllStyle();
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+        const showFrame = allText["showFrame"];
+        if (showFrame === true) {
+            this.setPlotWidth(width - yAxisLabelWidth - yAxisTickWidth);
+            this.setPlotHeight(height - xAxisLabelHeight - xAxisTickHeight - toolbarHeight);
+        } else {
+            this.setPlotWidth(width);
+            this.setPlotHeight(height);
+        }
+    }
+
+    calcXyValMinMax = (index: number) => {
+
+        const yAxis = this.getMainWidget().getYAxes()[index];
+        if (yAxis === undefined) {
+            return {
+                xValMin: 0,
+                xValMax: 100,
+                yValMin: 0,
+                yValMax: 100,
+            }
+        }
+        const xData = yAxis["xData"];
+        const yData = yAxis["yData"];
+
+        if (yData.length === 0) {
+            return {
+                xValMin: 0,
+                xValMax: 100,
+                yValMin: 0,
+                yValMax: 100,
             }
         }
 
+        // x
+        let xValMin = this.xAxis["valMin"];
+        let xValMax = this.xAxis["valMax"];
+
         // y
-        const yIndex = this.selectedTraceIndex;
-        const yAxis = this.yAxes[yIndex];
         let yValMin = yAxis["valMin"];
         let yValMax = yAxis["valMax"];
-        // auto scale
         if (yAxis["autoScale"]) {
-            const xData = this.xy[2 * yIndex];
-            const yData = this.xy[2 * yIndex + 1];
-            if (xData !== undefined && yData !== undefined && yData.length > 0) {
-                yValMin = Math.min(...yData);
-                yValMax = Math.max(...yData);
-            }
+            yValMin = Math.min(...yData);
+            yValMax = Math.max(...yData);
         }
 
         return (
@@ -1189,19 +1153,17 @@ export class XYPlotPlot {
         }
     };
 
-    getANewColor = () => {
-        const len = this.yAxes.length;
-        const index = len % this.presetColors.length;
-        return this.presetColors[index];
-    };
-
     generateDefaultYAxis = (index: number): type_yAxis => {
+
+        const index1 = index % presetColors.length;
+        const lineColor = presetColors[index1];
+
         return {
             label: `y${index}`,
             valMin: 0,
             valMax: 100,
             lineWidth: 2,
-            lineColor: this.getANewColor(),
+            lineColor: lineColor,
             ticks: [0, 50, 100],
             ticksText: [0, 50, 100],
             autoScale: false,
@@ -1211,120 +1173,85 @@ export class XYPlotPlot {
             showGrid: true,
             numGrids: 5,
             displayScale: "Linear",
+            // runtime data
+            xData: [],
+            yData: [],
+            ticksInfo: JSON.parse(JSON.stringify(defaultTicksInfo)),
         };
     };
 
-    initXY = () => {
-        this.xy = [];
-        for (let ii = 0; ii < this.getMainWidget().getChannelNamesLevel0().length; ii++) {
-            this.xy.push([]);
-            this.tracesHide = [];
+    initRuntimeData = () => {
+        for (const yAxis of this.yAxes) {
+            yAxis["xData"] = [];
+            yAxis["yData"] = [];
+            yAxis["ticksInfo"] = JSON.parse(JSON.stringify(defaultTicksInfo));
         }
     };
 
-    calcColor = () => {
-        const selectedYAxis = this.yAxes[this.selectedTraceIndex];
+    /**
+     * get the currently selected trace's color
+     */
+    calcSelectedTraceColor = () => {
+        const selectedYAxis = this.getSelectedYAxis();
         return selectedYAxis === undefined ? "rgba(0, 0, 0, 1)" : selectedYAxis.lineColor;
     }
 
     updateCursorValue = (event: any) => {
-        let pointX0 = -100000;
-        let pointY0 = -100000;
-        if (event.clientX !== undefined) {
-            this.lastCursorPointXY = [getMouseEventClientX(event), getMouseEventClientY(event)];
-            pointX0 = getMouseEventClientX(event);
-            pointY0 = getMouseEventClientY(event);
-        } else {
-            pointX0 = event[0];
-            pointY0 = event[1];
-        }
-
-        if (pointX0 === -100000) {
-            if (this.setCursorValue !== undefined) {
-                this.setCursorValue(``);
-            }
-            return;
-        }
+        const pointX0 = getMouseEventClientX(event);
+        const pointY0 = getMouseEventClientY(event);
+        const allStyle = this.getMainWidget().getAllStyle();
+        const left = allStyle["left"];
+        const top = allStyle["top"];
 
         // cursor location inside trace plot region
-        const pointX = pointX0 - this.yAxisLabelWidth - this.yAxisTickWidth - this.getStyle().left;
-        const pointY = pointY0 - this.titleHeight - this.getStyle().top;
+        const pointX = pointX0 - yAxisLabelWidth - yAxisTickWidth - left;
+        const pointY = pointY0 - top;
 
-        if (this.setCursorValue !== undefined) {
-
-            const yIndex = this.selectedTraceIndex;
-            if (this.yAxes[yIndex] === undefined) {
-                return;
-            }
-
-            let useLog10Scale = false;
-            if (this.yAxes[yIndex] !== undefined) {
-                useLog10Scale = this.yAxes[yIndex]["displayScale"] === "Log10" ? true : false;
-            }
-
-            const { xValMax, xValMin, yValMax, yValMin } = this.ticksInfo;
-
-            const [valX, valY] = this.mapPointToXY(yIndex, [pointX, pointY], [xValMin, xValMax, yValMin, yValMax]);
-
-            const valXStr = valX.toPrecision(4).toString();
-            const valYStr = valY.toPrecision(4).toString();
-            this.setCursorValue(`(${valXStr}, ${valYStr})`);
+        const yAxis = this.getSelectedYAxis();
+        if (yAxis === undefined) {
+            return;
         }
+        const ticksInfo = yAxis["ticksInfo"];
+        const { xValMax, xValMin, yValMax, yValMin } = ticksInfo;
+
+        const [valX, valY] = mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight())
+        const valXStr = valX.toPrecision(4).toString();
+        const valYStr = valY.toPrecision(4).toString();
+        this.setCursorValue(`(${valXStr}, ${valYStr})`);
     };
 
-    _ElementCursorPosition = () => {
-        const [cursorValue, setCursorValue] = React.useState(" ");
-        this.setCursorValue = setCursorValue;
-        return (
-            <div
-                style={{
-                    // display: "inline-flex",
-                    // justifyContent: "center",
-                    // alignItems: "center",
-                    width: `100%`,
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    // height: `${this.toolbarHeight}`,
-                    height: this.getMainWidget().getAllStyle()["fontSize"] + 4,
-                    display: "inline-flex",
-                    flexFlow: "row",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                    // backgroundColor: "green",
-                    backgroundColor: "rgba(0, 255, 0, 0)",
-
-                }}
-            >
-                {(() => {
-                    if (g_widgets1.isEditing()) {
-                        return ""
-                    } else if (this.yAxes[this.selectedTraceIndex] === undefined) {
-                        return ""
-                    } else {
-                        return cursorValue
-                    }
-                })()}
-            </div>
-        );
-    };
-
-    // ----------------------------- data and plot -------------------------------------
-
+    /**
+     * when new channel data arrives, 
+     * (1) update the corresponding yAxis["xData"], yAxis["yData"] 
+     * (2) calculate the yAxis["ticksInfo"]
+     */
     mapDbrDataWitNewData = (newChannelNames: string[]) => {
         if (g_widgets1.isEditing()) {
             return;
         }
 
-        for (let ii = 0; ii < this.getChannelNames().length; ii++) {
-            const channelName = this.getChannelNames()[ii];
+        const channelNames = this.getMainWidget().getChannelNames();
 
-            // after this step, this channel must have a new data!
+        for (let ii = 0; ii < channelNames.length; ii++) {
+            const channelName = channelNames[ii];
+
             if (newChannelNames.includes(channelName)) {
                 const newValue = g_widgets1.getChannelValue(channelName);
                 if (Array.isArray(newValue)) {
                     if (typeof newValue[0] === "number") {
-                        this.xy[ii] = newValue as number[];
+                        const yAxisIndex = Math.floor(ii / 2 + 0.1);
+                        const yAxis = this.getMainWidget().getYAxes()[yAxisIndex];
+                        if (yAxis === undefined) {
+                            return;
+                        }
+                        if (ii % 2 < 0.01) {
+                            yAxis["xData"] = newValue as number[];
+                        } else {
+                            yAxis["yData"] = newValue as number[];
+                        }
+
+                        // update runtime ticks, plot region width, height information, for grid lines and ticks
+                        this.updateTicksInfo(yAxisIndex);
                     }
                 }
             }
@@ -1336,43 +1263,40 @@ export class XYPlotPlot {
         return this._mainWidget;
     };
 
-    getStyle = () => {
-        return this.getMainWidget().getStyle();
-    };
-
-    getText = () => {
-        return this.getMainWidget().getText();
-    };
-    getChannelNames = () => {
-        return this.getMainWidget().getChannelNames();
-    };
-
     getElement = () => {
         return <this._Element></this._Element>;
     };
 
-    setXAxis = (newAxis: Record<string, any>) => {
-        this.xAxis = JSON.parse(JSON.stringify(newAxis));
-    };
-
-    setYAxes = (yAxes: Record<string, any>[]) => {
-        // deep copy
-        this.yAxes = JSON.parse(JSON.stringify(yAxes));
-    };
     getElementSettings = () => {
         return this._settings.getElementSettings();
     };
 
-    getTraceHidden = (yIndex: number) => {
-        return this.tracesHide[yIndex] === true ? true : false;
-    };
-
-    setTraceHidden = (yIndex: number, hide: boolean) => {
-        this.tracesHide[yIndex] = hide;
-    };
-
-    getSelectedYAxis = () => {
+    getSelectedYAxis = (): type_yAxis | undefined => {
         return this.yAxes[this.selectedTraceIndex];
     }
 
+    getTicksInfo = (index: number) => {
+        const yAxis = this.getMainWidget().getYAxes()[index];
+        if (yAxis === undefined) {
+            return JSON.parse(JSON.stringify(defaultTicksInfo));
+        } else {
+            return yAxis["ticksInfo"];
+        }
+    }
+
+    getPlotWidth = () => {
+        return this._plotWidth;
+    }
+
+    getPlotHeight = () => {
+        return this._plotHeight;
+    }
+
+    setPlotWidth = (newWidth: number) => {
+        this._plotWidth = newWidth;
+    }
+
+    setPlotHeight = (newHeight: number) => {
+        this._plotHeight = newHeight;
+    }
 }

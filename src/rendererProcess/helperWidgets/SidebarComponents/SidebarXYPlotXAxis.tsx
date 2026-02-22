@@ -57,7 +57,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                         <this._ElementLabel></this._ElementLabel>
                         <this._ElementXValMin></this._ElementXValMin>
                         <this._ElementXValMax></this._ElementXValMax>
-                        <this._ElementAutoScale></this._ElementAutoScale>
+                        {/* <this._ElementAutoScale></this._ElementAutoScale> */}
                         <this._ElementShowGrid></this._ElementShowGrid>
                         <this._ElementNumGrids></this._ElementNumGrids>
                     </>
@@ -155,7 +155,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                     const defaultYAxis = (this.getMainWidget() as XYPlot).getPlot().generateDefaultYAxis(newYIndex);
                     (this.getMainWidget() as XYPlot).getPlot().yAxes.push(defaultYAxis);
                     // update xy data
-                    (this.getMainWidget() as XYPlot).getPlot().initXY();
+                    (this.getMainWidget() as XYPlot).getPlot().initRuntimeData();
                     // remove axis in SidebarXYPlotYAxes
                     (this.getSidebar() as XYPlotSidebar)
                         .getYAxes()
@@ -244,53 +244,53 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
         g_flushWidgets();
     };
 
-    _ElementAutoScale = () => {
-        const [autoScale, setAutoScale] = React.useState<boolean>(this.getPlotXAxis()["autoScale"]);
+    // _ElementAutoScale = () => {
+    //     const [autoScale, setAutoScale] = React.useState<boolean>(this.getPlotXAxis()["autoScale"]);
 
-        return (
-            <form
-                onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetAutoScale(event, autoScale)}
-                style={{ ...(this._styleForm as any) }}
-            >
-                <div>Auto scale:</div>
-                <input
-                    type="checkbox"
-                    // uncheck if there are more than one traces
-                    // checked={this.getMainWidget().getChannelNamesLevel0().length > 2 ? false : autoScale}
-                    checked={autoScale}
-                    // greg out when there are more than one traces
-                    // disabled={this.getMainWidget().getChannelNamesLevel0().length > 2 ? true : false}
-                    onChange={(event: any) => {
-                        this.updateWidgetAutoScale(event, !autoScale);
-                        setAutoScale((prevVal: boolean) => {
-                            return !prevVal;
-                        });
-                    }}
-                />
-            </form>
-        );
-    };
+    //     return (
+    //         <form
+    //             onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetAutoScale(event, autoScale)}
+    //             style={{ ...(this._styleForm as any) }}
+    //         >
+    //             <div>Auto scale:</div>
+    //             <input
+    //                 type="checkbox"
+    //                 // uncheck if there are more than one traces
+    //                 // checked={this.getMainWidget().getChannelNamesLevel0().length > 2 ? false : autoScale}
+    //                 checked={autoScale}
+    //                 // greg out when there are more than one traces
+    //                 // disabled={this.getMainWidget().getChannelNamesLevel0().length > 2 ? true : false}
+    //                 onChange={(event: any) => {
+    //                     this.updateWidgetAutoScale(event, !autoScale);
+    //                     setAutoScale((prevVal: boolean) => {
+    //                         return !prevVal;
+    //                     });
+    //                 }}
+    //             />
+    //         </form>
+    //     );
+    // };
 
-    updateWidgetAutoScale = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // do not preventDefault()
+    // updateWidgetAutoScale = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    //     // do not preventDefault()
 
-        const oldVal = this.getPlotXAxis()["autoScale"];
-        if (propertyValue === oldVal) {
-            return;
-        } else {
-            if (typeof propertyValue === "boolean") {
-                this.getPlotXAxis()["autoScale"] = propertyValue;
-            }
-        }
+    //     const oldVal = this.getPlotXAxis()["autoScale"];
+    //     if (propertyValue === oldVal) {
+    //         return;
+    //     } else {
+    //         if (typeof propertyValue === "boolean") {
+    //             this.getPlotXAxis()["autoScale"] = propertyValue;
+    //         }
+    //     }
 
-        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-        history.registerAction();
+    //     const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+    //     history.registerAction();
 
-        g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+    //     g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
+    //     g_widgets1.addToForceUpdateWidgets("GroupSelection2");
 
-        g_flushWidgets();
-    };
+    //     g_flushWidgets();
+    // };
 
 
     _ElementShowGrid = () => {

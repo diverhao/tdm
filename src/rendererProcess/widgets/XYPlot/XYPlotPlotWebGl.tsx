@@ -3,6 +3,8 @@ import { OrthographicCamera, Scene, WebGLRenderer, BufferGeometry, BufferAttribu
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
+import { type_yAxis, XYPlotPlot } from "./XYPlotPlot";
+import { calcWebGlShadeColor } from "../../../common/GlobalMethods";
 
 /**
  * WebGL-based line/point rendering for XYPlot.
@@ -12,74 +14,63 @@ import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
  */
 export class XYPlotPlotWebGl {
     // XYPlotPlot instance, typed as any to avoid circular import
-    plot: any;
+    _plot: XYPlotPlot;
 
-    constructor(plot: any) {
-        this.plot = plot;
-    }
-
-    calcWebGlShadeColor = (rgbaColor: string) => {
-        // "rgba(255, 0, 0, 1)" --> "1.0, 0.0, 0.0, 1.0"
-        const color1 = rgbaColor.replace("rgba", "").replace("rgb", "").replace("(", "").replace(")", "");
-        const colorStrs = color1.split(",");
-
-        let result: string = "";
-        if (colorStrs.length !== 4) {
-            return "0.0, 0.0, 0.0, 1.0";
-        }
-
-        for (let ii = 0; ii < colorStrs.length; ii++) {
-            const colorStr = colorStrs[ii];
-            const colorNum = parseFloat(colorStr);
-            if (isNaN(colorNum)) {
-                return "0.0, 0.0, 0.0, 1.0";
-            }
-            if (ii < 3) {
-                result = result + `${colorNum / 255}` + ", ";
-            } else {
-                result = result + `${colorNum}`;
-            }
-        }
-        return result;
+    constructor(plot: XYPlotPlot) {
+        this._plot = plot;
     }
 
     _ElementLinesWebGl = () => {
         const mountRef = React.useRef<HTMLDivElement>(null);
+        const rendererRef = React.useRef<WebGLRenderer | null>(null);
+        const plot = this.getPlot();
+        const width = plot.getPlotWidth();
+        const height = plot.getPlotHeight();
+
+        // dispose on unmount
+        React.useEffect(() => {
+            return () => {
+                if (rendererRef.current !== null) {
+                    mountRef.current?.removeChild(rendererRef.current.domElement);
+                    rendererRef.current.dispose();
+                    rendererRef.current = null;
+                }
+            };
+        }, []);
 
         const fun1 = () => {
             const scene = new Scene();
             const camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
 
             camera.position.z = 1;
-            const containerWidth = this.plot.plotWidth;
-            const containerHeight = this.plot.plotHeight;
+            const containerWidth = width;
+            const containerHeight = height;
 
-            const pixelWorldUnitRatioX = containerWidth / 2;
-            const pixelWorldUnitRatioY = containerHeight / 2;
-
-            const renderer = new WebGLRenderer({ alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
+            // reuse the existing renderer, or create one on first render
+            let renderer = rendererRef.current;
+            if (renderer === null) {
+                renderer = new WebGLRenderer({ alpha: true });
+                rendererRef.current = renderer;
+                renderer.setPixelRatio(window.devicePixelRatio);
+                mountRef.current!.appendChild(renderer.domElement);
+            }
             renderer.setSize(containerWidth, containerHeight);
-            mountRef.current!.appendChild(renderer.domElement);
 
-            this.plot.xy.forEach((XorYData: number[], index: number) => {
-                if (index % 2 === 1 || this.plot.getTraceHidden(this.plot.getYIndex(index)) === true) {
-                    return;
-                }
+            plot.getMainWidget().getYAxes().forEach((yAxis: type_yAxis, index: number) => {
 
                 // for both points and lines
-                const positions = this.plot.mapXYsToPointsWebGl(index);
-                const color = this.plot.yAxes[this.plot.getYIndex(index)].lineColor;
+                const positions = plot.mapXYsToPointsWebGl(index);
+                const color = yAxis.lineColor;
 
-                const showLine = this.plot.yAxes[this.plot.getYIndex(index)].lineStyle === "none" ? false : true;
-                const showPoint = this.plot.yAxes[this.plot.getYIndex(index)].pointType === "none" ? false : true;
+                const showLine = yAxis.lineStyle === "none" ? false : true;
+                const showPoint = yAxis.pointType === "none" ? false : true;
 
                 // ---------------- points --------------
                 if (showPoint === true) {
                     const pointGeometry = new BufferGeometry();
                     pointGeometry.setAttribute('position', new BufferAttribute(positions, 3));
-                    const pointSize = this.plot.yAxes[this.plot.getYIndex(index)].pointSize;
-                    const pointType = this.plot.yAxes[this.plot.getYIndex(index)].pointType;
+                    const pointSize = yAxis.pointSize;
+                    const pointType = yAxis.pointType;
 
                     const shadeTypeValue = pointType === "circle" ?
                         1
@@ -119,7 +110,7 @@ export class XYPlotPlotWebGl {
                         void main() {
                           // Get coordinate within the point
                           vec2 coord = gl_PointCoord - vec2(0.5);
-                          gl_FragColor = vec4(${this.calcWebGlShadeColor(color)});
+                          gl_FragColor = vec4(${calcWebGlShadeColor(color)});
                     
                           if (shapeType == 0) {
                             // Default square (built-in behavior)
@@ -176,11 +167,11 @@ export class XYPlotPlotWebGl {
                 }
 
                 // ---------------- line ----------------
-                if (showLine === true) {
+                if (showLine === true && positions.length >= 6) {
                     const lineGeometry = new LineGeometry();
                     lineGeometry.setPositions(positions);
 
-                    const lineWidth = this.plot.yAxes[this.plot.getYIndex(index)].lineWidth;
+                    const lineWidth = plot.yAxes[index].lineWidth;
 
                     const lineMaterial = new LineMaterial({
                         worldUnits: false,
@@ -199,23 +190,18 @@ export class XYPlotPlotWebGl {
             });
 
             renderer.render(scene, camera);
-
-            return () => {
-                mountRef.current?.removeChild(renderer.domElement);
-                renderer.dispose();
-            };
         };
 
         React.useEffect(fun1);
 
-        return <div ref={mountRef} style={{ width: this.plot.plotWidth, height: this.plot.plotHeight }} />;
+        return <div ref={mountRef} style={{ width: width, height: height }} />;
     };
 
     calcDashSizeWebGl = (index: number) => {
-        const yIndex = this.plot.getYIndex(index);
-        const yAxis = this.plot.yAxes[yIndex];
-        const pixelWorldUnitRatioX = this.plot.plotWidth / 2;
-        const pixelWorldUnitRatioY = this.plot.plotHeight / 2;
+        const plot = this.getPlot();
+        const yAxis = plot.yAxes[index];
+        const pixelWorldUnitRatioX = plot.getPlotWidth() / 2;
+        const pixelWorldUnitRatioY = plot.getPlotHeight() / 2;
         const lineWidth = yAxis["lineWidth"] / pixelWorldUnitRatioX;
         switch (yAxis["lineStyle"]) {
             case "solid":
@@ -234,10 +220,11 @@ export class XYPlotPlotWebGl {
     };
 
     calcGapSizeWebGl = (index: number) => {
-        const yIndex = this.plot.getYIndex(index);
-        const yAxis = this.plot.yAxes[yIndex];
-        const pixelWorldUnitRatioX = this.plot.plotWidth / 2;
-        const pixelWorldUnitRatioY = this.plot.plotHeight / 2;
+        const yIndex = index;
+        const plot = this.getPlot();
+        const yAxis = plot.yAxes[yIndex];
+        const pixelWorldUnitRatioX = plot.getPlotWidth() / 2;
+        const pixelWorldUnitRatioY = plot.getPlotHeight() / 2;
         const lineWidth = yAxis["lineWidth"] / pixelWorldUnitRatioX;
         switch (yAxis["lineStyle"]) {
             case "solid":
@@ -254,4 +241,8 @@ export class XYPlotPlotWebGl {
                 return 1;
         }
     };
+
+    getPlot = () => {
+        return this._plot;
+    }
 }

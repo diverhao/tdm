@@ -163,7 +163,7 @@ export class SidebarXYPlotYAxis {
                     // remove yaxis in main widget
                     this.getPlotYAxes().splice(index0, 1);
                     // update xy data
-                    (this.getMainWidget() as XYPlot).getPlot().initXY();
+                    (this.getMainWidget() as XYPlot).getPlot().initRuntimeData();
                     // remove axis in SidebarXYPlotYAxes
                     this.yAxes.yAxes.splice(this.yIndex, 1);
                     // update SidebarXYPlotYAxis yIndex

@@ -39,8 +39,8 @@ export class XYPlot extends BaseWidget {
         this.setReadWriteType("write");
 
         this._plot = new XYPlotPlot(this);
-        this.getPlot().setXAxis(deepMerge(this.generateDefaultTdl().xAxis, widgetTdl.xAxis));
-        this.getPlot().setYAxes(deepMerge(this.generateDefaultTdl().yAxes, widgetTdl.yAxes));
+        this.getPlot().xAxis = deepMerge(this.generateDefaultTdl().xAxis, widgetTdl.xAxis);
+        this.getPlot().yAxes = deepMerge(this.generateDefaultTdl().yAxes, widgetTdl.yAxes);
     }
 
 
@@ -201,7 +201,6 @@ export class XYPlot extends BaseWidget {
         // the super.jobsAsEditingModeBegins() runs this.processChannelNames()
         // in here we should not remove duplicates
         this.processChannelNames([], false);
-        this.getPlot().initXY();
+        this.getPlot().initRuntimeData();
     }
-
 }
