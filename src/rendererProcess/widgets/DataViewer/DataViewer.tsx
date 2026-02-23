@@ -42,11 +42,12 @@ export class DataViewer extends BaseWidget {
                 return;
             }
 
-            if (this.getPlot().tracingIsMoving === true) {
-                // update this.getPlot().xAxis.valMin and valMax
-                const DT = this.getPlot().xAxis.valMax - this.getPlot().xAxis.valMin;
-                this.getPlot().xAxis.valMax = Date.now();
-                this.getPlot().xAxis.valMin = Date.now() - DT;
+            const plot = this.getPlot();
+            const xAxis = plot.xAxis;
+            if (plot.tracingIsMoving === true) {
+                const DT = xAxis.valMax - xAxis.valMin;
+                xAxis.valMax = Date.now();
+                xAxis.valMin = Date.now() - DT;
             }
 
             this.updatePlot(true);

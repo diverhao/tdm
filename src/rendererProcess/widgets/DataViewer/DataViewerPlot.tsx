@@ -2,19 +2,22 @@ import { DataViewer } from "./DataViewer";
 import * as React from "react";
 import { ElementProfileBlockNameInput } from "../../mainWindow/MainWindowStyledComponents";
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { getMouseEventClientX, getMouseEventClientY, type_dbrData, Channel_DBR_TYPES } from "../../../common/GlobalVariables";
+import { getMouseEventClientX, getMouseEventClientY, type_dbrData } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { Log } from "../../../common/Log";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { OrthographicCamera, Scene, WebGLRenderer, Color, Vector2 } from "three";
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
 import { Scale } from "../../helperWidgets/SharedElements/Scale";
+import { DataViewerPlotControls } from "./DataViewerPlotControls";
+import { DataViewerPlotTrace } from "./DataViewerPlotTrace";
+import { DataViewerPlotData } from "./DataViewerPlotData";
+import { DataViewerPlotMouse } from "./DataViewerPlotMouse";
 
 
-const defaultTicksInfo: type_ticksInfo = {
+export const defaultTicksInfo: type_ticksInfo = {
     scale: "Linear",
     xValMin: 0,
     xValMax: 0,
@@ -47,7 +50,7 @@ export type type_ticksInfo = {
     yTickPositions: number[],
 };
 
-type type_yAxis = {
+export type type_yAxis = {
     label: string;
     valMin: number;
     valMax: number;
@@ -71,7 +74,7 @@ type type_xAxis = {
 
 
 // colors
-const traceColors: [number, number, number, number][] = [
+export const traceColors: [number, number, number, number][] = [
     [255, 0, 0, 1],
     [0, 0, 255, 1],
     [0, 255, 0, 1],
@@ -117,13 +120,13 @@ const deltaTs: [number, number, string][] = [
 ];
 
 // layout
-const titleHeight = 50;
-const yAxisLabelWidth = 30;
-const yAxisTickWidth = 30;
+export const titleHeight = 50;
+export const yAxisLabelWidth = 30;
+export const yAxisTickWidth = 30;
 const xAxisLabelHeight = 30;
 // const thumbnailHeight = 30;
 const xAxisTickHeight = 30;
-const toolbarHeight = 30;
+export const toolbarHeight = 30;
 const legendWidth = 170;
 
 
@@ -167,6 +170,15 @@ const legendWidth = 170;
  */
 
 export class DataViewerPlot {
+
+    // helper class for toolbar controls
+    _controls: DataViewerPlotControls;
+    // helper class for trace management
+    _plotTrace: DataViewerPlotTrace;
+    // helper class for data operations
+    _plotData: DataViewerPlotData;
+    // helper class for mouse event handlers
+    _plotMouse: DataViewerPlotMouse;
 
     // ---------------------- efficiency ---------------------------
     thumbnailUpdateCount = 1;
@@ -221,6 +233,10 @@ export class DataViewerPlot {
 
     constructor(mainWidget: DataViewer) {
         this._mainWidget = mainWidget;
+        this._controls = new DataViewerPlotControls(this);
+        this._plotTrace = new DataViewerPlotTrace(this);
+        this._plotData = new DataViewerPlotData(this);
+        this._plotMouse = new DataViewerPlotMouse(this);
         this._plotWidth = this.getStyle().width - yAxisLabelWidth - yAxisTickWidth - legendWidth;
         this._plotHeight = this.getStyle().height - titleHeight - xAxisLabelHeight - xAxisTickHeight - toolbarHeight;
 
@@ -325,7 +341,7 @@ export class DataViewerPlot {
                     <this._ElementLegend></this._ElementLegend>
                 </div>
                 {/* control area */}
-                <this._ElementControls></this._ElementControls>
+                <this._controls._ElementControls></this._controls._ElementControls>
             </div>
         );
     };
@@ -492,11 +508,11 @@ export class DataViewerPlot {
                 onMouseDown={(event: any) => {
 
                     if (event.button === 0) {
-                        window.addEventListener("mousemove", this.handleMouseMoveOnPlotX);
+                        window.addEventListener("mousemove", this.getPlotMouse().handleMouseMoveOnPlotX);
                     } else if (event.button === 2) {
-                        window.addEventListener("mousemove", this.handleMouseMoveOnPlotY);
+                        window.addEventListener("mousemove", this.getPlotMouse().handleMouseMoveOnPlotY);
                     }
-                    window.addEventListener("mouseup", this.handleMouseUpOnPlot);
+                    window.addEventListener("mouseup", this.getPlotMouse().handleMouseUpOnPlot);
                 }}
 
                 onWheel={(event: React.WheelEvent) => {
@@ -910,1061 +926,73 @@ export class DataViewerPlot {
         );
     };
 
-    _ElementControls = () => {
 
-        const isSingleWidget = this.getMainWidget().getText()["singleWidget"];
+    // ------------------------ trace (delegated to _trace) ----------------------------
 
-        return (
-            <div
-                style={{
-                    // width: `100%`,
-                    width: isSingleWidget === true ? window.innerWidth : this.getMainWidget().getAllStyle()["width"],
-                    height: `${toolbarHeight}`,
-                    display: "inline-flex",
-                    flexFlow: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    backgroundColor: "rgba(255, 0, 0, 0)",
-                    paddingLeft: 10,
-                    paddingRight: 10,
-                    boxSizing: "border-box",
-                }}
-            >
-                <div
-                    style={{
-                        display: "inline-flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        height: "100%",
-                        padding: "0px",
-                        margin: "0px",
-                        marginTop: "0px",
-                    }}
-                >
-                    {/* re-scale vertically to plot limits */}
-                    <this._StyledFigButton
-                        hintText={"Auto scale all Y axes"}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-
-                            for (let ii = 0; ii < this.yAxes.length; ii++) {
-                                const yValMinMax = this.findVisibleYValueRange(ii);
-                                const yAxis = this.yAxes[ii];
-                                if (yValMinMax !== undefined) {
-                                    if (yAxis !== undefined) {
-                                        const Dy = yValMinMax[1] - yValMinMax[0];
-                                        yAxis.valMin = yValMinMax[0] - Dy * 0.1;
-                                        yAxis.valMax = yValMinMax[1] + Dy * 0.1;
-                                    }
-                                }
-
-                                if (Math.abs(yAxis.valMin - yAxis.valMax) < 1e-20) {
-                                    if (Math.abs(yAxis.valMax) < 1e-20) {
-                                        yAxis.valMin = -1;
-                                        yAxis.valMax = 1;
-                                    } else if (yAxis.valMax > 0) {
-                                        yAxis.valMin = yAxis.valMin * 0.9;
-                                        yAxis.valMax = yAxis.valMax * 1.1;
-                                    } else if (yAxis.valMax < 0) {
-                                        yAxis.valMin = yAxis.valMin * 1.1;
-                                        yAxis.valMax = yAxis.valMax * 0.9;
-                                    }
-                                }
-
-                            }
-                            this.updatePlot();
-                        }}
-                    >
-                        <img
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                            }}
-                            src={`../../../webpack/resources/webpages/scale-2y.svg`}
-                        ></img>
-                    </this._StyledFigButton>
-                    {/* re-scale the currently selected trace to vertical plot limits */}
-                    <this._StyledFigButton
-                        hintText={"Auto scale current Y axis (right double click)"}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-
-                            const yAxis = this.yAxes[this.selectedTraceIndex];
-                            if (yAxis === undefined) {
-                                return;
-                            }
-                            const yValMinMax = this.findVisibleYValueRange(this.selectedTraceIndex);
-
-                            if (yValMinMax !== undefined) {
-                                if (yAxis !== undefined) {
-                                    const Dy = yValMinMax[1] - yValMinMax[0];
-                                    yAxis.valMin = yValMinMax[0] - Dy * 0.1;
-                                    yAxis.valMax = yValMinMax[1] + Dy * 0.1;
-                                }
-                            }
-
-                            if (Math.abs(yAxis.valMin - yAxis.valMax) < 1e-20) {
-                                if (Math.abs(yAxis.valMax) < 1e-20) {
-                                    yAxis.valMin = -1;
-                                    yAxis.valMax = 1;
-                                } else if (yAxis.valMax > 0) {
-                                    yAxis.valMin = yAxis.valMin * 0.9;
-                                    yAxis.valMax = yAxis.valMax * 1.1;
-                                } else if (yAxis.valMax < 0) {
-                                    yAxis.valMin = yAxis.valMin * 1.1;
-                                    yAxis.valMax = yAxis.valMax * 0.9;
-                                }
-                            }
-
-                            this.updatePlot();
-                        }}
-                    >
-                        <img
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                            }}
-                            src={`../../../webpack/resources/webpages/scale-y.svg`}
-                        ></img>
-                    </this._StyledFigButton>
-                    {/* setting page */}
-                    <this._StyledFigButton
-                        hintText={"Settings"}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-
-                            this.getMainWidget().setShowSettingsPage(-1);
-                            this.updatePlot();
-                        }}
-                    >
-                        <img
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                            }}
-                            src={`../../../webpack/resources/webpages/settings.svg`}
-                        ></img>
-                    </this._StyledFigButton>
-                    {/* pause/play */}
-                    <this._StyledFigButton
-                        hintText={"Toggle data live update (Space key)"}
-                        style={{
-                            fontSize: "18px",
-                        }}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-                            this.tracingIsMoving = !this.tracingIsMoving;
-
-                            if (this.tracingIsMoving) {
-                                // update this.getPlot().xAxis.valMin and valMax
-                                const DT = this.xAxis.valMax - this.xAxis.valMin;
-                                this.xAxis.valMax = Date.now();
-                                this.xAxis.valMin = Date.now() - DT;
-                            }
-
-                            this.updatePlot();
-                        }}
-                    >
-                        {this.tracingIsMoving ? (
-                            <img
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                }}
-                                src={`../../../webpack/resources/webpages/pause.svg`}
-                            ></img>
-                        ) : (
-                            <img
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                }}
-                                src={`../../../webpack/resources/webpages/play.svg`}
-                            ></img>
-                        )}
-                    </this._StyledFigButton>{" "}
-                    {/* horizontal zoom in */}
-                    <this._StyledFigButton
-                        hintText={"Zoom in horizontally (wheel scroll up)"}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-
-                            const xAxis = this.xAxis;
-                            if (xAxis === undefined) {
-                                return;
-                            }
-                            const dt = xAxis.valMax - xAxis.valMin;
-                            xAxis.valMin = xAxis.valMax - dt / this.getText()["axisZoomFactor"];
-                            if (this.tracingIsMoving) {
-                                xAxis.valMax = Date.now();
-                            }
-                            this.updatePlot();
-                        }}
-                    >
-                        <img
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                            }}
-                            src={`../../../webpack/resources/webpages/horizontal-zoom-in.svg`}
-                        ></img>
-                    </this._StyledFigButton>{" "}
-                    {/* horizontal zoom out */}
-                    <this._StyledFigButton
-                        hintText={"Zoom out horizontally (wheel scroll down)"}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-
-                            const xAxis = this.xAxis;
-                            if (xAxis === undefined) {
-                                return;
-                            }
-                            const dt = xAxis.valMax - xAxis.valMin;
-                            xAxis.valMin = xAxis.valMax - dt * this.getText()["axisZoomFactor"];
-                            if (this.tracingIsMoving) {
-                                xAxis.valMax = Date.now();
-                            }
-                            this.updatePlot();
-                        }}
-                    >
-                        <img
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                            }}
-                            src={`../../../webpack/resources/webpages/horizontal-zoom-out.svg`}
-                        ></img>
-                    </this._StyledFigButton>
-                    {/* horizontal pan left */}
-                    <this._StyledFigButton
-                        hintText={"Pan trace to left (drag to left)"}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-
-                            this.tracingIsMoving = false;
-                            const xAxis = this.xAxis;
-                            if (xAxis === undefined) {
-                                return;
-                            }
-                            const dt = xAxis.valMax - xAxis.valMin;
-                            // each move is 20% of horizontal size
-                            xAxis.valMin = xAxis.valMin + dt / 4;
-                            xAxis.valMax = xAxis.valMax + dt / 4;
-                            // this.calcXTicksAndLabel();
-                            this.updatePlot();
-                        }}
-                    >
-                        <img
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                            }}
-                            src={`../../../webpack/resources/webpages/horizontal-pan-left.svg`}
-                        ></img>
-                    </this._StyledFigButton>
-                    {/* horizontal pan right */}
-                    <this._StyledFigButton
-                        hintText={"Pan trace to right (drag to right)"}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-
-                            this.tracingIsMoving = false;
-                            const xAxis = this.xAxis;
-                            if (xAxis === undefined) {
-                                return;
-                            }
-                            const dt = xAxis.valMax - xAxis.valMin;
-                            // each move is 20% of horizontal size
-                            xAxis.valMin = xAxis.valMin - dt / 4;
-                            xAxis.valMax = xAxis.valMax - dt / 4;
-                            this.updatePlot();
-                        }}
-                    >
-                        <img
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                            }}
-                            src={`../../../webpack/resources/webpages/horizontal-pan-right.svg`}
-                        ></img>
-                    </this._StyledFigButton>
-                    {/* vertical zoom in*/}
-                    <this._StyledFigButton
-                        hintText={"Zoom in vertically (Ctrl + wheel scroll up)"}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-
-                            // zoom for all traces
-                            for (let ii = 0; ii < this.yAxes.length; ii++) {
-                                const yAxis = this.yAxes[ii];
-                                if (yAxis === undefined) {
-                                    continue;
-                                }
-                                const yMin = yAxis.valMin;
-                                const yMax = yAxis.valMax;
-                                const yMid = (yMin + yMax) / 2;
-                                const dy = (yMax - yMin) / 2;
-                                // zoom
-                                const yMinNew = yMid - dy / this.getText()["axisZoomFactor"];
-                                const yMaxNew = yMid + dy / this.getText()["axisZoomFactor"];
-                                yAxis.valMin = yMinNew;
-                                yAxis.valMax = yMaxNew;
-                            }
-
-                            const xAxis = this.xAxis;
-                            if (this.tracingIsMoving) {
-                                xAxis.valMax = Date.now();
-                            }
-
-                            this.updatePlot();
-                        }}
-                    >
-                        <img
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                            }}
-                            src={`../../../webpack/resources/webpages/vertical-zoom-in.svg`}
-                        ></img>
-                    </this._StyledFigButton>
-                    {/* vertical zoom out*/}
-                    <this._StyledFigButton
-                        hintText={"Zoom out vertically (Ctrl + wheel scroll down)"}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-
-                            for (let ii = 0; ii < this.yAxes.length; ii++) {
-                                const yAxis = this.yAxes[ii];
-                                if (yAxis === undefined) {
-                                    continue;
-                                }
-                                const yMin = yAxis.valMin;
-                                const yMax = yAxis.valMax;
-                                const yMid = (yMin + yMax) / 2;
-                                const dy = (yMax - yMin) / 2;
-                                const yMinNew = yMid - dy * this.getText()["axisZoomFactor"];
-                                const yMaxNew = yMid + dy * this.getText()["axisZoomFactor"];
-                                yAxis.valMin = yMinNew;
-                                yAxis.valMax = yMaxNew;
-                            }
-                            const xAxis = this.xAxis;
-                            if (this.tracingIsMoving) {
-                                xAxis.valMax = Date.now();
-                            }
-
-                            this.updatePlot();
-                        }}
-                    >
-                        <img
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                            }}
-                            src={`../../../webpack/resources/webpages/vertical-zoom-out.svg`}
-                        ></img>
-                    </this._StyledFigButton>
-                    {/* vertical pan down*/}
-                    <this._StyledFigButton
-                        hintText={"Pan trace down (right button drag down)"}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-
-                            for (let ii = 0; ii < this.yAxes.length; ii++) {
-                                const yAxis = this.yAxes[ii];
-                                if (yAxis === undefined) {
-                                    continue;
-                                }
-                                const yMin = yAxis.valMin;
-                                const yMax = yAxis.valMax;
-                                const dy = (yMax - yMin) / 5;
-                                const yMinNew = yMin + dy;
-                                const yMaxNew = yMax + dy;
-                                yAxis.valMin = yMinNew;
-                                yAxis.valMax = yMaxNew;
-                            }
-                            const xAxis = this.xAxis;
-                            if (this.tracingIsMoving) {
-                                xAxis.valMax = Date.now();
-                            }
-
-                            this.updatePlot();
-                        }}
-                    >
-                        <img
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                            }}
-                            src={`../../../webpack/resources/webpages/vertical-pan-down.svg`}
-                        ></img>
-                    </this._StyledFigButton>{" "}
-                    {/* vertical pan up*/}
-                    <this._StyledFigButton
-                        hintText={"Pan trace up (right button drag up)"}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-
-                            for (let ii = 0; ii < this.yAxes.length; ii++) {
-                                const yAxis = this.yAxes[ii];
-                                if (yAxis === undefined) {
-                                    continue;
-                                }
-                                const yMin = yAxis.valMin;
-                                const yMax = yAxis.valMax;
-                                const dy = (yMax - yMin) / 5;
-                                const yMinNew = yMin - dy;
-                                const yMaxNew = yMax - dy;
-                                yAxis.valMin = yMinNew;
-                                yAxis.valMax = yMaxNew;
-                            }
-                            const xAxis = this.xAxis;
-                            if (this.tracingIsMoving) {
-                                xAxis.valMax = Date.now();
-                            }
-
-                            this.updatePlot();
-                        }}
-                    >
-                        <img
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                            }}
-                            src={`../../../webpack/resources/webpages/vertical-pan-up.svg`}
-                        ></img>
-                    </this._StyledFigButton>{" "}
-                    {/* export data */}
-                    <this._StyledFigButton
-                        hintText={"Export data"}
-                        onMouseDown={(event: any) => {
-                            if (event.button !== 0) {
-                                return;
-                            }
-
-                            this.exportData();
-                        }}
-                    >
-                        <img
-                            style={{
-                                width: "70%",
-                                height: "70%",
-                            }}
-                            src={`../../../webpack/resources/webpages/save-to-file.svg`}
-                        ></img>
-                    </this._StyledFigButton>{" "}
-                    <this._ElementCursorPosition></this._ElementCursorPosition>
-                </div>
-
-                <this._StyledFigButton
-                    hintText={"Fetch archive data (double click)"}
-                    onMouseDown={(event: any) => {
-                        if (event.button !== 0) {
-                            return;
-                        }
-                        this.fetchArchiveData();
-
-                    }}
-                >
-                    <img
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                        }}
-                        src={`../../../webpack/resources/webpages/download-from-cloud-symbol.svg`}
-                    ></img>
-                </this._StyledFigButton>{" "}
-            </div>
-        );
-    };
-
-    _ElementCursorPosition = () => {
-        const [cursorValue, setCursorValue] = React.useState(" ");
-        this.setCursorValue = setCursorValue;
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    color: cursorValue.startsWith("(") ? "rgba(0,0,0,1)" : "rgba(150, 150, 150, 1)",
-                }}
-            >
-                {(() => {
-                    if (g_widgets1.isEditing()) {
-                        return ""
-                    } else if (this.yAxes[this.getSelectedTraceIndex()] === undefined) {
-                        return " " + cursorValue
-                    } else {
-                        return " " + cursorValue
-                    }
-                })()}
-            </div>
-        );
-    };
-
-    _StyledFigButton = ({ children, onMouseDown, hintText }: any) => {
-        const elementRef = React.useRef<any>(null);
-        return (
-            <div
-                ref={elementRef}
-                style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    // height: "100%",
-                    height: toolbarHeight,
-                    aspectRatio: "1/1",
-                    backgroundColor: "rgba(255, 0, 0, 0)",
-                    opacity: 0.4,
-                    borderRadius: 3,
-                    padding: 1,
-                    margin: 0,
-                }}
-                onMouseEnter={() => {
-                    if (elementRef.current !== null) {
-                        if (!g_widgets1.isEditing()) {
-                            elementRef.current.style["opacity"] = 1;
-                            if (typeof hintText === "string" && this.setCursorValue !== undefined) {
-                                this.setCursorValue(hintText)
-                            }
-                        }
-                    }
-                }}
-                onMouseLeave={() => {
-                    if (elementRef.current !== null) {
-                        if (!g_widgets1.isEditing()) {
-                            elementRef.current.style["opacity"] = 0.4;
-                            if (typeof hintText === "string" && this.setCursorValue !== undefined) {
-                                this.setCursorValue("")
-                            }
-                        }
-                    }
-                }}
-                onMouseDown={(event: any) => {
-                    if (event.button !== 0) {
-                        return;
-                    }
-
-                    if (!g_widgets1.isEditing()) {
-                        onMouseDown(event)
-                    }
-                }}
-            >
-                {children}
-            </div>
-        )
-    }
-
-    // ------------------------ trace ----------------------------
-
-
-    /**
-     * Append a trace to the end.
-     * 
-     * (1) insert an empty channel name "" to this.getRawChannelNames() and expand the channel name
-     *     without checking the channel name duplication
-     * 
-     * (2) add a new trace data to the data structure: this.x, this.y and this.yAxes
-     * 
-     * (3) select this trace
-     * 
-     * (4) update the plot if necessary
-     * 
-     * (5) connect and monitor this channel
-     */
     addTrace = async (newChannelName: string, doFlush: boolean = true) => {
-        // (1)
-        const mainWidget = this.getMainWidget();
-        mainWidget.getChannelNamesLevel0().push(newChannelName);
-        mainWidget.processChannelNames([], false);
-
-        // (2)
-        // this.addNewTraceData(newTraceName, undefined);
-        let yAxis: type_yAxis = {
-            label: newChannelName, // updated every time
-            valMin: 0, // updated every time
-            valMax: 10, // updated every time
-            lineWidth: 2,
-            lineColor: `rgba(${this.getNewColor()})`,
-            show: true,
-            bufferSize: 50000,
-            displayScale: "Linear",
-            xData: [],
-            yData: [],
-            ticksInfo: JSON.parse(JSON.stringify(defaultTicksInfo)),
-        }
-        this.yAxes.push(yAxis);
-
-        // (3)
-        this.setSelectedTraceIndex(mainWidget.getChannelNamesLevel0().length - 1);
-
-        // (4)
-        if (doFlush) {
-            this.updatePlot();
-        }
-
-        // (5)
-        const newTcaChannel = g_widgets1.createTcaChannel(newChannelName, this.getMainWidget().getWidgetKey());
-        if (newTcaChannel !== undefined) {
-            await newTcaChannel.getMeta(undefined);
-            await newTcaChannel.get(undefined, 1, Channel_DBR_TYPES.DBR_TIME_DOUBLE, true, undefined);
-            newTcaChannel.monitor();
-        }
+        return this.getPlotTrace().addTrace(newChannelName, doFlush);
     };
 
-    /**
-     * Change the trace (channel) name
-     */
     renameTrace = async (index: number, newTraceName: string, doFlush: boolean = true, forceUpdate: boolean = false) => {
-
-        const oldTraceName = this.getChannelNames()[index];
-        if ((newTraceName === oldTraceName) && forceUpdate === false) {
-            // no change
-            return;
-        }
-
-        // (1)
-        const mainWidget = this.getMainWidget();
-        mainWidget.getChannelNamesLevel0()[index] = newTraceName;
-        mainWidget.processChannelNames([], false);
-
-        // (2)
-        // this.updateTraceData(index, newTraceName);
-        const yAxis = this.yAxes[index];
-        if (yAxis === undefined) {
-            return;
-        }
-        // (1)
-        yAxis["xData"] = [];
-        yAxis["yData"] = [];
-        // (2)
-        // default yAxis
-        yAxis["label"] = newTraceName;
-
-
-        // (3)
-        this.setSelectedTraceIndex(index);
-
-        // (4)
-        if (doFlush) {
-            this.updatePlot();
-        }
-
-        // (5)
-        const newTcaChannel = g_widgets1.createTcaChannel(newTraceName, this.getMainWidget().getWidgetKey());
-        if (newTcaChannel !== undefined) {
-            await newTcaChannel.getMeta(undefined);
-            await newTcaChannel.get(undefined, 1, Channel_DBR_TYPES.DBR_TIME_DOUBLE, true, undefined);
-            newTcaChannel.monitor();
-        }
+        return this.getPlotTrace().renameTrace(index, newTraceName, doFlush, forceUpdate);
     };
 
-    /**
-     * Remove a trace
-     * 
-     * (1) remove channel name from this.getRawChannelNames(), and expand channel names
-     * 
-     * (2) remove this channel's x, y and yAxis data
-     * 
-     * (3) remove this channel
-     * 
-     * (4) select the previous trace
-     * 
-     * (5) hide the trace setting page
-     * 
-     * (5) update plot
-     */
     removeTrace = (index: number) => {
-        const traceName = this.getMainWidget().getChannelNames()[index];
-        if (traceName === undefined) {
-            return;
-        }
-
-        // (1)
-        this.getMainWidget().getChannelNamesLevel0().splice(index, 1);
-        this.getMainWidget().processChannelNames([], false);
-
-        // (2)
-        this.yAxes.splice(index, 1);
-
-        // (3)
-        if (!this.getMainWidget().getChannelNames().includes(traceName)) {
-            g_widgets1.removeTcaChannel(traceName, this.getMainWidget().getWidgetKey());
-        }
-        // (4)
-        const newSelectedTrace = index - 1 > -1 ? index - 1 : index + 1 > this.getChannelNames().length - 1 ? -1 : index + 1;
-        this.setSelectedTraceIndex(newSelectedTrace);
-
-        // (5)
-        this.getMainWidget().setShowSettingsPage(-100);
-
-        // (6)
-        this.updatePlot();
+        this.getPlotTrace().removeTrace(index);
     };
 
     getNewColor = (): [number, number, number, number] => {
-        const numTraces = this.yAxes.length;
-        const newColorIndex = (numTraces) % traceColors.length;
-        return traceColors[newColorIndex];
+        return this.getPlotTrace().getNewColor();
     };
 
     updateTraceShowOrHide = (index: number, showTrace: boolean) => {
-        const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            yAxis["show"] = showTrace;
-        }
-        this.updatePlot();
-    }
-
-
-
-    updateTraceLineWidth = (index: number, newWidth: number) => {
-        const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            yAxis["lineWidth"] = newWidth;
-        }
-        this.updatePlot();
-    }
-
-    updateTraceBufferSize = (index: number, newSize: number) => {
-        const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            yAxis["bufferSize"] = newSize;
-        }
-        this.updatePlot();
-    }
-
-    updateTraceScale = (index: number, newScale: "Linear" | "Log10") => {
-        const yAxis = this.yAxes[index];
-        if (yAxis === undefined) {
-            return;
-        }
-        yAxis["displayScale"] = newScale;
-        this.updatePlot();
-    }
-    // ---------------------- data -------------------------------
-
-    fetchArchiveData = () => {
-        for (let ii = 0; ii < this.getChannelNames().length; ii++) {
-            const channelName = this.getChannelNames()[ii];
-            const timeMinOnPlot = this.xAxis["valMin"];
-            const timeMaxOnPlot = this.xAxis["valMax"];
-            const timeMinInData = this.minLiveDataTime;
-            // the archive data must be earlier than the live data
-            const startTime = timeMinOnPlot;
-            const endTime = Math.min(timeMaxOnPlot, timeMinInData);
-            Log.info("requesting archive data from", new Date(startTime).toLocaleTimeString(), "to", new Date(endTime).toLocaleString())
-            if (endTime > startTime) {
-                // const startTime = GlobalMethods.convertEpochTimeToString(timeMinOnPlot).split(".")[0];
-                // const endTime = GlobalMethods.convertEpochTimeToString(timeMinInData).split(".")[0];
-                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                displayWindowClient.getIpcManager().sendFromRendererProcess("request-archive-data", {
-                    displayWindowId: displayWindowClient.getWindowId(),
-                    widgetKey: this.getMainWidget().getWidgetKey(),
-                    channelName: channelName,
-                    startTime: startTime,
-                    endTime: endTime,
-                })
-            }
-        }
-    }
-
-    mapDbrDataWitNewArchiveData = (data: {
-        displayWindowId: string,
-        widgetKey: string,
-        channelName: string,
-        startTime: number, // ms since epoch // "2024-01-01 01:23:45", no ms
-        endTime: number,
-        archiveData: [number[], number[]],
-    }) => {
-        if (g_widgets1.isEditing()) {
-            return;
-        }
-        if (this.getChannelNames().includes(data["channelName"])) {
-            const ii = this.getChannelNames().indexOf(data["channelName"]);
-            const yAxis = this.yAxes[ii];
-            if (yAxis === undefined) {
-                return;
-            }
-            const xData = yAxis["xData"];
-            const yData = yAxis["yData"];
-            const xDataNew = data["archiveData"][0];
-            const yDataNew = data["archiveData"][1];
-
-
-            const minNewDataTime = xDataNew[0];
-            const maxNewDataTime = xDataNew[xDataNew.length - 1];
-
-            // empty data
-            if (typeof minNewDataTime !== "number" || typeof maxNewDataTime !== "number") {
-                return;
-            }
-
-            let [leftIndex, rightIndex] = GlobalMethods.binarySearchRange(xData, minNewDataTime, maxNewDataTime);
-            Log.info("Obtained archive data, replace data from index", leftIndex, "to index", rightIndex);
-            // archive data is not within the range of existing data
-            if (leftIndex === -100 || rightIndex === -100) {
-                leftIndex = -2;
-                rightIndex = -1;
-            }
-
-            const originalStartX = xData[leftIndex - 1];
-            const originalStartY = yData[leftIndex - 1];
-            const originalEndX = xData[rightIndex + 1];
-            const originalEndY = yData[rightIndex + 1];
-
-            // archive data
-            const x1: number[] = [];
-            const y1: number[] = [];
-
-            // patch first point: (new time, old value)
-            if (originalStartY !== undefined) {
-                x1.push(xDataNew[0]); // new time
-                y1.push(originalStartY); // old value
-            } else {
-                // archive data is earlier than any existing data
-                // there is not old data to patch
-                x1.push(xDataNew[0]); // new time
-                y1.push(yDataNew[0]); // new value
-            }
-
-            for (let ii = 0; ii < xDataNew.length - 1; ii++) {
-                // (new time, new value)
-                x1.push(xDataNew[ii]);
-                y1.push(yDataNew[ii]);
-                // (next new time, new value)
-                x1.push(xDataNew[ii + 1]);
-                y1.push(yDataNew[ii]);
-            }
-
-            // patch last point
-            if (originalEndY !== undefined) {
-                x1.push(xDataNew[xDataNew.length - 1]); // last time stamp in archive data
-                y1.push(yDataNew[yDataNew.length - 1]); //  last value in archive data
-                // the first point in the original data should be modified (patched)
-                yData[rightIndex + 1] = yDataNew[yDataNew.length - 1];
-            } else {
-                // exisiting data is empty
-                x1.push(xDataNew[xDataNew.length - 1]); // last time stamp in archive data
-                y1.push(yDataNew[yDataNew.length - 1]); //  last value in archive data
-                // the first point in the original data should be modified (patched)
-                yData[rightIndex + 1] = yDataNew[yDataNew.length - 1];
-
-            }
-
-            // remove the data that will be overriden by archive data
-            xData.splice(leftIndex, rightIndex - leftIndex + 1);
-            yData.splice(leftIndex, rightIndex - leftIndex + 1);
-
-
-            xData.splice(Math.max(leftIndex, 0), 0, ...x1);
-            yData.splice(Math.max(leftIndex, 0), 0, ...y1);
-        }
-    }
-
-    /**
-     * Invoked whenever there are new data received by the display window client. Usually comes every 0.1 second, or
-     * whenever the GET result arrives.
-     * 
-     * This funciton does not update plot. The plot is updated periodically or in mouse/keyboard actions
-     * 
-     */
-    mapDbrDataWitNewData = (dbrDataList: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
-
-        if (g_widgets1.isEditing()) {
-            return;
-        }
-
-        const yAxes = this.yAxes;
-
-        for (let ii = 0; ii < this.getChannelNames().length; ii++) {
-            const channelName = this.getChannelNames()[ii];
-
-            const data = dbrDataList[channelName];
-            if (data === undefined) {
-                continue;
-            }
-
-            const yAxis = yAxes[ii];
-            if (yAxis === undefined) {
-                continue;
-            }
-
-            // if the data is an array, that means there were more than one DBR data coming in
-            if (Array.isArray(data)) {
-                for (let dataElement of data) {
-                    this.addOneDbrData(dataElement, yAxis);
-                }
-            } else {
-                this.addOneDbrData(data, yAxis);
-            }
-
-            // remove data if exceeds buffer size
-            const bufferSize = yAxis["bufferSize"];
-            const xData = yAxis["xData"];
-            const yData = yAxis["yData"];
-            const overSize = xData.length - bufferSize * 2;
-            if (overSize > 0) {
-                xData.splice(0, overSize);
-                yData.splice(0, overSize);
-            }
-        }
+        this.getPlotTrace().updateTraceShowOrHide(index, showTrace);
     };
 
+    updateTraceLineWidth = (index: number, newWidth: number) => {
+        this.getPlotTrace().updateTraceLineWidth(index, newWidth);
+    };
 
-    /**
-     * Add one dbr data to the x and y data. 
-     * 
-     * (1) remove patch point Z
-     * 
-     * (2) add point A, this point as new time stamp, but with old value
-     * 
-     * (3) add point B, this point has new time stamp, and new value
-     * 
-     * (4) add new patch point Z', this point has current time stamp, and new value
-     */
+    updateTraceBufferSize = (index: number, newSize: number) => {
+        this.getPlotTrace().updateTraceBufferSize(index, newSize);
+    };
+
+    updateTraceScale = (index: number, newScale: "Linear" | "Log10") => {
+        this.getPlotTrace().updateTraceScale(index, newScale);
+    };
+
+    // ---------------------- data (delegated to _data) -------------------------------
+
+    fetchArchiveData = () => {
+        this.getPlotData().fetchArchiveData();
+    };
+
+    mapDbrDataWitNewArchiveData = (data: {
+        displayWindowId: string;
+        widgetKey: string;
+        channelName: string;
+        startTime: number;
+        endTime: number;
+        archiveData: [number[], number[]];
+    }) => {
+        this.getPlotData().mapDbrDataWitNewArchiveData(data);
+    };
+
+    mapDbrDataWitNewData = (dbrDataList: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
+        this.getPlotData().mapDbrDataWitNewData(dbrDataList);
+    };
+
     addOneDbrData = (data: type_dbrData | type_LocalChannel_data | undefined, yAxis: type_yAxis) => {
-
-        if (data === undefined) {
-            Log.debug("data is not valid", data);
-            return;
-        }
-        const value = data.value;
-        if (typeof value !== "number") {
-            Log.debug("value is not valid", data);
-            return;
-        }
-
-        const secondsSinceEpoch = data["secondsSinceEpoch"];
-        const nanoSeconds = data["nanoSeconds"];
-        if (typeof secondsSinceEpoch !== "number" || typeof nanoSeconds !== "number") {
-            Log.info("new data does not have time stamp")
-            return;
-        }
-
-        // convert EPICS timestamp to UNIX timestamp
-        let timeStamp = GlobalMethods.converEpicsTimeStampToEpochTime(
-            secondsSinceEpoch * 1000 + nanoSeconds * 1e-6
-        );
-
-        // sometimes the channel was never processed
-        if (secondsSinceEpoch === 0) {
-            Log.info("new data has 0 value time stamp", data)
-            timeStamp = Date.now();
-        }
-
-        if (timeStamp < this.minLiveDataTime && this.minLiveDataTime === Number.MAX_VALUE) {
-            this.minLiveDataTime = timeStamp;
-        }
-
-        const xData = yAxis["xData"];
-        const yData = yAxis["yData"];
-
-        // (1)
-        xData.pop();
-        const oldValue = yData.pop();
-
-        // (2)
-        if (oldValue !== undefined) {
-            xData.push(timeStamp);
-            yData.push(oldValue);
-        }
-
-        // (3)
-        xData.push(timeStamp);
-        yData.push(value);
-
-        // (4)
-        xData.push(Date.now());
-        yData.push(value);
-
-    }
+        this.getPlotData().addOneDbrData(data, yAxis);
+    };
 
     exportData = () => {
-        const result = this.prepareExportData();
-
-        const windowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        const mainProcessMode = displayWindowClient.getMainProcessMode();
-        if (mainProcessMode === "web") {
-            const blob = new Blob([JSON.stringify(result, null, 4)], { type: 'text/json' });
-            const dateNowStr = GlobalMethods.convertEpochTimeToString(Date.now());
-            const suggestedName = `DataViewer-data-${dateNowStr}.json`;
-            const description = 'Data Viewer data';
-            const applicationKey = "application/json";
-            const applicationValue = [".json"];
-            displayWindowClient.downloadData(blob, suggestedName, description, applicationKey, applicationValue);
-        } else {
-            g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("data-viewer-export-data",
-                {
-                    displayWindowId: windowId,
-                    data: result as Record<
-                        string,
-                        {
-                            Time: string[];
-                            Data: number[];
-                        }
-                    >
-                }
-            );
-        }
+        this.getPlotData().exportData();
     };
 
     prepareExportData = () => {
-        const result: Record<string, Record<string, number[] | string[]>> = {};
-        const yAxes = this.yAxes;
-        for (let ii = 0; ii < this.getMainWidget().getChannelNames().length; ii++) {
-            const channelName = this.getMainWidget().getChannelNames()[ii];
-            const yAxis = yAxes[ii];
-            if (yAxis === undefined) {
-                return;
-            }
-            const x = yAxis["xData"];
-            const y = yAxis["yData"];
-            const processedX: string[] = [];
-            const processedY: number[] = [];
-            // last data point is a patch, skip
-            for (let jj = 0; jj < x.length - 1; jj++) {
-                const xVal = x[jj];
-                const xValNext = x[jj + 1];
-                const yVal = y[jj];
-                if (xVal !== xValNext) {
-                    processedX.push(GlobalMethods.convertEpochTimeToString(xVal));
-                    processedY.push(yVal);
-                }
-            }
-            result[channelName] = {
-                Time: processedX,
-                Data: processedY,
-            };
-        }
-        return result;
-
-    }
+        return this.getPlotData().prepareExportData();
+    };
 
     // ----------------------------- helpers -----------------------
 
@@ -2161,6 +1189,7 @@ export class DataViewerPlot {
         }
 
         const { xValMin, xValMax, yValMin, yValMax } = this.calcXyValMinMax(index);
+
         const xLength = this.getPlotWidth();
         const yLength = this.getPlotHeight();
         // fixed numbers
@@ -2249,211 +1278,44 @@ export class DataViewerPlot {
 
 
 
-    // ------------------ mouse event handlers  ----------------------
+    // ------------------ mouse event handlers (delegated to _mouse) ----------------------
 
-    /**
-     * rotate mouse wheel to zoom x-direction
-     */
     handleWheelOnPlotX = (event: React.WheelEvent) => {
-        const yAxis = this.getSelectedYAxis();
-        if (yAxis === undefined) {
-            return;
-        }
-        const direction = event.deltaY < 0 ? "zoom-in" : "zoom-out";
+        this.getPlotMouse().handleWheelOnPlotX(event);
+    };
 
-        const pointX0 = event.clientX;
-        const pointY0 = 0;
-        const pointX = pointX0 - yAxisLabelWidth - yAxisTickWidth - this.getStyle().left;
-        const pointY = pointY0 - titleHeight - this.getStyle().top;
-
-        const ticksInfo = yAxis["ticksInfo"];
-        const xValMin = ticksInfo["xValMin"];
-        const xValMax = ticksInfo["xValMax"];
-        const yValMin = ticksInfo["yValMin"];
-        const yValMax = ticksInfo["yValMax"];
-
-        const [valXMid, valYMid] = GlobalMethods.mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
-
-        const xAxis = this.xAxis;
-
-        const zoomFactor = this.getText()["axisZoomFactor"];
-
-        if (this.tracingIsMoving) {
-            if (direction === "zoom-in") {
-                xAxis.valMax = Date.now();
-                xAxis.valMin = xAxis.valMax - (xAxis.valMax - xAxis.valMin) / zoomFactor;
-            } else {
-                xAxis.valMax = Date.now();
-                xAxis.valMin = xAxis.valMax - (xAxis.valMax - xAxis.valMin) * zoomFactor;
-            }
-        } else {
-            if (direction === "zoom-in") {
-                xAxis.valMin = valXMid - (valXMid - xAxis.valMin) / zoomFactor;
-                xAxis.valMax = valXMid + (xAxis.valMax - valXMid) / zoomFactor;
-            } else {
-                xAxis.valMin = valXMid - (valXMid - xAxis.valMin) * zoomFactor;
-                xAxis.valMax = valXMid + (xAxis.valMax - valXMid) * zoomFactor;
-            }
-
-
-        }
-
-        this.updatePlot();
-
-    }
-
-    /**
-     * rotate mouse wheel to zoom y-direction, ctrl key must be pressed
-     */
     handleWheelOnPlotY = (event: React.WheelEvent) => {
-
-        const yAxis = this.getSelectedYAxis();
-        if (yAxis === undefined) {
-            return;
-        }
-
-        const pointX0 = 0;
-        const pointY0 = event.clientY;
-        const pointX = pointX0 - yAxisLabelWidth - yAxisTickWidth - this.getStyle().left;
-        const pointY = pointY0 - titleHeight - this.getStyle().top;
-
-        const ticksInfo = yAxis["ticksInfo"];
-        const xValMin = ticksInfo["xValMin"];
-        const xValMax = ticksInfo["xValMax"];
-        const yValMin = ticksInfo["yValMin"];
-        const yValMax = ticksInfo["yValMax"];
-
-        const [valXMid, valYMid] = GlobalMethods.mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
-
-
-        // const valYMid = this.mapPointToXY(this.getSelectedTraceIndex(), [pointX, pointY]);
-
-
-        const direction = event.deltaY < 0 ? "zoom-in" : "zoom-out";
-
-
-        if (yAxis === undefined) {
-            return;
-        }
-        const yMin = yAxis.valMin;
-        const yMax = yAxis.valMax;
-        const yMid = valYMid;
-
-        const dyUpper = yMax - yMid;
-        const dyLower = yMid - yMin;
-        if (direction === "zoom-in") {
-            const yMinNew = yMid - dyLower / this.getText()["axisZoomFactor"];
-            const yMaxNew = yMid + dyUpper / this.getText()["axisZoomFactor"];
-            yAxis.valMin = yMinNew;
-            yAxis.valMax = yMaxNew;
-        } else {
-            const yMinNew = yMid - dyLower * this.getText()["axisZoomFactor"];
-            const yMaxNew = yMid + dyUpper * this.getText()["axisZoomFactor"];
-            yAxis.valMin = yMinNew;
-            yAxis.valMax = yMaxNew;
-        }
-
-        const xAxis = this.xAxis;
-        if (this.tracingIsMoving) {
-            xAxis.valMax = Date.now();
-        }
-
-        this.updatePlot();
-    }
+        this.getPlotMouse().handleWheelOnPlotY(event);
+    };
 
     handleMouseMoveOnPlotX = (event: MouseEvent) => {
-
-        this.tracingIsMoving = false;
-
-        const dPointX = event.movementX;
-
-        this.mouseMoveEndX = event.clientX;
-
-        const yAxis = this.getSelectedYAxis();
-        // const ii = this.getSelectedTraceIndex();
-        if (yAxis === undefined) {
-            return;
-        }
-
-
-        const ticksInfo = yAxis["ticksInfo"];
-        const xValMin = ticksInfo["xValMin"];
-        const xValMax = ticksInfo["xValMax"];
-        const yValMin = ticksInfo["yValMin"];
-        const yValMax = ticksInfo["yValMax"];
-
-        const valXY0 = GlobalMethods.mapPointToXy(0, 0, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
-        const valXY1 = GlobalMethods.mapPointToXy(dPointX, 0, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
-
-
-        // const valXY0 = this.mapPointToXY(ii, [0, 0]);
-        // const valXY1 = this.mapPointToXY(ii, [dPointX, 0]);
-        const dt = valXY1[0] - valXY0[0];
-
-        const xAxis = this.xAxis;
-        if (xAxis === undefined) {
-            return;
-        }
-
-        xAxis.valMin = xAxis.valMin - dt;
-        xAxis.valMax = xAxis.valMax - dt;
-        this.updatePlot();
-    }
+        this.getPlotMouse().handleMouseMoveOnPlotX(event);
+    };
 
     handleMouseMoveOnPlotY = (event: MouseEvent) => {
-        event.preventDefault();
-        const pointDy = event.movementY;
-
-        // const ii = this.getSelectedTraceIndex();
-        const yAxis = this.getSelectedYAxis();
-        if (yAxis === undefined) {
-            return;
-        }
-        const yMin = yAxis.valMin;
-        const yMax = yAxis.valMax;
-
-
-        const ticksInfo = yAxis["ticksInfo"];
-        const xValMin = ticksInfo["xValMin"];
-        const xValMax = ticksInfo["xValMax"];
-        const yValMin = ticksInfo["yValMin"];
-        const yValMax = ticksInfo["yValMax"];
-
-        const dxy0 = GlobalMethods.mapPointToXy(0, pointDy, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
-        const dxy1 = GlobalMethods.mapPointToXy(0, 0, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
-
-
-        // const dxy0 = this.mapPointToXY(ii, [0, pointDy]);
-        // const dxy1 = this.mapPointToXY(ii, [0, 0]);
-        const dy = dxy1[1] - dxy0[1];
-        const yMinNew = yMin + dy;
-        const yMaxNew = yMax + dy;
-        yAxis.valMin = yMinNew;
-        yAxis.valMax = yMaxNew;
-
-
-        const xAxis = this.xAxis;
-        const dx = xAxis.valMax - xAxis.valMin;
-        if (this.tracingIsMoving) {
-            xAxis.valMax = Date.now();
-            xAxis.valMin = Date.now() - dx;
-        }
-
-        this.updatePlot();
-    }
+        this.getPlotMouse().handleMouseMoveOnPlotY(event);
+    };
 
     handleMouseUpOnPlot = (event: MouseEvent) => {
-        event.preventDefault();
-
-        window.removeEventListener("mousemove", this.handleMouseMoveOnPlotX);
-        window.removeEventListener("mousemove", this.handleMouseMoveOnPlotY);
-        window.removeEventListener("mouseup", this.handleMouseUpOnPlot);
-    }
+        this.getPlotMouse().handleMouseUpOnPlot(event);
+    };
 
 
     // ---------------------- getters and setters -------------------------------
     getMainWidget = () => {
         return this._mainWidget;
+    };
+
+    getPlotTrace = () => {
+        return this._plotTrace;
+    };
+
+    getPlotData = () => {
+        return this._plotData;
+    };
+
+    getPlotMouse = () => {
+        return this._plotMouse;
     };
 
     getStyle = () => {
@@ -2466,10 +1328,6 @@ export class DataViewerPlot {
     getChannelNames = () => {
         return this.getMainWidget().getChannelNames();
     };
-
-    // getUnprocessedChannelNames = () => {
-    //     return this.getMainWidget().getUnprocessedChannelNames();
-    // };
 
     getElement = () => {
         return <this._Element></this._Element>;
