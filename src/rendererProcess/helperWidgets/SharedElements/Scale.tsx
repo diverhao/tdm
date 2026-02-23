@@ -226,7 +226,7 @@ export const ScaleTop = ({ min, max, numIntervals, length, scale, color, compact
     const fontSize = GlobalVariables.defaultFontSize;
     const tickValues = calcTicks(min, max, numIntervals + 1, { scale: scale });
     const tickPositions = GlobalMethods.calcTickPositions(tickValues, min, max, length, { scale: scale }, "horizontal");
-    const refinedTicks = GlobalMethods.refineTicks(tickValues, fontSize * 0.5, length, "vertical");
+    const refinedTicks = GlobalMethods.refineTicks(tickValues, fontSize * 0.5, length, "horizontal");
 
     return (
         <div
@@ -286,7 +286,7 @@ export const ScaleBottom = ({ min, max, numIntervals, length, scale, color, comp
     const fontSize = GlobalVariables.defaultFontSize;
     const tickValues = calcTicks(min, max, numIntervals + 1, { scale: scale });
     const tickPositions = GlobalMethods.calcTickPositions(tickValues, min, max, length, { scale: scale }, "horizontal");
-    const refinedTicks = GlobalMethods.refineTicks(tickValues, fontSize * 0.5, length, "vertical");
+    const refinedTicks = GlobalMethods.refineTicks(tickValues, fontSize * 0.5, length, "horizontal");
 
     return (
         <div

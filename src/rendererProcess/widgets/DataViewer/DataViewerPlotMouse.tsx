@@ -132,8 +132,6 @@ export class DataViewerPlotMouse {
 
         const dPointX = event.movementX;
 
-        plot.mouseMoveEndX = event.clientX;
-
         const yAxis = plot.getSelectedYAxis();
         if (yAxis === undefined) {
             return;

@@ -27,10 +27,13 @@ export const defaultTicksInfo: type_ticksInfo = {
     yLength: 0,
     numXgrid: 0,
     numYgrid: 0,
+    xTickValMin: -10,
+    xTickValMax: 0,
     xTickValues: [],
     xTickPositions: [],
     yTickValues: [],
     yTickPositions: [],
+    xTickUnit: "",
 }
 
 
@@ -44,10 +47,13 @@ export type type_ticksInfo = {
     yLength: number,
     numXgrid: number,
     numYgrid: number,
+    xTickValMin: number,
+    xTickValMax: number,
     xTickValues: number[],
     xTickPositions: number[],
     yTickValues: number[],
     yTickPositions: number[],
+    xTickUnit: string,
 };
 
 export type type_yAxis = {
@@ -89,45 +95,15 @@ export const traceColors: [number, number, number, number][] = [
     [0, 0, 0, 1],
 ];
 
-// time
-const oneSecond = 1 * 1000;
-const oneMinute = 60 * 1000;
-const oneHour = 60 * 60 * 1000;
-const oneDay = 24 * 60 * 60 * 1000;
-const deltaTs: [number, number, string][] = [
-    [oneSecond, -1, "second"],
-    [2 * oneSecond, -2, "second"],
-    [5 * oneSecond, -5, "second"],
-    [10 * oneSecond, -10, "second"],
-    [30 * oneSecond, -30, "second"],
-    [oneMinute, -1, "minute"],
-    [2 * oneMinute, -2, "minute"],
-    [5 * oneMinute, -5, "minute"],
-    [10 * oneMinute, -10, "minute"],
-    [30 * oneMinute, -30, "minute"],
-    [oneHour, -1, "hour"],
-    [2 * oneHour, -2, "hour"],
-    [5 * oneHour, -5, "hour"],
-    [10 * oneHour, -10, "hour"],
-    [oneDay, -1, "day"],
-    [2 * oneDay, -2, "day"],
-    [5 * oneDay, -5, "day"],
-    [10 * oneDay, -10, "day"],
-    [30 * oneDay, -30, "day"],
-    [100 * oneDay, -100, "day"],
-    [300 * oneDay, -300, "day"],
-    [1000 * oneDay, -1000, "day"],
-];
 
 // layout
 export const titleHeight = 50;
 export const yAxisLabelWidth = 30;
 export const yAxisTickWidth = 30;
-const xAxisLabelHeight = 30;
-// const thumbnailHeight = 30;
-const xAxisTickHeight = 30;
+export const xAxisLabelHeight = 30;
+export const xAxisTickHeight = 30;
 export const toolbarHeight = 30;
-const legendWidth = 170;
+export const legendWidth = 170;
 
 
 /**
@@ -181,25 +157,12 @@ export class DataViewerPlot {
     _plotMouse: DataViewerPlotMouse;
 
     // ---------------------- efficiency ---------------------------
-    thumbnailUpdateCount = 1;
-    updateThumbnail: boolean = true;
     minLiveDataTime: number = Number.MAX_VALUE;
-
-
-    plotUpdateCount = 1;
-    updatePlotLines: boolean = true;
-
-    pointsXYOnPlots: [number, number][][] = [];
-    // valsXYOnPlots: [number, number][][] = [];
-
-    pointsXYOnThumbnail: [number, number][][] = [];
-    valsXYOnThumbnail: [number, number][][] = [];
 
     // the traces may be discontinued when the plot is dragged horizontally
     // each time the mouse is up on plot, the event.clientX is recorded
     // then the plot min and max are recalculated based on this number
     // In addition, this widget is always rendered each time
-    mouseMoveEndX: number = 0;
     rightButtonClicked: boolean = false;
 
     // ---------------------- variables ----------------------------
@@ -213,8 +176,6 @@ export class DataViewerPlot {
     selectedTraceIndex: number = 1;
     tracingIsMoving: boolean = true;
 
-    // wasEditing: boolean = true;
-
     // plot
     _plotWidth: number;
     _plotHeight: number;
@@ -222,7 +183,7 @@ export class DataViewerPlot {
 
     // only one x axis, ticks and ticksText are the same for each data set
     xAxis: type_xAxis = {
-        label: "x label",
+        label: "Time from now",
         // time since epoch, ms
         valMin: -10 * 60 * 1000,
         valMax: 0,
@@ -233,10 +194,12 @@ export class DataViewerPlot {
 
     constructor(mainWidget: DataViewer) {
         this._mainWidget = mainWidget;
+        
         this._controls = new DataViewerPlotControls(this);
         this._plotTrace = new DataViewerPlotTrace(this);
         this._plotData = new DataViewerPlotData(this);
         this._plotMouse = new DataViewerPlotMouse(this);
+
         this._plotWidth = this.getStyle().width - yAxisLabelWidth - yAxisTickWidth - legendWidth;
         this._plotHeight = this.getStyle().height - titleHeight - xAxisLabelHeight - xAxisTickHeight - toolbarHeight;
 
@@ -311,7 +274,6 @@ export class DataViewerPlot {
                                 flexDirection: "row",
                                 justifyContent: "flex-start",
                                 alignItems: "center",
-                                backgroundColor: "rgba(0, 255, 128, 1)",
                             }}
                         >
                             {/* y axis label area */}
@@ -363,8 +325,6 @@ export class DataViewerPlot {
                     flexFlow: "row",
                     justifyContent: "center",
                     alignItems: "center",
-                    // backgroundColor: "lightblue",
-                    backgroundColor: "rgba(68, 85, 90, 1)",
                 }}
             >
 
@@ -394,7 +354,6 @@ export class DataViewerPlot {
                     alignItems: "center",
                     width: yAxisLabelWidth,
                     height: "100%",
-                    backgroundColor: "rgba(255, 0, 255, 1)",
                     color: color,
                 }}
             >
@@ -481,7 +440,7 @@ export class DataViewerPlot {
 
 
     // plot body
-    _ElementPlotRaw = () => {
+    _ElementPlot = () => {
         const plotRef = React.useRef<any>(null);
 
 
@@ -493,7 +452,6 @@ export class DataViewerPlot {
                     width: `${this.getPlotWidth()}px`,
                     height: `${this.getPlotHeight()}px`,
                     outline: "1px solid black",
-                    backgroundColor: "rgba(0, 255, 255, 0)",
                 }}
                 onMouseEnter={() => {
                     if (!g_widgets1.isEditing()) {
@@ -580,13 +538,6 @@ export class DataViewerPlot {
         );
     };
 
-    _ElementPlot = React.memo(this._ElementPlotRaw, () => {
-        if (this.updatePlotLines) {
-            return false;
-        } else {
-            return true;
-        }
-    })
 
     _ElementGridLines = () => {
 
@@ -605,10 +556,13 @@ export class DataViewerPlot {
             yLength,
             numXgrid,
             numYgrid,
+            xTickValMin,
+            xTickValMax,
             xTickValues,
             xTickPositions,
             yTickValues,
-            yTickPositions } = yAxis["ticksInfo"];
+            yTickPositions,
+            xTickUnit } = yAxis["ticksInfo"];
         const height = this.getPlotHeight();
         const width = this.getPlotWidth();
 
@@ -745,10 +699,13 @@ export class DataViewerPlot {
             yLength,
             numXgrid,
             numYgrid,
+            xTickValMin,
+            xTickValMax,
             xTickValues,
             xTickPositions,
             yTickValues,
-            yTickPositions } = yAxis["ticksInfo"];
+            yTickPositions,
+            xTickUnit } = yAxis["ticksInfo"];
 
         const color = this.calcSelectedTraceColor();
 
@@ -765,8 +722,8 @@ export class DataViewerPlot {
             >
 
                 <Scale
-                    min={xValMin}
-                    max={xValMax}
+                    min={xTickValMin}
+                    max={xTickValMax}
                     numIntervals={numXgrid}
                     position={"bottom"}
                     show={true}
@@ -784,6 +741,28 @@ export class DataViewerPlot {
     };
 
     _ElementXLabel = () => {
+
+        const yAxis = this.getSelectedYAxis();
+        if (yAxis === undefined) {
+            return null
+        }
+
+        const { xValMin,
+            xValMax,
+            yValMin,
+            yValMax,
+            xLength,
+            yLength,
+            numXgrid,
+            numYgrid,
+            xTickValMin,
+            xTickValMax,
+            xTickValues,
+            xTickPositions,
+            yTickValues,
+            yTickPositions,
+            xTickUnit } = yAxis["ticksInfo"];
+
         return (
             <div
                 style={{
@@ -793,11 +772,9 @@ export class DataViewerPlot {
                     flexFlow: "row",
                     justifyContent: "center",
                     alignItems: "center",
-                    // backgroundColor: "yellow",
-                    backgroundColor: "rgba(255, 255, 0, 0)",
                 }}
             >
-                {this.xAxis.label}
+                {this.xAxis.label}&nbsp;{"(" + xTickUnit + ")"}
             </div>
         );
     };
@@ -815,8 +792,6 @@ export class DataViewerPlot {
                     flexFlow: "column",
                     justifyContent: "flex-start",
                     alignItems: "flex-start",
-                    // backgroundColor: "cyan",
-                    backgroundColor: "rgba(0, 100, 100, 0)",
                 }}
             >
                 {this.yAxes.map((yAxis: type_yAxis, index: number) => {
@@ -829,6 +804,8 @@ export class DataViewerPlot {
                         timeStr = GlobalMethods.convertEpochTimeToString(xData[xData.length - 2]);
                         valueStr = yData[yData.length - 1].toString();
                     }
+                    const backgroundColor = this.getSelectedTraceIndex() === index ? "rgba(210, 210, 210, 1)" : "rgba(0,0,0,0)";
+                    const color = yAxis.show ? yAxis.lineColor : "rgba(0,0,0,0.5)";
                     return (
                         <div
                             key={this.yAxes[index].label + `-${index}`}
@@ -839,9 +816,9 @@ export class DataViewerPlot {
                                 alignItems: "flex-start",
                                 width: "100%",
                                 height: "fit-content",
-                                color: yAxis.show ? yAxis.lineColor : "rgba(0,0,0,0.5)",
+                                color: color,
                                 margin: "3px",
-                                backgroundColor: this.getSelectedTraceIndex() === index ? "rgba(210, 210, 210, 1)" : "rgba(0,0,0,0)",
+                                backgroundColor: backgroundColor,
                             }}
                             onMouseEnter={(event: any) => {
                                 this.setCursorValue("Click to selected the trace, double-click to configure the trace.")
@@ -881,17 +858,13 @@ export class DataViewerPlot {
                         justifyContent: "flex-start",
                         alignItems: "flex-start",
                         width: "100%",
-                        // backgroundColor: "red",
                         height: "fit-content",
-                        // color: yAxis.lineColor,
                         paddingTop: 5,
                         paddingBottom: 5,
                         paddingLeft: 5,
                         boxSizing: "border-box",
                         margin: "3px",
                         opacity: 0.3,
-                        // cursor: "pointer",
-                        // backgroundColor: this.selectedTraceIndex === index ? "rgba(210, 210, 210, 1)" : "rgba(0,0,0,0)",
                     }}
                     onMouseDown={(event: any) => {
                         if (event.button !== 0) {
@@ -912,7 +885,6 @@ export class DataViewerPlot {
                     }}
                     onMouseLeave={() => {
                         if (elementAddTraceRef.current !== null) {
-                            // elementAddTraceRef.current.style["outline"] = "none";
                             elementAddTraceRef.current.style["opacity"] = 0.3;
                         }
                         this.setCursorValue("")
@@ -927,7 +899,7 @@ export class DataViewerPlot {
     };
 
 
-    // ------------------------ trace (delegated to _trace) ----------------------------
+    // ------------------------ trace (delegated to _plotTrace) ----------------------------
 
     addTrace = async (newChannelName: string, doFlush: boolean = true) => {
         return this.getPlotTrace().addTrace(newChannelName, doFlush);
@@ -961,7 +933,7 @@ export class DataViewerPlot {
         this.getPlotTrace().updateTraceScale(index, newScale);
     };
 
-    // ---------------------- data (delegated to _data) -------------------------------
+    // ---------------------- data (delegated to _plotData) -------------------------------
 
     fetchArchiveData = () => {
         this.getPlotData().fetchArchiveData();
@@ -1195,8 +1167,14 @@ export class DataViewerPlot {
         // fixed numbers
         const numXgrid = 10;
         const numYgrid = 5;
-        const xTickValues = GlobalMethods.calcTicks(xValMin, xValMax, numXgrid + 1, { scale: scale });
-        const xTickPositions = GlobalMethods.calcTickPositions(xTickValues, xValMin, xValMax, xLength, { scale: scale }, "vertical");
+
+        // unit of ms
+        const xRange = xValMax - xValMin;
+        const { xTickValMin, xTickUnit } = this.calcXValMinTick(xRange);
+        const xTickValMax = 0;
+
+        const xTickValues = GlobalMethods.calcTicks(xTickValMin, xTickValMax, numXgrid + 1, { scale: scale });
+        const xTickPositions = GlobalMethods.calcTickPositions(xTickValues, xTickValMin, xTickValMax, xLength, { scale: scale }, "horizontal");
         const yTickValues = GlobalMethods.calcTicks(yValMin, yValMax, numYgrid + 1, { scale: scale });
         const yTickPositions = GlobalMethods.calcTickPositions(yTickValues, yValMin, yValMax, yLength, { scale: scale }, "vertical");
         yAxis["ticksInfo"] = {
@@ -1209,10 +1187,13 @@ export class DataViewerPlot {
             yLength,
             numXgrid,
             numYgrid,
+            xTickValMin,
+            xTickValMax,
             xTickValues,
             xTickPositions,
             yTickValues,
             yTickPositions,
+            xTickUnit,
         };
     }
 
@@ -1266,6 +1247,51 @@ export class DataViewerPlot {
             }
         )
     }
+
+
+    /**
+     * Convert a time range in milliseconds to a human-readable (negative) value and unit string.
+     *
+     * xValMaxTicks is always 0, xValMinTicks is the negative range in the chosen unit.
+     *
+     * Examples:
+     *   90,000 ms (1.5 min)   → { xValMinTicks: -90,  xValMaxTicks: 0, xTimeUnit: "second" }
+     *   7,200,000 ms (2 hr)   → { xValMinTicks: -120,  xValMaxTicks: 0, xTimeUnit: "minute" }
+     *   172,800,000 ms (2 d)  → { xValMinTicks: -48,  xValMaxTicks: 0, xTimeUnit: "hour" }
+     *   ~730 d (2 yr)         → { xValMinTicks: -24,  xValMaxTicks: 0, xTimeUnit: "month" }
+     */
+    calcXValMinTick = (xRangeMs: number): { xTickValMin: number; xTickUnit: string } => {
+        const absRange = Math.abs(xRangeMs);
+        const oneSecond = 1000;
+        const oneMinute = 60 * oneSecond;
+        const oneHour = 60 * oneMinute;
+        const oneDay = 24 * oneHour;
+        const oneMonth = 30 * oneDay;
+
+        let divisor: number;
+        let unit: string;
+
+        if (absRange < 6 * oneMinute) {
+            divisor = oneSecond;
+            unit = "second";
+        } else if (absRange < 2 * oneHour) {
+            divisor = oneMinute;
+            unit = "minute";
+        } else if (absRange < 2 * oneDay) {
+            divisor = oneHour;
+            unit = "hour";
+        } else if (absRange < 6 * oneMonth) {
+            divisor = oneDay;
+            unit = "day";
+        } else {
+            divisor = oneMonth;
+            unit = "month";
+        }
+
+        const xTickValMin = -(absRange / divisor);
+
+        return { xTickValMin, xTickUnit: unit };
+    };
 
 
     /**
