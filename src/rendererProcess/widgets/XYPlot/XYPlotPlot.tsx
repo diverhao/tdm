@@ -47,8 +47,6 @@ export type type_yAxis = {
     valMax: number;
     lineWidth: number;
     lineColor: string;
-    ticks: number[];
-    ticksText: (number | string)[];
     lineStyle: string;
     pointType: string;
     pointSize: number;
@@ -83,8 +81,6 @@ export type type_xAxis = {
     autoScale: boolean;
     valMin: number;
     valMax: number;
-    ticks: number[];
-    ticksText: (number | string)[];
     showGrid: boolean;
     numGrids: number;
 };
@@ -145,8 +141,6 @@ export class XYPlotPlot {
         // time since epoch, ms
         valMin: 0,
         valMax: 100,
-        ticks: [],
-        ticksText: [],
         showGrid: true,
         numGrids: 5,
     };
@@ -1164,8 +1158,6 @@ export class XYPlotPlot {
             valMax: 100,
             lineWidth: 2,
             lineColor: lineColor,
-            ticks: [0, 50, 100],
-            ticksText: [0, 50, 100],
             autoScale: false,
             lineStyle: "solid",
             pointType: "none",
@@ -1214,7 +1206,7 @@ export class XYPlotPlot {
         const ticksInfo = yAxis["ticksInfo"];
         const { xValMax, xValMin, yValMax, yValMin } = ticksInfo;
 
-        const [valX, valY] = mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight())
+        const [valX, valY] = mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
         const valXStr = valX.toPrecision(4).toString();
         const valYStr = valY.toPrecision(4).toString();
         this.setCursorValue(`(${valXStr}, ${valYStr})`);

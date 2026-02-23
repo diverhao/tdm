@@ -2,18 +2,50 @@ import { DataViewer } from "./DataViewer";
 import * as React from "react";
 import { ElementProfileBlockNameInput } from "../../mainWindow/MainWindowStyledComponents";
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, type_dbrData, Channel_DBR_TYPES } from "../../../common/GlobalVariables";
+import { getMouseEventClientX, getMouseEventClientY, type_dbrData, Channel_DBR_TYPES } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Log } from "../../../common/Log";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
-// import { type_xAxis } from "../XYPlot/XYPlotPlot";
-import uuid from "uuid";
-import * as THREE from 'three';
-import {OrthographicCamera, Scene, WebGLRenderer, BufferGeometry, BufferAttribute, ShaderMaterial, Points, Color, Vector2} from "three";
+import { OrthographicCamera, Scene, WebGLRenderer, Color, Vector2 } from "three";
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
+import { Scale } from "../../helperWidgets/SharedElements/Scale";
+
+
+const defaultTicksInfo: type_ticksInfo = {
+    scale: "Linear",
+    xValMin: 0,
+    xValMax: 0,
+    yValMin: 0,
+    yValMax: 0,
+    xLength: 0,
+    yLength: 0,
+    numXgrid: 0,
+    numYgrid: 0,
+    xTickValues: [],
+    xTickPositions: [],
+    yTickValues: [],
+    yTickPositions: [],
+}
+
+
+export type type_ticksInfo = {
+    scale: "Linear" | "Log10",
+    xValMin: number,
+    xValMax: number,
+    yValMin: number,
+    yValMax: number,
+    xLength: number,
+    yLength: number,
+    numXgrid: number,
+    numYgrid: number,
+    xTickValues: number[],
+    xTickPositions: number[],
+    yTickValues: number[],
+    yTickPositions: number[],
+};
 
 type type_yAxis = {
     label: string;
@@ -21,86 +53,125 @@ type type_yAxis = {
     valMax: number;
     lineWidth: number;
     lineColor: string;
-    // ticks and ticksText are not used in the plot, we simply divide the valMin and valMax to 5 intervals
-    ticks: number[];
-    ticksText: (number | string)[];
     show: boolean;
     bufferSize: number;
     displayScale: "Linear" | "Log10";
+    // runtime data, should not be included in tdl
+    xData: number[];
+    yData: number[];
+    ticksInfo: type_ticksInfo,
+
 };
 
 type type_xAxis = {
     label: string;
     valMin: number;
     valMax: number;
-    ticks: number[];
-    ticksText: string[]
 };
 
 
+// colors
+const traceColors: [number, number, number, number][] = [
+    [255, 0, 0, 1],
+    [0, 0, 255, 1],
+    [0, 255, 0, 1],
+    [255, 255, 0, 1],
+    [255, 0, 255, 1],
+    [0, 255, 255, 1],
+    [0, 0, 0, 1],
+    [0, 0, 0, 1],
+    [0, 0, 0, 1],
+    [0, 0, 0, 1],
+    [0, 0, 0, 1],
+    [0, 0, 0, 1],
+];
+
+// time
+const oneSecond = 1 * 1000;
+const oneMinute = 60 * 1000;
+const oneHour = 60 * 60 * 1000;
+const oneDay = 24 * 60 * 60 * 1000;
+const deltaTs: [number, number, string][] = [
+    [oneSecond, -1, "second"],
+    [2 * oneSecond, -2, "second"],
+    [5 * oneSecond, -5, "second"],
+    [10 * oneSecond, -10, "second"],
+    [30 * oneSecond, -30, "second"],
+    [oneMinute, -1, "minute"],
+    [2 * oneMinute, -2, "minute"],
+    [5 * oneMinute, -5, "minute"],
+    [10 * oneMinute, -10, "minute"],
+    [30 * oneMinute, -30, "minute"],
+    [oneHour, -1, "hour"],
+    [2 * oneHour, -2, "hour"],
+    [5 * oneHour, -5, "hour"],
+    [10 * oneHour, -10, "hour"],
+    [oneDay, -1, "day"],
+    [2 * oneDay, -2, "day"],
+    [5 * oneDay, -5, "day"],
+    [10 * oneDay, -10, "day"],
+    [30 * oneDay, -30, "day"],
+    [100 * oneDay, -100, "day"],
+    [300 * oneDay, -300, "day"],
+    [1000 * oneDay, -1000, "day"],
+];
+
+// layout
+const titleHeight = 50;
+const yAxisLabelWidth = 30;
+const yAxisTickWidth = 30;
+const xAxisLabelHeight = 30;
+// const thumbnailHeight = 30;
+const xAxisTickHeight = 30;
+const toolbarHeight = 30;
+const legendWidth = 170;
+
+
+/**
+ * -----------------------------------------------------------------------------------
+ * |                                                                                 |
+ * |                                 ElementTitle                                    |
+ * |                                                                                 |
+ * ----------------------------------------------------------------------------------|
+ * |    |   |                                                              |         |
+ * | E  | E |                                                              |   E     |
+ * | l  | l |                                                              |   l     |
+ * | e  | e |                                                              |   e     |
+ * | m  | m |                                                              |   m     |
+ * | e  | e |                                                              |   e     |
+ * | n  | n |                                                              |   n     |
+ * | t  | t |                      ElementPlot                             |   t     |
+ * | Y  | Y |                                                              |   L     |
+ * | L  | T |                                                              |   e     |
+ * | a  | i |                                                              |   g     |
+ * | b  | c |                                                              |   e     |
+ * | e  | k |                                                              |   n     |
+ * | l  | s |                                                              |   d     |
+ * |    |   |                                                              |         |
+ * |-----------------------------------------------------------------------|         |
+ * |        |                                                              |         |
+ * | E B    |                                                              |         |
+ * | l l    |                      ElementXTicks                           |         |
+ * | e a    |                                                              |         |
+ * | m n    |                                                              |         |
+ * | e k    |--------------------------------------------------------------|         |
+ * | n A    |                                                              |         |
+ * | t r    |                                                              |         |
+ * |   e    |                      ElementXLabel                           |         |
+ * |   a    |                                                              |         |
+ * |---------------------------------------------------------------------------------|
+ * |                                                                                 |
+ * |                               ElementControls                                   |
+ * |                                                                                 |
+ * -----------------------------------------------------------------------------------
+ */
+
 export class DataViewerPlot {
-    // ----------------- constants ------------------
-
-    // colors
-    readonly traceColors: [number, number, number, number][] = [
-        [255, 0, 0, 1],
-        [0, 0, 255, 1],
-        [0, 255, 0, 1],
-        [255, 255, 0, 1],
-        [255, 0, 255, 1],
-        [0, 255, 255, 1],
-        [0, 0, 0, 1],
-        [0, 0, 0, 1],
-        [0, 0, 0, 1],
-        [0, 0, 0, 1],
-        [0, 0, 0, 1],
-        [0, 0, 0, 1],
-    ];
-
-    // time
-    minLiveDataTime: number = Number.MAX_VALUE;
-    readonly oneSecond = 1 * 1000;
-    readonly oneMinute = 60 * 1000;
-    readonly oneHour = 60 * 60 * 1000;
-    readonly oneDay = 24 * 60 * 60 * 1000;
-    readonly deltaTs: [number, number, string][] = [
-        [this.oneSecond, -1, "second"],
-        [2 * this.oneSecond, -2, "second"],
-        [5 * this.oneSecond, -5, "second"],
-        [10 * this.oneSecond, -10, "second"],
-        [30 * this.oneSecond, -30, "second"],
-        [this.oneMinute, -1, "minute"],
-        [2 * this.oneMinute, -2, "minute"],
-        [5 * this.oneMinute, -5, "minute"],
-        [10 * this.oneMinute, -10, "minute"],
-        [30 * this.oneMinute, -30, "minute"],
-        [this.oneHour, -1, "hour"],
-        [2 * this.oneHour, -2, "hour"],
-        [5 * this.oneHour, -5, "hour"],
-        [10 * this.oneHour, -10, "hour"],
-        [this.oneDay, -1, "day"],
-        [2 * this.oneDay, -2, "day"],
-        [5 * this.oneDay, -5, "day"],
-        [10 * this.oneDay, -10, "day"],
-        [30 * this.oneDay, -30, "day"],
-        [100 * this.oneDay, -100, "day"],
-        [300 * this.oneDay, -300, "day"],
-        [1000 * this.oneDay, -1000, "day"],
-    ];
-
-    // layout
-    readonly titleHeight = 50;
-    readonly yAxisLabelWidth = 30;
-    readonly yAxisTickWidth = 30;
-    readonly xAxisLabelHeight = 30;
-    readonly thumbnailHeight = 30;
-    readonly xAxisTickHeight = 30;
-    readonly toolbarHeight = 30;
-    readonly legendWidth = 170;
 
     // ---------------------- efficiency ---------------------------
     thumbnailUpdateCount = 1;
     updateThumbnail: boolean = true;
+    minLiveDataTime: number = Number.MAX_VALUE;
 
 
     plotUpdateCount = 1;
@@ -133,13 +204,9 @@ export class DataViewerPlot {
     // wasEditing: boolean = true;
 
     // plot
-    plotWidth: number;
-    plotHeight: number;
+    _plotWidth: number;
+    _plotHeight: number;
     lastCursorPointXY: [number, number] = [-100000, -100000];
-
-    // data
-    x: number[][] = [];
-    y: number[][] = [];
 
     // only one x axis, ticks and ticksText are the same for each data set
     xAxis: type_xAxis = {
@@ -147,8 +214,6 @@ export class DataViewerPlot {
         // time since epoch, ms
         valMin: -10 * 60 * 1000,
         valMax: 0,
-        ticks: [],
-        ticksText: [],
     };
 
     // multiple y axes
@@ -156,8 +221,8 @@ export class DataViewerPlot {
 
     constructor(mainWidget: DataViewer) {
         this._mainWidget = mainWidget;
-        this.plotWidth = this.getStyle().width - this.yAxisLabelWidth - this.yAxisTickWidth - this.legendWidth;
-        this.plotHeight = this.getStyle().height - this.titleHeight - this.xAxisLabelHeight - this.xAxisTickHeight - this.toolbarHeight - this.thumbnailHeight;
+        this._plotWidth = this.getStyle().width - yAxisLabelWidth - yAxisTickWidth - legendWidth;
+        this._plotHeight = this.getStyle().height - titleHeight - xAxisLabelHeight - xAxisTickHeight - toolbarHeight;
 
         window.addEventListener("keydown", (event: KeyboardEvent) => {
             if (event.code === "Space") {
@@ -177,659 +242,18 @@ export class DataViewerPlot {
 
 
 
-    // --------------------------- plot calculation ---------------------------
-
-    findVisibleYValueRange = (index: number): [number, number] | undefined => {
-        const xData0 = this.x[index];
-        const yData0 = this.y[index];
-
-        if (yData0 === undefined) {
-            return undefined;
-        }
-
-        if (xData0[xData0.length - 1] < this.xAxis.valMin) {
-            return undefined;
-        }
-        if (xData0[0] > this.xAxis.valMax) {
-            return undefined;
-        }
-
-        let xMinIndex = xData0.findIndex((element: number) => element >= this.xAxis.valMin);
-        if (xMinIndex > 1) {
-            xMinIndex = xMinIndex - 1;
-        }
-        let xMaxIndex = xData0.findIndex((element: number) => element >= this.xAxis.valMax);
-
-        if (xMaxIndex === -1) {
-            xMaxIndex = xData0.length;
-        }
-        if (xMaxIndex < xData0.length) {
-            xMaxIndex = xMaxIndex + 1;
-        }
-
-        if (xMinIndex === -1 || xMaxIndex === -1) {
-            return undefined;
-        }
-        // only calculate the data in visible region
-        const yData = yData0.slice(xMinIndex, xMaxIndex);
-        let yValMax = Number.MIN_VALUE;
-        let yValMin = Number.MAX_VALUE;
-
-        for (let ii = 0; ii < yData.length; ii++) {
-            const element = yData[ii];
-            if (typeof element === "number") {
-                yValMax = Math.max(yValMax, element);
-                yValMin = Math.min(yValMin, element);
-            }
-        }
-
-        return [yValMin, yValMax];
-    }
-
-    mapXYsToPoints = (index: number): string => {
-        const xData0 = this.x[index];
-        const yData0 = this.y[index];
-
-        // y data exists
-        if (yData0 === undefined) {
-            return "";
-        }
-
-        // xMaxIndex is inclusive
-        let [xMinIndex, xMaxIndex] = GlobalMethods.binarySearchRange(xData0, this.xAxis.valMin, this.xAxis.valMax);
-        if (xMinIndex === -100 || xMaxIndex === -100) {
-            // binary search did not find, corner case, try linear search
-            [xMinIndex, xMaxIndex] = this.linearSearchRange(xData0, this.xAxis.valMin, this.xAxis.valMax);
-            if (xMinIndex === -100 || xMaxIndex === -100) {
-                // no data within the plot range
-                return "";
-            }
-        }
-
-        let xData = xData0;
-        let yData = yData0;
-        if (xMinIndex === 0 && xMaxIndex === xData0.length - 1) {
-        } else {
-            xData = xData.slice(Math.max(xMinIndex - 1, 0), xMaxIndex + 2);
-            yData = yData.slice(Math.max(xMinIndex - 1, 0), xMaxIndex + 2);
-        }
-
-        // down sample the data
-        const maxPoints = this.plotWidth * 2;
-        [xData, yData] = GlobalMethods.downSampleXyData(xData, yData, maxPoints);
-
-        const pointsXYOnPlot: [number, number][] = [];
-        for (let ii = 0; ii < xData.length; ii++) {
-            if (xData[ii] !== undefined && yData[ii] !== undefined) {
-                const pointXY = this.mapXYToPoint(index, [xData[ii], yData[ii]], this.plotHeight);
-                // out of range SVG polyline point
-                pointXY[0] = Math.round(Math.min(Math.max(pointXY[0], -100), 100000));
-                pointXY[1] = Math.round(Math.min(Math.max(pointXY[1], -100), 100000));
-                pointsXYOnPlot.push(pointXY);
-            }
-        }
-        return `${pointsXYOnPlot}`
-    };
-
-    mapXYsToPointsWebGl = (index: number): Float32Array => {
-        const xData0 = this.x[index];
-        const yData0 = this.y[index];
-
-        // y data exists
-        if (yData0 === undefined) {
-            const positions = new Float32Array(3);
-            return positions;
-        }
-
-        // xMaxIndex is inclusive
-        let [xMinIndex, xMaxIndex] = GlobalMethods.binarySearchRange(xData0, this.xAxis.valMin, this.xAxis.valMax);
-        if (xMinIndex === -100 || xMaxIndex === -100) {
-            // binary search did not find, corner case, try linear search
-            [xMinIndex, xMaxIndex] = this.linearSearchRange(xData0, this.xAxis.valMin, this.xAxis.valMax);
-            if (xMinIndex === -100 || xMaxIndex === -100) {
-                // no data within the plot range
-                const positions = new Float32Array(3);
-                return positions;
-            }
-        }
-
-        let xData = xData0;
-        let yData = yData0;
-        if (xMinIndex === 0 && xMaxIndex === xData0.length - 1) {
-        } else {
-            xData = xData.slice(Math.max(xMinIndex - 1, 0), xMaxIndex + 2);
-            yData = yData.slice(Math.max(xMinIndex - 1, 0), xMaxIndex + 2);
-        }
-
-        // down sample the data
-        const maxPoints = this.plotWidth * 2;
-        [xData, yData] = GlobalMethods.downSampleXyData(xData, yData, maxPoints);
-
-
-        const len = Math.min(xData.length, yData.length);
-        const positions = new Float32Array(len * 3);
-
-        const pointsXYOnPlot: [number, number][] = [];
-        for (let ii = 0; ii < len; ii++) {
-            if (xData[ii] !== undefined && yData[ii] !== undefined) {
-                // const pointXY = this.mapXYToPoint(index, [xData[ii], yData[ii]], this.plotHeight);
-                const pointX = this.mapXToPointWebGl(index, [xData[ii], yData[ii]], this.plotHeight);
-                const pointY = this.mapYToPointWebGl(index, [xData[ii], yData[ii]], this.plotHeight);
-                // out of range SVG polyline point
-                // pointXY[0] = Math.round(Math.min(Math.max(pointXY[0], -100), 100000));
-                // pointXY[1] = Math.round(Math.min(Math.max(pointXY[1], -100), 100000));
-                // pointsXYOnPlot.push(pointXY);
-                positions[3 * ii] = pointX;
-                positions[3 * ii + 1] = -1 * pointY;
-                positions[3 * ii + 2] = 0;
-
-            }
-        }
-        // return `${pointsXYOnPlot}`
-        return positions;
-    };
-
-    linearSearchRange = (data: number[], valMin: number, valMax: number) => {
-        let minIndex = -100;
-        let maxIndex = -100;
-
-        // window is on the left of data 
-        if (data[0] > valMax) {
-            return [minIndex, maxIndex];
-        }
-
-        // window is on the right of data
-        if (data[data.length - 1] < valMin) {
-            return [data.length - 1, data.length - 1];
-        }
-
-        // window is in between 2 points
-        for (let ii = 0; ii < data.length; ii++) {
-            if (data[ii] < valMin) {
-                minIndex = ii;
-            }
-            if (data[ii] > valMax && maxIndex === -100) {
-                maxIndex = ii;
-            }
-        }
-
-        return [minIndex, maxIndex];
-    }
-
-
-    mapXToPointWebGl = (index: number, [valX, valY]: [number, number], plotHeight: number, isThumbnail: boolean = false): number => {
-        let useLog10Scale = false;
-        const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
-        }
-
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-        let valYmin = Math.min(...this.generateFallbackYTicks());
-        let valYmax = Math.max(...this.generateFallbackYTicks());
-        if (useLog10Scale) {
-            valYmin = Math.log10(valYmin);
-            valYmax = Math.log10(valYmax);
-        }
-        if (yAxis !== undefined) {
-            valYmin = yAxis.valMin;
-            valYmax = yAxis.valMax;
-            if (useLog10Scale) {
-                valYmin = Math.log10(valYmin);
-                valYmax = Math.log10(valYmax);
-            }
-        }
-        if (useLog10Scale) {
-            valY = Math.log10(valY);
-        }
-        if (useLog10Scale) {
-            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
-                valY = 0
-            }
-            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
-                valYmin = 0
-            }
-            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
-                valYmax = 0
-            }
-        }
-
-        // thumbnail always use max range
-        if (isThumbnail) {
-            for (let xData0 of this.x) {
-                if (xData0.length > 1) {
-                    valXmin = Math.min(valXmin, xData0[0]);
-                    valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
-                }
-            }
-        }
-
-        // const pointXmin = 0;
-        // const pointXmax = this.plotWidth;
-        const pointXmin = -1;
-        const pointXmax = 1;
-        const pointYmin = 0;
-        let pointYmax = plotHeight;
-        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
-        // let pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
-        // return [pointX, pointY];
-        return pointX;
-    };
-
-    mapYToPointWebGl = (index: number, [valX, valY]: [number, number], plotHeight: number, isThumbnail: boolean = false): number => {
-        let useLog10Scale = false;
-        const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
-        }
-
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-        let valYmin = Math.min(...this.generateFallbackYTicks());
-        let valYmax = Math.max(...this.generateFallbackYTicks());
-        if (useLog10Scale) {
-            valYmin = Math.log10(valYmin);
-            valYmax = Math.log10(valYmax);
-        }
-        if (yAxis !== undefined) {
-            valYmin = yAxis.valMin;
-            valYmax = yAxis.valMax;
-            if (useLog10Scale) {
-                valYmin = Math.log10(valYmin);
-                valYmax = Math.log10(valYmax);
-            }
-        }
-        if (useLog10Scale) {
-            valY = Math.log10(valY);
-        }
-        if (useLog10Scale) {
-            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
-                valY = 0
-            }
-            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
-                valYmin = 0
-            }
-            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
-                valYmax = 0
-            }
-        }
-
-        // thumbnail always use max range
-        if (isThumbnail) {
-            for (let xData0 of this.x) {
-                if (xData0.length > 1) {
-                    valXmin = Math.min(valXmin, xData0[0]);
-                    valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
-                }
-            }
-        }
-
-        const pointXmin = 0;
-        const pointXmax = this.plotWidth;
-        // const pointYmin = 0;
-        // let pointYmax = plotHeight;
-        const pointYmin = -1;
-        let pointYmax = 1;
-        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
-        let pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
-        return pointY;
-    };
-
-    mapXToPointThumbnailWebGl = (index: number, [valX, valY]: [number, number], plotHeight: number, isThumbnail: boolean = false): number => {
-        let useLog10Scale = false;
-        const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
-        }
-
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-        let valYmin = Math.min(...this.generateFallbackYTicks());
-        let valYmax = Math.max(...this.generateFallbackYTicks());
-        if (useLog10Scale) {
-            valYmin = Math.log10(valYmin);
-            valYmax = Math.log10(valYmax);
-        }
-        if (yAxis !== undefined) {
-            valYmin = yAxis.valMin;
-            valYmax = yAxis.valMax;
-            if (useLog10Scale) {
-                valYmin = Math.log10(valYmin);
-                valYmax = Math.log10(valYmax);
-            }
-        }
-        if (useLog10Scale) {
-            valY = Math.log10(valY);
-        }
-        if (useLog10Scale) {
-            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
-                valY = 0
-            }
-            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
-                valYmin = 0
-            }
-            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
-                valYmax = 0
-            }
-        }
-
-        // thumbnail always use max range
-        if (isThumbnail) {
-            for (let xData0 of this.x) {
-                if (xData0.length > 1) {
-                    valXmin = Math.min(valXmin, xData0[0]);
-                    valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
-                }
-            }
-        }
-
-        // const pointXmin = 0;
-        // const pointXmax = this.plotWidth;
-        const pointXmin = -1;
-        const pointXmax = 1;
-        const pointYmin = 0;
-        let pointYmax = plotHeight;
-        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
-        // let pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
-        // return [pointX, pointY];
-        return pointX;
-    };
-
-    mapYToPointThumbnailWebGl = (index: number, [valX, valY]: [number, number], plotHeight: number, isThumbnail: boolean = false): number => {
-        let useLog10Scale = false;
-        const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
-        }
-
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-        let valYmin = Math.min(...this.generateFallbackYTicks());
-        let valYmax = Math.max(...this.generateFallbackYTicks());
-        if (useLog10Scale) {
-            valYmin = Math.log10(valYmin);
-            valYmax = Math.log10(valYmax);
-        }
-        if (yAxis !== undefined) {
-            valYmin = yAxis.valMin;
-            valYmax = yAxis.valMax;
-            if (useLog10Scale) {
-                valYmin = Math.log10(valYmin);
-                valYmax = Math.log10(valYmax);
-            }
-        }
-        if (useLog10Scale) {
-            valY = Math.log10(valY);
-        }
-        if (useLog10Scale) {
-            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
-                valY = 0
-            }
-            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
-                valYmin = 0
-            }
-            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
-                valYmax = 0
-            }
-        }
-
-        // thumbnail always use max range
-        if (isThumbnail) {
-            for (let xData0 of this.x) {
-                if (xData0.length > 1) {
-                    valXmin = Math.min(valXmin, xData0[0]);
-                    valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
-                }
-            }
-        }
-
-        const pointXmin = 0;
-        const pointXmax = this.plotWidth;
-        // const pointYmin = 0;
-        // let pointYmax = plotHeight;
-        const pointYmin = -1;
-        let pointYmax = 1;
-        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
-        let pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
-        return pointY;
-    };
-
-    mapXYToPoint = (index: number, [valX, valY]: [number, number], plotHeight: number, isThumbnail: boolean = false): [number, number] => {
-        let useLog10Scale = false;
-        const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
-        }
-
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-        let valYmin = Math.min(...this.generateFallbackYTicks());
-        let valYmax = Math.max(...this.generateFallbackYTicks());
-        if (useLog10Scale) {
-            valYmin = Math.log10(valYmin);
-            valYmax = Math.log10(valYmax);
-        }
-        if (yAxis !== undefined) {
-            valYmin = yAxis.valMin;
-            valYmax = yAxis.valMax;
-            if (useLog10Scale) {
-                valYmin = Math.log10(valYmin);
-                valYmax = Math.log10(valYmax);
-            }
-        }
-        if (useLog10Scale) {
-            valY = Math.log10(valY);
-        }
-        if (useLog10Scale) {
-            if (valY === Infinity || valY === -Infinity || isNaN(valY)) {
-                valY = 0
-            }
-            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
-                valYmin = 0
-            }
-            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
-                valYmax = 0
-            }
-        }
-
-        // thumbnail always use max range
-        if (isThumbnail) {
-            for (let xData0 of this.x) {
-                if (xData0.length > 1) {
-                    valXmin = Math.min(valXmin, xData0[0]);
-                    valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
-                }
-            }
-        }
-
-        const pointXmin = 0;
-        const pointXmax = this.plotWidth;
-        const pointYmin = 0;
-        let pointYmax = plotHeight;
-        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
-        let pointY = pointYmax - ((pointYmax - pointYmin) / (valYmax - valYmin)) * (valY - valYmin);
-        return [pointX, pointY];
-    };
-
-    // pointX, pointY are the coordinates inside Plot element
-    mapPointToXY = (index: number, [pointX, pointY]: [number, number]): [number, number] => {
-        if (index >= this.getMainWidget().getChannelNames().length) {
-            return [0, 0];
-        }
-        let useLog10Scale = false;
-        if (this.yAxes[index] !== undefined) {
-            useLog10Scale = this.yAxes[index]["displayScale"] === "Log10" ? true : false;
-        }
-
-        const valXmin = this.xAxis.valMin;
-        const valXmax = this.xAxis.valMax;
-        let valYmin = this.yAxes[index].valMin;
-        let valYmax = this.yAxes[index].valMax;
-        if (useLog10Scale) {
-            valYmin = Math.log10(valYmin);
-            valYmax = Math.log10(valYmax);
-        }
-        if (useLog10Scale) {
-            if (valYmin === Infinity || valYmin === -Infinity || isNaN(valYmin)) {
-                valYmin = 0
-            }
-            if (valYmax === Infinity || valYmax === -Infinity || isNaN(valYmax)) {
-                valYmax = 0
-            }
-        }
-
-        const pointXmin = 0;
-        const pointXmax = this.plotWidth;
-        const pointYmin = 0;
-        const pointYmax = this.plotHeight;
-
-        const valX = valXmin + ((pointX - pointXmin) * (valXmax - valXmin)) / (pointXmax - pointXmin);
-        if (useLog10Scale) {
-            let valY = valYmin - (pointY - pointYmax) / ((pointYmax - pointYmin) / (valYmax - valYmin));
-            valY = Math.pow(10, valY);
-            return [valX, valY];
-        } else {
-            const valY = valYmin - ((pointY - pointYmax) * (valYmax - valYmin)) / (pointYmax - pointYmin);
-            return [valX, valY];
-        }
-    };
-
-    /**
-     * Set the React state value setter for cursor text on the plot. It causes the cursor text to update.
-     * 
-     * @param {event: any} Input could be an mouse event, or a [number, number] array
-     */
-    updateCursorElement = (event: any) => {
-
-        if (this.getSelectedTraceIndex() < 0 || this.getSelectedTraceIndex() > this.getChannelNames().length - 1) {
-            return;
-        }
-
-        let pointX0 = -100000;
-        let pointY0 = -100000;
-
-        if (event.clientX !== undefined) {
-            // event callback
-            this.lastCursorPointXY = [getMouseEventClientX(event), getMouseEventClientY(event)];
-            pointX0 = getMouseEventClientX(event);
-            pointY0 = getMouseEventClientY(event);
-        } else {
-            // current cursor position on web page
-            pointX0 = event[0];
-            pointY0 = event[1];
-        }
-
-        // special case: the mouse is not on the plot region
-        if (pointX0 === -100000) {
-            // this.setCursorValue(``);
-            return;
-        }
-
-        const pointX = pointX0 - this.yAxisLabelWidth - this.yAxisTickWidth - this.getStyle().left;
-        const pointY = pointY0 - this.titleHeight - this.getStyle().top;
-        const [valX, valY] = this.mapPointToXY(this.getSelectedTraceIndex(), [pointX, pointY]);
-        const timeStr = GlobalMethods.convertEpochTimeToString(valX);
-        const valYStr = valY.toPrecision(4).toString();
-        this.setCursorValue(`(${timeStr}, ${valYStr})`);
-    };
-
-
-    /**
-     * Update 
-     * 
-     * (1) this.yAxes[index].ticks, 
-     *   
-     * (2) this.xAxes[index].ticksText, and 
-     * 
-     * (3) this.xAxes[index].label
-     * 
-     * according to this.xAxes[index].valMin and this.xAxes[index].valMax
-     * 
-     */
-    calcYTicksAndLabel = (index: number) => {
-        const yAxis = this.yAxes[index];
-        if (yAxis === undefined) {
-            return;
-        }
-
-        const yAxisInterval0 = (yAxis.valMax - yAxis.valMin) / 5;
-        const yAxisInterval = parseFloat(yAxisInterval0.toExponential(0));
-        yAxis.ticks.length = 0;
-        yAxis.ticksText.length = 0;
-        for (let val = Math.ceil(yAxis.valMin / yAxisInterval); val < Math.ceil(yAxis.valMax / yAxisInterval); val = val + 1) {
-            // (1)
-            yAxis.ticks.push(val * yAxisInterval);
-            // (2)
-            yAxis.ticksText.push(val * yAxisInterval);
-        }
-
-        // (3)
-        const channelName = this.getMainWidget().getChannelNames()[index];
-        const unitRaw = g_widgets1.getChannelUnit(channelName).trim();
-        yAxis.label = `${channelName} ${unitRaw === "" ? "" : "[" + unitRaw + "]"}`;
-    };
-
-    /**
-     * Update 
-     * 
-     * (1) this.xAxis.ticks, 
-     *   
-     * (2) this.xAxis.ticksText, and 
-     * 
-     * (3) this.xAxis.label 
-     * 
-     * according to this.xAxis.valMin and this.xAxis.valMax
-     * 
-     */
-    calcXTicksAndLabel = () => {
-
-        this.xAxis.ticks.length = 0;
-        this.xAxis.ticksText.length = 0;
-
-        // preferred xTick width
-        let deltaT0 = (this.xAxis.valMax - this.xAxis.valMin) / 5;
-        // obtain the closest interval
-        let index = 0;
-        for (let jj = this.deltaTs.length - 1; jj >= 0; jj--) {
-            if (deltaT0 / this.deltaTs[jj][0] >= 1) {
-                index = jj;
-                break;
-            }
-        }
-        const deltaT = this.deltaTs[index][0];
-        const deltaTnum = this.deltaTs[index][1];
-
-        let jj = 0;
-        while (true) {
-            if (this.xAxis.valMax - jj * deltaT < this.xAxis.valMin) {
-                break;
-            }
-            // (1)
-            this.xAxis.ticks.push(this.xAxis.valMax - jj * deltaT);
-            // (2)
-            this.xAxis.ticksText.push(`${deltaTnum * jj}`);
-            jj++;
-        }
-
-        // (3)
-        this.xAxis.label = `Time [${this.deltaTs[index][2]}] since ${GlobalMethods.convertEpochTimeToString(this.xAxis.valMax)}`;
-    };
-
     // --------------------------- element ------------------------------------
 
     _Element = () => {
-        this.plotWidth = this.getStyle().width - this.yAxisLabelWidth - this.yAxisTickWidth - this.legendWidth;
-        this.plotHeight = this.getStyle().height - this.titleHeight - this.xAxisLabelHeight - this.xAxisTickHeight - this.toolbarHeight - this.thumbnailHeight;
+
+        const width = this.getStyle()["width"];
+        const height = this.getStyle()["height"];
+        const plotHeight = this.getPlotHeight();
 
         return (
             <div
                 style={{
                     position: "absolute",
-                    // top: `${this.wrapperY}px`,
-                    // left: `${this.wrapperX}px`,
-                    // width: `${this.wrapperWidth}px`,
-                    // height: `${this.wrapperHeight}px`,
                     top: "0px",
                     left: "0px",
                     width: "100%",
@@ -841,11 +265,12 @@ export class DataViewerPlot {
                     overflow: "hidden",
                 }}
             >
+                {/* title */}
                 <this._ElementTitle></this._ElementTitle>
                 <div
                     style={{
-                        height: `${this.getStyle().height - this.titleHeight - this.toolbarHeight}px`,
-                        width: `100%`,
+                        height: height - titleHeight - toolbarHeight,
+                        width: "100%",
                         display: "inline-flex",
                         flexFlow: "row",
                         justifyContent: "flex-start",
@@ -854,8 +279,8 @@ export class DataViewerPlot {
                 >
                     <div
                         style={{
-                            width: `${this.getStyle().width - this.legendWidth}px`,
-                            height: `100%`,
+                            width: width - legendWidth,
+                            height: "100%",
                             display: "inline-flex",
                             flexFlow: "column",
                             justifyContent: "flex-start",
@@ -864,13 +289,13 @@ export class DataViewerPlot {
                     >
                         <div
                             style={{
-                                width: `100%`,
-                                height: `${this.plotHeight}px`,
                                 display: "inline-flex",
-                                flexFlow: "row",
+                                width: "100%",
+                                height: plotHeight,
+                                flexDirection: "row",
                                 justifyContent: "flex-start",
                                 alignItems: "center",
-                                backgroundColor: "rgba(0, 255, 128, 0)",
+                                backgroundColor: "rgba(0, 255, 128, 1)",
                             }}
                         >
                             {/* y axis label area */}
@@ -880,52 +305,20 @@ export class DataViewerPlot {
                             {/* plot */}
                             <this._ElementPlot></this._ElementPlot>
                         </div>
-                        <div
-                            style={{
-                                width: `100%`,
-                                height: `${this.xAxisTickHeight}px`,
-                                display: "inline-flex",
-                                flexFlow: "row",
-                                justifyContent: "flex-start",
-                                alignItems: "center",
-                            }}
-                        >
-                            {/* blank area */}
-                            <this._ElementBlankArea></this._ElementBlankArea>
-                            {/* x axis ticks */}
-                            <this._ElementXTicks></this._ElementXTicks>
-                        </div>
 
                         <div
                             style={{
-                                width: `100%`,
-                                height: `${this.xAxisLabelHeight}px`,
                                 display: "inline-flex",
-                                flexFlow: "row",
+                                width: "100%",
+                                flexDirection: "column",
                                 justifyContent: "flex-start",
-                                alignItems: "center",
+                                alignItems: "flex-end",
                             }}
                         >
-                            {/* blank area */}
-                            <this._ElementBlankArea></this._ElementBlankArea>
-                            {/* x aixs label */}
+                            {/* x axis ticks */}
+                            <this._ElementXTicks></this._ElementXTicks>
+                            {/* x axis label */}
                             <this._ElementXLabel></this._ElementXLabel>
-                        </div>
-                        <div
-                            style={{
-                                width: `100%`,
-                                height: `${this.thumbnailHeight}px`,
-                                display: "inline-flex",
-                                flexFlow: "row",
-                                justifyContent: "flex-start",
-                                alignItems: "center",
-                                backgroundColor: "rgba(255,128,0,0)",
-                            }}
-                        >
-                            {/* blank area */}
-                            <this._ElementBlankArea></this._ElementBlankArea>
-                            {/* thumbnail area */}
-                            <this._ElementThumbnail></this._ElementThumbnail>
                         </div>
                     </div>
                     {/* legend */}
@@ -937,88 +330,313 @@ export class DataViewerPlot {
         );
     };
 
-    // ---------------------------------- thumbnail ------------------------------
 
-    _ElementThumbnailRaw = () => {
-        const thumbnailRef = React.useRef<any>(null);
-        // did mount
-        React.useEffect(() => {
-            if (thumbnailRef.current !== null) {
-                thumbnailRef.current.addEventListener("wheel", this.handleWheelOnThumbnail, { passive: false })
-            }
-        }, [])
-        // did unmount
-        React.useEffect(() => {
-            return () => {
-                if (thumbnailRef.current !== null) {
-                    thumbnailRef.current.removeEventListener("wheel", this.handleWheelOnThumbnail, { passive: false })
-                }
-            }
-        }, [])
-
+    _ElementTitle = () => {
+        const changeTitle = (event: any) => {
+            event.preventDefault();
+            this.getText().title = event.target.value;
+            this.updatePlot();
+        };
         return (
             <div
-                ref={thumbnailRef}
                 style={{
-                    width: `${this.plotWidth}px`,
-                    height: "100%",
+                    position: "relative",
+                    width: `100%`,
+                    height: titleHeight,
                     display: "inline-flex",
                     flexFlow: "row",
                     justifyContent: "center",
                     alignItems: "center",
-                    position: "relative",
-                    backgroundColor: "rgba(255, 255, 0, 0)",
-                    border: "solid 1px rgba(0,0,0,1)"
+                    // backgroundColor: "lightblue",
+                    backgroundColor: "rgba(68, 85, 90, 1)",
                 }}
-                // zoom view box
-                // onWheel={this.handleWheelOnThumbnail}
-                // move view box left and right, trigger the event on thumbnail, not the view box
+            >
+
+                <ElementProfileBlockNameInput
+                    additionalStyle={{
+                        fontSize: 25,
+                    }}
+                    value={`${this.getText().title}`}
+                    onChange={changeTitle}
+                ></ElementProfileBlockNameInput>
+            </div>
+        );
+    };
+
+    _ElementYLabel = () => {
+        const color = this.calcSelectedTraceColor();
+        const yAxis = this.getSelectedYAxis();
+        let label = "";
+        if (yAxis !== undefined) {
+            label = yAxis["label"];
+        }
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: yAxisLabelWidth,
+                    height: "100%",
+                    backgroundColor: "rgba(255, 0, 255, 1)",
+                    color: color,
+                }}
+            >
+                <div
+                    style={{
+                        transform: "rotate(-90deg)",
+                        overflow: "visible",
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {label}
+                </div>
+            </div>
+        );
+    };
+
+    _ElementYTicks = () => {
+
+        if (g_widgets1.isEditing()) {
+            return (
+                <div
+                    style={{
+                        position: "relative",
+                        width: yAxisTickWidth,
+                        height: this.getPlotHeight(),
+                        display: "inline-flex",
+                        flexGrow: 0,
+                        flexShrink: 0,
+                    }}
+                >
+                </div>
+            );
+        }
+
+        const color = this.calcSelectedTraceColor();
+
+        const yAxis = this.getSelectedYAxis();
+        if (yAxis === undefined) {
+            return null;
+        }
+
+        const { xValMin,
+            xValMax,
+            yValMin,
+            yValMax,
+            xLength,
+            yLength,
+            numXgrid,
+            numYgrid,
+            xTickValues,
+            xTickPositions,
+            yTickValues,
+            yTickPositions } = yAxis["ticksInfo"];
+
+        return (
+            <div
+                style={{
+                    position: "relative",
+                    width: yAxisTickWidth,
+                    height: this.getPlotHeight(),
+                    display: "inline-flex",
+                    flexGrow: 0,
+                    flexShrink: 0,
+                }}
+            >
+                <Scale
+                    min={yValMin}
+                    max={yValMax}
+                    numIntervals={numYgrid}
+                    position={"left"}
+                    show={true}
+                    length={this.getPlotHeight()}
+                    scale={"Linear"}
+                    color={color}
+                    compact={false}
+                    showTicks={false}
+                    showLabels={true}
+                    showAxis={false}
+                >
+                </Scale>
+            </div>
+        )
+    };
+
+
+    // plot body
+    _ElementPlotRaw = () => {
+        const plotRef = React.useRef<any>(null);
+
+
+        return (
+            <div
+                id={"DataViewerPlot-" + Math.random().toString()}
+                ref={plotRef}
+                style={{
+                    width: `${this.getPlotWidth()}px`,
+                    height: `${this.getPlotHeight()}px`,
+                    outline: "1px solid black",
+                    backgroundColor: "rgba(0, 255, 255, 0)",
+                }}
+                onMouseEnter={() => {
+                    if (!g_widgets1.isEditing()) {
+                        window.addEventListener("mousemove", this.updateCursorElement);
+                    }
+                }}
+                onMouseLeave={() => {
+                    this.lastCursorPointXY = [-100000, -100000];
+                    this.setCursorValue("");
+                    window.removeEventListener("mousemove", this.updateCursorElement);
+                }}
                 onMouseDown={(event: any) => {
-                    if (event.button !== 0) {
+
+                    if (event.button === 0) {
+                        window.addEventListener("mousemove", this.handleMouseMoveOnPlotX);
+                    } else if (event.button === 2) {
+                        window.addEventListener("mousemove", this.handleMouseMoveOnPlotY);
+                    }
+                    window.addEventListener("mouseup", this.handleMouseUpOnPlot);
+                }}
+
+                onWheel={(event: React.WheelEvent) => {
+                    event.preventDefault()
+                    if (event.ctrlKey === true) {
+                        this.handleWheelOnPlotY(event);
+                    } else {
+                        this.handleWheelOnPlotX(event);
+                    }
+                }}
+                onDoubleClick={(event: any) => {
+                    this.fetchArchiveData();
+                }}
+
+                // double click to auto scale current Y axis
+                onContextMenu={(event: React.MouseEvent) => {
+                    // right click
+                    if (event.button !== 2) {
                         return;
                     }
-                    event.preventDefault();
-                    event.stopPropagation()
-                    window.addEventListener("mousemove", this.handleMouseMoveOnThumnailViewBox);
-                    window.addEventListener("mouseup", this.handleMouseUpOnThumnailViewBox);
+                    if (this.rightButtonClicked === true) {
+                        this.rightButtonClicked = false;
+
+                        const yAxis = this.yAxes[this.selectedTraceIndex];
+                        if (yAxis === undefined) {
+                            return;
+                        }
+                        const yValMinMax = this.findVisibleYValueRange(this.selectedTraceIndex);
+
+                        if (yValMinMax !== undefined) {
+                            if (yAxis !== undefined) {
+                                const Dy = yValMinMax[1] - yValMinMax[0];
+                                yAxis.valMin = yValMinMax[0] - Dy * 0.1;
+                                yAxis.valMax = yValMinMax[1] + Dy * 0.1;
+                            }
+                        }
+
+                        if (Math.abs(yAxis.valMin - yAxis.valMax) < 1e-20) {
+                            if (Math.abs(yAxis.valMax) < 1e-20) {
+                                yAxis.valMin = -1;
+                                yAxis.valMax = 1;
+                            } else if (yAxis.valMax > 0) {
+                                yAxis.valMin = yAxis.valMin * 0.9;
+                                yAxis.valMax = yAxis.valMax * 1.1;
+                            } else if (yAxis.valMax < 0) {
+                                yAxis.valMin = yAxis.valMin * 1.1;
+                                yAxis.valMax = yAxis.valMax * 0.9;
+                            }
+                        }
+
+                        this.updatePlot();
+                    } else {
+                        this.rightButtonClicked = true;
+                        setTimeout(() => {
+                            this.rightButtonClicked = false;
+                        }, 300)
+                    }
                 }}
-
             >
+                {/* tick lines first */}
+                <this._ElementGridLines></this._ElementGridLines>
                 {/* data */}
-                <this._ElementThumbnailLines></this._ElementThumbnailLines>
-                <this._ElementThumbnailViewBoxLeft></this._ElementThumbnailViewBoxLeft>
-                <this._ElementThumbnailViewBoxRight></this._ElementThumbnailViewBoxRight>
-                <this._ElementThumbnailViewBox></this._ElementThumbnailViewBox>
-            </div>)
-    }
+                <this._ElementLines></this._ElementLines>
+            </div>
+        );
+    };
 
-    _ElementThumbnailLines = () => {
-        const canUseWebGl = g_widgets1.getRoot().getDisplayWindowClient().canUseWebGl();
-        if (canUseWebGl) {
-            // canvas with webgl
-            return (
-                <this._ElementThumbnailLinesWebGl></this._ElementThumbnailLinesWebGl>
-            )
+    _ElementPlot = React.memo(this._ElementPlotRaw, () => {
+        if (this.updatePlotLines) {
+            return false;
         } else {
-            // svg
-            return (
-                <this._ElementThumbnailLinesSvg></this._ElementThumbnailLinesSvg>
-            )
+            return true;
         }
-    }
+    })
 
-    _ElementThumbnailLinesSvg = () => {
+    _ElementGridLines = () => {
+
+        const yAxis = this.getSelectedYAxis();
+        if (yAxis === undefined) {
+            return null
+        }
+
+        const xAxis = this.xAxis;
+
+        const { xValMin,
+            xValMax,
+            yValMin,
+            yValMax,
+            xLength,
+            yLength,
+            numXgrid,
+            numYgrid,
+            xTickValues,
+            xTickPositions,
+            yTickValues,
+            yTickPositions } = yAxis["ticksInfo"];
+        const height = this.getPlotHeight();
+        const width = this.getPlotWidth();
+
         return (
-            <>
-                {this.x.map((xData: number[], index: number) => {
-                    return <this._ElementThumbnailLine key={this.yAxes[index].label + `-${index}`} index={index}></this._ElementThumbnailLine>;
+            <svg
+                width={`${this.getPlotWidth()}`}
+                height={`${this.getPlotHeight()}`}
+                x="0"
+                y="0"
+                style={{
+                    position: "absolute",
+                }}
+            >
+                {xTickPositions.map((tickPosition: number, index: number) => {
+
+                    return (
+                        <polyline
+                            key={`x-${tickPosition}-${index}`}
+                            points={`${tickPosition} 0 ${tickPosition} ${height}`}
+                            strokeWidth="1"
+                            stroke="rgb(190,190,190)"
+                            strokeDasharray={"5, 5"}
+                            fill="none"
+                        ></polyline>
+                    );
                 })}
-            </>
+                {yTickPositions.map((tickPosition: number, index: number) => {
+                    return (
+                        <polyline
+                            key={`y-${tickPosition}-${index}`}
+                            points={`0 ${tickPosition} ${width} ${tickPosition}`}
+                            strokeWidth="1"
+                            stroke="rgb(190,190,190)"
+                            strokeDasharray={"5, 5"}
+                            fill="none"
+                        ></polyline>
+                    );
+                })}
+            </svg>
         )
     }
 
 
-    _ElementThumbnailLinesWebGl = () => {
+    _ElementLines = () => {
         const mountRef = React.useRef<HTMLDivElement>(null);
 
         const fun1 = () => {
@@ -1026,8 +644,8 @@ export class DataViewerPlot {
             const camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
 
             camera.position.z = 1;
-            const containerWidth = this.plotWidth;
-            const containerHeight = this.thumbnailHeight;
+            const containerWidth = this.getPlotWidth();
+            const containerHeight = this.getPlotHeight();
 
             const pixelWorldUnitRatioX = containerWidth / 2;
             const pixelWorldUnitRatioY = containerHeight / 2;
@@ -1037,20 +655,20 @@ export class DataViewerPlot {
             renderer.setSize(containerWidth, containerHeight);
             mountRef.current!.appendChild(renderer.domElement);
 
-            this.x.forEach((xData: number[], index: number) => {
+            this.yAxes.forEach((yAxis: type_yAxis, index: number) => {
 
-                const positions = this.mapXYsToPointsThumbnailWebGl(index);
-                const color = this.yAxes[index].lineColor;
+                const positions = this.mapXYsToPointsWebGl(index);
+                const color = yAxis.lineColor;
 
-                // const showLine = this.yAxes[index].show;
-                const showLine = true;
+                const showLine = yAxis.show;
 
                 // ---------------- line ----------------
-                if (showLine === true) {
+                if (showLine === true && positions.length >= 6) {
                     const lineGeometry = new LineGeometry();
                     lineGeometry.setPositions(positions);
 
-                    const lineWidth = 1;
+                    // const lineWidth = this.yAxes[this.getYIndex(index)].lineWidth;
+                    const lineWidth = this.yAxes[index].lineWidth;
 
                     const lineMaterial = new LineMaterial({
                         worldUnits: false,
@@ -1061,6 +679,7 @@ export class DataViewerPlot {
 
                     const line = new Line2(lineGeometry, lineMaterial);
                     line.computeLineDistances();
+
                     scene.add(line);
                 }
             });
@@ -1075,531 +694,84 @@ export class DataViewerPlot {
 
         React.useEffect(fun1);
 
-        return <div ref={mountRef} style={{ width: this.plotWidth, height: this.thumbnailHeight }} />;
+        return <div ref={mountRef} style={{ width: this.getPlotWidth(), height: this.getPlotWidth() }} />;
     };
 
-
-
-    _ElementThumbnail = React.memo(this._ElementThumbnailRaw, () => {
-        if (this.updateThumbnail) {
-            return false;
-        } else {
-            return true;
-        }
-    });
-
-    handleWheelOnThumbnail = (event: React.WheelEvent<HTMLDivElement>) => {
-        event.stopPropagation()
-        event.preventDefault();
-
-        const direction = event.deltaY < 0 ? "zoom-in" : "zoom-out";
-
-
-        let valXminInThumbnail = this.xAxis.valMin;
-        let valXmaxInThumbnail = this.xAxis.valMax;
-        for (let xData0 of this.x) {
-            if (xData0.length > 1) {
-                valXminInThumbnail = Math.min(valXminInThumbnail, xData0[0]);
-                valXmaxInThumbnail = Math.max(valXmaxInThumbnail, xData0[xData0.length - 1]);
-            }
-        }
-
-        let pointXmin = this.calcThumbnailViewBoxX(this.xAxis.valMin);
-
-        if (direction === "zoom-out") {
-            pointXmin = this.calcThumbnailViewBoxX(this.xAxis.valMin - (this.xAxis.valMax - this.xAxis.valMin) / 10);
-        } else {
-            pointXmin = this.calcThumbnailViewBoxX(this.xAxis.valMin + (this.xAxis.valMax - this.xAxis.valMin) / 10);
-        }
-
-        let pointXmax = this.calcThumbnailViewBoxX(this.xAxis.valMax);
-        // minimum width, this is only for manual resize on thumbnail, the regular update or manual magnifying is not limited
-        if (pointXmax - pointXmin < 10) {
-            pointXmin = pointXmax - 10;
-        }
-
-        let valMinTmp = Math.max(this.mapPointToXYThumbnail(pointXmin), valXminInThumbnail);
-
-        this.xAxis.valMin = valMinTmp;
-        this.updatePlot()
-    }
-
-    _ElementThumbnailViewBoxRight = () => {
-        return (
-            <div style={{
-                position: "absolute",
-                right: -1,
-                top: 0,
-                width: this.plotWidth - this.calcThumbnailViewBoxX(this.xAxis.valMax),
-                height: "100%",
-                backgroundColor: "rgba(0, 0, 0, 0.2)",
-            }}
-            >
-            </div>)
-    }
-
-    _ElementThumbnailViewBoxLeft = () => {
-        return (
-            <div style={{
-                position: "absolute",
-                left: -1,
-                top: 0,
-                width: this.calcThumbnailViewBoxX(this.xAxis.valMin),
-                height: "100%",
-                backgroundColor: "rgba(0, 0, 0, 0.2)",
-            }}
-            >
-            </div>)
-    }
-
-    _ElementThumbnailViewBox = () => {
-        const viewBoxRef = React.useRef<any>(null);
-        return (
-            <div style={{
-                position: "absolute",
-                left: this.calcThumbnailViewBoxX(this.xAxis.valMin) - 1,
-                top: 0,
-                width: this.calcThumbnailViewBoxX(this.xAxis.valMax) - this.calcThumbnailViewBoxX(this.xAxis.valMin),
-                height: "100%",
-            }}
-                ref={viewBoxRef}
-            >
-                {/* left resizer */}
-                <div style={{
-                    position: "absolute",
-                    left: -2,
-                    top: 0,
-                    width: 4,
-                    height: "100%",
-                    cursor: "ew-resize",
-                }}
-                    onMouseDown={(event: any) => {
-                        if (event.button !== 0) {
-                            return;
-                        }
-                        event.stopPropagation()
-
-                        window.addEventListener("mousemove", this.handleMouseMoveOnThumnailLeftResizer);
-                        window.addEventListener("mouseup", this.handleMouseUpOnThumnailLeftResizer);
-                    }}
-                >
-                </div>
-
-                {/* right resizer */}
-                <div style={{
-                    position: "absolute",
-                    right: -2,
-                    top: 0,
-                    width: 4,
-                    height: "100%",
-                    // border: "solid 1px rgba(0,0,0,1)",
-                    cursor: "ew-resize",
-                }}
-                    onMouseDown={(event: any) => {
-                        if (event.button !== 0) {
-                            return;
-                        }
-
-                        event.stopPropagation()
-                        window.addEventListener("mousemove", this.handleMouseMoveOnThumnailRightResizer);
-                        window.addEventListener("mouseup", this.handleMouseUpOnThumnailRightResizer);
-                    }}
-                >
-                </div>
-            </div>)
-    }
-
-
-    handleMouseMoveOnThumnailRightResizer = (event: MouseEvent) => {
-        event.stopPropagation()
-
-        let valXminInThumbnail = this.xAxis.valMin;
-        let valXmaxInThumbnail = this.xAxis.valMax;
-        for (let xData0 of this.x) {
-            if (xData0.length > 1) {
-                valXminInThumbnail = Math.min(valXminInThumbnail, xData0[0]);
-                valXmaxInThumbnail = Math.max(valXmaxInThumbnail, xData0[xData0.length - 1]);
-            }
-        }
-
-        this.tracingIsMoving = false;
-        const dx = event.movementX;
-
-        let pointXmin = this.calcThumbnailViewBoxX(this.xAxis.valMin);
-        let pointXmax = this.calcThumbnailViewBoxX(this.xAxis.valMax) + dx;
-        // minimum width, this is only for manual resize on thumbnail, the regular update or manual magnifying is not limited
-        if (pointXmax - pointXmin < 10) {
-            pointXmax = pointXmin + 10;
-        }
-
-        let valMaxTmp = Math.min(this.mapPointToXYThumbnail(pointXmax), valXmaxInThumbnail);
-        this.xAxis.valMax = valMaxTmp;
-        this.updatePlot()
-    }
-
-    handleMouseUpOnThumnailRightResizer = (event: any) => {
-        event.stopPropagation();
-        window.removeEventListener("mousemove", this.handleMouseMoveOnThumnailRightResizer);
-        window.removeEventListener("mouseup", this.handleMouseUpOnThumnailRightResizer);
-    }
-
-    handleMouseMoveOnThumnailLeftResizer = (event: MouseEvent) => {
-        event.stopPropagation()
-        let valXminInThumbnail = this.xAxis.valMin;
-        let valXmaxInThumbnail = this.xAxis.valMax;
-        for (let xData0 of this.x) {
-            if (xData0.length > 1) {
-                valXminInThumbnail = Math.min(valXminInThumbnail, xData0[0]);
-                valXmaxInThumbnail = Math.max(valXmaxInThumbnail, xData0[xData0.length - 1]);
-            }
-        }
-
-        this.tracingIsMoving = false;
-        const dx = event.movementX;
-
-        let pointXmin = this.calcThumbnailViewBoxX(this.xAxis.valMin) + dx;
-        let pointXmax = this.calcThumbnailViewBoxX(this.xAxis.valMax);
-        // minimum width, this is only for manual resize on thumbnail, the regular update or manual magnifying is not limited
-        if (pointXmax - pointXmin < 10) {
-            pointXmin = pointXmax - 10;
-        }
-
-        let valMinTmp = Math.max(this.mapPointToXYThumbnail(pointXmin), valXminInThumbnail);
-
-        this.xAxis.valMin = valMinTmp;
-        this.updatePlot()
-    }
-
-    handleMouseUpOnThumnailLeftResizer = (event: any) => {
-        event.stopPropagation();
-        window.removeEventListener("mousemove", this.handleMouseMoveOnThumnailLeftResizer);
-        window.removeEventListener("mouseup", this.handleMouseUpOnThumnailLeftResizer);
-    }
-
-    handleMouseMoveOnThumnailViewBox = (event: MouseEvent) => {
-        let valXminInThumbnail = this.xAxis.valMin;
-        let valXmaxInThumbnail = this.xAxis.valMax;
-        for (let xData0 of this.x) {
-            if (xData0.length > 1) {
-                valXminInThumbnail = Math.min(valXminInThumbnail, xData0[0]);
-                valXmaxInThumbnail = Math.max(valXmaxInThumbnail, xData0[xData0.length - 1]);
-            }
-        }
-
-
-        this.tracingIsMoving = false;
-
-        const dx = event.movementX;
-        // do not change window size
-        const dVal = this.xAxis.valMax - this.xAxis.valMin;
-
-        let valMinTmp = Math.max(this.mapPointToXYThumbnail(this.calcThumbnailViewBoxX(this.xAxis.valMin) + dx), valXminInThumbnail);
-        let valMaxTmp = Math.min(this.mapPointToXYThumbnail(this.calcThumbnailViewBoxX(this.xAxis.valMax) + dx), valXmaxInThumbnail);
-
-        if (valMinTmp === valXminInThumbnail) {
-            // we reached the left edge
-            valMaxTmp = this.xAxis.valMin + dVal;
-        } else if (valMaxTmp === valXmaxInThumbnail) {
-            // we reached the right edge
-            valMinTmp = this.xAxis.valMax - dVal
-        }
-
-        this.xAxis.valMin = valMinTmp;
-        this.xAxis.valMax = valMaxTmp;
-
-        this.updatePlot()
-    }
-
-    handleMouseUpOnThumnailViewBox = () => {
-        window.removeEventListener("mousemove", this.handleMouseMoveOnThumnailViewBox);
-        window.removeEventListener("mouseup", this.handleMouseUpOnThumnailViewBox);
-    }
-
-    mapPointToXYThumbnail = (pointX: number): number => {
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-        for (let xData0 of this.x) {
-            if (xData0.length > 1) {
-                valXmin = Math.min(valXmin, xData0[0]);
-                valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
-            }
-        }
-        const pointXmin = 0;
-        const pointXmax = this.plotWidth;
-        const valX = valXmin + ((pointX - pointXmin) * (valXmax - valXmin)) / (pointXmax - pointXmin);
-        return valX;
-    };
-
-    calcThumbnailViewBoxX = (valX: number): number => {
-        let valXmin = this.xAxis.valMin;
-        let valXmax = this.xAxis.valMax;
-
-        for (let xData0 of this.x) {
-            if (xData0.length > 1) {
-                valXmin = Math.min(valXmin, xData0[0]);
-                valXmax = Math.max(valXmax, xData0[xData0.length - 1]);
-            }
-        }
-        const pointXmin = 0;
-        const pointXmax = this.plotWidth;
-        const pointX = pointXmin + ((pointXmax - pointXmin) / (valXmax - valXmin)) * (valX - valXmin);
-        return pointX;
-    };
-
-    _ElementThumbnailLine = ({ index }: any) => {
-        if (this.yAxes[index] === undefined) {
-            return null;
-        }
-        if (this.yAxes[index].show === false) {
-            return null;
-        }
-
-        return (
-            <svg
-                width={`${this.plotWidth}`}
-                height={`${this.thumbnailHeight}`}
-                x="0"
-                y="0"
-                style={{
-                    position: "absolute",
-                }}
-            >
-                <polyline
-                    points={this.mapXYsToPointsThumbnail(index)}
-                    strokeWidth={`1`}
-                    stroke={this.yAxes[index].lineColor}
-                    fill="none"
-                ></polyline>
-            </svg>
-        );
-    };
-
-    mapXYsToPointsThumbnail = (index: number): string => {
-
-        const xData0 = this.x[index];
-        const yData0 = this.y[index];
-
-        if (yData0 === undefined) {
-            return "";
-        }
-
-        // down sample the data
-        let [xData, yData] = GlobalMethods.downSampleXyData(xData0, yData0, this.plotWidth);
-
-        let pointsXYOnPlot: [number, number][] = [];
-        for (let ii = 0; ii < xData.length; ii++) {
-            if (xData[ii] !== undefined && yData[ii] !== undefined) {
-                const pointXY = this.mapXYToPoint(index, [xData[ii], yData[ii]], this.thumbnailHeight, true);
-                pointsXYOnPlot.push(pointXY);
-            }
-
-        }
-        return `${pointsXYOnPlot}`
-    };
-
-    mapXYsToPointsThumbnailWebGl = (index: number): Float32Array => {
-        const xData0 = this.x[index];
-        const yData0 = this.y[index];
-
-        // y data exists
-        if (yData0 === undefined) {
-            const positions = new Float32Array(3);
-            return positions;
-        }
-
-
-        // down sample the data
-        let [xData, yData] = GlobalMethods.downSampleXyData(xData0, yData0, this.plotWidth);
-
-        const len = Math.min(xData.length, yData.length);
-        if (len === 0) {
-            return new Float32Array(3);
-        }
-        const positions = new Float32Array(len * 3);
-
-        for (let ii = 0; ii < len; ii++) {
-            if (xData[ii] !== undefined && yData[ii] !== undefined) {
-                const pointX = this.mapXToPointWebGl(index, [xData[ii], yData[ii]], this.thumbnailHeight);
-                const pointY = this.mapYToPointWebGl(index, [xData[ii], yData[ii]], this.thumbnailHeight);
-                positions[ii * 3] = pointX;
-                positions[ii * 3 + 1] = -1 * pointY;
-                positions[ii * 3 + 2] = 0;
-            }
-
-        }
-        return positions;
-    };
-
-
-    // ----------------------------- elements components -----------------------
-
-    _ElementXYTickLines = () => {
-
-        const yTicks = this.yAxes[this.getSelectedTraceIndex()] === undefined ? this.generateFallbackYTicks() : this.yAxes[this.getSelectedTraceIndex()].ticks;
-        return (
-            <svg
-                width={`${this.plotWidth}`}
-                height={`${this.plotHeight}`}
-                x="0"
-                y="0"
-                style={{
-                    position: "absolute",
-                }}
-            >
-                {this.xAxis.ticks.map((tickValue: number, index: number) => {
-                    return <this._ElementXtickLine key={`${tickValue}`} lineIndex={this.getSelectedTraceIndex()} tickIndex={index}></this._ElementXtickLine>;
-                })}
-                {yTicks.map((tickValue: number, index: number) => {
-                    return <this._ElementYtickLine key={`${tickValue}`} lineIndex={this.getSelectedTraceIndex()} tickIndex={index}></this._ElementYtickLine>;
-                })}
-            </svg>
-        );
-    };
-
-    generateFallbackYTicks = () => {
-        return [0, 2, 4, 6, 8, 10];
-    }
-
-    generateFallbackYTicksText = () => {
-        return ["0", "2", "4", "6", "8", "10"];
-    }
-
-    _ElementXtickLine = ({ lineIndex, tickIndex }: any) => {
-        let valMin = 0;
-        let valMax = 10;
-        if (lineIndex !== undefined && this.yAxes[lineIndex] !== undefined) {
-            valMin = this.yAxes[lineIndex].valMin;
-            valMax = this.yAxes[lineIndex].valMax;
-        }
-
-        const XYPoint1 = this.mapXYToPoint(lineIndex, [this.xAxis.ticks[tickIndex], valMin], this.plotHeight);
-        const XYPoint2 = this.mapXYToPoint(lineIndex, [this.xAxis.ticks[tickIndex], valMax], this.plotHeight);
-        const XYPoint3 = [XYPoint1[0], XYPoint1[1] - 10];
-        const XYPoint4 = [XYPoint2[0], XYPoint2[1] + 10];
-        return (
-            <>
-                <polyline
-                    points={`${XYPoint1} ${XYPoint2}`}
-                    strokeWidth="1"
-                    stroke="rgb(190,190,190)"
-                    strokeDasharray={"5, 5"}
-                    fill="none"
-                ></polyline>
-                <polyline points={`${XYPoint1} ${XYPoint3}`} strokeWidth="2" stroke="rgb(0,0,0)" fill="none"></polyline>
-                <polyline points={`${XYPoint2} ${XYPoint4}`} strokeWidth="2" stroke="rgb(0,0,0)" fill="none"></polyline>
-            </>
-        );
-
-    };
-
-    _ElementYtickLine = ({ lineIndex, tickIndex }: any) => {
-        // x axis expands from -10 days to now, in unit of Epoch time ms
-        let valMin = Date.now() - 10 * 1440 * 60 * 1000;
-        let valMax = Date.now();
-        let yTicks = this.generateFallbackYTicks();
-        if (lineIndex !== undefined && this.yAxes[lineIndex] !== undefined) {
-            yTicks = this.yAxes[lineIndex].ticks;
-        }
-        if (this.xAxis.valMin !== undefined && this.xAxis.valMax !== undefined) {
-            valMin = this.xAxis.valMin;
-            valMax = this.xAxis.valMax;
-        }
-
-        const XYPoint1 = this.mapXYToPoint(lineIndex, [valMin, yTicks[tickIndex]], this.plotHeight);
-        const XYPoint2 = this.mapXYToPoint(lineIndex, [valMax, yTicks[tickIndex]], this.plotHeight);
-        const XYPoint3 = [XYPoint1[0] + 10, XYPoint1[1]];
-        const XYPoint4 = [XYPoint2[0] - 10, XYPoint2[1]];
-
-        return (
-            <>
-                <polyline
-                    points={`${XYPoint1} ${XYPoint2}`}
-                    strokeWidth="1"
-                    stroke="rgb(190,190,190)"
-                    strokeDasharray={"5, 5"}
-                    fill="none"
-                ></polyline>
-                <polyline points={`${XYPoint1} ${XYPoint3}`} strokeWidth="2" stroke="rgb(0,0,0)" fill="none"></polyline>
-                <polyline points={`${XYPoint2} ${XYPoint4}`} strokeWidth="2" stroke="rgb(0,0,0)" fill="none"></polyline>
-            </>
-        );
-    };
-
-    _ElementLine = ({ index }: any) => {
-        if (this.yAxes[index] === undefined) {
-            return null;
-        }
-        if (this.yAxes[index].show === false) {
-            return null;
-        }
-
-
-        return (
-            <svg
-                width={`${this.plotWidth}`}
-                height={`${this.plotHeight}`}
-                x="0"
-                y="0"
-                style={{
-                    position: "absolute",
-                }}
-            >
-                <polyline
-                    points={this.mapXYsToPoints(index)}
-                    strokeWidth={`${this.yAxes[index].lineWidth}`}
-                    stroke={this.yAxes[index].lineColor}
-                    fill="none"
-                ></polyline>
-            </svg>
-        );
-    };
 
     _ElementXTicks = () => {
+
+        if (g_widgets1.isEditing()) {
+            return (
+                <div
+                    style={{
+                        position: "relative",
+                        height: xAxisTickHeight,
+                        width: this.getPlotWidth(),
+                        display: "inline-flex",
+                        flexGrow: 0,
+                        flexShrink: 0,
+                    }}
+                >
+                </div>
+            );
+        }
+
+        const yAxis = this.getSelectedYAxis();
+        if (yAxis === undefined) {
+            return null
+        }
+
+        const { xValMin,
+            xValMax,
+            yValMin,
+            yValMax,
+            xLength,
+            yLength,
+            numXgrid,
+            numYgrid,
+            xTickValues,
+            xTickPositions,
+            yTickValues,
+            yTickPositions } = yAxis["ticksInfo"];
+
+        const color = this.calcSelectedTraceColor();
+
         return (
             <div
                 style={{
-                    // necessary for absolute children elments
                     position: "relative",
-                    width: `${this.plotWidth}px`,
-                    height: `100%`,
+                    height: xAxisTickHeight,
+                    width: this.getPlotWidth(),
                     display: "inline-flex",
-                    flexFlow: "row",
-                    alignItems: "flex-start",
-                    justifyContent: "center",
-                    // backgroundColor: "grey",
-                    backgroundColor: "rgba(180, 180, 180, 0)",
-                    overflow: "visible",
+                    flexGrow: 0,
+                    flexShrink: 0,
                 }}
             >
-                {this.xAxis.ticks.map((value: number, tickIndex: number) => {
-                    const [pointX, pointY] = this.mapXYToPoint(0, [value, 1], this.plotHeight);
-                    return (
-                        <div
-                            key={`${value}`}
-                            style={{
-                                position: "absolute",
-                                left: `${pointX}px`,
-                                width: "0px",
-                                height: "100%",
-                                overflow: "visible",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            {this.xAxis.ticksText[tickIndex]}
-                        </div>
-                    );
-                })}
+
+                <Scale
+                    min={xValMin}
+                    max={xValMax}
+                    numIntervals={numXgrid}
+                    position={"bottom"}
+                    show={true}
+                    length={this.getPlotWidth()}
+                    scale={"Linear"}
+                    color={color}
+                    compact={false}
+                    showTicks={false}
+                    showLabels={true}
+                    showAxis={false}
+                >
+                </Scale>
             </div>
-        );
+        )
     };
 
     _ElementXLabel = () => {
         return (
             <div
                 style={{
-                    width: `${this.plotWidth}px`,
+                    width: `${this.getPlotWidth()}px`,
                     height: "100%",
                     display: "inline-flex",
                     flexFlow: "row",
@@ -1614,96 +786,6 @@ export class DataViewerPlot {
         );
     };
 
-    _ElementYTicks = () => {
-        // if no trace is selected (there is no trace), the y axis range is set as from 0 to 10 in this.mapXYToPlot()
-        const yTicks = this.yAxes[this.getSelectedTraceIndex()] === undefined ? this.generateFallbackYTicks() : this.yAxes[this.getSelectedTraceIndex()].ticks;
-        const yTicksText = this.yAxes[this.getSelectedTraceIndex()] === undefined ? this.generateFallbackYTicksText() : this.yAxes[this.getSelectedTraceIndex()].ticksText;
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: `${this.yAxisTickWidth}px`,
-                    height: "100%",
-                    margin: "0px",
-                    padding: "0px",
-                    // backgroundColor: "pink",
-                    backgroundColor: "rgba(255, 192, 203, 0)",
-                    position: "relative",
-                }}
-            >
-                {yTicks.map((value: number, tickIndex: number) => {
-                    const [pointX, pointY] = this.mapXYToPoint(this.getSelectedTraceIndex(), [1, value], this.plotHeight);
-                    return (
-                        <div
-                            key={`${value}`}
-                            style={{
-                                position: "absolute",
-                                right: "2px",
-                                top: `${pointY}px`,
-                                width: "100%",
-                                height: "0px",
-                                overflow: "visible",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "flex-end",
-                            }}
-                        >
-                            {yTicksText[tickIndex]}
-                        </div>
-                    );
-                })}
-            </div>
-        );
-    };
-
-    _ElementYLabel = () => {
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: `${this.yAxisLabelWidth}px`,
-                    height: "100%",
-                    margin: "0px",
-                    padding: "0px",
-                    // backgroundColor: "magenta",
-                    backgroundColor: "rgba(255, 0, 255, 0)",
-                    color: this.yAxes[this.getSelectedTraceIndex()] === undefined ? "black" : this.yAxes[this.getSelectedTraceIndex()].lineColor,
-                }}
-            >
-                <div
-                    style={{
-                        transform: "rotate(-90deg)",
-                        overflow: "visible",
-                        whiteSpace: "nowrap",
-                    }}
-                >
-                    {`${this.yAxes[this.getSelectedTraceIndex()] === undefined ? "" : this.yAxes[this.getSelectedTraceIndex()].label}`}
-                </div>
-            </div>
-        );
-    };
-
-    _ElementBlankArea = () => {
-
-        return (
-            <div
-                style={{
-                    width: `${this.yAxisLabelWidth + this.yAxisTickWidth}px`,
-                    height: `100%`,
-                    display: "inline-flex",
-                    flexFlow: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    // backgroundColor: "blue",
-                    backgroundColor: "rgba(0, 0, 255, 0)",
-                }}
-            ></div>
-        );
-    };
 
     _ElementLegend = () => {
         const elementAddTraceRef = React.useRef<any>(null);
@@ -1711,7 +793,7 @@ export class DataViewerPlot {
         return (
             <div
                 style={{
-                    width: `${this.legendWidth}px`,
+                    width: `${legendWidth}px`,
                     height: "100%",
                     display: "inline-flex",
                     flexFlow: "column",
@@ -1722,8 +804,8 @@ export class DataViewerPlot {
                 }}
             >
                 {this.yAxes.map((yAxis: type_yAxis, index: number) => {
-                    const xData = this.x[index];
-                    const yData = this.y[index];
+                    const xData = yAxis["xData"];
+                    const yData = yAxis["yData"];
                     let timeStr = "0000-00-00 00:00:00.000";
                     let valueStr = "0";
                     if (xData.length > 1) {
@@ -1799,7 +881,7 @@ export class DataViewerPlot {
                         if (event.button !== 0) {
                             return;
                         }
-                        this.appendTrace("");
+                        this.addTrace("");
                         const newIndex = this.getChannelNames().length - 1;
                         this.setSelectedTraceIndex(newIndex);
                         this.getMainWidget().setShowSettingsPage(newIndex);
@@ -1828,40 +910,6 @@ export class DataViewerPlot {
         );
     };
 
-    _ElementTitle = () => {
-        const changeTitle = (event: any) => {
-            event.preventDefault();
-            this.getText().title = event.target.value;
-            this.updatePlot();
-        };
-        return (
-            <div
-                style={{
-                    position: "relative",
-                    // top: `0px`,
-                    // left: `0px`,
-                    width: `100%`,
-                    height: `${this.titleHeight}px`,
-                    display: "inline-flex",
-                    flexFlow: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    // backgroundColor: "lightblue",
-                    backgroundColor: "rgba(68, 85, 90, 0)",
-                }}
-            >
-
-                <ElementProfileBlockNameInput
-                    additionalStyle={{
-                        fontSize: "25px",
-                    }}
-                    value={`${this.getText().title}`}
-                    onChange={changeTitle}
-                ></ElementProfileBlockNameInput>
-            </div>
-        );
-    };
-
     _ElementControls = () => {
 
         const isSingleWidget = this.getMainWidget().getText()["singleWidget"];
@@ -1870,8 +918,8 @@ export class DataViewerPlot {
             <div
                 style={{
                     // width: `100%`,
-                    width: isSingleWidget === true? window.innerWidth: this.getMainWidget().getAllStyle()["width"],
-                    height: `${this.toolbarHeight}`,
+                    width: isSingleWidget === true ? window.innerWidth : this.getMainWidget().getAllStyle()["width"],
+                    height: `${toolbarHeight}`,
                     display: "inline-flex",
                     flexFlow: "row",
                     justifyContent: "space-between",
@@ -2353,6 +1401,31 @@ export class DataViewerPlot {
         );
     };
 
+    _ElementCursorPosition = () => {
+        const [cursorValue, setCursorValue] = React.useState(" ");
+        this.setCursorValue = setCursorValue;
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    color: cursorValue.startsWith("(") ? "rgba(0,0,0,1)" : "rgba(150, 150, 150, 1)",
+                }}
+            >
+                {(() => {
+                    if (g_widgets1.isEditing()) {
+                        return ""
+                    } else if (this.yAxes[this.getSelectedTraceIndex()] === undefined) {
+                        return " " + cursorValue
+                    } else {
+                        return " " + cursorValue
+                    }
+                })()}
+            </div>
+        );
+    };
+
     _StyledFigButton = ({ children, onMouseDown, hintText }: any) => {
         const elementRef = React.useRef<any>(null);
         return (
@@ -2363,7 +1436,7 @@ export class DataViewerPlot {
                     justifyContent: "center",
                     alignItems: "center",
                     // height: "100%",
-                    height: this.toolbarHeight,
+                    height: toolbarHeight,
                     aspectRatio: "1/1",
                     backgroundColor: "rgba(255, 0, 0, 0)",
                     opacity: 0.4,
@@ -2406,446 +1479,201 @@ export class DataViewerPlot {
         )
     }
 
-    // plot body
-    _ElementPlotRaw = () => {
-        const plotRef = React.useRef<any>(null);
+    // ------------------------ trace ----------------------------
 
-
-        return (
-            <div
-                id={"DataViewerPlot-" + Math.random().toString()}
-                ref={plotRef}
-                style={{
-                    width: `${this.plotWidth}px`,
-                    height: `${this.plotHeight}px`,
-                    outline: "1px solid black",
-                    backgroundColor: "rgba(0, 255, 255, 0)",
-                }}
-                onMouseEnter={() => {
-                    if (!g_widgets1.isEditing()) {
-                        window.addEventListener("mousemove", this.updateCursorElement);
-                    }
-                }}
-                onMouseLeave={() => {
-                    this.lastCursorPointXY = [-100000, -100000];
-                    this.setCursorValue("");
-                    window.removeEventListener("mousemove", this.updateCursorElement);
-                }}
-                onMouseDown={(event: any) => {
-
-                    if (event.button === 0) {
-                        window.addEventListener("mousemove", this.handleMouseMoveOnPlotX);
-                    } else if (event.button === 2) {
-                        window.addEventListener("mousemove", this.handleMouseMoveOnPlotY);
-                    }
-                    window.addEventListener("mouseup", this.handleMouseUpOnPlot);
-                }}
-
-                onWheel={(event: React.WheelEvent) => {
-                    event.preventDefault()
-                    if (event.ctrlKey === true) {
-                        this.handleWheelOnPlotY(event);
-                    } else {
-                        this.handleWheelOnPlotX(event);
-                    }
-                }}
-                onDoubleClick={(event: any) => {
-                    this.fetchArchiveData();
-                }}
-
-                // double click to auto scale current Y axis
-                onContextMenu={(event: React.MouseEvent) => {
-                    // right click
-                    if (event.button !== 2) {
-                        return;
-                    }
-                    if (this.rightButtonClicked === true) {
-                        this.rightButtonClicked = false;
-
-                        const yAxis = this.yAxes[this.selectedTraceIndex];
-                        if (yAxis === undefined) {
-                            return;
-                        }
-                        const yValMinMax = this.findVisibleYValueRange(this.selectedTraceIndex);
-
-                        if (yValMinMax !== undefined) {
-                            if (yAxis !== undefined) {
-                                const Dy = yValMinMax[1] - yValMinMax[0];
-                                yAxis.valMin = yValMinMax[0] - Dy * 0.1;
-                                yAxis.valMax = yValMinMax[1] + Dy * 0.1;
-                            }
-                        }
-
-                        if (Math.abs(yAxis.valMin - yAxis.valMax) < 1e-20) {
-                            if (Math.abs(yAxis.valMax) < 1e-20) {
-                                yAxis.valMin = -1;
-                                yAxis.valMax = 1;
-                            } else if (yAxis.valMax > 0) {
-                                yAxis.valMin = yAxis.valMin * 0.9;
-                                yAxis.valMax = yAxis.valMax * 1.1;
-                            } else if (yAxis.valMax < 0) {
-                                yAxis.valMin = yAxis.valMin * 1.1;
-                                yAxis.valMax = yAxis.valMax * 0.9;
-                            }
-                        }
-
-                        this.updatePlot();
-                    } else {
-                        this.rightButtonClicked = true;
-                        setTimeout(() => {
-                            this.rightButtonClicked = false;
-                        }, 300)
-                    }
-                }}
-            >
-                {/* tick lines first */}
-                <this._ElementXYTickLines></this._ElementXYTickLines>
-                {/* data */}
-                <this._ElementLines></this._ElementLines>
-            </div>
-        );
-    };
-
-    _ElementLines = () => {
-        const canUseWebGl = g_widgets1.getRoot().getDisplayWindowClient().canUseWebGl();
-        if (canUseWebGl) {
-            // canvas with webgl
-            return (
-                <this._ElementLinesWebGl></this._ElementLinesWebGl>
-            )
-        } else {
-            // svg
-            return (
-                <this._ElementLinesSvg></this._ElementLinesSvg>
-            )
-        }
-    }
-
-
-
-    _ElementLinesSvg = () => {
-        return (
-            <>
-                {this.x.map((xData: number[], index: number) => {
-                    return <this._ElementLine key={this.yAxes[index].label + `-${index}`} index={index}></this._ElementLine>;
-                })}
-            </>
-        )
-    }
-
-
-    _ElementLinesWebGl = () => {
-        const mountRef = React.useRef<HTMLDivElement>(null);
-
-        const fun1 = () => {
-            const scene = new Scene();
-            const camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
-
-            camera.position.z = 1;
-            const containerWidth = this.plotWidth;
-            const containerHeight = this.plotHeight;
-
-            const pixelWorldUnitRatioX = containerWidth / 2;
-            const pixelWorldUnitRatioY = containerHeight / 2;
-
-            const renderer = new WebGLRenderer({ alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(containerWidth, containerHeight);
-            mountRef.current!.appendChild(renderer.domElement);
-
-            this.x.forEach((xData: number[], index: number) => {
-
-                const positions = this.mapXYsToPointsWebGl(index);
-                const color = this.yAxes[index].lineColor;
-
-                const showLine = this.yAxes[index].show;
-
-                // ---------------- line ----------------
-                if (showLine === true) {
-                    const lineGeometry = new LineGeometry();
-                    lineGeometry.setPositions(positions);
-
-                    // const lineWidth = this.yAxes[this.getYIndex(index)].lineWidth;
-                    const lineWidth = this.yAxes[index].lineWidth;
-
-                    const lineMaterial = new LineMaterial({
-                        worldUnits: false,
-                        color: new Color(color),
-                        linewidth: lineWidth,
-                        resolution: new Vector2(containerWidth, containerHeight),
-                    });
-
-                    const line = new Line2(lineGeometry, lineMaterial);
-                    line.computeLineDistances();
-
-                    scene.add(line);
-                }
-            });
-
-            renderer.render(scene, camera);
-
-            return () => {
-                mountRef.current?.removeChild(renderer.domElement);
-                renderer.dispose();
-            };
-        };
-
-        React.useEffect(fun1);
-
-        return <div ref={mountRef} style={{ width: this.plotWidth, height: this.plotWidth }} />;
-    };
-
-
-    _ElementPlot = React.memo(this._ElementPlotRaw, () => {
-        if (this.updatePlotLines) {
-            return false;
-        } else {
-            return true;
-        }
-    })
 
     /**
-     * rotate mouse wheel to zoom x-direction
+     * Append a trace to the end.
+     * 
+     * (1) insert an empty channel name "" to this.getRawChannelNames() and expand the channel name
+     *     without checking the channel name duplication
+     * 
+     * (2) add a new trace data to the data structure: this.x, this.y and this.yAxes
+     * 
+     * (3) select this trace
+     * 
+     * (4) update the plot if necessary
+     * 
+     * (5) connect and monitor this channel
      */
-    handleWheelOnPlotX = (event: React.WheelEvent) => {
-        if (this.yAxes[this.getSelectedTraceIndex()] === undefined) {
-            return;
+    addTrace = async (newChannelName: string, doFlush: boolean = true) => {
+        // (1)
+        const mainWidget = this.getMainWidget();
+        mainWidget.getChannelNamesLevel0().push(newChannelName);
+        mainWidget.processChannelNames([], false);
+
+        // (2)
+        // this.addNewTraceData(newTraceName, undefined);
+        let yAxis: type_yAxis = {
+            label: newChannelName, // updated every time
+            valMin: 0, // updated every time
+            valMax: 10, // updated every time
+            lineWidth: 2,
+            lineColor: `rgba(${this.getNewColor()})`,
+            show: true,
+            bufferSize: 50000,
+            displayScale: "Linear",
+            xData: [],
+            yData: [],
+            ticksInfo: JSON.parse(JSON.stringify(defaultTicksInfo)),
         }
-        const direction = event.deltaY < 0 ? "zoom-in" : "zoom-out";
+        this.yAxes.push(yAxis);
 
-        const pointX0 = event.clientX;
-        const pointY0 = 0;
-        const pointX = pointX0 - this.yAxisLabelWidth - this.yAxisTickWidth - this.getStyle().left;
-        const pointY = pointY0 - this.titleHeight - this.getStyle().top;
-        const valXMid = this.mapPointToXY(this.getSelectedTraceIndex(), [pointX, pointY]);
-        const xAxis = this.xAxis;
+        // (3)
+        this.setSelectedTraceIndex(mainWidget.getChannelNamesLevel0().length - 1);
 
-        if (xAxis === undefined) {
-            return;
-        }
-        const zoomFactor = this.getText()["axisZoomFactor"];
-
-        if (this.tracingIsMoving) {
-            if (direction === "zoom-in") {
-                xAxis.valMax = Date.now();
-                xAxis.valMin = xAxis.valMax - (xAxis.valMax - xAxis.valMin) / zoomFactor;
-            } else {
-                xAxis.valMax = Date.now();
-                xAxis.valMin = xAxis.valMax - (xAxis.valMax - xAxis.valMin) * zoomFactor;
-            }
-        } else {
-            if (direction === "zoom-in") {
-                xAxis.valMin = valXMid[0] - (valXMid[0] - xAxis.valMin) / zoomFactor;
-                xAxis.valMax = valXMid[0] + (xAxis.valMax - valXMid[0]) / zoomFactor;
-            } else {
-                xAxis.valMin = valXMid[0] - (valXMid[0] - xAxis.valMin) * zoomFactor;
-                xAxis.valMax = valXMid[0] + (xAxis.valMax - valXMid[0]) * zoomFactor;
-            }
-
-
+        // (4)
+        if (doFlush) {
+            this.updatePlot();
         }
 
-        this.updatePlot();
-
-    }
+        // (5)
+        const newTcaChannel = g_widgets1.createTcaChannel(newChannelName, this.getMainWidget().getWidgetKey());
+        if (newTcaChannel !== undefined) {
+            await newTcaChannel.getMeta(undefined);
+            await newTcaChannel.get(undefined, 1, Channel_DBR_TYPES.DBR_TIME_DOUBLE, true, undefined);
+            newTcaChannel.monitor();
+        }
+    };
 
     /**
-     * rotate mouse wheel to zoom y-direction, ctrl key must be pressed
+     * Change the trace (channel) name
      */
-    handleWheelOnPlotY = (event: React.WheelEvent) => {
+    renameTrace = async (index: number, newTraceName: string, doFlush: boolean = true, forceUpdate: boolean = false) => {
 
-        const pointX0 = 0;
-        const pointY0 = event.clientY;
-        const pointX = pointX0 - this.yAxisLabelWidth - this.yAxisTickWidth - this.getStyle().left;
-        const pointY = pointY0 - this.titleHeight - this.getStyle().top;
-        const valYMid = this.mapPointToXY(this.getSelectedTraceIndex(), [pointX, pointY]);
+        const oldTraceName = this.getChannelNames()[index];
+        if ((newTraceName === oldTraceName) && forceUpdate === false) {
+            // no change
+            return;
+        }
 
+        // (1)
+        const mainWidget = this.getMainWidget();
+        mainWidget.getChannelNamesLevel0()[index] = newTraceName;
+        mainWidget.processChannelNames([], false);
 
-        const direction = event.deltaY < 0 ? "zoom-in" : "zoom-out";
-
-        let ii = this.getSelectedTraceIndex();
-
-        const yAxis = this.yAxes[ii];
+        // (2)
+        // this.updateTraceData(index, newTraceName);
+        const yAxis = this.yAxes[index];
         if (yAxis === undefined) {
             return;
         }
-        const yMin = yAxis.valMin;
-        const yMax = yAxis.valMax;
-        const yMid = valYMid[1];
+        // (1)
+        yAxis["xData"] = [];
+        yAxis["yData"] = [];
+        // (2)
+        // default yAxis
+        yAxis["label"] = newTraceName;
 
-        const dyUpper = yMax - yMid;
-        const dyLower = yMid - yMin;
-        if (direction === "zoom-in") {
-            const yMinNew = yMid - dyLower / this.getText()["axisZoomFactor"];
-            const yMaxNew = yMid + dyUpper / this.getText()["axisZoomFactor"];
-            yAxis.valMin = yMinNew;
-            yAxis.valMax = yMaxNew;
-        } else {
-            const yMinNew = yMid - dyLower * this.getText()["axisZoomFactor"];
-            const yMaxNew = yMid + dyUpper * this.getText()["axisZoomFactor"];
-            yAxis.valMin = yMinNew;
-            yAxis.valMax = yMaxNew;
+
+        // (3)
+        this.setSelectedTraceIndex(index);
+
+        // (4)
+        if (doFlush) {
+            this.updatePlot();
         }
 
-        const xAxis = this.xAxis;
-        if (this.tracingIsMoving) {
-            xAxis.valMax = Date.now();
+        // (5)
+        const newTcaChannel = g_widgets1.createTcaChannel(newTraceName, this.getMainWidget().getWidgetKey());
+        if (newTcaChannel !== undefined) {
+            await newTcaChannel.getMeta(undefined);
+            await newTcaChannel.get(undefined, 1, Channel_DBR_TYPES.DBR_TIME_DOUBLE, true, undefined);
+            newTcaChannel.monitor();
+        }
+    };
+
+    /**
+     * Remove a trace
+     * 
+     * (1) remove channel name from this.getRawChannelNames(), and expand channel names
+     * 
+     * (2) remove this channel's x, y and yAxis data
+     * 
+     * (3) remove this channel
+     * 
+     * (4) select the previous trace
+     * 
+     * (5) hide the trace setting page
+     * 
+     * (5) update plot
+     */
+    removeTrace = (index: number) => {
+        const traceName = this.getMainWidget().getChannelNames()[index];
+        if (traceName === undefined) {
+            return;
         }
 
+        // (1)
+        this.getMainWidget().getChannelNamesLevel0().splice(index, 1);
+        this.getMainWidget().processChannelNames([], false);
+
+        // (2)
+        this.yAxes.splice(index, 1);
+
+        // (3)
+        if (!this.getMainWidget().getChannelNames().includes(traceName)) {
+            g_widgets1.removeTcaChannel(traceName, this.getMainWidget().getWidgetKey());
+        }
+        // (4)
+        const newSelectedTrace = index - 1 > -1 ? index - 1 : index + 1 > this.getChannelNames().length - 1 ? -1 : index + 1;
+        this.setSelectedTraceIndex(newSelectedTrace);
+
+        // (5)
+        this.getMainWidget().setShowSettingsPage(-100);
+
+        // (6)
+        this.updatePlot();
+    };
+
+    getNewColor = (): [number, number, number, number] => {
+        const numTraces = this.yAxes.length;
+        const newColorIndex = (numTraces) % traceColors.length;
+        return traceColors[newColorIndex];
+    };
+
+    updateTraceShowOrHide = (index: number, showTrace: boolean) => {
+        const yAxis = this.yAxes[index];
+        if (yAxis !== undefined) {
+            yAxis["show"] = showTrace;
+        }
         this.updatePlot();
     }
 
 
-    handleMouseMoveOnPlotX = (event: MouseEvent) => {
 
-        this.tracingIsMoving = false;
-
-        const dPointX = event.movementX;
-
-        this.mouseMoveEndX = event.clientX;
-
-        const ii = this.getSelectedTraceIndex();
-        if (this.yAxes[ii] === undefined) {
-            return;
+    updateTraceLineWidth = (index: number, newWidth: number) => {
+        const yAxis = this.yAxes[index];
+        if (yAxis !== undefined) {
+            yAxis["lineWidth"] = newWidth;
         }
-        const valXY0 = this.mapPointToXY(ii, [0, 0]);
-        const valXY1 = this.mapPointToXY(ii, [dPointX, 0]);
-        const dt = valXY1[0] - valXY0[0];
-
-        const xAxis = this.xAxis;
-        if (xAxis === undefined) {
-            return;
-        }
-
-        xAxis.valMin = xAxis.valMin - dt;
-        xAxis.valMax = xAxis.valMax - dt;
         this.updatePlot();
     }
 
-    handleMouseMoveOnPlotY = (event: MouseEvent) => {
-        event.preventDefault();
-        const pointDy = event.movementY;
+    updateTraceBufferSize = (index: number, newSize: number) => {
+        const yAxis = this.yAxes[index];
+        if (yAxis !== undefined) {
+            yAxis["bufferSize"] = newSize;
+        }
+        this.updatePlot();
+    }
 
-        const ii = this.getSelectedTraceIndex();
-        const yAxis = this.yAxes[ii];
+    updateTraceScale = (index: number, newScale: "Linear" | "Log10") => {
+        const yAxis = this.yAxes[index];
         if (yAxis === undefined) {
             return;
         }
-        const yMin = yAxis.valMin;
-        const yMax = yAxis.valMax;
-
-        const dxy0 = this.mapPointToXY(ii, [0, pointDy]);
-        const dxy1 = this.mapPointToXY(ii, [0, 0]);
-        const dy = dxy1[1] - dxy0[1];
-        const yMinNew = yMin + dy;
-        const yMaxNew = yMax + dy;
-        yAxis.valMin = yMinNew;
-        yAxis.valMax = yMaxNew;
-
-
-        const xAxis = this.xAxis;
-        const dx = xAxis.valMax - xAxis.valMin;
-        if (this.tracingIsMoving) {
-            xAxis.valMax = Date.now();
-            xAxis.valMin = Date.now() - dx;
-        }
-
+        yAxis["displayScale"] = newScale;
         this.updatePlot();
     }
-
-    handleMouseUpOnPlot = (event: MouseEvent) => {
-        event.preventDefault();
-
-        window.removeEventListener("mousemove", this.handleMouseMoveOnPlotX);
-        window.removeEventListener("mousemove", this.handleMouseMoveOnPlotY);
-        window.removeEventListener("mouseup", this.handleMouseUpOnPlot);
-
-
-        // if (this.mouseMoveEndX !== -100000) {
-        //     const dPointX = event.clientX - this.mouseMoveEndX;
-        //     this.mouseMoveEndX = -100000;
-
-        //     const ii = this.getSelectedTraceIndex();
-        //     if (this.yAxes[ii] === undefined) {
-        //         return;
-        //     }
-        //     const valXY0 = this.mapPointToXY(ii, [0, 0]);
-        //     const valXY1 = this.mapPointToXY(ii, [dPointX, 0]);
-        //     const dt = valXY1[0] - valXY0[0];
-
-        //     const xAxis = this.xAxis;
-        //     if (xAxis === undefined) {
-        //         return;
-        //     }
-
-        //     xAxis.valMin = xAxis.valMin - dt;
-        //     xAxis.valMax = xAxis.valMax - dt;
-        //     this.updatePlot();
-        // }
-    }
-
-    _ElementCursorPosition = () => {
-        const [cursorValue, setCursorValue] = React.useState(" ");
-        this.setCursorValue = setCursorValue;
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    color: cursorValue.startsWith("(") ? "rgba(0,0,0,1)" : "rgba(150, 150, 150, 1)",
-                }}
-            >
-                {(() => {
-                    if (g_widgets1.isEditing()) {
-                        return ""
-                    } else if (this.yAxes[this.getSelectedTraceIndex()] === undefined) {
-                        return " " + cursorValue
-                    } else {
-                        return " " + cursorValue
-                    }
-                })()}
-            </div>
-        );
-    };
-    // ----------------------------- data and plot -------------------------------------
-
-    /**
-     * Patch a point to the end of the data so that there is no blank in the end of trace
-     * 
-     * (1) remove the old patch point Z'
-     * 
-     * (2) add new patch point Z, with current time stamp, and last value
-     */
-    patchData = () => {
-        if (g_widgets1.isEditing()) {
-            return;
-        }
-        for (let ii = 0; ii < this.getChannelNames().length; ii++) {
-            const xData = this.x[ii];
-            const yData = this.y[ii];
-            if (xData.length > 1) {
-                // (1)
-                xData.pop();
-                const oldY = yData.pop();
-
-                // (2)
-                if (oldY !== undefined) {
-                    xData.push(Date.now());
-                    yData.push(oldY);
-                }
-            }
-        }
-    }
+    // ---------------------- data -------------------------------
 
     fetchArchiveData = () => {
         for (let ii = 0; ii < this.getChannelNames().length; ii++) {
             const channelName = this.getChannelNames()[ii];
             const timeMinOnPlot = this.xAxis["valMin"];
             const timeMaxOnPlot = this.xAxis["valMax"];
-            // const timeMinInData = this.x[ii][0];
             const timeMinInData = this.minLiveDataTime;
-            const timeMaxInData = this.x[ii][this.x[ii].length - 1];
             // the archive data must be earlier than the live data
             const startTime = timeMinOnPlot;
             const endTime = Math.min(timeMaxOnPlot, timeMinInData);
@@ -2878,8 +1706,12 @@ export class DataViewerPlot {
         }
         if (this.getChannelNames().includes(data["channelName"])) {
             const ii = this.getChannelNames().indexOf(data["channelName"]);
-            const xData = this.x[ii];
-            const yData = this.y[ii];
+            const yAxis = this.yAxes[ii];
+            if (yAxis === undefined) {
+                return;
+            }
+            const xData = yAxis["xData"];
+            const yData = yAxis["yData"];
             const xDataNew = data["archiveData"][0];
             const yDataNew = data["archiveData"][1];
 
@@ -2958,30 +1790,43 @@ export class DataViewerPlot {
      * Invoked whenever there are new data received by the display window client. Usually comes every 0.1 second, or
      * whenever the GET result arrives.
      * 
-     * This funciton does not update plot.
+     * This funciton does not update plot. The plot is updated periodically or in mouse/keyboard actions
      * 
      */
-    mapDbrDataWitNewData = (newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
+    mapDbrDataWitNewData = (dbrDataList: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
+
         if (g_widgets1.isEditing()) {
             return;
         }
 
+        const yAxes = this.yAxes;
+
         for (let ii = 0; ii < this.getChannelNames().length; ii++) {
             const channelName = this.getChannelNames()[ii];
-            const data = newDbrData[channelName];
 
+            const data = dbrDataList[channelName];
+            if (data === undefined) {
+                continue;
+            }
+
+            const yAxis = yAxes[ii];
+            if (yAxis === undefined) {
+                continue;
+            }
+
+            // if the data is an array, that means there were more than one DBR data coming in
             if (Array.isArray(data)) {
                 for (let dataElement of data) {
-                    this.addOneDbrData(dataElement, ii);
+                    this.addOneDbrData(dataElement, yAxis);
                 }
             } else {
-                this.addOneDbrData(data, ii);
+                this.addOneDbrData(data, yAxis);
             }
+
             // remove data if exceeds buffer size
-            const yAxis = this.yAxes[ii];
             const bufferSize = yAxis["bufferSize"];
-            const xData = this.x[ii];
-            const yData = this.y[ii];
+            const xData = yAxis["xData"];
+            const yData = yAxis["yData"];
             const overSize = xData.length - bufferSize * 2;
             if (overSize > 0) {
                 xData.splice(0, overSize);
@@ -2992,7 +1837,7 @@ export class DataViewerPlot {
 
 
     /**
-     * Add one dbr data to the x and y data.
+     * Add one dbr data to the x and y data. 
      * 
      * (1) remove patch point Z
      * 
@@ -3002,30 +1847,32 @@ export class DataViewerPlot {
      * 
      * (4) add new patch point Z', this point has current time stamp, and new value
      */
-    addOneDbrData = (data: type_dbrData | type_LocalChannel_data | undefined, index: number) => {
-        // data cannot be "undefined", value must be a number
-        if (data === undefined || typeof data["value"] !== "number") {
+    addOneDbrData = (data: type_dbrData | type_LocalChannel_data | undefined, yAxis: type_yAxis) => {
+
+        if (data === undefined) {
             Log.debug("data is not valid", data);
             return;
         }
+        const value = data.value;
+        if (typeof value !== "number") {
+            Log.debug("value is not valid", data);
+            return;
+        }
 
-        // data must contain time stamp
-        if (data["secondsSinceEpoch"] === undefined || data["nanoSeconds"] === undefined) {
+        const secondsSinceEpoch = data["secondsSinceEpoch"];
+        const nanoSeconds = data["nanoSeconds"];
+        if (typeof secondsSinceEpoch !== "number" || typeof nanoSeconds !== "number") {
             Log.info("new data does not have time stamp")
             return;
         }
 
-        const value = data.value;
-        if (typeof value !== "number") {
-            return;
-        }
-
+        // convert EPICS timestamp to UNIX timestamp
         let timeStamp = GlobalMethods.converEpicsTimeStampToEpochTime(
-            data.secondsSinceEpoch * 1000 + data.nanoSeconds * 1e-6
+            secondsSinceEpoch * 1000 + nanoSeconds * 1e-6
         );
 
         // sometimes the channel was never processed
-        if (data["secondsSinceEpoch"] === 0) {
+        if (secondsSinceEpoch === 0) {
             Log.info("new data has 0 value time stamp", data)
             timeStamp = Date.now();
         }
@@ -3034,16 +1881,18 @@ export class DataViewerPlot {
             this.minLiveDataTime = timeStamp;
         }
 
-        const xData = this.x[index];
-        const yData = this.y[index];
+        const xData = yAxis["xData"];
+        const yData = yAxis["yData"];
 
         // (1)
         xData.pop();
-        yData.pop();
+        const oldValue = yData.pop();
 
         // (2)
-        xData.push(timeStamp);
-        yData.push(yData[yData.length - 1] === undefined ? value : yData[yData.length - 1]); // if the data is empty
+        if (oldValue !== undefined) {
+            xData.push(timeStamp);
+            yData.push(oldValue);
+        }
 
         // (3)
         xData.push(timeStamp);
@@ -3087,10 +1936,15 @@ export class DataViewerPlot {
 
     prepareExportData = () => {
         const result: Record<string, Record<string, number[] | string[]>> = {};
+        const yAxes = this.yAxes;
         for (let ii = 0; ii < this.getMainWidget().getChannelNames().length; ii++) {
             const channelName = this.getMainWidget().getChannelNames()[ii];
-            const x = this.x[ii];
-            const y = this.y[ii];
+            const yAxis = yAxes[ii];
+            if (yAxis === undefined) {
+                return;
+            }
+            const x = yAxis["xData"];
+            const y = yAxis["yData"];
             const processedX: string[] = [];
             const processedY: number[] = [];
             // last data point is a patch, skip
@@ -3112,8 +1966,10 @@ export class DataViewerPlot {
 
     }
 
+    // ----------------------------- helpers -----------------------
+
     /**
-     * Invoked when the plot should be changed, i.e. 
+     * Invoked when the plot should be updated, i.e. 
      * 
      * (1) scheduled periodic plot update (every second), or
      * 
@@ -3124,300 +1980,476 @@ export class DataViewerPlot {
      * It does:
      * 
      * (1) patch the data to prevent , this is a low-cost operation, do it anyway
+     *    (1.1) remove the old patch point Z'
+     *    (1.2) add new patch point Z, with new (current) time stamp, and last value
      * 
-     * (2) calculate X ticks, ticks text, and labels
+     * (2) update runtime plot info, such as x/y value min/max, tick positions
      * 
-     * (3) calcualte each Y ticks, ticks text, and labels
+     * (3) calculate cursor value
      * 
-     * (4) calculate cursor value
-     * 
-     * (5) update the widget
+     * (4) update the widget
      * 
      */
     updatePlot = (doFlush: boolean = true) => {
-        if (g_widgets1 === undefined) {
+        if (g_widgets1.isEditing()) {
             return;
         }
 
         // (1)
-        this.patchData();
+        const yAxes = this.yAxes;
+        for (const yAxis of yAxes) {
+            const xData = yAxis["xData"];
+            const yData = yAxis["yData"];
+            if (xData.length > 1) {
+                // (1)
+                xData.pop();
+                const oldY = yData.pop();
 
-        // (2)
-        this.calcXTicksAndLabel();
-
-        // (3)
-        for (let ii = 0; ii < this.yAxes.length; ii++) {
-            this.calcYTicksAndLabel(ii);
+                // (2)
+                if (oldY !== undefined) {
+                    xData.push(Date.now());
+                    yData.push(oldY);
+                }
+            }
         }
 
-        // (4)
+        // (2)
+        for (let ii = 0; ii < yAxes.length; ii++) {
+            this.updateTicksInfo(ii);
+        }
+
+        // (3)
         this.updateCursorElement(this.lastCursorPointXY);
 
-        // (5)
+        // (4)
         g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
         if (doFlush) {
             g_flushWidgets();
         }
     };
 
-    // ------------------------------- traces ------------------------------------
+    findVisibleYValueRange = (index: number): [number, number] | undefined => {
+        const yAxis = this.yAxes[index];
+        if (yAxis === undefined) {
+            return undefined;
+        }
+        const xData0 = yAxis["xData"];
+        const yData0 = yAxis["yData"];
 
-    /**
-     * Append a trace to the end.
-     * 
-     * (1) insert an empty channel name "" to this.getRawChannelNames() and expand the channel name
-     *     without checking the channel name duplication
-     * 
-     * (2) add a new trace data to the data structure: this.x, this.y and this.yAxes
-     * 
-     * (3) select this trace
-     * 
-     * (4) update the plot if necessary
-     * 
-     * (5) connect and monitor this channel
-     */
-    appendTrace = async (newTraceName: string, doFlush: boolean = true) => {
-        // (1)
-        const mainWidget = this.getMainWidget();
-        mainWidget.getChannelNamesLevel0().push(newTraceName);
-        mainWidget.processChannelNames([], false);
-
-        // (2)
-        this.addNewTraceData(newTraceName, undefined);
-
-        // (3)
-        this.setSelectedTraceIndex(mainWidget.getChannelNamesLevel0().length - 1);
-
-        // (4)
-        if (doFlush) {
-            this.updatePlot();
+        if (yData0 === undefined) {
+            return undefined;
         }
 
-        // (5)
-        const newTcaChannel = g_widgets1.createTcaChannel(newTraceName, this.getMainWidget().getWidgetKey());
-        if (newTcaChannel !== undefined) {
-            await newTcaChannel.getMeta(undefined);
-            await newTcaChannel.get(undefined, 1, Channel_DBR_TYPES.DBR_TIME_DOUBLE, true, undefined);
-            newTcaChannel.monitor();
+        if (xData0[xData0.length - 1] < this.xAxis.valMin) {
+            return undefined;
         }
+        if (xData0[0] > this.xAxis.valMax) {
+            return undefined;
+        }
+
+        let xMinIndex = xData0.findIndex((element: number) => element >= this.xAxis.valMin);
+        if (xMinIndex > 1) {
+            xMinIndex = xMinIndex - 1;
+        }
+        let xMaxIndex = xData0.findIndex((element: number) => element >= this.xAxis.valMax);
+
+        if (xMaxIndex === -1) {
+            xMaxIndex = xData0.length;
+        }
+        if (xMaxIndex < xData0.length) {
+            xMaxIndex = xMaxIndex + 1;
+        }
+
+        if (xMinIndex === -1 || xMaxIndex === -1) {
+            return undefined;
+        }
+        // only calculate the data in visible region
+        const yData = yData0.slice(xMinIndex, xMaxIndex);
+        let yValMax = Number.MIN_VALUE;
+        let yValMin = Number.MAX_VALUE;
+
+        for (let ii = 0; ii < yData.length; ii++) {
+            const element = yData[ii];
+            if (typeof element === "number") {
+                yValMax = Math.max(yValMax, element);
+                yValMin = Math.min(yValMin, element);
+            }
+        }
+
+        return [yValMin, yValMax];
+    }
+
+
+    mapXYsToPointsWebGl = (index: number): Float32Array => {
+
+        const yAxis = this.getMainWidget().getYAxes()[index];
+        if (yAxis === undefined) {
+            return new Float32Array(0);
+        }
+
+        // x and y data are odd and even indices
+        let xData = yAxis["xData"];
+        let yData = yAxis["yData"];
+
+        // patch xData
+        if (xData.length === 0) {
+            xData = [...Array(yData.length).keys()];
+        }
+        const ticksInfo = yAxis["ticksInfo"];
+        let { xValMax, xValMin, yValMax, yValMin } = ticksInfo;
+        return GlobalMethods.mapXYsToPointsWebGl(xData, yData, xValMin, xValMax, yValMin, yValMax);
     };
 
     /**
-     * Change the trace name
+     * Set the React state value setter for cursor text on the plot. It causes the cursor text to update.
+     * 
+     * @param {event: any} Input could be an mouse event, or a [number, number] array
      */
-    updateTrace = async (index: number, newTraceName: string, doFlush: boolean = true, forceUpdate: boolean = false) => {
+    updateCursorElement = (event: any) => {
 
-        const oldTraceName = this.getChannelNames()[index];
-        if ((newTraceName === oldTraceName) && forceUpdate === false) {
-            // no change
+        const yAxis = this.getSelectedYAxis();
+        if (yAxis === undefined) {
             return;
         }
 
-        // (1)
-        const mainWidget = this.getMainWidget();
-        mainWidget.getChannelNamesLevel0()[index] = newTraceName;
-        mainWidget.processChannelNames([], false);
 
-        // (2)
-        this.updateTraceData(index, newTraceName);
+        let pointX0 = -100000;
+        let pointY0 = -100000;
 
-        // (3)
-        this.setSelectedTraceIndex(index);
-
-        // (4)
-        if (doFlush) {
-            this.updatePlot();
-        }
-
-        // (5)
-        const newTcaChannel = g_widgets1.createTcaChannel(newTraceName, this.getMainWidget().getWidgetKey());
-        if (newTcaChannel !== undefined) {
-            await newTcaChannel.getMeta(undefined);
-            await newTcaChannel.get(undefined, 1, Channel_DBR_TYPES.DBR_TIME_DOUBLE, true, undefined);
-            newTcaChannel.monitor();
-        }
-    };
-
-    /**
-     * Initialize data for all traces. Invoked when the display window operating status is changed.
-     * 
-     * Each channel name correponds to a trace.
-     * 
-     * If there is no y axis data for this channel, 
-     * 
-     * (1) clear all x and y data
-     * 
-     * (2) add new trace data for each trace
-     */
-    initTracesData = () => {
-
-        // (1)
-        this.x.length = 0;
-        this.y.length = 0;
-
-        // (2)
-        for (let ii = 0; ii < this.getChannelNames().length; ii++) {
-            const channelName = this.getChannelNames()[ii];
-            this.addNewTraceData(channelName, this.yAxes[ii]);
-        }
-    };
-
-
-    /**
-     * Add a new trace data to the end of data set
-     * 
-     * (1) add empty x and y data 
-     * 
-     * (2) add a new y axis data that contains the trace line properties: plot range, trace color, buffer size, ...
-     *     if there is already one, change its label to channel name
-     * 
-     * (3) remove excessive y axis if there are
-     */
-    addNewTraceData = (channelName: string, yAxis: type_yAxis | undefined) => {
-        // (1)
-        this.x.push([]);
-        this.y.push([]);
-        // (2)
-        // default yAxis
-        if (yAxis === undefined) {
-            let newYAxis: type_yAxis = {
-                label: channelName, // updated every time
-                valMin: 0, // updated every time
-                valMax: 10, // updated every time
-                lineWidth: 2,
-                lineColor: `rgba(${this.getNewColor()})`,
-                ticks: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // updated every time
-                ticksText: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // updated every time
-                show: true,
-                bufferSize: 50000,
-                displayScale: "Linear",
-            };
-            this.yAxes.push(newYAxis);
+        if (event.clientX !== undefined) {
+            // event callback
+            this.lastCursorPointXY = [getMouseEventClientX(event), getMouseEventClientY(event)];
+            pointX0 = getMouseEventClientX(event);
+            pointY0 = getMouseEventClientY(event);
         } else {
-            yAxis["label"] = channelName;
+            // current cursor position on web page
+            pointX0 = event[0];
+            pointY0 = event[1];
         }
 
-        // (3)
-        this.yAxes.splice(this.getChannelNames().length)
-    };
-
-    /**
-     * Update the trace data for an existing trace, it is similar to addNewTraceData
-     * 
-     * (1) clear the trace value data in this.x and this.y
-     * 
-     * (2) update the yaxis data, with the new channel name, keep all other properties
-     */
-    updateTraceData = (index: number, channelName: string) => {
-        // (1)
-        this.x[index] = [];
-        this.y[index] = [];
-        // (2)
-        // default yAxis
-        const yAxis = this.yAxes[index];
-        yAxis["label"] = channelName;
-    };
-
-    /**
-     * Remove a trace
-     * 
-     * (1) remove channel name from this.getRawChannelNames(), and expand channel names
-     * 
-     * (2) remove this channel's x, y and yAxis data
-     * 
-     * (3) remove this channel
-     * 
-     * (4) select the previous trace
-     * 
-     * (5) hide the trace setting page
-     * 
-     * (5) update plot
-     */
-    removeTrace = (index: number) => {
-        const traceName = this.getMainWidget().getChannelNames()[index];
-        if (traceName === undefined) {
+        // special case: the mouse is not on the plot region
+        if (pointX0 === -100000) {
+            // this.setCursorValue(``);
             return;
         }
 
-        // (1)
-        this.getMainWidget().getChannelNamesLevel0().splice(index, 1);
-        this.getMainWidget().processChannelNames([], false);
+        const ticksInfo = yAxis["ticksInfo"];
+        const pointX = pointX0 - yAxisLabelWidth - yAxisTickWidth - this.getStyle().left;
+        const pointY = pointY0 - titleHeight - this.getStyle().top;
+        const xValMin = ticksInfo.xValMin;
+        const xValMax = ticksInfo.xValMax;
+        const yValMin = ticksInfo.yValMin;
+        const yValMax = ticksInfo.yValMax;
 
-        // (2)
-        this.x.splice(index, 1);
-        this.y.splice(index, 1);
-        this.yAxes.splice(index, 1);
+        const [valX, valY] = GlobalMethods.mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
+        // const [valX, valY] = this.mapPointToXY(this.getSelectedTraceIndex(), [pointX, pointY]);
 
-        // (3)
-        if (!this.getMainWidget().getChannelNames().includes(traceName)) {
-            g_widgets1.removeTcaChannel(traceName, this.getMainWidget().getWidgetKey());
-        }
-        // (4)
-        const newSelectedTrace = index - 1 > -1 ? index - 1 : index + 1 > this.getChannelNames().length - 1 ? -1 : index + 1;
-        this.setSelectedTraceIndex(newSelectedTrace);
-
-        // (5)
-        this.getMainWidget().setShowSettingsPage(-100);
-
-        // (6)
-        this.updatePlot();
+        const timeStr = GlobalMethods.convertEpochTimeToString(valX);
+        const valYStr = valY.toPrecision(4).toString();
+        this.setCursorValue(`(${timeStr}, ${valYStr})`);
     };
 
-    getNewColor = (): [number, number, number, number] => {
-        const numTraces = this.yAxes.length;
-        const newColorIndex = (numTraces) % this.traceColors.length;
-        return this.traceColors[newColorIndex];
-    };
+    updateTicksInfo = (index: number) => {
 
-    upateTraceLineWidth = (index: number, newWidth: number) => {
+        this.updatePlotWidthHeight();
+
+        const scale = "Linear";
         const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            yAxis["lineWidth"] = newWidth;
-        }
-        this.updatePlot();
-    }
 
-    updateTraceShowOrHide = (index: number, showTrace: boolean) => {
-        const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            yAxis["show"] = showTrace;
-        }
-        this.updatePlot();
-    }
-
-
-    updateTraceLineColor = (index: number, newColor: string) => {
-        const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            yAxis["lineColor"] = newColor;
-        }
-        this.updatePlot();
-    }
-
-    updateTraceLineWidth = (index: number, newWidth: number) => {
-        const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            yAxis["lineWidth"] = newWidth;
-        }
-        this.updatePlot();
-    }
-
-    updateTraceBufferSize = (index: number, newSize: number) => {
-        const yAxis = this.yAxes[index];
-        if (yAxis !== undefined) {
-            yAxis["bufferSize"] = newSize;
-        }
-        this.updatePlot();
-    }
-
-    updateTraceScale = (index: number, newScale: "Linear" | "Log10") => {
-        const yAxis = this.yAxes[index];
         if (yAxis === undefined) {
             return;
         }
-        yAxis["displayScale"] = newScale;
+
+        const { xValMin, xValMax, yValMin, yValMax } = this.calcXyValMinMax(index);
+        const xLength = this.getPlotWidth();
+        const yLength = this.getPlotHeight();
+        // fixed numbers
+        const numXgrid = 10;
+        const numYgrid = 5;
+        const xTickValues = GlobalMethods.calcTicks(xValMin, xValMax, numXgrid + 1, { scale: scale });
+        const xTickPositions = GlobalMethods.calcTickPositions(xTickValues, xValMin, xValMax, xLength, { scale: scale }, "vertical");
+        const yTickValues = GlobalMethods.calcTicks(yValMin, yValMax, numYgrid + 1, { scale: scale });
+        const yTickPositions = GlobalMethods.calcTickPositions(yTickValues, yValMin, yValMax, yLength, { scale: scale }, "vertical");
+        yAxis["ticksInfo"] = {
+            scale,
+            xValMin,
+            xValMax,
+            yValMin,
+            yValMax,
+            xLength,
+            yLength,
+            numXgrid,
+            numYgrid,
+            xTickValues,
+            xTickPositions,
+            yTickValues,
+            yTickPositions,
+        };
+    }
+
+
+    updatePlotWidthHeight = () => {
+        const allStyle = this.getMainWidget().getAllStyle();
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+        this.setPlotWidth(width - yAxisLabelWidth - yAxisTickWidth - legendWidth);
+        this.setPlotHeight(height - titleHeight - xAxisLabelHeight - xAxisTickHeight - toolbarHeight);
+    }
+
+
+    calcXyValMinMax = (index: number) => {
+
+        const yAxis = this.getMainWidget().getYAxes()[index];
+        if (yAxis === undefined) {
+            return {
+                xValMin: 0,
+                xValMax: 100,
+                yValMin: 0,
+                yValMax: 100,
+            }
+        }
+        const xData = yAxis["xData"];
+        const yData = yAxis["yData"];
+
+        if (yData.length === 0) {
+            return {
+                xValMin: 0,
+                xValMax: 100,
+                yValMin: 0,
+                yValMax: 100,
+            }
+        }
+
+        // x
+        let xValMin = this.xAxis["valMin"];
+        let xValMax = this.xAxis["valMax"];
+
+        // y
+        let yValMin = yAxis["valMin"];
+        let yValMax = yAxis["valMax"];
+
+        return (
+            {
+                xValMin: xValMin,
+                xValMax: xValMax,
+                yValMin: yValMin,
+                yValMax: yValMax,
+            }
+        )
+    }
+
+
+    /**
+     * get the currently selected trace's color
+     */
+    calcSelectedTraceColor = () => {
+        const selectedYAxis = this.getSelectedYAxis();
+        return selectedYAxis === undefined ? "rgba(0, 0, 0, 1)" : selectedYAxis.lineColor;
+    }
+
+
+
+    // ------------------ mouse event handlers  ----------------------
+
+    /**
+     * rotate mouse wheel to zoom x-direction
+     */
+    handleWheelOnPlotX = (event: React.WheelEvent) => {
+        const yAxis = this.getSelectedYAxis();
+        if (yAxis === undefined) {
+            return;
+        }
+        const direction = event.deltaY < 0 ? "zoom-in" : "zoom-out";
+
+        const pointX0 = event.clientX;
+        const pointY0 = 0;
+        const pointX = pointX0 - yAxisLabelWidth - yAxisTickWidth - this.getStyle().left;
+        const pointY = pointY0 - titleHeight - this.getStyle().top;
+
+        const ticksInfo = yAxis["ticksInfo"];
+        const xValMin = ticksInfo["xValMin"];
+        const xValMax = ticksInfo["xValMax"];
+        const yValMin = ticksInfo["yValMin"];
+        const yValMax = ticksInfo["yValMax"];
+
+        const [valXMid, valYMid] = GlobalMethods.mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
+
+        const xAxis = this.xAxis;
+
+        const zoomFactor = this.getText()["axisZoomFactor"];
+
+        if (this.tracingIsMoving) {
+            if (direction === "zoom-in") {
+                xAxis.valMax = Date.now();
+                xAxis.valMin = xAxis.valMax - (xAxis.valMax - xAxis.valMin) / zoomFactor;
+            } else {
+                xAxis.valMax = Date.now();
+                xAxis.valMin = xAxis.valMax - (xAxis.valMax - xAxis.valMin) * zoomFactor;
+            }
+        } else {
+            if (direction === "zoom-in") {
+                xAxis.valMin = valXMid - (valXMid - xAxis.valMin) / zoomFactor;
+                xAxis.valMax = valXMid + (xAxis.valMax - valXMid) / zoomFactor;
+            } else {
+                xAxis.valMin = valXMid - (valXMid - xAxis.valMin) * zoomFactor;
+                xAxis.valMax = valXMid + (xAxis.valMax - valXMid) * zoomFactor;
+            }
+
+
+        }
+
+        this.updatePlot();
+
+    }
+
+    /**
+     * rotate mouse wheel to zoom y-direction, ctrl key must be pressed
+     */
+    handleWheelOnPlotY = (event: React.WheelEvent) => {
+
+        const yAxis = this.getSelectedYAxis();
+        if (yAxis === undefined) {
+            return;
+        }
+
+        const pointX0 = 0;
+        const pointY0 = event.clientY;
+        const pointX = pointX0 - yAxisLabelWidth - yAxisTickWidth - this.getStyle().left;
+        const pointY = pointY0 - titleHeight - this.getStyle().top;
+
+        const ticksInfo = yAxis["ticksInfo"];
+        const xValMin = ticksInfo["xValMin"];
+        const xValMax = ticksInfo["xValMax"];
+        const yValMin = ticksInfo["yValMin"];
+        const yValMax = ticksInfo["yValMax"];
+
+        const [valXMid, valYMid] = GlobalMethods.mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
+
+
+        // const valYMid = this.mapPointToXY(this.getSelectedTraceIndex(), [pointX, pointY]);
+
+
+        const direction = event.deltaY < 0 ? "zoom-in" : "zoom-out";
+
+
+        if (yAxis === undefined) {
+            return;
+        }
+        const yMin = yAxis.valMin;
+        const yMax = yAxis.valMax;
+        const yMid = valYMid;
+
+        const dyUpper = yMax - yMid;
+        const dyLower = yMid - yMin;
+        if (direction === "zoom-in") {
+            const yMinNew = yMid - dyLower / this.getText()["axisZoomFactor"];
+            const yMaxNew = yMid + dyUpper / this.getText()["axisZoomFactor"];
+            yAxis.valMin = yMinNew;
+            yAxis.valMax = yMaxNew;
+        } else {
+            const yMinNew = yMid - dyLower * this.getText()["axisZoomFactor"];
+            const yMaxNew = yMid + dyUpper * this.getText()["axisZoomFactor"];
+            yAxis.valMin = yMinNew;
+            yAxis.valMax = yMaxNew;
+        }
+
+        const xAxis = this.xAxis;
+        if (this.tracingIsMoving) {
+            xAxis.valMax = Date.now();
+        }
+
         this.updatePlot();
     }
+
+    handleMouseMoveOnPlotX = (event: MouseEvent) => {
+
+        this.tracingIsMoving = false;
+
+        const dPointX = event.movementX;
+
+        this.mouseMoveEndX = event.clientX;
+
+        const yAxis = this.getSelectedYAxis();
+        // const ii = this.getSelectedTraceIndex();
+        if (yAxis === undefined) {
+            return;
+        }
+
+
+        const ticksInfo = yAxis["ticksInfo"];
+        const xValMin = ticksInfo["xValMin"];
+        const xValMax = ticksInfo["xValMax"];
+        const yValMin = ticksInfo["yValMin"];
+        const yValMax = ticksInfo["yValMax"];
+
+        const valXY0 = GlobalMethods.mapPointToXy(0, 0, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
+        const valXY1 = GlobalMethods.mapPointToXy(dPointX, 0, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
+
+
+        // const valXY0 = this.mapPointToXY(ii, [0, 0]);
+        // const valXY1 = this.mapPointToXY(ii, [dPointX, 0]);
+        const dt = valXY1[0] - valXY0[0];
+
+        const xAxis = this.xAxis;
+        if (xAxis === undefined) {
+            return;
+        }
+
+        xAxis.valMin = xAxis.valMin - dt;
+        xAxis.valMax = xAxis.valMax - dt;
+        this.updatePlot();
+    }
+
+    handleMouseMoveOnPlotY = (event: MouseEvent) => {
+        event.preventDefault();
+        const pointDy = event.movementY;
+
+        // const ii = this.getSelectedTraceIndex();
+        const yAxis = this.getSelectedYAxis();
+        if (yAxis === undefined) {
+            return;
+        }
+        const yMin = yAxis.valMin;
+        const yMax = yAxis.valMax;
+
+
+        const ticksInfo = yAxis["ticksInfo"];
+        const xValMin = ticksInfo["xValMin"];
+        const xValMax = ticksInfo["xValMax"];
+        const yValMin = ticksInfo["yValMin"];
+        const yValMax = ticksInfo["yValMax"];
+
+        const dxy0 = GlobalMethods.mapPointToXy(0, pointDy, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
+        const dxy1 = GlobalMethods.mapPointToXy(0, 0, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
+
+
+        // const dxy0 = this.mapPointToXY(ii, [0, pointDy]);
+        // const dxy1 = this.mapPointToXY(ii, [0, 0]);
+        const dy = dxy1[1] - dxy0[1];
+        const yMinNew = yMin + dy;
+        const yMaxNew = yMax + dy;
+        yAxis.valMin = yMinNew;
+        yAxis.valMax = yMaxNew;
+
+
+        const xAxis = this.xAxis;
+        const dx = xAxis.valMax - xAxis.valMin;
+        if (this.tracingIsMoving) {
+            xAxis.valMax = Date.now();
+            xAxis.valMin = Date.now() - dx;
+        }
+
+        this.updatePlot();
+    }
+
+    handleMouseUpOnPlot = (event: MouseEvent) => {
+        event.preventDefault();
+
+        window.removeEventListener("mousemove", this.handleMouseMoveOnPlotX);
+        window.removeEventListener("mousemove", this.handleMouseMoveOnPlotY);
+        window.removeEventListener("mouseup", this.handleMouseUpOnPlot);
+    }
+
 
     // ---------------------- getters and setters -------------------------------
     getMainWidget = () => {
@@ -3456,4 +2488,25 @@ export class DataViewerPlot {
         return this.selectedTraceIndex;
     }
 
+    getSelectedYAxis = () => {
+        return this.yAxes[this.selectedTraceIndex];
+    }
+
+
+
+    getPlotWidth = () => {
+        return this._plotWidth;
+    }
+
+    getPlotHeight = () => {
+        return this._plotHeight;
+    }
+
+    setPlotWidth = (newWidth: number) => {
+        this._plotWidth = newWidth;
+    }
+
+    setPlotHeight = (newHeight: number) => {
+        this._plotHeight = newHeight;
+    }
 }

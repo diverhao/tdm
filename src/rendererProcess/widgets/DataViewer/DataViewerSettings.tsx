@@ -436,7 +436,7 @@ export class DataViewerSettings {
             setChannelNameInput(channelName);
             setShowChannelNameHint(false)
 
-            this.getPlot().updateTrace(index, channelName, true)
+            this.getPlot().renameTrace(index, channelName, true)
             setTimeout(() => {
                 this.updatePlot();
             }, 500);
@@ -467,7 +467,7 @@ export class DataViewerSettings {
                         if (elementRefChannelNameInput.current !== null) {
                             elementRefChannelNameInput.current.blur();
                         }
-                        this.getPlot().updateTrace(index, channelNameInput, true)
+                        this.getPlot().renameTrace(index, channelNameInput, true)
                         setTimeout(() => {
                             this.updatePlot();
                         }, 500);

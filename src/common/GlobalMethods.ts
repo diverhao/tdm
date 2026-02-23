@@ -1175,7 +1175,7 @@ export const mapPointToXy = (
     width: number,
     height: number,
 ): [number, number] => {
-    const x = pointX / width * (xMax - xMin);
+    const x = xMin + pointX / width * (xMax - xMin);
     const y = yMax - pointY / height * (yMax - yMin);
 
     if (isNaN(x) || isNaN(y)) {

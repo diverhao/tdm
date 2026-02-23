@@ -18,35 +18,23 @@ export type type_DataViewer_tdl = {
     text: Record<string, any>;
     channelNames: string[];
     groupNames: string[];
-    yAxes: Record<string, any>[];
     rules: type_rules_tdl;
+    // Data Viewer specific
+    yAxes: Record<string, any>[];
 };
 
 export class DataViewer extends BaseWidget {
-    // todo: more pre-defined color,
-    // when the predefined colors are used up, getNewColor() will generate random colors
 
     showSettingsPage: number = -100;
-
     _plot: DataViewerPlot;
     _settings: DataViewerSettings;
-
     updateInterval: any = undefined;
 
-
-    getPlot = () => {
-        return this._plot;
-    };
-
-    // updatingByInterval: boolean = true;
     constructor(widgetTdl: type_DataViewer_tdl) {
         super(widgetTdl);
         this.initStyle(widgetTdl);
         this.initText(widgetTdl);
         this.setReadWriteType("write");
-
-        // assign the sidebar
-        this._sidebar = new DataViewerSidebar(this);
 
         // update plot every "updatePeriod" time
         this.updateInterval = setInterval(() => {
@@ -148,43 +136,6 @@ export class DataViewer extends BaseWidget {
     getSettings = () => {
         return this._settings;
     };
-    // ------------------ hard coded dimensions ------------------------
-
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
-
-    // ---------------------------- trace manipulation ----------------------------------
-    // hide/show/remove/insert trace
-
-
-    // --------------------------- getters --------------------------------------
 
     // ------------------------------ elements ---------------------------------
 
@@ -206,31 +157,22 @@ export class DataViewer extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
-                </>
+                <div
+                    style={
+                        this.getElementBodyRawStyle()
+                    }
+                    id="DataViewer"
+                >
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                    {this.getShowSettingsPage() === -1 && (!g_widgets1.isEditing()) ? this.getSettings().getElement() : null}
+                    {this.getSettings().getElementTraceSetting(this.getShowSettingsPage())}
+                </div>
+                {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            <div
-                style={
-                    this.getElementBodyRawStyle()
-                }
-                id="DataViewer"
-            >
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-                {this.getShowSettingsPage() === -1 && (!g_widgets1.isEditing()) ? this.getSettings().getElement() : null}
-                {this.getSettings().getElementTraceSetting(this.getShowSettingsPage())}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
 
         React.useEffect(() => {
@@ -238,7 +180,7 @@ export class DataViewer extends BaseWidget {
             let ii = 0;
             for (const yAxis of Object.values(plot.yAxes)) {
                 const channelName = yAxis["label"];
-                plot.updateTrace(ii, channelName, false, true);
+                plot.renameTrace(ii, channelName, false, true);
                 ii++;
             }
             plot.updatePlot(true);
@@ -281,43 +223,14 @@ export class DataViewer extends BaseWidget {
             height: "100%",
             backgroundColor: "rgba(255,0,0,0)"
         }}>
-
         </div>)
     }
 
     // concretize abstract method
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // _Element = React.memo(this._ElementRaw, () => {return false});
-    // _ElementArea = React.memo(this._ElementAreaRaw, () => {return false});
-    // _ElementBody = React.memo(this._ElementBodyRaw, () => {return false});
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
 
     // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = () => {
-        return this._getFirstChannelValue();
-    };
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-    _getChannelUnit = () => {
-        return this._getFirstChannelUnit();
-    };
 
     setShowSettingsPage = (index: number) => {
         this.showSettingsPage = index;
@@ -328,12 +241,22 @@ export class DataViewer extends BaseWidget {
     }
 
     hasData = () => {
-        if (this.getPlot().x.length > 0 && this.getPlot().x[0].length > 0) {
-            return true;
-        } else {
-            return false;
+        for (const yAxis of this.getPlot().yAxes) {
+            if (yAxis["xData"].length > 0 && yAxis["yData"].length > 0) {
+                return true;
+            }
         }
+        return false;
+
     }
+
+    getPlot = () => {
+        return this._plot;
+    };
+
+    getYAxes = () => {
+        return this.getPlot().yAxes;
+    };
 
     // -------------------------- tdl -------------------------------
 
@@ -415,10 +338,6 @@ export class DataViewer extends BaseWidget {
         return result;
     }
 
-    getYAxes = () => {
-        return this.getPlot().yAxes;
-    };
-
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {
@@ -429,13 +348,19 @@ export class DataViewer extends BaseWidget {
     jobsAsEditingModeBegins() {
         super.jobsAsEditingModeBegins();
         // clear traces data
-        this.getPlot().initTracesData();
+        for (const yAxis of this.getPlot().yAxes) {
+            yAxis['xData'].length = 0;
+            yAxis['yData'].length = 0;
+        }
     }
 
 
     jobsAsOperatingModeBegins() {
         super.jobsAsOperatingModeBegins();
         // clear traces data
-        this.getPlot().initTracesData();
+        for (const yAxis of this.getPlot().yAxes) {
+            yAxis['xData'].length = 0;
+            yAxis['yData'].length = 0;
+        }
     }
 }

@@ -6,12 +6,7 @@ import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
 import { type_yAxis, XYPlotPlot } from "./XYPlotPlot";
 import { calcWebGlShadeColor } from "../../../common/GlobalMethods";
 
-/**
- * WebGL-based line/point rendering for XYPlot.
- *
- * Extracted from XYPlotPlot to reduce file size.
- * All access to plot state goes through `this.plot` (the XYPlotPlot instance).
- */
+
 export class XYPlotPlotWebGl {
     // XYPlotPlot instance, typed as any to avoid circular import
     _plot: XYPlotPlot;
@@ -39,6 +34,9 @@ export class XYPlotPlotWebGl {
         }, []);
 
         const fun1 = () => {
+
+            const yAxes = plot.getMainWidget().getYAxes();
+
             const scene = new Scene();
             const camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
 
@@ -56,12 +54,11 @@ export class XYPlotPlotWebGl {
             }
             renderer.setSize(containerWidth, containerHeight);
 
-            plot.getMainWidget().getYAxes().forEach((yAxis: type_yAxis, index: number) => {
+            yAxes.forEach((yAxis: type_yAxis, index: number) => {
 
                 // for both points and lines
                 const positions = plot.mapXYsToPointsWebGl(index);
                 const color = yAxis.lineColor;
-
                 const showLine = yAxis.lineStyle === "none" ? false : true;
                 const showPoint = yAxis.pointType === "none" ? false : true;
 
@@ -95,7 +92,8 @@ export class XYPlotPlotWebGl {
                     const pointMaterial = new ShaderMaterial({
                         uniforms: {
                             // for some shapes, the actual point size is different from pointSize value
-                            size: { value: pointSize },
+                            // scale by devicePixelRatio so the visual size matches CSS pixels (e.g. SVG)
+                            size: { value: pointSize * window.devicePixelRatio },
                             shapeType: { value: shadeTypeValue }
                         },
                         vertexShader: `

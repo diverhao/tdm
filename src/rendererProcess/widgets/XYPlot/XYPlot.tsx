@@ -175,7 +175,13 @@ export class XYPlot extends BaseWidget {
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
         result["xAxis"] = JSON.parse(JSON.stringify(this.getPlot().xAxis));
-        result["yAxes"] = JSON.parse(JSON.stringify(this.getPlot().yAxes));
+        const yAxesRaw = this.getPlot().yAxes;
+        // exclude runtime data
+        result["yAxes"] = yAxesRaw.map(({ xData, yData, ticksInfo, ...rest }) => {
+            return {
+                ...rest
+            }
+        });
         return result;
     }
 

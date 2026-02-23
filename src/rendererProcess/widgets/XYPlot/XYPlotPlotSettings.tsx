@@ -63,7 +63,8 @@ export class XYPlotPlotSettings {
 
         const axisType = (axisData as any)["xData"] === undefined ? "x" : "y";
         const data = axisType === "x" ? axisData as type_xAxis : axisData as type_yAxis;
-        const label = axisType === "x" ? data["label"] : "Trace " + data["label"];
+        const label = data["label"];
+        const plot = this.getPlot();
 
         return (
             <div
@@ -83,11 +84,15 @@ export class XYPlotPlotSettings {
                 {/* label */}
                 <div
                     style={{
+                        display: "inline-flex",
                         padding: 5,
                         fontWeight: "bold",
+                        alignItems: "center",
+                        flexDirection: "row",
                     }}
                 >
-                    {label}
+                    {axisType === "x" ? "" : "Trace"} &nbsp;
+                    {plot.convertLatexSourceToDiv(label)}
                 </div>
                 {/* min */}
                 <this._ElementNumVal
