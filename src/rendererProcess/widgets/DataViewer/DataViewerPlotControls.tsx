@@ -2,6 +2,7 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { DataViewerPlot } from "./DataViewerPlot";
 import { toolbarHeight } from "./DataViewerPlot";
+import { settingsIndexChoices } from "./DataViewer";
 
 /**
  * Toolbar controls for DataViewerPlot (zoom, pan, auto-scale, pause/play, export, etc.)
@@ -149,7 +150,7 @@ export class DataViewerPlotControls {
                                 return;
                             }
 
-                            plot.getMainWidget().setShowSettingsPage(-1);
+                            plot.getMainWidget().setSettingsIndex(settingsIndexChoices.MAIN);
                             plot.updatePlot();
                         }}
                     >

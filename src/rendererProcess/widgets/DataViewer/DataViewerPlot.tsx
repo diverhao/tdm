@@ -12,9 +12,9 @@ import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
 import { Scale } from "../../helperWidgets/SharedElements/Scale";
 import { DataViewerPlotControls } from "./DataViewerPlotControls";
-import { DataViewerPlotTrace } from "./DataViewerPlotTrace";
-import { DataViewerPlotData } from "./DataViewerPlotData";
-import { DataViewerPlotMouse } from "./DataViewerPlotMouse";
+import { DataViewerPlotTraceHelper } from "./DataViewerPlotTraceHelper";
+import { DataViewerPlotDataHelper } from "./DataViewerPlotDataHelper";
+import { DataViewerPlotMouseHelper } from "./DataViewerPlotMouseHelper";
 
 
 export const defaultTicksInfo: type_ticksInfo = {
@@ -150,11 +150,11 @@ export class DataViewerPlot {
     // helper class for toolbar controls
     _controls: DataViewerPlotControls;
     // helper class for trace management
-    _plotTrace: DataViewerPlotTrace;
+    _plotTraceHelper: DataViewerPlotTraceHelper;
     // helper class for data operations
-    _plotData: DataViewerPlotData;
+    _plotDataHelper: DataViewerPlotDataHelper;
     // helper class for mouse event handlers
-    _plotMouse: DataViewerPlotMouse;
+    _plotMouseHelper: DataViewerPlotMouseHelper;
 
     // ---------------------- efficiency ---------------------------
     minLiveDataTime: number = Number.MAX_VALUE;
@@ -196,9 +196,9 @@ export class DataViewerPlot {
         this._mainWidget = mainWidget;
 
         this._controls = new DataViewerPlotControls(this);
-        this._plotTrace = new DataViewerPlotTrace(this);
-        this._plotData = new DataViewerPlotData(this);
-        this._plotMouse = new DataViewerPlotMouse(this);
+        this._plotTraceHelper = new DataViewerPlotTraceHelper(this);
+        this._plotDataHelper = new DataViewerPlotDataHelper(this);
+        this._plotMouseHelper = new DataViewerPlotMouseHelper(this);
 
         this._plotWidth = this.getStyle().width - yAxisLabelWidth - yAxisTickWidth - legendWidth;
         this._plotHeight = this.getStyle().height - titleHeight - xAxisLabelHeight - xAxisTickHeight - toolbarHeight;
@@ -477,11 +477,11 @@ export class DataViewerPlot {
                 onMouseDown={(event: any) => {
 
                     if (event.button === 0) {
-                        window.addEventListener("mousemove", this.getPlotMouse().handleMouseMoveOnPlotX);
+                        window.addEventListener("mousemove", this.getPlotMouseHelper().handleMouseMoveOnPlotX);
                     } else if (event.button === 2) {
-                        window.addEventListener("mousemove", this.getPlotMouse().handleMouseMoveOnPlotY);
+                        window.addEventListener("mousemove", this.getPlotMouseHelper().handleMouseMoveOnPlotY);
                     }
-                    window.addEventListener("mouseup", this.getPlotMouse().handleMouseUpOnPlot);
+                    window.addEventListener("mouseup", this.getPlotMouseHelper().handleMouseUpOnPlot);
                 }}
 
                 onWheel={(event: React.WheelEvent) => {
@@ -851,7 +851,7 @@ export class DataViewerPlot {
                                     return;
                                 }
 
-                                this.getMainWidget().setShowSettingsPage(index);
+                                this.getMainWidget().setSettingsIndex(index);
                                 this.updatePlot();
                             }}
                         >
@@ -884,7 +884,7 @@ export class DataViewerPlot {
                         this.addTrace("");
                         const newIndex = this.getChannelNames().length - 1;
                         this.setSelectedTraceIndex(newIndex);
-                        this.getMainWidget().setShowSettingsPage(newIndex);
+                        this.getMainWidget().setSettingsIndex(newIndex);
                         this.updatePlot();
                     }}
                     onMouseEnter={() => {
@@ -913,41 +913,41 @@ export class DataViewerPlot {
     // ------------------------ trace (delegated to _plotTrace) ----------------------------
 
     addTrace = async (newChannelName: string, doFlush: boolean = true) => {
-        return this.getPlotTrace().addTrace(newChannelName, doFlush);
+        return this.getPlotTraceHelper().addTrace(newChannelName, doFlush);
     };
 
     renameTrace = async (index: number, newTraceName: string, doFlush: boolean = true, forceUpdate: boolean = false) => {
-        return this.getPlotTrace().renameTrace(index, newTraceName, doFlush, forceUpdate);
+        return this.getPlotTraceHelper().renameTrace(index, newTraceName, doFlush, forceUpdate);
     };
 
     removeTrace = (index: number) => {
-        this.getPlotTrace().removeTrace(index);
+        this.getPlotTraceHelper().removeTrace(index);
     };
 
     getNewColor = (): [number, number, number, number] => {
-        return this.getPlotTrace().getNewColor();
+        return this.getPlotTraceHelper().getNewColor();
     };
 
     updateTraceShowOrHide = (index: number, showTrace: boolean) => {
-        this.getPlotTrace().updateTraceShowOrHide(index, showTrace);
+        this.getPlotTraceHelper().updateTraceShowOrHide(index, showTrace);
     };
 
     updateTraceLineWidth = (index: number, newWidth: number) => {
-        this.getPlotTrace().updateTraceLineWidth(index, newWidth);
+        this.getPlotTraceHelper().updateTraceLineWidth(index, newWidth);
     };
 
     updateTraceBufferSize = (index: number, newSize: number) => {
-        this.getPlotTrace().updateTraceBufferSize(index, newSize);
+        this.getPlotTraceHelper().updateTraceBufferSize(index, newSize);
     };
 
     updateTraceScale = (index: number, newScale: "Linear" | "Log10") => {
-        this.getPlotTrace().updateTraceScale(index, newScale);
+        this.getPlotTraceHelper().updateTraceScale(index, newScale);
     };
 
     // ---------------------- data (delegated to _plotData) -------------------------------
 
     fetchArchiveData = () => {
-        this.getPlotData().fetchArchiveData();
+        this.getPlotDataHelper().fetchArchiveData();
     };
 
     mapDbrDataWitNewArchiveData = (data: {
@@ -958,23 +958,23 @@ export class DataViewerPlot {
         endTime: number;
         archiveData: [number[], number[]];
     }) => {
-        this.getPlotData().mapDbrDataWitNewArchiveData(data);
+        this.getPlotDataHelper().mapDbrDataWitNewArchiveData(data);
     };
 
     mapDbrDataWitNewData = (dbrDataList: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
-        this.getPlotData().mapDbrDataWitNewData(dbrDataList);
+        this.getPlotDataHelper().mapDbrDataWitNewData(dbrDataList);
     };
 
     addOneDbrData = (data: type_dbrData | type_LocalChannel_data | undefined, yAxis: type_yAxis) => {
-        this.getPlotData().addOneDbrData(data, yAxis);
+        this.getPlotDataHelper().addOneDbrData(data, yAxis);
     };
 
     exportData = () => {
-        this.getPlotData().exportData();
+        this.getPlotDataHelper().exportData();
     };
 
     prepareExportData = () => {
-        return this.getPlotData().prepareExportData();
+        return this.getPlotDataHelper().prepareExportData();
     };
 
     // ----------------------------- helpers -----------------------
@@ -1318,23 +1318,23 @@ export class DataViewerPlot {
     // ------------------ mouse event handlers (delegated to _mouse) ----------------------
 
     handleWheelOnPlotX = (event: React.WheelEvent) => {
-        this.getPlotMouse().handleWheelOnPlotX(event);
+        this.getPlotMouseHelper().handleWheelOnPlotX(event);
     };
 
     handleWheelOnPlotY = (event: React.WheelEvent) => {
-        this.getPlotMouse().handleWheelOnPlotY(event);
+        this.getPlotMouseHelper().handleWheelOnPlotY(event);
     };
 
     handleMouseMoveOnPlotX = (event: MouseEvent) => {
-        this.getPlotMouse().handleMouseMoveOnPlotX(event);
+        this.getPlotMouseHelper().handleMouseMoveOnPlotX(event);
     };
 
     handleMouseMoveOnPlotY = (event: MouseEvent) => {
-        this.getPlotMouse().handleMouseMoveOnPlotY(event);
+        this.getPlotMouseHelper().handleMouseMoveOnPlotY(event);
     };
 
     handleMouseUpOnPlot = (event: MouseEvent) => {
-        this.getPlotMouse().handleMouseUpOnPlot(event);
+        this.getPlotMouseHelper().handleMouseUpOnPlot(event);
     };
 
 
@@ -1343,16 +1343,16 @@ export class DataViewerPlot {
         return this._mainWidget;
     };
 
-    getPlotTrace = () => {
-        return this._plotTrace;
+    getPlotTraceHelper = () => {
+        return this._plotTraceHelper;
     };
 
-    getPlotData = () => {
-        return this._plotData;
+    getPlotDataHelper = () => {
+        return this._plotDataHelper;
     };
 
-    getPlotMouse = () => {
-        return this._plotMouse;
+    getPlotMouseHelper = () => {
+        return this._plotMouseHelper;
     };
 
     getStyle = () => {

@@ -1,5 +1,6 @@
 import { Channel_DBR_TYPES } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
+import { settingsIndexChoices } from "./DataViewer";
 import type { DataViewerPlot } from "./DataViewerPlot";
 import { defaultTicksInfo, traceColors, type type_yAxis } from "./DataViewerPlot";
 
@@ -9,7 +10,7 @@ import { defaultTicksInfo, traceColors, type type_yAxis } from "./DataViewerPlot
  * Handles: addTrace, renameTrace, removeTrace, getNewColor,
  * updateTraceShowOrHide, updateTraceLineWidth, updateTraceBufferSize, updateTraceScale
  */
-export class DataViewerPlotTrace {
+export class DataViewerPlotTraceHelper {
     _plot: DataViewerPlot;
 
     constructor(plot: DataViewerPlot) {
@@ -160,7 +161,7 @@ export class DataViewerPlotTrace {
         plot.setSelectedTraceIndex(newSelectedTrace);
 
         // (5)
-        plot.getMainWidget().setShowSettingsPage(-100);
+        plot.getMainWidget().setSettingsIndex(settingsIndexChoices.NONE);
 
         // (6)
         plot.updatePlot();

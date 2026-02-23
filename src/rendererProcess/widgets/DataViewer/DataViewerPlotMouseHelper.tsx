@@ -9,7 +9,7 @@ import { titleHeight, yAxisLabelWidth, yAxisTickWidth } from "./DataViewerPlot";
  * Handles: handleWheelOnPlotX, handleWheelOnPlotY,
  * handleMouseMoveOnPlotX, handleMouseMoveOnPlotY, handleMouseUpOnPlot
  */
-export class DataViewerPlotMouse {
+export class DataViewerPlotMouseHelper {
     _plot: DataViewerPlot;
 
     constructor(plot: DataViewerPlot) {

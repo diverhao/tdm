@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
-import { DataViewer } from "./DataViewer";
+import { DataViewer, settingsIndexChoices } from "./DataViewer";
 import { Log } from "../../../common/Log";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { DataViewerPlot } from "./DataViewerPlot";
@@ -10,8 +10,8 @@ import { GlobalVariables } from "../../../common/GlobalVariables";
 
 export class DataViewerTraceSettings {
     _plot: DataViewerPlot;
-    constructor(plot: DataViewerPlot) {
-        this._plot = plot;
+    constructor(mainWidget: DataViewer) {
+        this._plot = mainWidget.getPlot();
     }
 
 
@@ -38,8 +38,11 @@ export class DataViewerTraceSettings {
         )
     }
 
+    getElement = () => {
+        return <this._Element></this._Element>
+    }
 
-    _ElementChannelSection = ({ index }: any) => {
+    _ElementTraceSetting = ({ index }: any) => {
         const yAxis = this.getPlot().yAxes[index];
         const elementRefLineColor = React.useRef<any>(null);
         const elementRefChannelNameInput = React.useRef<any>(null);
@@ -480,7 +483,13 @@ export class DataViewerTraceSettings {
         )
     }
 
-    _ElementTraceSetting = ({ index }: { index: number }) => {
+    _Element = () => {
+        const index = this.getPlot().getMainWidget().getSettingsIndex();
+
+        if (index === settingsIndexChoices.NONE || index === settingsIndexChoices.MAIN) {
+            return null;
+        }
+
         const channelName = this.getChannelNames()[index];
 
         if (channelName === undefined) {
@@ -513,7 +522,7 @@ export class DataViewerTraceSettings {
             >
 
 
-                <this._ElementChannelSection key={`setting-line-${channelName}-${index}`} index={index} />
+                <this._ElementTraceSetting key={`setting-line-${channelName}-${index}`} index={index} />
 
                 <div
                     style={{
@@ -554,7 +563,7 @@ export class DataViewerTraceSettings {
                 marginTop={10}
                 marginBottom={10}
                 handleClick={() => {
-                    this.getPlot().getMainWidget().setShowSettingsPage(-100);
+                    this.getPlot().getMainWidget().setSettingsIndex(settingsIndexChoices.NONE);
                     this.getPlot().updatePlot();
                 }}
             >

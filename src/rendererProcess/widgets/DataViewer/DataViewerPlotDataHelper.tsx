@@ -11,7 +11,7 @@ import type { type_yAxis } from "./DataViewerPlot";
  * Handles: fetchArchiveData, mapDbrDataWitNewArchiveData, mapDbrDataWitNewData,
  * addOneDbrData, exportData, prepareExportData
  */
-export class DataViewerPlotData {
+export class DataViewerPlotDataHelper {
     _plot: DataViewerPlot;
 
     constructor(plot: DataViewerPlot) {

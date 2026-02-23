@@ -6,9 +6,10 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { DataViewerSidebar } from "./DataViewerSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { DataViewerPlot } from "./DataViewerPlot";
-import { DataViewerSettings } from "./DataViewerSettings";
+import { DataViewerMainSettings } from "./DataViewerMainSettings";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
+import { DataViewerTraceSettings } from "./DataViewerTraceSettings";
 
 export type type_DataViewer_tdl = {
     type: string;
@@ -23,11 +24,69 @@ export type type_DataViewer_tdl = {
     yAxes: Record<string, any>[];
 };
 
+
+export enum settingsIndexChoices {
+    NONE = -2,
+    MAIN = -1,
+    TRACE_0 = 0,
+    TRACE_1,
+    TRACE_2,
+    TRACE_3,
+    TRACE_4,
+    TRACE_5,
+    TRACE_6,
+    TRACE_7,
+    TRACE_8,
+    TRACE_9,
+    TRACE_10,
+    TRACE_11,
+    TRACE_12,
+    TRACE_13,
+    TRACE_14,
+    TRACE_15,
+    TRACE_16,
+    TRACE_17,
+    TRACE_18,
+    TRACE_19,
+    TRACE_20,
+    TRACE_21,
+    TRACE_22,
+    TRACE_23,
+    TRACE_24,
+    TRACE_25,
+    TRACE_26,
+    TRACE_27,
+    TRACE_28,
+    TRACE_29,
+    TRACE_30,
+    TRACE_31,
+    TRACE_32,
+    TRACE_33,
+    TRACE_34,
+    TRACE_35,
+    TRACE_36,
+    TRACE_37,
+    TRACE_38,
+    TRACE_39,
+    TRACE_40,
+    TRACE_41,
+    TRACE_42,
+    TRACE_43,
+    TRACE_44,
+    TRACE_45,
+    TRACE_46,
+    TRACE_47,
+    TRACE_48,
+    TRACE_49,
+}
+
+
 export class DataViewer extends BaseWidget {
 
-    showSettingsPage: number = -100;
+    _settingsIndex: settingsIndexChoices = settingsIndexChoices.NONE;
     _plot: DataViewerPlot;
-    _settings: DataViewerSettings;
+    _mainSettings: DataViewerMainSettings;
+    _traceSettings: DataViewerTraceSettings;
     updateInterval: any = undefined;
 
     constructor(widgetTdl: type_DataViewer_tdl) {
@@ -82,7 +141,8 @@ export class DataViewer extends BaseWidget {
 
         this._plot = new DataViewerPlot(this);
         this.getPlot().setYAxes(JSON.parse(JSON.stringify(widgetTdl.yAxes)));
-        this._settings = new DataViewerSettings(this);
+        this._mainSettings = new DataViewerMainSettings(this);
+        this._traceSettings = new DataViewerTraceSettings(this);
 
         // the Settings page needs side bar component
         this.createSidebar();
@@ -137,8 +197,11 @@ export class DataViewer extends BaseWidget {
         this.getPlot().updatePlot(doFlush);
     };
 
-    getSettings = () => {
-        return this._settings;
+    getMainSettings = () => {
+        return this._mainSettings;
+    };
+    getTraceSettings = () => {
+        return this._traceSettings;
     };
 
     // ------------------------------ elements ---------------------------------
@@ -169,8 +232,8 @@ export class DataViewer extends BaseWidget {
                 >
                     <this._ElementArea></this._ElementArea>
                     {this.showResizers() ? <this._ElementResizer /> : null}
-                    {this.getShowSettingsPage() === -1 && (!g_widgets1.isEditing()) ? this.getSettings().getElement() : null}
-                    {this.getSettings().getElementTraceSetting(this.getShowSettingsPage())}
+                    {this.getMainSettings().getElement()}
+                    {this.getTraceSettings().getElement()}
                 </div>
                 {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </ErrorBoundary>
@@ -222,14 +285,14 @@ export class DataViewer extends BaseWidget {
 
     // -------------------- helper functions ----------------
 
-    setShowSettingsPage = (index: number) => {
-        this.showSettingsPage = index;
+    setSettingsIndex = (newIndex: settingsIndexChoices) => {
+        this._settingsIndex = newIndex;
     }
 
-    getShowSettingsPage = () => {
-        return this.showSettingsPage;
+    getSettingsIndex = () => {
+        return this._settingsIndex;
     }
-
+    
     hasData = () => {
         for (const yAxis of this.getPlot().yAxes) {
             if (yAxis["xData"].length > 0 && yAxis["yData"].length > 0) {
