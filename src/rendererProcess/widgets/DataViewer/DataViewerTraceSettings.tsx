@@ -1,443 +1,20 @@
-import { DataViewer } from "./DataViewer";
 import * as React from "react";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
-import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { CollapsibleWithoutTitle } from "../../helperWidgets/ColorPicker/Collapsible";
+import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
+import { DataViewer } from "./DataViewer";
 import { Log } from "../../../common/Log";
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
+import { DataViewerPlot } from "./DataViewerPlot";
+import { CollapsibleWithoutTitle } from "../../helperWidgets/ColorPicker/Collapsible";
+import { g_widgets1 } from "../../global/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 
-export class DataViewerSettings {
-    _mainWidget: DataViewer;
-    constructor(mainWidget: DataViewer) {
-        this._mainWidget = mainWidget;
-    }
-
-    _Element = () => {
-        return (
-            <div
-                style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: "white",
-                    overflowY: "scroll",
-                    padding: 15,
-                    display: "inline-flex",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                    boxSizing: "border-box",
-                    flexDirection: "column",
-                    border: "solid 1px rgba(0,0,0,1)",
-                }}
-            >
-                <div
-                    style={{
-                        display: "inline-flex",
-                        flexDirection: "column",
-                        justifyContent: "flex-start",
-                        alignItems: "flex-start",
-                        width: "90%",
-                        boxSizing: "border-box",
-                        borderRadius: 10,
-                        backgroundColor: "rgba(230, 230, 230, 1)",
-                        padding: 10,
-                        marginBottom: 10,
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "inline-flex",
-                            padding: 5,
-                            fontWeight: "bold",
-                            alignItems: "center",
-                            flexDirection: "row",
-                        }}
-                    >
-                        Appearance
-                    </div>
-                    <this._ElementBackgroundColor></this._ElementBackgroundColor>
-                    <this._ElementPeriod></this._ElementPeriod>
-                    <this._ElementZoomFactor></this._ElementZoomFactor>
-                    <this._ElementFontFamily></this._ElementFontFamily>
-                    <this._ElementFontSize></this._ElementFontSize>
-                    <this._ElementFontWeight></this._ElementFontWeight>
-                    <this._ElementFontStyle></this._ElementFontStyle>
-                </div>
-                <this._ElementSettingsOKButton></this._ElementSettingsOKButton>
-            </div>
-        )
-    }
-
-    _ElementBackgroundColor = () => {
-        const [showCollapsible, setShowCollapsible] = React.useState<boolean>(false);
-        const elementRefBackgroundColor = React.useRef<any>(null);
-
-        return (
-            <div
-                style={{
-                    width: "80%",
-                    boxSizing: "border-box",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    padding: 5,
-                }}
-            >
-                <div
-                    style={{
-                        width: "30%",
-                    }}
-                >
-                    Background color
-                </div>
-                <div
-                    style={{
-                        display: "inline-flex",
-                        flexGrow: 1
-                    }}
-                >
-
-                    <div
-                        ref={elementRefBackgroundColor}
-                        style={{
-                            height: 12,
-                            aspectRatio: "1/1",
-                            borderRadius: 2,
-                            border: "solid 1px rgba(200, 200, 200, 1)",
-                            backgroundColor: this.getMainWidget().getStyle()["backgroundColor"],
-                            position: "relative",
-                        }}
-                        onMouseDown={() => {
-                            setShowCollapsible(!showCollapsible);
-                        }}
-                        onMouseEnter={() => {
-                            if (elementRefBackgroundColor.current !== null) {
-                                elementRefBackgroundColor.current.style["cursor"] = "pointer";
-                            }
-                        }}
-                        onMouseLeave={() => {
-                            if (elementRefBackgroundColor.current !== null) {
-                                elementRefBackgroundColor.current.style["cursor"] = "default";
-                            }
-                        }}
-                    ></div>
-
-                    {showCollapsible === true ? (
-                        <div
-                            style={{
-                                position: "relative",
-                                width: "200px",
-                            }}
-                        >
-                            <CollapsibleWithoutTitle
-                                rgbColorStr={this.getMainWidget().getStyle()["backgroundColor"]}
-                                updateFromSidebar={(event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-                                    this.updateBackgroundColor(event, propertyValue);
-                                }}
-
-                                title={" "}
-                                eventName={`background-color`}
-                            />
-                        </div>
-                    ) : null}
-
-                </div>
-            </div>
-        )
+export class DataViewerTraceSettings {
+    _plot: DataViewerPlot;
+    constructor(plot: DataViewerPlot) {
+        this._plot = plot;
     }
 
 
-
-    /**
-     * one numeric value
-     */
-    _ElementPeriod = () => {
-        // always string
-        const mainWidget = this.getMainWidget();
-        const text = mainWidget.getAllText();
-        const [value, setValue] = React.useState(`${text["updatePeriod"]}`);
-
-        return (
-            <div
-                style={{
-                    width: "80%",
-                    boxSizing: "border-box",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    padding: 5,
-                }}
-            >
-                <div
-                    style={{
-                        width: "30%",
-                    }}
-                >
-                    Update period
-                </div>
-                <form
-                    style={{
-                        display: "inline-flex",
-                        flexGrow: 1,
-                    }}
-                    spellCheck={false}
-                    onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                        event.preventDefault();
-                        const orig = text["updatePeriod"];
-                        const valueNum = parseFloat(value);
-                        if (!isNaN(valueNum)) {
-                            (text["updatePeriod"] as any) = valueNum;
-
-                            g_widgets1.addToForceUpdateWidgets(this.getPlot().getMainWidget().getWidgetKey());
-                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-                            g_flushWidgets();
-                        } else {
-                            setValue(`${orig}`);
-                        }
-                    }}
-                >
-                    <input
-                        style={{
-                            outline: "none",
-                            border: "none",
-                            borderRadius: 0,
-                            width: "50%",
-                        }}
-                        value={value}
-                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                            const newVal = event.target.value;
-                            setValue(newVal);
-                        }}
-                        onBlur={(event: any) => {
-                            const orig = `${text["updatePeriod"]}`;
-                            if (orig !== value) {
-                                setValue(orig);
-                            }
-                        }}
-                    ></input>
-                </form>
-            </div>
-
-
-        );
-    };
-
-
-    _ElementZoomFactor = () => {
-        const [zoomFactor, setZoomFactor] = React.useState(`${this.getMainWidget().getText()["axisZoomFactor"]}`);
-        const rawFactors = ["1.1", "1.25", "1.5", "1.75", "2"];
-        const factors = React.useRef<string[]>(rawFactors.includes(zoomFactor) ? rawFactors : [zoomFactor, ...rawFactors]);
-        const text = this.getMainWidget().getText();
-        return (
-            <div
-                style={{
-                    width: "80%",
-                    boxSizing: "border-box",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    padding: 5,
-                }}
-            >
-                <div
-                    style={{
-                        width: "30%",
-                    }}
-                >
-                    Mouse wheel zoom factor
-                </div>
-                <form
-                    style={{
-                        display: "inline-flex",
-                        flexGrow: 1,
-                    }}
-                    onSubmit={(event: any) => {
-                        event.preventDefault();
-                    }}
-                >
-                    <select
-                        value={zoomFactor}
-                        onChange={(event: any) => {
-                            const newFactor = event.target.value;
-                            setZoomFactor(newFactor);
-                            text["axisZoomFactor"] = parseFloat(newFactor);
-                        }}
-                    >
-                        {factors.current.map((factor: string, index: number) => {
-                            return (
-                                <option value={factor}>
-                                    {factor}
-                                </option>
-                            )
-                        })}
-                    </select>
-                </form>
-            </div>
-        )
-    }
-
-
-    _ElementFontFamily = () => {
-        return (
-
-            <div
-                style={{
-                    width: "80%",
-                    boxSizing: "border-box",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    padding: 5,
-                }}
-            >
-                <div
-                    style={{
-                        width: "30%",
-                    }}
-                >
-                    Font family
-                </div>
-                <div
-                    style={{
-                        display: "inline-flex",
-                        flexGrow: 1,
-                    }}
-
-                >
-                    {this.getSidebar()?.getSidebarFontFamily().getElement(true)}
-                </div>
-            </div>
-        )
-    }
-
-    _ElementFontSize = () => {
-        return (
-
-            <div
-                style={{
-                    width: "80%",
-                    boxSizing: "border-box",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    padding: 5,
-                }}
-            >
-                <div
-                    style={{
-                        width: "30%",
-                    }}
-                >
-                    Font size
-                </div>
-                <div
-                    style={{
-                        display: "inline-flex",
-                        flexGrow: 1,
-                    }}
-
-                >
-                    {this.getSidebar()?.getSidebarFontSize().getElement(true)}
-                </div>
-            </div>
-        )
-    }
-
-    _ElementFontWeight = () => {
-        return (
-
-            <div
-                style={{
-                    width: "80%",
-                    boxSizing: "border-box",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    padding: 5,
-                }}
-            >
-                <div
-                    style={{
-                        width: "30%",
-                    }}
-                >
-                    Font weight
-                </div>
-                <div
-                    style={{
-                        display: "inline-flex",
-                        flexGrow: 1,
-                    }}
-
-                >
-                    {this.getSidebar()?.getSidebarFontWeight().getElement(true)}
-                </div>
-            </div>
-        )
-    }
-
-    _ElementFontStyle = () => {
-        return (
-
-            <div
-                style={{
-                    width: "80%",
-                    boxSizing: "border-box",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    padding: 5,
-                }}
-            >
-                <div
-                    style={{
-                        width: "30%",
-                    }}
-                >
-                    Font style
-                </div>
-                <div
-                    style={{
-                        display: "inline-flex",
-                        flexGrow: 1,
-                    }}
-
-                >
-                    {this.getSidebar()?.getSidebarFontStyle().getElement(true)}
-                </div>
-            </div>
-        )
-    }
-
-    _ElementSettingsOKButton = () => {
-        return (
-            <ElementRectangleButton
-                marginTop={10}
-                marginBottom={10}
-                handleClick={() => {
-                    this.getMainWidget().setShowSettingsPage(-100);
-                    this.updatePlot();
-                }}
-            >
-                OK
-            </ElementRectangleButton>
-        )
-    }
-
-    _ElementSettingsRemoveTraceButton = ({ index }: { index: number }) => {
-        return (
-            <ElementRectangleButton
-                defaultBackgroundColor={"rgba(255,0,0,1)"}
-                highlightBackgroundColor={"rgba(255,0,0,0.8)"}
-                marginTop={10}
-                marginBottom={10}
-
-                handleClick={() => {
-                    this.getMainWidget().getPlot().removeTrace(index);
-                }}
-            >
-                Remove111
-            </ElementRectangleButton>
-
-        )
-    }
 
     _ElementSettingsRemoveTraceButtonFake = () => {
         return (
@@ -452,7 +29,7 @@ export class DataViewerSettings {
                 marginTop={10}
                 marginBottom={10}
                 handleClick={() => {
-                    // this.getMainWidget().getPlot().removeTrace(index);
+                    // this.getPlot().removeTrace(index);
                 }}
             >
                 Remove
@@ -498,7 +75,7 @@ export class DataViewerSettings {
 
             this.getPlot().renameTrace(index, channelName, true)
             setTimeout(() => {
-                this.updatePlot();
+                this.getPlot().updatePlot();
             }, 500);
         }
 
@@ -529,7 +106,7 @@ export class DataViewerSettings {
                         }
                         this.getPlot().renameTrace(index, channelNameInput, true)
                         setTimeout(() => {
-                            this.updatePlot();
+                            this.getPlot().updatePlot();
                         }, 500);
                     }}
                 >
@@ -637,7 +214,7 @@ export class DataViewerSettings {
                                     if (!isNaN(yAxisValMinNum)) {
                                         yAxis.valMin = yAxisValMinNum;
                                         setYAxisValMin(`${yAxisValMinNum}`);
-                                        this.updatePlot();
+                                        this.getPlot().updatePlot();
                                     } else {
                                         setYAxisValMin(orig.toString());
                                     }
@@ -673,7 +250,7 @@ export class DataViewerSettings {
                                     if (!isNaN(yAxisValMaxNum)) {
                                         yAxis.valMax = yAxisValMaxNum;
                                         setYAxisValMax(`${yAxisValMaxNum}`);
-                                        this.updatePlot();
+                                        this.getPlot().updatePlot();
                                     } else {
                                         setYAxisValMax(orig.toString());
                                     }
@@ -708,7 +285,7 @@ export class DataViewerSettings {
                                     const orig = yAxis["lineWidth"];
                                     if (!isNaN(lineWidthInt)) {
                                         setLineWidth(`${lineWidthInt}`);
-                                        this.getMainWidget().getPlot().updateTraceLineWidth(index, lineWidthInt);
+                                        this.getPlot().updateTraceLineWidth(index, lineWidthInt);
                                     } else {
                                         setLineWidth(`${orig}`);
                                     }
@@ -771,13 +348,13 @@ export class DataViewerSettings {
                                     <CollapsibleWithoutTitle
                                         rgbColorStr={yAxis["lineColor"]}
                                         updateFromSidebar={
-                                            // (this.getMainWidget().getSidebar() as DataViewerSidebar).getSidebarDataViewerChannelNames().updateWidgetLineColor
+                                            // (this.getSidebar() as DataViewerSidebar).getSidebarDataViewerChannelNames().updateWidgetLineColor
                                             (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
                                                 if (event) {
                                                     event.preventDefault();
                                                 }
 
-                                                const mainWidget = this.getMainWidget() as DataViewer;
+                                                const mainWidget = this.getPlot().getMainWidget() as DataViewer;
 
                                                 const newVal = GlobalMethods.rgbaArrayToRgbaStr(propertyValue as number[]);
                                                 const indexStr = propertyName.split("-")[2];
@@ -815,7 +392,7 @@ export class DataViewerSettings {
                                     if (!isNaN(bufferSizeInt)) {
                                         setBufferSize(`${bufferSizeInt}`);
 
-                                        const mainWidget = this.getMainWidget();
+                                        const mainWidget = this.getPlot().getMainWidget();
                                         mainWidget.getPlot().updateTraceBufferSize(index, bufferSizeInt);
                                     } else {
                                         setBufferSize(`${orig}`);
@@ -851,11 +428,11 @@ export class DataViewerSettings {
                                 <select
                                     style={{ width: "140px", padding: 3, outline: "none", borderRadius: 0, border: "1px solid rgba(50,50,50,1)", }}
                                     onChange={(event: any) => {
-                                        this.getMainWidget().getPlot().updateTraceScale(index, event.target.value);
+                                        this.getPlot().updateTraceScale(index, event.target.value);
                                     }}
                                 >
                                     <option selected>{"Linear"}</option>
-                                    <option selected={this.getMainWidget().getPlot().yAxes[index]["displayScale"] === "Log10"}>{"Log10"}</option>
+                                    <option selected={this.getPlot().yAxes[index]["displayScale"] === "Log10"}>{"Log10"}</option>
                                 </select>
 
                             </form>
@@ -889,7 +466,7 @@ export class DataViewerSettings {
                                     type="checkbox"
                                     checked={showTrace}
                                     onChange={(event: any) => {
-                                        this.getMainWidget().getPlot().updateTraceShowOrHide(index, !showTrace);
+                                        this.getPlot().updateTraceShowOrHide(index, !showTrace);
                                         setShowTrace((prevVal: boolean) => {
                                             return !showTrace;
                                         });
@@ -952,6 +529,40 @@ export class DataViewerSettings {
             </div>
         );
     };
+
+    _ElementSettingsRemoveTraceButton = ({ index }: { index: number }) => {
+        return (
+            <ElementRectangleButton
+                defaultBackgroundColor={"rgba(255,0,0,1)"}
+                highlightBackgroundColor={"rgba(255,0,0,0.8)"}
+                marginTop={10}
+                marginBottom={10}
+
+                handleClick={() => {
+                    this.getPlot().removeTrace(index);
+                }}
+            >
+                Remove111
+            </ElementRectangleButton>
+
+        )
+    }
+
+    _ElementSettingsOKButton = () => {
+        return (
+            <ElementRectangleButton
+                marginTop={10}
+                marginBottom={10}
+                handleClick={() => {
+                    this.getPlot().getMainWidget().setShowSettingsPage(-100);
+                    this.getPlot().updatePlot();
+                }}
+            >
+                OK
+            </ElementRectangleButton>
+        )
+    }
+
 
     getElementTraceSetting = (index: number) => {
         return <this._ElementTraceSetting index={index}></this._ElementTraceSetting>
@@ -1048,51 +659,11 @@ export class DataViewerSettings {
         )
     }
 
-    // ----------------- getters and helper functions ----------------------
-
-    getMainWidget = () => {
-        return this._mainWidget;
-    };
-
-    getElement = () => {
-        return <this._Element></this._Element>;
-    };
-
-    getSidebar = () => {
-        return this.getMainWidget().getSidebar();
-    };
-
-    updatePlot = (doFlush: boolean = true) => {
-        this.getMainWidget().updatePlot(doFlush);
-    };
+    getPlot = () => {
+        return this._plot;
+    }
 
     getChannelNames = () => {
-        return this.getMainWidget().getChannelNames();
-    };
-
-    getPlot = () => {
-        return this.getMainWidget().getPlot();
-    };
-
-
-
-
-    updateBackgroundColor = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        // no event
-
-        const newVal = GlobalMethods.rgbaArrayToRgbaStr(propertyValue as number[]);
-        const oldVal = this.getMainWidget().getStyle()["backgroundColor"];
-        if (newVal === oldVal) {
-            return;
-        } else {
-            this.getMainWidget().getStyle()["backgroundColor"] = newVal;
-        }
-
-        // the history is handled inside Collapsible
-
-        g_widgets1.addToForceUpdateWidgets(this.getMainWidget().getWidgetKey());
-        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-        g_flushWidgets();
-    };
+        return this.getPlot().getMainWidget().getChannelNames();
+    }
 }

@@ -83,6 +83,9 @@ export class DataViewer extends BaseWidget {
         this._plot = new DataViewerPlot(this);
         this.getPlot().setYAxes(JSON.parse(JSON.stringify(widgetTdl.yAxes)));
         this._settings = new DataViewerSettings(this);
+
+        // the Settings page needs side bar component
+        this.createSidebar();
     }
 
     restartUpdateInterval = () => {
@@ -200,34 +203,20 @@ export class DataViewer extends BaseWidget {
                     // different from regular widget
                     overflow: this.getText().overflowVisible ? "visible" : "hidden",
                     flexDirection: "column",
-                    // whiteSpace: this.getText().wrapWord ? "pre-line" : "nowrap",
-                    // justifyContent: this.getText().horizontalAlign,
-                    // alignItems: this.getText().verticalAlign,
                     fontFamily: this.getStyle().fontFamily,
                     fontSize: this.getStyle().fontSize,
                     fontStyle: this.getStyle().fontStyle,
-                    // outline: this._getElementAreaRawOutlineStyle(),
                     whiteSpace: "nowrap",
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                {g_widgets1.isEditing() ? <this._ElementMask></this._ElementMask> : this.getPlot().getElement()}
+                {this.getPlot().getElement()}
             </div>
         );
     };
 
-    _ElementMask = () => {
-        return (<div style={{
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(255,0,0,0)"
-        }}>
-        </div>)
-    }
 
-    // concretize abstract method
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 

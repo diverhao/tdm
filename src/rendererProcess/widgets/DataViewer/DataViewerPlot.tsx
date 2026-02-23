@@ -194,7 +194,7 @@ export class DataViewerPlot {
 
     constructor(mainWidget: DataViewer) {
         this._mainWidget = mainWidget;
-        
+
         this._controls = new DataViewerPlotControls(this);
         this._plotTrace = new DataViewerPlotTrace(this);
         this._plotData = new DataViewerPlotData(this);
@@ -224,6 +224,17 @@ export class DataViewerPlot {
     // --------------------------- element ------------------------------------
 
     _Element = () => {
+
+        if (g_widgets1.isEditing()) {
+            return (
+                <div style={{
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(255,0,0,0)"
+                }}>
+                </div>
+            );
+        }
 
         const width = this.getStyle()["width"];
         const height = this.getStyle()["height"];
