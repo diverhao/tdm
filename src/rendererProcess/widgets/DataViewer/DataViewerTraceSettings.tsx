@@ -3,10 +3,11 @@ import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
 import { DataViewer, settingsIndexChoices } from "./DataViewer";
 import { Log } from "../../../common/Log";
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { DataViewerPlot } from "./DataViewerPlot";
+import { DataViewerPlot, type_yAxis } from "./DataViewerPlot";
 import { CollapsibleWithoutTitle } from "../../helperWidgets/ColorPicker/Collapsible";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
+import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 
 export class DataViewerTraceSettings {
     _plot: DataViewerPlot;
@@ -14,56 +15,109 @@ export class DataViewerTraceSettings {
         this._plot = mainWidget.getPlot();
     }
 
+    _Element = () => {
+        const index = this.getPlot().getMainWidget().getSettingsIndex();
+        const yAxis = this.getPlot().getSelectedYAxis();
+
+        if (yAxis === undefined) {
+            return null;
+        }
+
+        if (index === settingsIndexChoices.NONE || index === settingsIndexChoices.MAIN) {
+            return null;
+        }
+
+        const channelName = this.getChannelNames()[index];
+
+        if (channelName === undefined) {
+            return null;
+        }
 
 
-    _ElementSettingsRemoveTraceButtonFake = () => {
+
         return (
-            <ElementRectangleButton
-                additionalStyle={{
-                    cursor: "default",
-                    color: "rgba(0,0,0,0)",
-                    opacity: 0,
-                }}
-                defaultBackgroundColor={"rgba(255,0,0,0)"}
-                highlightBackgroundColor={"rgba(255,0,0,0)"}
-                marginTop={10}
-                marginBottom={10}
-                handleClick={() => {
-                    // this.getPlot().removeTrace(index);
+            <div
+                style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "white",
+                    overflowY: "scroll",
+                    padding: 15,
+                    display: "inline-flex",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    boxSizing: "border-box",
+                    flexDirection: "column",
+                    border: "solid 1px rgba(0,0,0,1)",
+                    fontSize: GlobalVariables.defaultFontSize,
+                    fontFamily: GlobalVariables.defaultFontFamily,
+                    fontStyle: GlobalVariables.defaultFontStyle,
+                    fontWeight: GlobalVariables.defaultFontWeight,
                 }}
             >
-                Remove
-            </ElementRectangleButton>
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "column",
+                        justifyContent: "flex-start",
+                        alignItems: "flex-start",
+                        width: "90%",
+                        boxSizing: "border-box",
+                        borderRadius: 10,
+                        backgroundColor: "rgba(230, 230, 230, 1)",
+                        padding: 10,
+                        marginBottom: 10,
+                    }}
+                >
+                    <this._ElementChannelNameInput></this._ElementChannelNameInput>
+                    <this._ElementNumVal
+                        axisData={yAxis}
+                        fieldName={"valMin"}
+                    ></this._ElementNumVal>
+                    <this._ElementNumVal
+                        axisData={yAxis}
+                        fieldName={"valMax"}
+                    ></this._ElementNumVal>
+                    <this._ElementNumVal
+                        axisData={yAxis}
+                        fieldName={"lineWidth"}
+                    ></this._ElementNumVal>
+                    <this._ElementNumVal
+                        axisData={yAxis}
+                        fieldName={"bufferSize"}
+                    ></this._ElementNumVal>
+                    <this._ElementBoolVal
+                        axisData={yAxis}
+                        fieldName={"show"}
+                    ></this._ElementBoolVal>
+                    <this._ElementYScale></this._ElementYScale>
+                    <this._ElementLineColor></this._ElementLineColor>
+                </div>
 
-        )
-    }
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        width: "90%",
+                    }}>
+                    <this._ElementRemoveTraceButton></this._ElementRemoveTraceButton>
+                    <this._ElementOKButton></this._ElementOKButton>
+                    <this._ElementFakeButton></this._ElementFakeButton>
+                </div>
+            </div>
+        );
+    };
 
-    getElement = () => {
-        return <this._Element></this._Element>
-    }
-
-    _ElementTraceSetting = ({ index }: any) => {
-        const yAxis = this.getPlot().yAxes[index];
-        const elementRefLineColor = React.useRef<any>(null);
+    _ElementChannelNameInput = () => {
+        const index = this.getPlot().getMainWidget().getSettingsIndex();
         const elementRefChannelNameInput = React.useRef<any>(null);
         const channelName = this.getChannelNames()[index];
-        const [yAxisValMin, setYAxisValMin] = React.useState<string>(yAxis.valMin.toString());
-        const [yAxisValMax, setYAxisValMax] = React.useState<string>(yAxis.valMax.toString());
         const [channelNameInput, setChannelNameInput] = React.useState(channelName);
-
-        React.useEffect(() => {
-            setYAxisValMin(yAxis.valMin.toString());
-        }, [yAxis.valMin]);
-
-        React.useEffect(() => {
-            setYAxisValMax(yAxis.valMax.toString());
-        }, [yAxis.valMax]);
-
-        const [showTrace, setShowTrace] = React.useState<boolean>(yAxis["show"]);
-        const [showCollapsible, setShowCollapsible] = React.useState<boolean>(false);
-        const [lineWidth, setLineWidth] = React.useState<string>(`${yAxis["lineWidth"]}`);
-        const [bufferSize, setBufferSize] = React.useState<string>(`${yAxis["bufferSize"]}`);
-
+        console.log("channel name Input", channelNameInput, "-->", channelName)
         // channel name hint
         const formElementRef = React.useRef<any>(null);
 
@@ -83,463 +137,408 @@ export class DataViewerTraceSettings {
         }
 
         return (
-            <div style={{
-                width: "100%",
-                display: "inline-flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-            }}>
-                {/* channel name */}
-                <form
-                    ref={formElementRef}
+            <form
+                ref={formElementRef}
+                style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "100%",
+                    fontSize: 25,
+                    marginTop: 20,
+                    marginBottom: 15,
+                }}
+                onSubmit={(event: any) => {
+                    event.preventDefault();
+                    setShowChannelNameHint(false);
+
+                    this.getPlot().renameTrace(index, channelNameInput, true)
+                    setTimeout(() => {
+                        this.getPlot().updatePlot();
+                    }, 5000);
+                }}
+            >
+                <input
+                    ref={elementRefChannelNameInput}
                     style={{
-                        width: "100%",
                         fontSize: 25,
-                        marginTop: 20,
-                        marginBottom: 15,
+                        width: "70%",
+                        outline: "none",
+                        border: "none",
+                        borderRadius: 0,
+                        padding: 5,
+                        boxSizing: "border-box",
                     }}
-                    // style={this.getFormStyle()}
-                    onSubmit={(event: any) => {
-                        event.preventDefault();
+                    value={channelNameInput}
+                    onChange={
+                        (event: any) => {
+                            const newVal = event.target.value;
+                            setChannelNameInput(newVal);
+
+                            // send query for channel name if there are more than 1 character input
+                            if (newVal.trim().length >= 2) {
+                                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
+                                console.log(queryStr)
+                                if (queryStr !== "") {
+                                    fetch(queryStr)
+                                        .then(res => res.json())
+                                        .then((data: any) => {
+                                            if (Object.keys(data).length > 0 && formElementRef.current !== null) {
+
+                                                // const rectInput = inputElementRef.current.getBoundingClientRect();
+                                                const recForm = formElementRef.current.getBoundingClientRect();
+                                                setChannelNameHintElementDimension({
+                                                    left: recForm.left, // rectInput.left, // - recForm.left,
+                                                    top: recForm.top + recForm.height + 5, //rectInput.top - recForm.top + rectInput.height,
+                                                    width: recForm.width - 5,
+                                                    maxHeight: 200,
+                                                })
+                                                setChannelNameHintData(Object.keys(data));
+                                                setShowChannelNameHint(true);
+                                            } else {
+                                                setChannelNameHintData(data);
+                                                setShowChannelNameHint(false);
+                                            }
+                                        })
+                                }
+                            }
+
+                        }
+                    }
+                    onBlur={(event: any) => {
                         setShowChannelNameHint(false);
+                        setChannelNameHintData([]);
 
                         if (elementRefChannelNameInput.current !== null) {
-                            elementRefChannelNameInput.current.blur();
+                            elementRefChannelNameInput.current.style["color"] = "rgba(0,0,0,1)";
                         }
-                        this.getPlot().renameTrace(index, channelNameInput, true)
-                        setTimeout(() => {
-                            this.getPlot().updatePlot();
-                        }, 500);
+                        const orig = channelName;
+                        if (orig !== channelNameInput) {
+                            setChannelNameInput(orig);
+                        }
                     }}
-                >
-                    <input
-                        ref={elementRefChannelNameInput}
-                        style={{
-                            fontSize: 25,
-                            width: "100%",
-                            outline: "none",
-                            borderRadius: 0,
-                            border: "solid 1px rgba(50,50,50,1)",
-                            padding: 5,
-                            boxSizing: "border-box",
-                        }}
-                        value={channelNameInput}
-                        onChange={
-                            (event: any) => {
-                                const newVal = event.target.value;
-                                setChannelNameInput(newVal);
-
-                                // send query for channel name if there are more than 1 character input
-                                if (newVal.trim().length >= 2) {
-                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                                    const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
-                                    console.log(queryStr)
-                                    if (queryStr !== "") {
-                                        fetch(queryStr)
-                                            .then(res => res.json())
-                                            .then((data: any) => {
-                                                if (Object.keys(data).length > 0 && formElementRef.current !== null) {
-
-                                                    // const rectInput = inputElementRef.current.getBoundingClientRect();
-                                                    const recForm = formElementRef.current.getBoundingClientRect();
-                                                    setChannelNameHintElementDimension({
-                                                        left: recForm.left, // rectInput.left, // - recForm.left,
-                                                        top: recForm.top + recForm.height + 5, //rectInput.top - recForm.top + rectInput.height,
-                                                        width: recForm.width - 5,
-                                                        maxHeight: 200,
-                                                    })
-                                                    setChannelNameHintData(Object.keys(data));
-                                                    setShowChannelNameHint(true);
-                                                } else {
-                                                    setChannelNameHintData(data);
-                                                    setShowChannelNameHint(false);
-                                                }
-                                            })
-                                    }
-                                }
-
-                            }
+                    placeholder="Channel Name"
+                    onFocus={(event: any) => {
+                        if (elementRefChannelNameInput.current !== null) {
+                            elementRefChannelNameInput.current.style["color"] = "rgba(255,0,0,1)";
                         }
-                        onBlur={(event: any) => {
-                            setShowChannelNameHint(false);
-                            setChannelNameHintData([]);
+                    }}
+                    onMouseEnter={(event: any) => {
+                        if (elementRefChannelNameInput.current !== null) {
+                            elementRefChannelNameInput.current.style["color"] = "rgba(255,0,0,1)";
+                        }
+                    }}
+                    onMouseLeave={(event: any) => {
+                        if (document.activeElement !== elementRefChannelNameInput.current &&
+                            elementRefChannelNameInput.current !== null) {
+                            elementRefChannelNameInput.current.style["color"] = "rgba(0,0,0,1)";
+                        }
+                    }}
+                ></input>
+                
+                <ChannelNameHintElement
+                    show={showChannelNameHint}
+                    additionalStyle={channelNameHintElementDimension}
+                    channelNames={channelNameHintData}
+                    selectHint={selectHint}
+                ></ChannelNameHintElement>
 
-                            if (elementRefChannelNameInput.current !== null) {
-                                elementRefChannelNameInput.current.style["color"] = "rgba(0,0,0,1)";
-                            }
-                            const orig = channelName;
-                            if (orig !== channelNameInput) {
-                                setChannelNameInput(orig);
-                            }
-                        }}
-                        placeholder="Channel Name"
-                        onFocus={(event: any) => {
-                            if (elementRefChannelNameInput.current !== null) {
-                                elementRefChannelNameInput.current.style["color"] = "rgba(255,0,0,1)";
-                            }
-                        }}
-                        onMouseEnter={(event: any) => {
-                            if (elementRefChannelNameInput.current !== null) {
-                                elementRefChannelNameInput.current.style["color"] = "rgba(255,0,0,1)";
-                            }
-                        }}
-                        onMouseLeave={(event: any) => {
-                            if (document.activeElement !== elementRefChannelNameInput.current &&
-                                elementRefChannelNameInput.current !== null) {
-                                elementRefChannelNameInput.current.style["color"] = "rgba(0,0,0,1)";
-                            }
-                        }}
-                    ></input>
+            </form>
 
-                    <ChannelNameHintElement
-                        show={showChannelNameHint}
-                        additionalStyle={channelNameHintElementDimension}
-                        channelNames={channelNameHintData}
-                        selectHint={selectHint}
-                    ></ChannelNameHintElement>
-
-                </form>
-                <table style={{ width: "90%" }}>
-                    <col style={{ width: "30%" }}></col>
-                    <col style={{ width: "70%" }}></col>
-                    {/* min Y */}
-                    <tr>
-                        <td>
-                            Min Y:
-                        </td>
-                        <td>
-                            <form
-                                onSubmit={(event: any) => {
-                                    event.preventDefault();
-                                    const yAxisValMinNum = parseFloat(yAxisValMin);
-                                    const orig = yAxis.valMin;
-                                    if (!isNaN(yAxisValMinNum)) {
-                                        yAxis.valMin = yAxisValMinNum;
-                                        setYAxisValMin(`${yAxisValMinNum}`);
-                                        this.getPlot().updatePlot();
-                                    } else {
-                                        setYAxisValMin(orig.toString());
-                                    }
-                                }}
-                            >
-                                <this._ElementInput
-                                    value={yAxisValMin}
-                                    onChange={(event: any) => {
-                                        event.preventDefault();
-                                        setYAxisValMin(event.target.value);
-                                    }}
-                                    onBlur={(event: any) => {
-                                        const orig = yAxis.valMin;
-                                        if (orig !== parseFloat(yAxisValMin)) {
-                                            setYAxisValMin(orig.toString());
-                                        }
-                                    }}
-                                ></this._ElementInput>
-                            </form>
-                        </td>
-                    </tr>
-                    {/* max Y */}
-                    <tr>
-                        <td>
-                            Max Y:
-                        </td>
-                        <td>
-                            <form
-                                onSubmit={(event: any) => {
-                                    event.preventDefault();
-                                    const yAxisValMaxNum = parseFloat(yAxisValMax);
-                                    const orig = yAxis.valMax;
-                                    if (!isNaN(yAxisValMaxNum)) {
-                                        yAxis.valMax = yAxisValMaxNum;
-                                        setYAxisValMax(`${yAxisValMaxNum}`);
-                                        this.getPlot().updatePlot();
-                                    } else {
-                                        setYAxisValMax(orig.toString());
-                                    }
-                                }}
-                            >
-                                <this._ElementInput
-                                    value={yAxisValMax}
-                                    onChange={(event: any) => {
-                                        event.preventDefault();
-                                        setYAxisValMax(event.target.value);
-                                    }}
-                                    onBlur={(event: any) => {
-                                        const orig = yAxis.valMax;
-                                        if (orig !== parseFloat(yAxisValMax)) {
-                                            setYAxisValMax(orig.toString());
-                                        }
-                                    }}
-                                ></this._ElementInput>
-                            </form>
-                        </td>
-                    </tr>
-                    {/* line width */}
-                    <tr>
-                        <td>
-                            Line width:
-                        </td>
-                        <td>
-                            <form
-                                onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                                    event.preventDefault();
-                                    const lineWidthInt = parseInt(lineWidth);
-                                    const orig = yAxis["lineWidth"];
-                                    if (!isNaN(lineWidthInt)) {
-                                        setLineWidth(`${lineWidthInt}`);
-                                        this.getPlot().updateTraceLineWidth(index, lineWidthInt);
-                                    } else {
-                                        setLineWidth(`${orig}`);
-                                    }
-                                }}
-                            >
-                                <this._ElementInput
-                                    value={lineWidth}
-                                    onChange={(event: any) => {
-                                        setLineWidth(event.target.value);
-                                    }}
-                                    onBlur={(event: any) => {
-                                        const orig = yAxis["lineWidth"];
-                                        if (`${orig}` !== lineWidth) {
-                                            setLineWidth(`${orig}`);
-                                        }
-                                    }}
-                                ></this._ElementInput>
-                            </form>
-                        </td>
-                    </tr>
-                    {/* line color */}
-                    <tr>
-                        <td>
-                            Line color:
-                        </td>
-                        <td>
-                            <div
-                                ref={elementRefLineColor}
-                                style={{
-                                    height: 12,
-                                    aspectRatio: "1/1",
-                                    borderRadius: 2,
-                                    border: "solid 1px rgba(200, 200, 200, 1)",
-                                    backgroundColor: yAxis["lineColor"],
-                                    position: "relative",
-                                }}
-                                onMouseDown={() => {
-                                    setShowCollapsible(!showCollapsible);
-                                }}
-                                onMouseEnter={() => {
-                                    if (elementRefLineColor.current !== null) {
-                                        elementRefLineColor.current.style["cursor"] = "pointer";
-                                    }
-                                }}
-                                onMouseLeave={() => {
-                                    if (elementRefLineColor.current !== null) {
-                                        elementRefLineColor.current.style["cursor"] = "default";
-                                    }
-                                }}
-                            ></div>
-                            {showCollapsible === true ? (
-                                <div
-                                    style={{
-                                        zIndex: 10000,
-                                        position: "relative",
-                                        width: "200px",
-                                        // height: "100px",
-                                    }}
-                                >
-                                    <CollapsibleWithoutTitle
-                                        rgbColorStr={yAxis["lineColor"]}
-                                        updateFromSidebar={
-                                            // (this.getSidebar() as DataViewerSidebar).getSidebarDataViewerChannelNames().updateWidgetLineColor
-                                            (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-                                                if (event) {
-                                                    event.preventDefault();
-                                                }
-
-                                                const mainWidget = this.getPlot().getMainWidget() as DataViewer;
-
-                                                const newVal = GlobalMethods.rgbaArrayToRgbaStr(propertyValue as number[]);
-                                                const indexStr = propertyName.split("-")[2];
-                                                if (indexStr !== undefined) {
-                                                    const index = parseInt(indexStr);
-                                                    const yAxis = mainWidget.getYAxes()[index];
-                                                    if (yAxis !== undefined) {
-                                                        yAxis["lineColor"] = newVal;
-                                                    }
-                                                } else {
-                                                    Log.error("error");
-                                                    return;
-                                                }
-                                                // do not update plot, the OK button will do.
-                                            }
-                                        }
-                                        title={" "}
-                                        eventName={`line-color-${index}`}
-                                    />
-                                </div>
-                            ) : null}
-                        </td>
-                    </tr>
-                    {/* buffer size */}
-                    <tr>
-                        <td>
-                            Buffer size:
-                        </td>
-                        <td>
-                            <form
-                                onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                                    event.preventDefault();
-                                    const bufferSizeInt = parseInt(bufferSize);
-                                    const orig = yAxis["bufferSize"];
-                                    if (!isNaN(bufferSizeInt)) {
-                                        setBufferSize(`${bufferSizeInt}`);
-
-                                        const mainWidget = this.getPlot().getMainWidget();
-                                        mainWidget.getPlot().updateTraceBufferSize(index, bufferSizeInt);
-                                    } else {
-                                        setBufferSize(`${orig}`);
-                                    }
-                                }}
-                            >
-                                <this._ElementInput
-                                    value={bufferSize}
-                                    onChange={(event: any) => {
-                                        setBufferSize(event.target.value);
-                                    }}
-                                    onBlur={(event: any) => {
-                                        const orig = yAxis["bufferSize"];
-                                        if (`${orig}` !== bufferSize) {
-                                            setBufferSize(`${orig}`);
-                                        }
-                                    }}
-                                ></this._ElementInput>
-                            </form>
-                        </td>
-                    </tr>
-                    {/* y scale */}
-                    <tr>
-                        <td>
-                            Scale:
-                        </td>
-                        <td>
-                            <form
-                                onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                                    event.preventDefault();
-                                }}
-                            >
-                                <select
-                                    style={{ width: "140px", padding: 3, outline: "none", borderRadius: 0, border: "1px solid rgba(50,50,50,1)", }}
-                                    onChange={(event: any) => {
-                                        this.getPlot().updateTraceScale(index, event.target.value);
-                                    }}
-                                >
-                                    <option selected>{"Linear"}</option>
-                                    <option selected={this.getPlot().yAxes[index]["displayScale"] === "Log10"}>{"Log10"}</option>
-                                </select>
-
-                            </form>
-                        </td>
-                    </tr>
-                    {/* show or hide trace */}
-                    <tr>
-                        <td>
-                            Show trace:
-                        </td>
-                        <td>
-                            <form
-                                style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "flex-start",
-                                    width: "100%",
-                                    height: "100%",
-                                    padding: "0px",
-                                    margin: "0px",
-                                }}
-                            >
-                                <input
-                                    style={{
-                                        margin: 0,
-                                        // height: "100%",
-                                        // same as color indicator, hard coded 15px
-                                        height: "12px",
-                                        aspectRatio: "1/1",
-                                    }}
-                                    type="checkbox"
-                                    checked={showTrace}
-                                    onChange={(event: any) => {
-                                        this.getPlot().updateTraceShowOrHide(index, !showTrace);
-                                        setShowTrace((prevVal: boolean) => {
-                                            return !showTrace;
-                                        });
-                                    }}
-                                />
-                            </form>
-                        </td>
-                    </tr>
-                </table>
-            </div>
         )
     }
 
-    _Element = () => {
+    /**
+     * one numeric value
+     */
+    _ElementNumVal = ({ axisData, fieldName }: { axisData: type_yAxis, fieldName: keyof (type_yAxis) }) => {
+        // always string
+        const [value, setValue] = React.useState(`${axisData[fieldName]}`);
+
+        return (
+            <div
+                style={{
+                    width: "80%",
+                    boxSizing: "border-box",
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    padding: 5,
+                }}
+            >
+                <div
+                    style={{
+                        width: "30%",
+                    }}
+                >
+                    {fieldName}
+                </div>
+                <form
+                    style={{
+                        display: "inline-flex",
+                        flexGrow: 1,
+                    }}
+                    spellCheck={false}
+                    onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+                        event.preventDefault();
+                        const orig = axisData[fieldName];
+                        const valueNum = parseFloat(value);
+                        if (!isNaN(valueNum)) {
+                            (axisData[fieldName] as any) = valueNum;
+
+                            g_widgets1.addToForceUpdateWidgets(this.getPlot().getMainWidget().getWidgetKey());
+                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+                            g_flushWidgets();
+                        } else {
+                            setValue(`${orig}`);
+                        }
+                    }}
+                >
+                    <input
+                        style={{
+                            outline: "none",
+                            border: "none",
+                            borderRadius: 0,
+                            width: "50%",
+                        }}
+                        value={value}
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                            const newVal = event.target.value;
+                            setValue(newVal);
+                        }}
+                        onBlur={(event: any) => {
+                            const orig = `${axisData[fieldName]}`;
+                            if (orig !== value) {
+                                setValue(orig);
+                            }
+                        }}
+                    ></input>
+                </form>
+            </div>
+
+
+        );
+    };
+
+    _ElementLineColor = () => {
+        const [showCollapsible, setShowCollapsible] = React.useState(false);
+        const elementRefLineColor = React.useRef<any>(null);
         const index = this.getPlot().getMainWidget().getSettingsIndex();
+        const yAxis = this.getPlot().getSelectedYAxis();
 
-        if (index === settingsIndexChoices.NONE || index === settingsIndexChoices.MAIN) {
-            return null;
-        }
-
-        const channelName = this.getChannelNames()[index];
-
-        if (channelName === undefined) {
+        if (yAxis === undefined) {
             return null;
         }
 
         return (
             <div
                 style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: "white",
-                    overflowY: "scroll",
-                    padding: 15,
-                    display: "inline-flex",
-                    justifyContent: "flex-start",
-                    alignItems: "flex-start",
+                    width: "80%",
                     boxSizing: "border-box",
-                    flexDirection: "column",
-                    border: "solid 1px rgba(0,0,0,1)",
-                    // always use default fonts
-                    fontFamily: GlobalVariables.defaultFontFamily,
-                    fontSize: GlobalVariables.defaultFontSize,
-                    fontStyle: GlobalVariables.defaultFontStyle,
-                    fontWeight: GlobalVariables.defaultFontWeight,
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    padding: 5,
+                    alignItems: "center",
                 }}
             >
-
-
-                <this._ElementTraceSetting key={`setting-line-${channelName}-${index}`} index={index} />
-
                 <div
                     style={{
-                        display: "inline-flex",
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        width: "100%",
-                    }}>
-                    <this._ElementSettingsRemoveTraceButton index={index}></this._ElementSettingsRemoveTraceButton>
-                    <this._ElementSettingsOKButton></this._ElementSettingsOKButton>
-                    <this._ElementSettingsRemoveTraceButtonFake></this._ElementSettingsRemoveTraceButtonFake>
+                        width: "30%",
+                    }}
+                >
+                    {"Line color"}
                 </div>
+
+                <div
+                    ref={elementRefLineColor}
+                    style={{
+                        height: 12,
+                        aspectRatio: "1/1",
+                        borderRadius: 2,
+                        border: "solid 1px rgba(200, 200, 200, 1)",
+                        backgroundColor: yAxis["lineColor"],
+                        position: "relative",
+                    }}
+                    onMouseDown={() => {
+                        setShowCollapsible(!showCollapsible);
+                    }}
+                    onMouseEnter={() => {
+                        if (elementRefLineColor.current !== null) {
+                            elementRefLineColor.current.style["cursor"] = "pointer";
+                        }
+                    }}
+                    onMouseLeave={() => {
+                        if (elementRefLineColor.current !== null) {
+                            elementRefLineColor.current.style["cursor"] = "default";
+                        }
+                    }}
+                ></div>
+                {showCollapsible === true ? (
+                    <div
+                        style={{
+                            zIndex: 10000,
+                            position: "relative",
+                            width: "200px",
+                            // height: "100px",
+                        }}
+                    >
+                        <CollapsibleWithoutTitle
+                            rgbColorStr={yAxis["lineColor"]}
+                            updateFromSidebar={
+                                // (this.getSidebar() as DataViewerSidebar).getSidebarDataViewerChannelNames().updateWidgetLineColor
+                                (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+                                    if (event) {
+                                        event.preventDefault();
+                                    }
+
+                                    const mainWidget = this.getPlot().getMainWidget() as DataViewer;
+
+                                    const newVal = GlobalMethods.rgbaArrayToRgbaStr(propertyValue as number[]);
+                                    const indexStr = propertyName.split("-")[2];
+                                    if (indexStr !== undefined) {
+                                        const index = parseInt(indexStr);
+                                        const yAxis = mainWidget.getYAxes()[index];
+                                        if (yAxis !== undefined) {
+                                            yAxis["lineColor"] = newVal;
+                                        }
+                                    } else {
+                                        Log.error("error");
+                                        return;
+                                    }
+                                    // do not update plot, the OK button will do.
+                                }
+                            }
+                            title={" "}
+                            eventName={`line-color-${index}`}
+                        />
+                    </div>
+                ) : null}
             </div>
+        )
+    }
+
+    /**
+     * one boolean value
+     */
+    _ElementBoolVal = ({ axisData, fieldName }: { axisData: type_yAxis, fieldName: keyof (type_yAxis) }) => {
+        // boolean
+        const [value, setValue] = React.useState<boolean>(axisData[fieldName] as boolean);
+
+        return (
+            <div
+                style={{
+                    width: "80%",
+                    boxSizing: "border-box",
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    padding: 5,
+                }}
+            >
+                <div
+                    style={{
+                        width: "30%",
+                    }}
+                >
+                    {fieldName}
+                </div>
+
+                <form
+                    style={{
+                        display: "inline-flex",
+                        flexGrow: 1,
+                    }}
+                    onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+                        event.preventDefault();
+                    }}
+                >
+                    <input
+                        type="checkbox"
+                        style={{
+                            outline: "none",
+                            border: "none",
+                            borderRadius: 0,
+                            margin: 0,
+                        }}
+
+                        checked={value}
+                        onChange={(event: any) => {
+                            (axisData[fieldName] as boolean) = !value;
+
+                            g_widgets1.addToForceUpdateWidgets(this.getPlot().getMainWidget().getWidgetKey());
+                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+
+                            g_flushWidgets();
+                            setValue((prevVal: boolean) => {
+                                return !prevVal;
+                            });
+                        }}
+                    />
+                </form>
+            </div>
+
+
         );
     };
 
-    _ElementSettingsRemoveTraceButton = ({ index }: { index: number }) => {
+    _ElementYScale = () => {
+        const index = this.getPlot().getMainWidget().getSettingsIndex();
+        const yAxis = this.getPlot().getSelectedYAxis();
+
+        if (yAxis === undefined) {
+            return null;
+        }
+
+        return (
+            <div
+                style={{
+                    width: "80%",
+                    boxSizing: "border-box",
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    padding: 5,
+                    border: "none",
+                }}
+            >
+                <div
+                    style={{
+                        width: "30%",
+                    }}
+                >
+                    {"Scale"}
+                </div>
+
+                <form
+                    onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+                        event.preventDefault();
+                    }}
+                >
+                    <select
+                        style={{
+                            width: "140px",
+                            padding: 0,
+                            outline: "none",
+                            borderRadius: 0,
+                            border: "none",
+                            fontSize: GlobalVariables.defaultFontSize,
+                            fontFamily: GlobalVariables.defaultFontFamily,
+                            fontStyle: GlobalVariables.defaultFontStyle,
+                            fontWeight: GlobalVariables.defaultFontWeight,
+                        }}
+                        onChange={(event: any) => {
+                            this.getPlot().updateTraceScale(index, event.target.value);
+                        }}
+                    >
+                        <option selected>{"Linear"}</option>
+                        <option selected={this.getPlot().yAxes[index]["displayScale"] === "Log10"}>{"Log10"}</option>
+                    </select>
+
+                </form>
+            </div>
+        )
+    }
+
+    _ElementRemoveTraceButton = () => {
+        const index = this.getPlot().getMainWidget().getSettingsIndex();
         return (
             <ElementRectangleButton
                 defaultBackgroundColor={"rgba(255,0,0,1)"}
@@ -551,13 +550,13 @@ export class DataViewerTraceSettings {
                     this.getPlot().removeTrace(index);
                 }}
             >
-                Remove111
+                Remove
             </ElementRectangleButton>
 
         )
     }
 
-    _ElementSettingsOKButton = () => {
+    _ElementOKButton = () => {
         return (
             <ElementRectangleButton
                 marginTop={10}
@@ -572,99 +571,9 @@ export class DataViewerTraceSettings {
         )
     }
 
-
-    getElementTraceSetting = (index: number) => {
-        return <this._ElementTraceSetting index={index}></this._ElementTraceSetting>
-    }
-
-
-    _ElementSmallButton = ({ children, onMouseDown }: any) => {
-        const elementRef = React.useRef<any>(null);
-        return <div
-            ref={elementRef}
-            style={{
-                aspectRatio: "1/1",
-                borderRadius: 2,
-                display: "inline-flex",
-                alignItems: "center",
-                opacity: 0.2,
-                justifyContent: "center",
-                userSelect: "none",
-            }}
-            onMouseDown={(event: any) => {
-                onMouseDown(event);
-            }}
-            onMouseEnter={(event: any) => {
-                if (elementRef.current !== null) {
-                    elementRef.current.style["cursor"] = "pointer";
-                    elementRef.current.style["opacity"] = 0.5;
-                }
-            }}
-            onMouseLeave={(event: any) => {
-                if (elementRef.current !== null) {
-                    elementRef.current.style["cursor"] = "default";
-                    elementRef.current.style["opacity"] = 0.2;
-                }
-            }}
-        >
-            {children}
-        </div>
-    }
-
-
-    _ElementInput = ({ children, value, onChange, onBlur, onFocus }: any) => {
-        const elementRef = React.useRef<any>(null);
+    _ElementFakeButton = () => {
         return (
-            <input
-                ref={elementRef}
-                style={{
-                    backgroundColor: 'rgba(0, 0, 0, 0)',
-                    width: "50%",
-                    height: "100%",
-                    // padding: 0,
-                    margin: 0,
-                    /* explicit inherits */
-                    fontSize: "inherit",
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                    whiteSpace: "nowrap",
-                    boxSizing: "border-box",
-                    border: "solid 1px rgba(50,50,50,1)",
-                    borderRadius: 0,
-                    outline: "none",
-                    padding: 3,
-                }}
-                value={value}
-                type={"text"}
-                onChange={(event: any) => {
-                    event.preventDefault();
-                    if (onChange !== undefined) {
-                        onChange(event);
-                    }
-                }}
-                onBlur={(event: any) => {
-                    event.preventDefault();
-                    if (onBlur !== undefined) {
-                        onBlur(event);
-                    }
-                    if (elementRef.current !== null) {
-                        // elementRef.current.style["border"] = "solid 1px rgba(0,0,0,0)";
-                        elementRef.current.style["backgroundColor"] = "rgba(255,255,255,0)";
-                    }
-                }}
-                onFocus={(event: any) => {
-                    event.preventDefault();
-                    if (onFocus !== undefined) {
-                        onFocus(event);
-                    }
-                    if (elementRef.current !== null) {
-                        // elementRef.current.style["border"] = "solid 1px rgba(0,0,0,1)";
-                        elementRef.current.style["backgroundColor"] = "rgba(255,255,255,1)";
-                    }
-                }}
-            >
-                {children}
-            </input>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
         )
     }
 
@@ -675,4 +584,10 @@ export class DataViewerTraceSettings {
     getChannelNames = () => {
         return this.getPlot().getMainWidget().getChannelNames();
     }
+
+
+    getElement = () => {
+        return <this._Element></this._Element>
+    }
+
 }
