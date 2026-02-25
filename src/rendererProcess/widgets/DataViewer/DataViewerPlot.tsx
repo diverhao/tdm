@@ -2,7 +2,7 @@ import { DataViewer } from "./DataViewer";
 import * as React from "react";
 import { ElementProfileBlockNameInput } from "../../mainWindow/MainWindowStyledComponents";
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { getMouseEventClientX, getMouseEventClientY, type_dbrData } from "../../../common/GlobalVariables";
+import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, type_dbrData } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
@@ -19,7 +19,7 @@ import { DataViewerPlotMouseHelper } from "./DataViewerPlotMouseHelper";
 
 export const defaultTicksInfo: type_ticksInfo = {
     scale: "Linear",
-    xValMin: 0,
+    xValMin: 0, // min/max with unit of ms since epoch
     xValMax: 0,
     yValMin: 0,
     yValMax: 0,
@@ -27,13 +27,28 @@ export const defaultTicksInfo: type_ticksInfo = {
     yLength: 0,
     numXgrid: 0,
     numYgrid: 0,
-    xTickValMin: -10,
+    xTickValMin: -10, // min/max with automatic unit from current time
     xTickValMax: 0,
     xTickValues: [],
     xTickPositions: [],
     yTickValues: [],
     yTickPositions: [],
-    xTickUnit: "",
+    xTickUnit: "", // automatically calculated unit
+}
+
+
+export const defaultYAxis: type_yAxis = {
+    label: "",
+    valMin: 0,
+    valMax: 10,
+    lineWidth: 2,
+    lineColor: `rgba(0,0,0,1)`,
+    show: true,
+    bufferSize: 50000,
+    displayScale: "Linear",
+    xData: [],
+    yData: [],
+    ticksInfo: JSON.parse(JSON.stringify(defaultTicksInfo)),
 }
 
 
@@ -69,7 +84,6 @@ export type type_yAxis = {
     xData: number[];
     yData: number[];
     ticksInfo: type_ticksInfo,
-
 };
 
 type type_xAxis = {
@@ -79,6 +93,61 @@ type type_xAxis = {
 };
 
 
+// no more than 50 traces
+export enum settingsIndexChoices {
+    NONE = -2,
+    MAIN = -1,
+    TRACE_0 = 0,
+    TRACE_1,
+    TRACE_2,
+    TRACE_3,
+    TRACE_4,
+    TRACE_5,
+    TRACE_6,
+    TRACE_7,
+    TRACE_8,
+    TRACE_9,
+    TRACE_10,
+    TRACE_11,
+    TRACE_12,
+    TRACE_13,
+    TRACE_14,
+    TRACE_15,
+    TRACE_16,
+    TRACE_17,
+    TRACE_18,
+    TRACE_19,
+    TRACE_20,
+    TRACE_21,
+    TRACE_22,
+    TRACE_23,
+    TRACE_24,
+    TRACE_25,
+    TRACE_26,
+    TRACE_27,
+    TRACE_28,
+    TRACE_29,
+    TRACE_30,
+    TRACE_31,
+    TRACE_32,
+    TRACE_33,
+    TRACE_34,
+    TRACE_35,
+    TRACE_36,
+    TRACE_37,
+    TRACE_38,
+    TRACE_39,
+    TRACE_40,
+    TRACE_41,
+    TRACE_42,
+    TRACE_43,
+    TRACE_44,
+    TRACE_45,
+    TRACE_46,
+    TRACE_47,
+    TRACE_48,
+    TRACE_49,
+}
 // colors
 export const traceColors: [number, number, number, number][] = [
     [255, 0, 0, 1],
@@ -156,7 +225,6 @@ export class DataViewerPlot {
     // helper class for mouse event handlers
     _plotMouseHelper: DataViewerPlotMouseHelper;
 
-    // ---------------------- efficiency ---------------------------
     minLiveDataTime: number = Number.MAX_VALUE;
 
     // the traces may be discontinued when the plot is dragged horizontally
@@ -165,16 +233,17 @@ export class DataViewerPlot {
     // In addition, this widget is always rendered each time
     rightButtonClicked: boolean = false;
 
-    // ---------------------- variables ----------------------------
-
     _mainWidget: DataViewer;
 
     // update cursor values without updating everything
     setCursorValue: React.Dispatch<React.SetStateAction<string>> | ((input: string) => void) = () => { };
 
     // trace
-    selectedTraceIndex: number = 1;
-    tracingIsMoving: boolean = true;
+    // which trace is being selected
+    _selectedTraceIndex: number = 0;
+    // for settings: which setting is shown, a setting could be main setting or trace setting
+    _settingsIndex: settingsIndexChoices = settingsIndexChoices.NONE;
+    traceIsMoving: boolean = true;
 
     // plot
     _plotWidth: number;
@@ -184,7 +253,6 @@ export class DataViewerPlot {
     // only one x axis, ticks and ticksText are the same for each data set
     xAxis: type_xAxis = {
         label: "Time from now",
-        // time since epoch, ms
         valMin: -10 * 60 * 1000,
         valMax: 0,
     };
@@ -200,44 +268,41 @@ export class DataViewerPlot {
         this._plotDataHelper = new DataViewerPlotDataHelper(this);
         this._plotMouseHelper = new DataViewerPlotMouseHelper(this);
 
-        this._plotWidth = this.getStyle().width - yAxisLabelWidth - yAxisTickWidth - legendWidth;
-        this._plotHeight = this.getStyle().height - titleHeight - xAxisLabelHeight - xAxisTickHeight - toolbarHeight;
+        const style = this.getStyle();
+        this._plotWidth = style.width - yAxisLabelWidth - yAxisTickWidth - legendWidth;
+        this._plotHeight = style.height - titleHeight - xAxisLabelHeight - xAxisTickHeight - toolbarHeight;
 
+        // stop moving with space key down
         window.addEventListener("keydown", (event: KeyboardEvent) => {
             if (event.code === "Space") {
-                this.tracingIsMoving = !this.tracingIsMoving;
-                if (this.tracingIsMoving) {
+                this.traceIsMoving = !this.traceIsMoving;
+                if (this.traceIsMoving) {
                     // update this.getPlot().xAxis.valMin and valMax
                     const DT = this.xAxis.valMax - this.xAxis.valMin;
                     this.xAxis.valMax = Date.now();
                     this.xAxis.valMin = Date.now() - DT;
                 }
-
                 this.updatePlot();
-
             }
         })
     }
-
-
 
     // --------------------------- element ------------------------------------
 
     _Element = () => {
 
+        // everytime resize the widget, update the sizes
         if (g_widgets1.isEditing()) {
-            return (
-                <div style={{
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: "rgba(255,0,0,0)"
-                }}>
-                </div>
-            );
+            this.updatePlotWidthHeight();
+        }
+
+        if (g_widgets1.getRoot().getDisplayWindowClient().getIsUtilityWindow() && this.getMainWidget().getYAxes().length === 0) {
+            this.updatePlotWidthHeight();
         }
 
         const width = this.getStyle()["width"];
         const height = this.getStyle()["height"];
+        const plotWidth = this.getPlotWidth();
         const plotHeight = this.getPlotHeight();
 
         return (
@@ -353,10 +418,28 @@ export class DataViewerPlot {
     _ElementYLabel = () => {
         const color = this.calcSelectedTraceColor();
         const yAxis = this.getSelectedYAxis();
-        let label = "";
-        if (yAxis !== undefined) {
-            label = yAxis["label"];
+
+
+        if (g_widgets1.isEditing() || yAxis === undefined) {
+            return (
+                <div
+                    style={{
+                        display: "inline-flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        width: yAxisLabelWidth,
+                        height: "100%",
+                        color: color,
+                    }}
+                >
+                    Y
+                </div>
+            );
         }
+
+        const label = yAxis["label"];
+
+
         return (
             <div
                 style={{
@@ -383,7 +466,11 @@ export class DataViewerPlot {
 
     _ElementYTicks = () => {
 
-        if (g_widgets1.isEditing()) {
+        const color = this.calcSelectedTraceColor();
+
+        const yAxis = this.getSelectedYAxis();
+
+        if (g_widgets1.isEditing() || yAxis === undefined) {
             return (
                 <div
                     style={{
@@ -395,16 +482,26 @@ export class DataViewerPlot {
                         flexShrink: 0,
                     }}
                 >
+                    <Scale
+                        min={0}
+                        max={10}
+                        numIntervals={5}
+                        position={"left"}
+                        show={true}
+                        length={this.getPlotHeight()}
+                        scale={"Linear"}
+                        color={color}
+                        compact={false}
+                        showTicks={false}
+                        showLabels={true}
+                        showAxis={false}
+                    >
+                    </Scale>
+
                 </div>
             );
         }
 
-        const color = this.calcSelectedTraceColor();
-
-        const yAxis = this.getSelectedYAxis();
-        if (yAxis === undefined) {
-            return null;
-        }
 
         const { xValMin,
             xValMax,
@@ -454,6 +551,13 @@ export class DataViewerPlot {
     _ElementPlot = () => {
         const plotRef = React.useRef<any>(null);
 
+        if (g_widgets1.isEditing() === true) {
+            return <this._ElementPlotDummy></this._ElementPlotDummy>
+        }
+
+        if (g_widgets1.getRoot().getDisplayWindowClient().getIsUtilityWindow() && this.getMainWidget().getYAxes().length === 0) {
+            return <this._ElementPlotDummy></this._ElementPlotDummy>
+        }
 
         return (
             <div
@@ -505,11 +609,11 @@ export class DataViewerPlot {
                     if (this.rightButtonClicked === true) {
                         this.rightButtonClicked = false;
 
-                        const yAxis = this.yAxes[this.selectedTraceIndex];
+                        const yAxis = this.yAxes[this.getSelectedTraceIndex()];
                         if (yAxis === undefined) {
                             return;
                         }
-                        const yValMinMax = this.findVisibleYValueRange(this.selectedTraceIndex);
+                        const yValMinMax = this.findVisibleYValueRange(this.getSelectedTraceIndex());
 
                         if (yValMinMax !== undefined) {
                             if (yAxis !== undefined) {
@@ -549,6 +653,64 @@ export class DataViewerPlot {
         );
     };
 
+    _ElementPlotDummy = () => {
+
+        const width = this.getPlotWidth();
+        const height = this.getPlotHeight();
+
+        const xTickValues = GlobalMethods.calcTicks(-10, 0, 10 + 1, { scale: "Linear" });
+        const xTickPositions = GlobalMethods.calcTickPositions(xTickValues, -10, 0, width, { scale: "Linear" }, "horizontal");
+        const yTickValues = GlobalMethods.calcTicks(0, 10, 5 + 1, { scale: "Linear" });
+        const yTickPositions = GlobalMethods.calcTickPositions(yTickValues, 0, 10, height, { scale: "Linear" }, "vertical");
+
+        return (
+            <div
+                style={{
+                    width: width,
+                    height: height,
+                    outline: "1px solid black",
+                }}
+            >
+                <svg
+                    width={`${width}`}
+                    height={`${height}`}
+                    x="0"
+                    y="0"
+                    style={{
+                        position: "absolute",
+                    }}
+                >
+                    {xTickPositions.map((tickPosition: number, index: number) => {
+
+                        return (
+                            <polyline
+                                key={`x-${tickPosition}-${index}`}
+                                points={`${tickPosition} 0 ${tickPosition} ${height}`}
+                                strokeWidth="1"
+                                stroke="rgb(190,190,190)"
+                                strokeDasharray={"5, 5"}
+                                fill="none"
+                            ></polyline>
+                        );
+                    })}
+                    {yTickPositions.map((tickPosition: number, index: number) => {
+                        return (
+                            <polyline
+                                key={`y-${tickPosition}-${index}`}
+                                points={`0 ${tickPosition} ${width} ${tickPosition}`}
+                                strokeWidth="1"
+                                stroke="rgb(190,190,190)"
+                                strokeDasharray={"5, 5"}
+                                fill="none"
+                            ></polyline>
+                        );
+                    })}
+                </svg>
+
+            </div>
+        )
+
+    }
 
     _ElementGridLines = () => {
 
@@ -579,8 +741,8 @@ export class DataViewerPlot {
 
         return (
             <svg
-                width={`${this.getPlotWidth()}`}
-                height={`${this.getPlotHeight()}`}
+                width={`${width}`}
+                height={`${height}`}
                 x="0"
                 y="0"
                 style={{
@@ -680,8 +842,9 @@ export class DataViewerPlot {
 
 
     _ElementXTicks = () => {
+        const yAxis = this.getSelectedYAxis();
 
-        if (g_widgets1.isEditing()) {
+        if (g_widgets1.isEditing() || yAxis === undefined) {
             return (
                 <div
                     style={{
@@ -693,13 +856,23 @@ export class DataViewerPlot {
                         flexShrink: 0,
                     }}
                 >
+                    <Scale
+                        min={-10}
+                        max={0}
+                        numIntervals={10}
+                        position={"bottom"}
+                        show={true}
+                        length={this.getPlotWidth()}
+                        scale={"Linear"}
+                        color={"rgba(0,0,0,1)"}
+                        compact={false}
+                        showTicks={false}
+                        showLabels={true}
+                        showAxis={false}
+                    >
+                    </Scale>
                 </div>
             );
-        }
-
-        const yAxis = this.getSelectedYAxis();
-        if (yAxis === undefined) {
-            return null
         }
 
         const { xValMin,
@@ -752,11 +925,25 @@ export class DataViewerPlot {
     };
 
     _ElementXLabel = () => {
-
         const yAxis = this.getSelectedYAxis();
-        if (yAxis === undefined) {
-            return null
+        if (g_widgets1.isEditing() || yAxis === undefined) {
+            return (
+                <div
+                    style={{
+                        position: "relative",
+                        height: xAxisTickHeight,
+                        width: this.getPlotWidth(),
+                        display: "inline-flex",
+                        justifyContent: "center",
+                        flexGrow: 0,
+                        flexShrink: 0,
+                    }}
+                >
+                    Time since now (minute)
+                </div>
+            );
         }
+
 
         const { xValMin,
             xValMax,
@@ -792,17 +979,40 @@ export class DataViewerPlot {
 
 
     _ElementLegend = () => {
+
+        if (g_widgets1.isEditing()) {
+            return (
+                <div
+                    style={{
+                        width: legendWidth,
+                        // height: "100%",
+                        height: this.getPlotHeight(),
+                        display: "inline-flex",
+                        flexFlow: "column",
+                        justifyContent: "flex-start",
+                        alignItems: "flex-start",
+                        overflowY: "auto",
+                        overflowX: "hidden",
+                    }}
+                >
+                </div>
+            )
+        }
+
         const elementAddTraceRef = React.useRef<any>(null);
 
         return (
             <div
                 style={{
-                    width: `${legendWidth}px`,
-                    height: "100%",
+                    width: legendWidth,
+                    // height: "100%",
+                    height: this.getPlotHeight(),
                     display: "inline-flex",
                     flexFlow: "column",
                     justifyContent: "flex-start",
                     alignItems: "flex-start",
+                    overflowY: "auto",
+                    overflowX: "hidden",
                 }}
             >
                 {this.yAxes.map((yAxis: type_yAxis, index: number) => {
@@ -901,7 +1111,7 @@ export class DataViewerPlot {
                         this.setCursorValue("")
                     }}
                 >
-                    <div style={{ fontSize: 20 }}>+</div>
+                    <div style={{ fontSize: GlobalVariables.defaultFontSize * 1.5 }}>+</div>
                 </div>
 
 
@@ -1113,9 +1323,9 @@ export class DataViewerPlot {
 
     /**
      * Set the React state value setter for cursor text on the plot. It causes the cursor text to update.
-     * 
+     *
      * @param {event: any} Input could be an mouse event, or a [number, number] array
-     */
+                        */
     updateCursorElement = (event: any) => {
 
         const yAxis = this.getSelectedYAxis();
@@ -1266,11 +1476,11 @@ export class DataViewerPlot {
      * xValMaxTicks is always 0, xValMinTicks is the negative range in the chosen unit.
      *
      * Examples:
-     *   90,000 ms (1.5 min)   → { xValMinTicks: -90,  xValMaxTicks: 0, xTimeUnit: "second" }
-     *   7,200,000 ms (2 hr)   → { xValMinTicks: -120,  xValMaxTicks: 0, xTimeUnit: "minute" }
-     *   172,800,000 ms (2 d)  → { xValMinTicks: -48,  xValMaxTicks: 0, xTimeUnit: "hour" }
-     *   ~730 d (2 yr)         → { xValMinTicks: -24,  xValMaxTicks: 0, xTimeUnit: "month" }
-     */
+     *   90,000 ms (1.5 min)   → {xValMinTicks: -90,  xValMaxTicks: 0, xTimeUnit: "second" }
+                        *   7,200,000 ms (2 hr)   → {xValMinTicks: -120,  xValMaxTicks: 0, xTimeUnit: "minute" }
+                        *   172,800,000 ms (2 d)  → {xValMinTicks: -48,  xValMaxTicks: 0, xTimeUnit: "hour" }
+                        *   ~730 d (2 yr)         → {xValMinTicks: -24,  xValMaxTicks: 0, xTimeUnit: "month" }
+                        */
     calcXValMinTick = (xRangeMs: number): { xTickValMin: number; xTickUnit: string } => {
         const absRange = Math.abs(xRangeMs);
         const oneSecond = 1000;
@@ -1376,15 +1586,15 @@ export class DataViewerPlot {
     };
 
     setSelectedTraceIndex = (newIndex: number) => {
-        this.selectedTraceIndex = newIndex;
+        this._selectedTraceIndex = newIndex;
     }
 
     getSelectedTraceIndex = () => {
-        return this.selectedTraceIndex;
+        return this._selectedTraceIndex;
     }
 
     getSelectedYAxis = () => {
-        return this.yAxes[this.selectedTraceIndex];
+        return this.yAxes[this.getSelectedTraceIndex()];
     }
 
 
@@ -1403,5 +1613,14 @@ export class DataViewerPlot {
 
     setPlotHeight = (newHeight: number) => {
         this._plotHeight = newHeight;
+    }
+
+
+    setSettingsIndex = (newIndex: settingsIndexChoices) => {
+        this._settingsIndex = newIndex;
+    }
+
+    getSettingsIndex = () => {
+        return this._settingsIndex;
     }
 }

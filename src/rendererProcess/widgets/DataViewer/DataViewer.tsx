@@ -5,7 +5,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { DataViewerSidebar } from "./DataViewerSidebar";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-import { DataViewerPlot } from "./DataViewerPlot";
+import { DataViewerPlot, defaultTicksInfo, defaultYAxis, settingsIndexChoices, type_yAxis } from "./DataViewerPlot";
 import { DataViewerMainSettings } from "./DataViewerMainSettings";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
@@ -21,69 +21,13 @@ export type type_DataViewer_tdl = {
     groupNames: string[];
     rules: type_rules_tdl;
     // Data Viewer specific
-    yAxes: Record<string, any>[];
+    yAxes: type_yAxis[];
 };
 
-
-export enum settingsIndexChoices {
-    NONE = -2,
-    MAIN = -1,
-    TRACE_0 = 0,
-    TRACE_1,
-    TRACE_2,
-    TRACE_3,
-    TRACE_4,
-    TRACE_5,
-    TRACE_6,
-    TRACE_7,
-    TRACE_8,
-    TRACE_9,
-    TRACE_10,
-    TRACE_11,
-    TRACE_12,
-    TRACE_13,
-    TRACE_14,
-    TRACE_15,
-    TRACE_16,
-    TRACE_17,
-    TRACE_18,
-    TRACE_19,
-    TRACE_20,
-    TRACE_21,
-    TRACE_22,
-    TRACE_23,
-    TRACE_24,
-    TRACE_25,
-    TRACE_26,
-    TRACE_27,
-    TRACE_28,
-    TRACE_29,
-    TRACE_30,
-    TRACE_31,
-    TRACE_32,
-    TRACE_33,
-    TRACE_34,
-    TRACE_35,
-    TRACE_36,
-    TRACE_37,
-    TRACE_38,
-    TRACE_39,
-    TRACE_40,
-    TRACE_41,
-    TRACE_42,
-    TRACE_43,
-    TRACE_44,
-    TRACE_45,
-    TRACE_46,
-    TRACE_47,
-    TRACE_48,
-    TRACE_49,
-}
 
 
 export class DataViewer extends BaseWidget {
 
-    _settingsIndex: settingsIndexChoices = settingsIndexChoices.NONE;
     _plot: DataViewerPlot;
     _mainSettings: DataViewerMainSettings;
     _traceSettings: DataViewerTraceSettings;
@@ -95,114 +39,30 @@ export class DataViewer extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        // update plot every "updatePeriod" time
-        this.updateInterval = setInterval(() => {
-            if (g_widgets1.isEditing()) {
-                return;
-            }
-
-            const plot = this.getPlot();
-            const xAxis = plot.xAxis;
-            if (plot.tracingIsMoving === true) {
-                const DT = xAxis.valMax - xAxis.valMin;
-                xAxis.valMax = Date.now();
-                xAxis.valMin = Date.now() - DT;
-            }
-
-            this.updatePlot(true);
-
-            // fetch archive data if needed
-            // this.getPlot().fetchArchiveData();
-        }, this.getText()["updatePeriod"] * 1000);
-
-
-        setTimeout(() => {
-            if (this._plot === undefined) {
-                this._plot = new DataViewerPlot(this);
-                this.getPlot().setYAxes(JSON.parse(JSON.stringify(widgetTdl.yAxes)));
-            }
-        }, 0);
-
-        window.addEventListener("resize", () => {
-            if (this.getText().singleWidget === false) {
-                return;
-            }
-            if (g_widgets1.isEditing()) {
-                this.getStyle().width = window.innerWidth - calcSidebarWidth() - getWindowHorizontalScrollBarWidth();
-                this.getStyle().height = window.innerHeight;
-                this.getText().singleWidget = false;
-            } else {
-                this.getStyle().width = window.innerWidth;
-                this.getStyle().height = window.innerHeight;
-            }
-
-            this.updatePlot();
-        });
-
+        // plot region
         this._plot = new DataViewerPlot(this);
-        this.getPlot().setYAxes(JSON.parse(JSON.stringify(widgetTdl.yAxes)));
+        const yAxes: type_yAxis[] = [];
+        for (const yAxis of widgetTdl.yAxes) {
+            yAxes.push(GlobalMethods.deepMerge(defaultYAxis, yAxis));
+        }
+        this._plot.setYAxes(yAxes);
+
+        // 2 setting pages
         this._mainSettings = new DataViewerMainSettings(this);
         this._traceSettings = new DataViewerTraceSettings(this);
 
         // the Settings page needs side bar component
         this.createSidebar();
+
+        this.startUpdateInterval();
+
+        // single-window DataViewer does not use "100%" for width or height
+        // it needs explicit dimension for proper plotting of traces
+        // when the window is resized
+        this.registerUtilityWindowResizeCallback((event: any) => {
+            this.updatePlot();
+        })
     }
-
-    restartUpdateInterval = () => {
-        clearInterval(this.updateInterval);
-        this.updateInterval = setInterval(() => {
-            if (g_widgets1.isEditing()) {
-                return;
-            }
-
-            if (this.getPlot().tracingIsMoving === true) {
-                // update this.getPlot().xAxis.valMin and valMax
-                const DT = this.getPlot().xAxis.valMax - this.getPlot().xAxis.valMin;
-                this.getPlot().xAxis.valMax = Date.now();
-                this.getPlot().xAxis.valMin = Date.now() - DT;
-            }
-            this.updatePlot(true);
-        }, this.getText()["updatePeriod"] * 1000);
-
-        if (g_widgets1.isEditing()) {
-            return;
-        }
-
-        if (this.getPlot().tracingIsMoving === true) {
-            // update this.getPlot().xAxis.valMin and valMax
-            const DT = this.getPlot().xAxis.valMax - this.getPlot().xAxis.valMin;
-            this.getPlot().xAxis.valMax = Date.now();
-            this.getPlot().xAxis.valMin = Date.now() - DT;
-        }
-        this.updatePlot(true);
-
-    }
-
-    mapDbrDataWitNewData = (newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
-        this.getPlot().mapDbrDataWitNewData(newDbrData);
-    };
-
-    mapDbrDataWitNewArchiveData = (data: {
-        displayWindowId: string,
-        widgetKey: string,
-        channelName: string,
-        startTime: number, // ms since epoch // "2024-01-01 01:23:45", no ms
-        endTime: number,
-        archiveData: [number[], number[]],
-    }) => {
-        this.getPlot().mapDbrDataWitNewArchiveData(data);
-    };
-
-    updatePlot = (doFlush: boolean = true) => {
-        this.getPlot().updatePlot(doFlush);
-    };
-
-    getMainSettings = () => {
-        return this._mainSettings;
-    };
-    getTraceSettings = () => {
-        return this._traceSettings;
-    };
 
     // ------------------------------ elements ---------------------------------
 
@@ -242,6 +102,7 @@ export class DataViewer extends BaseWidget {
 
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
 
+        // invoked upon the widget rendered for the first time
         React.useEffect(() => {
             const plot = this.getPlot();
             let ii = 0;
@@ -250,9 +111,16 @@ export class DataViewer extends BaseWidget {
                 plot.renameTrace(ii, channelName, false, true);
                 ii++;
             }
+            this.getPlot().setSelectedTraceIndex(0);
             plot.updatePlot(true);
-
         }, [])
+
+        const overflow = this.getText().overflowVisible ? "visible" : "hidden";
+        const flexDirection = "column";
+        const fontFamily = this.getStyle().fontFamily;
+        const fontSize = this.getStyle().fontSize;
+        const fontStyle = this.getStyle().fontStyle;
+        const whiteSpace = "nowrap";
 
         return (
             <div
@@ -263,13 +131,12 @@ export class DataViewer extends BaseWidget {
                     width: "100%",
                     height: "100%",
                     userSelect: "none",
-                    // different from regular widget
-                    overflow: this.getText().overflowVisible ? "visible" : "hidden",
-                    flexDirection: "column",
-                    fontFamily: this.getStyle().fontFamily,
-                    fontSize: this.getStyle().fontSize,
-                    fontStyle: this.getStyle().fontStyle,
-                    whiteSpace: "nowrap",
+                    overflow: overflow,
+                    flexDirection: flexDirection,
+                    fontFamily: fontFamily,
+                    fontSize: fontSize,
+                    fontStyle: fontStyle,
+                    whiteSpace: whiteSpace,
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
@@ -279,20 +146,84 @@ export class DataViewer extends BaseWidget {
         );
     };
 
-
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
     // -------------------- helper functions ----------------
 
+    startUpdateInterval = () => {
+        clearInterval(this.updateInterval);
+        this.updateInterval = setInterval(() => {
+            if (g_widgets1.isEditing()) {
+                return;
+            }
+            const plot = this.getPlot();
+            const xAxis = plot.xAxis;
+            if (plot.traceIsMoving === true) {
+                const DT = xAxis.valMax - xAxis.valMin;
+                xAxis.valMax = Date.now();
+                xAxis.valMin = Date.now() - DT;
+            }
+            this.updatePlot(true);
+        }, this.getText()["updatePeriod"] * 1000);
+
+        // ensure there is one update after 1 second
+        setTimeout(() => {
+            if (g_widgets1 === undefined) {
+                return;
+            }
+
+            if (g_widgets1.isEditing()) {
+                return;
+            }
+            const plot = this.getPlot();
+            const xAxis = plot.xAxis;
+            if (plot.traceIsMoving === true) {
+                const DT = xAxis.valMax - xAxis.valMin;
+                xAxis.valMax = Date.now();
+                xAxis.valMin = Date.now() - DT;
+            }
+            this.updatePlot(true);
+
+        }, 1000)
+    }
+
+    mapDbrDataWitNewData = (newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
+        this.getPlot().mapDbrDataWitNewData(newDbrData);
+    };
+
+    mapDbrDataWitNewArchiveData = (data: {
+        displayWindowId: string,
+        widgetKey: string,
+        channelName: string,
+        startTime: number, // ms since epoch // "2024-01-01 01:23:45", no ms
+        endTime: number,
+        archiveData: [number[], number[]],
+    }) => {
+        this.getPlot().mapDbrDataWitNewArchiveData(data);
+    };
+
+    updatePlot = (doFlush: boolean = true) => {
+        this.getPlot().updatePlot(doFlush);
+    };
+
+    // ----------------- getters and setters ------------------
+
+    getMainSettings = () => {
+        return this._mainSettings;
+    };
+    getTraceSettings = () => {
+        return this._traceSettings;
+    };
+
     setSettingsIndex = (newIndex: settingsIndexChoices) => {
-        this._settingsIndex = newIndex;
+        this.getPlot().setSettingsIndex(newIndex);
     }
 
     getSettingsIndex = () => {
-        return this._settingsIndex;
+        return this.getPlot().getSettingsIndex();
     }
-    
+
     hasData = () => {
         for (const yAxis of this.getPlot().yAxes) {
             if (yAxis["xData"].length > 0 && yAxis["yData"].length > 0) {
@@ -361,8 +292,8 @@ export class DataViewer extends BaseWidget {
             },
             channelNames: [],
             groupNames: [],
-            yAxes: [],
             rules: [],
+            yAxes: [],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return JSON.parse(JSON.stringify(defaultTdl));
@@ -378,16 +309,21 @@ export class DataViewer extends BaseWidget {
     */
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_DataViewer_tdl => {
         const result = this.generateDefaultTdl();
-        // 
         result.style["borderWidth"] = 0;
         result.channelNames = utilityOptions.channelNames as string[];
         return result;
     };
 
-    // override, has 'yAxes' property
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        result["yAxes"] = JSON.parse(JSON.stringify(this.getPlot().yAxes));
+        result["yAxes"] = this.getPlot().yAxes.map(({ xData, yData, ticksInfo, ...rest }) => {
+            return JSON.parse(JSON.stringify(rest));
+        });
+        result["yAxes"].map((yAxis: type_yAxis) => {
+            yAxis["xData"] = [];
+            yAxis["yData"] = [];
+            yAxis["ticksInfo"] = JSON.parse(JSON.stringify(defaultTicksInfo));
+        })
         return result;
     }
 

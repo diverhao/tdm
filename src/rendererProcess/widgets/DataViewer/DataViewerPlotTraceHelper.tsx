@@ -1,8 +1,8 @@
 import { Channel_DBR_TYPES } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { settingsIndexChoices } from "./DataViewer";
+import { settingsIndexChoices } from "./DataViewerPlot";
 import type { DataViewerPlot } from "./DataViewerPlot";
-import { defaultTicksInfo, traceColors, type type_yAxis } from "./DataViewerPlot";
+import { defaultTicksInfo, defaultYAxis, traceColors, type type_yAxis } from "./DataViewerPlot";
 
 /**
  * Helper class for trace management in DataViewerPlot.
@@ -45,19 +45,9 @@ export class DataViewerPlotTraceHelper {
         mainWidget.processChannelNames([], false);
 
         // (2)
-        let yAxis: type_yAxis = {
-            label: newChannelName, // updated every time
-            valMin: 0, // updated every time
-            valMax: 10, // updated every time
-            lineWidth: 2,
-            lineColor: `rgba(${this.getNewColor()})`,
-            show: true,
-            bufferSize: 50000,
-            displayScale: "Linear",
-            xData: [],
-            yData: [],
-            ticksInfo: JSON.parse(JSON.stringify(defaultTicksInfo)),
-        };
+        const yAxis = JSON.parse(JSON.stringify(defaultYAxis));
+        yAxis["label"] = newChannelName;
+        yAxis["lineColor"] = `rgba(${this.getNewColor()})`;
         plot.yAxes.push(yAxis);
 
         // (3)

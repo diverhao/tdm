@@ -73,6 +73,10 @@ export class Probe extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
+        // this.registerUtilityWindowResizeCallback((event: any) => {
+            
+        // })
+
         this._dbdFiles = new DbdFiles(JSON.parse(JSON.stringify(widgetTdl.recordTypes)), JSON.parse(JSON.stringify(widgetTdl.menus)));
 
         this._sidebar = new ProbeSidebar(this);
@@ -200,21 +204,15 @@ export class Probe extends BaseWidget {
         } catch (e) {
             rtypTcaChannel = g_widgets1.createTcaChannel(rtypChannelName, this.getWidgetKey());
         }
-        console.log("================= aaa")
         if (rtypTcaChannel !== undefined) {
 
             this.rtyp = this.rtypWaitingName;
-            console.log("================= bbb", this.rtyp)
             if (rtypTcaChannel.getProtocol() === "pva") {
-                console.log("================= ccc", this.rtyp)
                 await rtypTcaChannel.fetchPvaType(undefined);
-                console.log("================= ddd", this.rtyp, rtypTcaChannel.getFullPvaType())
                 const dbrData = await rtypTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
                 if (dbrData["value"] === undefined) {
-                    console.log("rtyp data ================", undefined)
                 }
                 // const dbrData = undefined;
-                console.log("dbr data =======================", dbrData, rtypTcaChannel.getDbrData(), rtypTcaChannel.getPvaType(), rtypTcaChannel.getFullPvaType())
 
                 if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
                     // this is a PVA V3 channel, it has fields, such as pva://demo:count.EGU

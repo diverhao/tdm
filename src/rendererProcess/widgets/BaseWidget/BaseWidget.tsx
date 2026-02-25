@@ -214,6 +214,19 @@ export abstract class BaseWidget {
 
     // ------------------------ mouse events ----------------------------
 
+    registerUtilityWindowResizeCallback = (func: (event: any) => void) => {
+        window.addEventListener("resize", (event: any) => {
+            const isUtilityWindow = g_widgets1.getRoot().getDisplayWindowClient().getIsUtilityWindow()
+            if (isUtilityWindow === false) {
+                return;
+            }
+            const style = this.getStyle();
+            style.width = window.innerWidth;
+            style.height = window.innerHeight;
+            func(event);
+        })
+    }
+
     /**
      * handler for mouse down event on this widget
      * left mouse button down (button code 0)

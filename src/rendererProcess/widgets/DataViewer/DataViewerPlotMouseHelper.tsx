@@ -50,7 +50,7 @@ export class DataViewerPlotMouseHelper {
 
         const zoomFactor = plot.getText()["axisZoomFactor"];
 
-        if (plot.tracingIsMoving) {
+        if (plot.traceIsMoving) {
             if (direction === "zoom-in") {
                 xAxis.valMax = Date.now();
                 xAxis.valMin = xAxis.valMax - (xAxis.valMax - xAxis.valMin) / zoomFactor;
@@ -118,7 +118,7 @@ export class DataViewerPlotMouseHelper {
         }
 
         const xAxis = plot.xAxis;
-        if (plot.tracingIsMoving) {
+        if (plot.traceIsMoving) {
             xAxis.valMax = Date.now();
         }
 
@@ -128,7 +128,7 @@ export class DataViewerPlotMouseHelper {
     handleMouseMoveOnPlotX = (event: MouseEvent) => {
         const plot = this.getPlot();
 
-        plot.tracingIsMoving = false;
+        plot.traceIsMoving = false;
 
         const dPointX = event.movementX;
 
@@ -187,7 +187,7 @@ export class DataViewerPlotMouseHelper {
 
         const xAxis = plot.xAxis;
         const dx = xAxis.valMax - xAxis.valMin;
-        if (plot.tracingIsMoving) {
+        if (plot.traceIsMoving) {
             xAxis.valMax = Date.now();
             xAxis.valMin = Date.now() - dx;
         }

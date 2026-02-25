@@ -1,4 +1,5 @@
-import { DataViewer, settingsIndexChoices } from "./DataViewer";
+import { DataViewer } from "./DataViewer";
+import {settingsIndexChoices} from "./DataViewerPlot"
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
@@ -31,7 +32,7 @@ export class DataViewerMainSettings {
                     width: "100%",
                     height: "100%",
                     backgroundColor: "white",
-                    overflowY: "scroll",
+                    overflowY: "auto",
                     padding: 15,
                     display: "inline-flex",
                     justifyContent: "flex-start",

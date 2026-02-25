@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
-import { DataViewer, settingsIndexChoices } from "./DataViewer";
+import { DataViewer } from "./DataViewer";
+import {settingsIndexChoices} from "./DataViewerPlot"
 import { Log } from "../../../common/Log";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { DataViewerPlot, type_yAxis } from "./DataViewerPlot";
@@ -44,7 +45,7 @@ export class DataViewerTraceSettings {
                     width: "100%",
                     height: "100%",
                     backgroundColor: "white",
-                    overflowY: "scroll",
+                    overflowY: "auto",
                     padding: 15,
                     display: "inline-flex",
                     justifyContent: "flex-start",
@@ -169,6 +170,7 @@ export class DataViewerTraceSettings {
                         padding: 5,
                         boxSizing: "border-box",
                     }}
+                    spellCheck={false}
                     value={channelNameInput}
                     onChange={
                         (event: any) => {

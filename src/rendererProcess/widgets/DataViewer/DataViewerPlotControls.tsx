@@ -2,7 +2,7 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { DataViewerPlot } from "./DataViewerPlot";
 import { toolbarHeight } from "./DataViewerPlot";
-import { settingsIndexChoices } from "./DataViewer";
+import { settingsIndexChoices } from "./DataViewerPlot";
 
 /**
  * Toolbar controls for DataViewerPlot (zoom, pan, auto-scale, pause/play, export, etc.)
@@ -28,8 +28,8 @@ export class DataViewerPlotControls {
         return (
             <div
                 style={{
-                    // width: `100%`,
-                    width: isSingleWidget === true ? window.innerWidth : plot.getMainWidget().getAllStyle()["width"],
+                    width: `100%`,
+                    // width: isSingleWidget === true ? window.innerWidth : plot.getMainWidget().getAllStyle()["width"],
                     height: `${toolbarHeight}`,
                     display: "inline-flex",
                     flexFlow: "row",
@@ -104,11 +104,11 @@ export class DataViewerPlotControls {
                                 return;
                             }
 
-                            const yAxis = plot.yAxes[plot.selectedTraceIndex];
+                            const yAxis = plot.yAxes[plot.getSelectedTraceIndex()];
                             if (yAxis === undefined) {
                                 return;
                             }
-                            const yValMinMax = plot.findVisibleYValueRange(plot.selectedTraceIndex);
+                            const yValMinMax = plot.findVisibleYValueRange(plot.getSelectedTraceIndex());
 
                             if (yValMinMax !== undefined) {
                                 if (yAxis !== undefined) {
@@ -172,9 +172,9 @@ export class DataViewerPlotControls {
                             if (event.button !== 0) {
                                 return;
                             }
-                            plot.tracingIsMoving = !plot.tracingIsMoving;
+                            plot.traceIsMoving = !plot.traceIsMoving;
 
-                            if (plot.tracingIsMoving) {
+                            if (plot.traceIsMoving) {
                                 // update this.getPlot().xAxis.valMin and valMax
                                 const DT = plot.xAxis.valMax - plot.xAxis.valMin;
                                 plot.xAxis.valMax = Date.now();
@@ -184,7 +184,7 @@ export class DataViewerPlotControls {
                             plot.updatePlot();
                         }}
                     >
-                        {plot.tracingIsMoving ? (
+                        {plot.traceIsMoving ? (
                             <img
                                 style={{
                                     width: "100%",
@@ -216,7 +216,7 @@ export class DataViewerPlotControls {
                             }
                             const dt = xAxis.valMax - xAxis.valMin;
                             xAxis.valMin = xAxis.valMax - dt / plot.getText()["axisZoomFactor"];
-                            if (plot.tracingIsMoving) {
+                            if (plot.traceIsMoving) {
                                 xAxis.valMax = Date.now();
                             }
                             plot.updatePlot();
@@ -244,7 +244,7 @@ export class DataViewerPlotControls {
                             }
                             const dt = xAxis.valMax - xAxis.valMin;
                             xAxis.valMin = xAxis.valMax - dt * plot.getText()["axisZoomFactor"];
-                            if (plot.tracingIsMoving) {
+                            if (plot.traceIsMoving) {
                                 xAxis.valMax = Date.now();
                             }
                             plot.updatePlot();
@@ -266,7 +266,7 @@ export class DataViewerPlotControls {
                                 return;
                             }
 
-                            plot.tracingIsMoving = false;
+                            plot.traceIsMoving = false;
                             const xAxis = plot.xAxis;
                             if (xAxis === undefined) {
                                 return;
@@ -295,7 +295,7 @@ export class DataViewerPlotControls {
                                 return;
                             }
 
-                            plot.tracingIsMoving = false;
+                            plot.traceIsMoving = false;
                             const xAxis = plot.xAxis;
                             if (xAxis === undefined) {
                                 return;
@@ -341,7 +341,7 @@ export class DataViewerPlotControls {
                             }
 
                             const xAxis = plot.xAxis;
-                            if (plot.tracingIsMoving) {
+                            if (plot.traceIsMoving) {
                                 xAxis.valMax = Date.now();
                             }
 
@@ -379,7 +379,7 @@ export class DataViewerPlotControls {
                                 yAxis.valMax = yMaxNew;
                             }
                             const xAxis = plot.xAxis;
-                            if (plot.tracingIsMoving) {
+                            if (plot.traceIsMoving) {
                                 xAxis.valMax = Date.now();
                             }
 
@@ -416,7 +416,7 @@ export class DataViewerPlotControls {
                                 yAxis.valMax = yMaxNew;
                             }
                             const xAxis = plot.xAxis;
-                            if (plot.tracingIsMoving) {
+                            if (plot.traceIsMoving) {
                                 xAxis.valMax = Date.now();
                             }
 
@@ -453,7 +453,7 @@ export class DataViewerPlotControls {
                                 yAxis.valMax = yMaxNew;
                             }
                             const xAxis = plot.xAxis;
-                            if (plot.tracingIsMoving) {
+                            if (plot.traceIsMoving) {
                                 xAxis.valMax = Date.now();
                             }
 
