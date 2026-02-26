@@ -180,11 +180,11 @@ export class DataViewer extends BaseWidget {
             const xAxis = plot.xAxis;
             if (plot.traceIsMoving === true) {
                 const DT = xAxis.valMax - xAxis.valMin;
-                xAxis.valMax = Date.now();
-                xAxis.valMin = Date.now() - DT;
+                const now = Date.now();
+                xAxis.valMax = now;
+                xAxis.valMin = now - DT;
             }
             this.updatePlot(true);
-
         }, 1000)
     }
 
