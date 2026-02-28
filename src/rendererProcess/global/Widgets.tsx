@@ -616,7 +616,7 @@ export class Widgets {
      */
     createWidget = (widgetTdlRaw: Record<string, any>, doFlush: boolean): type_widget => {
         // make a copy, do not use original
-        const widgetTdl = JSON.parse(JSON.stringify(widgetTdlRaw));
+        const widgetTdl: any = structuredClone(widgetTdlRaw);
         const widgetKey: string = widgetTdl.widgetKey;
         const widgetType: string = widgetTdl.type;
         let widget: any = null;
@@ -1621,7 +1621,7 @@ export class Widgets {
         }
 
         // the dynamically added widgets changes the array (set) of the widget keys
-        for (const widgetKey of JSON.parse(JSON.stringify([...this.getWidgets().keys()]))) {
+        for (const widgetKey of structuredClone([...this.getWidgets().keys()])) {
             // (5)
             try {
                 const widget = this.getWidget2(widgetKey);
@@ -3129,7 +3129,7 @@ export class Widgets {
         const tdlFileName = this.getTdlFileName();
         const rendererWindowStatus = g_widgets1.isEditing() ? "editing" : "operating";
         const editable = this.getEditable();
-        const externalMacros = JSON.parse(JSON.stringify(this.getRoot().getExternalMacros()));
+        const externalMacros = structuredClone(this.getRoot().getExternalMacros());
         const externalReplaceMacros = this.getRoot().getUseExternalMacros();
         // (3)
         this.removeAllWidgetsHard(false);

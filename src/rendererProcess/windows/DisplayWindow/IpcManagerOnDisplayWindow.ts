@@ -2,6 +2,7 @@ import { DisplayWindowClient } from "./DisplayWindowClient";
 import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
 import { rendererWindowStatus, type_widget, Widgets } from "../../../rendererProcess/global/Widgets";
 import { type_dbrData } from "../../../common/GlobalVariables";
+import { type_pva_value } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../../rendererProcess/helperWidgets/Root/Root";
 // import { type_tdl } from "../../file/FileReader";
 import { type_tdl } from "../../../common/GlobalVariables";

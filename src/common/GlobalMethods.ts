@@ -925,7 +925,7 @@ export const mergePvaTypeAndData = (type: Record<string, any>, key: string | und
     ) {
         // struct[]
         const structName = type["name"];
-        const structType = JSON.parse(JSON.stringify(type));
+        const structType = structuredClone(type);
         structType["typeIndex"] = "0x80";
         const result: any[] = [];
         if (Array.isArray(data)) {
@@ -944,7 +944,7 @@ export const mergePvaTypeAndData = (type: Record<string, any>, key: string | und
     ) {
         // union[]
         const unionName = type["name"];
-        const unionType = JSON.parse(JSON.stringify(type));
+        const unionType = structuredClone(type);
         unionType["typeIndex"] = "0x81";
         const result: any[] = [];
         if (Array.isArray(data)) {
@@ -1030,7 +1030,7 @@ export const deepMerge = (obj1: any, obj2: any): any => {
         obj2.forEach((val, i) => result[i] = val);
         return result;
     } else {
-        return JSON.parse(JSON.stringify({ ...obj1, ...obj2 }));
+        return structuredClone({ ...obj1, ...obj2 });
     }
 };
 
@@ -1210,7 +1210,7 @@ export const calcWebGlShadeColor = (rgbaColor: string) => {
     return result;
 }
 
-function matchesSingleType(value: unknown, expectedType: FieldType): boolean {
+function matchesSingleType(value: unknown, expectedType: FieldType, fieldPath: string = ""): boolean {
     if (expectedType === "undefined") {
         return value === undefined;
     }
@@ -1219,22 +1219,22 @@ function matchesSingleType(value: unknown, expectedType: FieldType): boolean {
     // Array where each item matches one of several schemas: { arrayOfUnion: TypeSchema[] }
     if (typeof expectedType === "object" && !Array.isArray(expectedType) && "arrayOfUnion" in expectedType) {
         const schemas = (expectedType as any).arrayOfUnion as TypeSchema[];
-        return Array.isArray(value) && value.every((item) => schemas.some((s) => isOfType(item, s)));
+        return Array.isArray(value) && value.every((item) => schemas.some((s) => isOfType(item, s, fieldPath + "[]")));
     }
 
     // Fixed-length tuple of primitive types: { tuple: PrimitiveFieldType[] }
     if (typeof expectedType === "object" && !Array.isArray(expectedType) && "tuple" in expectedType) {
         const tupleDef = (expectedType as any).tuple as string[];
         return Array.isArray(value) && value.length === tupleDef.length &&
-            tupleDef.every((t, i) => matchesSingleType((value as unknown[])[i], t as PrimitiveFieldType));
+            tupleDef.every((t, i) => matchesSingleType((value as unknown[])[i], t as PrimitiveFieldType, `${fieldPath}[${i}]`));
     }
 
     // Array of fixed-length tuples: { arrayOfTuple: PrimitiveFieldType[] }
     if (typeof expectedType === "object" && !Array.isArray(expectedType) && "arrayOfTuple" in expectedType) {
         const tupleDef = (expectedType as any).arrayOfTuple as string[];
-        return Array.isArray(value) && value.every((item) =>
+        return Array.isArray(value) && value.every((item, idx) =>
             Array.isArray(item) && item.length === tupleDef.length &&
-            tupleDef.every((t, i) => matchesSingleType(item[i], t as PrimitiveFieldType))
+            tupleDef.every((t, i) => matchesSingleType(item[i], t as PrimitiveFieldType, `${fieldPath}[${idx}][${i}]`))
         );
     }
 
@@ -1246,12 +1246,12 @@ function matchesSingleType(value: unknown, expectedType: FieldType): boolean {
 
     // Array of objects matching a schema: { arrayOf: TypeSchema }
     if (typeof expectedType === "object" && !Array.isArray(expectedType) && "arrayOf" in expectedType) {
-        return Array.isArray(value) && value.every((item) => isOfType(item, (expectedType as any).arrayOf));
+        return Array.isArray(value) && value.every((item, idx) => isOfType(item, (expectedType as any).arrayOf, `${fieldPath}[${idx}]`));
     }
 
     // Nested schema (object)
     if (typeof expectedType === "object" && !Array.isArray(expectedType)) {
-        return isOfType(value, expectedType);
+        return isOfType(value, expectedType, fieldPath);
     }
 
     switch (expectedType) {
@@ -1268,8 +1268,9 @@ function matchesSingleType(value: unknown, expectedType: FieldType): boolean {
     }
 }
 
-export function isOfType(obj: unknown, schema: TypeSchema): boolean {
+export function isOfType(obj: unknown, schema: TypeSchema, _path: string = ""): boolean {
     if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
+        console.warn(`[isOfType] Type check failed at "${_path || "(root)"}": expected a plain object, got`, obj);
         return false;
     }
 
@@ -1277,14 +1278,21 @@ export function isOfType(obj: unknown, schema: TypeSchema): boolean {
 
     for (const [key, expectedType] of Object.entries(schema)) {
         const value = record[key];
+        const fieldPath = _path ? `${_path}.${key}` : key;
 
         // If expectedType is an array, the value must match any of the types in the array
         if (Array.isArray(expectedType)) {
-            if (!expectedType.some((t) => matchesSingleType(value, t))) return false;
+            if (!expectedType.some((t) => matchesSingleType(value, t))) {
+                console.warn(`[isOfType] Type check failed at "${fieldPath}": expected one of`, expectedType, ", got", value);
+                return false;
+            }
             continue;
         }
 
-        if (!matchesSingleType(value, expectedType)) return false;
+        if (!matchesSingleType(value, expectedType)) {
+            console.warn(`[isOfType] Type check failed at "${fieldPath}": expected`, expectedType, ", got", value);
+            return false;
+        }
     }
 
     return true;

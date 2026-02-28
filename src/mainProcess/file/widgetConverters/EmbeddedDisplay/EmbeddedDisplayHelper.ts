@@ -89,14 +89,14 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
     // not getDefaultTdl(), always generate a new key
     static generateDefaultTdl = (type: string): type_EmbeddedDisplay_tdl => {
         const result = super.generateDefaultTdl(type) as type_EmbeddedDisplay_tdl;
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.tdlFileNames = JSON.parse(JSON.stringify(this._defaultTdl.tdlFileNames));
-        result.itemNames = JSON.parse(JSON.stringify(this._defaultTdl.itemNames));
-        result.itemMacros = JSON.parse(JSON.stringify(this._defaultTdl.itemMacros));
-        result.itemIsWebpage = JSON.parse(JSON.stringify(this._defaultTdl.itemIsWebpage));
+        result.style = structuredClone(this._defaultTdl.style);
+        result.text = structuredClone(this._defaultTdl.text);
+        result.channelNames = structuredClone(this._defaultTdl.channelNames);
+        result.groupNames = structuredClone(this._defaultTdl.groupNames);
+        result.tdlFileNames = structuredClone(this._defaultTdl.tdlFileNames);
+        result.itemNames = structuredClone(this._defaultTdl.itemNames);
+        result.itemMacros = structuredClone(this._defaultTdl.itemMacros);
+        result.itemIsWebpage = structuredClone(this._defaultTdl.itemIsWebpage);
         return result;
     };
 

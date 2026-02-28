@@ -29,7 +29,7 @@ export class ActionButton extends BaseWidget {
     // more than a regular component. That means if a display has 500 such components,
     // it may cost 1 second to render them, which is unacceptable.
     // In here we delay the render of <select /> components until all widgets are rendered
-    setDropDownActivated: (value: any) => void = (value: any) => { };
+    setDropDownActivated: React.Dispatch<React.SetStateAction<boolean>> = (value: React.SetStateAction<boolean>) => { };
 
     _actions: type_actions_tdl;
     constructor(widgetTdl: type_ActionButton_tdl) {
@@ -71,7 +71,7 @@ export class ActionButton extends BaseWidget {
         );
     };
 
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementAreaRaw = (): React.JSX.Element => {
 
         const allText = this.getAllText();
 
@@ -145,9 +145,9 @@ export class ActionButton extends BaseWidget {
                     boxSizing: "border-box",
                 }}
                 // do not use onMouseOver, which also applies to the children elements
-                onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                onMouseEnter={(event: React.MouseEvent) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
                 // do not use onMouseOut
-                onMouseLeave={(event: any) => {
+                onMouseLeave={(event: React.MouseEvent) => {
                     this.handleMouseLeaveWriteWidget(event, elementRef);
                     if (elementRef.current !== null) {
                         elementRef.current.style["outline"] = outline;
@@ -169,7 +169,7 @@ export class ActionButton extends BaseWidget {
     _ElementActionButtonText = () => {
         const allText = this.getAllText();
         const appearance = allText["appearance"];
-        const numActions = ((this.getActions() as unknown) as any[]).length;
+        const numActions = this.getActions().length;
         const dropDownArrowDisplay = appearance === "contemporary" && numActions > 1 ? "inline-flex" : "none";
         const justifyContent = allText["horizontalAlign"];
         const alignItems = allText["verticalAlign"];
@@ -193,7 +193,7 @@ export class ActionButton extends BaseWidget {
                     alignItems: alignItems,
                     backgroundColor: "rgba(0,0,0,0)",
                 }}
-                onMouseDown={(event: any) => {
+                onMouseDown={(event: React.MouseEvent) => {
                     if (numActions !== 1) {
                         return;
                     }
@@ -247,7 +247,7 @@ export class ActionButton extends BaseWidget {
                     WebkitAppearance: "none",
                     overflow: "hidden",
                 }}
-                onChange={(event: any) => {
+                onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
                     this.handleChangeOnSelect(event);
                     // go back to empty option (value = -1) after executing the option
                     if (selectRef.current !== null) {
@@ -305,7 +305,7 @@ export class ActionButton extends BaseWidget {
         this.executeAction(0);
     }
 
-    handleChangeOnSelect = (event: any) => {
+    handleChangeOnSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
 
         if (g_widgets1.isEditing()) {
             return;
@@ -587,7 +587,7 @@ export class ActionButton extends BaseWidget {
     // --------------------- getters -------------------------
 
     getActions = () => {
-        return this._actions as unknown as any[];
+        return this._actions;
     };
 
     // -------------------------- sidebar ---------------------------

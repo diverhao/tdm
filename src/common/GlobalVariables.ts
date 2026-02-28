@@ -222,6 +222,12 @@ export type type_dbrData = Record<string, any> & {
     value: string | string[] | number | number[] | undefined;
 };
 
+type Primitive = number | number[] | bigint | bigint[] | string | string[];
+export interface PvaRecord {
+    [key: string]: Primitive | PvaRecord;
+}
+export type type_pva_value = PvaRecord | Primitive;
+
 
 export enum NDArray_ColorMode {
     mono,

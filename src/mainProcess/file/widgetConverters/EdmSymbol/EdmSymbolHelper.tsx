@@ -80,10 +80,10 @@ export class EdmSymbolHelper extends BaseWidgetHelper {
     // not getDefaultTdl(), always generate a new key
     static generateDefaultTdl = (type: string): Record<string, any> => {
         const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
+        result.style = structuredClone(this._defaultTdl.style);
+        result.text = structuredClone(this._defaultTdl.text);
+        result.channelNames = structuredClone(this._defaultTdl.channelNames);
+        result.groupNames = structuredClone(this._defaultTdl.groupNames);
         return result;
     };
 

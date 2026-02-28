@@ -62,7 +62,7 @@ export class Canvas {
         this._widgetKey = widgetTdl.widgetKey;
 
         this._style = { ...Canvas._defaultTdl.style, ...widgetTdl.style };
-        this._macros = JSON.parse(JSON.stringify(widgetTdl.macros));
+        this._macros = structuredClone(widgetTdl.macros);
         // this._replaceMacros = widgetTdl.replaceMacros;
         this._windowName = widgetTdl.windowName === undefined ? "" : widgetTdl.windowName;
 
@@ -304,7 +304,7 @@ export class Canvas {
 
     // not getDefaultTdl(), always generate a new key
     static generateDefaultTdl = (): type_Canvas_tdl => {
-        const result = JSON.parse(JSON.stringify(this._defaultTdl));
+        const result = structuredClone(this._defaultTdl);
         return result;
     };
 
@@ -313,8 +313,8 @@ export class Canvas {
             type: "Canvas",
             widgetKey: "Canvas",
             key: "Canvas",
-            style: JSON.parse(JSON.stringify(this.getStyle())),
-            macros: JSON.parse(JSON.stringify(this.getMacros())),
+            style: structuredClone(this.getStyle()),
+            macros: structuredClone(this.getMacros()),
             // replaceMacros: this.getReplaceMacros(),
             windowName: this.getWindowName(),
             script: this.getScript(),

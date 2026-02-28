@@ -2,7 +2,7 @@ import { DataViewer } from "./DataViewer";
 import * as React from "react";
 import { ElementProfileBlockNameInput } from "../../mainWindow/MainWindowStyledComponents";
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, type_dbrData } from "../../../common/GlobalVariables";
+import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, type_dbrData, type_pva_value } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
@@ -318,7 +318,7 @@ export class DataViewerPlot {
 
 
     _ElementTitle = () => {
-        const changeTitle = (event: any) => {
+        const changeTitle = (event: React.ChangeEvent<HTMLInputElement>) => {
             event.preventDefault();
             this.getText().title = event.target.value;
             this.updatePlot();
@@ -333,6 +333,8 @@ export class DataViewerPlot {
                     flexFlow: "row",
                     justifyContent: "center",
                     alignItems: "center",
+                    flexShrink: 0,
+                    flexGrow: 0,
                 }}
             >
 
@@ -510,7 +512,7 @@ export class DataViewerPlot {
                     this.setCursorValue("");
                     window.removeEventListener("mousemove", this.updateCursorElement);
                 }}
-                onMouseDown={(event: any) => {
+                onMouseDown={(event: React.MouseEvent) => {
 
                     if (event.button === 0) {
                         window.addEventListener("mousemove", this.getPlotMouseHelper().handleMouseMoveOnPlotX);
@@ -528,7 +530,7 @@ export class DataViewerPlot {
                         this.handleWheelOnPlotX(event);
                     }
                 }}
-                onDoubleClick={(event: any) => {
+                onDoubleClick={() => {
                     this.fetchArchiveData();
                 }}
 
@@ -987,13 +989,13 @@ export class DataViewerPlot {
                                 margin: "3px",
                                 backgroundColor: backgroundColor,
                             }}
-                            onMouseEnter={(event: any) => {
+                            onMouseEnter={() => {
                                 this.setCursorValue("Click to selected the trace, double-click to configure the trace.")
                             }}
-                            onMouseLeave={(event: any) => {
+                            onMouseLeave={() => {
                                 this.setCursorValue("")
                             }}
-                            onMouseDown={(event: any) => {
+                            onMouseDown={(event: React.MouseEvent) => {
                                 if (event.button !== 0) {
                                     return;
                                 }
@@ -1002,7 +1004,7 @@ export class DataViewerPlot {
                                 this.updatePlot();
                             }}
 
-                            onDoubleClick={(event: any) => {
+                            onDoubleClick={(event: React.MouseEvent) => {
                                 if (event.button !== 0) {
                                     return;
                                 }
@@ -1033,7 +1035,7 @@ export class DataViewerPlot {
                         margin: "3px",
                         opacity: 0.3,
                     }}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event: React.MouseEvent) => {
                         if (event.button !== 0) {
                             return;
                         }
@@ -1117,7 +1119,7 @@ export class DataViewerPlot {
         this.getPlotDataHelper().mapDbrDataWitNewArchiveData(data);
     };
 
-    mapDbrDataWitNewData = (dbrDataList: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
+    mapDbrDataWitNewData = (dbrDataList: Record<string, type_pva_value | type_pva_value[] | type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
         this.getPlotDataHelper().mapDbrDataWitNewData(dbrDataList);
     };
 
@@ -1270,9 +1272,9 @@ export class DataViewerPlot {
     /**
      * Set the React state value setter for cursor text on the plot. It causes the cursor text to update.
      *
-     * @param {event: any} Input could be an mouse event, or a [number, number] array
+     * @param {event: MouseEvent | [number, number]} Input could be an mouse event, or a [number, number] array
                         */
-    updateCursorElement = (event: any) => {
+    updateCursorElement = (event: MouseEvent | [number, number]) => {
 
         const yAxis = this.getSelectedYAxis();
         if (yAxis === undefined) {
@@ -1283,15 +1285,17 @@ export class DataViewerPlot {
         let pointX0 = -100000;
         let pointY0 = -100000;
 
-        if (event.clientX !== undefined) {
+        if (event instanceof MouseEvent) {
             // event callback
             this.lastCursorPointXY = [getMouseEventClientX(event), getMouseEventClientY(event)];
             pointX0 = getMouseEventClientX(event);
             pointY0 = getMouseEventClientY(event);
-        } else {
+        } else if (typeof event[0] === "number" && typeof event[1] === "number") {
             // current cursor position on web page
             pointX0 = event[0];
             pointY0 = event[1];
+        } else {
+            return;
         }
 
         // special case: the mouse is not on the plot region

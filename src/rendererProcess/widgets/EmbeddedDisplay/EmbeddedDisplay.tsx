@@ -67,10 +67,10 @@ export class EmbeddedDisplay extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._tdlFileNames = JSON.parse(JSON.stringify(widgetTdl["tdlFileNames"]));
-        this._itemNames = JSON.parse(JSON.stringify(widgetTdl["itemNames"]));
-        this._itemMacros = JSON.parse(JSON.stringify(widgetTdl["itemMacros"]));
-        this._itemIsWebpage = JSON.parse(JSON.stringify(widgetTdl["itemIsWebpage"]));
+        this._tdlFileNames = structuredClone(widgetTdl["tdlFileNames"]);
+        this._itemNames = structuredClone(widgetTdl["itemNames"]);
+        this._itemMacros = structuredClone(widgetTdl["itemMacros"]);
+        this._itemIsWebpage = structuredClone(widgetTdl["itemIsWebpage"]);
 
         this._rules = new EmbeddedDisplayRules(this, widgetTdl);
     }
@@ -394,7 +394,7 @@ export class EmbeddedDisplay extends BaseWidget {
             itemIsWebpage: [],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+        return structuredClone(defaultTdl);
     };
 
     generateDefaultTdl: () => any = EmbeddedDisplay.generateDefaultTdl;
@@ -402,10 +402,10 @@ export class EmbeddedDisplay extends BaseWidget {
     // defined in super class
     getTdlCopy(newKey: boolean = true) {
         const result = super.getTdlCopy(newKey);
-        result["tdlFileNames"] = JSON.parse(JSON.stringify(this.getTdlFileNames()));
-        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
-        result["itemMacros"] = JSON.parse(JSON.stringify(this.getItemMacros()));
-        result["itemIsWebpage"] = JSON.parse(JSON.stringify(this.getItemIsWebpage()));
+        result["tdlFileNames"] = structuredClone(this.getTdlFileNames());
+        result["itemNames"] = structuredClone(this.getItemNames());
+        result["itemMacros"] = structuredClone(this.getItemMacros());
+        result["itemIsWebpage"] = structuredClone(this.getItemIsWebpage());
         return result;
     }
 

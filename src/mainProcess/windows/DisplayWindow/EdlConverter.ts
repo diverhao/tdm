@@ -430,7 +430,7 @@ export class EdlConverter {
                         // create an additional LED widget in edlJSON if the indicatorPv exists for edl Button
                         // edl does not have a native LED widget
                         widgetKey = `LED_${uuidv4()}`;
-                        edlJSON[widgetKey] = JSON.parse(JSON.stringify(widgetJSON));
+                        edlJSON[widgetKey] = structuredClone(widgetJSON);
                         widgetJSON["invisible"] = "true"; // hide the next BooleanButton widget
                     }
 

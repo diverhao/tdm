@@ -77,12 +77,12 @@ export class ComboBoxHelper extends BaseWidgetHelper {
     static generateDefaultTdl = (type: string): type_ComboBox_tdl => {
         // defines type, widgetKey, and key
         const result = super.generateDefaultTdl(type) as type_ComboBox_tdl;
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.itemLabels = JSON.parse(JSON.stringify(this._defaultTdl.itemLabels));
-        result.itemValues = JSON.parse(JSON.stringify(this._defaultTdl.itemValues));
+        result.style = structuredClone(this._defaultTdl.style);
+        result.text = structuredClone(this._defaultTdl.text);
+        result.channelNames = structuredClone(this._defaultTdl.channelNames);
+        result.groupNames = structuredClone(this._defaultTdl.groupNames);
+        result.itemLabels = structuredClone(this._defaultTdl.itemLabels);
+        result.itemValues = structuredClone(this._defaultTdl.itemValues);
         return result;
     };
 

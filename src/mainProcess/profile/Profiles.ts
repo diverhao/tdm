@@ -354,14 +354,14 @@ export class Profiles {
 
         for (const profileName in this._profiles) {
             const profile = this._profiles[profileName];
-            let profileObj = JSON.parse(JSON.stringify(profile.getContents()));
+            let profileObj = structuredClone(profile.getContents());
 
             // special case: "For All Profiles" profile
             if (profileName === "For All Profiles") {
                 // do not merge with default profile, it is not a real profile
             } else {
 
-                let defaultProfile = JSON.parse(JSON.stringify(defaultGeneralProfile));
+                let defaultProfile = structuredClone(defaultGeneralProfile);
 
                 // special one: only keep "About" and "SSH Configuration" categories
                 for (let categoryName of Object.keys(defaultProfile)) {
@@ -382,7 +382,7 @@ export class Profiles {
 
 
         // make a hard copy
-        return JSON.parse(JSON.stringify(profilesObj));
+        return structuredClone(profilesObj);
     };
 
     getFilePath = () => {

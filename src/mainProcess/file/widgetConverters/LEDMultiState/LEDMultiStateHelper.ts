@@ -79,13 +79,13 @@ export class LEDMultiStateHelper extends BaseWidgetHelper {
     static generateDefaultTdl = (type: string): type_LEDMultiState_tdl => {
         const result = super.generateDefaultTdl("LEDMultiState") as type_LEDMultiState_tdl;
 
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.itemNames = JSON.parse(JSON.stringify(this._defaultTdl.itemNames));
-        result.itemColors = JSON.parse(JSON.stringify(this._defaultTdl.itemColors));
-        result.itemValues = JSON.parse(JSON.stringify(this._defaultTdl.itemValues));
+        result.style = structuredClone(this._defaultTdl.style);
+        result.text = structuredClone(this._defaultTdl.text);
+        result.channelNames = structuredClone(this._defaultTdl.channelNames);
+        result.groupNames = structuredClone(this._defaultTdl.groupNames);
+        result.itemNames = structuredClone(this._defaultTdl.itemNames);
+        result.itemColors = structuredClone(this._defaultTdl.itemColors);
+        result.itemValues = structuredClone(this._defaultTdl.itemValues);
         return result;
     };
 

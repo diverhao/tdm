@@ -105,7 +105,7 @@ export class ChannelAgentsManager {
             return result;
         } else {
             const networkStats = context.getNetworkStats();
-            result = JSON.parse(JSON.stringify(networkStats))
+            result = structuredClone(networkStats)
 
             const tcpTransports = context.getTcpTransports();
             for (let [address, tcpTransport] of Object.entries(tcpTransports.getTcpTransports())) {

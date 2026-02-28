@@ -78,12 +78,12 @@ export class SymbolHelper extends BaseWidgetHelper {
     static generateDefaultTdl = (type: string): type_Symbol_tdl => {
         // defines type, widgetKey, and key
         const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.itemNames = JSON.parse(JSON.stringify(this._defaultTdl.itemNames));
-        result.itemValues = JSON.parse(JSON.stringify(this._defaultTdl.itemValues));
+        result.style = structuredClone(this._defaultTdl.style);
+        result.text = structuredClone(this._defaultTdl.text);
+        result.channelNames = structuredClone(this._defaultTdl.channelNames);
+        result.groupNames = structuredClone(this._defaultTdl.groupNames);
+        result.itemNames = structuredClone(this._defaultTdl.itemNames);
+        result.itemValues = structuredClone(this._defaultTdl.itemValues);
         return result as type_Symbol_tdl;
     };
 

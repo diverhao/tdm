@@ -2431,7 +2431,7 @@ export class IpcManagerOnMainProcess {
 
         // (2)
         if (useInterval) {
-            if (data["value"] !== undefined) {
+            if (typeof data === "object" && data !== null && "value" in data) {
                 displayWindowAgent.addNewChannelData(channelName, data);
             }
         }

@@ -103,10 +103,10 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
     static generateDefaultTdl = (type: string): type_BooleanButton_tdl => {
         // defines type, widgetKey, and key
         const result = super.generateDefaultTdl(type) as type_BooleanButton_tdl;
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
+        result.style = structuredClone(this._defaultTdl.style);
+        result.text = structuredClone(this._defaultTdl.text);
+        result.channelNames = structuredClone(this._defaultTdl.channelNames);
+        result.groupNames = structuredClone(this._defaultTdl.groupNames);
         // result.itemLabels = JSON.parse(JSON.stringify(this._defaultTdl.itemLabels));
         // result.itemValues = JSON.parse(JSON.stringify(this._defaultTdl.itemValues));
         // result.itemPictures = JSON.parse(JSON.stringify(this._defaultTdl.itemPictures));

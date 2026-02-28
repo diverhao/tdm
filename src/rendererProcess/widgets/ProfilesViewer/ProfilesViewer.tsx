@@ -1235,7 +1235,7 @@ export class ProfilesViewer extends BaseWidget {
         };
 
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+        return structuredClone(defaultTdl);
     };
 
     generateDefaultTdl: () => any = ProfilesViewer.generateDefaultTdl;

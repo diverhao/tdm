@@ -141,7 +141,7 @@ export class ChannelGraph extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._dbdFiles = new DbdFiles(JSON.parse(JSON.stringify(widgetTdl.recordTypes)), JSON.parse(JSON.stringify(widgetTdl.menus)));
+        this._dbdFiles = new DbdFiles(structuredClone(widgetTdl.recordTypes), structuredClone(widgetTdl.menus));
 
         this._sidebar = new ChannelGraphSidebar(this);
     }
@@ -1387,7 +1387,7 @@ export class ChannelGraph extends BaseWidget {
 
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+        return structuredClone(defaultTdl);
     };
 
     generateDefaultTdl: () => any = ChannelGraph.generateDefaultTdl;

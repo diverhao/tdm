@@ -16,14 +16,14 @@ export class MainWindowProfileRunPage {
         this._mainWindowClient = mainWindowClient;
         this._selectedProfileName = mainWindowClient.getSelectedProfileName();
         // make local copies
-        this._profiles = JSON.parse(JSON.stringify(mainWindowClient.getProfiles()));
+        this._profiles = structuredClone(mainWindowClient.getProfiles());
         console.log("mainWindowClient.getProfiles()", mainWindowClient.getSelectedProfile(), JSON.stringify(mainWindowClient.getProfiles()));
-        this._selectedProfile = JSON.parse(JSON.stringify(mainWindowClient.getSelectedProfile()));
+        this._selectedProfile = structuredClone(mainWindowClient.getSelectedProfile());
         this._largeInput = new SidebarLargeInput();
     }
 
     updateProfiles = (newProfiles: Record<string, any>) => {
-        this._profiles = JSON.parse(JSON.stringify(newProfiles));
+        this._profiles = structuredClone(newProfiles);
     };
 
     getMainWindowClient = () => {

@@ -1113,7 +1113,7 @@ export class XYPlotPlot {
             // runtime data
             xData: [],
             yData: [],
-            ticksInfo: JSON.parse(JSON.stringify(defaultXYPlotTicksInfo)),
+            ticksInfo: structuredClone(defaultXYPlotTicksInfo),
         };
     };
 
@@ -1121,7 +1121,7 @@ export class XYPlotPlot {
         for (const yAxis of this.yAxes) {
             yAxis["xData"] = [];
             yAxis["yData"] = [];
-            yAxis["ticksInfo"] = JSON.parse(JSON.stringify(defaultXYPlotTicksInfo));
+            yAxis["ticksInfo"] = structuredClone(defaultXYPlotTicksInfo);
         }
     };
 
@@ -1215,7 +1215,7 @@ export class XYPlotPlot {
     getTicksInfo = (index: number) => {
         const yAxis = this.getMainWidget().getYAxes()[index];
         if (yAxis === undefined) {
-            return JSON.parse(JSON.stringify(defaultXYPlotTicksInfo));
+            return structuredClone(defaultXYPlotTicksInfo);
         } else {
             return yAxis["ticksInfo"];
         }

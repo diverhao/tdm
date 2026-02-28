@@ -81,12 +81,12 @@ export class PolylineHelper extends BaseWidgetHelper {
     static generateDefaultTdl = (type: string): type_Polyline_tdl => {
         // defines type, widgetKey, and key
         const result = super.generateDefaultTdl(type) as type_Polyline_tdl;
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.pointsX = JSON.parse(JSON.stringify(this._defaultTdl.pointsX));
-        result.pointsY = JSON.parse(JSON.stringify(this._defaultTdl.pointsY));
+        result.style = structuredClone(this._defaultTdl.style);
+        result.text = structuredClone(this._defaultTdl.text);
+        result.channelNames = structuredClone(this._defaultTdl.channelNames);
+        result.groupNames = structuredClone(this._defaultTdl.groupNames);
+        result.pointsX = structuredClone(this._defaultTdl.pointsX);
+        result.pointsY = structuredClone(this._defaultTdl.pointsY);
         return result;
     };
 

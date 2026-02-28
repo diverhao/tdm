@@ -61,7 +61,7 @@ export class GroupSelection2 {
         this._type = widgetTdl.type;
         this._widgetKey = widgetTdl.widgetKey;
         //todo: combine with default style
-        this._style = JSON.parse(JSON.stringify(widgetTdl.style));
+        this._style = structuredClone(widgetTdl.style);
         this._sidebar = new GroupSelectionSidebar2(this);
     }
 
@@ -662,7 +662,7 @@ export class GroupSelection2 {
 
     // do not produce a new key
     static generateDefaultTdl = (): Record<string, any> => {
-        return JSON.parse(JSON.stringify(this._defaultTdl));
+        return structuredClone(this._defaultTdl);
     };
 
     getTdlCopy = (newKey: boolean = true): Record<string, any> => {

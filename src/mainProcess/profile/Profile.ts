@@ -16,7 +16,7 @@ export class Profile {
 
 
     convertToTcaInput = (): Record<string, any> => {
-        const contentsCopy = JSON.parse(JSON.stringify(this._contents));
+        const contentsCopy = structuredClone(this._contents);
 
         for (let categoryName of Object.keys(this._contents)) {
             const category = this._contents[categoryName];

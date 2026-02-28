@@ -129,7 +129,7 @@ export class MouseSelectionRegion {
 	};
 
 	static generateDefaultTdl = () => {
-		return JSON.parse(JSON.stringify(MouseSelectionRegion._defaultTdl));
+		return structuredClone(MouseSelectionRegion._defaultTdl);
 	};
 
 	// only one copy

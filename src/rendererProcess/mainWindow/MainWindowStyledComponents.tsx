@@ -35,7 +35,11 @@ export const ElementUpDownButtonOnSidebar = ({ children, additionalStyle, handle
     )
 };
 
-export const ElementProfileBlockNameInput = ({ additionalStyle, value, onChange }: any) => {
+export const ElementProfileBlockNameInput = ({ additionalStyle, value, onChange }: {
+    additionalStyle: Record<string, any>,
+    value: string,
+    onChange: React.ChangeEventHandler<HTMLInputElement>,
+}) => {
     const refElement = React.useRef<any>(null);
     return (
         <input

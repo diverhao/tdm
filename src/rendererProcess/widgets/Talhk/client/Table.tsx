@@ -36,7 +36,7 @@ export class Table {
     // it should be emptied after each render
     forceUpdatedRows: number[] = [];
     constructor(initColumnwidths: number[], tablePage: TablePage) {
-        this.columnWidths = JSON.parse(JSON.stringify(initColumnwidths));
+        this.columnWidths = structuredClone(initColumnwidths);
         this._mainPage = tablePage.getMainPage();
         this._tablePage = tablePage;
         this.lineHeight = this._mainPage.baseFontSize * 2;

@@ -672,7 +672,7 @@ export class Spinner extends BaseWidget {
             rules: [],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+        return structuredClone(defaultTdl);
     };
 
     generateDefaultTdl: () => any = Spinner.generateDefaultTdl;

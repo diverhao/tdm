@@ -208,14 +208,14 @@ export abstract class BaseWidget {
         this._type = widgetTdl.type;
         this._widgetKey = widgetTdl.widgetKey;
 
-        this._channelNamesLevel0 = JSON.parse(JSON.stringify(widgetTdl.channelNames));
-        this._groupNames = JSON.parse(JSON.stringify(widgetTdl.groupNames));
+        this._channelNamesLevel0 = structuredClone(widgetTdl.channelNames);
+        this._groupNames = structuredClone(widgetTdl.groupNames);
     }
 
     // ------------------------ mouse events ----------------------------
 
-    registerUtilityWindowResizeCallback = (func: (event: any) => void) => {
-        window.addEventListener("resize", (event: any) => {
+    registerUtilityWindowResizeCallback = (func: (event: UIEvent) => void) => {
+        window.addEventListener("resize", (event: UIEvent) => {
             const isUtilityWindow = g_widgets1.getRoot().getDisplayWindowClient().getIsUtilityWindow()
             if (isUtilityWindow === false) {
                 return;
@@ -1165,13 +1165,13 @@ export abstract class BaseWidget {
             type: this.getType(),
             widgetKey: this.getWidgetKey(),
             key: this.getWidgetKey(),
-            style: JSON.parse(JSON.stringify(this.getStyle())),
-            text: JSON.parse(JSON.stringify(this.getText())),
+            style: structuredClone(this.getStyle()),
+            text: structuredClone(this.getText()),
             // channelNames: [...this.getChannelNames()],
             // the un-processed channel names
             channelNames: [...this.getChannelNamesLevel0()],
             groupNames: [...this.getGroupNames()],
-            rules: JSON.parse(JSON.stringify(this.getRulesTdl())),
+            rules: structuredClone(this.getRulesTdl()),
         };
         // deselect tdl
         result.style.outlineStyle = "none";
@@ -1297,7 +1297,7 @@ export abstract class BaseWidget {
 
     // todo: improve efficiency
     getResizerStyles = () => {
-        let result = JSON.parse(JSON.stringify(this._resizerStyles));
+        let result = structuredClone(this._resizerStyles);
         let w0 = this.getStyle()["borderWidth"];
         // for borderType === "inside", they do not have style["borderWidth"] property
         if (w0 === undefined) {

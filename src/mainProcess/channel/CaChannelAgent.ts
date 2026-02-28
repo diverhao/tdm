@@ -1,4 +1,5 @@
 import { Channel, ChannelMonitor, Context, Channel_DBR_TYPES, type_pva_status, PVA_STATUS_TYPE } from "epics-tca";
+import { type_pva_value } from "../../common/GlobalVariables";
 import { type_dbrData } from "../../common/GlobalVariables";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { ChannelAgentsManager } from "./ChannelAgentsManager";
@@ -216,7 +217,7 @@ export class CaChannelAgent {
             if (dataRaw === undefined) {
                 data = { value: undefined };
             } else {
-                data = JSON.parse(JSON.stringify(dataRaw));
+                data = structuredClone(dataRaw);
             }
 
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
@@ -235,9 +236,9 @@ export class CaChannelAgent {
         displayWindowId: string,
         ioTimeout: number = 1,
         pvRequest: string | undefined = undefined, // when undefined, use CaChannel's own pvRequest,
-    ): Promise<type_dbrData | { value: undefined }> => {
+    ): Promise<type_pva_value | { value: undefined }> => {
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
-        let data: type_dbrData | undefined = { value: undefined };
+        let data: type_pva_value | undefined = undefined;
         try {
             const channel = this.getChannel();
             if (channel === undefined) {
@@ -253,9 +254,9 @@ export class CaChannelAgent {
 
             // default ioTimeout = 1 second
             if (pvRequest !== undefined) {
-                data = JSON.parse(JSON.stringify(await channel.getPva(ioTimeout, pvRequest)));
+                data = structuredClone(await channel.getPva(ioTimeout, pvRequest));
             } else {
-                data = JSON.parse(JSON.stringify(await channel.getPva(ioTimeout, this.getPvRequest())));
+                data = structuredClone(await channel.getPva(ioTimeout, this.getPvRequest()));
             }
 
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);

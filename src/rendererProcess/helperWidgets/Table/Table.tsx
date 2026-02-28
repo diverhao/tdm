@@ -31,7 +31,7 @@ export class Table {
     // it should be emptied after each render
     forceUpdatedRows: number[] = [];
     constructor(initColumnwidths: number[], mainWidget: BaseWidget) {
-        this.columnWidths = JSON.parse(JSON.stringify(initColumnwidths));
+        this.columnWidths = structuredClone(initColumnwidths);
         // max 200 columns
         if (this.columnWidths.length < 200) {
             for (let ii = 0; ii < 200 - this.columnWidths.length; ii++) {

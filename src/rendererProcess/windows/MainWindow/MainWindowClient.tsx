@@ -162,7 +162,7 @@ export class MainWindowClient {
         return this._profiles;
     };
     setProfiles = (newProfiles: Record<string, any>) => {
-        this._profiles = JSON.parse(JSON.stringify(newProfiles));
+        this._profiles = structuredClone(newProfiles);
     };
     getProfileEditPage = () => {
         return this._profileEditPage;

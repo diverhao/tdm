@@ -1445,7 +1445,7 @@ export class TreePage {
         const parentData = this.getMainPage().getData(parentPath);
         const thisData = parentData[name];
 
-        parentData[newName] = JSON.parse(JSON.stringify(thisData));
+        parentData[newName] = structuredClone(thisData);
 
         // update the server
         this.getMainPage().sendNewData(parentPath, parentData);

@@ -7,6 +7,7 @@ import * as GlobalMethods from "../../common/GlobalMethods";
 import { type_LocalChannel_data } from "../../common/GlobalVariables";
 import { Channel_ACCESS_RIGHTS } from "../../common/GlobalVariables";
 import { Log } from "../../common/Log";
+import { type_pva_value } from "../../common/GlobalVariables";
 
 export enum ChannelSeverity {
     NO_ALARM,
@@ -1859,15 +1860,19 @@ export class TcaChannel {
         return this._dbrData;
     };
 
-    appendToDbrData = (newDbrData: type_dbrData | type_dbrData[] | type_LocalChannel_data | { value: undefined }) => {
+    appendToDbrData = (newDbrData: type_dbrData | type_pva_value | type_pva_value[] | type_dbrData[] | type_LocalChannel_data | { value: undefined }) => {
         if (Array.isArray(newDbrData)) {
             for (const dbrData of newDbrData) {
                 // deep merge
-                this._dbrData = GlobalMethods.deepMergeObj(this._dbrData, dbrData) as any;
+                if (typeof dbrData === "object") {
+                    this._dbrData = GlobalMethods.deepMergeObj(this._dbrData, dbrData) as any;
+                }
             }
         } else {
             // deep merge: PVA may skip some data if they were already delivered
-            this._dbrData = GlobalMethods.deepMergeObj(this._dbrData, newDbrData) as any;
+            if (typeof newDbrData === "object") {
+                this._dbrData = GlobalMethods.deepMergeObj(this._dbrData, newDbrData) as any;
+            }
         }
     };
 

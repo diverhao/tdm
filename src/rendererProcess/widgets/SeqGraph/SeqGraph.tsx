@@ -148,7 +148,7 @@ export class SeqGraph extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this.setMacros(JSON.parse(JSON.stringify(widgetTdl.macros)));
+        this.setMacros(structuredClone(widgetTdl.macros));
         this._sidebar = new SeqGraphSidebar(this);
 
         this._seqProgram = new SeqProgram("Seq Program", this);
@@ -1698,7 +1698,7 @@ ss volt_check {
 
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+        return structuredClone(defaultTdl);
     };
 
     generateDefaultTdl: () => any = SeqGraph.generateDefaultTdl;

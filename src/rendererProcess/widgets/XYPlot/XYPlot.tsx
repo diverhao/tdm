@@ -7,7 +7,7 @@ import { XYPlotSidebar } from "./XYPlotSidebar";
 import { XYPlotPlot } from "./XYPlotPlot";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { deepMerge } from "../../../common/GlobalMethods";
-import { type_XYPlot_tdl } from "../../../common/types/type_widget_tdl";
+import { defaultXYPlotTdl, type_XYPlot_tdl } from "../../../common/types/type_widget_tdl";
 
 export { type_XYPlot_tdl };
 
@@ -94,59 +94,14 @@ export class XYPlot extends BaseWidget {
     };
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-        const defaultTdl = {
-            type: "XYPlot",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(255, 255,255, 1)",
-                left: 0,
-                top: 0,
-                width: 500,
-                height: 300,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                showLegend: false,
-                showFrame: true,
-            },
-            channelNames: [],
-            groupNames: [],
-            xAxis: {
-                label: "x",
-                valMin: 0,
-                valMax: 100,
-                ticks: [0, 50, 100],
-                ticksText: ["0", "50", "100"],
-                autoScale: false,
-                showGrid: true,
-                numGrids: 10,
-            },
-            yAxes: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_XYPlot_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultXYPlotTdl.type);
+        return structuredClone({
+            ...defaultXYPlotTdl,
+            widgetKey: widgetKey,
+        });
     };
+
 
     generateDefaultTdl = XYPlot.generateDefaultTdl;
 
@@ -160,7 +115,7 @@ export class XYPlot extends BaseWidget {
     // override, has 'yAxes' property
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        result["xAxis"] = JSON.parse(JSON.stringify(this.getPlot().xAxis));
+        result["xAxis"] = structuredClone(this.getPlot().xAxis);
         const yAxesRaw = this.getPlot().yAxes;
         // exclude runtime data
         result["yAxes"] = yAxesRaw.map(({ xData, yData, ticksInfo, ...rest }) => {

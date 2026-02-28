@@ -88,7 +88,7 @@ export class MainWindowProfileEditPage {
          */
         if (this.getLocalProfile()["undefined"] === "I am not defined yet") {
             const profiles = this.getMainWindowClient().getProfiles();
-            this.setLocalProfile(JSON.parse(JSON.stringify(profiles[profileName])) as Record<string, any>);
+            this.setLocalProfile(structuredClone(profiles[profileName]) as Record<string, any>);
             // select the first category
             const firstCategoryName = Object.keys(this.getLocalProfile())[0];
             if (firstCategoryName !== undefined) {
@@ -238,7 +238,7 @@ export class MainWindowProfileEditPage {
                 style={style}
             >
                 <div>
-                    <ElementProfileBlockNameInput value={localProfileName} onChange={changeLocalProfileName}></ElementProfileBlockNameInput>
+                    <ElementProfileBlockNameInput additionalStyle={{}} value={localProfileName} onChange={changeLocalProfileName}></ElementProfileBlockNameInput>
                 </div>
                 <this._ElementTitleControls profileName={profileName} localProfileName={localProfileName} />
             </div>
@@ -362,7 +362,7 @@ export class MainWindowProfileEditPage {
             while (Object.keys(this.getLocalProfile()).includes(newName)) {
                 newName = `${newName}-1`;
             }
-            this.getLocalProfile()[newName] = JSON.parse(JSON.stringify(generateEmptyCategory()));
+            this.getLocalProfile()[newName] = structuredClone(generateEmptyCategory());
             selectCategory(undefined, newName);
             this._forceUpdatePage();
         };
@@ -374,7 +374,7 @@ export class MainWindowProfileEditPage {
                 Log.error("Web Server category already exists");
                 return;
             }
-            this.getLocalProfile()[categoryName] = JSON.parse(JSON.stringify(categoryJson[categoryName]));
+            this.getLocalProfile()[categoryName] = structuredClone(categoryJson[categoryName]);
             selectCategory(undefined, categoryName);
             this._forceUpdatePage();
         }
@@ -386,7 +386,7 @@ export class MainWindowProfileEditPage {
                 Log.error("Web Server category already exists");
                 return;
             }
-            this.getLocalProfile()[categoryName] = JSON.parse(JSON.stringify(categoryJson[categoryName]));
+            this.getLocalProfile()[categoryName] = structuredClone(categoryJson[categoryName]);
             selectCategory(undefined, categoryName);
             this._forceUpdatePage();
         }
@@ -398,7 +398,7 @@ export class MainWindowProfileEditPage {
                 Log.error("Archieve category already exists");
                 return;
             }
-            this.getLocalProfile()[categoryName] = JSON.parse(JSON.stringify(categoryJson[categoryName]));
+            this.getLocalProfile()[categoryName] = structuredClone(categoryJson[categoryName]);
             selectCategory(undefined, categoryName);
             this._forceUpdatePage();
         }
@@ -454,7 +454,7 @@ export class MainWindowProfileEditPage {
 
             // if profile name is not changed
             if (this.getOrigProfileName() === localProfileName) {
-                profiles[localProfileName] = JSON.parse(JSON.stringify(this.getLocalProfile()));
+                profiles[localProfileName] = structuredClone(this.getLocalProfile());
             }
             // if changed
             else {
@@ -486,7 +486,7 @@ export class MainWindowProfileEditPage {
                 }
 
                 this.renameObjProperty(this.getOrigProfileName(), localProfileName, profiles);
-                profiles[localProfileName] = JSON.parse(JSON.stringify(this.getLocalProfile()));
+                profiles[localProfileName] = structuredClone(this.getLocalProfile());
             }
 
             // send this._profiles back to main process which saves it to hard drive

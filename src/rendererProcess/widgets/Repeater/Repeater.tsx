@@ -41,8 +41,8 @@ export class Repeater extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._widgetKeys = JSON.parse(JSON.stringify(widgetTdl["widgetKeys"]));
-        this._tabMacros = JSON.parse(JSON.stringify(widgetTdl["macros"]));
+        this._widgetKeys = structuredClone(widgetTdl["widgetKeys"]);
+        this._tabMacros = structuredClone(widgetTdl["macros"]);
     }
 
     // ------------------------------ elements ---------------------------------
@@ -478,7 +478,7 @@ export class Repeater extends BaseWidget {
         for (let ii = 0; ii < this.getTabMacros().length; ii++) {
             for (const widgetTdlOriginal of templateWidgetsTdls) {
 
-                const widgetTdl = JSON.parse(JSON.stringify(widgetTdlOriginal));
+                const widgetTdl = structuredClone(widgetTdlOriginal);
                 // create a new widget JSON
                 const newWidgetKey = widgetTdl.type + "_" + GlobalMethods.generateNewWidgetKey();
                 widgetTdl.key = newWidgetKey;
@@ -655,7 +655,7 @@ export class Repeater extends BaseWidget {
             macros: [],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+        return structuredClone(defaultTdl);
     };
 
     generateDefaultTdl: () => any = Repeater.generateDefaultTdl;
@@ -663,8 +663,8 @@ export class Repeater extends BaseWidget {
     // defined in super class
     getTdlCopy(newKey: boolean) {
         const result = super.getTdlCopy(newKey);
-        result["widgetKeys"] = JSON.parse(JSON.stringify(this.getWidgetKeys()));
-        result["macros"] = JSON.parse(JSON.stringify(this.getTabMacros()));
+        result["widgetKeys"] = structuredClone(this.getWidgetKeys());
+        result["macros"] = structuredClone(this.getTabMacros());
         return result;
     }
 

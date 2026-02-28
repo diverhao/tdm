@@ -102,11 +102,11 @@ export class DataViewerHelper extends BaseWidgetHelper {
     static generateDefaultTdl = (type: string) => {
         // defines type, widgetKey, and key
         const result = super.generateDefaultTdl(type) as type_DataViewer_tdl;
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.yAxes = JSON.parse(JSON.stringify(this._defaultTdl.yAxes));
+        result.style = structuredClone(this._defaultTdl.style);
+        result.text = structuredClone(this._defaultTdl.text);
+        result.channelNames = structuredClone(this._defaultTdl.channelNames);
+        result.groupNames = structuredClone(this._defaultTdl.groupNames);
+        result.yAxes = structuredClone(this._defaultTdl.yAxes);
         return result;
     };
 

@@ -85,13 +85,13 @@ export class SlideButtonHelper extends BaseWidgetHelper {
     static generateDefaultTdl = (type: string) => {
         // defines type, widgetKey, and key
         const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
-        result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
-        result.itemLabels = JSON.parse(JSON.stringify(this._defaultTdl.itemLabels));
-        result.itemValues = JSON.parse(JSON.stringify(this._defaultTdl.itemValues));
-        result.itemColors = JSON.parse(JSON.stringify(this._defaultTdl.itemColors));
+        result.style = structuredClone(this._defaultTdl.style);
+        result.text = structuredClone(this._defaultTdl.text);
+        result.channelNames = structuredClone(this._defaultTdl.channelNames);
+        result.groupNames = structuredClone(this._defaultTdl.groupNames);
+        result.itemLabels = structuredClone(this._defaultTdl.itemLabels);
+        result.itemValues = structuredClone(this._defaultTdl.itemValues);
+        result.itemColors = structuredClone(this._defaultTdl.itemColors);
         return result as type_SlideButton_tdl;
     };
 

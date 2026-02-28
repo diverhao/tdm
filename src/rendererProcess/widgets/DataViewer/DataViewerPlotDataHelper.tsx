@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { type_dbrData, type_LocalChannel_data } from "../../../common/GlobalVariables";
+import { type_dbrData, type_LocalChannel_data, type_pva_value } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { DataViewerPlot } from "./DataViewerPlot";
@@ -146,7 +146,7 @@ export class DataViewerPlotDataHelper {
      * This funciton does not update plot. The plot is updated periodically or in mouse/keyboard actions
      *
      */
-    mapDbrDataWitNewData = (dbrDataList: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
+    mapDbrDataWitNewData = (dbrDataList: Record<string, type_pva_value | type_pva_value[] | type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
         const plot = this.getPlot();
         if (g_widgets1.isEditing()) {
             return;
@@ -199,29 +199,43 @@ export class DataViewerPlotDataHelper {
      *
      * (4) add new patch point Z', this point has current time stamp, and new value
      */
-    addOneDbrData = (data: type_dbrData | type_LocalChannel_data | undefined, yAxis: type_DataViewer_yAxis) => {
+    addOneDbrData = (data: type_pva_value | type_dbrData | type_LocalChannel_data | undefined, yAxis: type_DataViewer_yAxis) => {
         const plot = this.getPlot();
-        if (data === undefined) {
+        if (!(typeof data === "object" && "value" in data)) {
             Log.debug("data is not valid", data);
             return;
         }
+
+        let secondsSinceEpoch = 0;
+        let nanoSeconds = 0;
+        // let value: PvaRecord | Primitive | undefined = 0;
+
         const value = data.value;
         if (typeof value !== "number") {
             Log.debug("value is not valid", data);
             return;
         }
 
-        const secondsSinceEpoch = data["secondsSinceEpoch"];
-        const nanoSeconds = data["nanoSeconds"];
+        // get timestamp
+        if (data["timeStamp"] !== undefined) {
+            // pva data
+            secondsSinceEpoch = data["timeStamp"]["secondsPastEpoch"];
+            nanoSeconds = data["timeStamp"]["nanoseconds"];
+        } else {
+            secondsSinceEpoch = data["secondsSinceEpoch"];
+            nanoSeconds = data["nanoSeconds"];
+        }
+
         if (typeof secondsSinceEpoch !== "number" || typeof nanoSeconds !== "number") {
             Log.info("new data does not have time stamp");
             return;
         }
 
         // convert EPICS timestamp to UNIX timestamp
-        let timeStamp = GlobalMethods.converEpicsTimeStampToEpochTime(
-            secondsSinceEpoch * 1000 + nanoSeconds * 1e-6
-        );
+        let timeStamp = secondsSinceEpoch * 1000 + nanoSeconds * 1e-6;
+        if (data["timeStamp"] === undefined) {
+            timeStamp = GlobalMethods.converEpicsTimeStampToEpochTime(timeStamp);
+        }
 
         // sometimes the channel was never processed
         if (secondsSinceEpoch === 0) {

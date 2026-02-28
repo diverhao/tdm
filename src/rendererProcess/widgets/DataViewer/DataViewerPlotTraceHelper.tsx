@@ -47,7 +47,7 @@ export class DataViewerPlotTraceHelper {
         mainWidget.processChannelNames([], false);
 
         // (2)
-        const yAxis = JSON.parse(JSON.stringify(defaultDataViewerYAxis));
+        const yAxis = structuredClone(defaultDataViewerYAxis);
         yAxis["label"] = newChannelName;
         yAxis["lineColor"] = `rgba(${this.getNewColor()})`;
         plot.yAxes.push(yAxis);

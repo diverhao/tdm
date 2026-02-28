@@ -188,7 +188,7 @@ export class Casw extends BaseWidget {
         this.initStyle(widgetTdl);
         this.initText(widgetTdl);
         this.setReadWriteType("write");
-        this.setMacros(JSON.parse(JSON.stringify(widgetTdl.macros)));
+        this.setMacros(structuredClone(widgetTdl.macros));
 
         // columns: ms since epoch, channel name, ip, port
         this._table = new Table([GlobalVariables.defaultFontSize * 4, GlobalVariables.defaultFontSize * 16, GlobalVariables.defaultFontSize * 20, GlobalVariables.defaultFontSize * 10], this);
@@ -979,8 +979,8 @@ export class Casw extends BaseWidget {
     getTdlCopy = (newKey: boolean = true): Record<string, any> => {
         const result = super.getTdlCopy(newKey);
         // result.fieldNames = this.getStrippedFieldNames();
-        result.macros = JSON.parse(JSON.stringify(this.getMacros()));
-        result.channelNames = JSON.parse(JSON.stringify(this.getChannelNamesLevel0()));
+        result.macros = structuredClone(this.getMacros());
+        result.channelNames = structuredClone(this.getChannelNamesLevel0());
         return result;
     };
 
@@ -1052,7 +1052,7 @@ export class Casw extends BaseWidget {
             macros: [],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+        return structuredClone(defaultTdl);
     };
 
     generateDefaultTdl: () => any = Casw.generateDefaultTdl;

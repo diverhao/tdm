@@ -77,7 +77,7 @@ export class Probe extends BaseWidget {
             
         // })
 
-        this._dbdFiles = new DbdFiles(JSON.parse(JSON.stringify(widgetTdl.recordTypes)), JSON.parse(JSON.stringify(widgetTdl.menus)));
+        this._dbdFiles = new DbdFiles(structuredClone(widgetTdl.recordTypes), structuredClone(widgetTdl.menus));
 
         this._sidebar = new ProbeSidebar(this);
     }
@@ -957,7 +957,7 @@ export class Probe extends BaseWidget {
                 >
                     <ElementRectangleButton
                         handleClick={(event: any) => {
-                            const result = JSON.parse(JSON.stringify(this._mappedDbrData));
+                            const result = structuredClone(this._mappedDbrData);
                             for (let fieldName of this.fieldNames) {
                                 const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
                                 const value = g_widgets1.getChannelValue(channelName);
@@ -1661,7 +1661,7 @@ export class Probe extends BaseWidget {
         };
 
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+        return structuredClone(defaultTdl);
     };
 
     generateDefaultTdl: () => any = Probe.generateDefaultTdl;

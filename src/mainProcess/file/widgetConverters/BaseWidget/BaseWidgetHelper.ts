@@ -34,7 +34,7 @@ export abstract class BaseWidgetHelper {
 	};
 
 	static generateDefaultTdl = (type: string): Record<string, any> => {
-		const result = JSON.parse(JSON.stringify(this._defaultTdl));
+		const result = structuredClone(this._defaultTdl);
 		const widgetKey = type + "_" + uuidv4();
 		result.widgetKey = widgetKey;
 		result.key = widgetKey;

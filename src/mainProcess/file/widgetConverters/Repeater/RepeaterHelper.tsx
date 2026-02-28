@@ -84,14 +84,14 @@ export class RepeaterHelper extends BaseWidgetHelper {
     // not getDefaultTdl(), always generate a new key
     static generateDefaultTdl = (type: string): type_Repeater_tdl => {
         const result = super.generateDefaultTdl(type);
-        result.style = JSON.parse(JSON.stringify(this._defaultTdl.style));
-        result.text = JSON.parse(JSON.stringify(this._defaultTdl.text));
-        result.channelNames = JSON.parse(JSON.stringify(this._defaultTdl.channelNames));
+        result.style = structuredClone(this._defaultTdl.style);
+        result.text = structuredClone(this._defaultTdl.text);
+        result.channelNames = structuredClone(this._defaultTdl.channelNames);
         // result.groupNames = JSON.parse(JSON.stringify(this._defaultTdl.groupNames));
         // result.itemNames = JSON.parse(JSON.stringify(this._defaultTdl.itemNames));
         // result.itemBackgroundColors = JSON.parse(JSON.stringify(this._defaultTdl.itemBackgroundColors));
-        result.widgetKeys = JSON.parse(JSON.stringify(this._defaultTdl.widgetKeys));
-        result.macros = JSON.parse(JSON.stringify(this._defaultTdl.macros));
+        result.widgetKeys = structuredClone(this._defaultTdl.widgetKeys);
+        result.macros = structuredClone(this._defaultTdl.macros);
         return result as type_Repeater_tdl;
     };
 

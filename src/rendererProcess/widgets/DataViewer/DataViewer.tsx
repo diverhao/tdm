@@ -1,6 +1,6 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
-import { GlobalVariables, calcSidebarWidth, getWindowHorizontalScrollBarWidth, type_dbrData } from "../../../common/GlobalVariables";
+import { type_dbrData, type_pva_value } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { DataViewerSidebar } from "./DataViewerSidebar";
@@ -17,7 +17,7 @@ export class DataViewer extends BaseWidget {
     _plot: DataViewerPlot;
     _mainSettings: DataViewerMainSettings;
     _traceSettings: DataViewerTraceSettings;
-    updateInterval: any = undefined;
+    updateInterval: ReturnType<typeof setInterval> | undefined = undefined;
 
     constructor(widgetTdl: type_DataViewer_tdl) {
         super(widgetTdl);
@@ -45,7 +45,7 @@ export class DataViewer extends BaseWidget {
         // single-window DataViewer does not use "100%" for width or height
         // it needs explicit dimension for proper plotting of traces
         // when the window is resized
-        this.registerUtilityWindowResizeCallback((event: any) => {
+        this.registerUtilityWindowResizeCallback((event: UIEvent) => {
             this.updatePlot();
         })
     }
@@ -86,7 +86,7 @@ export class DataViewer extends BaseWidget {
         );
     };
 
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementAreaRaw = (): React.JSX.Element => {
 
         // invoked upon the widget rendered for the first time
         React.useEffect(() => {
@@ -174,7 +174,7 @@ export class DataViewer extends BaseWidget {
         }, 1000)
     }
 
-    mapDbrDataWitNewData = (newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
+    mapDbrDataWitNewData = (newDbrData: Record<string, type_pva_value | type_pva_value[] | type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
         this.getPlot().mapDbrDataWitNewData(newDbrData);
     };
 
@@ -238,16 +238,16 @@ export class DataViewer extends BaseWidget {
         });
     };
 
-    generateDefaultTdl: () => any = DataViewer.generateDefaultTdl;
+    generateDefaultTdl: () => type_DataViewer_tdl = DataViewer.generateDefaultTdl;
 
-    getTdlCopy(newKey: boolean = true): Record<string, any> {
+    getTdlCopy(newKey: boolean = true) {
         const result = super.getTdlCopy(newKey);
         result["yAxes"] = this.getPlot().yAxes.map(({ xData, yData, ticksInfo, ...rest }) => {
             return structuredClone(rest);
         });
         result["yAxes"].map((yAxis: type_DataViewer_yAxis) => {
-            yAxis["xData"].length = 0;
-            yAxis["yData"].length = 0;
+            yAxis["xData"] = [];
+            yAxis["yData"] = [];
             yAxis["ticksInfo"] = structuredClone(defaultDataViewerTicksInfo);
         })
         return result;

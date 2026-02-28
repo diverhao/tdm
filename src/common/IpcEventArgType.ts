@@ -2,6 +2,7 @@
  * This file can be imported by both main and renderer process.
  */
 
+import { type_pva_value } from "./GlobalVariables";
 import { Channel_DBR_TYPES, type_dbrData } from "./GlobalVariables";
 import { type_LocalChannel_data } from "./GlobalVariables";
 import { type_tdl } from "./GlobalVariables";
@@ -605,7 +606,7 @@ export type IpcEventArgType2 = {
     }
 
     "new-channel-data": {
-        newDbrData: Record<string, type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>
+        newDbrData: Record<string, type_pva_value | type_pva_value[] | type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>
     },
 
     "new-archive-data": {
@@ -635,7 +636,7 @@ export type IpcEventArgType2 = {
     "tca-get-result": {
         ioId: number,
         widgetKey?: string,
-        newDbrData: type_dbrData
+        newDbrData: type_dbrData | type_pva_value
     },
 
     "tca-put-result": {

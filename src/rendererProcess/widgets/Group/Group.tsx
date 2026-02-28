@@ -42,9 +42,9 @@ export class Group extends BaseWidget {
 
         this.setSelectedGroup(this.getText()["selectedGroup"]);
 
-        this._itemNames = JSON.parse(JSON.stringify(widgetTdl["itemNames"]));
-        this._itemBackgroundColors = JSON.parse(JSON.stringify(widgetTdl["itemBackgroundColors"]));
-        this._widgetKeys = JSON.parse(JSON.stringify(widgetTdl["widgetKeys"]));
+        this._itemNames = structuredClone(widgetTdl["itemNames"]);
+        this._itemBackgroundColors = structuredClone(widgetTdl["itemBackgroundColors"]);
+        this._widgetKeys = structuredClone(widgetTdl["widgetKeys"]);
     }
 
     // ------------------------------ elements ---------------------------------
@@ -670,7 +670,7 @@ export class Group extends BaseWidget {
             widgetKeys: [[]],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+        return structuredClone(defaultTdl);
     };
 
     generateDefaultTdl: () => any = Group.generateDefaultTdl;
@@ -678,9 +678,9 @@ export class Group extends BaseWidget {
     // defined in super class
     getTdlCopy(newKey: boolean) {
         const result = super.getTdlCopy(newKey);
-        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
-        result["itemBackgroundColors"] = JSON.parse(JSON.stringify(this.getItemBackgroundColors()));
-        result["widgetKeys"] = JSON.parse(JSON.stringify(this.getWidgetKeys()));
+        result["itemNames"] = structuredClone(this.getItemNames());
+        result["itemBackgroundColors"] = structuredClone(this.getItemBackgroundColors());
+        result["widgetKeys"] = structuredClone(this.getWidgetKeys());
         return result;
     }
 

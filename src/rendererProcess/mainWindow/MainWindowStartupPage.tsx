@@ -85,7 +85,7 @@ export class MainWindowStartupPage {
         }
 
         if (profiles[name] !== undefined) {
-            propertyValue = JSON.parse(JSON.stringify(profiles[name]));
+            propertyValue = structuredClone(profiles[name]);
         }
 
         while (Object.keys(profiles).includes(newName)) {
@@ -116,7 +116,7 @@ export class MainWindowStartupPage {
         }
 
         if (profiles[name] !== undefined) {
-            propertyValue = JSON.parse(JSON.stringify(profiles[name]));
+            propertyValue = structuredClone(profiles[name]);
         }
 
         while (Object.keys(profiles).includes(newName)) {

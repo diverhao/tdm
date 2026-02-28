@@ -19,7 +19,7 @@ import { generateAboutInfo } from "../../global/GlobalMethods";
 import pidusage from "pidusage";
 import * as os from "os";
 import { getCurrentDateTimeStr } from "../../global/GlobalMethods";
-import { Promises, PVA_STATUS_TYPE, type_pva_status } from "epics-tca";
+import { Promises, PVA_STATUS_TYPE, type_pva_status, type_pva_value } from "epics-tca";
 import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
 
 /**
@@ -81,7 +81,7 @@ export class DisplayWindowAgent {
      * New channel data on this display window. Updated in ChannelAgentsManager.
      */
     // private _newChannelData: Record<string, type_dbrData | { value: undefined }> = {};
-    private _newChannelData: Record<string, type_dbrData | type_dbrData[] | { value: undefined }> = {};
+    private _newChannelData: Record<string, type_pva_value | type_pva_value[] | type_dbrData | type_dbrData[] | { value: undefined }> = {};
 
     /**
      * The context menu is initiated on display window in renderer process, but it is configured and realized in main process.
@@ -126,7 +126,7 @@ export class DisplayWindowAgent {
         return this._boundValues;
     };
     setBoundValues = (newValues: { x: number; y: number; width: number; height: number }) => {
-        this._boundValues = JSON.parse(JSON.stringify(newValues));
+        this._boundValues = structuredClone(newValues);
     };
 
     // private _mainProcessId: string;
@@ -184,7 +184,7 @@ export class DisplayWindowAgent {
 
     constructor(windowAgentsManager: WindowAgentsManager, options: type_options_createDisplayWindow, id: string) {
         this._windowAgentsManager = windowAgentsManager;
-        this._tdl = JSON.parse(JSON.stringify(options))["tdl"];
+        this._tdl = structuredClone(options)["tdl"];
         this._isUtilityWindow = this._tdl["Canvas"]["isUtilityWindow"] === undefined ? false : this._tdl["Canvas"]["isUtilityWindow"];
 
         this._initialMode = options["mode"];
@@ -193,8 +193,8 @@ export class DisplayWindowAgent {
         this._utilityOptions = options["utilityOptions"];
 
 
-        this._tdlFileName = JSON.parse(JSON.stringify(options))["tdlFileName"];
-        this._macros = JSON.parse(JSON.stringify(options["macros"]));
+        this._tdlFileName = structuredClone(options)["tdlFileName"];
+        this._macros = structuredClone(options["macros"]);
         this.updateHash();
 
         // for a regular display window, editable means it can be switched to Editing mode, and in operating mode, it only has 
@@ -404,12 +404,12 @@ export class DisplayWindowAgent {
      * @param {number} ioTimeout Time out [second].
      *
      */
-    tcaGet = async (channelName: string, ioTimeout: number | undefined, dbrType: Channel_DBR_TYPES | undefined | string): Promise<type_dbrData | { value: undefined }> => {
+    tcaGet = async (channelName: string, ioTimeout: number | undefined, dbrType: Channel_DBR_TYPES | undefined | string): Promise<type_dbrData | type_pva_value | { value: undefined }> => {
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
         const channelType = channelAgentsManager.determineChannelType(channelName);
-        let result: type_LocalChannel_data | type_dbrData = { value: undefined };
+        let result: type_pva_value | type_LocalChannel_data | type_dbrData = { value: undefined };
 
         if (channelType === "ca" || channelType === "pva") {
             // (1)
@@ -1136,14 +1136,14 @@ export class DisplayWindowAgent {
      * @param {type_dbrData} newData The new data
      *
      */
-    addNewChannelData = (channelName: string, newData: type_dbrData | type_LocalChannel_data) => {
+    addNewChannelData = (channelName: string, newData: type_dbrData | type_LocalChannel_data | type_pva_value) => {
         const data = this._newChannelData;
         const existingData = data[channelName];
         if (existingData !== undefined && newData !== undefined) {
             if (Array.isArray(existingData)) {
-                this._newChannelData[channelName] = [...(existingData), newData]
+                this._newChannelData[channelName] = [...(existingData), newData] as (type_pva_value | type_dbrData)[]
             } else {
-                this._newChannelData[channelName] = [existingData, newData]
+                this._newChannelData[channelName] = [existingData, newData] as (type_pva_value | type_dbrData)[]
             };
         } else {
             this._newChannelData[channelName] = newData;
@@ -2099,7 +2099,7 @@ export class DisplayWindowAgent {
      * set new macros (hard copy), and update hash.
      */
     setMacros = (newMacros: [string, string][]) => {
-        this._macros = JSON.parse(JSON.stringify(newMacros));
+        this._macros = structuredClone(newMacros);
         this.updateHash();
     }
 

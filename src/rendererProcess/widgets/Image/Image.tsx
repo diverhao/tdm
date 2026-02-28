@@ -147,7 +147,7 @@ export class Image extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._regionOfInterest = JSON.parse(JSON.stringify(widgetTdl.regionsOfInterest));
+        this._regionOfInterest = structuredClone(widgetTdl.regionsOfInterest);
 
         this._rules = new ImageRules(this, widgetTdl);
 
@@ -1144,8 +1144,8 @@ export class Image extends BaseWidget {
             return;
         }
         if (playing === false) {
-            this.imageValueBackup = JSON.parse(JSON.stringify(this.getImageValue()));
-            this.imageDimensionsBackup = JSON.parse(JSON.stringify(this.getImageDimensions()));
+            this.imageValueBackup = structuredClone(this.getImageValue());
+            this.imageDimensionsBackup = structuredClone(this.getImageDimensions());
         } else {
             this.imageValueBackup = [];
             this.imageDimensionsBackup = { width: -1, height: -1, colorMode: NDArray_ColorMode.mono, pixelDepth: 0 };
@@ -6688,14 +6688,14 @@ export class Image extends BaseWidget {
             regionsOfInterest: [],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+        return structuredClone(defaultTdl);
     };
 
     generateDefaultTdl: () => any = Image.generateDefaultTdl;
 
     getTdlCopy(newKey?: boolean): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        result["regionsOfInterest"] = JSON.parse(JSON.stringify(this.getRegionsOfInterest()));
+        result["regionsOfInterest"] = structuredClone(this.getRegionsOfInterest());
         return result;
     }
 

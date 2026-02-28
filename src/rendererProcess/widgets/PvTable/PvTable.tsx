@@ -109,10 +109,10 @@ export class PvTable extends BaseWidget {
             this.getChannelNamesLevel5().push(channelNameLevel5);
         }
 
-        this.setMacros(JSON.parse(JSON.stringify(widgetTdl.macros)));
-        this.setFieldNames(JSON.parse(JSON.stringify(widgetTdl.fieldNames)));
-        this._channelValues = JSON.parse(JSON.stringify(widgetTdl.channelValues));
-        this._channelSelects = JSON.parse(JSON.stringify(widgetTdl.channelSelects));
+        this.setMacros(structuredClone(widgetTdl.macros));
+        this.setFieldNames(structuredClone(widgetTdl.fieldNames));
+        this._channelValues = structuredClone(widgetTdl.channelValues);
+        this._channelSelects = structuredClone(widgetTdl.channelSelects);
 
         this._settings = new PvTableSettings(this);
 
@@ -1433,7 +1433,7 @@ export class PvTable extends BaseWidget {
             channelSelects: [],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+        return structuredClone(defaultTdl);
     };
 
     generateDefaultTdl: () => any = PvTable.generateDefaultTdl;
@@ -1457,10 +1457,10 @@ export class PvTable extends BaseWidget {
         const result = super.getTdlCopy(newKey);
         // result.fieldNames = this.getStrippedFieldNames();
         result.fieldNames = this.getFieldlNames();
-        result.macros = JSON.parse(JSON.stringify(this.getMacros()));
-        result.channelNames = JSON.parse(JSON.stringify(this.getChannelNamesLevel5()));
-        result.channelValues = JSON.parse(JSON.stringify(this.getChannelValues()));
-        result.channelSelects = JSON.parse(JSON.stringify(this.getChannelSelects()));
+        result.macros = structuredClone(this.getMacros());
+        result.channelNames = structuredClone(this.getChannelNamesLevel5());
+        result.channelValues = structuredClone(this.getChannelValues());
+        result.channelSelects = structuredClone(this.getChannelSelects());
         return result;
     };
 

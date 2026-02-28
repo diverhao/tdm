@@ -69,7 +69,7 @@ export class Root {
         this._displayWindowClient = displayWindowClient;
         this._initialMode = initialMode;
         this._editable = editable;
-        this._externalMacros = JSON.parse(JSON.stringify(externalMacros));
+        this._externalMacros = structuredClone(externalMacros);
         this._useExternalMacros = useExternalMacros;
         g_setWidgets1(new Widgets(tdl, this));
         g_flushWidgets = this._flushWidgets;
@@ -189,7 +189,7 @@ export class Root {
     };
 
     setExternalMacros = (newMacros: [string, string][]) => {
-        this._externalMacros = JSON.parse(JSON.stringify(newMacros));
+        this._externalMacros = structuredClone(newMacros);
     };
 
     setUseExternalMacros = (use: boolean) => {

@@ -234,7 +234,7 @@ export class FileReader {
                 } else {
                     Log.error("-1", "record body wrong");
                 }
-                result.push(JSON.parse(JSON.stringify(resultRecord)));
+                result.push(structuredClone(resultRecord));
             }
         }
 
@@ -728,7 +728,7 @@ export class FileReader {
                     }
                     const includeFileFields = this.readFieldsDbdFile(includeFileName);
                     for (let includeField of includeFileFields) {
-                        result.push(JSON.parse(JSON.stringify(includeField)));
+                        result.push(structuredClone(includeField));
                     }
                 } else {
                     // field
@@ -795,7 +795,7 @@ export class FileReader {
                     } else {
                         Log.error("record body wrong");
                     }
-                    result.push(JSON.parse(JSON.stringify(resultField)));
+                    result.push(structuredClone(resultField));
                 }
             }
         }

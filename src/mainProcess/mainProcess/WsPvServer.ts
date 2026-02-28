@@ -97,7 +97,9 @@ export class WsPvServer {
                             useInterval: false
                         }
                     );
-                    wsClient.send(JSON.stringify({ ...dbrData, ...message, channelName: channelName }));
+                    if (typeof dbrData === "object") {
+                        wsClient.send(JSON.stringify({ ...dbrData, ...message, channelName: channelName }));
+                    }
                 } else if (command === "MONITOR") {
                     // const channelName = message["channelName"];
                     // register this websocket client

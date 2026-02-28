@@ -52,7 +52,7 @@ export class CanvasHelper {
 
     // not getDefaultTdl(), always generate a new key
     static generateDefaultTdl = (): type_Canvas_tdl => {
-        const result = JSON.parse(JSON.stringify(this._defaultTdl));
+        const result = structuredClone(this._defaultTdl);
         return result;
     };
 
