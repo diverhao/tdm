@@ -1,6 +1,7 @@
-import { ChoiceButton, type_ChoiceButton_tdl } from "./ChoiceButton";
+import { ChoiceButton } from "./ChoiceButton";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { ChoiceButtonRule } from "./ChoiceButtonRule";
+import { type_ChoiceButton_tdl } from "../../../common/types/type_widget_tdl";
 
 
 export class ChoiceButtonRules extends BaseWidgetRules {

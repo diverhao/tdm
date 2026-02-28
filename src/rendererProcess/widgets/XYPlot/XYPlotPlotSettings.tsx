@@ -2,7 +2,8 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { type_xAxis, type_yAxis, XYPlotPlot } from "./XYPlotPlot";
+import { type_XYPlot_xAxis as type_xAxis, type_XYPlot_yAxis as type_yAxis } from "../../../common/types/type_widget_tdl";
+import { XYPlotPlot } from "./XYPlotPlot";
 
 export class XYPlotPlotSettings {
     private _plot: XYPlotPlot;

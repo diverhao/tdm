@@ -3,7 +3,6 @@ import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { MediaRules } from "./MediaRules";
 import { MediaSidebar } from "./MediaSidebar";
 import * as path from "path";
@@ -11,17 +10,7 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Log } from "../../../common/Log";
 import { resolvePath } from "react-router-dom";
-
-export type type_Media_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { type_Media_tdl, defaultMediaTdl } from "../../../common/types/type_widget_tdl";
 
 export class Media extends BaseWidget {
 
@@ -527,52 +516,12 @@ export class Media extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_Media_tdl = {
-            type: "Media",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                width: 100,
-                height: 100,
-                backgroundColor: "rgba(0, 0, 0, 0)",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                // border, it is different from the "alarmBorder" below
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // media file name, could be picture types, pdf, or video type
-                fileName: "../../../webpack/resources/webpages/tdm-logo.svg",
-                // opacity
-                opacity: 1,
-                // for picture
-                stretchToFit: false,
-                invisibleInOperation: false,
-                // actually "alarm outline"
-                alarmBorder: true,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_Media_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultMediaTdl.type);
+        return structuredClone({
+            ...defaultMediaTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = Media.generateDefaultTdl;

@@ -12,17 +12,7 @@ import { parseIntAngle } from "../../../common/GlobalMethods";
 import { Log } from "../../../common/Log";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Scale } from "../../helperWidgets/SharedElements/Scale";
-
-export type type_ScaledSlider_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultScaledSliderTdl, type_ScaledSlider_tdl } from "../../../common/types/type_widget_tdl";
 
 export class ScaledSlider extends BaseWidget {
     readonly sliderBlockPercentage = 50;
@@ -1007,74 +997,14 @@ export class ScaledSlider extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_ScaledSlider_tdl = {
-            type: "ScaledSlider",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(255, 255, 255, 1)",
-                left: 100,
-                top: 100,
-                width: 150,
-                height: 80,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                showUnit: true,
-                minPvValue: 0,
-                maxPvValue: 100,
-                usePvLimits: false,
-                numTickIntervals: 5,
-                // layout
-                showPvValue: true,
-                showLabels: true,
-                // ------------------------------
-                stepSize: 1,
-                invisibleInOperation: false,
-                // decimal, exponential, hexadecimal
-                format: "default",
-                // scale, >= 0
-                scale: 0,
-                compactScale: false,
-                // "contemporary" | "traditional"
-                appearance: "traditional",
-                // slide bar background color
-                fillColor: "rgba(180, 180, 180, 1)",
-                // slide bar highlight area color
-                // sliderBarBackgroundColor1: "rgba(180, 180, 180, 1)",
-                alarmBorder: true,
-                alarmText: false,
-                alarmFill: false,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_ScaledSlider_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultScaledSliderTdl.type);
+        return structuredClone({
+            ...defaultScaledSliderTdl,
+            widgetKey: widgetKey,
+        });
     };
+
 
     generateDefaultTdl: () => any = ScaledSlider.generateDefaultTdl;
 

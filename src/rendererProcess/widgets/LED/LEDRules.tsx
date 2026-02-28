@@ -1,4 +1,5 @@
-import { LED, type_LED_tdl } from "./LED";
+import { LED } from "./LED";
+import { type_LED_tdl } from "../../../common/types/type_widget_tdl";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { LEDRule } from "./LEDRule";
 

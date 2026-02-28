@@ -2,8 +2,8 @@ import * as GlobalMethods from "../../../common/GlobalMethods";
 import { type_dbrData, type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { Log } from "../../../common/Log";
-import type { DataViewerPlot } from "./DataViewerPlot";
-import type { type_yAxis } from "./DataViewerPlot";
+import { DataViewerPlot } from "./DataViewerPlot";
+import { type_DataViewer_yAxis } from "../../../common/types/type_widget_tdl";
 
 /**
  * Helper class for data operations in DataViewerPlot.
@@ -199,7 +199,7 @@ export class DataViewerPlotDataHelper {
      *
      * (4) add new patch point Z', this point has current time stamp, and new value
      */
-    addOneDbrData = (data: type_dbrData | type_LocalChannel_data | undefined, yAxis: type_yAxis) => {
+    addOneDbrData = (data: type_dbrData | type_LocalChannel_data | undefined, yAxis: type_DataViewer_yAxis) => {
         const plot = this.getPlot();
         if (data === undefined) {
             Log.debug("data is not valid", data);

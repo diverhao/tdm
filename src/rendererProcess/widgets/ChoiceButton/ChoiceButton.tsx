@@ -4,26 +4,11 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ChoiceButtonSidebar } from "./ChoiceButtonSidebar";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ChoiceButtonRules } from "./ChoiceButtonRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
 import { deepMerge } from "../../../common/GlobalMethods";
-
-export type type_ChoiceButton_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    // Slide Button specific
-    itemNames: string[];
-    itemColors: string[];
-    itemValues: number[];
-};
+import { type_ChoiceButton_tdl, defaultChoiceButtonTdl } from "../../../common/types/type_widget_tdl";
 
 export class ChoiceButton extends BaseWidget {
 
@@ -297,85 +282,21 @@ export class ChoiceButton extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_ChoiceButton_tdl = {
-            type: "ChoiceButton",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                width: 100,
-                height: 100,
-                backgroundColor: "rgba(128, 255, 255, 0)",
-                // angle
-                transform: "rotate(0deg)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // border, it is different from the alarmBorder below
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: false,
-                alarmBorder: true,
-                // colors
-                selectedBackgroundColor: "rgba(218, 218, 218, 1)",
-                unselectedBackgroundColor: "rgba(200, 200, 200, 1)",
-                invisibleInOperation: false,
-                direction: "horizontal",
-                // "contemporary" | "traditional"
-                appearance: "traditional",
-                alarmText: false,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-                confirmOnWrite: false,
-                confirmOnWriteUsePassword: false,
-                confirmOnWritePassword: "",
-
-                // discrete states
-                bit: -1, // always -1
-                useChannelItems: true,
-                fallbackColor: "rgba(255,0,255,1)",
-                fallbackText: "Wrong State",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            // discrete states
-            itemNames: ["ZERO", "ONE"],
-            itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
-            itemValues: [0, 1],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_ChoiceButton_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultChoiceButtonTdl.type);
+        return structuredClone({
+            ...defaultChoiceButtonTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = ChoiceButton.generateDefaultTdl;
 
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
-        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
-        result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
+        result["itemColors"] = structuredClone(this.getItemColors());
+        result["itemNames"] = structuredClone(this.getItemNames());
+        result["itemValues"] = structuredClone(this.getItemValues());
         return result;
     }
 

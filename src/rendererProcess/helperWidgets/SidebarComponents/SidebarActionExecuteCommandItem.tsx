@@ -3,7 +3,7 @@ import * as React from "react";
 import { ActionButton } from "../../widgets/ActionButton/ActionButton";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
-import { type_action_executecommand_tdl } from "../../widgets/ActionButton/ActionButton";
+import { type_action_executecommand_tdl } from "../../../common/types/type_widget_tdl";
 import { ElementButton } from "../SharedElements/MacrosTable";
 
 export class SidebarActionExecuteCommandItem {

@@ -4,25 +4,11 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { SlideButtonSidebar } from "./SlideButtonSidebar";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { SlideButtonRules } from "./SlideButtonRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { deepMerge } from "../../../common/GlobalMethods";
+import { type_SlideButton_tdl, defaultSlideButtonTdl } from "../../../common/types/type_widget_tdl";
 
-export type type_SlideButton_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    // Slide Button specific
-    itemNames: string[];
-    itemColors: string[];
-    itemValues: number[];
-};
 
 export class SlideButton extends BaseWidget {
 
@@ -220,67 +206,12 @@ export class SlideButton extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_SlideButton_tdl = {
-            type: "SlideButton",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(128, 255, 255, 0)",
-                left: 100,
-                top: 100,
-                width: 150,
-                height: 80,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: false,
-                alarmBorder: true,
-                boxWidth: 100,
-
-                text: "Label",
-                invisibleInOperation: false,
-                confirmOnWrite: false,
-                confirmOnWriteUsePassword: false,
-                confirmOnWritePassword: "",
-                // discrete states
-                bit: 0,
-                useChannelItems: true,
-                fallbackColor: "rgba(255,0,255,1)",
-                fallbackText: "Wrong State",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            // discrete states
-            itemNames: ["ZERO", "ONE"],
-            itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
-            itemValues: [0, 1],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_SlideButton_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultSlideButtonTdl.type);
+        return structuredClone({
+            ...defaultSlideButtonTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = SlideButton.generateDefaultTdl;
@@ -288,9 +219,9 @@ export class SlideButton extends BaseWidget {
     // overload
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
-        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
-        result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
+        result["itemColors"] = structuredClone(this.getItemColors());
+        result["itemNames"] = structuredClone(this.getItemNames());
+        result["itemValues"] = structuredClone(this.getItemValues());
         return result;
     }
     // --------------------- getters -------------------------

@@ -36,7 +36,7 @@ import { convertEpochTimeToString, isDataUri, isRemotePath } from "../../../comm
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
 import path from "path";
 
-// this path is the path inside src/ when webpack transpiles this tsx file
+// this path is the path inside src/when webpack transpiles this tsx file
 // so we cannot use "../../../webpack/resources/...", but using the path in `src/`
 import '../../../common/resources/css/katex.min.css'
 import { Talhk } from "../../../rendererProcess/widgets/Talhk/Talhk";
@@ -779,13 +779,13 @@ export class DisplayWindowClient {
         utilityOptions: Record<string, any>
     ) => {
         if (utilityType === "Probe") {
-            // todo: this window should not be editable, in editing mode, it is a mess
             const widgetTdl = Probe.generateWidgetTdl(utilityOptions);
             const widgetKey = widgetTdl.widgetKey;
-            widgetTdl.style.width = "100%";
-            widgetTdl.style.height = "100%";
-            widgetTdl.style.boxSizing = "border-box";
-            widgetTdl.style.padding = "20px";
+            const style = widgetTdl.style as Record<string, any>;
+            style.width = "100%";
+            style.height = "100%";
+            style.boxSizing = "border-box";
+            style.padding = "20px";
             tdl[widgetKey] = widgetTdl;
             tdl["Canvas"].style.backgroundColor = "rgba(255, 255, 255, 1)";
         } else if (utilityType === "PvMonitor") {
@@ -818,8 +818,8 @@ export class DisplayWindowClient {
             const widgetTdl = DataViewer.generateWidgetTdl(utilityOptions);
             const widgetKey = widgetTdl.widgetKey;
             widgetTdl.text.singleWidget = true;
-            widgetTdl.style.boxSizing = "border-box";
-            widgetTdl.style.padding = 5;
+            // widgetTdl.style.boxSizing = "border-box";
+            // widgetTdl.style.padding = 5;
             tdl[widgetKey] = widgetTdl;
             tdl["Canvas"].style.backgroundColor = "rgba(255, 255, 255, 1)";
         } else if (utilityType === "ProfilesViewer") {
@@ -837,7 +837,7 @@ export class DisplayWindowClient {
             widgetTdl2.style.width = 666;
             widgetTdl2.style.height = 333;
             widgetTdl2.channelNames = ["loc://lastSecondCount=0"];
-            widgetTdl2.text["title"] = [""];
+            widgetTdl2.text["title"] = "";
 
             // put Casw on top of XYPlot, so that the mouse click/down reaches Casw
             tdl[widgetKey] = widgetTdl;
@@ -960,7 +960,7 @@ export class DisplayWindowClient {
             widgetTdl2.style.width = 666;
             widgetTdl2.style.height = 333;
             widgetTdl2.channelNames = ["loc://lastSecondCount=0"];
-            widgetTdl2.text["title"] = ["# of packets / s"];
+            widgetTdl2.text["title"] = "# of packets / s";
 
             tdl[widgetKey] = widgetTdl;
             tdl[widgetKey2] = widgetTdl2;
@@ -991,7 +991,7 @@ export class DisplayWindowClient {
             widgetTdl2.style.width = 666;
             widgetTdl2.style.height = 333;
             widgetTdl2.channelNames = ["loc://lastSecondCount=0"];
-            widgetTdl2.text["title"] = ["# of packets / second"];
+            widgetTdl2.text["title"] = "# of packets / second";
 
             // put Casw on top of XYPlot, so that the mouse click/down reaches Casw
             tdl[widgetKey] = widgetTdl;
@@ -1577,7 +1577,7 @@ export class DisplayWindowClient {
      */
     setWindowId = (newId: string) => {
         this._windowId = newId;
-        // process ID, part of display window ID
+        // process ID, part of display window
         const newIdArray = newId.split("-");
         if (newIdArray.length === 2) {
             if (this.getProcessId() === "") {
@@ -1720,7 +1720,7 @@ export class DisplayWindowClient {
         try {
             const canvas = document.createElement('canvas');
             this._webGlSupported = !!(window.WebGLRenderingContext &&
-                (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+                (canvas.getContext('webgl') || canvas.getContext('experimental-web-gl')));
         } catch (e) {
             this._webGlSupported = false;
         }

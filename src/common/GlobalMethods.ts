@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { Log } from "./Log";
+import { FieldType, PrimitiveFieldType, TypeSchema } from "./types/type_schema";
 
 export const rgbaArrayToRgbaStr = (rgbaArray: number[]): string => {
     const rStr = rgbaArray[0].toString();
@@ -1207,4 +1208,84 @@ export const calcWebGlShadeColor = (rgbaColor: string) => {
         }
     }
     return result;
+}
+
+function matchesSingleType(value: unknown, expectedType: FieldType): boolean {
+    if (expectedType === "undefined") {
+        return value === undefined;
+    }
+    if (value === undefined) return false;
+
+    // Array where each item matches one of several schemas: { arrayOfUnion: TypeSchema[] }
+    if (typeof expectedType === "object" && !Array.isArray(expectedType) && "arrayOfUnion" in expectedType) {
+        const schemas = (expectedType as any).arrayOfUnion as TypeSchema[];
+        return Array.isArray(value) && value.every((item) => schemas.some((s) => isOfType(item, s)));
+    }
+
+    // Fixed-length tuple of primitive types: { tuple: PrimitiveFieldType[] }
+    if (typeof expectedType === "object" && !Array.isArray(expectedType) && "tuple" in expectedType) {
+        const tupleDef = (expectedType as any).tuple as string[];
+        return Array.isArray(value) && value.length === tupleDef.length &&
+            tupleDef.every((t, i) => matchesSingleType((value as unknown[])[i], t as PrimitiveFieldType));
+    }
+
+    // Array of fixed-length tuples: { arrayOfTuple: PrimitiveFieldType[] }
+    if (typeof expectedType === "object" && !Array.isArray(expectedType) && "arrayOfTuple" in expectedType) {
+        const tupleDef = (expectedType as any).arrayOfTuple as string[];
+        return Array.isArray(value) && value.every((item) =>
+            Array.isArray(item) && item.length === tupleDef.length &&
+            tupleDef.every((t, i) => matchesSingleType(item[i], t as PrimitiveFieldType))
+        );
+    }
+
+    // String literal union: { literalUnion: string[] }
+    if (typeof expectedType === "object" && !Array.isArray(expectedType) && "literalUnion" in expectedType) {
+        const allowed = (expectedType as any).literalUnion as string[];
+        return typeof value === "string" && allowed.includes(value);
+    }
+
+    // Array of objects matching a schema: { arrayOf: TypeSchema }
+    if (typeof expectedType === "object" && !Array.isArray(expectedType) && "arrayOf" in expectedType) {
+        return Array.isArray(value) && value.every((item) => isOfType(item, (expectedType as any).arrayOf));
+    }
+
+    // Nested schema (object)
+    if (typeof expectedType === "object" && !Array.isArray(expectedType)) {
+        return isOfType(value, expectedType);
+    }
+
+    switch (expectedType) {
+        case "string":
+        case "number":
+        case "boolean":
+            return typeof value === expectedType;
+        case "string[]":
+            return Array.isArray(value) && value.every((v) => typeof v === "string");
+        case "number[]":
+            return Array.isArray(value) && value.every((v) => typeof v === "number");
+        default:
+            return false;
+    }
+}
+
+export function isOfType(obj: unknown, schema: TypeSchema): boolean {
+    if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
+        return false;
+    }
+
+    const record = obj as Record<string, unknown>;
+
+    for (const [key, expectedType] of Object.entries(schema)) {
+        const value = record[key];
+
+        // If expectedType is an array, the value must match any of the types in the array
+        if (Array.isArray(expectedType)) {
+            if (!expectedType.some((t) => matchesSingleType(value, t))) return false;
+            continue;
+        }
+
+        if (!matchesSingleType(value, expectedType)) return false;
+    }
+
+    return true;
 }

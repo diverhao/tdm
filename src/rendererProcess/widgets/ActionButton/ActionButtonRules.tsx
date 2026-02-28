@@ -1,6 +1,7 @@
-import { ActionButton, type_ActionButton_tdl } from "./ActionButton";
+import { ActionButton } from "./ActionButton";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { ActionButtonRule } from "./ActionButtonRule";
+import { type_ActionButton_tdl } from "../../../common/types/type_widget_tdl";
 
 export class ActionButtonRules extends BaseWidgetRules {
 	constructor(mainWidget: ActionButton, widgetTdl: type_ActionButton_tdl) {

@@ -1,6 +1,7 @@
-import { ByteMonitor, type_ByteMonitor_tdl } from "./ByteMonitor";
+import { ByteMonitor } from "./ByteMonitor";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { ByteMonitorRule } from "./ByteMonitorRule";
+import { type_ByteMonitor_tdl } from "../../../common/types/type_widget_tdl";
 
 
 export class ByteMonitorRules extends BaseWidgetRules {

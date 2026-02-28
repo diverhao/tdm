@@ -5,7 +5,7 @@ import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
 import { PvTable } from "../../widgets/PvTable/PvTable";
 import { XYPlot } from "../../widgets/XYPlot/XYPlot";
-import { type_yAxis } from "../../widgets/XYPlot/XYPlotPlot";
+import { type_XYPlot_yAxis as type_yAxis } from "../../../common/types/type_widget_tdl";
 import { SidebarXYPlotYAxis } from "./SidebarXYPlotYAxis";
 
 /**

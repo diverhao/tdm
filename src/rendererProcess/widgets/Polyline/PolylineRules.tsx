@@ -1,4 +1,5 @@
-import { Polyline, type_Polyline_tdl } from "./Polyline";
+import { Polyline } from "./Polyline";
+import { type_Polyline_tdl } from "../../../common/types/type_widget_tdl";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { PolylineRule } from "./PolylineRule";
 

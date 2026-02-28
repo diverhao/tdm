@@ -1,6 +1,7 @@
-import { RadioButton, type_RadioButton_tdl } from "./RadioButton";
+import { RadioButton } from "./RadioButton";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { RadioButtonRule } from "./RadioButtonRule";
+import { type_RadioButton_tdl } from "../../../common/types/type_widget_tdl";
 
 
 export class RadioButtonRules extends BaseWidgetRules {

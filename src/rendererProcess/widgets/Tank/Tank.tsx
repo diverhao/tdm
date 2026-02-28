@@ -4,22 +4,11 @@ import { GlobalVariables } from "../../../common/GlobalVariables";
 import { TankSidebar } from "./TankSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { TankRules } from "./TankRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Scale } from "../../helperWidgets/SharedElements/Scale";
+import { defaultTankTdl, type_Tank_tdl } from "../../../common/types/type_widget_tdl";
 
-
-export type type_Tank_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
 
 export class Tank extends BaseWidget {
     _rules: TankRules;
@@ -242,72 +231,14 @@ export class Tank extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-        const defaultTdl: type_Tank_tdl = {
-            type: "Tank",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 100,
-                top: 100,
-                width: 100,
-                height: 100,
-                backgroundColor: "rgba(240, 240, 240, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // border
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // outline
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // showUnit: true,
-                // channel
-                // showPvValue: true,
-                usePvLimits: false,
-                minPvValue: 0,
-                maxPvValue: 100,
-                useLogScale: false,
-                // tank and water colors
-                fillColor: "rgba(0,200,0,1)",
-                containerColor: "rgba(210,210,210,1)",
-                showLabels: true,
-                invisibleInOperation: false,
-                // decimal, exponential, hexadecimal
-                format: "default",
-                numTickIntervals: 5,
-                compactScale: false,
-                // "left" | "right"
-                scalePosition: "right",
-                displayScale: "Linear", // "Linear" | "Log10"
-                alarmContainer: false,
-                alarmFill: false,
-                alarmText: false,
-                alarmBorder: true,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_Tank_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultTankTdl.type);
+        return structuredClone({
+            ...defaultTankTdl,
+            widgetKey: widgetKey,
+        });
     };
+
 
     generateDefaultTdl: () => any = Tank.generateDefaultTdl;
 

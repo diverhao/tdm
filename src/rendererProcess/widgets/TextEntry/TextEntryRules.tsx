@@ -1,6 +1,7 @@
-import { TextEntry, type_TextEntry_tdl } from "./TextEntry";
+import { TextEntry } from "./TextEntry";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { TextEntryRule } from "./TextEntryRule";
+import { type_TextEntry_tdl } from "../../../common/types/type_widget_tdl";
 
 
 export class TextEntryRules extends BaseWidgetRules {

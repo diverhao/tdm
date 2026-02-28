@@ -11,6 +11,12 @@ import { Log } from "../../../common/Log";
 import { XYPlotPlotSettings } from "./XYPlotPlotSettings";
 import { XYPlotPlotWebGl } from "./XYPlotPlotWebGl";
 import { Scale } from "../../helperWidgets/SharedElements/Scale";
+import { type_XYPlot_yAxis, type_XYPlot_ticksInfo, type_XYPlot_xAxis, defaultXYPlotTicksInfo } from "../../../common/types/type_widget_tdl";
+
+// re-export for consumers that import from here
+export type type_yAxis = type_XYPlot_yAxis;
+export type type_ticksInfo = type_XYPlot_ticksInfo;
+export type type_xAxis = type_XYPlot_xAxis;
 
 
 const presetColors: string[] = [
@@ -23,67 +29,6 @@ const presetColors: string[] = [
     "rgba(128, 0, 128, 1)",
     "rgba(255, 128, 0, 1)",
 ];
-
-const defaultTicksInfo: type_ticksInfo = {
-    scale: "Linear",
-    xValMin: 0,
-    xValMax: 0,
-    yValMin: 0,
-    yValMax: 0,
-    xLength: 0,
-    yLength: 0,
-    numXgrid: 0,
-    numYgrid: 0,
-    xTickValues: [],
-    xTickPositions: [],
-    yTickValues: [],
-    yTickPositions: [],
-}
-
-
-export type type_yAxis = {
-    label: string;
-    valMin: number;
-    valMax: number;
-    lineWidth: number;
-    lineColor: string;
-    lineStyle: string;
-    pointType: string;
-    pointSize: number;
-    showGrid: boolean;
-    autoScale: boolean;
-    numGrids: number;
-    displayScale: "Linear" | "Log10";
-    // runtime data, should not be included in tdl
-    xData: number[];
-    yData: number[];
-    ticksInfo: type_ticksInfo,
-};
-
-export type type_ticksInfo = {
-    scale: "Linear" | "Log10",
-    xValMin: number,
-    xValMax: number,
-    yValMin: number,
-    yValMax: number,
-    xLength: number,
-    yLength: number,
-    numXgrid: number,
-    numYgrid: number,
-    xTickValues: number[],
-    xTickPositions: number[],
-    yTickValues: number[],
-    yTickPositions: number[],
-};
-
-export type type_xAxis = {
-    label: string;
-    autoScale: boolean;
-    valMin: number;
-    valMax: number;
-    showGrid: boolean;
-    numGrids: number;
-};
 
 const yAxisLabelWidth = 30;
 const yAxisTickWidth = 30;
@@ -1168,7 +1113,7 @@ export class XYPlotPlot {
             // runtime data
             xData: [],
             yData: [],
-            ticksInfo: JSON.parse(JSON.stringify(defaultTicksInfo)),
+            ticksInfo: JSON.parse(JSON.stringify(defaultXYPlotTicksInfo)),
         };
     };
 
@@ -1176,7 +1121,7 @@ export class XYPlotPlot {
         for (const yAxis of this.yAxes) {
             yAxis["xData"] = [];
             yAxis["yData"] = [];
-            yAxis["ticksInfo"] = JSON.parse(JSON.stringify(defaultTicksInfo));
+            yAxis["ticksInfo"] = JSON.parse(JSON.stringify(defaultXYPlotTicksInfo));
         }
     };
 
@@ -1270,7 +1215,7 @@ export class XYPlotPlot {
     getTicksInfo = (index: number) => {
         const yAxis = this.getMainWidget().getYAxes()[index];
         if (yAxis === undefined) {
-            return JSON.parse(JSON.stringify(defaultTicksInfo));
+            return JSON.parse(JSON.stringify(defaultXYPlotTicksInfo));
         } else {
             return yAxis["ticksInfo"];
         }

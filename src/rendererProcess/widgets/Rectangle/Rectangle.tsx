@@ -1,24 +1,12 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { RectangleSidebar } from "./RectangleSidebar";
-import { rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 import { RectangleRules } from "./RectangleRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-
-export type type_Rectangle_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultRectangleTdl, type_Rectangle_tdl } from "../../../common/types/type_widget_tdl";
 
 export class Rectangle extends BaseWidget {
 
@@ -105,8 +93,6 @@ export class Rectangle extends BaseWidget {
         const cornerHeight = allText["cornerHeight"];
         const fillColor = allText["fill"] ? this._getElementAreaRawFillStyle() : "none";
 
-        console.log("lineWidth =", lineWidth)
-
         return (
             <svg
                 width="100%"
@@ -158,53 +144,12 @@ export class Rectangle extends BaseWidget {
     };
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_Rectangle_tdl = {
-            type: "Rectangle",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 100,
-                top: 100,
-                width: 100,
-                height: 100,
-                backgroundColor: "rgba(0, 0, 0, 0)", // always transparent, background is controlled in fillColor
-                // angle
-                transform: "rotate(0deg)",
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // line
-                lineWidth: 3,
-                lineColor: "rgba(0, 0, 255, 1)",
-                lineStyle: "solid",
-                // fill
-                fillColor: "rgba(30, 144,255,1)",
-                fill: true,
-                // corner
-                cornerWidth: 0,
-                cornerHeight: 0,
-                invisibleInOperation: false,
-                alarmBorder: false,
-                alarmShape: false,
-                alarmFill: false,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_Rectangle_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultRectangleTdl.type);
+        return structuredClone({
+            ...defaultRectangleTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = Rectangle.generateDefaultTdl;

@@ -9,17 +9,7 @@ import { LabelRules } from "./LabelRules";
 import katex from "katex";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
-
-export type type_Label_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultLabelTdl, type_Label_tdl } from "../../../common/types/type_widget_tdl";
 
 export class Label extends BaseWidget {
 
@@ -35,7 +25,6 @@ export class Label extends BaseWidget {
 
     // ------------------------------ elements ---------------------------------
 
-    // area + resizer + sidebar
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -151,58 +140,13 @@ export class Label extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-        const defaultTdl: type_Label_tdl = {
-            type: "Label",
-            widgetKey: "",
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 100,
-                top: 100,
-                width: 100,
-                height: 100,
-                // lookings
-                backgroundColor: "rgba(255,255,255,0)",
-                transform: "rotate(0deg)",
-                // border
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // text contents
-                text: "Label text",
-                // text align
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                invisibleInOperation: false,
-                alarmBorder: false,
-                alarmBackground: false,
-                alarmText: false,
-                alarmLevel: "MINOR",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
+    static generateDefaultTdl = (): type_Label_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultLabelTdl.type);
+        return structuredClone({
+            ...defaultLabelTdl,
+            widgetKey: widgetKey,
+        });
 
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
     };
 
     generateDefaultTdl: () => any = Label.generateDefaultTdl;

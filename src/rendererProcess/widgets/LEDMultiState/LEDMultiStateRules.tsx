@@ -1,4 +1,5 @@
-import { LEDMultiState, type_LEDMultiState_tdl } from "./LEDMultiState";
+import { LEDMultiState } from "./LEDMultiState";
+import { type_LEDMultiState_tdl } from "../../../common/types/type_widget_tdl";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { LEDMultiStateRule } from "./LEDMultiStateRule";
 

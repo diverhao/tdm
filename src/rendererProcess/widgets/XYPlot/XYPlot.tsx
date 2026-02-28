@@ -4,26 +4,12 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { XYPlotSidebar } from "./XYPlotSidebar";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-import { type_xAxis, type_yAxis, XYPlotPlot } from "./XYPlotPlot";
+import { XYPlotPlot } from "./XYPlotPlot";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { deepMerge } from "../../../common/GlobalMethods";
+import { type_XYPlot_tdl } from "../../../common/types/type_widget_tdl";
 
-export type type_XYPlot_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    // 0th element is x axis, rest are y axes channel names
-    // x-axis channel name may be empty string
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    // XYPlot specific
-    xAxis: type_xAxis; // only one x-axis
-    yAxes: type_yAxis[]; // could be multiple y-axis
-};
+export { type_XYPlot_tdl };
 
 
 export class XYPlot extends BaseWidget {

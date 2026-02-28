@@ -9,21 +9,7 @@ import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { deepMerge, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 import { LEDMultiStateRules } from "./LEDMultiStateRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-
-export type type_LEDMultiState_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    // LEDMultiState specific
-    itemNames: string[];
-    itemColors: string[];
-    itemValues: number[];
-};
+import { defaultLEDMultiStateTdl, type_LEDMultiState_tdl } from "../../../common/types/type_widget_tdl";
 
 export class LEDMultiState extends BaseWidget {
 
@@ -420,70 +406,12 @@ export class LEDMultiState extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_LEDMultiState_tdl = {
-            type: "LEDMultiState",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                width: 100,
-                height: 100,
-                backgroundColor: "rgba(0, 0, 0, 0)",
-                // angle
-                transform: "rotate(0deg)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // border, it is different from the "alarmBorder" below
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // text styles
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: false,
-                alarmBorder: true,
-                // LED line
-                lineWidth: 2,
-                lineStyle: "solid",
-                lineColor: "rgba(50, 50, 50, 0.698)",
-                // LED shape: round or square
-                shape: "round",
-                // if the value is not valid
-                invisibleInOperation: false,
-                // discrete states
-                bit: -1, // always -1
-                useChannelItems: true,
-                fallbackColor: "rgba(255,0,255,1)",
-                fallbackText: "Wrong State",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            // discrete states
-            itemNames: ["ZERO", "ONE"],
-            itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
-            itemValues: [0, 1],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_LEDMultiState_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultLEDMultiStateTdl.type);
+        return structuredClone({
+            ...defaultLEDMultiStateTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = LEDMultiState.generateDefaultTdl;
@@ -491,11 +419,12 @@ export class LEDMultiState extends BaseWidget {
     // overload
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
-        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
-        result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
+        result["itemColors"] = structuredClone(this.getItemColors());
+        result["itemNames"] = structuredClone(this.getItemNames());
+        result["itemValues"] = structuredClone(this.getItemValues());
         return result;
     }
+
 
     // --------------------- getters -------------------------
 

@@ -1,4 +1,5 @@
-import { Label, type_Label_tdl } from "./Label";
+import { Label } from "./Label";
+import { type_Label_tdl } from "../../../common/types/type_widget_tdl";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { LabelRule } from "./LabelRule";
 

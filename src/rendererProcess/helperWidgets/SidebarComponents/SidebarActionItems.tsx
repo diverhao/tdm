@@ -6,12 +6,14 @@ import { ElementButton } from "../SharedElements/MacrosTable";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
 import {
     ActionButton,
+} from "../../widgets/ActionButton/ActionButton";
+import {
     type_action_openwebpage_tdl,
     type_action_opendisplay_tdl,
     type_action_writepv_tdl,
     type_action_executecommand_tdl,
     type_action_closedisplaywindow,
-} from "../../widgets/ActionButton/ActionButton";
+} from "../../../common/types/type_widget_tdl";
 import { SidebarActionOpenDisplayItem } from "./SidebarActionOpenDisplayItem";
 import { SidebarActionWritePvItem } from "./SidebarActionWritePvItem";
 import { SidebarActionOpenWebpageItem } from "./SidebarActionOpenWebpageItem";

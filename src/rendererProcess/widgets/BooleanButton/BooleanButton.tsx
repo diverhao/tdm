@@ -4,26 +4,11 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { BooleanButtonSidebar } from "./BooleanButtonSidebar";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { BooleanButtonRules } from "./BooleanButtonRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
 import { deepMerge } from "../../../common/GlobalMethods";
-
-export type type_BooleanButton_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    // Boolean Button specific
-    itemNames: string[];
-    itemColors: string[];
-    itemValues: number[];
-};
+import { type_BooleanButton_tdl, defaultBooleanButtonTdl } from "../../../common/types/type_widget_tdl";
 
 export class BooleanButton extends BaseWidget {
 
@@ -285,78 +270,12 @@ export class BooleanButton extends BaseWidget {
     }
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_BooleanButton_tdl = {
-            type: "BooleanButton",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                width: 100,
-                height: 100,
-                backgroundColor: "rgba(210, 210, 210, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // border, it is different from the "alarmBorder" below
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "rgba(0,0,0,1)",
-            },
-            text: {
-                // the LED indicator or picture position and size
-                horizontalAlign: "center",
-                verticalAlign: "center",
-                // text styles
-                wrapWord: false,
-                showUnit: false,
-                // use picture instead of colors
-                usePictures: false,
-                showLED: true,
-                alarmBorder: true,
-                // Toggle/Push/Push (inverted)
-                mode: "Toggle",
-                // becomes not visible in operation mode, but still clickable
-                invisibleInOperation: false,
-                onPicture: "", // not implemented yet
-                offPicture: "",
-                // "contemporary" | "traditional"
-                appearance: "traditional",
-                confirmOnWrite: false,
-                confirmOnWriteUsePassword: false,
-                confirmOnWritePassword: "",
-                // discrete states
-                bit: 0,
-                useChannelItems: true,
-                fallbackColor: "rgba(255,0,255,1)",
-                fallbackText: "Wrong State",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            // discrete states
-            itemNames: ["ZERO", "ONE"],
-            itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
-            itemValues: [0, 1],
-
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_BooleanButton_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultBooleanButtonTdl.type);
+        return structuredClone({
+            ...defaultBooleanButtonTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = BooleanButton.generateDefaultTdl;
@@ -364,9 +283,9 @@ export class BooleanButton extends BaseWidget {
     // overload
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
-        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
-        result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
+        result["itemColors"] = structuredClone(this.getItemColors());
+        result["itemNames"] = structuredClone(this.getItemNames());
+        result["itemValues"] = structuredClone(this.getItemValues());
         return result;
     }
     // --------------------- getters -------------------------

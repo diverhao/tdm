@@ -4,20 +4,9 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { TextEntrySidebar } from "./TextEntrySidebar";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { TextEntryRules } from "./TextEntryRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-
-export type type_TextEntry_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { type_TextEntry_tdl, defaultTextEntryTdl } from "../../../common/types/type_widget_tdl";
 
 export class TextEntry extends BaseWidget {
     _rules: TextEntryRules;
@@ -269,71 +258,15 @@ export class TextEntry extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-        const defaultTdl: type_TextEntry_tdl = {
-            type: "TextEntry",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                width: 100,
-                height: 100,
-                backgroundColor: "rgba(128, 255, 255, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // border, it is different from the alarmBorder below
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // text positions and contents
-                horizontalAlign: "flex-start",
-                verticalAlign: "center",
-                wrapWord: false,
-                showUnit: true,
-                // when the input box is focused
-                highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-                invisibleInOperation: false,
-                // decimal, exponential, hexadecimal
-                format: "default",
-                // scale, >= 0
-                scale: 0,
-                // "contemporary" | "traditional"
-                appearance: "contemporary",
-                // actuall "alarm outline"
-                alarmBorder: true,
-                alarmText: false,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-                confirmOnWrite: false,
-                confirmOnWriteUsePassword: false,
-                confirmOnWritePassword: "",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_TextEntry_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultTextEntryTdl.type);
+        return structuredClone({
+            ...defaultTextEntryTdl,
+            widgetKey: widgetKey,
+        });
     };
 
-    generateDefaultTdl = TextEntry.generateDefaultTdl;
+    generateDefaultTdl: () => any = TextEntry.generateDefaultTdl;
 
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {

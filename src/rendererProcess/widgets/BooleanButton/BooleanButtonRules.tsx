@@ -1,6 +1,7 @@
-import { BooleanButton, type_BooleanButton_tdl } from "./BooleanButton";
+import { BooleanButton } from "./BooleanButton";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BooleanButtonRule } from "./BooleanButtonRule";
+import { type_BooleanButton_tdl } from "../../../common/types/type_widget_tdl";
 
 
 export class BooleanButtonRules extends BaseWidgetRules {

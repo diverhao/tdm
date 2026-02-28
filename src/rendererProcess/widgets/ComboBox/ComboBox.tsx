@@ -4,26 +4,11 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ComboBoxSidebar } from "./ComboBoxSidebar";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ComboBoxRules } from "./ComboBoxRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
 import { deepMerge } from "../../../common/GlobalMethods";
-
-export type type_ComboBox_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    // Combo Box specific
-    itemNames: string[];
-    itemColors: string[];
-    itemValues: number[];
-};
+import { type_ComboBox_tdl, defaultComboBoxTdl } from "../../../common/types/type_widget_tdl";
 
 export class ComboBox extends BaseWidget {
 
@@ -238,75 +223,21 @@ export class ComboBox extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_ComboBox_tdl = {
-            type: "ComboBox",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 100,
-                top: 100,
-                width: 150,
-                height: 80,
-                backgroundColor: "rgba(210, 210, 210, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // border, it is different from the "alarmBorder" below,
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                horizontalAlign: "center",
-                alarmBorder: true,
-                invisibleInOperation: false,
-                alarmText: false,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-                confirmOnWrite: false,
-                confirmOnWriteUsePassword: false,
-                confirmOnWritePassword: "",
-
-                // discrete states
-                bit: -1, // always -1
-                useChannelItems: true,
-                fallbackColor: "rgba(255,0,255,1)",
-                fallbackText: "Wrong State",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            // discrete states
-            itemNames: ["ZERO", "ONE"],
-            itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
-            itemValues: [0, 1],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_ComboBox_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultComboBoxTdl.type);
+        return structuredClone({
+            ...defaultComboBoxTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = ComboBox.generateDefaultTdl;
 
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
-        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
-        result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
+        result["itemColors"] = structuredClone(this.getItemColors());
+        result["itemNames"] = structuredClone(this.getItemNames());
+        result["itemValues"] = structuredClone(this.getItemValues());
         return result;
     }
 

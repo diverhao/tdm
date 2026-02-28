@@ -4,7 +4,8 @@ import { DataViewer } from "./DataViewer";
 import {settingsIndexChoices} from "./DataViewerPlot"
 import { Log } from "../../../common/Log";
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { DataViewerPlot, type_yAxis } from "./DataViewerPlot";
+import { DataViewerPlot } from "./DataViewerPlot";
+import { type_DataViewer_yAxis } from "../../../common/types/type_widget_tdl";
 import { CollapsibleWithoutTitle } from "../../helperWidgets/ColorPicker/Collapsible";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
@@ -254,7 +255,7 @@ export class DataViewerTraceSettings {
     /**
      * one numeric value
      */
-    _ElementNumVal = ({ axisData, fieldName }: { axisData: type_yAxis, fieldName: keyof (type_yAxis) }) => {
+    _ElementNumVal = ({ axisData, fieldName }: { axisData: type_DataViewer_yAxis, fieldName: keyof (type_DataViewer_yAxis) }) => {
         // always string
         const [value, setValue] = React.useState(`${axisData[fieldName]}`);
 
@@ -422,7 +423,7 @@ export class DataViewerTraceSettings {
     /**
      * one boolean value
      */
-    _ElementBoolVal = ({ axisData, fieldName }: { axisData: type_yAxis, fieldName: keyof (type_yAxis) }) => {
+    _ElementBoolVal = ({ axisData, fieldName }: { axisData: type_DataViewer_yAxis, fieldName: keyof (type_DataViewer_yAxis) }) => {
         // boolean
         const [value, setValue] = React.useState<boolean>(axisData[fieldName] as boolean);
 

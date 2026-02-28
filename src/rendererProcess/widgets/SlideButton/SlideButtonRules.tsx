@@ -1,6 +1,7 @@
-import {SlideButton, type_SlideButton_tdl} from "./SlideButton"
+import { SlideButton } from "./SlideButton";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { SlideButtonRule } from "./SlideButtonRule";
+import { type_SlideButton_tdl } from "../../../common/types/type_widget_tdl";
 
 
 export class SlideButtonRules extends BaseWidgetRules {

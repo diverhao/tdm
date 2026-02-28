@@ -4,20 +4,6 @@ import { g_widgets1,  } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { ElementButton } from "../SharedElements/MacrosTable";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
-import {
-    ActionButton,
-    type_action_openwebpage_tdl,
-    type_action_opendisplay_tdl,
-    type_action_writepv_tdl,
-    type_action_executecommand_tdl,
-    type_action_closedisplaywindow,
-} from "../../widgets/ActionButton/ActionButton";
-import { SidebarActionOpenDisplayItem } from "./SidebarActionOpenDisplayItem";
-import { SidebarActionWritePvItem } from "./SidebarActionWritePvItem";
-import { SidebarActionOpenWebpageItem } from "./SidebarActionOpenWebpageItem";
-import { SidebarActionExecuteCommandItem } from "./SidebarActionExecuteCommandItem";
-import { ActionButtonSidebar } from "../../widgets/ActionButton/ActionButtonSidebar";
-import { SidebarActionCloseDisplayWindowItem } from "./SidebarActionCloseDisplayWindowItem";
 import { Image, type_Image_roi } from "../../widgets/Image/Image";
 import { Collapsible } from "../ColorPicker/Collapsible";
 import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";

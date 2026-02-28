@@ -3,25 +3,11 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ByteMonitorSidebar } from "./ByteMonitorSidebar";
 import { deepMerge, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 import { ByteMonitorRules } from "./ByteMonitorRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-
-export type type_ByteMonitor_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    // ByteMonitor specific
-    bitNames: string[];
-    itemColors: string[];
-};
+import { type_ByteMonitor_tdl, defaultByteMonitorTdl } from "../../../common/types/type_widget_tdl";
 
 export class ByteMonitor extends BaseWidget {
 
@@ -502,77 +488,20 @@ export class ByteMonitor extends BaseWidget {
     };
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_ByteMonitor_tdl = {
-            type: "ByteMonitor",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 100,
-                top: 100,
-                width: 100,
-                height: 100,
-                // clear background, use "itemColors"
-                backgroundColor: "rgba(0, 0, 0, 0)",
-                // angle
-                transform: "rotate(0deg)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // border, it is different from the "alarmBorder" below,
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: false,
-                alarmBorder: true,
-                // line style for each bit
-                lineWidth: 2,
-                lineStyle: "solid",
-                lineColor: "rgba(0, 0, 0, 1)",
-                // shape, round/square
-                shape: "round",
-                bitStart: 0,
-                bitLength: 8,
-                direction: "horizontal", // vs "vertical"
-                sequence: "positive", // vs "reverse"
-                // if the value is not valid
-                fallbackColor: "rgba(255,0,255,1)",
-                invisibleInOperation: false,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            bitNames: [],
-            itemColors: ["rgba(60, 100, 60, 1)", "rgba(60, 255, 60, 1)"],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_ByteMonitor_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultByteMonitorTdl.type);
+        return structuredClone({
+            ...defaultByteMonitorTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = ByteMonitor.generateDefaultTdl;
 
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
-        result["bitNames"] = JSON.parse(JSON.stringify(this.getBitNames()));
+        result["itemColors"] = structuredClone(this.getItemColors());
+        result["bitNames"] = structuredClone(this.getBitNames());
         return result;
     }
 

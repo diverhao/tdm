@@ -15,76 +15,8 @@ import { DataViewerPlotControls } from "./DataViewerPlotControls";
 import { DataViewerPlotTraceHelper } from "./DataViewerPlotTraceHelper";
 import { DataViewerPlotDataHelper } from "./DataViewerPlotDataHelper";
 import { DataViewerPlotMouseHelper } from "./DataViewerPlotMouseHelper";
+import { type_DataViewer_yAxis } from "../../../common/types/type_widget_tdl";
 
-
-export const defaultTicksInfo: type_ticksInfo = {
-    scale: "Linear",
-    xValMin: 0, // min/max with unit of ms since epoch
-    xValMax: 0,
-    yValMin: 0,
-    yValMax: 0,
-    xLength: 0,
-    yLength: 0,
-    numXgrid: 0,
-    numYgrid: 0,
-    xTickValMin: -10, // min/max with automatic unit from current time
-    xTickValMax: 0,
-    xTickValues: [],
-    xTickPositions: [],
-    yTickValues: [],
-    yTickPositions: [],
-    xTickUnit: "", // automatically calculated unit
-}
-
-
-export const defaultYAxis: type_yAxis = {
-    label: "",
-    valMin: 0,
-    valMax: 10,
-    lineWidth: 2,
-    lineColor: `rgba(0,0,0,1)`,
-    show: true,
-    bufferSize: 50000,
-    displayScale: "Linear",
-    xData: [],
-    yData: [],
-    ticksInfo: JSON.parse(JSON.stringify(defaultTicksInfo)),
-}
-
-
-export type type_ticksInfo = {
-    scale: "Linear" | "Log10",
-    xValMin: number,
-    xValMax: number,
-    yValMin: number,
-    yValMax: number,
-    xLength: number,
-    yLength: number,
-    numXgrid: number,
-    numYgrid: number,
-    xTickValMin: number,
-    xTickValMax: number,
-    xTickValues: number[],
-    xTickPositions: number[],
-    yTickValues: number[],
-    yTickPositions: number[],
-    xTickUnit: string,
-};
-
-export type type_yAxis = {
-    label: string;
-    valMin: number;
-    valMax: number;
-    lineWidth: number;
-    lineColor: string;
-    show: boolean;
-    bufferSize: number;
-    displayScale: "Linear" | "Log10";
-    // runtime data, should not be included in tdl
-    xData: number[];
-    yData: number[];
-    ticksInfo: type_ticksInfo,
-};
 
 type type_xAxis = {
     label: string;
@@ -258,7 +190,7 @@ export class DataViewerPlot {
     };
 
     // multiple y axes
-    yAxes: type_yAxis[] = [];
+    yAxes: type_DataViewer_yAxis[] = [];
 
     constructor(mainWidget: DataViewer) {
         this._mainWidget = mainWidget;
@@ -618,21 +550,35 @@ export class DataViewerPlot {
                         if (yValMinMax !== undefined) {
                             if (yAxis !== undefined) {
                                 const Dy = yValMinMax[1] - yValMinMax[0];
-                                yAxis.valMin = yValMinMax[0] - Dy * 0.1;
-                                yAxis.valMax = yValMinMax[1] + Dy * 0.1;
+                                // Create a new yAxis object with updated valMin and valMax
+                                const updatedYAxis = {
+                                    ...yAxis,
+                                    valMin: yValMinMax[0] - Dy * 0.1,
+                                    valMax: yValMinMax[1] + Dy * 0.1,
+                                };
+                                this.yAxes[this.getSelectedTraceIndex()] = updatedYAxis;
                             }
                         }
 
                         if (Math.abs(yAxis.valMin - yAxis.valMax) < 1e-20) {
+                            let newValMin, newValMax;
                             if (Math.abs(yAxis.valMax) < 1e-20) {
-                                yAxis.valMin = -1;
-                                yAxis.valMax = 1;
+                                newValMin = -1;
+                                newValMax = 1;
                             } else if (yAxis.valMax > 0) {
-                                yAxis.valMin = yAxis.valMin * 0.9;
-                                yAxis.valMax = yAxis.valMax * 1.1;
+                                newValMin = yAxis.valMin * 0.9;
+                                newValMax = yAxis.valMax * 1.1;
                             } else if (yAxis.valMax < 0) {
-                                yAxis.valMin = yAxis.valMin * 1.1;
-                                yAxis.valMax = yAxis.valMax * 0.9;
+                                newValMin = yAxis.valMin * 1.1;
+                                newValMax = yAxis.valMax * 0.9;
+                            }
+                            if (newValMin !== undefined && newValMax !== undefined) {
+                                const updatedYAxis = {
+                                    ...yAxis,
+                                    valMin: newValMin,
+                                    valMax: newValMax,
+                                };
+                                this.yAxes[this.getSelectedTraceIndex()] = updatedYAxis;
                             }
                         }
 
@@ -798,7 +744,7 @@ export class DataViewerPlot {
             renderer.setSize(containerWidth, containerHeight);
             mountRef.current!.appendChild(renderer.domElement);
 
-            this.yAxes.forEach((yAxis: type_yAxis, index: number) => {
+            this.yAxes.forEach((yAxis: type_DataViewer_yAxis, index: number) => {
 
                 const positions = this.mapXYsToPointsWebGl(index);
                 const color = yAxis.lineColor;
@@ -1015,7 +961,7 @@ export class DataViewerPlot {
                     overflowX: "hidden",
                 }}
             >
-                {this.yAxes.map((yAxis: type_yAxis, index: number) => {
+                {this.yAxes.map((yAxis: type_DataViewer_yAxis, index: number) => {
                     const xData = yAxis["xData"];
                     const yData = yAxis["yData"];
                     let timeStr = "0000-00-00 00:00:00.000";
@@ -1175,7 +1121,7 @@ export class DataViewerPlot {
         this.getPlotDataHelper().mapDbrDataWitNewData(dbrDataList);
     };
 
-    addOneDbrData = (data: type_dbrData | type_LocalChannel_data | undefined, yAxis: type_yAxis) => {
+    addOneDbrData = (data: type_dbrData | type_LocalChannel_data | undefined, yAxis: type_DataViewer_yAxis) => {
         this.getPlotDataHelper().addOneDbrData(data, yAxis);
     };
 
@@ -1580,9 +1526,9 @@ export class DataViewerPlot {
         return <this._Element></this._Element>;
     };
 
-    setYAxes = (yAxes: Record<string, any>[]) => {
+    setYAxes = (yAxes: type_DataViewer_yAxis[]) => {
         // deep copy
-        this.yAxes = JSON.parse(JSON.stringify(yAxes));
+        this.yAxes = structuredClone(yAxes);
     };
 
     setSelectedTraceIndex = (newIndex: number) => {

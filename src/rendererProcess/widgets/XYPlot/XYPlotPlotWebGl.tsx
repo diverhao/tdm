@@ -3,7 +3,8 @@ import { OrthographicCamera, Scene, WebGLRenderer, BufferGeometry, BufferAttribu
 import { Line2 } from 'three/examples/jsm/lines/Line2';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry';
-import { type_yAxis, XYPlotPlot } from "./XYPlotPlot";
+import { type_XYPlot_yAxis as type_yAxis, type_XYPlot_ticksInfo } from "../../../common/types/type_widget_tdl";
+import { XYPlotPlot } from "./XYPlotPlot";
 import { calcWebGlShadeColor } from "../../../common/GlobalMethods";
 
 

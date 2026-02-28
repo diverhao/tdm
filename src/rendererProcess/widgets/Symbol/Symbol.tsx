@@ -4,25 +4,11 @@ import { deepMerge } from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { SymbolRules } from "./SymbolRules";
 import { SymbolSidebar } from "./SymbolSidebar";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import path from "path";
-
-export type type_Symbol_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    // Symbol specific
-    itemNames: string[]; // imageNames
-    itemValues: number[]; // PV value
-};
+import { type_Symbol_tdl, defaultSymbolTdl } from "../../../common/types/type_widget_tdl";
 
 export class Symbol extends BaseWidget {
     _rules: SymbolRules;
@@ -245,69 +231,20 @@ export class Symbol extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_Symbol_tdl = {
-            type: "Symbol",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(240, 240, 240, 0.2)",
-                left: 100,
-                top: 100,
-                width: 150,
-                height: 80,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: false,
-                // fallback file name
-                fileName: "../../../webpack/resources/webpages/tdm-logo.svg",
-                opacity: 1,
-                stretchToFit: false,
-                showPvValue: false,
-                invisibleInOperation: false,
-                alarmBorder: true,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            itemNames: [],
-            itemValues: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_Symbol_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultSymbolTdl.type);
+        return structuredClone({
+            ...defaultSymbolTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = Symbol.generateDefaultTdl;
 
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
-        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
+        result["itemValues"] = structuredClone(this.getItemValues());
+        result["itemNames"] = structuredClone(this.getItemNames());
         return result;
     }
 

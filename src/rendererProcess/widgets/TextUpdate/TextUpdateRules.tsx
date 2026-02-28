@@ -1,6 +1,7 @@
-import { TextUpdate, type_TextUpdate_tdl } from "./TextUpdate";
+import { TextUpdate } from "./TextUpdate";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { TextUpdateRule } from "./TextUpdateRule";
+import { type_TextUpdate_tdl } from "../../../common/types/type_widget_tdl";
 
 
 export class TextUpdateRules extends BaseWidgetRules {

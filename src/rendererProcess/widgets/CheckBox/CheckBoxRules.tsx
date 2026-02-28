@@ -1,6 +1,7 @@
-import {CheckBox, type_CheckBox_tdl} from "./CheckBox"
+import { CheckBox } from "./CheckBox";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { CheckBoxRule } from "./CheckBoxRule";
+import { type_CheckBox_tdl } from "../../../common/types/type_widget_tdl";
 
 
 export class CheckBoxRules extends BaseWidgetRules {

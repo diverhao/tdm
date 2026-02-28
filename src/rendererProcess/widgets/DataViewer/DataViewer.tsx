@@ -4,27 +4,13 @@ import { GlobalVariables, calcSidebarWidth, getWindowHorizontalScrollBarWidth, t
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { DataViewerSidebar } from "./DataViewerSidebar";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-import { DataViewerPlot, defaultTicksInfo, defaultYAxis, settingsIndexChoices, type_yAxis } from "./DataViewerPlot";
+import { DataViewerPlot, settingsIndexChoices } from "./DataViewerPlot";
+import { type_DataViewer_yAxis, defaultDataViewerYAxis } from "../../../common/types/type_widget_tdl";
+import { type_DataViewer_tdl, defaultDataViewerTdl, defaultDataViewerTicksInfo } from "../../../common/types/type_widget_tdl";
 import { DataViewerMainSettings } from "./DataViewerMainSettings";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { DataViewerTraceSettings } from "./DataViewerTraceSettings";
-
-export type type_DataViewer_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    // Data Viewer specific
-    yAxes: type_yAxis[];
-};
-
-
 
 export class DataViewer extends BaseWidget {
 
@@ -41,9 +27,9 @@ export class DataViewer extends BaseWidget {
 
         // plot region
         this._plot = new DataViewerPlot(this);
-        const yAxes: type_yAxis[] = [];
+        const yAxes: type_DataViewer_yAxis[] = [];
         for (const yAxis of widgetTdl.yAxes) {
-            yAxes.push(GlobalMethods.deepMerge(defaultYAxis, yAxis));
+            yAxes.push(GlobalMethods.deepMerge(defaultDataViewerYAxis, yAxis));
         }
         this._plot.setYAxes(yAxes);
 
@@ -244,69 +230,29 @@ export class DataViewer extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_DataViewer_tdl = {
-            type: "DataViewer",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(255, 255, 255, 1)",
-                left: 0,
-                top: 0,
-                width: 500,
-                height: 300,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 1,
-                borderColor: "rgba(0, 0, 0, 1)",
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                wrapWord: true,
-                showUnit: false,
-                alarmBorder: true,
-                highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-                overflowVisible: true,
-                singleWidget: false,
-                title: "Title",
-                updatePeriod: 1, // second
-                axisZoomFactor: 1.25,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            yAxes: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_DataViewer_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultDataViewerTdl.type);
+        return structuredClone({
+            ...defaultDataViewerTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = DataViewer.generateDefaultTdl;
 
-    /** 
-     * Static method for generating a widget tdl with external PV name <br>
-     * 
-     * Used in creating utility window, which is borderless
-     * 
-    */
+    getTdlCopy(newKey: boolean = true): Record<string, any> {
+        const result = super.getTdlCopy(newKey);
+        result["yAxes"] = this.getPlot().yAxes.map(({ xData, yData, ticksInfo, ...rest }) => {
+            return structuredClone(rest);
+        });
+        result["yAxes"].map((yAxis: type_DataViewer_yAxis) => {
+            yAxis["xData"].length = 0;
+            yAxis["yData"].length = 0;
+            yAxis["ticksInfo"] = structuredClone(defaultDataViewerTicksInfo);
+        })
+        return result;
+    }
+
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_DataViewer_tdl => {
         const result = this.generateDefaultTdl();
         result.style["borderWidth"] = 0;
@@ -314,18 +260,6 @@ export class DataViewer extends BaseWidget {
         return result;
     };
 
-    getTdlCopy(newKey: boolean = true): Record<string, any> {
-        const result = super.getTdlCopy(newKey);
-        result["yAxes"] = this.getPlot().yAxes.map(({ xData, yData, ticksInfo, ...rest }) => {
-            return JSON.parse(JSON.stringify(rest));
-        });
-        result["yAxes"].map((yAxis: type_yAxis) => {
-            yAxis["xData"] = [];
-            yAxis["yData"] = [];
-            yAxis["ticksInfo"] = JSON.parse(JSON.stringify(defaultTicksInfo));
-        })
-        return result;
-    }
 
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {

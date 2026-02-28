@@ -3,26 +3,11 @@ import { GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { TextSymbolSidebar } from "./TextSymbolSidebar";
 import { TextSymbolRules } from "./TextSymbolRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { deepMerge } from "../../../common/GlobalMethods";
-
-export type type_TextSymbol_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    // Radio Button specific
-    itemNames: string[];
-    itemColors: string[];
-    itemValues: number[];
-};
+import { type_TextSymbol_tdl, defaultTextSymbolTdl } from "../../../common/types/type_widget_tdl";
 
 export class TextSymbol extends BaseWidget {
 
@@ -142,77 +127,21 @@ export class TextSymbol extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (): Record<string, any> => {
-        const defaultTdl: type_TextSymbol_tdl = {
-            type: "TextSymbol",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(240, 240, 240, 0.2)",
-                left: 100,
-                top: 100,
-                width: 150,
-                height: 80,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: false,
-                invisibleInOperation: false,
-                alarmBorder: true,
-                alarmBackground: false,
-                alarmText: false,
-                alarmLevel: "MINOR",
-                text: "",
-                showPvValue: false,
-
-                // discrete states
-                bit: -1, // always -1
-                useChannelItems: false,
-                fallbackColor: "rgba(255,0,255,0)",
-                fallbackText: "Wrong State",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            // discrete states
-            itemNames: ["ZERO", "ONE"],
-            itemValues: [0, 1],
-            itemColors: ["rgba(60, 100, 60, 0)", "rgba(0, 255, 0, 0)"],
-        };
-
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_TextSymbol_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultTextSymbolTdl.type);
+        return structuredClone({
+            ...defaultTextSymbolTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = TextSymbol.generateDefaultTdl;
 
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        result["itemColors"] = JSON.parse(JSON.stringify(this.getItemColors()));
-        result["itemNames"] = JSON.parse(JSON.stringify(this.getItemNames()));
-        result["itemValues"] = JSON.parse(JSON.stringify(this.getItemValues()));
+        result["itemColors"] = structuredClone(this.getItemColors());
+        result["itemNames"] = structuredClone(this.getItemNames());
+        result["itemValues"] = structuredClone(this.getItemValues());
         return result;
     }
 

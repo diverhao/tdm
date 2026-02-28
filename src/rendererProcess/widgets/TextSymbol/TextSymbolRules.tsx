@@ -1,6 +1,7 @@
-import {TextSymbol, type_TextSymbol_tdl} from "./TextSymbol"
+import { TextSymbol } from "./TextSymbol";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { TextSymbolRule } from "./TextSymbolRule";
+import { type_TextSymbol_tdl } from "../../../common/types/type_widget_tdl";
 
 export class TextSymbolRules extends BaseWidgetRules {
 	constructor(mainWidget: TextSymbol, widgetTdl: type_TextSymbol_tdl) {

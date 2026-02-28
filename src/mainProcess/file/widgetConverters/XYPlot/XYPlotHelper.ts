@@ -1,103 +1,14 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import * as GlobalMethods from "../../../../common/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
+import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
-import { v4 as uuidv4 } from "uuid";
+import { type_XYPlot_tdl, type_XYPlot_yAxis as type_yAxis, type_XYPlot_xAxis as type_xAxis, defaultXYPlotTdl } from "../../../../common/types/type_widget_tdl";
 
-export type type_XYPlot_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[]; // x and y axes channel names, x channel name might be an empty string ""
-    groupNames: string[];
-    xAxis: type_xAxis;
-    yAxes: type_yAxis[];
-    rules: type_rules_tdl;
-};
-
-export type type_yAxis = {
-    label: string;
-    valMin: number;
-    valMax: number;
-    lineWidth: number;
-    lineColor: string;
-    ticks: number[];
-    ticksText: (number | string)[];
-    autoScale: boolean;
-    lineStyle: string;
-    pointType: string;
-    pointSize: number;
-    showGrid: boolean;
-    numGrids: number;
-    displayScale: "Linear" | "Log10",
-};
-
-export type type_xAxis = {
-    label: string;
-    valMin: number;
-    valMax: number;
-    ticks: number[];
-    ticksText: (number | string)[];
-    autoScale: boolean;
-    showGrid: boolean;
-    numGrids: number;
-};
+export { type_XYPlot_tdl };
 
 export class XYPlotHelper extends BaseWidgetHelper {
     // override BaseWidget
-    static _defaultTdl: type_XYPlot_tdl = {
-        type: "XYPlot",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(255, 255,255, 1)",
-            left: 0,
-            top: 0,
-            width: 500,
-            height: 300,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            showLegend: false,
-            showFrame: true,
-        },
-        channelNames: [],
-        groupNames: [],
-        xAxis: {
-            label: "x",
-            valMin: 0,
-            valMax: 100,
-            ticks: [0, 50, 100],
-            ticksText: ["0", "50", "100"],
-            autoScale: false,
-            showGrid: true,
-            numGrids: 5,
-        },
-        yAxes: [],
-        rules: [],
-    };
+    static _defaultTdl: type_XYPlot_tdl = structuredClone(defaultXYPlotTdl);
 
     // override
     static generateDefaultTdl = (type: string): type_XYPlot_tdl => {
@@ -138,8 +49,6 @@ export class XYPlotHelper extends BaseWidgetHelper {
             valMax: 100,
             lineWidth: 2,
             lineColor: this.getANewColor(index),
-            ticks: [0, 50, 100],
-            ticksText: [0, 50, 100],
             autoScale: false,
             lineStyle: "solid",
             pointType: "none",
@@ -147,6 +56,9 @@ export class XYPlotHelper extends BaseWidgetHelper {
             showGrid: true,
             numGrids: 5,
             displayScale: "Linear",
+            xData: [],
+            yData: [],
+            ticksInfo: {} as any,
         };
     };
 
@@ -405,8 +317,6 @@ export class XYPlotHelper extends BaseWidgetHelper {
                 yAxis["valMin"] = bobYAxis["valMin"];
                 yAxis["valMax"] = bobYAxis["valMax"];
                 yAxis["displayScale"] = bobYAxis["displayScale"];
-                yAxis["ticks"] = bobYAxis["ticks"];
-                yAxis["ticksText"] = bobYAxis["ticks"];
                 yAxis["autoScale"] = bobYAxis["autoScale"];
                 yAxis["showGrid"] = bobYAxis["showGrid"];
             }

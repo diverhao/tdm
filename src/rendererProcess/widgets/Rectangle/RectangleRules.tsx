@@ -1,4 +1,5 @@
-import {Rectangle, type_Rectangle_tdl} from "./Rectangle"
+import {Rectangle} from "./Rectangle"
+import { type_Rectangle_tdl } from "../../../common/types/type_widget_tdl";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { RectangleRule } from "./RectangleRule";
 

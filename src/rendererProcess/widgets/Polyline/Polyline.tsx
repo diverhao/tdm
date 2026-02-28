@@ -10,19 +10,8 @@ import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { PolylineSmoother } from "./PolylineSmoother";
 import { PolylineRules } from "./PolylineRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
+import { defaultPolylineTdl, type_Polyline_tdl } from "../../../common/types/type_widget_tdl";
 
-export type type_Polyline_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    pointsX: number[];
-    pointsY: number[];
-};
 
 export class Polyline extends BaseWidget {
 
@@ -585,65 +574,11 @@ export class Polyline extends BaseWidget {
 
     static generateDefaultTdl = (): Record<string, any> => {
 
-        const defaultTdl: type_Polyline_tdl = {
-            type: "Polyline",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                width: 100,
-                height: 100,
-                backgroundColor: "rgba(0,0,0,0)",
-                // angle
-                transform: "rotate(0deg)",
-                // line color, not text color
-                color: "rgba(0,0,255,1)",
-                // border
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            // the ElementBody style
-            text: {
-                // line styles
-                lineWidth: 3,
-                lineStyle: "solid",
-                lineColor: "rgba(0,0,255,1)",
-                // arrows, length and width are in unit of line width
-                arrowLength: 6,
-                arrowWidth: 3,
-                showArrowHead: false,
-                showArrowTail: false,
-                // curve
-                smootherize: false,
-                // when fill === true and closed === true, it is a polygon
-                fill: false,
-                closed: false,
-                fillColor: "rgba(50,50,255,1)",
-                invisibleInOperation: false,
-                alarmBorder: false,
-                alarmFill: false,
-                alarmBackground: false,
-                alarmText: false,
-                alarmLevel: "MINOR",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            pointsX: [],
-            pointsY: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultPolylineTdl["type"]);
+        return structuredClone({
+            ...defaultPolylineTdl,
+            widgetKey: widgetKey,
+        })
     };
 
     generateDefaultTdl: () => any = Polyline.generateDefaultTdl;

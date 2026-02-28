@@ -4,82 +4,21 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { ActionButtonSidebar } from "./ActionButtonSidebar";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ActionButtonRules } from "./ActionButtonRules";
 import path from "path";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
-
-export type type_action_opendisplay_tdl = {
-    type: "OpenDisplay";
-    label: string;
-    fileName: string;
-    // user-provided external macros, the child display must take it
-    externalMacros: [string, string][];
-    // if the child macros should take the parent's macros
-    useParentMacros: boolean;
-    // if open the display in same window
-    openInSameWindow: boolean;
-};
-
-export type type_action_writepv_tdl = {
-    type: "WritePV";
-    label: string;
-    channelName: string;
-    channelValue: string;
-    confirmOnWrite: boolean;
-    confirmOnWriteUsePassword: boolean;
-    confirmOnWritePassword: string,
-};
-
-export type type_action_executescript_tdl = {
-    type: "ExecuteScript";
-    label: string;
-    fileName: string;
-};
-
-export type type_action_executecommand_tdl = {
-    type: "ExecuteCommand";
-    label: string;
-    command: string;
-    confirmOnWrite: boolean;
-    confirmOnWriteUsePassword: boolean;
-    confirmOnWritePassword: string,
-};
-
-export type type_action_openwebpage_tdl = {
-    type: "OpenWebPage";
-    label: string;
-    url: string;
-};
-
-export type type_action_closedisplaywindow = {
-    type: "CloseDisplayWindow";
-    label: string;
-    quitTDM: boolean;
-};
-
-export type type_actions_tdl = (
-    | type_action_opendisplay_tdl
-    | type_action_writepv_tdl
-    | type_action_executecommand_tdl
-    | type_action_executescript_tdl
-    | type_action_openwebpage_tdl
-    | type_action_closedisplaywindow
-)[];
-
-export type type_ActionButton_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    // ActionButton specific
-    actions: type_actions_tdl;
-};
+import {
+    type_ActionButton_tdl,
+    type_actions_tdl,
+    type_action_opendisplay_tdl,
+    type_action_writepv_tdl,
+    type_action_executecommand_tdl,
+    type_action_executescript_tdl,
+    type_action_openwebpage_tdl,
+    type_action_closedisplaywindow,
+    defaultActionButtonTdl,
+} from "../../../common/types/type_widget_tdl";
 
 export class ActionButton extends BaseWidget {
 
@@ -101,7 +40,7 @@ export class ActionButton extends BaseWidget {
 
         this._rules = new ActionButtonRules(this, widgetTdl);
 
-        this._actions = JSON.parse(JSON.stringify(widgetTdl.actions));
+        this._actions = structuredClone(widgetTdl.actions);
     }
 
 
@@ -230,7 +169,7 @@ export class ActionButton extends BaseWidget {
     _ElementActionButtonText = () => {
         const allText = this.getAllText();
         const appearance = allText["appearance"];
-        const numActions = this.getActions().length;
+        const numActions = ((this.getActions() as unknown) as any[]).length;
         const dropDownArrowDisplay = appearance === "contemporary" && numActions > 1 ? "inline-flex" : "none";
         const justifyContent = allText["horizontalAlign"];
         const alignItems = allText["verticalAlign"];
@@ -324,15 +263,20 @@ export class ActionButton extends BaseWidget {
                 ></option>
 
                 {/* actions */}
-                {this.getActions().map(
-                    (
-                        action:
+                {(
+                    Array.isArray(this.getActions())
+                        ? (this.getActions() as unknown as (
                             | type_action_executecommand_tdl
                             | type_action_opendisplay_tdl
                             | type_action_openwebpage_tdl
                             | type_action_writepv_tdl
                             | type_action_executescript_tdl
-                            | type_action_closedisplaywindow,
+                            | type_action_closedisplaywindow
+                        )[])
+                        : []
+                ).map(
+                    (
+                        action,
                         index: number
                     ) => {
                         return (
@@ -624,74 +568,26 @@ export class ActionButton extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-        const defaultTdl: type_ActionButton_tdl = {
-            type: "ActionButton",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 100,
-                top: 100,
-                width: 100,
-                height: 100,
-                backgroundColor: "rgba(210, 210, 210, 1)",
-                // border, not related to the below alarmBorder
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // angle
-                transform: "rotate(0deg)",
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                wrapWord: false,
-                horizontalAlign: "center",
-                verticalAlign: "center",
-                // actually alarmOutline
-                alarmBorder: true,
-                text: "Action Button",
-                // becomes not visible in operation mode, but still clickable
-                invisibleInOperation: false,
-                // "contemporary" | "traditional"
-                appearance: "traditional",
-                alarmText: false,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            actions: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return JSON.parse(JSON.stringify(defaultTdl));
+    static generateDefaultTdl = (): type_ActionButton_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultActionButtonTdl.type);
+        return structuredClone({
+            ...defaultActionButtonTdl,
+            widgetKey: widgetKey,
+        });
     };
 
-    generateDefaultTdl = ActionButton.generateDefaultTdl;
+    generateDefaultTdl: () => any = ActionButton.generateDefaultTdl;
 
     getTdlCopy(newKey: boolean = true) {
         const result = super.getTdlCopy(newKey);
-        result["actions"] = JSON.parse(JSON.stringify(this.getActions()));
+        result["actions"] = structuredClone(this.getActions());
         return result;
     }
 
     // --------------------- getters -------------------------
 
     getActions = () => {
-        return this._actions;
+        return this._actions as unknown as any[];
     };
 
     // -------------------------- sidebar ---------------------------

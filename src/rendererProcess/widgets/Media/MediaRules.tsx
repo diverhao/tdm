@@ -1,6 +1,7 @@
-import {Media, type_Media_tdl} from "./Media"
+import { Media } from "./Media";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { MediaRule } from "./MediaRule";
+import { type_Media_tdl } from "../../../common/types/type_widget_tdl";
 
 export class MediaRules extends BaseWidgetRules {
 	constructor(mainWidget: Media, widgetTdl: type_Media_tdl) {

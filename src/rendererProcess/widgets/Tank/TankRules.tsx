@@ -1,4 +1,5 @@
-import { Tank, type_Tank_tdl } from "./Tank";
+import { Tank } from "./Tank";
+import { type_Tank_tdl } from "../../../common/types/type_widget_tdl";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { TankRule } from "./TankRule";
 

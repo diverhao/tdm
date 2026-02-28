@@ -1,6 +1,7 @@
-import { ScaledSlider, type_ScaledSlider_tdl } from "./ScaledSlider";
+import { ScaledSlider } from "./ScaledSlider";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { ScaledSliderRule } from "./ScaledSliderRule";
+import { type_ScaledSlider_tdl } from "../../../common/types/type_widget_tdl";
 
 
 export class ScaledSliderRules extends BaseWidgetRules {

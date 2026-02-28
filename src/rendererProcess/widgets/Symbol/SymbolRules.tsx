@@ -1,6 +1,7 @@
-import {Symbol, type_Symbol_tdl} from "./Symbol"
+import {Symbol} from "./Symbol"
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { SymbolRule } from "./SymbolRule";
+import { type_Symbol_tdl } from "../../../common/types/type_widget_tdl";
 
 export class SymbolRules extends BaseWidgetRules {
 	constructor(mainWidget: Symbol, widgetTdl: type_Symbol_tdl) {

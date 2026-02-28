@@ -1,6 +1,7 @@
-import { ComboBox, type_ComboBox_tdl } from "./ComboBox";
+import { ComboBox } from "./ComboBox";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { ComboBoxRule } from "./ComboBoxRule";
+import { type_ComboBox_tdl } from "../../../common/types/type_widget_tdl";
 
 
 export class ComboBoxRules extends BaseWidgetRules {
