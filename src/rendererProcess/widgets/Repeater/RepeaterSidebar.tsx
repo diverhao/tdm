@@ -5,17 +5,18 @@ import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarRepeaterRowsConfig } from "../../helperWidgets/SidebarComponents/SidebarRepeaterRowsConfig"
-import { SidebarRepeaterGap } from "../../helperWidgets/SidebarComponents/SidebarRepeaterGap";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 
 export class RepeaterSidebar extends BaseWidgetSidebar {
 
     _sidebarRepeaterRowsConfig: SidebarRepeaterRowsConfig;
-    _sidebarRepeaterGap: SidebarRepeaterGap;
+    _sidebarRepeaterGap;
 
     constructor(repeater: Repeater) {
         super(repeater);
+        const text = this.getMainWidget().getText();
         this._sidebarRepeaterRowsConfig = new SidebarRepeaterRowsConfig(this);
-        this._sidebarRepeaterGap = new SidebarRepeaterGap(this);
+        this._sidebarRepeaterGap = new SidebarNumberInput(this, text, "gap", "Gap");
     }
 
 

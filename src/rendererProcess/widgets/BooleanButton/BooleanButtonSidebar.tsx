@@ -1,41 +1,26 @@
 import * as React from "react";
 import { BooleanButton } from "./BooleanButton";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarLEDBit } from "../../helperWidgets/SidebarComponents/SidebarLEDBit";
-import { SidebarSlideButtonBoxWidth } from "../../helperWidgets/SidebarComponents/SidebarSlideButtonBoxWidth";
-import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
-import { SidebarBooleanButtonUsePictures } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonUsePictures";
-import { SidebarBooleanButtonShowLED } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonShowLED";
-import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
-import { SidebarBooleanButtonOnColor } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOnColor";
-import { SidebarBooleanButtonOffColor } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffColor";
-import { SidebarBooleanButtonOnValue } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOnValue";
-import { SidebarBooleanButtonOffValue } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffValue";
-import { SidebarBooleanButtonOnLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOnLabel";
-import { SidebarBooleanButtonOffLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffLabel";
-import { SidebarBooleanButtonMode } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonMode";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
 import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
-import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
+import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
 
 export class BooleanButtonSidebar extends BaseWidgetSidebar {
-    _sidebarLEDBit: SidebarLEDBit;
-    _sidebarSlideButtonBoxWidth: SidebarSlideButtonBoxWidth;
-    _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
-    _sidebarBooleanButtonUsePictures: SidebarBooleanButtonUsePictures;
-    _sidebarBooleanButtonShowLED: SidebarBooleanButtonShowLED;
-    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
-    _sidebarBooleanButtonOnColor: SidebarBooleanButtonOnColor;
-    _sidebarBooleanButtonOffColor: SidebarBooleanButtonOffColor;
-    _sidebarBooleanButtonOnValue: SidebarBooleanButtonOnValue;
-    _sidebarBooleanButtonOffValue: SidebarBooleanButtonOffValue;
-    _sidebarBooleanButtonOnLabel: SidebarBooleanButtonOnLabel;
-    _sidebarBooleanButtonOffLabel: SidebarBooleanButtonOffLabel;
-    _sidebarBooleanButtonMode: SidebarBooleanButtonMode;
+    _sidebarLEDBit;
+    _sidebarSlideButtonBoxWidth;
+    _sidebarChoiceButtonUseChannelItems;
+    _sidebarBooleanButtonUsePictures;
+    _sidebarBooleanButtonShowLED;
+    _sidebarLEDFallbackColor;
+    _sidebarBooleanButtonMode;
     _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
-    _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
+    _sidebarLEDMultiStateFallbackText;
 
     useItemColor: boolean = true;
     variableItems: boolean = false;
@@ -44,21 +29,16 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
 
     constructor(booleanButton: BooleanButton) {
         super(booleanButton);
-        this._sidebarLEDBit = new SidebarLEDBit(this);
-        this._sidebarSlideButtonBoxWidth = new SidebarSlideButtonBoxWidth(this);
-        this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
-        this._sidebarBooleanButtonUsePictures = new SidebarBooleanButtonUsePictures(this);
-        this._sidebarBooleanButtonShowLED = new SidebarBooleanButtonShowLED(this);
-        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
-        this._sidebarBooleanButtonOnColor = new SidebarBooleanButtonOnColor(this);
-        this._sidebarBooleanButtonOffColor = new SidebarBooleanButtonOffColor(this);
-        this._sidebarBooleanButtonOnValue = new SidebarBooleanButtonOnValue(this);
-        this._sidebarBooleanButtonOffValue = new SidebarBooleanButtonOffValue(this);
-        this._sidebarBooleanButtonOnLabel = new SidebarBooleanButtonOnLabel(this);
-        this._sidebarBooleanButtonOffLabel = new SidebarBooleanButtonOffLabel(this);
-        this._sidebarBooleanButtonMode = new SidebarBooleanButtonMode(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarLEDBit = new SidebarNumberInput(this, text, "bit", "Bit");
+        this._sidebarSlideButtonBoxWidth = new SidebarNumberInput(this, text, "boxWidth", "Box width");
+        this._sidebarChoiceButtonUseChannelItems = new SidebarCheckBox(this, text, "useChannelItems", "Use channel items");
+        this._sidebarBooleanButtonUsePictures = new SidebarCheckBox(this, text, "usePictures", "Use pictures");
+        this._sidebarBooleanButtonShowLED = new SidebarCheckBox(this, text, "showLED", "Show LED");
+        this._sidebarLEDFallbackColor = new SidebarColor(this, text, "fallbackColor", "Fallback color");
+        this._sidebarBooleanButtonMode = new SidebarStringChoices(this, text, "mode", "Mode", {Toggle: "Toggle", Push: "Push", "Push (inverted)": "Push (inverted)"});
         this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
-        this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
+        this._sidebarLEDMultiStateFallbackText = new SidebarStringInput(this, text, "fallbackText", "Text");
     }
 
     getSidebarLEDBit = () => {
@@ -87,27 +67,6 @@ export class BooleanButtonSidebar extends BaseWidgetSidebar {
 
     getSidebarLEDFallbackColor = () => {
         return this._sidebarLEDFallbackColor;
-    }
-
-    getSidebarBooleanButtonOnColor = () => {
-        return this._sidebarBooleanButtonOnColor;
-    }
-
-    getSidebarBooleanButtonOffColor = () => {
-        return this._sidebarBooleanButtonOffColor;
-    }
-
-    getSidebarBooleanButtonOnValue = () => {
-        return this._sidebarBooleanButtonOnValue;
-    }
-    getSidebarBooleanButtonOffValue = () => {
-        return this._sidebarBooleanButtonOffValue;
-    }
-    getSidebarBooleanButtonOnLabel = () => {
-        return this._sidebarBooleanButtonOnLabel;
-    }
-    getSidebarBooleanButtonOffLabel = () => {
-        return this._sidebarBooleanButtonOffLabel;
     }
 
     getSidebarBooleanButtonMode = () => {

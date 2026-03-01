@@ -1,26 +1,32 @@
 import * as React from "react";
 import { Arc } from "./Arc";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarPolylineFill } from "../../helperWidgets/SidebarComponents/SidebarPolylineFill";
-import { SidebarArcAngleStart } from "../../helperWidgets/SidebarComponents/SidebarArcAngleStart";
-import { SidebarArcAngleRange } from "../../helperWidgets/SidebarComponents/SidebarArcAngleRange";
-import { SidebarArcShowRadius } from "../../helperWidgets/SidebarComponents/SidebarArcShowRadius";
+import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
 import {Log} from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
+import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
 
 export class ArcSidebar extends BaseWidgetSidebar {
-    _sidebarPolylineFill: SidebarPolylineFill;
-    _sidebarArcAngleStart: SidebarArcAngleStart;
-    _sidebarArcAngleRange: SidebarArcAngleRange;
-    _sidebarArcShowRadius: SidebarArcShowRadius;
+    _sidebarPolylineFill;
+    _sidebarArcAngleStart;
+    _sidebarArcAngleRange;
+    _sidebarArcShowRadius;
 
     constructor(arc: Arc) {
         super(arc);
-        this._sidebarPolylineFill = new SidebarPolylineFill(this);
-        this._sidebarArcAngleStart = new SidebarArcAngleStart(this);
-        this._sidebarArcAngleRange = new SidebarArcAngleRange(this);
-        this._sidebarArcShowRadius = new SidebarArcShowRadius(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarPolylineFill = new SidebarStringInput(this, text, "fill", "Fill");
+        this._sidebarArcAngleStart = new SidebarNumberInput(this, text, "angelStart", "Start");
+        this._sidebarArcAngleRange = new SidebarNumberInput(this, text, "angelRange", "Range");
+        this._sidebarArcShowRadius = new SidebarStringChoices(this, text, "showRadius", "Show", 
+            {
+                None: "none",
+                Radius: "radius",
+                Secant: "secant",
+            }
+        )
     }
 
     getSidebarPolylineFill = () => {

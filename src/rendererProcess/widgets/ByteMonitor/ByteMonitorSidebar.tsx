@@ -1,41 +1,46 @@
 import * as React from "react";
 import { ByteMonitor } from "./ByteMonitor";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
-import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
-import { SidebarLEDShape } from "../../helperWidgets/SidebarComponents/SidebarLEDShape";
-import { SidebarByteMonitorBitStart } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorBitStart";
-import { SidebarByteMonitorBitLength } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorBitLength";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 import { SidebarByteMonitorBitValueColors } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorBitValueColors";
 import { SidebarByteMonitorBitNamesTable } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorBitNamesTable";
-import { SidebarByteMonitorSequence } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorSequence";
-import {Log} from "../../../common/Log";
+import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
 
 export class ByteMonitorSidebar extends BaseWidgetSidebar {
-    _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
+    _sidebarPictureStretchToFit;
     _sidebarPictureOpacity: SidebarPictureOpacity;
-    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
-    _sidebarLEDShape: SidebarLEDShape;
-    _sidebarByteMonitorBitStart: SidebarByteMonitorBitStart;
-    _sidebarByteMonitorBitLength: SidebarByteMonitorBitLength;
+    _sidebarLEDFallbackColor;
+    _sidebarLEDShape;
+    _sidebarByteMonitorBitStart;
+    _sidebarByteMonitorBitLength;
     _sidebarByteMonitorBitValueColors: SidebarByteMonitorBitValueColors;
     _sidebarByteMonitorBitNamesTable: SidebarByteMonitorBitNamesTable;
-    _sidebarByteMonitorSequence: SidebarByteMonitorSequence;
+    _sidebarByteMonitorSequence;
 
     constructor(byteMonitor: ByteMonitor) {
         super(byteMonitor);
-        this._sidebarPictureStretchToFit = new SidebarPictureStretchToFit(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarPictureStretchToFit = new SidebarCheckBox(this, text, "stretchToFit", "Stretch to fit");
         this._sidebarPictureOpacity = new SidebarPictureOpacity(this);
-        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
-        this._sidebarLEDShape = new SidebarLEDShape(this);
-        this._sidebarByteMonitorBitStart = new SidebarByteMonitorBitStart(this);
-        this._sidebarByteMonitorBitLength = new SidebarByteMonitorBitLength(this);
+        this._sidebarLEDFallbackColor = new SidebarColor(this, text, "fallbackColor", "Fallback color");
+
+        this._sidebarLEDShape = new SidebarStringChoices(this, text, "shape", "Shape",
+            {
+                Round: "round",
+                Square: "square",
+            }
+        );
+        this._sidebarByteMonitorBitStart = new SidebarNumberInput(this, text, "bitStart", "Start");
+        this._sidebarByteMonitorBitLength = new SidebarNumberInput(this, text, "bitLength", "Length");
         this._sidebarByteMonitorBitValueColors = new SidebarByteMonitorBitValueColors(this);
         this._sidebarByteMonitorBitNamesTable = new SidebarByteMonitorBitNamesTable(this);
-        this._sidebarByteMonitorSequence = new SidebarByteMonitorSequence(this);
+        this._sidebarByteMonitorSequence = new SidebarStringChoices(this, text, "sequence", "Sequence", {Positive: "positive", Reverse: "reverse"});
     }
 
     getSidebarPictureStretchToFit = () => {

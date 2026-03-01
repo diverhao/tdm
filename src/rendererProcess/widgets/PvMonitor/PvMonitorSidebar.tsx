@@ -1,16 +1,17 @@
 import * as React from "react";
 import { PvMonitor } from "./PvMonitor";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarPvMonitorMaxLineNum } from "../../helperWidgets/SidebarComponents/SidebarPvMonitorMaxLineNum"
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 import {Log} from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class PvMonitorSidebar extends BaseWidgetSidebar {
-    private _sidebarPvMonitorMaxLineNum: SidebarPvMonitorMaxLineNum;
+    private _sidebarPvMonitorMaxLineNum;
     constructor(pvMonitor: PvMonitor) {
         super(pvMonitor);
-        this._sidebarPvMonitorMaxLineNum = new SidebarPvMonitorMaxLineNum(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarPvMonitorMaxLineNum = new SidebarNumberInput(this, text, "maxLineNum", "Max lines");
     }
 
     getSidebarPvMonitorMaxLineNum = () => {

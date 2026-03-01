@@ -1,25 +1,23 @@
 import * as React from "react";
 import { LEDMultiState } from "./LEDMultiState";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
-// import { SidebarLEDMultiStateItems } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateItems";
-import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
-import { SidebarLEDShape } from "../../helperWidgets/SidebarComponents/SidebarLEDShape";
-import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
-import {Log} from "../../../common/Log";
+import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
+import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
-import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
 import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
+import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 
 export class LEDMultiStateSidebar extends BaseWidgetSidebar {
-    _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
+    _sidebarPictureStretchToFit;
     _sidebarPictureOpacity: SidebarPictureOpacity;
-    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
-    _sidebarLEDShape: SidebarLEDShape;
-    _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
-    _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
+    _sidebarLEDFallbackColor;
+    _sidebarLEDShape;
+    _sidebarLEDMultiStateFallbackText;
+    _sidebarChoiceButtonUseChannelItems;
     _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
 
     useItemColor: boolean = true;
@@ -27,12 +25,18 @@ export class LEDMultiStateSidebar extends BaseWidgetSidebar {
 
     constructor(ledMultiState: LEDMultiState) {
         super(ledMultiState);
-        this._sidebarPictureStretchToFit = new SidebarPictureStretchToFit(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarPictureStretchToFit = new SidebarCheckBox(this, text, "stretchToFit", "Stretch to fit");
         this._sidebarPictureOpacity = new SidebarPictureOpacity(this);
-        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
-        this._sidebarLEDShape = new SidebarLEDShape(this);
-        this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
-        this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
+        this._sidebarLEDFallbackColor = new SidebarColor(this, text, "fallbackColor", "Fallback color");
+        this._sidebarLEDShape = new SidebarStringChoices(this, text, "shape", "Shape",
+            {
+                Round: "round",
+                Square: "square",
+            }
+        );
+        this._sidebarLEDMultiStateFallbackText = new SidebarStringInput(this, text, "fallbackText", "Text");
+        this._sidebarChoiceButtonUseChannelItems = new SidebarCheckBox(this, text, "useChannelItems", "Use channel items");
         this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
     }
 

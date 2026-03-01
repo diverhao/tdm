@@ -3,42 +3,40 @@ import { EmbeddedDisplay } from "./EmbeddedDisplay";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 // import { SidebarEmbeddedDisplayTdlFileName } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTdlFileName";
 import { SidebarEmbeddedDisplayItems } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayItems";
-import { SidebarEmbeddedDisplayTabPosition } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabPosition";
-import { SidebarEmbeddedDisplayTabDefaultColor } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabDefaultColor";
-import { SidebarEmbeddedDisplayTabSelectedColor } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabSelectedColor";
-import { SidebarEmbeddedDisplayTabWidth } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabWidth";
-import { SidebarEmbeddedDisplayTabHeight } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabHeight";
-import { SidebarEmbeddedDisplayShowTab } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayShowTab";
+import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
-import { SidebarEmbeddedDisplayResize } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayResize";
 
 export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {
 
     // _sidebarEmbeddedDisplayTdlFileName: SidebarEmbeddedDisplayTdlFileName;
     _sidebarEmbeddedDisplayItems: SidebarEmbeddedDisplayItems;
-    _sidebarEmbeddedDisplayTabPosition: SidebarEmbeddedDisplayTabPosition;
-    _sidebarEmbeddedDisplayTabSelectedColor: SidebarEmbeddedDisplayTabSelectedColor;
-    _sidebarEmbeddedDisplayTabDefaultColor: SidebarEmbeddedDisplayTabDefaultColor;
-    _sidebarEmbeddedDisplayTabWidth: SidebarEmbeddedDisplayTabWidth;
-    _sidebarEmbeddedDisplayTabHeight: SidebarEmbeddedDisplayTabHeight;
-    _sidebarEmbeddedDisplayShowTab: SidebarEmbeddedDisplayShowTab;
-    _sidebarEmbeddedDisplayResize: SidebarEmbeddedDisplayResize;
+    _sidebarEmbeddedDisplayTabPosition;
+    _sidebarEmbeddedDisplayTabSelectedColor;
+    _sidebarEmbeddedDisplayTabDefaultColor;
+    _sidebarEmbeddedDisplayTabWidth;
+    _sidebarEmbeddedDisplayTabHeight;
+    _sidebarEmbeddedDisplayShowTab;
+    _sidebarEmbeddedDisplayResize;
 
     beingUpdatedItemIndex: number = -1;
 
     constructor(embeddedDisplay: EmbeddedDisplay) {
         super(embeddedDisplay);
+        const text = this.getMainWidget().getText();
         // this._sidebarEmbeddedDisplayTdlFileName = new SidebarEmbeddedDisplayTdlFileName(this);
         this._sidebarEmbeddedDisplayItems = new SidebarEmbeddedDisplayItems(this);
-        this._sidebarEmbeddedDisplayTabPosition = new SidebarEmbeddedDisplayTabPosition(this);
-        this._sidebarEmbeddedDisplayTabSelectedColor = new SidebarEmbeddedDisplayTabSelectedColor(this);
-        this._sidebarEmbeddedDisplayTabDefaultColor = new SidebarEmbeddedDisplayTabDefaultColor(this);
-        this._sidebarEmbeddedDisplayTabWidth = new SidebarEmbeddedDisplayTabWidth(this);
-        this._sidebarEmbeddedDisplayTabHeight = new SidebarEmbeddedDisplayTabHeight(this);
-        this._sidebarEmbeddedDisplayShowTab = new SidebarEmbeddedDisplayShowTab(this);
-        this._sidebarEmbeddedDisplayResize = new SidebarEmbeddedDisplayResize(this);
+        this._sidebarEmbeddedDisplayTabPosition = new SidebarStringChoices(this, text, "tabPostion", "Position", {top: "top", left: "left", bottom: "bottom", right: "right"});
+        this._sidebarEmbeddedDisplayTabSelectedColor = new SidebarColor(this, text, "tabSelectedColor", "Selected color");
+        this._sidebarEmbeddedDisplayTabDefaultColor = new SidebarColor(this, text, "tabDefaultColor", "Default color");
+        this._sidebarEmbeddedDisplayTabWidth = new SidebarNumberInput(this, text, "tabWidth", "Width");
+        this._sidebarEmbeddedDisplayTabHeight = new SidebarNumberInput(this, text, "tabHeight", "Height");
+        this._sidebarEmbeddedDisplayShowTab = new SidebarCheckBox(this, text, "showTab", "Show tab");
+        this._sidebarEmbeddedDisplayResize = new SidebarStringChoices(this, text, "resize", "Match", {None: "none", "Fit content into widget": "fit"});
     }
 
     // ------------------------------------- elements --------------------------------------

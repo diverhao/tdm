@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Symbol } from "./Symbol";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
 import { SidebarSymbolItems } from "../../helperWidgets/SidebarComponents/SidebarSymbolItems";
 import { Log } from "../../../common/Log";
@@ -10,7 +10,7 @@ import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarMediaOpenFile } from "../../helperWidgets/SidebarComponents/SidebarMediaOpenFile";
 
 export class SymbolSidebar extends BaseWidgetSidebar {
-    _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
+    _sidebarPictureStretchToFit;
     _sidebarPictureOpacity: SidebarPictureOpacity;
     _sidebarSymbolItems: SidebarSymbolItems;
     _sidebarMediaOpenFile: SidebarMediaOpenFile;
@@ -19,7 +19,8 @@ export class SymbolSidebar extends BaseWidgetSidebar {
 
     constructor(symbol: Symbol) {
         super(symbol);
-        this._sidebarPictureStretchToFit = new SidebarPictureStretchToFit(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarPictureStretchToFit = new SidebarCheckBox(this, text, "stretchToFit", "Stretch to fit");
         this._sidebarPictureOpacity = new SidebarPictureOpacity(this);
         this._sidebarSymbolItems = new SidebarSymbolItems(this);
         this._sidebarMediaOpenFile = new SidebarMediaOpenFile(this);

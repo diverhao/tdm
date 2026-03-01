@@ -1,33 +1,23 @@
 import * as React from "react";
 import { CheckBox } from "./CheckBox";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
-import { SidebarLEDBit } from "../../helperWidgets/SidebarComponents/SidebarLEDBit";
-import { SidebarCheckBoxSize } from "../../helperWidgets/SidebarComponents/SidebarCheckBoxSize";
-import { SidebarBooleanButtonOnLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOnLabel";
-import { SidebarBooleanButtonOffLabel } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffLabel";
-import { SidebarBooleanButtonOnValue } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOnValue";
-import { SidebarBooleanButtonOffValue } from "../../helperWidgets/SidebarComponents/SidebarBooleanButtonOffValue";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
-import { SidebarTankShowLabels } from "../../helperWidgets/SidebarComponents/SidebarTankShowLabels";
-import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
-import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
 
 export class CheckBoxSidebar extends BaseWidgetSidebar {
-    _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
-    _sidebarLEDBit: SidebarLEDBit;
-    _sidebarCheckBoxSize: SidebarCheckBoxSize;
-    _sidebarBooleanButtonOnLabel: SidebarBooleanButtonOnLabel;
-    _sidebarBooleanButtonOffLabel: SidebarBooleanButtonOffLabel;
-    _sidebarBooleanButtonOnValue: SidebarBooleanButtonOnValue;
-    _sidebarBooleanButtonOffValue: SidebarBooleanButtonOffValue;
-    _sidebarTankShowLabels: SidebarTankShowLabels;
+    _sidebarChoiceButtonUseChannelItems;
+    _sidebarLEDBit;
+    _sidebarCheckBoxSize;
+    _sidebarTankShowLabels;
     _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
-    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
-    _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
+    _sidebarLEDFallbackColor;
+    _sidebarLEDMultiStateFallbackText;
 
     useItemColor: boolean = true;
     variableItems: boolean = false;
@@ -35,17 +25,14 @@ export class CheckBoxSidebar extends BaseWidgetSidebar {
 
     constructor(checkBox: CheckBox) {
         super(checkBox);
-        this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
-        this._sidebarLEDBit = new SidebarLEDBit(this);
-        this._sidebarCheckBoxSize = new SidebarCheckBoxSize(this);
-        this._sidebarBooleanButtonOnLabel = new SidebarBooleanButtonOnLabel(this);
-        this._sidebarBooleanButtonOffLabel = new SidebarBooleanButtonOffLabel(this);
-        this._sidebarBooleanButtonOnValue = new SidebarBooleanButtonOnValue(this);
-        this._sidebarBooleanButtonOffValue = new SidebarBooleanButtonOffValue(this);
-        this._sidebarTankShowLabels = new SidebarTankShowLabels(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarChoiceButtonUseChannelItems = new SidebarCheckBox(this, text, "useChannelItems", "Use channel items");
+        this._sidebarLEDBit = new SidebarNumberInput(this, text, "bit", "Bit");
+        this._sidebarCheckBoxSize = new SidebarNumberInput(this, text, "size", "Size");
+        this._sidebarTankShowLabels = new SidebarCheckBox(this, text, "showLabels", "Show labels");
         this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
-        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
-        this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
+        this._sidebarLEDFallbackColor = new SidebarColor(this, text, "fallbackColor", "Fallback color");
+        this._sidebarLEDMultiStateFallbackText = new SidebarStringInput(this, text, "fallbackText", "Text");
     }
 
     getSidebarChoiceButtonUseChannelItems = () => {
@@ -59,20 +46,7 @@ export class CheckBoxSidebar extends BaseWidgetSidebar {
     getSidebarCheckBoxSize = () => {
         return this._sidebarCheckBoxSize;
     };
-
-    getSidebarBooleanButtonOnLabel = () => {
-        return this._sidebarBooleanButtonOnLabel;
-    };
-    getSidebarBooleanButtonOffLabel = () => {
-        return this._sidebarBooleanButtonOffLabel;
-    };
-    getSidebarBooleanButtonOnValue = () => {
-        return this._sidebarBooleanButtonOnValue;
-    };
-    getSidebarBooleanButtonOffValue = () => {
-        return this._sidebarBooleanButtonOffValue;
-    };
-
+    
     getSidebarDiscreteStateItems = () => {
         return this._sidebarDiscreteStateItems;
     }

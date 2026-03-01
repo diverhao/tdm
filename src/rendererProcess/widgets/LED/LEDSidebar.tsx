@@ -1,28 +1,22 @@
 import * as React from "react";
 import { LED } from "./LED";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
-import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
-import { SidebarLEDItems } from "../../helperWidgets/SidebarComponents/SidebarLEDItems";
-import { SidebarLEDShape } from "../../helperWidgets/SidebarComponents/SidebarLEDShape";
-import { SidebarLEDBit } from "../../helperWidgets/SidebarComponents/SidebarLEDBit";
-import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
-import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
-import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
 import {Log} from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
+import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
 
 export class LEDSidebar extends BaseWidgetSidebar {
-    _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
-    _sidebarPictureOpacity: SidebarPictureOpacity;
-    _sidebarLEDItems: SidebarLEDItems;
-    _sidebarLEDShape: SidebarLEDShape;
-    _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
-    _sidebarLEDBit: SidebarLEDBit;
-    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
-    _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
+    _sidebarLEDShape;
+    _sidebarChoiceButtonUseChannelItems;
+    _sidebarLEDBit;
+    _sidebarLEDFallbackColor;
+    _sidebarLEDMultiStateFallbackText;
     _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
 
     useItemColor: boolean = true;
@@ -30,27 +24,18 @@ export class LEDSidebar extends BaseWidgetSidebar {
 
     constructor(led: LED) {
         super(led);
-        this._sidebarPictureStretchToFit = new SidebarPictureStretchToFit(this);
-        this._sidebarPictureOpacity = new SidebarPictureOpacity(this);
-        this._sidebarLEDItems = new SidebarLEDItems(this);
-        this._sidebarLEDShape = new SidebarLEDShape(this);
-        this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
-        this._sidebarLEDBit = new SidebarLEDBit(this);
-        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
-        this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarLEDShape = new SidebarStringChoices(this, text, "shape", "Shape", 
+            {
+                Round: "round",
+                Square: "square",
+            }
+        );
+        this._sidebarChoiceButtonUseChannelItems = new SidebarCheckBox(this, text, "useChannelItems", "Use channel items");
+        this._sidebarLEDBit = new SidebarNumberInput(this, text, "bit", "Bit");
+        this._sidebarLEDFallbackColor = new SidebarColor(this, text, "fallbackColor", "Fallback color");
+        this._sidebarLEDMultiStateFallbackText = new SidebarStringInput(this, text, "fallbackText", "Text");
         this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
-    }
-
-    getSidebarPictureStretchToFit = () => {
-        return this._sidebarPictureStretchToFit;
-    };
-
-    getSidebarPictureOpacity = () => {
-        return this._sidebarPictureOpacity;
-    };
-
-    getSidebarLEDItems = () => {
-        return this._sidebarLEDItems;
     }
 
     getSidebarLEDFallbackColor = () => {

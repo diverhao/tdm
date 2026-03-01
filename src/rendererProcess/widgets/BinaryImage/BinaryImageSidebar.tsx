@@ -1,7 +1,7 @@
 import * as React from "react";
 import { BinaryImage } from "./BinaryImage";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
 import {Log} from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
@@ -9,12 +9,13 @@ import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class BinaryImageSidebar extends BaseWidgetSidebar {
 
-    _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
+    _sidebarPictureStretchToFit;
     _sidebarPictureOpacity: SidebarPictureOpacity;
 
     constructor(binaryImage: BinaryImage) {
         super(binaryImage);
-        this._sidebarPictureStretchToFit = new SidebarPictureStretchToFit(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarPictureStretchToFit = new SidebarCheckBox(this, text, "stretchToFit", "Stretch to fit");
         this._sidebarPictureOpacity = new SidebarPictureOpacity(this);
 
     }

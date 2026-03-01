@@ -1,29 +1,26 @@
 import * as React from "react";
 import { ScaledSlider } from "./ScaledSlider";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarScaledSliderNumTickIntervals } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderNumTickIntervals";
-import { SidebarTankShowLabels } from "../../helperWidgets/SidebarComponents/SidebarTankShowLabels";
-import { SidebarScaledSliderCompactScale } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderCompactScale";
-import { SidebarScaledSliderSliderBarBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderSliderBarBackgroundColor"
-import { SidebarScaledSliderSliderBarBackgroundColor1 } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderSliderBarBackgroundColor1"
-import {Log} from "../../../common/Log";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 
 export class ScaledSliderSidebar extends BaseWidgetSidebar {
-    _sidebarScaledSliderNumTickIntervals: SidebarScaledSliderNumTickIntervals;
-    _sidebarTankShowLabels: SidebarTankShowLabels;
-    _sidebarScaledSliderCompactScale: SidebarScaledSliderCompactScale;
-    _sidebarScaledSliderSliderBarBackgroundColor: SidebarScaledSliderSliderBarBackgroundColor;
-    _sidebarScaledSliderSliderBarBackgroundColor1: SidebarScaledSliderSliderBarBackgroundColor1;
+    _sidebarScaledSliderNumTickIntervals;
+    _sidebarTankShowLabels;
+    _sidebarScaledSliderCompactScale;
+    _sidebarScaledSliderSliderBarBackgroundColor;
 
     constructor(scaledSlider: ScaledSlider) {
         super(scaledSlider);
-        this._sidebarScaledSliderNumTickIntervals = new SidebarScaledSliderNumTickIntervals(this);
-        this._sidebarTankShowLabels = new SidebarTankShowLabels(this);
-        this._sidebarScaledSliderCompactScale = new SidebarScaledSliderCompactScale(this);
-        this._sidebarScaledSliderSliderBarBackgroundColor = new SidebarScaledSliderSliderBarBackgroundColor(this);
-        this._sidebarScaledSliderSliderBarBackgroundColor1 = new SidebarScaledSliderSliderBarBackgroundColor1(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarScaledSliderNumTickIntervals = new SidebarNumberInput(this, text, "numTickIntervals", "# intervals");
+        this._sidebarTankShowLabels = new SidebarCheckBox(this, text, "showLabels", "Show labels");
+        this._sidebarScaledSliderCompactScale = new SidebarCheckBox(this, text, "compactScale", "Compact scale");
+        this._sidebarScaledSliderSliderBarBackgroundColor = new SidebarColor(this, text, "sliderBarBackgroundColor", "Slider color");
     }
 
     getSidebarTankShowLabels = () => {
@@ -40,10 +37,6 @@ export class ScaledSliderSidebar extends BaseWidgetSidebar {
 
     getSidebarScaledSliderSliderBarBackgroundColor = () => {
         return this._sidebarScaledSliderSliderBarBackgroundColor;
-    }
-
-    getSidebarScaledSliderSliderBarBackgroundColor1 = () => {
-        return this._sidebarScaledSliderSliderBarBackgroundColor1;
     }
 
     // ------------------------------------- elements --------------------------------------

@@ -1,24 +1,23 @@
 import * as React from "react";
 import { Rectangle } from "./Rectangle";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarPolylineFill } from "../../helperWidgets/SidebarComponents/SidebarPolylineFill";
-import { SidebarRectangleCornerWidth } from "../../helperWidgets/SidebarComponents/SidebarRectangleCornerWidth";
-import { SidebarRectangleCornerHeight } from "../../helperWidgets/SidebarComponents/SidebarRectangleCornerHeight";
-import { SidebarAlarmBorder } from "../../helperWidgets/SidebarComponents/SidebarAlarmBorder";
+import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class RectangleSidebar extends BaseWidgetSidebar {
-    _sidebarPolylineFill: SidebarPolylineFill;
-    _sidebarRectangleCornerWidth: SidebarRectangleCornerWidth;
-    _sidebarRectangleCornerHeight: SidebarRectangleCornerHeight;
+    _sidebarPolylineFill;
+    _sidebarRectangleCornerWidth;
+    _sidebarRectangleCornerHeight;
 
     constructor(rectangle: Rectangle) {
         super(rectangle);
-        this._sidebarPolylineFill = new SidebarPolylineFill(this);
-        this._sidebarRectangleCornerWidth = new SidebarRectangleCornerWidth(this);
-        this._sidebarRectangleCornerHeight = new SidebarRectangleCornerHeight(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarPolylineFill = new SidebarStringInput(this, text, "fill", "Fill");
+        this._sidebarRectangleCornerWidth = new SidebarNumberInput(this, text, "cornerWidth", "Width");
+        this._sidebarRectangleCornerHeight = new SidebarNumberInput(this, text, "cornerHeight", "Height");
     }
 
     getSidebarPolylineFill = () => {

@@ -2,36 +2,34 @@ import * as React from "react";
 import { Thermometer } from "./Thermometer";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 
-import { SidebarProgressBarBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarProgressbarBackgroundColor";
-import { SidebarTankShowLabels } from "../../helperWidgets/SidebarComponents/SidebarTankShowLabels";
-import { SidebarThermometerBulbDiameter } from "../../helperWidgets/SidebarComponents/SidebarThermometerBulbDiameter";
-import { SidebarThermometerTubeWidth } from "../../helperWidgets/SidebarComponents/SidebarThermometerTubeWidth";
-import { SidebarScaledSliderNumTickIntervals } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderNumTickIntervals";
-import { SidebarScaledSliderCompactScale } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderCompactScale";
-import { SidebarDisplayScale } from "../../helperWidgets/SidebarComponents/SidebarDisplayScale";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
+import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
 import {Log} from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class ThermometerSidebar extends BaseWidgetSidebar {
-    _sidebarProgressBarBackgroundColor: SidebarProgressBarBackgroundColor;
-    _sidebarTankShowLabels: SidebarTankShowLabels;
-    _sidebarThermometerBulbDiameter: SidebarThermometerBulbDiameter;
-    _sidebarThermometerTubeWidth: SidebarThermometerTubeWidth;
-    _sidebarScaledSliderNumTickIntervals: SidebarScaledSliderNumTickIntervals;
-    _sidebarScaledSliderCompactScale: SidebarScaledSliderCompactScale;
-    _sidebarDisplayScale: SidebarDisplayScale;
+    _sidebarProgressBarBackgroundColor;
+    _sidebarTankShowLabels;
+    _sidebarThermometerBulbDiameter;
+    _sidebarThermometerTubeWidth;
+    _sidebarScaledSliderNumTickIntervals;
+    _sidebarScaledSliderCompactScale;
+    _sidebarDisplayScale;
     
 
     constructor(thermometer: Thermometer) {
         super(thermometer);
-        this._sidebarProgressBarBackgroundColor = new SidebarProgressBarBackgroundColor(this);
-        this._sidebarTankShowLabels = new SidebarTankShowLabels(this);
-        this._sidebarThermometerBulbDiameter = new SidebarThermometerBulbDiameter(this);
-        this._sidebarThermometerTubeWidth = new SidebarThermometerTubeWidth(this);
-        this._sidebarScaledSliderNumTickIntervals = new SidebarScaledSliderNumTickIntervals(this);
-        this._sidebarScaledSliderCompactScale = new SidebarScaledSliderCompactScale(this);
-        this._sidebarDisplayScale = new SidebarDisplayScale(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarProgressBarBackgroundColor = new SidebarColor(this, text, "backgroundColor", "Background color");
+        this._sidebarTankShowLabels = new SidebarCheckBox(this, text, "showLabels", "Show labels");
+        this._sidebarThermometerBulbDiameter = new SidebarNumberInput(this, text, "bulbDiameter", "Bulb size");
+        this._sidebarThermometerTubeWidth = new SidebarNumberInput(this, text, "tubeWidth", "Tube width", true);
+        this._sidebarScaledSliderNumTickIntervals = new SidebarNumberInput(this, text, "numTickIntervals", "# intervals");
+        this._sidebarScaledSliderCompactScale = new SidebarCheckBox(this, text, "compactScale", "Compact scale");
+        this._sidebarDisplayScale = new SidebarStringChoices(this, text, "displayScale", "Scale", {Linear: "Linear", Log10: "Log10"});
     }
 
     // ------------------------------------- elements --------------------------------------

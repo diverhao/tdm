@@ -1,17 +1,17 @@
 import * as React from "react";
 import { ComboBox } from "./ComboBox";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
-import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
+import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
 
 export class ComboBoxSidebar extends BaseWidgetSidebar {
-    _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
+    _sidebarChoiceButtonUseChannelItems;
     _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
-    _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
+    _sidebarLEDMultiStateFallbackText;
 
     useItemColor: boolean = false;
     variableItems: boolean = true;
@@ -19,9 +19,10 @@ export class ComboBoxSidebar extends BaseWidgetSidebar {
 
     constructor(comboBox: ComboBox) {
         super(comboBox);
-        this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarChoiceButtonUseChannelItems = new SidebarCheckBox(this, text, "useChannelItems", "Use channel items");
         this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
-        this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
+        this._sidebarLEDMultiStateFallbackText = new SidebarStringInput(this, text, "fallbackText", "Text");
     }
 
     getSidebarChoiceButtonUseChannelItems = () => {

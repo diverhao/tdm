@@ -1,25 +1,25 @@
 import * as React from "react";
 import { Polyline } from "./Polyline";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarPolylineSmootherize } from "../../helperWidgets/SidebarComponents/SidebarPolylineSmootherize";
-import { SidebarPolylineFill } from "../../helperWidgets/SidebarComponents/SidebarPolylineFill";
-import { SidebarPolylineClosed } from "../../helperWidgets/SidebarComponents/SidebarPolylineClosed";
+import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { SidebarPolylinePointsTable } from "../../helperWidgets/SidebarComponents/SidebarPolylinePointsTable";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class PolylineSidebar extends BaseWidgetSidebar {
-    _sidebarPolylineSmootherize: SidebarPolylineSmootherize;
-    _sidebarPolylineFill: SidebarPolylineFill;
-    _sidebarPolylineClosed: SidebarPolylineClosed;
+    _sidebarPolylineSmootherize;
+    _sidebarPolylineFill;
+    _sidebarPolylineClosed;
     _sidebarPolylinePointsTable: SidebarPolylinePointsTable;
 
     constructor(polyline: Polyline) {
         super(polyline);
-        this._sidebarPolylineSmootherize = new SidebarPolylineSmootherize(this);
-        this._sidebarPolylineFill = new SidebarPolylineFill(this);
-        this._sidebarPolylineClosed = new SidebarPolylineClosed(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarPolylineSmootherize = new SidebarCheckBox(this, text, "smootherize", "Smootherize");
+        this._sidebarPolylineFill = new SidebarStringInput(this, text, "fill", "Fill");
+        this._sidebarPolylineClosed = new SidebarCheckBox(this, text, "closed", "Closed");
         this._sidebarPolylinePointsTable = new SidebarPolylinePointsTable(this);
     }
 

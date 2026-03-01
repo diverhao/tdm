@@ -4,15 +4,6 @@ import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
-import { SidebarImageXmin } from "../../helperWidgets/SidebarComponents/SidebarImageXmin";
-import { SidebarImageXmax } from "../../helperWidgets/SidebarComponents/SidebarImageXmax";
-import { SidebarImageYmin } from "../../helperWidgets/SidebarComponents/SidebarImageYmin";
-import { SidebarImageYmax } from "../../helperWidgets/SidebarComponents/SidebarImageYmax";
-import { SidebarImageAutoXY } from "../../helperWidgets/SidebarComponents/SidebarImageAutoXY";
-import { SidebarImageZmin } from "../../helperWidgets/SidebarComponents/SidebarImageZmin";
-import { SidebarImageZmax } from "../../helperWidgets/SidebarComponents/SidebarImageZmax";
-import { SidebarImageAutoZ } from "../../helperWidgets/SidebarComponents/SidebarImageAutoZ";
-import { SidebarImageColorMap } from "../../helperWidgets/SidebarComponents/SidebarImageColorMap";
 import { SidebarImageRegionsOfInterest } from "../../helperWidgets/SidebarComponents/SidebarImageRegionsOfInterest";
 import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
@@ -32,24 +23,14 @@ export class ImageSidebar extends BaseWidgetSidebar {
     constructor(image: Image) {
         super(image);
         const text = this.getMainWidget().getText();
-        const style = this.getMainWidget().getStyle()
-        // this.sidebarImageXmin = new SidebarImageXmin(this);
         this.sidebarImageXmin = new SidebarNumberInput(this, text, "xMin", "X min");
-        // this.sidebarImageXmax = new SidebarImageXmax(this);
         this.sidebarImageXmax = new SidebarNumberInput(this, text, "xMax", "X max");
-        // this.sidebarImageYmin = new SidebarImageYmin(this);
         this.sidebarImageYmin = new SidebarNumberInput(this, text, "yMin", "Y min");
-        // this.sidebarImageYmax = new SidebarImageYmax(this);
         this.sidebarImageYmax = new SidebarNumberInput(this, text, "yMax", "Y max");
-        // this.sidebarImageAutoXY = new SidebarImageAutoXY(this);
-        this.sidebarImageAutoXY = new SidebarCheckBox(this, text, "initialAutoXY", "XY auto range")
-        // this.sidebarImageZmin = new SidebarImageZmin(this);
+        this.sidebarImageAutoXY = new SidebarCheckBox(this, text, "initialAutoXY", "XY auto range");
         this.sidebarImageZmin = new SidebarNumberInput(this, text, "zMin", "Z min");
-        // this.sidebarImageZmax = new SidebarImageZmax(this);
         this.sidebarImageZmax = new SidebarNumberInput(this, text, "zMax", "Z max");
-        // this.sidebarImageAutoZ = new SidebarImageAutoZ(this);
         this.sidebarImageAutoZ = new SidebarCheckBox(this, text, "autoZ", "Auto range");
-        // this.sidebarImageColorMap = new SidebarImageColorMap(this);
         this.sidebarImageColorMap = new SidebarStringChoices(this, text, "colorMap", "Style", 
             Object.fromEntries(Object.keys((this.getMainWidget() as Image).colorMapFunctions).map((s) => [s.toUpperCase(), s]))
         )

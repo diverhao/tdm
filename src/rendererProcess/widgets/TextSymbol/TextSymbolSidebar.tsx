@@ -1,38 +1,37 @@
 import * as React from "react";
 import { TextSymbol } from "./TextSymbol";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarPictureStretchToFit } from "../../helperWidgets/SidebarComponents/SidebarPictureStretchToFit";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
-import { SidebarTextSymbolShowPvValue } from "../../helperWidgets/SidebarComponents/SidebarTextSymbolShowPvValue";
-import { SidebarLEDMultiStateFallbackText } from "../../helperWidgets/SidebarComponents/SidebarLEDMultiStateFallbackText";
-import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
+import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
-import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
 
 export class TextSymbolSidebar extends BaseWidgetSidebar {
-    _sidebarPictureStretchToFit: SidebarPictureStretchToFit;
+    _sidebarPictureStretchToFit;
     _sidebarPictureOpacity: SidebarPictureOpacity;
-    _sidebarTextSymbolShowPvValue: SidebarTextSymbolShowPvValue;
-    _sidebarLEDMultiStateFallbackText: SidebarLEDMultiStateFallbackText;
-    _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
+    _sidebarTextSymbolShowPvValue;
+    _sidebarLEDMultiStateFallbackText;
+    _sidebarChoiceButtonUseChannelItems;
     _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
-    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
+    _sidebarLEDFallbackColor;
 
     useItemColor: boolean = true;
     variableItems: boolean = true;
 
     constructor(symbol: TextSymbol) {
         super(symbol);
-        this._sidebarPictureStretchToFit = new SidebarPictureStretchToFit(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarPictureStretchToFit = new SidebarCheckBox(this, text, "stretchToFit", "Stretch to fit");
         this._sidebarPictureOpacity = new SidebarPictureOpacity(this);
-        this._sidebarTextSymbolShowPvValue = new SidebarTextSymbolShowPvValue(this);
-        this._sidebarLEDMultiStateFallbackText = new SidebarLEDMultiStateFallbackText(this);
-        this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
+        this._sidebarTextSymbolShowPvValue = new SidebarCheckBox(this, text, "showPvValue", "Show PV");
+        this._sidebarLEDMultiStateFallbackText = new SidebarStringInput(this, text, "fallbackText", "Text");
+        this._sidebarChoiceButtonUseChannelItems = new SidebarCheckBox(this, text, "useChannelItems", "Use channel items");
         this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
-        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
+        this._sidebarLEDFallbackColor = new SidebarColor(this, text, "fallbackColor", "Fallback color");
     }
 
     getSidebarPictureStretchToFit = () => {

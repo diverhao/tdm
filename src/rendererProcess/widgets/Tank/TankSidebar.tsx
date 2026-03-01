@@ -2,36 +2,39 @@ import * as React from "react";
 import { Tank } from "./Tank";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 
-import { SidebarProgressBarBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarProgressbarBackgroundColor";
-import { SidebarScaledSliderNumTickIntervals } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderNumTickIntervals";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 // import { SidebarScaledSliderShowScale } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderShowScale";
-import { SidebarTankShowLabels } from "../../helperWidgets/SidebarComponents/SidebarTankShowLabels";
-import { SidebarScaledSliderCompactScale } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderCompactScale";
-import { SidebarTankScalePosition } from "../../helperWidgets/SidebarComponents/SidebarTankScalePosition";
-import { SidebarTankShowScaleInnerLabel } from "../../helperWidgets/SidebarComponents/SidebarTankShowScaleInnerLabel";
-import { SidebarDisplayScale } from "../../helperWidgets/SidebarComponents/SidebarDisplayScale";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 
 export class TankSidebar extends BaseWidgetSidebar {
-    _sidebarProgressBarBackgroundColor: SidebarProgressBarBackgroundColor;
-    _sidebarScaledSliderNumTickIntervals: SidebarScaledSliderNumTickIntervals;
-    _sidebarTankShowLabels: SidebarTankShowLabels;
-    _sidebarScaledSliderCompactScale: SidebarScaledSliderCompactScale;
-    _sidebarTankScalePosition: SidebarTankScalePosition;
-    _sidebarTankShowScaleInnerLabel: SidebarTankShowScaleInnerLabel;
-    _sidebarDisplayScale: SidebarDisplayScale;
+    _sidebarProgressBarBackgroundColor;
+    _sidebarScaledSliderNumTickIntervals;
+    _sidebarTankShowLabels;
+    _sidebarScaledSliderCompactScale;
+    _sidebarTankScalePosition;
+    _sidebarTankShowScaleInnerLabel;
+    _sidebarDisplayScale;
 
     constructor(tank: Tank) {
         super(tank);
-        this._sidebarProgressBarBackgroundColor = new SidebarProgressBarBackgroundColor(this);
-        this._sidebarScaledSliderNumTickIntervals = new SidebarScaledSliderNumTickIntervals(this);
-        this._sidebarTankShowLabels = new SidebarTankShowLabels(this);
-        this._sidebarScaledSliderCompactScale = new SidebarScaledSliderCompactScale(this);
-        this._sidebarTankScalePosition = new SidebarTankScalePosition(this);
-        this._sidebarTankShowScaleInnerLabel = new SidebarTankShowScaleInnerLabel(this);
-        this._sidebarDisplayScale = new SidebarDisplayScale(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarProgressBarBackgroundColor = new SidebarColor(this, text, "backgroundColor", "Background color");
+        this._sidebarScaledSliderNumTickIntervals = new SidebarNumberInput(this, text, "numTickIntervals", "# intervals");
+        this._sidebarTankShowLabels = new SidebarCheckBox(this, text, "showLabels", "Show labels");
+        this._sidebarScaledSliderCompactScale = new SidebarCheckBox(this, text, "compactScale", "Compact scale");
+        this._sidebarTankScalePosition = new SidebarStringChoices(this, text, "scalePosition", "Scale position", 
+            {
+                Left: "left",
+                Right: "right",
+            }
+        )
+        this._sidebarTankShowScaleInnerLabel = new SidebarCheckBox(this, text, "showScaleInnerLabel", "Show inner labels");
+        this._sidebarDisplayScale = new SidebarStringChoices(this, text, "displayScale", "Scale", {Linear: "Linear", Log10: "Log10"});
     }
 
     // ------------------------------------- elements --------------------------------------

@@ -1,29 +1,30 @@
 import * as React from "react";
 import { RadioButton } from "./RadioButton";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarSlideButtonBoxWidth } from "../../helperWidgets/SidebarComponents/SidebarSlideButtonBoxWidth";
-import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
-import { SidebarLEDFallbackColor } from "../../helperWidgets/SidebarComponents/SidebarLEDFallbackColor";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
 
 export class RadioButtonSidebar extends BaseWidgetSidebar {
-    _sidebarSlideButtonBoxWidth: SidebarSlideButtonBoxWidth;
-    _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
+    _sidebarSlideButtonBoxWidth;
+    _sidebarChoiceButtonUseChannelItems;
     _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
-    _sidebarLEDFallbackColor: SidebarLEDFallbackColor;
+    _sidebarLEDFallbackColor;
 
     useItemColor: boolean = true;
     variableItems: boolean = true;
 
     constructor(radioButton: RadioButton) {
         super(radioButton);
-        this._sidebarSlideButtonBoxWidth = new SidebarSlideButtonBoxWidth(this);
-        this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarSlideButtonBoxWidth = new SidebarNumberInput(this, text, "boxWidth", "Box width");
+        this._sidebarChoiceButtonUseChannelItems = new SidebarCheckBox(this, text, "useChannelItems", "Use channel items");
         this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
-        this._sidebarLEDFallbackColor = new SidebarLEDFallbackColor(this);
+        this._sidebarLEDFallbackColor = new SidebarColor(this, text, "fallbackColor", "Fallback color");
     }
     getSidebarSlideButtonBoxWidth = () => {
         return this._sidebarSlideButtonBoxWidth;

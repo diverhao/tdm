@@ -1,18 +1,17 @@
 import * as React from "react";
 import { ChoiceButton } from "./ChoiceButton";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarChoiceButtonSelectedBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonSelectedBackgroundColor";
-import { SidebarChoiceButtonUnselectedBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUnselectedBackgroundColor";
-import { SidebarChoiceButtonUseChannelItems } from "../../helperWidgets/SidebarComponents/SidebarChoiceButtonUseChannelItems";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
 
 export class ChoiceButtonSidebar extends BaseWidgetSidebar {
-    _sidebarChoiceButtonSelectedBackgroundColor: SidebarChoiceButtonSelectedBackgroundColor;
-    _sidebarChoiceButtonUnselectedBackgroundColor: SidebarChoiceButtonUnselectedBackgroundColor;
-    _sidebarChoiceButtonUseChannelItems: SidebarChoiceButtonUseChannelItems;
+    _sidebarChoiceButtonSelectedBackgroundColor;
+    _sidebarChoiceButtonUnselectedBackgroundColor;
+    _sidebarChoiceButtonUseChannelItems;
     _sidebarDiscreteStateItems: SidebarDiscreteStateItems;
 
     useItemColor: boolean = false;
@@ -21,9 +20,10 @@ export class ChoiceButtonSidebar extends BaseWidgetSidebar {
 
     constructor(choiceButton: ChoiceButton) {
         super(choiceButton);
-        this._sidebarChoiceButtonSelectedBackgroundColor = new SidebarChoiceButtonSelectedBackgroundColor(this);
-        this._sidebarChoiceButtonUnselectedBackgroundColor = new SidebarChoiceButtonUnselectedBackgroundColor(this);
-        this._sidebarChoiceButtonUseChannelItems = new SidebarChoiceButtonUseChannelItems(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarChoiceButtonSelectedBackgroundColor = new SidebarColor(this, text, "selectedBackgroundColor", "Selected color");
+        this._sidebarChoiceButtonUnselectedBackgroundColor = new SidebarColor(this, text, "unselectedBackgroundColor", "Unselected color");
+        this._sidebarChoiceButtonUseChannelItems = new SidebarCheckBox(this, text, "useChannelItems", "Use channel items");
         this._sidebarDiscreteStateItems = new SidebarDiscreteStateItems(this);
     }
 

@@ -1,45 +1,38 @@
 import * as React from "react";
 import { Meter } from "./Meter";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
-import { SidebarProgressBarBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarProgressbarBackgroundColor";
-import { SidebarMeterAngleRange } from "../../helperWidgets/SidebarComponents/SidebarMeterAngleRange";
-import { SidebarMeterPointerColor } from "../../helperWidgets/SidebarComponents/SidebarMeterPointerColor";
-import { SidebarMeterDialColor } from "../../helperWidgets/SidebarComponents/SidebarMeterDialColor";
-import { SidebarMeterDialThickness } from "../../helperWidgets/SidebarComponents/SidebarMeterDialThickness";
-import { SidebarMeterDialPercentage } from "../../helperWidgets/SidebarComponents/SidebarMeterDialPercentage";
-import { SidebarMeterPointerThickness } from "../../helperWidgets/SidebarComponents/SidebarMeterPointerThickness";
-import { SidebarMeterDialLabelPositionPercentage } from "../../helperWidgets/SidebarComponents/SidebarMeterLabelPositionPercentage";
-import { SidebarMeterPointerLengthPercentage } from "../../helperWidgets/SidebarComponents/SidebarMeterPointerLengthPercentage";
-import { SidebarScaledSliderNumTickIntervals } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderNumTickIntervals";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 
 import {Log} from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 export class MeterSidebar extends BaseWidgetSidebar {
-    _sidebarProgressBarBackgroundColor: SidebarProgressBarBackgroundColor;
-    _sidebarMeterAngleRange: SidebarMeterAngleRange;
-    _sidebarMeterPointerColor: SidebarMeterPointerColor;
-    _sidebarMeterDialColor: SidebarMeterDialColor;
-    _sidebarMeterDialThickness: SidebarMeterDialThickness;
-    _sidebarMeterDialPercentage: SidebarMeterDialPercentage;
-    _sidebarMeterPointerThickness: SidebarMeterPointerThickness;
-    _sidebarMeterDialLabelPositionPercentage: SidebarMeterDialLabelPositionPercentage;
-    _sidebarMeterPointerLengthPercentage: SidebarMeterPointerLengthPercentage;
-    _sidebarScaledSliderNumTickIntervals: SidebarScaledSliderNumTickIntervals;
+    _sidebarProgressBarBackgroundColor;
+    _sidebarMeterAngleRange;
+    _sidebarMeterPointerColor;
+    _sidebarMeterDialColor;
+    _sidebarMeterDialThickness;
+    _sidebarMeterDialPercentage;
+    _sidebarMeterPointerThickness;
+    _sidebarMeterDialLabelPositionPercentage;
+    _sidebarMeterPointerLengthPercentage;
+    _sidebarScaledSliderNumTickIntervals;
 
     constructor(meter: Meter) {
         super(meter);
-        this._sidebarProgressBarBackgroundColor = new SidebarProgressBarBackgroundColor(this);
-        this._sidebarMeterAngleRange = new SidebarMeterAngleRange(this);
-        this._sidebarMeterPointerColor = new SidebarMeterPointerColor(this);
-        this._sidebarMeterDialColor = new SidebarMeterDialColor(this);
-        this._sidebarMeterDialThickness = new SidebarMeterDialThickness(this);
-        this._sidebarMeterDialPercentage = new SidebarMeterDialPercentage(this);
-        this._sidebarMeterPointerThickness = new SidebarMeterPointerThickness(this);
-        this._sidebarMeterDialLabelPositionPercentage = new SidebarMeterDialLabelPositionPercentage(this);
-        this._sidebarMeterPointerLengthPercentage = new SidebarMeterPointerLengthPercentage(this);
-        this._sidebarScaledSliderNumTickIntervals = new SidebarScaledSliderNumTickIntervals(this);
+        const text = this.getMainWidget().getText();
+        this._sidebarProgressBarBackgroundColor = new SidebarColor(this, text, "backgroundColor", "Background color");
+        this._sidebarMeterAngleRange = new SidebarNumberInput(this, text, "angleRange", "Range");
+        this._sidebarMeterPointerColor = new SidebarColor(this, text, "pointerColor", "Color");
+        this._sidebarMeterDialColor = new SidebarColor(this, text, "dialColor", "Color");
+        this._sidebarMeterDialThickness = new SidebarNumberInput(this, text, "dialThickness", "Thick");
+        this._sidebarMeterDialPercentage = new SidebarNumberInput(this, text, "dialPercentage", "Height [%]");
+        this._sidebarMeterPointerThickness = new SidebarNumberInput(this, text, "pointerThickness", "Thick");
+        this._sidebarMeterDialLabelPositionPercentage = new SidebarNumberInput(this, text, "labelPositionPercentage", "Size [%]");
+        this._sidebarMeterPointerLengthPercentage = new SidebarNumberInput(this, text, "pointerLengthPercentage", "Size [%]");
+        this._sidebarScaledSliderNumTickIntervals = new SidebarNumberInput(this, text, "numTickIntervals", "# intervals");
     }
 
     // ------------------------------------- elements --------------------------------------

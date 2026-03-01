@@ -2,39 +2,37 @@ import * as React from "react";
 import { Group } from "./Group";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarGroupItems } from "../../helperWidgets/SidebarComponents/SidebarGroupItems";
-import { SidebarEmbeddedDisplayTabPosition } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabPosition";
-import { SidebarEmbeddedDisplayTabDefaultColor } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabDefaultColor";
-import { SidebarEmbeddedDisplayTabSelectedColor } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabSelectedColor";
-import { SidebarEmbeddedDisplayTabWidth } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabWidth";
-import { SidebarEmbeddedDisplayTabHeight } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayTabHeight";
-import { SidebarEmbeddedDisplayShowTab } from "../../helperWidgets/SidebarComponents/SidebarEmbeddedDisplayShowTab";
+import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
-import { SidebarGroupShowBox } from "../../helperWidgets/SidebarComponents/SidebarGroupShowBox";
 
 
 export class GroupSidebar extends BaseWidgetSidebar {
 
     private _sidebarGroupItems: SidebarGroupItems;
-    _sidebarEmbeddedDisplayTabPosition: SidebarEmbeddedDisplayTabPosition;
-    _sidebarEmbeddedDisplayTabSelectedColor: SidebarEmbeddedDisplayTabSelectedColor;
-    _sidebarEmbeddedDisplayTabDefaultColor: SidebarEmbeddedDisplayTabDefaultColor;
-    _sidebarEmbeddedDisplayTabWidth: SidebarEmbeddedDisplayTabWidth;
-    _sidebarEmbeddedDisplayTabHeight: SidebarEmbeddedDisplayTabHeight;
-    _sidebarEmbeddedDisplayShowTab: SidebarEmbeddedDisplayShowTab;
-    _sidebarGroupShowBox: SidebarGroupShowBox;
+    _sidebarEmbeddedDisplayTabPosition;
+    _sidebarEmbeddedDisplayTabSelectedColor;
+    _sidebarEmbeddedDisplayTabDefaultColor;
+    _sidebarEmbeddedDisplayTabWidth;
+    _sidebarEmbeddedDisplayTabHeight;
+    _sidebarEmbeddedDisplayShowTab;
+    _sidebarGroupShowBox;
 
     constructor(group: Group) {
         super(group);
+        const text = this.getMainWidget().getText();
         this._sidebarGroupItems = new SidebarGroupItems(this);
-        this._sidebarEmbeddedDisplayTabPosition = new SidebarEmbeddedDisplayTabPosition(this);
-        this._sidebarEmbeddedDisplayTabSelectedColor = new SidebarEmbeddedDisplayTabSelectedColor(this);
-        this._sidebarEmbeddedDisplayTabDefaultColor = new SidebarEmbeddedDisplayTabDefaultColor(this);
-        this._sidebarEmbeddedDisplayTabWidth = new SidebarEmbeddedDisplayTabWidth(this);
-        this._sidebarEmbeddedDisplayTabHeight = new SidebarEmbeddedDisplayTabHeight(this);
-        this._sidebarEmbeddedDisplayShowTab = new SidebarEmbeddedDisplayShowTab(this);
-        this._sidebarGroupShowBox = new SidebarGroupShowBox(this);
+        this._sidebarEmbeddedDisplayTabPosition = new SidebarStringChoices(this, text, "tabPostion", "Position", {top: "top", left: "left", bottom: "bottom", right: "right"});
+        this._sidebarEmbeddedDisplayTabSelectedColor = new SidebarColor(this, text, "tabSelectedColor", "Selected color");
+        this._sidebarEmbeddedDisplayTabDefaultColor = new SidebarColor(this, text, "tabDefaultColor", "Default color");
+        this._sidebarEmbeddedDisplayTabWidth = new SidebarNumberInput(this, text, "tabWidth", "Width");
+        this._sidebarEmbeddedDisplayTabHeight = new SidebarNumberInput(this, text, "tabHeight", "Height");
+        this._sidebarEmbeddedDisplayShowTab = new SidebarCheckBox(this, text, "showTab", "Show tab");
+        this._sidebarGroupShowBox = new SidebarCheckBox(this, text, "showBox", "Show box");
     }
 
 
