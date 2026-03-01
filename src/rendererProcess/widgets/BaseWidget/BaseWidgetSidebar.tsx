@@ -2,107 +2,63 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables, calcSidebarWidth } from "../../../common/GlobalVariables";
 import { BaseWidget } from "./BaseWidget";
+import { FontsData } from "../../global/FontsData";
 
-import { SidebarX } from "../../helperWidgets/SidebarComponents/SidebarX";
-import { SidebarY } from "../../helperWidgets/SidebarComponents/SidebarY";
-import { SidebarWidth } from "../../helperWidgets/SidebarComponents/SidebarWidth";
-import { SidebarHeight } from "../../helperWidgets/SidebarComponents/SidebarHeight";
+// specialized
 import { SidebarAngle } from "../../helperWidgets/SidebarComponents/SidebarAngle";
 import { SidebarChannelName } from "../../helperWidgets/SidebarComponents/SidebarChannelName";
-import { SidebarShowUnit } from "../../helperWidgets/SidebarComponents/SidebarShowUnit";
-import { SidebarAlarmBorder } from "../../helperWidgets/SidebarComponents/SidebarAlarmBorder";
-import { SidebarXAlign } from "../../helperWidgets/SidebarComponents/SidebarXAlign";
-import { SidebarYAlign } from "../../helperWidgets/SidebarComponents/SidebarYAlign";
-import { SidebarWrapWord } from "../../helperWidgets/SidebarComponents/SidebarWrapWord";
-import { SidebarBorderWidth } from "../../helperWidgets/SidebarComponents/SidebarBorderWidth";
-import { SidebarBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarBackgroundColor";
-import { SidebarTextColor } from "../../helperWidgets/SidebarComponents/SidebarTextColor";
-import { SidebarBorderColor } from "../../helperWidgets/SidebarComponents/SidebarBorderColor";
-import { SidebarFontFamily } from "../../helperWidgets/SidebarComponents/SidebarFontFamily";
-import { SidebarFontSize } from "../../helperWidgets/SidebarComponents/SidebarFontSize";
-import { SidebarFontStyle } from "../../helperWidgets/SidebarComponents/SidebarFontStyle";
-import { SidebarFontWeight } from "../../helperWidgets/SidebarComponents/SidebarFontWeight";
-import { SidebarHighlightBackgroundColor } from "../../helperWidgets/SidebarComponents/SidebarHighlightBackgroundColor";
-import { SidebarOverflowVisible } from "../../helperWidgets/SidebarComponents/SidebarOverflowVisible";
 import { SidebarChannelNames } from "../../helperWidgets/SidebarComponents/SidebarChannelNames";
-import { SidebarLineWidth } from "../../helperWidgets/SidebarComponents/SidebarLineWidth";
-import { SidebarLineStyle } from "../../helperWidgets/SidebarComponents/SidebarLineStyle";
-import { SidebarLineArrowStyle } from "../../helperWidgets/SidebarComponents/SidebarLineArrowStyle";
-import { SidebarLineColor } from "../../helperWidgets/SidebarComponents/SidebarLineColor";
-import { SidebarUsePvLimits } from "../../helperWidgets/SidebarComponents/SidebarUsePvLimits";
-import { SidebarUseLogScale } from "../../helperWidgets/SidebarComponents/SidebarUseLogScale";
-import { SidebarMinPvValue } from "../../helperWidgets/SidebarComponents/SidebarMinPvValue";
-import { SidebarMaxPvValue } from "../../helperWidgets/SidebarComponents/SidebarMaxPvValue";
-import { SidebarDirection } from "../../helperWidgets/SidebarComponents/SidebarDirection";
-import { SidebarFillColor } from "../../helperWidgets/SidebarComponents/SidebarFillColor";
-import { SidebarFillColorMajor } from "../../helperWidgets/SidebarComponents/SidebarFillColorMajor";
-import { SidebarFillColorMinor } from "../../helperWidgets/SidebarComponents/SidebarFillColorMinor";
-import { SidebarFillColorInvalid } from "../../helperWidgets/SidebarComponents/SidebarFillColorInvalid";
-import { SidebarMajorSeverityColor } from "../../helperWidgets/SidebarComponents/SidebarMajorSeverityColor";
-import { SidebarMinorSeverityColor } from "../../helperWidgets/SidebarComponents/SidebarMinorSeverityColor";
-import { SidebarInvalidSeverityColor } from "../../helperWidgets/SidebarComponents/SidebarInvalidSeverityColor";
-import { SidebarShowPvValue } from "../../helperWidgets/SidebarComponents/SidebarShowPvValue";
-import { SidebarStepSize } from "../../helperWidgets/SidebarComponents/SidebarStepSize";
-import { SidebarText } from "../../helperWidgets/SidebarComponents/SidebarText";
-import { SidebarInvisibleInOperation } from "../../helperWidgets/SidebarComponents/SidebarInvisibleInOperation";
-import { SidebarNumberScale } from "../../helperWidgets/SidebarComponents/SidebarNumberScale";
-import { SidebarNumberFormat } from "../../helperWidgets/SidebarComponents/SidebarNumberFormat";
-import { SidebarShowLegend } from "../../helperWidgets/SidebarComponents/SidebarShowLegend";
-import { SidebarWidgetAppearance } from "../../helperWidgets/SidebarComponents/SidebarWidgetAppearance"
-import { SidebarAlarmLevel } from "../../helperWidgets/SidebarComponents/SidebarAlarmLevel";
-import { SidebarAlarmBackground } from "../../helperWidgets/SidebarComponents/SidebarAlarmBackground";
-import { SidebarAlarmShape } from "../../helperWidgets/SidebarComponents/SidebarAlarmShape";
-import { SidebarAlarmText } from "../../helperWidgets/SidebarComponents/SidebarAlarmText";
-import { SidebarAlarmFill } from "../../helperWidgets/SidebarComponents/SidebarAlarmFill";
-import { SidebarAlarmDial } from "../../helperWidgets/SidebarComponents/SidebarAlarmDial";
-import { SidebarAlarmPointer } from "../../helperWidgets/SidebarComponents/SidebarAlarmPointer";
-import { SidebarTankAlarmContainer } from "../../helperWidgets/SidebarComponents/SidebarTankAlarmContainer";
-import { SidebarTankContainerColor } from "../../helperWidgets/SidebarComponents/SidebarTankContainerColor";
-import { SidebarWriteConfirmation } from "../../helperWidgets/SidebarComponents/SidebarWriteConfirmation";
 import { SidebarLargeInput } from "./SidebarLargeInput";
 
+// generic 
+import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
+import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
+import { SidebarNumberChoices } from "../../helperWidgets/SidebarComponents/SidebarNumberChoices";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
+import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
+
 export abstract class BaseWidgetSidebar {
-    private _sidebarX: SidebarX;
-    private _sidebarY: SidebarY;
-    private _sidebarWidth: SidebarWidth;
-    private _sidebarHeight: SidebarHeight;
-    private _sidebarAngle: SidebarAngle;
-    private _sidebarChannelName: SidebarChannelName;
-    private _sidebarShowUnit: SidebarShowUnit;
-    private _sidebarAlarmBorder: SidebarAlarmBorder;
-    private _sidebarXAlign: SidebarXAlign;
-    private _sidebarYAlign: SidebarYAlign;
-    private _sidebarWrapWord: SidebarWrapWord;
-    private _sidebarBorderWidth: SidebarBorderWidth;
-    private _sidebarBackgroundColor: SidebarBackgroundColor;
-    private _sidebarTextColor: SidebarTextColor;
-    private _sidebarBorderColor: SidebarBorderColor;
-    private _sidebarFontFamily: SidebarFontFamily;
-    private _sidebarFontSize: SidebarFontSize;
-    private _sidebarFontStyle: SidebarFontStyle;
-    private _sidebarFontWeight: SidebarFontWeight;
-    private _sidebarHighlightBackgroundColor: SidebarHighlightBackgroundColor;
-    private _sidebarOverflowVisible: SidebarOverflowVisible;
-    private _sidebarChannelNames: SidebarChannelNames;
-    private _sidebarLineWidth: SidebarLineWidth;
-    private _sidebarLineStyle: SidebarLineStyle;
-    private _sidebarLineArrowStyle: SidebarLineArrowStyle;
-    private _sidebarLineColor: SidebarLineColor;
-    private _sidebarUsePvLimits: SidebarUsePvLimits;
-    private _sidebarUseLogScale: SidebarUseLogScale;
-    private _sidebarMinPvValue: SidebarMinPvValue;
-    private _sidebarMaxPvValue: SidebarMaxPvValue;
-    private _sidebarDirection: SidebarDirection;
-    private _sidebarFillColor: SidebarFillColor;
-    private _sidebarFillColorMajor: SidebarFillColorMajor;
-    private _sidebarFillColorMinor: SidebarFillColorMinor;
-    private _sidebarFillColorInvalid: SidebarFillColorInvalid;
-    private _sidebarMajorSeverityColor: SidebarMajorSeverityColor;
-    private _sidebarMinorSeverityColor: SidebarMinorSeverityColor;
-    private _sidebarInvalidSeverityColor: SidebarInvalidSeverityColor;
-    private _sidebarShowPvValue: SidebarShowPvValue;
-    private _sidebarStepSize: SidebarStepSize;
-    private _sidebarText: SidebarText;
+    private _sidebarX;
+    private _sidebarY;
+    private _sidebarWidth;
+    private _sidebarHeight;
+    private _sidebarAngle;
+    private _sidebarChannelName;
+    private _sidebarShowUnit;
+    private _sidebarAlarmBorder;
+    private _sidebarXAlign;
+    private _sidebarYAlign;
+    private _sidebarWrapWord;
+    private _sidebarBorderWidth;
+    private _sidebarBackgroundColor;
+    private _sidebarTextColor;
+    private _sidebarBorderColor;
+    private _sidebarFontFamily;
+    private _sidebarFontSize;
+    private _sidebarFontStyle;
+    private _sidebarFontWeight;
+    private _sidebarHighlightBackgroundColor;
+    private _sidebarOverflowVisible;
+    private _sidebarChannelNames;
+    private _sidebarLineWidth;
+    private _sidebarLineStyle;
+    private _sidebarLineColor;
+    private _sidebarUsePvLimits;
+    private _sidebarUseLogScale;
+    private _sidebarMinPvValue;
+    private _sidebarMaxPvValue;
+    private _sidebarDirection;
+    private _sidebarFillColor;
+    private _sidebarFillColorMajor;
+    private _sidebarFillColorMinor;
+    private _sidebarFillColorInvalid;
+    private _sidebarMajorSeverityColor;
+    private _sidebarMinorSeverityColor;
+    private _sidebarInvalidSeverityColor;
+    private _sidebarShowPvValue;
+    private _sidebarStepSize;
+    private _sidebarText;
     private _sidebarInvisibleInOperation;
     private _sidebarNumberScale;
     private _sidebarNumberFormat;
@@ -113,13 +69,17 @@ export abstract class BaseWidgetSidebar {
     private _sidebarAlarmShape;
     private _sidebarAlarmText;
     private _sidebarAlarmFill;
-    private _sidebarAlarmPointer: SidebarAlarmPointer;
-    private _sidebarAlarmDial: SidebarAlarmDial;
-    private _sidebarTankAlarmContainer: SidebarTankAlarmContainer;
-    private _sidebarTankContainerColor: SidebarTankContainerColor
-    private _sidebarWriteConfirmation: SidebarWriteConfirmation;
-
-
+    private _sidebarAlarmPointer;
+    private _sidebarAlarmDial;
+    private _sidebarTankAlarmContainer;
+    private _sidebarTankContainerColor;
+    private _sidebarLineShowArrowHead;
+    private _sidebarLineShowArrowTail;
+    private _sidebarLineArrowLength;
+    private _sidebarLineArrowWidth;
+    private _sidebarConfirmOnWrite;
+    private _sidebarConfirmOnWriteUsePassword;
+    private _sidebarConfirmOnWritePasword;
     private _sidebarLargeInput: SidebarLargeInput;
 
     _widgetKey: string;
@@ -130,64 +90,105 @@ export abstract class BaseWidgetSidebar {
     constructor(baseWidget: BaseWidget) {
         this._mainWidget = baseWidget;
         this._widgetKey = this._mainWidget.getWidgetKey() + "-sidebar";
-        // components, some of them may not be used
-        this._sidebarX = new SidebarX(this);
-        this._sidebarY = new SidebarY(this);
-        this._sidebarWidth = new SidebarWidth(this);
-        this._sidebarHeight = new SidebarHeight(this);
+        const text = this.getMainWidget().getText();
+        const style = this.getMainWidget().getStyle()
+        this._sidebarX = new SidebarNumberInput(this, style, "left", "X", true);
+        this._sidebarY = new SidebarNumberInput(this, style, "top", "Y", true);
+        this._sidebarWidth = new SidebarNumberInput(this, style, "width", "Width", true);
+        this._sidebarHeight = new SidebarNumberInput(this, style, "height", "Height", true);
+        // todo
         this._sidebarAngle = new SidebarAngle(this);
+        // todo
         this._sidebarChannelName = new SidebarChannelName(this);
-        this._sidebarAlarmBorder = new SidebarAlarmBorder(this);
-        this._sidebarShowUnit = new SidebarShowUnit(this);
-        this._sidebarXAlign = new SidebarXAlign(this);
-        this._sidebarYAlign = new SidebarYAlign(this);
-        this._sidebarWrapWord = new SidebarWrapWord(this);
-        this._sidebarBorderWidth = new SidebarBorderWidth(this);
-        this._sidebarBackgroundColor = new SidebarBackgroundColor(this);
-        this._sidebarTextColor = new SidebarTextColor(this);
-        this._sidebarBorderColor = new SidebarBorderColor(this);
-        this._sidebarFontFamily = new SidebarFontFamily(this);
-        this._sidebarFontSize = new SidebarFontSize(this);
-        this._sidebarFontStyle = new SidebarFontStyle(this);
-        this._sidebarFontWeight = new SidebarFontWeight(this);
-        this._sidebarHighlightBackgroundColor = new SidebarHighlightBackgroundColor(this);
-        this._sidebarOverflowVisible = new SidebarOverflowVisible(this);
+        this._sidebarAlarmBorder = new SidebarCheckBox(this, text, "alarmBorder", "Alarm border");
+        this._sidebarShowUnit = new SidebarCheckBox(this, text, "showUnit", "Show unit");
+        this._sidebarXAlign = new SidebarStringChoices(this, text, "horizontalAlign", "X align", { Left: "flex-start", Center: "center", Right: "flex-end" });
+        this._sidebarYAlign = new SidebarStringChoices(this, text, "verticalAlign", "Y align", { Top: "flex-start", Middle: "center", Bottom: "flex-end" });
+        this._sidebarWrapWord = new SidebarCheckBox(this, text, "wrapWord", "Wrap word");
+        this._sidebarBorderWidth = new SidebarNumberInput(this, style, "borderWidth", "Width");
+        this._sidebarBackgroundColor = new SidebarColor(this, style, "backgroundColor", "Color");
+        this._sidebarTextColor = new SidebarColor(this, style, "color", "Color");
+        this._sidebarBorderColor = new SidebarColor(this, style, "borderColor", "Color");
+        this._sidebarFontFamily = new SidebarStringChoices(this, style, "fontFamily", "Family", {
+            "TDM Fonts": Object.fromEntries(Object.keys(FontsData.g_fonts).map((k) => [k, k])),
+            "OS fonts (not recommended)": Object.fromEntries(FontsData.g_localFonts.map((k) => [k, k])),
+        });
+        this._sidebarFontSize = new SidebarNumberChoices(this, style, "fontSize", "Size", Object.fromEntries(FontsData.g_fontSizes.map((n) => [`${n}`, n])));
+        this._sidebarFontStyle = new SidebarStringChoices(this, style, "fontStyle", "Style", {
+            "normal": "normal",
+            "italic": "italic",
+        });
+        this._sidebarFontWeight = new SidebarStringChoices(this, style, "fontWeight", "Weight", {
+            "normal": "normal",
+            "bold": "bold",
+        });
+        this._sidebarHighlightBackgroundColor = new SidebarColor(this, text, "highlightBackgroundColor", "Highlight color");
+        this._sidebarOverflowVisible = new SidebarCheckBox(this, text, "overflowVisible", "Overflow visible");
+        // todo
         this._sidebarChannelNames = new SidebarChannelNames(this);
-        this._sidebarLineWidth = new SidebarLineWidth(this);
-        this._sidebarLineStyle = new SidebarLineStyle(this);
-        this._sidebarLineArrowStyle = new SidebarLineArrowStyle(this);
-        this._sidebarLineColor = new SidebarLineColor(this);
-        this._sidebarUsePvLimits = new SidebarUsePvLimits(this);
-        this._sidebarUseLogScale = new SidebarUseLogScale(this);
-        this._sidebarMinPvValue = new SidebarMinPvValue(this);
-        this._sidebarMaxPvValue = new SidebarMaxPvValue(this);
-        this._sidebarDirection = new SidebarDirection(this);
-        this._sidebarFillColor = new SidebarFillColor(this);
-        this._sidebarFillColorMajor = new SidebarFillColorMajor(this);
-        this._sidebarFillColorMinor = new SidebarFillColorMinor(this);
-        this._sidebarFillColorInvalid = new SidebarFillColorInvalid(this);
-        this._sidebarMajorSeverityColor = new SidebarMajorSeverityColor(this);
-        this._sidebarMinorSeverityColor = new SidebarMinorSeverityColor(this);
-        this._sidebarInvalidSeverityColor = new SidebarInvalidSeverityColor(this);
-        this._sidebarShowPvValue = new SidebarShowPvValue(this);
-        this._sidebarStepSize = new SidebarStepSize(this);
-        this._sidebarText = new SidebarText(this);
-        this._sidebarInvisibleInOperation = new SidebarInvisibleInOperation(this);
-        this._sidebarNumberScale = new SidebarNumberScale(this);
-        this._sidebarNumberFormat = new SidebarNumberFormat(this);
-        this._sidebarShowLegend = new SidebarShowLegend(this);
-        this._sidebarWidgetAppearance = new SidebarWidgetAppearance(this);
-        this._sidebarAlarmLevel = new SidebarAlarmLevel(this);
-        this._sidebarAlarmBackground = new SidebarAlarmBackground(this);
-        this._sidebarAlarmShape = new SidebarAlarmShape(this);
-        this._sidebarAlarmText = new SidebarAlarmText(this);
-        this._sidebarAlarmFill = new SidebarAlarmFill(this);
-        this._sidebarAlarmPointer = new SidebarAlarmPointer(this);
-        this._sidebarAlarmDial = new SidebarAlarmDial(this);
-        this._sidebarTankAlarmContainer = new SidebarTankAlarmContainer(this);
-        this._sidebarTankContainerColor = new SidebarTankContainerColor(this);
-        this._sidebarWriteConfirmation = new SidebarWriteConfirmation(this);
+        this._sidebarLineWidth = new SidebarNumberInput(this, text, "lineWidth", "Width");
+        this._sidebarLineStyle = new SidebarStringChoices(this, text, "lineStyle", "Style", {
+            Solid: "solid",
+            Dashed: "dashed",
+            Dotted: "dotted",
+            "Dash Dot": "dash-dot",
+            "Dash Dot Dot": "dash-dot-dot",
+        });
+        this._sidebarLineShowArrowHead = new SidebarCheckBox(this, text, "showArrowHead", "Show head");
+        this._sidebarLineShowArrowTail = new SidebarCheckBox(this, text, "showArrowTail", "Show tail");
+        this._sidebarLineArrowLength = new SidebarNumberInput(this, text, "arrowLength", "Length");
+        this._sidebarLineArrowWidth = new SidebarNumberInput(this, text, "arrowWidth", "Width");
+        this._sidebarLineColor = new SidebarColor(this, text, "lineColor", "Color");
+        this._sidebarUsePvLimits = new SidebarCheckBox(this, text, "usePvLimits", "Use PV limits");
+        this._sidebarUseLogScale = new SidebarCheckBox(this, text, "useLogScale", "Use Log scale");
+        this._sidebarMinPvValue = new SidebarNumberInput(this, text, "minPvValue", "Min");
+        this._sidebarMaxPvValue = new SidebarNumberInput(this, text, "maxPvValue", "Max");
+        this._sidebarDirection = new SidebarStringChoices(this, text, "direction", "Direction", {
+            Horizontal: "horizontal",
+            Vertical: "vertical",
+        });
+        this._sidebarFillColor = new SidebarColor(this, text, "fillColor", "Color");
+        this._sidebarFillColorMajor = new SidebarColor(this, text, "fillColorMajor", "Color MAJOR");
+        this._sidebarFillColorMinor = new SidebarColor(this, text, "fillColorMinor", "Color MINOR");
+        this._sidebarFillColorInvalid = new SidebarColor(this, text, "fillColorInvalid", "Color INVALID");
+        this._sidebarMajorSeverityColor = new SidebarColor(this, text, "majorSeverityColor", "MAJOR severity color");
+        this._sidebarMinorSeverityColor = new SidebarColor(this, text, "minorSeverityColor", "MINOR severity color");
+        this._sidebarInvalidSeverityColor = new SidebarColor(this, text, "invalidSeverityColor", "INVALID severity color");
+        this._sidebarShowPvValue = new SidebarCheckBox(this, text, "showPvValue", "Show channel value");
+        this._sidebarStepSize = new SidebarNumberInput(this, style, "stepSize", "Step size");
+        this._sidebarText = new SidebarStringInput(this, text, "text", "Text");
+        this._sidebarInvisibleInOperation = new SidebarCheckBox(this, text, "invisibleInOperation", "Invisible in operation");
+        this._sidebarNumberScale = new SidebarNumberInput(this, text, "scale", "Scale");
+        this._sidebarNumberFormat = new SidebarStringChoices(this, text, "format", "Format", {
+            Default: "default",
+            Decimal: "decimal",
+            Exponential: "exponential",
+            Hexadecimal: "hexadecimal",
+            String: "string",
+        });
+        this._sidebarShowLegend = new SidebarCheckBox(this, text, "showLegend", "Show legend");
+        this._sidebarWidgetAppearance = new SidebarStringChoices(this, text, "appearance", "Style", {
+            Traditional: "traditional",
+            Contemporary: "contemporary",
+        });
+        this._sidebarAlarmLevel = new SidebarStringChoices(this, text, "alarmLevel", "Alarm level", {
+            ">= MINOR": "MINOR",
+            ">= MAJOR": "MAJOR",
+            "= INVALID": "INVALID",
+        });
+        this._sidebarAlarmBackground = new SidebarCheckBox(this, text, "alarmBackground", "Alarm background");
+        this._sidebarAlarmShape = new SidebarCheckBox(this, text, "alarmShape", "Alarm shape");
+        this._sidebarAlarmText = new SidebarCheckBox(this, text, "alarmText", "Alarm text");
+        this._sidebarAlarmFill = new SidebarCheckBox(this, text, "alarmFill", "Alarm fill");
+        this._sidebarAlarmPointer = new SidebarCheckBox(this, text, "alarmPointer", "Alarm pointer");
+        this._sidebarAlarmDial = new SidebarCheckBox(this, text, "alarmDial", "Alarm dial");
+        this._sidebarTankAlarmContainer = new SidebarCheckBox(this, text, "alarmContainer", "Alarm container");
+        this._sidebarTankContainerColor = new SidebarColor(this, text, "containerColor", "Container color");
+        this._sidebarConfirmOnWrite = new SidebarCheckBox(this, text, "confirmOnWrite", "Confirm change");
+        this._sidebarConfirmOnWriteUsePassword = new SidebarCheckBox(this, text, "confirmOnWriteUsePassword", "Use password");
+        this._sidebarConfirmOnWritePasword = new SidebarStringInput(this, text, "confirmOnWritePassword", "Password");
 
+        // special input, full screen for long string
         this._sidebarLargeInput = new SidebarLargeInput();
     }
 
@@ -374,9 +375,9 @@ export abstract class BaseWidgetSidebar {
         return this._sidebarLineStyle;
     };
 
-    getSidebarLineArrowStyle = () => {
-        return this._sidebarLineArrowStyle;
-    };
+    // getSidebarLineArrowStyle = () => {
+    //     return this._sidebarLineArrowStyle;
+    // };
 
     getSidebarLineColor = () => {
         return this._sidebarLineColor;
@@ -502,12 +503,37 @@ export abstract class BaseWidgetSidebar {
         return this._sidebarTankContainerColor;
     }
 
-    getSidebarWriteConfirmation = () => {
-        return this._sidebarWriteConfirmation;
-    }
-
     getSidebarLargeInput = () => {
         return this._sidebarLargeInput;
+    }
+
+    getSidebarLineShowArrowHead = () => {
+        return this._sidebarLineShowArrowHead;
+    }
+
+    getSidebarLineShowArrowTail = () => {
+        return this._sidebarLineShowArrowTail;
+    }
+
+    getSidebarLineArrowLength = () => {
+        return this._sidebarLineArrowLength;
+    }
+
+    getSidebarLineArrowWidth = () => {
+        return this._sidebarLineArrowWidth;
+    }
+
+
+    getSidebarConfirmOnWrite = () => {
+        return this._sidebarConfirmOnWrite;
+    }
+
+    getSidebarConfirmOnWriteUsePassword = () => {
+        return this._sidebarConfirmOnWriteUsePassword;
+    }
+
+    getSidebarConfirmOnWritePasword = () => {
+        return this._sidebarConfirmOnWritePasword;
     }
 
     // ------------------------- style -------------------------

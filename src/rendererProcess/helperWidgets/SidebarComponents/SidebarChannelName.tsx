@@ -3,35 +3,21 @@ import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
-import * as GlobalMethods from "../../../common/GlobalMethods"
 import { TcaChannel } from "../../channel/TcaChannel";
-import { v4 as uuidv4 } from "uuid";
 
-/**
- * Represents the X component in sidebar. <br>
- *
- * It provides: (1) the JSX element, (2) the method to udpate the widget from sidebar, and (3) the method to
- * update this sidebar component from widget.
- */
 export class SidebarChannelName extends SidebarComponent {
     constructor(sidebar: BaseWidgetSidebar) {
         super(sidebar);
     }
 
     _Element = () => {
-        // const [channelName, setChannelName] = React.useState<string>(this.getMainWidget().getChannelNames()[0]);
         const channelNameRaw = this.getMainWidget().getChannelNamesLevel0()[0];
         const [channelName, setChannelName] = React.useState<string>(channelNameRaw === undefined ? "" : channelNameRaw);
         const [channeNameColor, setChanneNameColor] = React.useState<string>(
-            // GlobalMethods.validateChannelName(this.getMainWidget().getChannelNames()[0]) ? "black" : "red"
-            // GlobalMethods.validateChannelName(this.getMainWidget().getUnprocessedChannelNames()[0]) ? "black" : "red"
             TcaChannel.checkChannelName(this.getMainWidget().getChannelNamesLevel0()[0]) !== undefined ? "black" : "red"
         );
 
-
-
         const inputElementRef = React.useRef<any>(null);
-        const labelElementRef = React.useRef<any>(null);
         const formElementRef = React.useRef<any>(null);
 
         // channel name hint
@@ -111,11 +97,9 @@ export class SidebarChannelName extends SidebarComponent {
                         setShowChannelNameHint(false);
                         setChannelNameHintData([]);
 
-                        // const orig = this.getMainWidget().getChannelNames()[0];
                         const orig = this.getMainWidget().getChannelNamesLevel0()[0];
                         if (orig !== channelName) {
                             setChannelName(orig);
-                            // setChanneNameColor(GlobalMethods.validateChannelName(orig) ? "black" : "red");
                             setChanneNameColor(TcaChannel.checkChannelName(orig) !== undefined ? "black" : "red");
                         }
                     }}
@@ -133,14 +117,16 @@ export class SidebarChannelName extends SidebarComponent {
     updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
 
-        // const oldVal = this.getMainWidget().getChannelNames()[0];
-        const oldVal = this.getMainWidget().getChannelNamesLevel0()[0];
+        if (typeof propertyValue !== "string") {
+            return;
+        }
 
-        if (propertyValue === oldVal) {
+        const orig = this.getMainWidget().getChannelNamesLevel0()[0];
+
+        if (propertyValue === orig) {
             return;
         } else {
-            // this.getMainWidget().changeChannelName(`${propertyValue}`);
-            this.getMainWidget().getChannelNamesLevel0()[0] = `${propertyValue}`;
+            this.setPropertyValue(propertyValue);
         }
 
         const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
@@ -151,4 +137,9 @@ export class SidebarChannelName extends SidebarComponent {
 
         g_flushWidgets();
     };
+
+    setPropertyValue = (newValue: string) => {
+        this.getMainWidget().getChannelNamesLevel0()[0] = newValue;
+    }
+    
 }

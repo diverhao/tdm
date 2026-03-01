@@ -142,7 +142,10 @@ export class ArcSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ------------------- arrow ----------------------------- */}
-                {this.getSidebarLineArrowStyle().getElement()}
+                {this.getSidebarLineShowArrowHead().getElement()}
+                {this.getSidebarLineShowArrowTail().getElement()}
+                {this.getSidebarLineArrowLength().getElement()}
+                {this.getSidebarLineArrowWidth().getElement()}
                 {/* ---------------- points table -------------------------- */}
                 {/* {this.getSidebarPolylinePointsTable().getElement()} */}
                 {/* ---------------- angle -------------------------- */}

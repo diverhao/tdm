@@ -60,7 +60,7 @@ export class XYPlot extends BaseWidget {
     };
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementAreaRaw = (): React.JSX.Element => {
         const overflow = this.getText().overflowVisible ? "visible" : "hidden";
         return (
             <div

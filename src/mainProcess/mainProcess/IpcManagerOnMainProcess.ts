@@ -1,7 +1,5 @@
 import { BrowserView, BrowserWindow, app, dialog } from "electron";
 import { MainProcess } from "../mainProcess/MainProcess";
-import { Profiles } from "../profile/Profiles";
-import { ChannelAgentsManager } from "../channel/ChannelAgentsManager";
 import { type_options_createDisplayWindow } from "../windows/WindowAgentsManager";
 import * as fs from "fs";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
@@ -14,7 +12,6 @@ import * as os from "os";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import pidusage from "pidusage";
 import { spawn } from "child_process";
-import { SqlState } from "../archive/Sql";
 import { Environment, type_network_stats } from "epics-tca";
 import { IpcEventArgType, type_DialogMessageBox } from "../../common/IpcEventArgType";
 import { fileToDataUri, generateKeyAndCert, scanSymbolGallery } from "../global/GlobalMethods";

@@ -224,7 +224,15 @@ export class CheckBoxSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
                 {/* ---------------- confirm on write -------------------- */}
-                {this.getSidebarWriteConfirmation().getElement()}
+                <this._BlockTitle>
+                    <b>Change confirmation</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarConfirmOnWrite().getElement()}
+                    {this.getSidebarConfirmOnWriteUsePassword().getElement()}
+                    {this.getSidebarConfirmOnWritePasword().getElement()}
+                </this._BlockBody>
+
                 <this._HorizontalLine />
                 {/* ------------------------- rules ---------------------------- */}
                 {this.getMainWidget().getRules()?.getElement()}

@@ -5,7 +5,7 @@ import { SidebarPolylineSmootherize } from "../../helperWidgets/SidebarComponent
 import { SidebarPolylineFill } from "../../helperWidgets/SidebarComponents/SidebarPolylineFill";
 import { SidebarPolylineClosed } from "../../helperWidgets/SidebarComponents/SidebarPolylineClosed";
 import { SidebarPolylinePointsTable } from "../../helperWidgets/SidebarComponents/SidebarPolylinePointsTable";
-import {Log} from "../../../common/Log";
+import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
@@ -43,7 +43,7 @@ export class PolylineSidebar extends BaseWidgetSidebar {
     // mockup definition to let TypeScript stop complaining
     updateFromWidget = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => { };
 
-    _Element = (): React.JSX.Element => { 
+    _Element = (): React.JSX.Element => {
         // when we move the widget out of vertical range, the sidebar width is not calculated correctly due to the asynchronous 
         // calculation of window size, 
         // check the window vertical scrollbar width one more time to have a correct sidebar width
@@ -110,11 +110,19 @@ export class PolylineSidebar extends BaseWidgetSidebar {
 
                 </this._BlockBody>
                 <this._HorizontalLine />
-                
+
                 {/* ------------------- arrow ----------------------------- */}
-                {this.getSidebarLineArrowStyle().getElement()}
+                <this._BlockTitle>
+                    <b>Arrow</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarLineShowArrowHead().getElement()}
+                    {this.getSidebarLineShowArrowTail().getElement()}
+                    {this.getSidebarLineArrowLength().getElement()}
+                    {this.getSidebarLineArrowWidth().getElement()}
+                </this._BlockBody>
                 <this._HorizontalLine />
-                
+
                 {/* ---------------- points table -------------------------- */}
                 {this.getSidebarPolylinePointsTable().getElement()}
                 <this._HorizontalLine />
@@ -129,7 +137,7 @@ export class PolylineSidebar extends BaseWidgetSidebar {
                     {this.getSidebarInvisibleInOperation().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                
+
                 {/* ---------------- filling -------------------------- */}
                 <this._BlockTitle>
                     <b>Filling</b>
@@ -142,17 +150,17 @@ export class PolylineSidebar extends BaseWidgetSidebar {
 
                 {/* ---------------- channel -------------------------- */}
                 <this._BlockTitle>
-					<b>Channel</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarChannelName().getElement()}
-					{this.getSidebarAlarmShape().getElement()}
-					{this.getSidebarAlarmFill().getElement()}
-					{this.getSidebarAlarmBackground().getElement()}
-					{this.getSidebarAlarmBorder().getElement()}
-					{this.getSidebarAlarmLevel().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine />
+                    <b>Channel</b>
+                </this._BlockTitle>
+                <this._BlockBody>
+                    {this.getSidebarChannelName().getElement()}
+                    {this.getSidebarAlarmShape().getElement()}
+                    {this.getSidebarAlarmFill().getElement()}
+                    {this.getSidebarAlarmBackground().getElement()}
+                    {this.getSidebarAlarmBorder().getElement()}
+                    {this.getSidebarAlarmLevel().getElement()}
+                </this._BlockBody>
+                <this._HorizontalLine />
 
                 {/* ---------------- border -------------------------- */}
                 <this._BlockTitle>
