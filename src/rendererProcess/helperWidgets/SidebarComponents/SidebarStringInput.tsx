@@ -32,7 +32,7 @@ export class SidebarStringInput extends SidebarComponent {
                     readableText={this.getLabel()}
                     updater={(newValue: string) => { this.updateWidget(undefined, newValue) }}
                 >
-                    {this.getLabel()}:
+                    {this.getLabel()}
                 </this._ElementInputLabel>
                 <input
                     style={{ ...this.getInputStyle(), width: "65.6%" }}
