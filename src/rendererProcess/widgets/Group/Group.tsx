@@ -1,5 +1,4 @@
 import * as React from "react";
-import { MouseEvent } from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
@@ -227,7 +226,7 @@ export class Group extends BaseWidget {
                                         // marginTop: 15,
                                         // marginLeft: 15,
                                     }}
-                                    onMouseDown={(event: any) => {
+                                    onMouseDown={(event) => {
                                         // event.preventDefault();
                                         // forceUpdate({});
                                         // this.selectTab(index);
@@ -325,14 +324,14 @@ export class Group extends BaseWidget {
                     justifyContent: "center",
                     alignItems: "center",
                 }}
-                onMouseDown={(event: any) => {
+                onMouseDown={(event) => {
                     this._handleMouseDown(event);
                     if (g_widgets1.isEditing()) {
                         this.updateGroup(index);
                         this.selectGroup(index);
                     }
                 }}
-                onMouseUp={(event: any) => {
+                onMouseUp={(event) => {
                     // todo: why did we need this? It causes unexpected selection of the Group widget
                     // todo: when the mouse is up, even we are not selecting this widget
                     if (g_widgets1.isEditing()) {
@@ -370,7 +369,7 @@ export class Group extends BaseWidget {
         );
     };
 
-    _handleMouseDownOnResizer(event: MouseEvent, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
+    _handleMouseDownOnResizer(event: React.MouseEvent<HTMLElement, MouseEvent>, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
         super._handleMouseDownOnResizer(event, index);
         if (g_widgets1.isEditing()) {
             if (this._tmp_itemBackgroundColor === "rgba(0,0,0,0.14159265358979323846264338327)") {
@@ -380,7 +379,7 @@ export class Group extends BaseWidget {
         }
     }
 
-    _handleMouseUpOnResizer(event: any, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
+    _handleMouseUpOnResizer(event: globalThis.MouseEvent, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
         super._handleMouseUpOnResizer(event, index);
         if (g_widgets1.isEditing()) {
             this.getItemBackgroundColors()[this.getSelectedGroup()] = this._tmp_itemBackgroundColor;

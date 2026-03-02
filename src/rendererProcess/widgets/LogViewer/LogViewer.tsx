@@ -200,7 +200,7 @@ export class LogViewer extends BaseWidget {
 
 
     _ElementTable = () => {
-        const tableRef = React.useRef<any>(null);
+        const tableRef = React.useRef<HTMLDivElement>(null);
 
         this.tableRef = tableRef;
 
@@ -210,7 +210,9 @@ export class LogViewer extends BaseWidget {
 
 
         const scrollToBottom = () => {
-            tableRef.current.scrollTop = tableRef.current.scrollHeight;
+            if (tableRef.current !== null) {
+                tableRef.current.scrollTop = tableRef.current.scrollHeight;
+            }
         };
 
         let isScrolledToBottom = false;
@@ -366,7 +368,7 @@ export class LogViewer extends BaseWidget {
                         }}
                         readOnly={this.getText()["usePvLimits"] ? true : false}
                         // must use enter to change the value
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             if (parseFloat(this.getText()["maxLineNum"]) !== maxLineNum) {
                                 setMaxLineNum(parseFloat(this.getText()["maxLineNum"]));
                             }

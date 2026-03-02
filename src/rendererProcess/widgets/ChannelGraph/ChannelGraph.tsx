@@ -250,7 +250,7 @@ export class ChannelGraph extends BaseWidget {
     }
 
     _ElementChannelGraph = () => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         const [showConfigPage, setShowConfigPage] = React.useState(false);
         this.setShowConfigPage = setShowConfigPage;
         // const rawChannelName = this.getChannelNames()[0];
@@ -551,10 +551,10 @@ export class ChannelGraph extends BaseWidget {
 
 
     private _ElementChannelInput = ({ channelName, setChannelName }: any) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLInputElement>(null);
 
         // channel name hint
-        const formElementRef = React.useRef<any>(null);
+        const formElementRef = React.useRef<HTMLFormElement>(null);
 
         const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
         const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
@@ -570,7 +570,7 @@ export class ChannelGraph extends BaseWidget {
         return (
             <form
                 ref={formElementRef}
-                onSubmit={(event: any) => {
+                onSubmit={(event) => {
                     event.preventDefault();
                     setShowChannelNameHint(false)
                     this.expandNode(channelName);
@@ -596,7 +596,7 @@ export class ChannelGraph extends BaseWidget {
                     spellCheck={false}
                     value={channelName}
                     placeholder="channel name"
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event.preventDefault();
                         const newVal = event.target.value;
                         setChannelName(newVal);
@@ -629,13 +629,13 @@ export class ChannelGraph extends BaseWidget {
                             }
                         }
                     }}
-                    onMouseEnter={(event: any) => {
+                    onMouseEnter={(event) => {
                         event.preventDefault();
                         if (elementRef.current !== null) {
                             elementRef.current.style["color"] = "red";
                         }
                     }}
-                    onMouseLeave={(event: any) => {
+                    onMouseLeave={(event) => {
                         event.preventDefault();
                         if (elementRef.current !== null) {
                             if (document.activeElement !== elementRef.current) {
@@ -643,13 +643,13 @@ export class ChannelGraph extends BaseWidget {
                             }
                         }
                     }}
-                    onFocus={(event: any) => {
+                    onFocus={(event) => {
                         event.preventDefault();
                         if (elementRef.current !== null) {
                             elementRef.current.style["color"] = "red";
                         }
                     }}
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         event.preventDefault();
                         setShowChannelNameHint(false);
                         setChannelNameHintData([]);

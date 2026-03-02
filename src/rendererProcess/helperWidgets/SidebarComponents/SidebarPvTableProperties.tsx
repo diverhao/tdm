@@ -43,7 +43,7 @@ export class SidebarPvTableProperties extends SidebarComponent {
                         setPropertyNamesStr(event.target.value);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = `${(this.getMainWidget() as PvTable).getStrippedFieldNames()}`;
                         if (orig !== propertyNamesStr) {
                             setPropertyNamesStr(orig);
@@ -55,7 +55,7 @@ export class SidebarPvTableProperties extends SidebarComponent {
         );
     };
 
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
 
         const mainWidget = this.getMainWidget() as PvTable;

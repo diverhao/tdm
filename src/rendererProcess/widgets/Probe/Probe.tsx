@@ -462,11 +462,11 @@ export class Probe extends BaseWidget {
         // const isFocused = React.useRef<boolean>(false);
         const [channelName, setChannelName] = React.useState(this.getChannelNames()[0]);
         // const channelNameInputRef: React.RefObject<null | HTMLInputElement> = React.useRef(null);
-        const filterElementRef = React.useRef<any>(null);
+        const filterElementRef = React.useRef<HTMLInputElement>(null);
         const [filterValue, setFilterValue] = React.useState("");
-        const elementProcessRef = React.useRef<any>(null);
-        const elementGenerateRecord = React.useRef<any>(null);
-        const elementGenerateRecordShort = React.useRef<any>(null);
+        const elementProcessRef = React.useRef<HTMLSpanElement>(null);
+        const elementGenerateRecord = React.useRef<HTMLSpanElement>(null);
+        const elementGenerateRecordShort = React.useRef<HTMLSpanElement>(null);
 
         let tcaChannel: undefined | TcaChannel = undefined;
         try {
@@ -495,8 +495,8 @@ export class Probe extends BaseWidget {
 
 
         // channel name hint
-        const inputElementRef = React.useRef<any>(null);
-        const formElementRef = React.useRef<any>(null);
+        const inputElementRef = React.useRef<HTMLInputElement>(null);
+        const formElementRef = React.useRef<HTMLFormElement>(null);
 
         const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
         const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
@@ -559,7 +559,7 @@ export class Probe extends BaseWidget {
                     >
                         <form
                             ref={formElementRef}
-                            onSubmit={(event: any) => {
+                            onSubmit={(event) => {
                                 event.preventDefault();
                                 this.newProbe(channelName);
                                 (event.currentTarget.elements[0] as HTMLInputElement).blur();
@@ -613,8 +613,7 @@ export class Probe extends BaseWidget {
                                     }
 
                                 }}
-                                // must use enter to change the value
-                                onBlur={(event: any) => {
+                                onBlur={() => {
                                     setShowChannelNameHint(false);
                                     setChannelNameHintData([]);
 
@@ -871,7 +870,7 @@ export class Probe extends BaseWidget {
                             fontSize: this.getAllStyle()["fontSize"],
                         }}
                         type="text"
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             event.preventDefault();
                             const newValue = event.target.value;
                             setFilterValue(newValue);
@@ -956,7 +955,7 @@ export class Probe extends BaseWidget {
                     }}
                 >
                     <ElementRectangleButton
-                        handleClick={(event: any) => {
+                        handleClick={(event) => {
                             const result = structuredClone(this._mappedDbrData);
                             for (let fieldName of this.fieldNames) {
                                 const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
@@ -1078,7 +1077,7 @@ export class Probe extends BaseWidget {
 
 
     ElementPvInput = ({ additionalStyle, type, name, placeholder, onChange, value, onBlur, onFocus }: any) => {
-        const refElement = React.useRef<any>(null);
+        const refElement = React.useRef<HTMLInputElement>(null);
         return (
             <input
                 ref={refElement}
@@ -1096,13 +1095,13 @@ export class Probe extends BaseWidget {
                     ...additionalStyle
                 }}
                 value={value}
-                onFocus={(event: any) => {
+                onFocus={(event) => {
                     event.preventDefault();
                     if (refElement.current !== null) {
                         refElement.current.style["color"] = "red";
                     }
                 }}
-                onBlur={(event: any) => {
+                onBlur={(event) => {
                     event.preventDefault();
                     if (refElement.current !== null) {
                         refElement.current.style["color"] = "#937878";
@@ -1196,7 +1195,7 @@ export class Probe extends BaseWidget {
                         defaultTextColor={"rgba(0,0,0,0)"}
                         highlightBackgroundColor={ElementRectangleButtonDefaultBackgroundColor}
                         highlightTextColor={ElementRectangleButtonDefaultTextColor}
-                        handleClick={(event: any) => {
+                        handleClick={(event) => {
                             const value = Object.values(this.getDbrData())[index];
                             navigator.clipboard.writeText(`${value}`);
                         }}
@@ -1209,8 +1208,8 @@ export class Probe extends BaseWidget {
     };
 
     private TableLineField = ({ index, property, value, defaultValue, isLink, isMenu, channelName, fieldMenu }: any) => {
-        const valueElementRef = React.useRef<any>(null);
-        const nameElementRef = React.useRef<any>(null);
+        const valueElementRef = React.useRef<HTMLInputElement>(null);
+        const nameElementRef = React.useRef<HTMLTableCellElement>(null);
         // always a string
         const [inputValue, setInputValue] = React.useState(`${value}`);
 
@@ -1305,7 +1304,7 @@ export class Probe extends BaseWidget {
                         <div>
                             {/* {inputValue} */}
                             <form
-                                onSubmit={(event: any) => {
+                                onSubmit={(event) => {
                                     event.preventDefault();
                                     try {
                                         const tcaChannel = g_widgets1.getTcaChannel(channelName);
@@ -1340,7 +1339,7 @@ export class Probe extends BaseWidget {
                                         cursor: accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? "default" : "not-allowed",
                                     }}
                                     type="text"
-                                    onChange={(event: any) => {
+                                    onChange={(event) => {
                                         event.preventDefault();
                                         setInputValue(event.target.value);
                                     }}
@@ -1367,7 +1366,7 @@ export class Probe extends BaseWidget {
                                     cursor: accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? "default" : "not-allowed",
                                 }}
                                 disabled={accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? false : true}
-                                onChange={(event: any) => {
+                                onChange={(event) => {
                                     // do not change the selection until the new data arrives
                                     event.preventDefault();
                                     try {
@@ -1404,7 +1403,7 @@ export class Probe extends BaseWidget {
                         paddingBottom={1}
                         highlightBackgroundColor={ElementRectangleButtonDefaultBackgroundColor}
                         highlightTextColor={ElementRectangleButtonDefaultTextColor}
-                        handleClick={(event: any) => {
+                        handleClick={(event) => {
                             // const value = Object.values(this.getDbrData())[index];
                             // const channelName = `${this._channelNames[0]}.${fieldName}`;
                             const value = g_widgets1.getChannelValue(channelName);
@@ -1507,7 +1506,7 @@ export class Probe extends BaseWidget {
 
         // press escape key to blur input box
         React.useEffect(() => {
-            const blurOnEscapeKey = (event: any) => {
+            const blurOnEscapeKey = (event: KeyboardEvent) => {
                 if (event.key === "Escape") {
                     keyRef.current?.blur();
                 }
@@ -1559,26 +1558,26 @@ export class Probe extends BaseWidget {
                         borderLeft: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(100,100,100,1)` : "none",
                         borderTop: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(100,100,100,1)` : "none",
                     }}
-                    onMouseOver={(event: any) => {
+                    onMouseOver={(event) => {
                         event.preventDefault();
                         if (!g_widgets1.isEditing()) {
                             if (this._getChannelAccessRight() > 1.5) {
-                                event.target.style["cursor"] = "text";
+                                (event.target as HTMLElement).style["cursor"] = "text";
                             } else {
-                                event.target.style["cursor"] = "not-allowed";
+                                (event.target as HTMLElement).style["cursor"] = "not-allowed";
                             }
                         } else {
-                            event.target.style["cursor"] = "default";
+                            (event.target as HTMLElement).style["cursor"] = "default";
                         }
                     }}
-                    onMouseOut={(event: any) => {
+                    onMouseOut={(event) => {
                         event.preventDefault();
-                        event.target.style["cursor"] = "default";
+                        (event.target as HTMLElement).style["cursor"] = "default";
                     }}
                     type="text"
                     name="value"
                     value={value}
-                    onFocus={(event: any) => {
+                    onFocus={(event) => {
                         isFocused.current = true;
                         // this.setFocusStatus(true);
                         keyRef.current?.select();
@@ -1587,7 +1586,7 @@ export class Probe extends BaseWidget {
                             keyRef.current.style["backgroundColor"] = this.getAllText()["highlightBackgroundColor"];
                         }
                     }}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event.preventDefault();
                         if (this._getChannelAccessRight() < 1.5) {
                             // no write access, do not update
@@ -1595,7 +1594,7 @@ export class Probe extends BaseWidget {
                         }
                         setValue(event.target.value);
                     }}
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         isFocused.current = false;
                         // this.setFocusStatus(false);
                         setValue(`${this.parseValue()}`);

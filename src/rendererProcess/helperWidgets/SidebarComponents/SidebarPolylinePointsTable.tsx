@@ -69,7 +69,7 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
                                             justifyContent: "flex-end",
                                         }} >
                                             <ElementButton
-                                                onClick={(event: any) => {
+                                                onClick={(event) => {
                                                     event?.preventDefault();
                                                     const newX =
                                                         10 +
@@ -121,14 +121,14 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
                                                 }}
                                             >
                                                 <ElementButton
-                                                    onClick={(event: any) => {
+                                                    onClick={(event) => {
                                                         this.updateWidgetMoveUpPoint(event, index);
                                                     }}
                                                 >
                                                     &#8593;
                                                 </ElementButton>
                                                 <ElementButton
-                                                    onClick={(event: any) => {
+                                                    onClick={(event) => {
                                                         this.updateWidgetMoveDownPoint(event, index);
                                                     }}
                                                 >
@@ -209,7 +209,7 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
                             Log.error(e);
                         }
                     }}
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         event.preventDefault();
                         if (elementRef.current !== null) {
                             elementRef.current.style["outline"] = "none";
@@ -227,7 +227,7 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
             
                         g_flushWidgets();
                     }}
-                    onFocus={(event: any) => {
+                    onFocus={(event) => {
                         event.preventDefault();
                         if (elementRef.current !== null) {
                             elementRef.current.style["outline"] = "solid 1px black";
@@ -250,7 +250,7 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
 
     // change 2 things for each direction: this.getStyle()["width"], this.getPointsRelativeX()
     // flush widget event: any, propertyValue: number, dataArray: number[], index: number, size: number
-    updateWidgetCoordinate = (event: any, newValue: number, dataArray: number[], index: number, direction: "x" | "y", doFlush: boolean = true) => {
+    updateWidgetCoordinate = (event: React.SyntheticEvent | null | undefined, newValue: number, dataArray: number[], index: number, direction: "x" | "y", doFlush: boolean = true) => {
         if (event) {
             event.preventDefault();
         }
@@ -300,7 +300,7 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
         }
     };
 
-    updateWidgetMoveUpPoint = (event: any, index: number) => {
+    updateWidgetMoveUpPoint = (event: React.SyntheticEvent | null | undefined, index: number) => {
         if (event) {
             event.preventDefault();
         }
@@ -346,7 +346,7 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
         g_flushWidgets();
     };
 
-    updateWidgetMoveDownPoint = (event: any, index: number) => {
+    updateWidgetMoveDownPoint = (event: React.SyntheticEvent | null | undefined, index: number) => {
         if (event) {
             event.preventDefault();
         }
@@ -467,8 +467,8 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
     // 	g_flushWidgets();
     // };
 
-    updateWidgetCoordinate2 = (event: any, propertyValue: number, dataArray: number[], index: number, size: number) => {
-        event.preventDefault();
+    updateWidgetCoordinate2 = (event: React.SyntheticEvent | null | undefined, propertyValue: number, dataArray: number[], index: number, size: number) => {
+        event?.preventDefault();
 
         const oldVal = dataArray[index] * size;
         if (propertyValue === oldVal) {
@@ -486,8 +486,8 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
         g_flushWidgets();
     };
 
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
 
         const oldVal = this.getText()["lineWidth"];
         if (propertyValue === oldVal) {

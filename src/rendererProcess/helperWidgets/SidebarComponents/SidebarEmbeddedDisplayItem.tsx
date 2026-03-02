@@ -70,7 +70,7 @@ export class SidebarEmbeddedDisplayItem {
 
                         {this.isValidDisplayFile(tdlFileName) === false ? null :
                             <this.StyledButton
-                                onClick={(event: any) => {
+                                onClick={(event) => {
                                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                     const displayWindowId = displayWindowClient.getWindowId();
                                     const mainWidget = this.getMainWidget();
@@ -124,7 +124,7 @@ export class SidebarEmbeddedDisplayItem {
                         }
 
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                 const displayWindowId = displayWindowClient.getWindowId();
                                 displayWindowClient.getIpcManager().sendFromRendererProcess("select-a-file", {
@@ -147,21 +147,21 @@ export class SidebarEmbeddedDisplayItem {
                         </this.StyledButton>
 
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.updateWidgetMoveUpItem(event);
                             }}
                         >
                             &#8593;{" "}
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.updateWidgetMoveDownItem(event);
                             }}
                         >
                             &#8595;{" "}
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.updateWidgetRemoveItem(event);
                             }}
                         >
@@ -208,7 +208,7 @@ export class SidebarEmbeddedDisplayItem {
                                 setItemName(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = mainWidget.getItemNames()[this.getIndex()];
                                 if (orig !== itemName) {
                                     setItemName(orig);
@@ -250,7 +250,7 @@ export class SidebarEmbeddedDisplayItem {
                                 setTdlFileName(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = `${mainWidget.getTdlFileNames()[this.getIndex()]}`;
                                 if (orig !== tdlFileName) {
                                     setTdlFileName(orig);
@@ -302,7 +302,7 @@ export class SidebarEmbeddedDisplayItem {
         marginBottom: 2,
     };
 
-    updateWidgetName = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetName = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -324,7 +324,7 @@ export class SidebarEmbeddedDisplayItem {
         g_flushWidgets();
     };
 
-    updateWidgetTdlFileName = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetTdlFileName = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -352,7 +352,7 @@ export class SidebarEmbeddedDisplayItem {
         g_flushWidgets();
     };
 
-    updateWidgetMoveDownItem = (event: any) => {
+    updateWidgetMoveDownItem = (event: React.SyntheticEvent | null | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -410,7 +410,7 @@ export class SidebarEmbeddedDisplayItem {
         g_flushWidgets();
     };
 
-    updateWidgetMoveUpItem = (event: any) => {
+    updateWidgetMoveUpItem = (event: React.SyntheticEvent | null | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -468,7 +468,7 @@ export class SidebarEmbeddedDisplayItem {
         g_flushWidgets();
     };
 
-    updateWidgetRemoveItem = (event: any) => {
+    updateWidgetRemoveItem = (event: React.SyntheticEvent | null | undefined) => {
         if (event) {
             event.preventDefault();
         }

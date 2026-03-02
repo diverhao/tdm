@@ -48,7 +48,7 @@ export class ProfilesViewer extends BaseWidget {
 
     DataViewerMoved: boolean = false;
 
-    wrapperRef: any = undefined;
+    wrapperRef: React.RefObject<HTMLDivElement | null> | undefined = undefined;
 
 
 
@@ -340,7 +340,7 @@ export class ProfilesViewer extends BaseWidget {
     }
 
     _ElementEpicsStatsPlotWrapper = ({ show }: any) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         this.wrapperRef = elementRef;
         return <div
             id="DataViewerWrapper"
@@ -493,20 +493,20 @@ export class ProfilesViewer extends BaseWidget {
     }
 
     _ElementChannelsText = ({ channelNames }: any) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 ref={elementRef}
                 style={{
                     cursor: "pointer",
                 }}
-                onMouseEnter={(event: any) => {
+                onMouseEnter={(event) => {
                     event.preventDefault();
                     if (elementRef.current !== null) {
                         elementRef.current.style["outline"] = "solid 3px rgba(150, 150, 150, 1)";
                     }
                 }}
-                onMouseLeave={(event: any) => {
+                onMouseLeave={(event) => {
                     event.preventDefault();
                     if (elementRef.current !== null) {
                         elementRef.current.style["outline"] = "none";
@@ -538,7 +538,7 @@ export class ProfilesViewer extends BaseWidget {
     }
 
     _ElementEpicsStatsChannelName = ({ channelName }: any) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 ref={elementRef}
@@ -584,7 +584,7 @@ export class ProfilesViewer extends BaseWidget {
                         justifyContent: "flex-start",
                         alignItems: "center",
                     }}
-                    onSubmit={(event: any) => {
+                    onSubmit={(event) => {
                         event.preventDefault();
                     }}
                 >
@@ -599,7 +599,7 @@ export class ProfilesViewer extends BaseWidget {
                             outline: "none",
                         }}
                         value={tcpFilterText}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             event.preventDefault();
                             setTcpFilterText(event.target.value);
                         }}
@@ -614,7 +614,7 @@ export class ProfilesViewer extends BaseWidget {
                         justifyContent: "flex-start",
                         alignItems: "center",
                     }}
-                    onSubmit={(event: any) => {
+                    onSubmit={(event) => {
                         event.preventDefault();
                     }}
                 >
@@ -628,7 +628,7 @@ export class ProfilesViewer extends BaseWidget {
                             outline: "none",
                         }}
                         value={channelFilterText}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             event.preventDefault();
                             setChannelFilterText(event.target.value);
                         }}
@@ -640,7 +640,7 @@ export class ProfilesViewer extends BaseWidget {
     }
 
     _ElementSelectionButton = ({ text, selectionText, selection, onMouseDown }: any) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         return <div
             ref={elementRef}
             style={{
@@ -656,13 +656,13 @@ export class ProfilesViewer extends BaseWidget {
             onMouseEnter={() => {
                 if (elementRef.current !== null) {
                     elementRef.current.style["cursor"] = "pointer";
-                    elementRef.current.style["opacity"] = 0.9;
+                    elementRef.current.style["opacity"] = "0.9";
                 }
             }}
             onMouseLeave={() => {
                 if (elementRef.current !== null) {
                     elementRef.current.style["cursor"] = "default";
-                    elementRef.current.style["opacity"] = 1;
+                    elementRef.current.style["opacity"] = "1";
                 }
             }}
             onMouseDown={onMouseDown}
@@ -1113,7 +1113,7 @@ export class ProfilesViewer extends BaseWidget {
 
 
     _ElementThumbnail = ({ displayWindowId, imageBase64, visible, type, index }: any) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         return (
             <div

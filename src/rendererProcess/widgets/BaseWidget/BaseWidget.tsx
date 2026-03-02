@@ -1,6 +1,5 @@
 
 import * as React from "react";
-import { MouseEvent } from "react";
 import { Channel_ACCESS_RIGHTS, getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
@@ -307,7 +306,7 @@ export abstract class BaseWidget {
     // (1) set the this._readyToDeselect bit to false: once the widget moves, the widget is not deselected when shift is pressed down
     // (2) move "GroupSelection2" as a whole, do not flush
     // (3) udpate sidebar with flush
-    _handleMouseMove = (event: any) => {
+    _handleMouseMove = (event: MouseEvent) => {
         event.preventDefault();
 
         if (!(g_widgets1.getRendererWindowStatus() === rendererWindowStatus.movingWidget)) {
@@ -334,7 +333,7 @@ export abstract class BaseWidget {
     // (5) reset real and virtual styles of the GroupSelection2, do not flush
     // (6) update sidebar with flush
     // (7) save history if widgets are moved
-    _handleMouseUp = (event: any) => {
+    _handleMouseUp = (event: MouseEvent) => {
         event.preventDefault();
         // (1)
         g_widgets1.setRendererWindowStatus(rendererWindowStatus.editing);
@@ -372,7 +371,7 @@ export abstract class BaseWidget {
         }
     };
 
-    _handleMouseDoubleClickOnResizer = (event: MouseEvent) => {
+    _handleMouseDoubleClickOnResizer = (event: React.MouseEvent<HTMLElement, MouseEvent>) => {
         event.preventDefault();
         this._handleMouseDoubleClick(event);
     }
@@ -383,7 +382,7 @@ export abstract class BaseWidget {
     // (4) reset real and virtual styles of GroupSelection2, no flush,
     // (5) save init virtual values in GroupSelection2, ready to resize
     //     no flush in this function
-    _handleMouseDownOnResizer(event: MouseEvent, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
+    _handleMouseDownOnResizer(event: React.MouseEvent<HTMLElement, MouseEvent>, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
         event.preventDefault();
         if (event.ctrlKey === true && event.button === 0) {
             this._handleMouseDown(event);
@@ -400,8 +399,8 @@ export abstract class BaseWidget {
         // (2)
         // they are set back to undefined upon mouseUpOnResizer
         if (this._tmp_mouseMoveOnResizerListener === undefined && this._tmp_mouseUpOnResizerListener === undefined) {
-            this._tmp_mouseMoveOnResizerListener = (event: any) => this._handleMouseMoveOnResizer(event, index);
-            this._tmp_mouseUpOnResizerListener = (event: any) => this._handleMouseUpOnResizer(event, index);
+            this._tmp_mouseMoveOnResizerListener = (event: MouseEvent) => this._handleMouseMoveOnResizer(event, index);
+            this._tmp_mouseUpOnResizerListener = (event: MouseEvent) => this._handleMouseUpOnResizer(event, index);
         }
         // (3)
         window.addEventListener("mousemove", this._tmp_mouseMoveOnResizerListener);
@@ -417,7 +416,7 @@ export abstract class BaseWidget {
 
     // (1) resize all elements in GroupSelection2
     // (2) update sidebar with flush
-    _handleMouseMoveOnResizer = (event: any, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") => {
+    _handleMouseMoveOnResizer = (event: MouseEvent, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") => {
         event.preventDefault();
 
         if (!rendererWindowStatus[g_widgets1.getRendererWindowStatus()].includes("resizingWidget")) {
@@ -438,7 +437,7 @@ export abstract class BaseWidget {
     // (4) reset real and virtual styles of the GroupSelection2, do not flush
     // (5) update sidebar with flush
     // (6) if the mouse is moved, add this event to history
-    _handleMouseUpOnResizer(event: any, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
+    _handleMouseUpOnResizer(event: MouseEvent, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
         event.preventDefault();
         // (1)
         g_widgets1.setRendererWindowStatus(rendererWindowStatus.editing);
@@ -462,7 +461,7 @@ export abstract class BaseWidget {
         }
     }
 
-    _handleMouseDoubleClick = (event: MouseEvent): void => {
+    _handleMouseDoubleClick = (event: React.MouseEvent<HTMLElement, MouseEvent>): void => {
         if (g_widgets1.isEditing()) {
             this.selectOnMouseDoubleClick(true);
         } else {
@@ -784,14 +783,14 @@ export abstract class BaseWidget {
         return (
             <>
                 {/* order is important: BDFH -> ACEG */}
-                <div style={this.getResizerStyles().B} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "B")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
-                <div style={this.getResizerStyles().D} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "D")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
-                <div style={this.getResizerStyles().F} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "F")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
-                <div style={this.getResizerStyles().H} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "H")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
-                <div style={this.getResizerStyles().A} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "A")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
-                <div style={this.getResizerStyles().C} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "C")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
-                <div style={this.getResizerStyles().E} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "E")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
-                <div style={this.getResizerStyles().G} onMouseDown={(event: any) => this._handleMouseDownOnResizer(event, "G")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().B} onMouseDown={(event) => this._handleMouseDownOnResizer(event, "B")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().D} onMouseDown={(event) => this._handleMouseDownOnResizer(event, "D")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().F} onMouseDown={(event) => this._handleMouseDownOnResizer(event, "F")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().H} onMouseDown={(event) => this._handleMouseDownOnResizer(event, "H")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().A} onMouseDown={(event) => this._handleMouseDownOnResizer(event, "A")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().C} onMouseDown={(event) => this._handleMouseDownOnResizer(event, "C")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().E} onMouseDown={(event) => this._handleMouseDownOnResizer(event, "E")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
+                <div style={this.getResizerStyles().G} onMouseDown={(event) => this._handleMouseDownOnResizer(event, "G")} onDoubleClick={this._handleMouseDoubleClickOnResizer} onContextMenu={(event) => { event?.preventDefault() }}></div>
             </>
         );
     };
@@ -1165,13 +1164,13 @@ export abstract class BaseWidget {
             type: this.getType(),
             widgetKey: this.getWidgetKey(),
             key: this.getWidgetKey(),
-            style: structuredClone(this.getStyle()),
-            text: structuredClone(this.getText()),
+            style: {...this.getStyle()},
+            text: {...this.getText()},
             // channelNames: [...this.getChannelNames()],
             // the un-processed channel names
             channelNames: [...this.getChannelNamesLevel0()],
             groupNames: [...this.getGroupNames()],
-            rules: structuredClone(this.getRulesTdl()),
+            rules: {...this.getRulesTdl()},
         };
         // deselect tdl
         result.style.outlineStyle = "none";
@@ -1908,7 +1907,7 @@ export abstract class BaseWidget {
     /**
      * Show a thick light gray outline when mouse enters the write widget
      */
-    hanldeMouseEnterWriteWidget = (event: any, elementRef: any) => {
+    hanldeMouseEnterWriteWidget = (event: React.MouseEvent<Element>, elementRef: React.RefObject<HTMLElement | null>) => {
         event.preventDefault();
         if (!g_widgets1.isEditing() && elementRef.current !== null) {
             elementRef.current.style["outlineStyle"] = "solid";
@@ -1925,7 +1924,7 @@ export abstract class BaseWidget {
     /**
      * hide the thick light gray outline when mouse leaves the write widget
      */
-    handleMouseLeaveWriteWidget = (event: any, elementRef: any) => {
+    handleMouseLeaveWriteWidget = (event: React.MouseEvent<Element>, elementRef: React.RefObject<HTMLElement | null>) => {
         event.preventDefault();
         if (!g_widgets1.isEditing() && elementRef.current !== null) {
             // elementRef.current.style["outline"] = calcOutline();

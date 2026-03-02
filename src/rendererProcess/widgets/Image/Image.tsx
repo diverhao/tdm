@@ -209,7 +209,7 @@ export class Image extends BaseWidget {
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     forceUpdate = (input: any) => { };
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementAreaRaw = (): React.JSX.Element => {
         const [, forceUpdate] = React.useState({});
         this.forceUpdate = forceUpdate;
 
@@ -269,7 +269,7 @@ export class Image extends BaseWidget {
         return (
             <div
                 style={{ ...style, alignItems: "flex-end" }}
-                onMouseDown={(event: any) => {
+                onMouseDown={(event) => {
                     this._handleMouseDown(event);
                     if (this.showConfigPage === true) {
                         this.showConfigPage = false;
@@ -310,7 +310,7 @@ export class Image extends BaseWidget {
        0.5px  0.5px 0 white
     `
             }}
-                onMouseDown={(event: any) => {
+                onMouseDown={(event) => {
                     event.stopPropagation();
                 }}
             >
@@ -636,7 +636,7 @@ export class Image extends BaseWidget {
                     <this._ElementYrange></this._ElementYrange> */}
                         {/* config page */}
                         <img
-                            onMouseDown={(event: any) => {
+                            onMouseDown={(event) => {
                                 event.stopPropagation();
                                 if (this.showConfigPage === true) {
                                     this.showConfigPage = false;
@@ -1404,7 +1404,7 @@ export class Image extends BaseWidget {
                         this.setHintText("");
                     }}
                     onSubmit={
-                        (event: any) => {
+                        (event: React.FormEvent<HTMLFormElement>) => {
                             event.preventDefault();
                             let value = parseFloat(zMin);
                             if (isNaN(value)) {
@@ -1429,11 +1429,11 @@ export class Image extends BaseWidget {
                         value={autoZ === true ? this.zMin : zMin}
                         type={"text"}
                         readOnly={autoZ}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             const valueStr = event.target.value;
                             setZmin(valueStr);
                         }}
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             if (`${this.getText()["zMin"]}` !== zMin) {
                                 setZmax(`${this.getText()["zMin"]}`)
                             }
@@ -1452,7 +1452,7 @@ export class Image extends BaseWidget {
                     }}
 
                     onSubmit={
-                        (event: any) => {
+                        (event: React.FormEvent<HTMLFormElement>) => {
                             event.preventDefault();
                             let value = parseFloat(zMax);
                             if (isNaN(value)) {
@@ -1477,11 +1477,11 @@ export class Image extends BaseWidget {
                         value={autoZ === true ? this.zMax : zMax}
                         type={"text"}
                         readOnly={autoZ}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             const valueStr = event.target.value;
                             setZmax(valueStr);
                         }}
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             if (`${this.getText()["zMax"]}` !== zMax) {
                                 setZmax(`${this.getText()["zMax"]}`)
                             }
@@ -1499,7 +1499,7 @@ export class Image extends BaseWidget {
 
                     type={"checkbox"}
                     checked={autoZ}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         this.getText()["autoZ"] = !autoZ;
                         setAutoZ(!autoZ);
                         this.processData(false);
@@ -1536,7 +1536,7 @@ export class Image extends BaseWidget {
                     <div>X min.:</div>
                     <form
                         onSubmit={
-                            (event: any) => {
+                            (event: React.FormEvent<HTMLFormElement>) => {
                                 event.preventDefault();
                                 let value = parseFloat(xMin);
                                 if (isNaN(value)) {
@@ -1557,11 +1557,11 @@ export class Image extends BaseWidget {
                             }}
                             value={xMin}
                             type={"text"}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 const valueStr = event.target.value;
                                 setXmin(valueStr);
                             }}
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (`${this.getText()["xMin"]}` !== xMin) {
                                     setXmax(`${this.getText()["xMin"]}`)
                                 }
@@ -1584,7 +1584,7 @@ export class Image extends BaseWidget {
                     <div>X max.:</div>
                     <form
                         onSubmit={
-                            (event: any) => {
+                            (event: React.FormEvent<HTMLFormElement>) => {
                                 event.preventDefault();
                                 let value = parseFloat(xMax);
                                 if (isNaN(value)) {
@@ -1606,11 +1606,11 @@ export class Image extends BaseWidget {
                             }}
                             value={xMax}
                             type={"text"}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 const valueStr = event.target.value;
                                 setXmax(valueStr);
                             }}
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (`${this.getText()["xMax"]}` !== xMax) {
                                     setXmax(`${this.getText()["xMax"]}`)
                                 }
@@ -1650,7 +1650,7 @@ export class Image extends BaseWidget {
 
                     <form
                         onSubmit={
-                            (event: any) => {
+                            (event: React.FormEvent<HTMLFormElement>) => {
                                 event.preventDefault();
                                 let value = parseFloat(yMin);
                                 if (isNaN(value)) {
@@ -1670,11 +1670,11 @@ export class Image extends BaseWidget {
                             }}
                             value={yMin}
                             type={"text"}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 const valueStr = event.target.value;
                                 setYmin(valueStr);
                             }}
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (`${this.getText()["yMin"]}` !== yMin) {
                                     setYmax(`${this.getText()["yMin"]}`)
                                 }
@@ -1699,7 +1699,7 @@ export class Image extends BaseWidget {
 
                     <form
                         onSubmit={
-                            (event: any) => {
+                            (event: React.FormEvent<HTMLFormElement>) => {
                                 event.preventDefault();
                                 let value = parseFloat(yMax);
                                 if (isNaN(value)) {
@@ -1719,11 +1719,11 @@ export class Image extends BaseWidget {
                             }}
                             value={yMax}
                             type={"text"}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 const valueStr = event.target.value;
                                 setYmax(valueStr);
                             }}
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (`${this.getText()["yMax"]}` !== yMax) {
                                     setYmax(`${this.getText()["yMax"]}`)
                                 }
@@ -1735,7 +1735,7 @@ export class Image extends BaseWidget {
                 {/* <input
                     type={"checkbox"}
                     checked={autoXY}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         this.getText()["autoXY"] = !autoXY;
                         setAutoXY(!autoXY);
                         // this.processData();
@@ -1780,7 +1780,7 @@ export class Image extends BaseWidget {
                         }}
                         id="myDropdown"
                         value={colorMap}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             setColorMap(event.target.value);
                             this.switchColorMap(event.target.value);
                         }}
@@ -1957,7 +1957,7 @@ export class Image extends BaseWidget {
                     height: this.getImageSize()[1],
                 }}
 
-                onMouseDown={(event: any) => {
+                onMouseDown={(event) => {
                     if (event.button !== 0) {
                         return;
                     }
@@ -1981,7 +1981,7 @@ export class Image extends BaseWidget {
                     })
                 }}
 
-                onWheel={(event: any) => {
+                onWheel={(event) => {
                     event.preventDefault();
 
                     const zoomFactor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
@@ -2015,7 +2015,7 @@ export class Image extends BaseWidget {
     resizeRoiRightHandlers: any[] = [];
     resizeRoiRightHandlersMouseUp: any[] = [];
 
-    resizeRoiTopHandler = (event: any, index: number) => {
+    resizeRoiTopHandler = (event: MouseEvent | undefined, index: number) => {
         if (event === undefined) {
             return;
         }
@@ -2036,14 +2036,14 @@ export class Image extends BaseWidget {
 
     // resizingRoi = false;
 
-    resizeRoiTopHandlerMouseUp = (event: any, index: number) => {
+    resizeRoiTopHandlerMouseUp = (event: MouseEvent | undefined, index: number) => {
         // this.resizingRoi = false;
         this.updateRoiPvs(index);
         window.removeEventListener("mousemove", this.resizeRoiTopHandlers[index]);
         window.removeEventListener("mouseup", this.resizeRoiTopHandlersMouseUp[index]);
     };
 
-    resizeRoiBottomHandler = (event: any, index: number) => {
+    resizeRoiBottomHandler = (event: MouseEvent | undefined, index: number) => {
         if (event === undefined) {
             return;
         }
@@ -2059,14 +2059,14 @@ export class Image extends BaseWidget {
         });
     };
 
-    resizeRoiBottomHandlerMouseUp = (event: any, index: number) => {
+    resizeRoiBottomHandlerMouseUp = (event: MouseEvent | undefined, index: number) => {
         // this.resizingRoi = false;
         this.updateRoiPvs(index);
         window.removeEventListener("mousemove", this.resizeRoiBottomHandlers[index]);
         window.removeEventListener("mouseup", this.resizeRoiBottomHandlersMouseUp[index]);
     };
 
-    resizeRoiLeftHandler = (event: any, index: number) => {
+    resizeRoiLeftHandler = (event: MouseEvent | undefined, index: number) => {
         if (event === undefined) {
             return;
         }
@@ -2086,14 +2086,14 @@ export class Image extends BaseWidget {
         });
     };
 
-    resizeRoiLeftHandlerMouseUp = (event: any, index: number) => {
+    resizeRoiLeftHandlerMouseUp = (event: MouseEvent | undefined, index: number) => {
         // this.resizingRoi = false;
         this.updateRoiPvs(index);
         window.removeEventListener("mousemove", this.resizeRoiLeftHandlers[index]);
         window.removeEventListener("mouseup", this.resizeRoiLeftHandlersMouseUp[index]);
     };
 
-    resizeRoiRightHandler = (event: any, index: number) => {
+    resizeRoiRightHandler = (event: MouseEvent | undefined, index: number) => {
         if (event === undefined) {
             return;
         }
@@ -2108,7 +2108,7 @@ export class Image extends BaseWidget {
         });
     };
 
-    resizeRoiRightHandlerMouseUp = (event: any, index: number) => {
+    resizeRoiRightHandlerMouseUp = (event: MouseEvent | undefined, index: number) => {
         // this.resizingRoi = false;
         this.updateRoiPvs(index);
         window.removeEventListener("mousemove", this.resizeRoiRightHandlers[index]);
@@ -2243,7 +2243,7 @@ export class Image extends BaseWidget {
                         height: 10,
                         cursor: "ns-resize",
                     }}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event) => {
                         // this.resizingRoi = true;
                         window.addEventListener("mousemove", this.resizeRoiTopHandlers[index]);
                         window.addEventListener("mouseup", this.resizeRoiTopHandlersMouseUp[index]);
@@ -2262,7 +2262,7 @@ export class Image extends BaseWidget {
                         cursor: "ew-resize",
 
                     }}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event) => {
                         // this.resizingRoi = true;
                         window.addEventListener("mousemove", this.resizeRoiLeftHandlers[index]);
                         window.addEventListener("mouseup", this.resizeRoiLeftHandlersMouseUp[index]);
@@ -2280,7 +2280,7 @@ export class Image extends BaseWidget {
                         width: "100%",
                         cursor: "ns-resize",
                     }}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event) => {
                         // this.resizingRoi = true;
                         window.addEventListener("mousemove", this.resizeRoiBottomHandlers[index]);
                         window.addEventListener("mouseup", this.resizeRoiBottomHandlersMouseUp[index]);
@@ -2298,7 +2298,7 @@ export class Image extends BaseWidget {
                         width: 10,
                         cursor: "ew-resize",
                     }}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event) => {
                         // this.resizingRoi = true;
                         window.addEventListener("mousemove", this.resizeRoiRightHandlers[index]);
                         window.addEventListener("mouseup", this.resizeRoiRightHandlersMouseUp[index]);

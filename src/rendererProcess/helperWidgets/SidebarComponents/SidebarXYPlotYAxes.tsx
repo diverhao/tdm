@@ -46,8 +46,8 @@ export class SidebarXYPlotYAxes extends SidebarComponent {
 	};
     
 
-	updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-		event.preventDefault();
+	updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+		event?.preventDefault();
 		const mainWidget = this.getMainWidget() as PvTable;
 
 		const newVal = propertyValue as string;

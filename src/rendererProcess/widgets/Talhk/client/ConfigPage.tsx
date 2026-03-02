@@ -240,7 +240,7 @@ export class ConfigPage {
                             }}
                         >
                             <ElementRectangleButton
-                                handleMouseDown={(event: any) => {
+                                handleMouseDown={() => {
                                     this.showingConfigPage = "";
                                     this.getMainPage().forceUpdate();
                                 }}
@@ -259,12 +259,12 @@ export class ConfigPage {
 
     _ElementConfigTitle = ({ nodeName0, pathStr, index }: any) => {
         const [nodeName, setNodeName] = React.useState(nodeName0);
-        const inputRef = React.useRef<any>(null);
+        const inputRef = React.useRef<HTMLInputElement>(null);
 
         const submitting = React.useRef<boolean>(false);
 
         return (
-            <form onSubmit={(event: any) => {
+            <form onSubmit={(event) => {
                 event.preventDefault();
                 const path = JSON.parse(pathStr) as string[];
                 const nodeConfigJson = this.getMainPage().getData(path);
@@ -293,19 +293,19 @@ export class ConfigPage {
                     }}
                     spellCheck={false}
                     value={nodeName}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event.preventDefault();
                         nodeName0 = event.target.value;
                         setNodeName(event.target.value);
                     }}
-                    onFocus={(event: any) => {
+                    onFocus={(event) => {
                         if (inputRef.current !== null) {
                             inputRef.current.style["backgroundColor"] = "rgba(255, 255, 0, 1)";
                             inputRef.current.style["outline"] = "solid 1px rgba(120, 120, 120, 1)";
                             inputRef.current.style["cursor"] = "text";
                         }
                     }}
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         if (inputRef.current !== null) {
                             inputRef.current.style["backgroundColor"] = "rgba(255, 255, 0, 0)";
                             inputRef.current.style["outline"] = "none";
@@ -318,7 +318,7 @@ export class ConfigPage {
 
                         }
                     }}
-                    onKeyDown={(event: any) => {
+                    onKeyDown={(event) => {
                         if (event.key === "Escape") {
                             if (inputRef.current !== null) {
                                 inputRef.current.blur();
@@ -391,13 +391,13 @@ export class ConfigPage {
                         width: "60%",
                     }}
 
-                    onSubmit={(event: any) => {
+                    onSubmit={(event) => {
                         event.preventDefault();
                     }}>
                     <input
                         type="checkbox"
                         checked={value}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             event.preventDefault();
                             this.getMainPage().sendNewData(JSON.parse(pathStr), !value1)
                             setValue1(!value1);
@@ -625,8 +625,8 @@ export class ConfigPage {
         // const [name1, setName1] = React.useState(name);
         // const [details1, setDetails1] = React.useState(details);
 
-        const elementRef = React.useRef<any>(null);
-        const elementControlRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
+        const elementControlRef = React.useRef<HTMLDivElement>(null);
 
         return (
             <div
@@ -877,8 +877,8 @@ export class ConfigPage {
         // const [name1, setName1] = React.useState(name);
         // const [details1, setDetails1] = React.useState(details);
 
-        const elementRef = React.useRef<any>(null);
-        const elementControlRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
+        const elementControlRef = React.useRef<HTMLDivElement>(null);
 
         return (
             <div
@@ -1038,7 +1038,7 @@ export class ConfigPage {
 
     _ElementInputBoxFieldValue = ({ pathStr, value, width, type }: any) => {
 
-        const inputRef = React.useRef<any>(null);
+        const inputRef = React.useRef<HTMLInputElement>(null);
 
         const [value1, setValue1] = React.useState(`${value}`);
 
@@ -1046,7 +1046,7 @@ export class ConfigPage {
 
         return (
             <form
-                onSubmit={(event: any) => {
+                onSubmit={(event) => {
                     event.preventDefault();
                     if (type === "number") {
                         const valueNum = parseFloat(value1);
@@ -1073,7 +1073,7 @@ export class ConfigPage {
                     }
 
                 }}
-                onKeyDown={(event: any) => {
+                onKeyDown={(event) => {
                     if (event.key === "Escape") {
                         if (inputRef.current !== null) {
                             inputRef.current.blur()
@@ -1099,13 +1099,13 @@ export class ConfigPage {
                         border: "solid 1px rgba(120, 120, 120, 0)",
                         cursor: "pointer",
                     }}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event.preventDefault();
                         setValue1(event.target.value);
 
                     }}
                     value={value1}
-                    onFocus={(event: any) => {
+                    onFocus={(event) => {
                         if (inputRef.current !== null) {
                             inputRef.current.style["backgroundColor"] = "rgba(255,255,0,1)";
                             inputRef.current.style["border"] = "solid 1px rgba(120, 120, 120, 1)";
@@ -1113,7 +1113,7 @@ export class ConfigPage {
                         }
                     }}
 
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         if (inputRef.current !== null) {
                             inputRef.current.style["backgroundColor"] = "rgba(255,255,255,0)";
                             inputRef.current.style["border"] = "solid 1px rgba(120, 120, 120, 0)";
@@ -1134,7 +1134,7 @@ export class ConfigPage {
 
     _ElementInputBoxFieldName = ({ pathStr, width }: any) => {
 
-        const inputRef = React.useRef<any>(null);
+        const inputRef = React.useRef<HTMLInputElement>(null);
 
         const [name, setName] = React.useState(JSON.parse(pathStr)[JSON.parse(pathStr).length - 1]);
 
@@ -1142,7 +1142,7 @@ export class ConfigPage {
 
         return (
             <form
-                onSubmit={(event: any) => {
+                onSubmit={(event) => {
                     event.preventDefault();
                     if (inputRef.current !== null) {
                         submitting.current = true;
@@ -1156,7 +1156,7 @@ export class ConfigPage {
                     replaceObjectField(parentData, JSON.parse(pathStr)[JSON.parse(pathStr).length - 1], name, thisData);
                     this.getMainPage().sendNewData(parentPath, parentData);
                 }}
-                onKeyDown={(event: any) => {
+                onKeyDown={(event) => {
                     if (event.key === "Escape") {
                         if (inputRef.current !== null) {
                             inputRef.current.blur()
@@ -1181,13 +1181,13 @@ export class ConfigPage {
                         border: "solid 1px rgba(120, 120, 120, 0)",
                         cursor: "pointer",
                     }}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event.preventDefault();
                         setName(event.target.value);
 
                     }}
                     value={name}
-                    onFocus={(event: any) => {
+                    onFocus={(event) => {
                         if (inputRef.current !== null) {
                             inputRef.current.style["backgroundColor"] = "rgba(255,255,0,1)";
                             inputRef.current.style["border"] = "solid 1px rgba(120, 120, 120, 1)";
@@ -1195,7 +1195,7 @@ export class ConfigPage {
                         }
                     }}
 
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         if (inputRef.current !== null) {
                             inputRef.current.style["backgroundColor"] = "rgba(255,255,255,0)";
                             inputRef.current.style["border"] = "solid 1px rgba(120, 120, 120, 0)";

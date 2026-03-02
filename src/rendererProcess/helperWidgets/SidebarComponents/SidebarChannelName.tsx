@@ -92,7 +92,7 @@ export class SidebarChannelName extends SidebarComponent {
                         }
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         setShowChannelNameHint(false);
                         setChannelNameHintData([]);
 
@@ -113,7 +113,7 @@ export class SidebarChannelName extends SidebarComponent {
         );
     };
 
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
 
         if (typeof propertyValue !== "string") {

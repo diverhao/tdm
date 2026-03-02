@@ -22,7 +22,7 @@ export class RepeaterSidebar extends BaseWidgetSidebar {
 
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
-    updateFromWidget = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => { };
+    updateFromWidget = (event: React.SyntheticEvent | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => { };
 
     _Element = (): React.JSX.Element => {
         // when we move the widget out of vertical range, the sidebar width is not calculated correctly due to the asynchronous 
@@ -38,7 +38,7 @@ export class RepeaterSidebar extends BaseWidgetSidebar {
 
         // formally defined in main widget, actually defined in sidebar, invoked from main widget
         const _updateFromWidget = React.useCallback(
-            (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => {
+            (event: React.SyntheticEvent | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => {
                 switch (propertyName) {
                     case "left":
                         this.getSidebarX().getUpdateFromWidget()(propertyValue as number);

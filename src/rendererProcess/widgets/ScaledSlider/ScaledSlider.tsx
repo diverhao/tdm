@@ -17,12 +17,12 @@ import { defaultScaledSliderTdl, type_ScaledSlider_tdl } from "../../../common/t
 export class ScaledSlider extends BaseWidget {
     readonly sliderBlockPercentage = 50;
     showSettings: boolean = false;
-    mouseDownIntervalTimer: any = undefined;
-    keyDownIntervalTimer: any = undefined;
+    mouseDownIntervalTimer: ReturnType<typeof setTimeout> | undefined = undefined;
+    keyDownIntervalTimer: ReturnType<typeof setTimeout> | undefined = undefined;
     readonly mouseDownDelay: number = 1000; // ms
-    _tmp_handleMouseMove: any;
-    _tmp_handleMouseUp: any;
-    _dragThrottleTimer: any = undefined;
+    _tmp_handleMouseMove: ((event: MouseEvent) => void) | undefined = undefined;
+    _tmp_handleMouseUp: ((event: MouseEvent) => void) | undefined = undefined;
+    _dragThrottleTimer: ReturnType<typeof setTimeout> | undefined = undefined;
     _pendingDragValue: number | undefined = undefined;
     _isDragging: boolean = false;
 
@@ -63,7 +63,7 @@ export class ScaledSlider extends BaseWidget {
         );
     };
 
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementAreaRaw = (): React.JSX.Element => {
         const whiteSpace = this.getAllText().wrapWord ? "normal" : "pre";
         const justifyContent = this.getAllText().horizontalAlign;
         const alignItems = this.getAllText().verticalAlign;
@@ -173,7 +173,7 @@ export class ScaledSlider extends BaseWidget {
 
         const [channelValue, setChannelValue] = React.useState<number>(parseFloat(this._getChannelValue(true) as string));
         const [stepSize, setStepSize] = React.useState<number>(this.getAllText()["stepSize"]);
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
 
         const width = 200;
         let height = 200; // we assume this
@@ -234,7 +234,7 @@ export class ScaledSlider extends BaseWidget {
                         alignItems: "center",
                         width: "100%",
                     }}
-                    onSubmit={(event: any) => {
+                    onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
                         event.preventDefault();
                     }}
                 >
@@ -256,7 +256,7 @@ export class ScaledSlider extends BaseWidget {
                             }
                         }}
                         // must use enter to change the value
-                        onBlur={(event: any) => { }}
+                        onBlur={() => { }}
                     />
                 </form>
                 <form
@@ -268,7 +268,7 @@ export class ScaledSlider extends BaseWidget {
                         justifyContent: "space-between",
                         alignItems: "center",
                     }}
-                    onSubmit={(event: any) => {
+                    onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
                         event.preventDefault();
                     }}
                 >
@@ -290,7 +290,7 @@ export class ScaledSlider extends BaseWidget {
                             }
                         }}
                         // must use enter to change the value
-                        onBlur={(event: any) => { }}
+                        onBlur={() => { }}
                     />
                 </form>
                 <div
@@ -303,7 +303,7 @@ export class ScaledSlider extends BaseWidget {
                     }}
                 >
                     <ElementRectangleButton
-                        handleClick={(event: any) => {
+                        handleClick={(event: React.MouseEvent<HTMLElement>) => {
                             event.preventDefault();
                             try {
                                 const channelName = this.getChannelNames()[0];
@@ -326,7 +326,7 @@ export class ScaledSlider extends BaseWidget {
                         OK
                     </ElementRectangleButton>
                     <ElementRectangleButton
-                        handleClick={(event: any) => {
+                        handleClick={(event: React.MouseEvent<HTMLElement>) => {
                             event?.preventDefault();
                             this.closeSettings();
                         }}
@@ -402,8 +402,8 @@ export class ScaledSlider extends BaseWidget {
                 scale={scaleParam["scale"]}
                 color={scaleParam["color"]}
                 compact={scaleParam["compact"]}
-                showTicks={true}  
-                showLabels={true}  
+                showTicks={true}
+                showLabels={true}
                 showAxis={false}
             ></Scale>
         )
@@ -422,16 +422,16 @@ export class ScaledSlider extends BaseWidget {
                 scale={scaleParam["scale"]}
                 color={scaleParam["color"]}
                 compact={scaleParam["compact"]}
-                showTicks={true}  
-                showLabels={true}  
+                showTicks={true}
+                showLabels={true}
                 showAxis={false}
             ></Scale>
         )
     };
 
     _ElementSliderContemporary = () => {
-        const sliderRef = React.useRef<any>(null);
-        const blockRef = React.useRef<any>(null);
+        const sliderRef = React.useRef<HTMLDivElement>(null);
+        const blockRef = React.useRef<HTMLDivElement>(null);
         const blockSize = 14;
         let blockColor = "rgba(255, 255, 255 ,1)";
         let blockHighlightColor = "rgba(0, 100, 255, 1)";
@@ -452,23 +452,23 @@ export class ScaledSlider extends BaseWidget {
                     overflow: "visible",
                     flexShrink: "0",
                 }}
-                onKeyDown={(event: any) => {
+                onKeyDown={(event) => {
                     this.handleKeyDown(event);
                 }}
-                onKeyUp={(event: any) => {
+                onKeyUp={(event) => {
                     this.handleKeyUp(event);
                 }}
-                onMouseDown={(event: any) => {
+                onMouseDown={(event) => {
                     this.handleMouseDown(event, blockRef);
                 }}
-                onMouseUp={(event: any) => {
+                onMouseUp={(event) => {
                     this.handleMouseUp(event);
                 }}
                 // focus the element so that we can use keyboard event
-                onMouseEnter={(event: any) => {
+                onMouseEnter={(event) => {
                     this.handleMouseEnter(event, sliderRef);
                 }}
-                onMouseLeave={(event: any) => {
+                onMouseLeave={(event) => {
                     this.handleMouseLeave(event, sliderRef, "none");
                 }}
             >
@@ -497,7 +497,7 @@ export class ScaledSlider extends BaseWidget {
                 {/* slider block */}
                 <div
                     ref={blockRef}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event) => {
                         this.handleMouseDownOnBlock(event, blockRef, blockHighlightColor, blockSize, blockColor);
                     }}
                     style={{
@@ -521,8 +521,8 @@ export class ScaledSlider extends BaseWidget {
         const blockWidth = 20;
         const width = this.getAllStyle()["width"] - 2 * shadowWidth;
 
-        const sliderRef = React.useRef<any>(null);
-        const blockRef = React.useRef<any>(null);
+        const sliderRef = React.useRef<HTMLDivElement>(null);
+        const blockRef = React.useRef<HTMLDivElement>(null);
         let blockColor = "rgba(200, 200, 200, 1)";
         let blockHighlightColor = "rgba(215, 215, 215, 1)";
 
@@ -556,23 +556,23 @@ export class ScaledSlider extends BaseWidget {
                     flexBasis: 0,
                     boxSizing: "border-box",
                 }}
-                onKeyDown={(event: any) => {
+                onKeyDown={(event) => {
                     this.handleKeyDown(event);
                 }}
-                onKeyUp={(event: any) => {
+                onKeyUp={(event) => {
                     this.handleKeyUp(event);
                 }}
-                onMouseDown={(event: any) => {
+                onMouseDown={(event) => {
                     this.handleMouseDown(event, blockRef);
                 }}
-                onMouseUp={(event: any) => {
+                onMouseUp={(event) => {
                     this.handleMouseUp(event);
                 }}
                 // focus the element so that we can use keyboard event
-                onMouseEnter={(event: any) => {
+                onMouseEnter={(event) => {
                     this.handleMouseEnter(event, sliderRef);
                 }}
-                onMouseLeave={(event: any) => {
+                onMouseLeave={(event) => {
                     this.handleMouseLeave(event, sliderRef, outline);
                 }}
             >
@@ -587,7 +587,7 @@ export class ScaledSlider extends BaseWidget {
                 {/* slider block */}
                 <div
                     ref={blockRef}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event) => {
                         this.handleMouseDownOnBlock(event, blockRef, blockHighlightColor, blockWidth, blockColor);
                     }}
                     style={{
@@ -662,7 +662,7 @@ export class ScaledSlider extends BaseWidget {
      * (mouseDownDelay), repeats at a faster rate (mouseDownDelay / 4) — same
      * timing as handleMouseDown.
      */
-    handleKeyDown = (event: any) => {
+    handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
         const key = event.key;
         if (key === undefined) {
             return;
@@ -698,12 +698,12 @@ export class ScaledSlider extends BaseWidget {
         this.keyDownIntervalTimer = setTimeout(repeat, this.mouseDownDelay);
     }
 
-    handleKeyUp = (event: any) => {
+    handleKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
         clearTimeout(this.keyDownIntervalTimer);
         this.keyDownIntervalTimer = undefined;
     }
 
-    handleMouseDown = (event: any, blockRef: any) => {
+    handleMouseDown = (event: React.MouseEvent<HTMLDivElement>, blockRef: any) => {
         event.preventDefault();
         if (event.button !== 0) return;
         if (this._getChannelAccessRight() < 1.5) return;
@@ -722,7 +722,7 @@ export class ScaledSlider extends BaseWidget {
         this.mouseDownIntervalTimer = setTimeout(repeat, this.mouseDownDelay);
     };
 
-    handleMouseUp = (event: any) => {
+    handleMouseUp = (event: React.MouseEvent<HTMLDivElement>) => {
         clearTimeout(this.mouseDownIntervalTimer);
         this.mouseDownIntervalTimer = undefined;
     }
@@ -736,7 +736,7 @@ export class ScaledSlider extends BaseWidget {
      * 
      * Does nothing in editing mode (when the display is being designed).
      */
-    handleMouseEnter = (event: any, sliderRef: any) => {
+    handleMouseEnter = (event: React.MouseEvent<HTMLDivElement>, sliderRef: any) => {
         event.preventDefault();
 
         if (g_widgets1.isEditing()) {
@@ -766,7 +766,7 @@ export class ScaledSlider extends BaseWidget {
      * (4) Restore the default outline (e.g. thin 3D outline for traditional
      *     appearance, or "none" for contemporary)
      */
-    handleMouseLeave = (event: any, sliderRef: any, outline: string) => {
+    handleMouseLeave = (event: React.MouseEvent<HTMLDivElement>, sliderRef: any, outline: string) => {
         if (sliderRef.current === null) {
             return;
         }
@@ -793,7 +793,7 @@ export class ScaledSlider extends BaseWidget {
      * than by React re-renders from channel readback (which would lag behind).
      * Channel value puts are throttled to `mouseDownDelay / 4` interval.
      */
-    handleMouseDownOnBlock = (event: any, blockRef: any, blockHighlightColor: string, blockWidth: number, blockColor: string) => {
+    handleMouseDownOnBlock = (event: React.MouseEvent<HTMLDivElement>, blockRef: any, blockHighlightColor: string, blockWidth: number, blockColor: string) => {
         // do not propagate up
 
         if (event.button !== 0) {
@@ -816,10 +816,10 @@ export class ScaledSlider extends BaseWidget {
         this._isDragging = true;
         this._pendingDragValue = undefined;
 
-        this._tmp_handleMouseMove = (event: any) => {
+        this._tmp_handleMouseMove = (event: MouseEvent) => {
             this.handleMouseMoveOnSlider(event, clientX0, clientY0, channelValue0, blockWidth, blockRef);
         };
-        this._tmp_handleMouseUp = (event: any) => {
+        this._tmp_handleMouseUp = (event: MouseEvent) => {
             this.handleMouseUpOnSlider(event, blockRef, blockColor);
         };
 
@@ -834,7 +834,7 @@ export class ScaledSlider extends BaseWidget {
      * resets `_isDragging` so that subsequent re-renders sync the block
      * position to the channel readback value.
      */
-    handleMouseUpOnSlider = (event: any, blockRef: any, blockColor: string) => {
+    handleMouseUpOnSlider = (_event: MouseEvent, blockRef: any, blockColor: string) => {
         // put the final pending value
         if (this._pendingDragValue !== undefined) {
             this.putDragValue(this._pendingDragValue);
@@ -849,8 +849,12 @@ export class ScaledSlider extends BaseWidget {
         if (blockRef.current !== null) {
             blockRef.current.style["backgroundColor"] = blockColor;
         }
-        window.removeEventListener("mousemove", this._tmp_handleMouseMove);
-        window.removeEventListener("mouseup", this._tmp_handleMouseUp);
+        if (this._tmp_handleMouseMove !== undefined) {
+            window.removeEventListener("mousemove", this._tmp_handleMouseMove);
+        }
+        if (this._tmp_handleMouseUp !== undefined) {
+            window.removeEventListener("mouseup", this._tmp_handleMouseUp);
+        }
         this._tmp_handleMouseMove = undefined;
         this._tmp_handleMouseUp = undefined;
     };
@@ -864,7 +868,7 @@ export class ScaledSlider extends BaseWidget {
      * (3) Throttles `channel.put()` calls to `mouseDownDelay / 4` interval
      *     to avoid overwhelming the channel with too many writes.
      */
-    handleMouseMoveOnSlider = (event: any, clientX0: number, clientY0: number, channelValue0: number, blockSize: number, blockRef: any) => {
+    handleMouseMoveOnSlider = (event: MouseEvent, clientX0: number, clientY0: number, channelValue0: number, blockSize: number, blockRef: any) => {
 
         const clientX = getMouseEventClientX(event);
         const clientY = getMouseEventClientY(event);

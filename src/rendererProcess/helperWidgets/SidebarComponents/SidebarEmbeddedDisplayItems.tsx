@@ -53,7 +53,7 @@ export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 						<b>Displays {`(${this.getMembers().length})`}</b>
 
 						<ElementButton
-							onClick={(event: any) => {
+							onClick={(event) => {
 								this.updateWidgetAppendItem(event);
 							}}
 						>
@@ -66,7 +66,7 @@ export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 							></img>
 						</ElementButton>
 						<ElementButton
-							onClick={(event: any) => {
+							onClick={(event) => {
 								this.updateWidgetAppendItem(event, true);
 							}}
 						>
@@ -107,7 +107,7 @@ export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 	_BlockTitle = this.getSidebar()._BlockTitle;
 	_BlockBody = this.getSidebar()._BlockBody;
 
-	updateWidgetAppendItem = (event: any, isWebpage: boolean = false) => {
+	updateWidgetAppendItem = (event: React.SyntheticEvent | null | undefined, isWebpage: boolean = false) => {
 		if (event) {
 			event.preventDefault();
 		}
@@ -139,7 +139,7 @@ export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 	};
 
 	// no need to update widget from this sidebar component
-	updateWidget = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {};
+	updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {};
 
 	getMembers = () => {
 		return this._members;

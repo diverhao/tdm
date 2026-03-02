@@ -49,21 +49,21 @@ export class SidebarActionExecuteCommandItem {
                     <b>{`#${this.getIndex()} Execute Cmd`}</b>
                     <div>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetMoveUpAction(event, this.getIndex());
                             }}
                         >
                             &#8593;
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetMoveDownAction(event, this.getIndex());
                             }}
                         >
                             &#8595;
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetRemoveAction(event, this.getIndex());
                             }}
                         >
@@ -112,7 +112,7 @@ export class SidebarActionExecuteCommandItem {
                                 setLabel(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = this.getTdl()["label"];
                                 if (orig !== label) {
                                     setLabel(orig);
@@ -154,7 +154,7 @@ export class SidebarActionExecuteCommandItem {
                                 setCommand(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = this.getTdl()["command"];
                                 if (orig !== command) {
                                     setCommand(orig);
@@ -190,7 +190,7 @@ export class SidebarActionExecuteCommandItem {
                         <input
                             type="checkbox"
                             checked={confirmOnWrite}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 this.updateWidget(event, !confirmOnWrite);
                                 setConfirmOnWrite((prevVal: boolean) => {
                                     return !prevVal;
@@ -208,7 +208,7 @@ export class SidebarActionExecuteCommandItem {
                         <input
                             type="checkbox"
                             checked={confirmOnWriteUsePassword}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 this.updateWidgetUsePassword(event, !confirmOnWriteUsePassword);
                                 setConfirmOnWriteUsePassword((prevVal: boolean) => {
                                     return !prevVal;
@@ -236,7 +236,7 @@ export class SidebarActionExecuteCommandItem {
                                 setConfirmOnWritePassword(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (this.getTdl()["confirmOnWritePassword"] !== confirmOnWritePassword) {
                                     setConfirmOnWritePassword(this.getTdl()["confirmOnWritePassword"]);
                                 }
@@ -248,7 +248,7 @@ export class SidebarActionExecuteCommandItem {
         );
     };
 
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // do not prevent default
         // event?.preventDefault();
 
@@ -270,7 +270,7 @@ export class SidebarActionExecuteCommandItem {
         g_flushWidgets();
     };
 
-    updateWidgetUsePassword = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidgetUsePassword = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // do not prevent default for checkbox
         // event.preventDefault();
 
@@ -292,8 +292,8 @@ export class SidebarActionExecuteCommandItem {
         g_flushWidgets();
     };
 
-    updateWidgetPassword = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidgetPassword = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
 
         const oldVal = this.getTdl()["confirmOnWritePassword"];
         if (propertyValue === oldVal) {
@@ -314,7 +314,7 @@ export class SidebarActionExecuteCommandItem {
     };
 
 
-    updateWidgetLabel = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetLabel = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -336,7 +336,7 @@ export class SidebarActionExecuteCommandItem {
         g_flushWidgets();
     };
 
-    updateWidgetCommand = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetCommand = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }

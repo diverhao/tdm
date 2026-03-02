@@ -482,7 +482,7 @@ export class GroupSelection2 {
     // (3) assign new value
     // (4) reset the intermediate quantities (not including this._leftShown, this._widthShown ...)
     // (5) update sidebar (basically update this._leftShown ...) and flush
-    public updateFromSidebar = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => {
+    public updateFromSidebar = (event: React.SyntheticEvent | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => {
         if (event) {
             // do not perventDefault for checkbox
             if (propertyName !== "text-wrap-word") {

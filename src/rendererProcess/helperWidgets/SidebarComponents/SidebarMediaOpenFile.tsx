@@ -148,7 +148,7 @@ export class SidebarMediaOpenFile extends SidebarComponent {
                             }}
                             // readOnly={g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "web" ? true : false}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (this.getText()["fileName"] !== fileName) {
                                     setFileName(this.getText()["fileName"]);
                                 }
@@ -160,7 +160,7 @@ export class SidebarMediaOpenFile extends SidebarComponent {
         );
     };
 
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
 
         const oldVal = this.getText()["fileName"];

@@ -50,21 +50,21 @@ export class SidebarActionWritePvItem {
                     <b>{`#${this.getIndex()} Write PV`}</b>
                     <div>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetMoveUpAction(event, this.getIndex());
                             }}
                         >
                             &#8593;{" "}
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetMoveDownAction(event, this.getIndex());
                             }}
                         >
                             &#8595;{" "}
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetRemoveAction(event, this.getIndex());
                             }}
                         >
@@ -112,7 +112,7 @@ export class SidebarActionWritePvItem {
                                 setLabel(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = this.getTdl()["label"];
                                 if (orig !== label) {
                                     setLabel(orig);
@@ -154,7 +154,7 @@ export class SidebarActionWritePvItem {
                                 setChannelName(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = this.getTdl()["channelName"];
                                 if (orig !== channelName) {
                                     setChannelName(orig);
@@ -196,7 +196,7 @@ export class SidebarActionWritePvItem {
                                 setChannelValue(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = `${this.getTdl()["channelValue"]}`;
                                 if (orig !== channelValue) {
                                     setChannelValue(orig);
@@ -214,7 +214,7 @@ export class SidebarActionWritePvItem {
     };
 
 
-    updateWidgetLabel = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetLabel = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -236,7 +236,7 @@ export class SidebarActionWritePvItem {
         g_flushWidgets();
     };
 
-    updateWidgetChannelName = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetChannelName = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -258,7 +258,7 @@ export class SidebarActionWritePvItem {
         g_flushWidgets();
     };
 
-    updateWidgetChannelValue = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetChannelValue = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -303,7 +303,7 @@ export class SidebarActionWritePvItem {
                         <input
                             type="checkbox"
                             checked={confirmOnWrite}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 this.updateWidget(event, !confirmOnWrite);
                                 setConfirmOnWrite((prevVal: boolean) => {
                                     return !prevVal;
@@ -321,7 +321,7 @@ export class SidebarActionWritePvItem {
                         <input
                             type="checkbox"
                             checked={confirmOnWriteUsePassword}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 this.updateWidgetUsePassword(event, !confirmOnWriteUsePassword);
                                 setConfirmOnWriteUsePassword((prevVal: boolean) => {
                                     return !prevVal;
@@ -349,7 +349,7 @@ export class SidebarActionWritePvItem {
                                 setConfirmOnWritePassword(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (this.getTdl()["confirmOnWritePassword"] !== confirmOnWritePassword) {
                                     setConfirmOnWritePassword(this.getTdl()["confirmOnWritePassword"]);
                                 }
@@ -361,7 +361,7 @@ export class SidebarActionWritePvItem {
         );
     };
 
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // do not prevent default
         // event?.preventDefault();
 
@@ -383,7 +383,7 @@ export class SidebarActionWritePvItem {
         g_flushWidgets();
     };
 
-    updateWidgetUsePassword = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidgetUsePassword = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // do not prevent default for checkbox
         // event.preventDefault();
 
@@ -405,8 +405,8 @@ export class SidebarActionWritePvItem {
         g_flushWidgets();
     };
 
-    updateWidgetPassword = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidgetPassword = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
 
         const oldVal = this.getTdl()["confirmOnWritePassword"];
         if (propertyValue === oldVal) {

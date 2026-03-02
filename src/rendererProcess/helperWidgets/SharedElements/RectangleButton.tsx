@@ -16,8 +16,8 @@ export const ElementRectangleButtonHighlightTextColor = "rgba(255,255,255,1)";
 export const ElementRectangleButton = (
     {
         children,
-        handleClick = (event: any) => { },
-        handleMouseDown = (event: any) => { },
+        handleClick = (_event: React.MouseEvent<HTMLDivElement>) => { },
+        handleMouseDown = (_event: React.MouseEvent<HTMLDivElement>) => { },
         defaultBackgroundColor = ElementRectangleButtonDefaultBackgroundColor,
         highlightBackgroundColor = ElementRectangleButtonHighlightBackgroundColor,
         defaultTextColor = ElementRectangleButtonDefaultTextColor,
@@ -33,7 +33,26 @@ export const ElementRectangleButton = (
         marginBottom = 0,
         borderRadius = 2,
         additionalStyle = {}
-    }: any) => {
+    }: {
+        children?: React.ReactNode;
+        handleClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
+        handleMouseDown?: (event: React.MouseEvent<HTMLDivElement>) => void;
+        defaultBackgroundColor?: string;
+        highlightBackgroundColor?: string;
+        defaultTextColor?: string;
+        highlightTextColor?: string;
+        fontSize?: string | number;
+        paddingTop?: number;
+        paddingBottom?: number;
+        paddingLeft?: number;
+        paddingRight?: number;
+        marginLeft?: number;
+        marginRight?: number;
+        marginTop?: number;
+        marginBottom?: number;
+        borderRadius?: number;
+        additionalStyle?: React.CSSProperties;
+    }) => {
 
     const elementRef = React.useRef<any>(null);
     return (
@@ -73,11 +92,11 @@ export const ElementRectangleButton = (
                     elementRef.current.style["cursor"] = "default";
                 }
             }}
-            onClick={(event: any) => {
+            onClick={(event) => {
                 event?.preventDefault();
                 handleClick(event);
             }}
-            onMouseDown={(event: any) => {
+            onMouseDown={(event) => {
                 event?.preventDefault();
                 handleMouseDown(event);
             }}

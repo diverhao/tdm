@@ -42,7 +42,7 @@ export class SidebarLEDMultiStateItems extends SidebarComponent {
 						<b>Items {`(${this.getMembers().length})`}</b>
 
 						<ElementButton
-							onClick={(event: any) => {
+							onClick={(event) => {
 								this.updateWidgetAppendItem(event);
 							}}
 						>
@@ -76,7 +76,7 @@ export class SidebarLEDMultiStateItems extends SidebarComponent {
 	_BlockTitle = this.getSidebar()._BlockTitle;
 	_BlockBody = this.getSidebar()._BlockBody;
 
-	updateWidgetAppendItem = (event: any) => {
+	updateWidgetAppendItem = (event: React.SyntheticEvent | null | undefined) => {
 		if (event) {
 			event.preventDefault();
 		}
@@ -100,7 +100,7 @@ export class SidebarLEDMultiStateItems extends SidebarComponent {
 	};
 
 	// no need to update widget from this sidebar component
-	updateWidget = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {};
+	updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {};
 
 	getMembers = () => {
 		return this._members;

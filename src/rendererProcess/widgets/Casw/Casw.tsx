@@ -459,7 +459,7 @@ export class Casw extends BaseWidget {
                     }}>
                         Number of entries:
                     </div>
-                    <form onSubmit={(event: any) => {
+                    <form onSubmit={(event) => {
                         event.preventDefault();
                         const bufferSizeInt = parseInt(bufferSize);
                         if (!isNaN(bufferSizeInt) && bufferSizeInt > 10 && bufferSizeInt < this.maxBufferSize) {
@@ -471,7 +471,7 @@ export class Casw extends BaseWidget {
                     }}>
                         <input
                             value={`${bufferSize}`}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 event.preventDefault();
                                 const value = event.target.value;
                                 setBufferSize(value);
@@ -500,7 +500,7 @@ export class Casw extends BaseWidget {
                     }}>
                         Count last N seconds:
                     </div>
-                    <form onSubmit={(event: any) => {
+                    <form onSubmit={(event) => {
                         event.preventDefault();
                         const statsNsecInt = parseInt(statsNsec);
                         if (!isNaN(statsNsecInt) && statsNsecInt > 1) {
@@ -516,7 +516,7 @@ export class Casw extends BaseWidget {
                     }}>
                         <input
                             value={`${statsNsec}`}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 event.preventDefault();
                                 const value = event.target.value;
                                 setStatsNsec(value);
@@ -608,7 +608,7 @@ export class Casw extends BaseWidget {
 
     _ElementCounts = ({ data }: { data: Record<string, any> }) => {
 
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         // this.countsRef = elementRef;
 
         const style = {
@@ -701,7 +701,7 @@ export class Casw extends BaseWidget {
                     }}>
                         IP:
                     </div>
-                    <form onSubmit={(event: any) => {
+                    <form onSubmit={(event) => {
                         event.preventDefault();
                         this.filteredIp = filteredIp;
                         // apply the new filter
@@ -715,7 +715,7 @@ export class Casw extends BaseWidget {
                     }}>
                         <input
                             value={filteredIp}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 event.preventDefault();
                                 setFilteredIp(event.target.value);
                             }}
@@ -742,7 +742,7 @@ export class Casw extends BaseWidget {
                         Port:
                     </div>
 
-                    <form onSubmit={(event: any) => {
+                    <form onSubmit={(event) => {
                         event.preventDefault();
                         this.filteredPort = filteredPort;
                         // apply the new filter
@@ -755,7 +755,7 @@ export class Casw extends BaseWidget {
                     }}>
                         <input
                             value={filteredPort}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 event.preventDefault();
                                 setFilteredPort(event.target.value);
                             }}
@@ -773,7 +773,7 @@ export class Casw extends BaseWidget {
         )
     }
 
-    tableRef: React.MutableRefObject<any> | undefined = undefined;
+    tableRef: React.RefObject<HTMLDivElement | null> | undefined = undefined;
 
 
     resizeDataViewer = () => {
@@ -809,7 +809,7 @@ export class Casw extends BaseWidget {
 
 
     _ElementDataTable = () => {
-        const tableRef = React.useRef<any>(null);
+        const tableRef = React.useRef<HTMLDivElement>(null);
 
         this.tableRef = tableRef;
 
@@ -819,7 +819,9 @@ export class Casw extends BaseWidget {
 
 
         const scrollToBottom = () => {
-            tableRef.current.scrollTop = tableRef.current.scrollHeight;
+            if (tableRef.current !== null) {
+                tableRef.current.scrollTop = tableRef.current.scrollHeight;
+            }
         };
 
         let isScrolledToBottom = false;

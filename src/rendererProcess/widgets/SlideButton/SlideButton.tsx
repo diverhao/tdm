@@ -98,7 +98,7 @@ export class SlideButton extends BaseWidget {
 
     _ElementSlideButton = () => {
         const boxHeight = this.getAllText()["boxWidth"] / 3;
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         const backgroundColor = this.calcItemColor();
         const buttonPosition = this.calcButtonPosition();
         const border = "solid 1px rgba(30,30,30,1)";
@@ -113,12 +113,12 @@ export class SlideButton extends BaseWidget {
                     alignItems: "center",
                     justifyContent: "center",
                 }}
-                onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
-                onMouseLeave={(event: any) => this.handleMouseLeaveWriteWidget(event, elementRef)}
+                onMouseEnter={(event) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                onMouseLeave={(event) => this.handleMouseLeaveWriteWidget(event, elementRef)}
             >
                 {/* sliding area */}
                 <div
-                    onClick={(event: any) => {
+                    onClick={(event) => {
                         this.handleMouseClick(event);
                     }}
                     style={{
@@ -166,7 +166,7 @@ export class SlideButton extends BaseWidget {
     /**
      * when the mouse is down or up on the button, do something
      */
-    handleMouseClick = (event: any) => {
+    handleMouseClick = (event: React.MouseEvent<HTMLElement>) => {
         event.preventDefault();
         // left button only
         if (event.button !== 0) {

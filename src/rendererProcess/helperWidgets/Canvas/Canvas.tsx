@@ -94,7 +94,7 @@ export class Canvas {
 
     // defined in widget, invoked in sidebar
     updateFromSidebar = (
-        event: any,
+        event: React.SyntheticEvent | null | undefined,
         propertyName: string,
         propertyValue: number | string | number[] | string[] | Record<string, string> | [string, string][]
     ) => {
@@ -153,7 +153,7 @@ export class Canvas {
         g_flushWidgets();
     };
 
-    handleWindowResize = (event: any) => {
+    handleWindowResize = (_event: UIEvent) => {
 
         // if in web mode, do not do anything
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();

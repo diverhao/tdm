@@ -54,7 +54,7 @@ export class SidebarByteMonitorBitValueColors extends SidebarComponent {
 						<Collapsible
 							rgbColorStr={`${mainWidget.getItemColors()[0]}`}
 							updateFromSidebar={(
-								event: any,
+								event: React.SyntheticEvent | null | undefined,
 								propertyName: string,
 								propertyValue: number | string | number[] | string[] | boolean | undefined
 							) => {
@@ -76,7 +76,7 @@ export class SidebarByteMonitorBitValueColors extends SidebarComponent {
 						<Collapsible
 							rgbColorStr={`${mainWidget.getItemColors()[1]}`}
 							updateFromSidebar={(
-								event: any,
+								event: React.SyntheticEvent | null | undefined,
 								propertyName: string,
 								propertyValue: number | string | number[] | string[] | boolean | undefined
 							) => {
@@ -92,7 +92,7 @@ export class SidebarByteMonitorBitValueColors extends SidebarComponent {
 	};
 
 
-	updateWidgetColor = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined, index: number) => {
+	updateWidgetColor = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined, index: number) => {
 		if (event) {
 			event.preventDefault();
 		}
@@ -119,6 +119,6 @@ export class SidebarByteMonitorBitValueColors extends SidebarComponent {
 	_BlockBody = this.getSidebar()._BlockBody;
 
 	// no need to update widget from this sidebar component
-	updateWidget = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {};
+	updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {};
 
 }

@@ -201,7 +201,7 @@ export class Thermometer extends BaseWidget {
      * Line, ticks, and values
      */
     _ElementScale = () => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
 
         const scaleTickSize = 10;
 
@@ -261,7 +261,7 @@ export class Thermometer extends BaseWidget {
         };
 
         const height = elementRef.current?.offsetHeight;
-        const refinedTicks = refineTicks(calcTickValues(), this.getAllStyle()["fontSize"] * 0.5, height, "vertical");
+        const refinedTicks = refineTicks(calcTickValues(), this.getAllStyle()["fontSize"] * 0.5, height ?? 0, "vertical");
 
         return (
             <div

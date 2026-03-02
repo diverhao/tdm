@@ -41,7 +41,7 @@ export class ScaledSliderSidebar extends BaseWidgetSidebar {
 
     // ------------------------------------- elements --------------------------------------
     // mockup definition to let TypeScript stop complaining
-    updateFromWidget = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => { };
+    updateFromWidget = (event: React.SyntheticEvent | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => { };
 
     // override
     _Element = (): React.JSX.Element => {
@@ -58,7 +58,7 @@ export class ScaledSliderSidebar extends BaseWidgetSidebar {
 
         // defined in sidebar, invoked from main widget
         const _updateFromWidget = React.useCallback(
-            (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => {
+            (event: React.SyntheticEvent | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => {
                 switch (propertyName) {
                     case "left":
                         this.getSidebarX().getUpdateFromWidget()(propertyValue as number);

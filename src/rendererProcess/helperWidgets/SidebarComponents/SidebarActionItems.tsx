@@ -91,7 +91,7 @@ export class SidebarActionItems extends SidebarComponent {
                         }}
                     >
                         <ElementButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.updateWidgetAppendItem(event, createAction);
                             }}
                         >
@@ -109,9 +109,9 @@ export class SidebarActionItems extends SidebarComponent {
                                 width: "74%"
                             }}
                             defaultValue={"OpenDisplay"}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 event?.preventDefault();
-                                setCreateAction(event.target.value);
+                                setCreateAction(event.target.value as "OpenDisplay" | "WritePV" | "ExecuteCommand" | "CloseDisplayWindow" | "OpenWebpage");
                             }}
                         >
                             <option value="OpenDisplay"> Open Display</option>
@@ -151,7 +151,7 @@ export class SidebarActionItems extends SidebarComponent {
     _BlockTitle = this.getSidebar()._BlockTitle;
     _BlockBody = this.getSidebar()._BlockBody;
 
-    updateWidgetAppendItem = (event: any, type: "OpenDisplay" | "WritePV" | "OpenWebpage" | "ExecuteCommand" | "CloseDisplayWindow") => {
+    updateWidgetAppendItem = (event: React.SyntheticEvent | null | undefined, type: "OpenDisplay" | "WritePV" | "OpenWebpage" | "ExecuteCommand" | "CloseDisplayWindow") => {
         if (event) {
             event.preventDefault();
         }
@@ -230,7 +230,7 @@ export class SidebarActionItems extends SidebarComponent {
         g_flushWidgets();
     };
 
-    updateWidgetRemoveAction = (event: any, thisIndex: number) => {
+    updateWidgetRemoveAction = (event: React.SyntheticEvent | null | undefined, thisIndex: number) => {
         if (event) {
             event.preventDefault();
         }
@@ -257,7 +257,7 @@ export class SidebarActionItems extends SidebarComponent {
         g_flushWidgets();
     };
 
-    updateWidgetMoveUpAction = (event: any, thisIndex: number) => {
+    updateWidgetMoveUpAction = (event: React.SyntheticEvent | null | undefined, thisIndex: number) => {
         if (event) {
             event.preventDefault();
         }
@@ -291,7 +291,7 @@ export class SidebarActionItems extends SidebarComponent {
         g_flushWidgets();
     };
 
-    updateWidgetMoveDownAction = (event: any, thisIndex: number) => {
+    updateWidgetMoveDownAction = (event: React.SyntheticEvent | null | undefined, thisIndex: number) => {
         if (event) {
             event.preventDefault();
         }
@@ -326,7 +326,7 @@ export class SidebarActionItems extends SidebarComponent {
     };
 
     // no need to update widget from this sidebar component
-    updateWidget = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => { };
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => { };
 
     getMembers = () => {
         return this._members;

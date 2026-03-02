@@ -86,7 +86,7 @@ const ElementJsonViewerField = ({ fieldName, value, topLevel }: { fieldName: str
                         alignItems: "center",
                         cursor: "pointer",
                     }}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event) => {
                         setExpanded(!expanded);
                     }}
                 >

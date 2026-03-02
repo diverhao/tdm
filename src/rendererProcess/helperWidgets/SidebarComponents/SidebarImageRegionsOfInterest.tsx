@@ -37,7 +37,7 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
                     >
                         <b>Regions of Interest</b>
                         <ElementButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.updateWidgetAddRoi(event);
                             }}
                         >
@@ -101,7 +101,7 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
                 >
                     <b># {index + 1}</b>
                     <ElementButton
-                        onClick={(event: any) => {
+                        onClick={(event) => {
                             this.updateWidgetDeleteRoi(event, index);
                         }}
                     >
@@ -142,7 +142,7 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
                             setXPv(newVal);
                         }}
                         // must use enter to change the value
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             if (roi.xPv !== xPv) {
                                 setXPv(roi.xPv);
                             }
@@ -176,7 +176,7 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
                             setYPv(newVal);
                         }}
                         // must use enter to change the value
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             if (roi.yPv !== yPv) {
                                 setYPv(roi.yPv);
                             }
@@ -210,7 +210,7 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
                             setWidthPv(newVal);
                         }}
                         // must use enter to change the value
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             if (roi.widthPv !== widthPv) {
                                 setWidthPv(roi.widthPv);
                             }
@@ -243,7 +243,7 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
                             setHeightPv(newVal);
                         }}
                         // must use enter to change the value
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             if (roi.heightPv !== heightPv) {
                                 setHeightPv(roi.heightPv);
                             }
@@ -252,7 +252,7 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
                 </form>
                 <Collapsible
                     rgbColorStr={roi.color}
-                    updateFromSidebar={(event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+                    updateFromSidebar={(_event: React.SyntheticEvent | null | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
 
                         const newVal = rgbaArrayToRgbaStr(propertyValue as number[]);
                         const oldVal = roi.color;
@@ -278,7 +278,7 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
         )
     }
 
-    updateWidgetAddRoi = (event: any) => {
+    updateWidgetAddRoi = (event: React.SyntheticEvent | null | undefined) => {
         const mainWidget = this.getMainWidget() as Image;
         mainWidget.getRegionsOfInterest().push({
             xPv: "",
@@ -300,7 +300,7 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
     }
 
 
-    updateWidgetDeleteRoi = (event: any, index: number) => {
+    updateWidgetDeleteRoi = (event: React.SyntheticEvent | null | undefined, index: number) => {
         const mainWidget = this.getMainWidget() as Image;
         mainWidget.getRegionsOfInterest().splice(index, 1);
         this._forceUpdate();
@@ -315,5 +315,5 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
 
     }
 
-    updateWidget = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => { };
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => { };
 }

@@ -175,7 +175,7 @@ export class EmbeddedDisplay extends BaseWidget {
 
     _ElementIframe = () => {
 
-        const webviewElementRef = React.useRef<any>(null);
+        const webviewElementRef = React.useRef<HTMLIFrameElement>(null);
 
         let display: string = "none";
         let link = "";
@@ -276,7 +276,7 @@ export class EmbeddedDisplay extends BaseWidget {
                                 // marginTop: 15,
                                 // marginLeft: 15,
                             }}
-                            onMouseDown={(event: any) => {
+                            onMouseDown={(event) => {
                                 event.preventDefault();
                                 forceUpdate({});
                                 this.selectTab(index);

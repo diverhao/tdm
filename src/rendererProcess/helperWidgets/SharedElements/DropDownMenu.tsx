@@ -18,8 +18,8 @@ export const ElementDropDownMenu = ({ callbacks, fontSize }: any) => {
             // fontSize: fontSize === undefined ? 13 : fontSize,
             backgroundColor: "rgba(0,0,0,0)",
         }}
-            onChange={(event: any) => {
-                const selectedTabName = event.target.value;
+            onChange={(event) => {
+                const selectedTabName = (event.target as HTMLSelectElement).value;
                 const callback = callbacks[selectedTabName];
                 if (callback !== undefined) {
                     callback();

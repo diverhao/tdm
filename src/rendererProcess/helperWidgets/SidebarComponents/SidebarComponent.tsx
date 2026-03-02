@@ -20,7 +20,7 @@ export abstract class SidebarComponent {
     abstract _Element: ({ hideText }: any) => React.JSX.Element;
 
     // update widget's apperance from sidebar
-    abstract updateWidget: (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => void;
+    abstract updateWidget: (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => void;
 
     // --------------------- getters ---------------------
 

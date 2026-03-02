@@ -12,7 +12,7 @@ export class GroupSelectionSidebar2 {
     private _mainWidget: GroupSelection2;
     // assigned inside _Element
     // mock up definition to silence TypeScript 
-    updateFromWidget = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => { };
+    updateFromWidget = (event: React.SyntheticEvent | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => { };
 
     constructor(textUpdate: GroupSelection2) {
         this._mainWidget = textUpdate;
@@ -40,7 +40,7 @@ export class GroupSelectionSidebar2 {
 
         // useCallback
         const updateFromWidget = React.useCallback(
-            (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => {
+            (event: React.SyntheticEvent | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => {
                 switch (propertyName) {
                     case "left":
                         setLeft(propertyValue as number);
@@ -106,7 +106,7 @@ export class GroupSelectionSidebar2 {
                             value={left}
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateValue(event)}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 setLeft(this._mainWidget._leftShown);
                             }}
                         />
@@ -123,7 +123,7 @@ export class GroupSelectionSidebar2 {
                             value={top}
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateValue(event)}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 setTop(this._mainWidget._topShown);
                             }}
                         />
@@ -140,7 +140,7 @@ export class GroupSelectionSidebar2 {
                             value={width}
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateValue(event)}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 setWidth(this._mainWidget._widthShown);
                             }}
                         />
@@ -157,7 +157,7 @@ export class GroupSelectionSidebar2 {
                             value={height}
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateValue(event)}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 setHeight(this._mainWidget._heightShown);
                             }}
                         />
@@ -323,7 +323,7 @@ export class GroupSelectionSidebar2 {
 
     // -------------------------------- getters ------------------------------
 
-    getUpdateFromSidebar = (): ((event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => void) => {
+    getUpdateFromSidebar = (): ((event: React.SyntheticEvent | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => void) => {
         return this._mainWidget.updateFromSidebar;
     };
 

@@ -136,7 +136,7 @@ export class ThumbWheel extends BaseWidget {
                     }}
                     ref={spinnerRef}
                     tabIndex={0}
-                    onKeyDown={(event: any) => {
+                    onKeyDown={(event) => {
                         if (event.key === "ArrowUp") {
                             this.changeChannelValue("positive");
                         } else if (event.key === "ArrowDown") {
@@ -144,13 +144,13 @@ export class ThumbWheel extends BaseWidget {
                         }
                     }}
                     // focus the element so that we can use keyboard event
-                    onMouseEnter={(event: any) => {
+                    onMouseEnter={(event) => {
                         if (!g_widgets1.isEditing()) {
                             event.preventDefault();
                             (spinnerRef.current as any).focus();
                         }
                     }}
-                    onMouseLeave={(event: any) => {
+                    onMouseLeave={(event) => {
                         (spinnerRef.current as any).blur();
                     }}
                 >
@@ -164,7 +164,7 @@ export class ThumbWheel extends BaseWidget {
                             backgroundColor: "rgba(150,150,150,1)",
                             border: "solid 1px black",
                         }}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             event.preventDefault();
 
                             if (event.button !== 0) {
@@ -182,12 +182,12 @@ export class ThumbWheel extends BaseWidget {
                                 }, this.mouseDownDelay / 4);
                             }, this.mouseDownDelay);
                         }}
-                        onMouseUp={(event: any) => {
+                        onMouseUp={(event) => {
                             clearInterval(this.mouseDownIntervalTimer);
                             clearTimeout(this.mouseDownIntervalTimer);
                             this.mouseDownIntervalTimer = undefined;
                         }}
-                        onMouseLeave={(event: any) => {
+                        onMouseLeave={(event) => {
                             clearInterval(this.mouseDownIntervalTimer);
                             clearTimeout(this.mouseDownIntervalTimer);
                             this.mouseDownIntervalTimer = undefined;
@@ -213,7 +213,7 @@ export class ThumbWheel extends BaseWidget {
                             backgroundColor: "rgba(150,150,150,1)",
                             border: "solid 1px black",
                         }}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             event.preventDefault();
 
                             if (event.button !== 0) {
@@ -231,12 +231,12 @@ export class ThumbWheel extends BaseWidget {
                                 }, this.mouseDownDelay / 4);
                             }, this.mouseDownDelay);
                         }}
-                        onMouseUp={(event: any) => {
+                        onMouseUp={(event) => {
                             clearInterval(this.mouseDownIntervalTimer);
                             clearTimeout(this.mouseDownIntervalTimer);
                             this.mouseDownIntervalTimer = undefined;
                         }}
-                        onMouseLeave={(event: any) => {
+                        onMouseLeave={(event) => {
                             clearInterval(this.mouseDownIntervalTimer);
                             clearTimeout(this.mouseDownIntervalTimer);
                             this.mouseDownIntervalTimer = undefined;
@@ -260,7 +260,7 @@ export class ThumbWheel extends BaseWidget {
     _ValueInputForm = ({ valueRaw }: { valueRaw: string | number | string[] | number[] }) => {
         const [value, setValue] = React.useState(`${valueRaw}`);
         const isFocused = React.useRef<boolean>(false);
-        const keyRef = React.useRef<any>(null);
+        const keyRef = React.useRef<HTMLInputElement>(null);
 
         React.useEffect(() => {
             setValue((oldValue: string) => {
@@ -289,7 +289,7 @@ export class ThumbWheel extends BaseWidget {
 
         // press escape key to blur input box
         React.useEffect(() => {
-            const blurOnEscapeKey = (event: any) => {
+            const blurOnEscapeKey = (event: KeyboardEvent) => {
                 if (event.key === "Escape") {
                     keyRef.current?.blur();
                 }
@@ -335,11 +335,11 @@ export class ThumbWheel extends BaseWidget {
                             keyRef.current.style["backgroundColor"] = this.getAllText().highlightBackgroundColor;
                         }
                     }}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event.preventDefault();
                         setValue(event.target.value);
                     }}
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         isFocused.current = false;
                         setValue(`${valueRaw}`);
                         if (keyRef.current !== null) {
@@ -425,7 +425,7 @@ export class ThumbWheel extends BaseWidget {
                         alignItems: "center",
                         width: "100%",
                     }}
-                    onSubmit={(event: any) => {
+                    onSubmit={(event) => {
                         event.preventDefault();
                     }}
                 >
@@ -444,7 +444,7 @@ export class ThumbWheel extends BaseWidget {
                             setChannelValue(parseFloat(newVal));
                         }}
                         // must use enter to change the value
-                        onBlur={(event: any) => { }}
+                        onBlur={(event) => { }}
                     />
                 </form>
                 <form
@@ -456,7 +456,7 @@ export class ThumbWheel extends BaseWidget {
                         justifyContent: "space-between",
                         alignItems: "center",
                     }}
-                    onSubmit={(event: any) => {
+                    onSubmit={(event) => {
                         event.preventDefault();
                     }}
                 >
@@ -475,7 +475,7 @@ export class ThumbWheel extends BaseWidget {
                             setStepSize(parseFloat(newVal));
                         }}
                         // must use enter to change the value
-                        onBlur={(event: any) => { }}
+                        onBlur={(event) => { }}
                     />
                 </form>
                 <div
@@ -488,7 +488,7 @@ export class ThumbWheel extends BaseWidget {
                     }}
                 >
                     <div
-                        onClick={(event: any) => {
+                        onClick={(event) => {
                             event.preventDefault();
                             try {
                                 const channelName = this.getChannelNames()[0];
@@ -511,7 +511,7 @@ export class ThumbWheel extends BaseWidget {
                         OK
                     </div>
                     <div
-                        onClick={(event: any) => {
+                        onClick={(event) => {
                             event?.preventDefault;
                             this.closeSettings();
                         }}

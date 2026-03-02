@@ -219,11 +219,11 @@ export class TablePage {
         return (
             <select
                 value={"TablePage"}
-                onChange={(event: any) => {
+                onChange={(event) => {
                     if (event.target.value === "TablePage") {
                         return;
                     } else {
-                        this.getMainPage().switchView(event.target.value);
+                        this.getMainPage().switchView(event.target.value as "TreePage" | "AreaPage" | "TablePage");
                     }
                 }}
                 style={{
@@ -254,7 +254,7 @@ export class TablePage {
         }) => {
         return (
             <form
-                onSubmit={(event: any) => {
+                onSubmit={(event) => {
                     event.preventDefault();
                 }}
                 style={{
@@ -266,7 +266,7 @@ export class TablePage {
                 <input
                     value={filterText}
                     placeholder="Filter PV name, description, severity, or status."
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event.preventDefault();
                         setFilterText(event.target.value);
                         forceUpdateTable({});
@@ -1066,7 +1066,7 @@ export class TablePage {
 
                     {/* show edit options */}
                     <form
-                        onSubmit={(event: any) => {
+                        onSubmit={(event) => {
                             event.preventDefault();
                         }}
                         style={{
@@ -1086,7 +1086,7 @@ export class TablePage {
                                 height: this.getMainPage().baseFontSize,
                             }}
                             checked={this.getEditing()}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 if (this.getEditing() === false) {
                                     this.setEditing(true);
                                     this.addToForceUpdateElement("/");
@@ -1113,7 +1113,7 @@ export class TablePage {
                     }}>
                         Font size:&nbsp;
                         <select
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 this.getMainPage().baseFontSize = parseInt(event.target.value);
                                 // setFontSize(this.getMainPage().baseFontSize);
                                 this.getMainPage().getConfigPage().styleInputBox["fontSize"] = this.getMainPage().baseFontSize;
@@ -1142,7 +1142,7 @@ export class TablePage {
 
                     {/* Test speak text */}
                     <ElementRectangleButton
-                        handleMouseDown={(event: any) => {
+                        handleMouseDown={() => {
                             speakText("Alarm, this is a test.")
                         }}
                         marginRight={20}

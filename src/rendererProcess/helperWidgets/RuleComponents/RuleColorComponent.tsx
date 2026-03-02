@@ -33,7 +33,7 @@ export class RuleColorComponent extends RuleComponent {
         return (
             <Collapsible
                 rgbColorStr={this.getRuleTdl()["propertyValue"]}
-                updateFromSidebar={(event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+                updateFromSidebar={(_event: React.SyntheticEvent | null | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
                     event?.preventDefault();
                     
                     const rule = this.getRule();
@@ -56,7 +56,7 @@ export class RuleColorComponent extends RuleComponent {
         );
     };
 
-    updatePropertyValue = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updatePropertyValue = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         if (event) {
             event.preventDefault();
         }

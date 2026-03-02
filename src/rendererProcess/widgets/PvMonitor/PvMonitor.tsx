@@ -239,7 +239,7 @@ export class PvMonitor extends BaseWidget {
     }
 
     _ElementPvMonitor = () => {
-        const tableRef = React.useRef<any>(null);
+        const tableRef = React.useRef<HTMLDivElement>(null);
         const [, forceUpdate] = React.useState({});
         this.getTable().updateForceUpdateTableFunc(() => {
             forceUpdate({});
@@ -353,13 +353,12 @@ export class PvMonitor extends BaseWidget {
     }
 
     _ElementTitle = () => {
-        const inputRef = React.useRef<any>(null);
-        const selectRef = React.useRef<any>(null);
+        const inputRef = React.useRef<HTMLInputElement>(null);
         const [channelName, setChannelName] = React.useState(`${this.getChannelNamesLevel0()[0]}`)
 
 
         // channel name hint
-        const formElementRef = React.useRef<any>(null);
+        const formElementRef = React.useRef<HTMLFormElement>(null);
 
         const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
         const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
@@ -503,18 +502,18 @@ export class PvMonitor extends BaseWidget {
                             }
 
                         }}
-                        onMouseEnter={(event: any) => {
+                        onMouseEnter={(event) => {
                             if (inputRef.current !== null) {
                                 inputRef.current.style["color"] = "rgba(255, 0, 0, 1)";
                             }
                         }}
-                        onMouseLeave={(event: any) => {
+                        onMouseLeave={(event) => {
                             if (inputRef.current !== null && document.activeElement !== inputRef.current) {
                                 inputRef.current.style["color"] = "rgba(0, 0, 0, 1)";
                             }
                         }}
                         // must use enter to change the value
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             event.preventDefault();
                             setShowChannelNameHint(false);
                             setChannelNameHintData([]);
@@ -527,7 +526,7 @@ export class PvMonitor extends BaseWidget {
                                 setChannelName(orig);
                             }
                         }}
-                        onFocus={(event: any) => {
+                        onFocus={(event) => {
                             event.preventDefault();
                             if (inputRef.current !== null) {
                                 inputRef.current.style["color"] = "rgba(255, 0, 0, 1)";
@@ -606,7 +605,7 @@ export class PvMonitor extends BaseWidget {
                         }}
                         readOnly={this.getText()["usePvLimits"] ? true : false}
                         // must use enter to change the value
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             if (parseFloat(this.getText()["maxLineNum"]) !== maxLineNum) {
                                 setMaxLineNum(parseFloat(this.getText()["maxLineNum"]));
                             }

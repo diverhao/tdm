@@ -95,7 +95,7 @@ export class Table {
                     boxSizing: "border-box",
                     ...additionalStyle
                 }}
-                onMouseDown={(event: any) => {
+                onMouseDown={(event) => {
                     if (selectable === false) {
                         return;
                     }
@@ -232,7 +232,7 @@ export class Table {
         }
     }
 
-    cancelResizeTableColumn = (event: any) => {
+    cancelResizeTableColumn = (_event: MouseEvent) => {
         this.resizeMouseX0 = -10000;
         this.resizingColumnIndex = -1;
         window.removeEventListener("mousemove", this.resizeTableColumn);

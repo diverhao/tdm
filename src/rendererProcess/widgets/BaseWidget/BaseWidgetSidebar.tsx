@@ -85,7 +85,7 @@ export abstract class BaseWidgetSidebar {
     _widgetKey: string;
     _mainWidget: BaseWidget;
     // assigned inside _Element
-    abstract updateFromWidget: (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => void;
+    abstract updateFromWidget: (event: React.SyntheticEvent | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => void;
 
     constructor(baseWidget: BaseWidget) {
         this._mainWidget = baseWidget;

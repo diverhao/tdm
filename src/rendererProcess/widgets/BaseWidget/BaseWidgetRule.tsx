@@ -844,7 +844,7 @@ export abstract class BaseWidgetRule {
 
                 <select
                     style={{ ...this.getInputStyle(), paddingTop: 1, paddingBottom: 1, width: "69%" }}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event.preventDefault();
                         this.setPropertyName(event.target.value);
                         this.renewRuleComponent(true);

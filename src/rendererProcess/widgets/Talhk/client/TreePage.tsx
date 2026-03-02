@@ -290,7 +290,7 @@ export class TreePage {
 
                     {/* only show alarming PVs */}
                     <form
-                        onSubmit={(event: any) => {
+                        onSubmit={(event) => {
                             event.preventDefault();
                         }}
                         style={{
@@ -310,7 +310,7 @@ export class TreePage {
                                 height: this.getMainPage().baseFontSize,
                             }}
                             checked={this.onlyShowAlarmingPvs}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 if (this.onlyShowAlarmingPvs === true) {
                                     this.showAllPvs();
                                 } else {
@@ -323,7 +323,7 @@ export class TreePage {
 
                     {/* Show config page */}
                     <form
-                        onSubmit={(event: any) => {
+                        onSubmit={(event) => {
                             event.preventDefault();
                         }}
                         style={{
@@ -343,7 +343,7 @@ export class TreePage {
                                 height: this.getMainPage().baseFontSize,
                             }}
                             checked={this.showConfigMiniPage}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 if (this.showConfigMiniPage === false) {
                                     this.showConfigMiniPage = true;
                                     // this.addToForceUpdateElement("/");
@@ -360,7 +360,7 @@ export class TreePage {
 
                     {/* show edit options */}
                     <form
-                        onSubmit={(event: any) => {
+                        onSubmit={(event) => {
                             event.preventDefault();
                         }}
                         style={{
@@ -380,7 +380,7 @@ export class TreePage {
                                 height: this.getMainPage().baseFontSize,
                             }}
                             checked={this.getEditing()}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 if (this.getEditing() === false) {
                                     this.switchToEditing();
                                 } else {
@@ -393,7 +393,7 @@ export class TreePage {
 
                     {/* Show operation options */}
                     <form
-                        onSubmit={(event: any) => {
+                        onSubmit={(event) => {
                             event.preventDefault();
                         }}
                         style={{
@@ -414,7 +414,7 @@ export class TreePage {
                                 height: this.getMainPage().baseFontSize,
                             }}
                             checked={this.showOperations}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 if (this.showOperations === false) {
                                     this.showOperations = true;
                                     this.addToForceUpdateElement("/");
@@ -441,7 +441,7 @@ export class TreePage {
 
                     {/* Expand all button */}
                     <ElementRectangleButton
-                        handleMouseDown={(event: any) => {
+                        handleMouseDown={() => {
                             this.expandAll()
                         }}
                         marginRight={20}
@@ -463,8 +463,8 @@ export class TreePage {
                     </ElementRectangleButton>
 
                     {/* Test speak text */}
-                        <this._ElementTestTalk></this._ElementTestTalk>
-                        <this._ElementTestPa></this._ElementTestPa>
+                    <this._ElementTestTalk></this._ElementTestTalk>
+                    <this._ElementTestPa></this._ElementTestPa>
 
                     {/* font size */}
                     <div style={{
@@ -476,7 +476,7 @@ export class TreePage {
                     }}>
                         Font size:&nbsp;
                         <select
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 this.getMainPage().baseFontSize = parseInt(event.target.value);
                                 // setFontSize(this.getMainPage().baseFontSize);
                                 this.getMainPage().getConfigPage().styleInputBox["fontSize"] = this.getMainPage().baseFontSize;
@@ -528,7 +528,7 @@ export class TreePage {
         }) => {
         return (
             <form
-                onSubmit={(event: any) => {
+                onSubmit={(event) => {
                     event.preventDefault();
                 }}
                 style={{
@@ -540,7 +540,7 @@ export class TreePage {
                 <input
                     value={filterText}
                     placeholder="Filter PV name."
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event.preventDefault();
                         setFilterText(event.target.value);
                         this.addToForceUpdateElement("/");
@@ -942,7 +942,7 @@ export class TreePage {
             return null;
         }
 
-        const modifyElementRef = React.useRef<any>(null);
+        const modifyElementRef = React.useRef<HTMLDivElement>(null);
 
         const status = data["status"];
         const severity = status === undefined ? SEVERITES.NOT_CONNECTED : status["severity"];
@@ -1076,11 +1076,11 @@ export class TreePage {
         return (
             <select
                 value={"TreePage"}
-                onChange={(event: any) => {
+                onChange={(event) => {
                     if (event.target.value === "TreePage") {
                         return;
                     } else {
-                        this.getMainPage().switchView(event.target.value);
+                        this.getMainPage().switchView(event.target.value as "TreePage" | "AreaPage" | "TablePage");
                     }
                 }}
                 style={{
@@ -1099,8 +1099,8 @@ export class TreePage {
     }
 
     _ElementName = ({ name, severity, onMouseDown, type, numSubsystems, numPvs, showChildren, pathStr }: any) => {
-        const elementRef = React.useRef<any>(null);
-        const arrowElementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
+        const arrowElementRef = React.useRef<HTMLImageElement>(null);
 
         const data = this.getMainPage().getData(JSON.parse(pathStr));
 

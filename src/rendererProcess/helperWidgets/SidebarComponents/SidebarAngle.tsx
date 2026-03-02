@@ -130,7 +130,7 @@ export class SidebarAngle extends SidebarComponent {
 							setAngle(Math.min(Math.max(parseInt(newVal), 0), 360));
 						}}
 						// must use enter to change the value
-						onBlur={(event: any) => {
+						onBlur={(event) => {
 							const orig = GlobalMethods.parseIntAngle(this.getMainWidget().getStyle().transform);
 							if (orig !== angle) {
 								setAngle(orig);
@@ -189,7 +189,7 @@ export class SidebarAngle extends SidebarComponent {
 		);
 	};
 
-	updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+	updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
 		if (event) {
 			event.preventDefault();
 		}

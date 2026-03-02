@@ -59,7 +59,7 @@ export class SidebarNumberInput extends SidebarComponent {
                         setNumStr(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = this.getPropertyValue();
                         if (`${orig}` !== numStr) {
                             setNumStr(`${orig}`);
@@ -70,7 +70,7 @@ export class SidebarNumberInput extends SidebarComponent {
         );
     };
 
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
 
         if (typeof propertyValue !== "number") {

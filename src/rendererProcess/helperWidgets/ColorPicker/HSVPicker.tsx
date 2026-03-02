@@ -116,7 +116,7 @@ const _SatLitPicker = ({ hsv, handleColorUpdate, setHsv}: any) => {
 		}, 0);
 	}, []);
 
-	const handleMouseDown = (event: any): void => {
+	const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
 		event.preventDefault();
 
 		let hueX = xxy[0];
@@ -136,7 +136,7 @@ const _SatLitPicker = ({ hsv, handleColorUpdate, setHsv}: any) => {
 		window.addEventListener("mouseup", handleMouseUp);
 	};
 
-	const handleMouseMove = (event: any) => {
+	const handleMouseMove = (event: MouseEvent) => {
 		event.preventDefault();
 
 		// calculate the coordinates first
@@ -169,7 +169,7 @@ const _SatLitPicker = ({ hsv, handleColorUpdate, setHsv}: any) => {
 
 	};
 
-	const handleMouseUp = (event: any) => {
+	const handleMouseUp = (event: MouseEvent) => {
 		event.preventDefault();
 		window.removeEventListener("mousemove", handleMouseMove);
 		window.removeEventListener("mouseup", handleMouseUp);
@@ -249,7 +249,7 @@ const _HuePicker = ({ setHsv, hsv, handleColorUpdate}: any) => {
 		}, 0);
 	}, []);
 
-	const handleMouseMove = (event: any) => {
+	const handleMouseMove = (event: MouseEvent) => {
 		event.preventDefault();
 
 		let hueX = xxy[0];
@@ -273,7 +273,7 @@ const _HuePicker = ({ setHsv, hsv, handleColorUpdate}: any) => {
 
 	};
 
-	const handleMouseDown = (event: any): void => {
+	const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
 		event.preventDefault();
 
 		let hueX = xxy[0];
@@ -296,7 +296,7 @@ const _HuePicker = ({ setHsv, hsv, handleColorUpdate}: any) => {
 		window.addEventListener("mouseup", handleMouseUp);
 	};
 
-	const handleMouseUp = (event: any) => {
+	const handleMouseUp = (event: MouseEvent) => {
 		event.preventDefault();
 		window.removeEventListener("mousemove", handleMouseMove);
 		window.removeEventListener("mouseup", handleMouseUp);

@@ -54,7 +54,7 @@ export class SidebarDiscreteStateItem {
                         }}
                     >
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.updateWidgetMoveUpItem(event);
                             }}
                             style={{
@@ -64,7 +64,7 @@ export class SidebarDiscreteStateItem {
                             &#8593;{" "}
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.updateWidgetMoveDownItem(event);
                             }}
                             style={{
@@ -74,7 +74,7 @@ export class SidebarDiscreteStateItem {
                             &#8595;{" "}
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.updateWidgetRemoveItem(event);
                             }}
                         >
@@ -123,7 +123,7 @@ export class SidebarDiscreteStateItem {
                                 setItemName(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = mainWidget.getItemNames()[this.getIndex()];
                                 if (orig !== itemName) {
                                     setItemName(orig);
@@ -166,7 +166,7 @@ export class SidebarDiscreteStateItem {
                                 setItemValue(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = `${mainWidget.getItemValues()[this.getIndex()]}`;
                                 if (orig !== itemValue) {
                                     setItemValue(orig);
@@ -188,7 +188,7 @@ export class SidebarDiscreteStateItem {
                     <Collapsible
                         rgbColorStr={`${mainWidget.getItemColors()[this.getIndex()]}`}
                         updateFromSidebar={(
-                            event: any,
+                            event: React.SyntheticEvent | null | undefined,
                             propertyName: string,
                             propertyValue: number | string | number[] | string[] | boolean | undefined
                         ) => {
@@ -201,7 +201,7 @@ export class SidebarDiscreteStateItem {
             </this._BlockBody>
         );
     };
-    updateWidgetName = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetName = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -223,7 +223,7 @@ export class SidebarDiscreteStateItem {
         g_flushWidgets();
     };
 
-    updateWidgetValue = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetValue = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -256,7 +256,7 @@ export class SidebarDiscreteStateItem {
         g_flushWidgets();
     };
 
-    updateWidgetColor = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetColor = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -279,7 +279,7 @@ export class SidebarDiscreteStateItem {
         g_flushWidgets();
     };
 
-    updateWidgetMoveUpItem = (event: any) => {
+    updateWidgetMoveUpItem = (event: React.SyntheticEvent | null | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -325,7 +325,7 @@ export class SidebarDiscreteStateItem {
         g_flushWidgets();
     };
 
-    updateWidgetMoveDownItem = (event: any) => {
+    updateWidgetMoveDownItem = (event: React.SyntheticEvent | null | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -371,7 +371,7 @@ export class SidebarDiscreteStateItem {
         g_flushWidgets();
     };
 
-    updateWidgetRemoveItem = (event: any) => {
+    updateWidgetRemoveItem = (event: React.SyntheticEvent | null | undefined) => {
         if (event) {
             event.preventDefault();
         }

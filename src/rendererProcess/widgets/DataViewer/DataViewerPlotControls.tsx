@@ -55,7 +55,7 @@ export class DataViewerPlotControls {
                     {/* re-scale vertically to plot limits */}
                     <this._StyledFigButton
                         hintText={"Auto scale all Y axes"}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -99,7 +99,7 @@ export class DataViewerPlotControls {
                     {/* re-scale the currently selected trace to vertical plot limits */}
                     <this._StyledFigButton
                         hintText={"Auto scale current Y axis (right double click)"}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -145,7 +145,7 @@ export class DataViewerPlotControls {
                     {/* setting page */}
                     <this._StyledFigButton
                         hintText={"Settings"}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -168,7 +168,7 @@ export class DataViewerPlotControls {
                         style={{
                             fontSize: "18px",
                         }}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -205,7 +205,7 @@ export class DataViewerPlotControls {
                     {/* horizontal zoom in */}
                     <this._StyledFigButton
                         hintText={"Zoom in horizontally (wheel scroll up)"}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -233,7 +233,7 @@ export class DataViewerPlotControls {
                     {/* horizontal zoom out */}
                     <this._StyledFigButton
                         hintText={"Zoom out horizontally (wheel scroll down)"}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -261,7 +261,7 @@ export class DataViewerPlotControls {
                     {/* horizontal pan left */}
                     <this._StyledFigButton
                         hintText={"Pan trace to left (drag to left)"}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -290,7 +290,7 @@ export class DataViewerPlotControls {
                     {/* horizontal pan right */}
                     <this._StyledFigButton
                         hintText={"Pan trace to right (drag to right)"}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -318,7 +318,7 @@ export class DataViewerPlotControls {
                     {/* vertical zoom in*/}
                     <this._StyledFigButton
                         hintText={"Zoom in vertically (Ctrl + wheel scroll up)"}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -359,7 +359,7 @@ export class DataViewerPlotControls {
                     {/* vertical zoom out*/}
                     <this._StyledFigButton
                         hintText={"Zoom out vertically (Ctrl + wheel scroll down)"}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -397,7 +397,7 @@ export class DataViewerPlotControls {
                     {/* vertical pan down*/}
                     <this._StyledFigButton
                         hintText={"Pan trace down (right button drag down)"}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -434,7 +434,7 @@ export class DataViewerPlotControls {
                     {/* vertical pan up*/}
                     <this._StyledFigButton
                         hintText={"Pan trace up (right button drag up)"}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -471,7 +471,7 @@ export class DataViewerPlotControls {
                     {/* export data */}
                     <this._StyledFigButton
                         hintText={"Export data"}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             if (event.button !== 0) {
                                 return;
                             }
@@ -492,7 +492,7 @@ export class DataViewerPlotControls {
 
                 <this._StyledFigButton
                     hintText={"Fetch archive data (double click)"}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event) => {
                         if (event.button !== 0) {
                             return;
                         }
@@ -538,9 +538,9 @@ export class DataViewerPlotControls {
         );
     };
 
-    _StyledFigButton = ({ children, onMouseDown, hintText }: any) => {
+    _StyledFigButton = ({ children, onMouseDown, hintText, style }: { children?: React.ReactNode; onMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void; hintText?: string; style?: React.CSSProperties }) => {
         const plot = this.getPlot();
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 ref={elementRef}
@@ -560,7 +560,7 @@ export class DataViewerPlotControls {
                 onMouseEnter={() => {
                     if (elementRef.current !== null) {
                         if (!g_widgets1.isEditing()) {
-                            elementRef.current.style["opacity"] = 1;
+                            elementRef.current.style["opacity"] = "1";
                             if (typeof hintText === "string" && plot.setCursorValue !== undefined) {
                                 plot.setCursorValue(hintText)
                             }
@@ -570,14 +570,14 @@ export class DataViewerPlotControls {
                 onMouseLeave={() => {
                     if (elementRef.current !== null) {
                         if (!g_widgets1.isEditing()) {
-                            elementRef.current.style["opacity"] = 0.4;
+                            elementRef.current.style["opacity"] = "0.4";
                             if (typeof hintText === "string" && plot.setCursorValue !== undefined) {
                                 plot.setCursorValue("")
                             }
                         }
                     }
                 }}
-                onMouseDown={(event: any) => {
+                onMouseDown={(event) => {
                     if (event.button !== 0) {
                         return;
                     }

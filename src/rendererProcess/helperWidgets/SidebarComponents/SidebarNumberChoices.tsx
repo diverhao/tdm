@@ -28,7 +28,7 @@ export class SidebarNumberChoices extends SidebarComponent {
                     </div>
                     <select
                         style={{ ...this.getInputStyle() }}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             this.updateWidget(event, event.target.value);
                         }}
                         defaultValue={this.getPropertyValue()}
@@ -60,7 +60,7 @@ export class SidebarNumberChoices extends SidebarComponent {
                     </div>
                     <select
                         style={{ ...this.getInputStyle() }}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             let num = parseInt(event.target.value);
                             if (isNaN(num)) {
                                 num = GlobalVariables.defaultFontSize;
@@ -86,7 +86,7 @@ export class SidebarNumberChoices extends SidebarComponent {
     };
 
 
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
 
         if (typeof propertyValue !== "number") {

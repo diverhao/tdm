@@ -124,7 +124,7 @@ export class ActionButton extends BaseWidget {
 
     _ElementActionButton = () => {
         // const [showDropDown, setShowDropDown] = React.useState(false);
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
 
         // 3D shadow
         const threeDStyle = this.get3dButtonStyle(false);
@@ -218,7 +218,7 @@ export class ActionButton extends BaseWidget {
     }
 
     _ElementActionButtonMulti = () => {
-        const selectRef = React.useRef<any>(null);
+        const selectRef = React.useRef<HTMLSelectElement>(null);
         const [dropDownActivated, setDropDownActivated] = React.useState(false);
         this.setDropDownActivated = setDropDownActivated;
         const numActions = this.getActions().length;

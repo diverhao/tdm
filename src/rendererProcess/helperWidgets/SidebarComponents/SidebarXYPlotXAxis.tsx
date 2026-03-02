@@ -27,7 +27,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
         // this.yIndex = yIndex;
     }
 
-    updateWidget = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => { };
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => { };
 
     getPlot = () => {
         return (this.getMainWidget() as XYPlot).getPlot();
@@ -216,7 +216,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                         setLabel(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = this.getPlotXAxis()["label"];
                         if (orig !== label) {
                             setLabel(orig);
@@ -227,7 +227,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
         );
     };
 
-    updateWidgetLabel = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidgetLabel = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
 
         this.getPlotXAxis()["label"] = `${propertyValue}`;
@@ -308,7 +308,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                     checked={showGrid}
                     // greg out when there are more than one traces
                     // disabled={this.getMainWidget().getChannelNamesLevel0().length > 2 ? true : false}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         this.updateWidgetShowGrid(event, !showGrid);
                         setShowGrid((prevVal: boolean) => {
                             return !prevVal;
@@ -320,7 +320,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
     };
 
 
-    updateWidgetShowGrid = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidgetShowGrid = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // do not preventDefault()
 
         const oldVal = this.getPlotXAxis()["showGrid"];
@@ -362,7 +362,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                         setNumGrids(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = `${this.getPlotXAxis()["numGrids"]}`;
                         if (orig !== numGrids) {
                             setNumGrids(orig);
@@ -374,8 +374,8 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
     };
 
 
-    updateWidgetNumGrids = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidgetNumGrids = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
         const mainWidget = this.getMainWidget();
 
         // const index = this.yIndex * 2;
@@ -424,7 +424,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                         setValMin(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = `${this.getPlotXAxis()["valMin"]}`;
                         if (orig !== valMin) {
                             setValMin(orig);
@@ -455,7 +455,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                         setValMax(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = `${this.getPlotXAxis()["valMax"]}`;
                         if (orig !== valMax) {
                             setValMax(orig);
@@ -466,8 +466,8 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
         );
     };
 
-    updateWidgetXValMin = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidgetXValMin = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
         const mainWidget = this.getMainWidget();
 
         // const index = this.yIndex * 2;
@@ -495,8 +495,8 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
         g_flushWidgets();
     };
 
-    updateWidgetXValMax = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidgetXValMax = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
         const mainWidget = this.getMainWidget();
 
         // const index = this.yIndex * 2;

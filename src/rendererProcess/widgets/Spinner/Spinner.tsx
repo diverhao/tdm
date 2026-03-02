@@ -137,7 +137,7 @@ export class Spinner extends BaseWidget {
                     }}
                     ref={spinnerRef}
                     tabIndex={0}
-                    onKeyDown={(event: any) => {
+                    onKeyDown={(event) => {
                         if (this._getChannelAccessRight() < 1.5) {
                             return;
                         }
@@ -148,21 +148,21 @@ export class Spinner extends BaseWidget {
                         }
                     }}
                     // focus the element so that we can use keyboard event
-                    onMouseEnter={(event: any) => {
+                    onMouseEnter={(event) => {
                         if (!g_widgets1.isEditing()) {
                             event.preventDefault();
                             (spinnerRef.current as any).focus();
                         }
                     }}
-                    onMouseOver={(event: any) => {
+                    onMouseOver={(event) => {
                         if (!g_widgets1.isEditing()) {
                             event.preventDefault();
                             if (this._getChannelAccessRight() < 1.5) {
-                                event.target.style["cursor"] = "not-allowed";
+                                (event.target as HTMLElement).style["cursor"] = "not-allowed";
                             }
                         }
                     }}
-                    onMouseLeave={(event: any) => {
+                    onMouseLeave={(event) => {
                         (spinnerRef.current as any).blur();
                     }}
                 >
@@ -177,7 +177,7 @@ export class Spinner extends BaseWidget {
                             border: "solid 1px black",
                             cursor: "pointer",
                         }}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             event.preventDefault();
 
                             if (event.button !== 0) {
@@ -198,12 +198,12 @@ export class Spinner extends BaseWidget {
                                 }, this.mouseDownDelay / 4);
                             }, this.mouseDownDelay);
                         }}
-                        onMouseUp={(event: any) => {
+                        onMouseUp={(event) => {
                             clearInterval(this.mouseDownIntervalTimer);
                             clearTimeout(this.mouseDownIntervalTimer);
                             this.mouseDownIntervalTimer = undefined;
                         }}
-                        onMouseLeave={(event: any) => {
+                        onMouseLeave={(event) => {
                             clearInterval(this.mouseDownIntervalTimer);
                             clearTimeout(this.mouseDownIntervalTimer);
                             this.mouseDownIntervalTimer = undefined;
@@ -230,7 +230,7 @@ export class Spinner extends BaseWidget {
                             border: "solid 1px black",
                             cursor: "pointer",
                         }}
-                        onMouseDown={(event: any) => {
+                        onMouseDown={(event) => {
                             event.preventDefault();
 
                             if (event.button !== 0) {
@@ -252,12 +252,12 @@ export class Spinner extends BaseWidget {
                                 }, this.mouseDownDelay / 4);
                             }, this.mouseDownDelay);
                         }}
-                        onMouseUp={(event: any) => {
+                        onMouseUp={(event) => {
                             clearInterval(this.mouseDownIntervalTimer);
                             clearTimeout(this.mouseDownIntervalTimer);
                             this.mouseDownIntervalTimer = undefined;
                         }}
-                        onMouseLeave={(event: any) => {
+                        onMouseLeave={(event) => {
                             clearInterval(this.mouseDownIntervalTimer);
                             clearTimeout(this.mouseDownIntervalTimer);
                             this.mouseDownIntervalTimer = undefined;
@@ -305,7 +305,7 @@ export class Spinner extends BaseWidget {
 
         // press escape key to blur input box
         React.useEffect(() => {
-            const blurOnEscapeKey = (event: any) => {
+            const blurOnEscapeKey = (event: KeyboardEvent) => {
                 if (event.key === "Escape") {
                     keyRef.current?.blur();
                 }
@@ -345,21 +345,21 @@ export class Spinner extends BaseWidget {
                         fontWeight: this.getAllStyle()["fontWeight"],
 
                     }}
-                    onMouseOver={(event: any) => {
+                    onMouseOver={(event) => {
                         event.preventDefault();
                         if (!g_widgets1.isEditing()) {
                             if (this._getChannelAccessRight() < 1.5) {
-                                event.target.style["cursor"] = "not-allowed";
+                                (event.target as HTMLElement).style["cursor"] = "not-allowed";
                             } else {
-                                event.target.style["cursor"] = "text";
+                                (event.target as HTMLElement).style["cursor"] = "text";
                             }
                         } else {
-                            event.target.style["cursor"] = "default";
+                            (event.target as HTMLElement).style["cursor"] = "default";
                         }
                     }}
-                    onMouseOut={(event: any) => {
+                    onMouseOut={(event) => {
                         event.preventDefault();
-                        event.target.style["cursor"] = "default";
+                        (event.target as HTMLElement).style["cursor"] = "default";
                     }}
                     // isEditing={g_widgets1.isEditing()}
                     // textAlign={
@@ -369,19 +369,19 @@ export class Spinner extends BaseWidget {
                     type="text"
                     name="value"
                     value={value}
-                    onFocus={(event: any) => {
+                    onFocus={(event) => {
                         isFocused.current = true;
                         keyRef.current?.select();
                         event.target.style["backgroundColor"] = this.getAllText().highlightBackgroundColor;
                     }}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event.preventDefault();
                         if (this._getChannelAccessRight() < 1.5) {
                             return;
                         }
                         setValue(event.target.value);
                     }}
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         isFocused.current = false;
                         setValue(`${valueRaw}`);
                         event.target.style["backgroundColor"] = `rgba(0,0,0,0)`;
@@ -464,7 +464,7 @@ export class Spinner extends BaseWidget {
                         alignItems: "center",
                         width: "100%",
                     }}
-                    onSubmit={(event: any) => {
+                    onSubmit={(event) => {
                         event.preventDefault();
                     }}
                 >
@@ -483,7 +483,7 @@ export class Spinner extends BaseWidget {
                             setChannelValue(parseFloat(newVal));
                         }}
                         // must use enter to change the value
-                        onBlur={(event: any) => { }}
+                        onBlur={(event) => { }}
                     />
                 </form>
                 <form
@@ -495,7 +495,7 @@ export class Spinner extends BaseWidget {
                         justifyContent: "space-between",
                         alignItems: "center",
                     }}
-                    onSubmit={(event: any) => {
+                    onSubmit={(event) => {
                         event.preventDefault();
                     }}
                 >
@@ -514,7 +514,7 @@ export class Spinner extends BaseWidget {
                             setStepSize(parseFloat(newVal));
                         }}
                         // must use enter to change the value
-                        onBlur={(event: any) => { }}
+                        onBlur={(event) => { }}
                     />
                 </form>
                 <div
@@ -527,7 +527,7 @@ export class Spinner extends BaseWidget {
                     }}
                 >
                     <ElementRectangleButton
-                        handleClick={(event: any) => {
+                        handleClick={(event) => {
                             event.preventDefault();
                             try {
                                 const channelName = this.getChannelNames()[0];
@@ -551,7 +551,7 @@ export class Spinner extends BaseWidget {
                     </ElementRectangleButton>
 
                     <ElementRectangleButton
-                        handleClick={(event: any) => {
+                        handleClick={(event) => {
                             event?.preventDefault();
                             this.closeSettings();
                         }}

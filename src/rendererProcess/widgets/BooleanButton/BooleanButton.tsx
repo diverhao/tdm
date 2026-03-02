@@ -98,7 +98,7 @@ export class BooleanButton extends BaseWidget {
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
     _ElementBooleanButton = () => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         const [, forceUpdate] = React.useState({});
         this.forceUpdateButton = forceUpdate;
 
@@ -150,12 +150,12 @@ export class BooleanButton extends BaseWidget {
                     outline: outline,
                     ...threeDStyle,
                 }}
-                onMouseDown={(event: any) => { this.handleMouseActionOnButton(event, "down") }}
-                onMouseUp={(event: any) => { this.handleMouseActionOnButton(event, "up") }}
+                onMouseDown={(event) => { this.handleMouseActionOnButton(event, "down") }}
+                onMouseUp={(event) => { this.handleMouseActionOnButton(event, "up") }}
                 // do not use onMouseOver, which also applies to the children elements
-                onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                onMouseEnter={(event) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
                 // do not use onMouseOut
-                onMouseLeave={(event: any) => {
+                onMouseLeave={(event) => {
                     this.handleMouseLeaveWriteWidget(event, elementRef);
                     if (elementRef.current !== null) {
                         elementRef.current.style["outline"] = outline;
@@ -184,7 +184,7 @@ export class BooleanButton extends BaseWidget {
     /**
      * when the mouse is down or up on the button, do something
      */
-    handleMouseActionOnButton = (event: any, direction: "down" | "up") => {
+    handleMouseActionOnButton = (event: React.MouseEvent<HTMLElement>, direction: "down" | "up") => {
         event.preventDefault();
         // left button only
         if (event.button !== 0) {

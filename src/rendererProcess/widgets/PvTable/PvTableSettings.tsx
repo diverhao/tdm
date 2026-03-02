@@ -153,7 +153,7 @@ export class PvTableSettings {
                             resize: "none",
                             fontSize: this.getMainWidget().getStyle()["fontSize"],
                         }}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             event.preventDefault();
                             setChannelNamesStr(event.target.value);
                         }}
@@ -219,7 +219,7 @@ export class PvTableSettings {
                             resize: "none",
                             fontSize: this.getMainWidget().getStyle()["fontSize"],
                         }}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             event.preventDefault();
                             setFieldNamessStr(event.target.value);
                         }}

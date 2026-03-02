@@ -1387,8 +1387,8 @@ export class Terminal extends BaseWidget {
         const [, forceUpdate] = React.useState({});
         this.forceUpdateMineField = forceUpdate;
         const [success, setSuccess] = React.useState(false);
-        const smileyFaceElementRef = React.useRef<any>(null);
-        const returnElementRef = React.useRef<any>(null);
+        const smileyFaceElementRef = React.useRef<HTMLDivElement>(null);
+        const returnElementRef = React.useRef<HTMLDivElement>(null);
         React.useEffect(() => {
             if (this.checkMineField()) {
                 setSuccess(true);
@@ -1431,7 +1431,7 @@ export class Terminal extends BaseWidget {
                         <div>
                             <form>
                                 <select
-                                    onChange={(event: any) => {
+                                    onChange={(event) => {
                                         const difficulty = event.target.value;
                                         if (difficulty === "easy") {
                                             this.mineGrids = 8;
@@ -1834,10 +1834,10 @@ export class Terminal extends BaseWidget {
         ``,
     ];
 
-    oldRef: any;
+    oldRef: HTMLDivElement | null = null;
 
     _ElementTerminal = () => {
-        const terminalRef = React.useRef<any>(null);
+        const terminalRef = React.useRef<HTMLDivElement>(null);
         this.getTerminal().options.fontFamily = this.getAllStyle()["fontFamily"];
         this.getTerminal().options.fontSize = this.getAllStyle()["fontSize"];
 

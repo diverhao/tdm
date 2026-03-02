@@ -93,7 +93,7 @@ export class ComboBox extends BaseWidget {
 
     _ElementComboBox = () => {
 
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
 
         const allStyle = this.getAllStyle();
         const allText = this.getAllText();
@@ -125,8 +125,8 @@ export class ComboBox extends BaseWidget {
                     height: "100%",
                     backgroundColor: "rgba(0,0,0,0)",
                 }}
-                onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
-                onMouseLeave={(event: any) => this.handleMouseLeaveWriteWidget(event, elementRef)}
+                onMouseEnter={(event) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                onMouseLeave={(event) => this.handleMouseLeaveWriteWidget(event, elementRef)}
             >
                 <form
                     style={{
@@ -154,7 +154,7 @@ export class ComboBox extends BaseWidget {
                             outline: "none",
                             textAlignLast: textAlignLast,
                         }}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             this.handleMouseClick(event);
                         }}
                         value={`${itemIndex}`}
@@ -189,7 +189,7 @@ export class ComboBox extends BaseWidget {
     /**
      * when the mouse is down or up on the button, do something
      */
-    handleMouseClick = (event: any) => {
+    handleMouseClick = (event: React.ChangeEvent<HTMLSelectElement>) => {
         event.preventDefault();
 
         // no button field
@@ -202,7 +202,7 @@ export class ComboBox extends BaseWidget {
             return;
         }
 
-        const index = parseInt(event.target.value);
+        const index = parseInt((event.target as HTMLSelectElement).value);
         if (isNaN(index)) {
             return;
         }

@@ -167,7 +167,7 @@ export class SidebarCanvasScript {
                                 setScript(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (this.getMainWidget().getScript() !== script) {
                                     setScript(`${this.getMainWidget().getScript()}`);
                                 }
@@ -179,7 +179,7 @@ export class SidebarCanvasScript {
         );
     };
 
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
 
         const oldVal = this.getMainWidget().getScript();

@@ -50,7 +50,7 @@ export class SidebarSymbolItems extends SidebarComponent {
 
 
 						<ElementButton
-							onClick={(event: any) => {
+							onClick={(event) => {
                                 this.updateWidgetAppendItem(event);
 							}}
 						>
@@ -85,7 +85,7 @@ export class SidebarSymbolItems extends SidebarComponent {
     _BlockTitle = this.getSidebar()._BlockTitle;
     _BlockBody = this.getSidebar()._BlockBody;
 
-	updateWidgetAppendItem = (event: any) => {
+	updateWidgetAppendItem = (event: React.SyntheticEvent | null | undefined) => {
 		if (event) {
 			event.preventDefault();
 		}
@@ -108,7 +108,7 @@ export class SidebarSymbolItems extends SidebarComponent {
 	};
 
 	// no need to update widget from this sidebar component
-	updateWidget = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {};
+	updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {};
 
 	getMembers = () => {
 		return this._members;

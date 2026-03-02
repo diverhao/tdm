@@ -405,7 +405,7 @@ export class MainPage extends BasePage {
 
                         }}
                         value={value}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             const newValue = event.target.value;
                             if (newValue.startsWith("open-display-")) {
                                 // todo: open the display
@@ -640,7 +640,7 @@ export class MainPage extends BasePage {
     _ElementTestTalk = () => {
         return (
             <ElementRectangleButton
-                handleMouseDown={(event: any) => {
+                handleMouseDown={() => {
                     speakText("Alarm, this is a test.")
                 }}
                 marginRight={20}
@@ -664,7 +664,7 @@ export class MainPage extends BasePage {
     }
 
     _ElementTestPa = () => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         const [text, setText] = React.useState("Test PA");
         return (
             <div
@@ -729,7 +729,7 @@ export class MainPage extends BasePage {
     }
 
     _ElementPa = () => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         const [text, setText] = React.useState("PA");
         return (
             <div
@@ -789,7 +789,7 @@ export class MainPage extends BasePage {
 
 
     _ElementModifyButton = ({ imgSrc, handleClick, hint, setHint }: { imgSrc: string, handleClick: () => void, hint: string, setHint: (hint: string) => void }) => {
-        const imgRef = React.useRef<any>(null);
+        const imgRef = React.useRef<HTMLImageElement>(null);
 
         return (
             <img
@@ -808,7 +808,7 @@ export class MainPage extends BasePage {
                 }}
                 onMouseEnter={() => {
                     if (imgRef.current !== null) {
-                        imgRef.current.style["opacity"] = 1;
+                        imgRef.current.style["opacity"] = "1";
                         imgRef.current.style["outline"] = 'solid 2px blue';
                         // imgRef.current.style["filter"] = 'invert(100%)';
                         // imgRef.current.style["backgroundColor"] = 'rgba(255,255,255,1)';
@@ -819,7 +819,7 @@ export class MainPage extends BasePage {
 
                 onMouseLeave={() => {
                     if (imgRef.current !== null) {
-                        imgRef.current.style["opacity"] = 0.2;
+                        imgRef.current.style["opacity"] = "0.2";
                         imgRef.current.style["outline"] = 'none';
                         // imgRef.current.style["filter"] = '';
                         // imgRef.current.style["backgroundColor"] = 'rgba(0,0,0,0)';

@@ -253,7 +253,7 @@ export class SymbolGallery {
                     maxWidth: "150px",
                     flex: "0 1 auto",
                 }}
-                onMouseDown={(event: any) => {
+                onMouseDown={(event) => {
                     if (isSelected) {
                         return;
                     }
@@ -365,7 +365,7 @@ export class SymbolGallery {
                     boxSizing: "border-box",
 
                 }}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event) => {
                         event.preventDefault();
                         if (this.getSelectedImageName() === imageName) {
                             // Deselect the image
@@ -512,7 +512,7 @@ export class SymbolGallery {
                 <ElementRectangleButton
                     defaultBackgroundColor={defaultBackgroundColor}
                     highlightBackgroundColor={highlightBackgroundColor}
-                    handleMouseDown={(event: any) => {
+                    handleMouseDown={(event) => {
                         const symbolName = this.getSelectedImageName();
                         if (symbolName === "") {
                             return;
@@ -531,7 +531,7 @@ export class SymbolGallery {
                 {/* Close button: closes gallery without selecting */}
                 <ElementRectangleButton
                     marginLeft={20}
-                    handleMouseDown={(event: any) => {
+                    handleMouseDown={(event) => {
                         this.removeElement();
                     }}
                 >

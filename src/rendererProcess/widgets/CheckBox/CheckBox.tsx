@@ -95,7 +95,7 @@ export class CheckBox extends BaseWidget {
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
     _ElementCheckBox = () => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLFormElement>(null);
         const allText = this.getAllText();
         const size = allText["size"];
         const widgetKey = this.getWidgetKey();
@@ -112,14 +112,14 @@ export class CheckBox extends BaseWidget {
                     alignItems: "center",
                     backgroundColor: backgroundColor,
                 }}
-                onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
-                onMouseLeave={(event: any) => this.handleMouseLeaveWriteWidget(event, elementRef)}
+                onMouseEnter={(event) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                onMouseLeave={(event) => this.handleMouseLeaveWriteWidget(event, elementRef)}
             >
                 <input
                     type="checkbox"
                     name="checkbox"
                     id={widgetKey}
-                    onClick={(event: any) => {
+                    onClick={(event) => {
                         this.handleMouseClick(event);
                     }}
                     style={{
@@ -152,7 +152,7 @@ export class CheckBox extends BaseWidget {
     /**
      * when the mouse is down or up on the button, do something
      */
-    handleMouseClick = (event: any) => {
+    handleMouseClick = (event: React.MouseEvent<HTMLElement>) => {
         event.preventDefault();
         // left button only
         if (event.button !== 0) {

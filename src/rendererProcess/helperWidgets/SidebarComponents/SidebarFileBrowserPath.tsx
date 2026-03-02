@@ -44,7 +44,7 @@ export class SidebarFileBrowserPath extends SidebarComponent {
 						setPath(newVal);
 					}}
 					// must use enter to change the value
-					onBlur={(event: any) => {
+					onBlur={(event) => {
 						const orig = this.getText()["path"];
 						if (orig !== path) {
 							setPath(orig);
@@ -55,7 +55,7 @@ export class SidebarFileBrowserPath extends SidebarComponent {
 		);
 	};
 
-	updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+	updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
 		event?.preventDefault();
 
 		const oldVal = this.getText()["path"];

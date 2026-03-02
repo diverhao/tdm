@@ -37,7 +37,7 @@ export class RuleAngle extends RuleComponent {
 						setAngle(Math.min(Math.max(parseInt(newVal), 0), 360));
 					}}
 					// must use enter to change the value
-					onBlur={(event: any) => {
+					onBlur={(event) => {
 						const orig = GlobalMethods.parseIntAngle(`${this.getRuleTdl()["propertyValue"]}`);
 						if (orig !== angle) {
 							setAngle(orig);
@@ -48,7 +48,7 @@ export class RuleAngle extends RuleComponent {
 		);
 	};
 
-	updatePropertyValue = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+	updatePropertyValue = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
 		if (event) {
 			event.preventDefault();
 		}

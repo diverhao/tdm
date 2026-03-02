@@ -293,7 +293,7 @@ export const ElementMacroInput = ({ rowIndex, columnIndex, macrosData, modifyCel
                 type={"text"}
                 spellCheck={false}
                 placeholder={""}
-                onChange={(event: any) => {
+                onChange={(event) => {
                     event.preventDefault();
                     setValue(event.target.value);
                 }}
@@ -312,7 +312,7 @@ export const ElementMacroInput = ({ rowIndex, columnIndex, macrosData, modifyCel
                         refElement.current.style["outline"] = "solid 1px black";
                     }
                 }}
-                onBlur={(event: any) => {
+                onBlur={(event) => {
                     if (refElement.current !== null) {
                         refElement.current.style["outline"] = "solid 0px black";
                     }
@@ -363,7 +363,7 @@ export const ElementMacroInputSingleColumnData = ({widgetKey, rowIndex, macrosDa
                 type={"text"}
                 spellCheck={false}
                 placeholder={""}
-                onChange={(event: any) => {
+                onChange={(event) => {
                     event.preventDefault();
                     setValue(event.target.value);
                 }}
@@ -382,7 +382,7 @@ export const ElementMacroInputSingleColumnData = ({widgetKey, rowIndex, macrosDa
                         refElement.current.style["outline"] = "solid 1px black";
                     }
                 }}
-                onBlur={(event: any) => {
+                onBlur={(event) => {
                     if (refElement.current !== null) {
                         refElement.current.style["outline"] = "solid 0px black";
                     }
@@ -451,7 +451,7 @@ export const ElementSmallButton = ({ children, onMouseDown }: any) => {
                     refElement.current.style["opacity"] = 0.2;
                 }
             }}
-            onMouseDown={(event: any) => {
+            onMouseDown={(event) => {
                 onMouseDown(event);
             }}
         >
@@ -460,7 +460,7 @@ export const ElementSmallButton = ({ children, onMouseDown }: any) => {
     )
 }
 
-export const ElementButton = ({ children, onClick, style }: any) => {
+export const ElementButton = ({ children, onClick, style }: { children?: React.ReactNode; onClick?: (event: React.MouseEvent<HTMLDivElement>) => void; style?: React.CSSProperties }) => {
     const refElement = React.useRef<any>(null);
     return (
         <div
@@ -486,8 +486,8 @@ export const ElementButton = ({ children, onClick, style }: any) => {
                     refElement.current.style["opacity"] = 0.3;
                 }
             }}
-            onClick={() => {
-                onClick()
+            onClick={(event) => {
+                if (onClick) onClick(event)
             }}
         >
             {children}

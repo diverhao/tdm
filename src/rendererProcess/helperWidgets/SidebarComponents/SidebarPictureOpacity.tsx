@@ -140,7 +140,7 @@ export class SidebarPictureOpacity extends SidebarComponent {
 							setOpacity(Math.min(Math.max(parseFloat(newVal), 0), 1));
 						}}
 						// must use enter to change the value
-						onBlur={(event: any) => {
+						onBlur={(event) => {
 							if (parseFloat(this.getText()["opacity"]) !== opacity) {
 								setOpacity(parseFloat(this.getText()["opacity"]));
 							}
@@ -198,7 +198,7 @@ export class SidebarPictureOpacity extends SidebarComponent {
 		);
 	};
 
-	updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+	updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
 		if (event) {
 			event.preventDefault();
 		}

@@ -471,11 +471,11 @@ export class PvTable extends BaseWidget {
     _ElementTableLineChannelName = ({ rowIndex }: any) => {
         // a level-5 channel name
         const [channelName, setChannelName] = React.useState<string>(this.getChannelNamesLevel5()[rowIndex - 1]);
-        const elementRefInput = React.useRef<any>(null);
+        const elementRefInput = React.useRef<HTMLInputElement>(null);
 
 
         // channel name hint
-        const formElementRef = React.useRef<any>(null);
+        const formElementRef = React.useRef<HTMLFormElement>(null);
 
         const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
         const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
@@ -516,7 +516,7 @@ export class PvTable extends BaseWidget {
                         width: "100%",
                         overflow: "visible",
                     }}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event) => {
                         if (event.button === 1) {
                             event.preventDefault();
                             // this <div /> element is removed in DisplayWindowClient mouseup event
@@ -527,7 +527,7 @@ export class PvTable extends BaseWidget {
                 >
                     <form
                         ref={formElementRef}
-                        onSubmit={(event: any) => {
+                        onSubmit={(event) => {
                             // event.preventDefault();
                             setShowChannelNameHint(false)
 
@@ -580,7 +580,7 @@ export class PvTable extends BaseWidget {
                                 // outline: "solid 1px rgba(255, 0, 0, 1)",
                                 userSelect: "auto",
                             }}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 event.preventDefault();
                                 const newVal = event.target.value;
                                 setChannelName(newVal);
@@ -620,7 +620,7 @@ export class PvTable extends BaseWidget {
                                 }
                             }}
                             // readOnly={!(this.modifyingColumnIndex === columnIndex)}
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 event.preventDefault();
                                 setShowChannelNameHint(false);
                                 setChannelNameHintData([]);
@@ -632,7 +632,7 @@ export class PvTable extends BaseWidget {
                                 this.modifyingRowIndex = -1;
                                 this.forceUpdateTable();
                             }}
-                            onFocus={(event: any) => {
+                            onFocus={(event) => {
                                 event.preventDefault();
                                 if (elementRefInput.current !== null) {
                                     // elementRefInput.current.style["border"] = "solid 1px rgba(255,0,0,1)";
@@ -665,7 +665,7 @@ export class PvTable extends BaseWidget {
                     this.modifyingRowIndex = rowIndex;
                     this.forceUpdateTable();
                 }}
-                onMouseDown={(event: any) => {
+                onMouseDown={(event) => {
                     if (event.button === 1) {
                         event.preventDefault();
                         // this <div /> element is removed in DisplayWindowClient mouseup event
@@ -709,12 +709,12 @@ export class PvTable extends BaseWidget {
 
     _ElementTableHeaderFieldName = ({ columnIndex }: any) => {
         const [fieldName, setFieldName] = React.useState<string>(this.getFieldlNames()[columnIndex - 2]);
-        const elementRefInput = React.useRef<any>(null);
+        const elementRefInput = React.useRef<HTMLInputElement>(null);
 
         if (this.modifyingColumnIndex === columnIndex) {
             return <div>
                 <form
-                    onSubmit={(event: any) => {
+                    onSubmit={(event) => {
                         event.preventDefault();
                         this.getFieldlNames()[columnIndex - 2] = fieldName;
                         this.modifyingColumnIndex = -1;
@@ -747,12 +747,12 @@ export class PvTable extends BaseWidget {
                             fontWeight: GlobalVariables.defaultFontWeight,
                             // outline: "solid 1px rgba(255, 0, 0, 1)",
                         }}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             event.preventDefault();
                             setFieldName(event.target.value);
                         }}
                         // readOnly={!(this.modifyingColumnIndex === columnIndex)}
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             event.preventDefault();
                             if (elementRefInput.current !== null) {
                                 elementRefInput.current.style["border"] = "solid 1px rgba(255,0,0,0)";
@@ -761,7 +761,7 @@ export class PvTable extends BaseWidget {
                             this.modifyingColumnIndex = -1;
                             this.forceUpdateTable();
                         }}
-                        onFocus={(event: any) => {
+                        onFocus={(event) => {
                             event.preventDefault();
                             if (elementRefInput.current !== null) {
                                 // elementRefInput.current.style["border"] = "solid 1px rgba(255,0,0,1)";
@@ -801,9 +801,6 @@ export class PvTable extends BaseWidget {
 
     _ElementHeader = () => {
         const [strings, setStrings] = React.useState(this.filterStrings.join(" "));
-        const buttonAddRef = React.useRef<any>(null);
-        const buttonSettingsRef = React.useRef<any>(null);
-        const buttonCopyAllDataRef = React.useRef<any>(null);
         return (
             <div style={{
                 width: "100%",
@@ -823,13 +820,13 @@ export class PvTable extends BaseWidget {
                 }}>
                     Filter:
                 </div>
-                <form onSubmit={(event: any) => {
+                <form onSubmit={(event) => {
                     event?.preventDefault();
                 }}>
                     < input
                         value={strings}
                         spellCheck={false}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             const rawString = event.target.value;
                             setStrings(rawString);
                             this.filterStrings = `${rawString}`.split(/\s+/);
@@ -964,7 +961,7 @@ export class PvTable extends BaseWidget {
     _ElementPvTable = () => {
         const [, forceUpdate] = React.useState({});
 
-        const tableRef = React.useRef<any>(null);
+        const tableRef = React.useRef<HTMLDivElement>(null);
 
         this.forceUpdateTable = () => {
             forceUpdate({});
@@ -1129,7 +1126,7 @@ export class PvTable extends BaseWidget {
                                             <input
                                                 type="checkbox"
                                                 checked={this.getChannelSelects()[channelNameIndex]}
-                                                onChange={(event: any) => {
+                                                onChange={(event) => {
                                                     event.preventDefault();
                                                     this.getChannelSelects()[channelNameIndex] = !this.getChannelSelects()[channelNameIndex];
                                                 }}
@@ -1192,7 +1189,7 @@ export class PvTable extends BaseWidget {
         const currentValueRaw = this.getChannelValue(channelNameLevel4, fieldName);
         const currentValue = currentValueRaw === undefined ? "" : currentValueRaw;
         const [value, setValue] = React.useState(`${currentValue}`);
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLInputElement>(null);
         if (fieldName === "" || channelNameLevel4 === "") {
             return null;
         } else {
@@ -1203,7 +1200,7 @@ export class PvTable extends BaseWidget {
                         width: "100%",
                         height: "100%",
                     }}
-                    onSubmit={(event: any) => {
+                    onSubmit={(event) => {
                         event.preventDefault();
                         try {
                             const tcaChannel = g_widgets1.getTcaChannel(channelNameLevel4);
@@ -1246,11 +1243,11 @@ export class PvTable extends BaseWidget {
                         ref={elementRef}
                         type="text"
                         value={(document.activeElement === elementRef.current ? value : currentValue) as (string | number | readonly string[] | undefined)}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             event.preventDefault();
                             setValue(event.target.value);
                         }}
-                        onFocus={(event: any) => {
+                        onFocus={(event) => {
                             event.preventDefault();
                             const valueShown = this.getChannelValue(channelNameLevel4, fieldName);
                             setValue(`${valueShown === undefined ? "" : valueShown}`);
@@ -1258,14 +1255,14 @@ export class PvTable extends BaseWidget {
                                 elementRef.current.style["border"] = "solid 1px rgba(0,0,0,1)";
                             }
                         }}
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             event.preventDefault();
                             if (elementRef.current !== null) {
                                 elementRef.current.style["border"] = "solid 1px rgba(0,0,0,0)";
                             }
                         }}
                         // why it cannot be focused
-                        onClick={(event: any) => {
+                        onClick={(event) => {
                             if (elementRef.current !== null) {
                                 elementRef.current.focus()
                             }

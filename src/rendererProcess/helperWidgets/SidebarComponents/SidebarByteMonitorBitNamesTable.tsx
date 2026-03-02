@@ -51,8 +51,8 @@ export class SidebarByteMonitorBitNamesTable extends SidebarComponent {
         );
     };
     
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
 
         // const oldVal = this.getText()["lineWidth"];
         // if (propertyValue === oldVal) {

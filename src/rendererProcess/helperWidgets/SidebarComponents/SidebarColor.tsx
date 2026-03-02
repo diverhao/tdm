@@ -22,8 +22,8 @@ export class SidebarColor extends SidebarComponent {
         return (
             <Collapsible
                 rgbColorStr={this.getPropertyValue()}
-                updateFromSidebar={(event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-                    this.updateWidget(event, propertyValue);
+                updateFromSidebar={(_event: React.SyntheticEvent | null | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+                    this.updateWidget(_event, propertyValue);
                 }}
                 title={this.getLabel()}
                 eventName={"border-color"}
@@ -31,7 +31,7 @@ export class SidebarColor extends SidebarComponent {
         );
     };
 
-    updateWidget = (event: any, propertyValueNumArray: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValueNumArray: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
 
         if (!Array.isArray(propertyValueNumArray)) {

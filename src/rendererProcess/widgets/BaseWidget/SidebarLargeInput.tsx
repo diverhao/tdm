@@ -49,7 +49,7 @@ export class SidebarLargeInput {
         const [localValue, setLocalValue] = React.useState(this.getValue());
 
         // channel name hint
-        const formElementRef = React.useRef<any>(null);
+        const formElementRef = React.useRef<HTMLFormElement>(null);
 
         const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
         const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
@@ -178,7 +178,7 @@ export class SidebarLargeInput {
                                 }
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 setShowChannelNameHint(false);
                                 setChannelNameHintData([]);
 
@@ -223,7 +223,7 @@ export class SidebarLargeInput {
         const [localValue, setLocalValue] = React.useState(this.getValue());
 
         // channel name hint
-        const formElementRef = React.useRef<any>(null);
+        const formElementRef = React.useRef<HTMLFormElement>(null);
 
 
         return (
@@ -300,7 +300,7 @@ export class SidebarLargeInput {
                                 setLocalValue(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 // const orig = this.getMainWidget().getChannelNames()[0];
                                 const orig = this.getValue();
                                 // console.log("blur:", orig, localValue)
@@ -395,7 +395,7 @@ export class SidebarLargeInput {
                             marginBottom: 20,
                         }}
                         value={localValue}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             setLocalValue(event.target.value);
                         }}
                     >

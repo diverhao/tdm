@@ -39,7 +39,7 @@ export class MouseSelectionRegion {
 	//     the boundary of canvas is included
 	// (2) update "mouse selection region" appearance
 	// (3) update widgets appearance according to the new "mouse selection region" dimension
-	private _handleMouseMove = (event: any) => {
+	private _handleMouseMove = (event: MouseEvent) => {
 		event.preventDefault();
 		if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.selectingWidget) {
 			return;
@@ -70,7 +70,7 @@ export class MouseSelectionRegion {
 	// (1) change window status to "editing"
 	// (2) remove window event listeners: mousemove and mouseup
 	// (3) remove the "mouse selection region" object in Widgets, and flush (so that the "mouse selection region" disappears)
-	private _handleMouseUp = (event: any) => {
+	private _handleMouseUp = (event: MouseEvent) => {
 		event.preventDefault();
 		// (1)
 		g_widgets1.setRendererWindowStatus(rendererWindowStatus.editing);

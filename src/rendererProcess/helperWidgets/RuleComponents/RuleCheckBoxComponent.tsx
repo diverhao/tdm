@@ -78,7 +78,7 @@ export class RuleCheckBoxComponent extends RuleComponent {
         );
     };
 
-    updatePropertyValue = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updatePropertyValue = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         if (event) {
             // do not prevent default
             // event.preventDefault();

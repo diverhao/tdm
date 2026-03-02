@@ -134,7 +134,7 @@ export class TextEntry extends BaseWidget {
          *  (1) prevent updating the display each time when the value is changed
          *  (2) change background color
          */
-        const handleFocus = (event: any) => {
+        const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
             isFocused.current = true;
             if (keyRef.current !== null) {
                 keyRef.current.select();
@@ -142,7 +142,7 @@ export class TextEntry extends BaseWidget {
             }
         }
 
-        const handleChange = (event: any) => {
+        const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             event.preventDefault();
             if (this._getChannelAccessRight() < 1.5) {
                 // no write access, do not update
@@ -155,7 +155,7 @@ export class TextEntry extends BaseWidget {
          * when the input is blurred, the displayed value goes back to the 
          * current channel value
          */
-        const handleBlur = (event: any) => {
+        const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
             isFocused.current = false;
             setValue(this.getFormattedChannelValue(true));
             if (keyRef.current !== null) {
@@ -166,22 +166,22 @@ export class TextEntry extends BaseWidget {
         /**
          * change mouse shape based upon write permission and editing status
          */
-        const handleMouseOver = (event: any) => {
+        const handleMouseOver = (event: React.MouseEvent<HTMLElement>) => {
             event.preventDefault();
             if (!g_widgets1.isEditing()) {
                 if (this._getChannelAccessRight() >= Channel_ACCESS_RIGHTS.READ_WRITE) {
-                    event.target.style["cursor"] = "text";
+                    (event.target as HTMLElement).style["cursor"] = "text";
                 } else {
-                    event.target.style["cursor"] = "not-allowed";
+                    (event.target as HTMLElement).style["cursor"] = "not-allowed";
                 }
             } else {
-                event.target.style["cursor"] = "default";
+                (event.target as HTMLElement).style["cursor"] = "default";
             }
         };
 
-        const handleMouseOut = (event: any) => {
+        const handleMouseOut = (event: React.MouseEvent<HTMLElement>) => {
             event.preventDefault();
-            event.target.style["cursor"] = "default";
+            (event.target as HTMLElement).style["cursor"] = "default";
         };
 
         /**
@@ -199,7 +199,7 @@ export class TextEntry extends BaseWidget {
 
         // press escape key to blur input box
         React.useEffect(() => {
-            const blurOnEscapeKey = (event: any) => {
+            const blurOnEscapeKey = (event: KeyboardEvent) => {
                 if (event.key === "Escape") {
                     keyRef.current?.blur();
                 }

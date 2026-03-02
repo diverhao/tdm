@@ -18,7 +18,7 @@ export class CanvasSidebar {
     private _sidebarLargeInput: SidebarLargeInput;
 
     // mock up definiton to silence TypeScript
-    updateFromWidget = (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => { };
+    updateFromWidget = (event: React.SyntheticEvent | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean) => { };
 
     constructor(canvas: Canvas) {
         this._mainWidget = canvas;
@@ -56,7 +56,7 @@ export class CanvasSidebar {
 
         // defined in sidebar, invoked from main widget
         const _updateFromWidget = React.useCallback(
-            (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => {
+            (event: React.SyntheticEvent | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean): void => {
                 switch (propertyName) {
                     case "width":
                         setWidth(propertyValue as number);
@@ -137,7 +137,7 @@ export class CanvasSidebar {
                             name="windowName"
                             value={windowName}
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateValue(event)}
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (this._mainWidget.getWindowName() !== windowName) {
                                     setWindowName(this._mainWidget.getWindowName());
                                 }
@@ -178,7 +178,7 @@ export class CanvasSidebar {
                             name="width"
                             value={width}
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateValue(event)}
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (parseInt(this._mainWidget.getStyle().width) !== width) {
                                     setWidth(parseInt(this._mainWidget.getStyle().width));
                                 }
@@ -204,7 +204,7 @@ export class CanvasSidebar {
                             name="height"
                             value={height}
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateValue(event)}
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (parseInt(this._mainWidget.getStyle().height) !== height) {
                                     setHeight(parseInt(this._mainWidget.getStyle().height));
                                 }
@@ -298,7 +298,7 @@ export class CanvasSidebar {
                                     Log.error("X Grid Size is not a number, cannot change it");
                                 }
                             }}
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (this._mainWidget.getXGridSize() !== xGridSize) {
                                     setXGridSize(this._mainWidget.getXGridSize());
                                 }
@@ -344,7 +344,7 @@ export class CanvasSidebar {
                                     Log.error("Y Grid Size is not a number, cannot change it");
                                 }
                             }}
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 if (this._mainWidget.getYGridSize() !== yGridSize) {
                                     setYGridSize(this._mainWidget.getYGridSize());
                                 }
@@ -355,7 +355,7 @@ export class CanvasSidebar {
                 {/* grid color */}
                 <Collapsible
                     rgbColorStr={this._mainWidget.getGridColor()}
-                    updateFromSidebar={(event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+                    updateFromSidebar={(_event: React.SyntheticEvent | null | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
                         // this.updateWidget(event, propertyValue);
                         const newVal = GlobalMethods.rgbaArrayToRgbaStr(propertyValue as number[]);
                         const oldVal = this._mainWidget.getGridColor();
@@ -401,7 +401,7 @@ export class CanvasSidebar {
                         <input
                             type="checkbox"
                             checked={showGrid}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 // this.updateWidget(event, !invisibleInOperation);
                                 this._mainWidget.setShowGrid(!showGrid);
 
@@ -522,7 +522,7 @@ export class CanvasSidebar {
 
     // defined in widget, invoked in sidebar
     getUpdateFromSidebar = (): ((
-        event: any,
+        event: React.SyntheticEvent | null | undefined,
         propertyName: string,
         propertyValue: number | string | number[] | string[] | [string, string][]
     ) => void) => {

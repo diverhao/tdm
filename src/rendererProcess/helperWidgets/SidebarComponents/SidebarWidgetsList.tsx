@@ -112,12 +112,12 @@ export class SidebarWidgetsList {
                             }
                             g_widgets1.updateSidebar(true);
                         }}
-                        onMouseEnter={(event: any) => {
+                        onMouseEnter={(event) => {
                             if (titleRef.current !== null) {
                                 titleRef.current.style["backgroundColor"] = "rgb(230, 230, 230, 1)";
                             }
                         }}
-                        onMouseLeave={(event: any) => {
+                        onMouseLeave={(event) => {
                             if (titleRef.current !== null) {
                                 titleRef.current.style["backgroundColor"] = "rgb(255, 255, 255, 1)";
                             }
@@ -234,7 +234,7 @@ export class SidebarWidgetsList {
             } else {
                 // de-select all widgets, select this widget
                 g_widgets1.deselectAllWidgets(false);
-                widget._handleMouseDoubleClick(event);
+                widget._handleMouseDoubleClick(event as React.MouseEvent<HTMLElement>);
             }
         } else if (event.button === 0 && !widget.isSelected()) {
             // left button down on not-selected widget
@@ -244,7 +244,7 @@ export class SidebarWidgetsList {
             } else {
                 // de-select all widgets, select this widget
                 g_widgets1.deselectAllWidgets(false);
-                widget._handleMouseDoubleClick(event);
+                widget._handleMouseDoubleClick(event as React.MouseEvent<HTMLElement>);
             }
         } else if (event.button === 2 && widget.isSelected()) {
             // right button down on selected widget

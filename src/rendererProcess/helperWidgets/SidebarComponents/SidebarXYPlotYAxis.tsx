@@ -204,7 +204,7 @@ export class SidebarXYPlotYAxis {
                 <input
                     type="checkbox"
                     checked={autoScale}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         this.updateWidgetAutoScale(event, !autoScale);
                         setAutoScale((prevVal: boolean) => {
                             return !prevVal;
@@ -215,7 +215,7 @@ export class SidebarXYPlotYAxis {
         );
     };
 
-    updateWidgetAutoScale = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidgetAutoScale = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // do not preventDefault()
 
         const oldVal = this.getPlotYAxes()[this.yIndex]["autoScale"];
@@ -252,7 +252,7 @@ export class SidebarXYPlotYAxis {
                 <div>Scale:</div>
                 <select
                     style={{ fontFamily: "inherit", width: "60%" }}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         this.updateScale(event, this.yIndex);
                     }}
                 >
@@ -264,15 +264,15 @@ export class SidebarXYPlotYAxis {
         );
     };
 
-    updateScale = (event: any, index: number) => {
-        event.preventDefault();
+    updateScale = (event: React.ChangeEvent<HTMLSelectElement>, index: number) => {
+        event?.preventDefault();
 
         const mainWidget = this.getMainWidget() as XYPlot;
         const yAxis = mainWidget.getYAxes()[index];
         if (yAxis === undefined) {
             return;
         }
-        yAxis["displayScale"] = event.target.value;
+        yAxis["displayScale"] = event.target.value as "Linear" | "Log10";
 
         const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
         history.registerAction();
@@ -303,7 +303,7 @@ export class SidebarXYPlotYAxis {
                 <input
                     type="checkbox"
                     checked={showGrid}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         this.updateWidgetShowGrid(event, !showGrid);
                         setShowGrid((prevVal: boolean) => {
                             return !prevVal;
@@ -314,7 +314,7 @@ export class SidebarXYPlotYAxis {
         );
     };
 
-    updateWidgetShowGrid = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidgetShowGrid = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // do not preventDefault()
 
         const oldVal = this.getPlotYAxes()[this.yIndex]["showGrid"];
@@ -375,7 +375,7 @@ export class SidebarXYPlotYAxis {
                         setChannelName(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = this.getMainWidget().getChannelNamesLevel0()[this.yIndex * 2];
                         if (orig !== channelName) {
                             setChannelName(orig);
@@ -412,7 +412,7 @@ export class SidebarXYPlotYAxis {
                         setLabel(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = this.getPlotYAxes()[this.yIndex]["label"];
                         if (orig !== label) {
                             setLabel(orig);
@@ -423,7 +423,7 @@ export class SidebarXYPlotYAxis {
         );
     };
 
-    updateWidgetLabel = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidgetLabel = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
 
         this.getPlotYAxes()[this.yIndex]["label"] = `${propertyValue}`;
@@ -466,7 +466,7 @@ export class SidebarXYPlotYAxis {
                         setChannelName(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = this.getMainWidget().getChannelNamesLevel0()[this.yIndex * 2 + 1];
                         if (orig !== channelName) {
                             setChannelName(orig);
@@ -497,7 +497,7 @@ export class SidebarXYPlotYAxis {
                         setLineWidth(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = `${this.getPlotYAxes()[this.yIndex]["lineWidth"]}`;
                         if (orig !== lineWidth) {
                             setLineWidth(orig);
@@ -508,8 +508,8 @@ export class SidebarXYPlotYAxis {
         );
     };
 
-    updateWidgetLineWidth = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidgetLineWidth = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
         const mainWidget = this.getMainWidget();
 
         // const index = this.yIndex * 2;
@@ -557,7 +557,7 @@ export class SidebarXYPlotYAxis {
                         setValMin(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = `${this.getPlotYAxes()[this.yIndex]["valMin"]}`;
                         if (orig !== valMin) {
                             setValMin(orig);
@@ -588,7 +588,7 @@ export class SidebarXYPlotYAxis {
                         setValMax(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = `${this.getPlotYAxes()[this.yIndex]["valMax"]}`;
                         if (orig !== valMax) {
                             setValMax(orig);
@@ -599,8 +599,8 @@ export class SidebarXYPlotYAxis {
         );
     };
 
-    updateWidgetYValMin = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidgetYValMin = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
         const mainWidget = this.getMainWidget();
 
         // const index = this.yIndex * 2;
@@ -628,8 +628,8 @@ export class SidebarXYPlotYAxis {
         g_flushWidgets();
     };
 
-    updateWidgetYValMax = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidgetYValMax = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
         const mainWidget = this.getMainWidget();
 
         // const index = this.yIndex * 2;
@@ -661,8 +661,8 @@ export class SidebarXYPlotYAxis {
         return (
             <Collapsible
                 rgbColorStr={this.getPlotYAxes()[this.yIndex]["lineColor"]}
-                updateFromSidebar={(event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-                    this.updateWidgetLineColor(event, propertyValue);
+                updateFromSidebar={(_event: React.SyntheticEvent | null | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+                    this.updateWidgetLineColor(_event, propertyValue);
                 }}
                 title={"Line color"}
                 eventName={"text-color"}
@@ -670,7 +670,7 @@ export class SidebarXYPlotYAxis {
         );
     };
 
-    updateWidgetLineColor = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidgetLineColor = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // no event
 
         const newVal = GlobalMethods.rgbaArrayToRgbaStr(propertyValue as number[]);
@@ -689,7 +689,7 @@ export class SidebarXYPlotYAxis {
         g_flushWidgets();
     };
 
-    updateWidgetXChannelName = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidgetXChannelName = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
         const mainWidget = this.getMainWidget();
 
@@ -708,7 +708,7 @@ export class SidebarXYPlotYAxis {
         g_flushWidgets();
     };
 
-    updateWidgetYChannelName = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidgetYChannelName = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
         const mainWidget = this.getMainWidget();
 
@@ -747,7 +747,7 @@ export class SidebarXYPlotYAxis {
                         setPointSize(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = `${this.getPlotYAxes()[this.yIndex]["pointSize"]}`;
                         if (orig !== pointSize) {
                             setPointSize(orig);
@@ -759,8 +759,8 @@ export class SidebarXYPlotYAxis {
     };
 
 
-    updateWidgetPointSize = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidgetPointSize = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
         const mainWidget = this.getMainWidget();
 
         // const index = this.yIndex * 2;
@@ -809,7 +809,7 @@ export class SidebarXYPlotYAxis {
                         setNumGrids(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const orig = `${this.getPlotYAxes()[this.yIndex]["numGrids"]}`;
                         if (orig !== numGrids) {
                             setNumGrids(orig);
@@ -821,8 +821,8 @@ export class SidebarXYPlotYAxis {
     };
 
 
-    updateWidgetNumGrids = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidgetNumGrids = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
         const mainWidget = this.getMainWidget();
 
         // const index = this.yIndex * 2;
@@ -858,7 +858,7 @@ export class SidebarXYPlotYAxis {
                 <div>Point type</div>
                 <select
                     style={{ ...this._styleInput, width: "59%" }}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         this.updateWidgetPointType(event, event.target.value);
                     }}
                     defaultValue={this.getPlotYAxes()[this.yIndex]["pointType"]}
@@ -881,7 +881,7 @@ export class SidebarXYPlotYAxis {
                 <div>Line Style</div>
                 <select
                     style={{ ...this._styleInput, width: "59%" }}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         this.updateWidgetLineStyle(event, event.target.value);
                     }}
                     defaultValue={this.getPlotYAxes()[this.yIndex]["lineStyle"]}
@@ -897,8 +897,8 @@ export class SidebarXYPlotYAxis {
         );
     };
 
-    updateWidgetPointType = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidgetPointType = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
 
         const oldVal = this.getPlotYAxes()[this.yIndex]["pointType"];
         if (propertyValue === oldVal) {
@@ -915,8 +915,8 @@ export class SidebarXYPlotYAxis {
 
         g_flushWidgets();
     };
-    updateWidgetLineStyle = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidgetLineStyle = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
 
         const oldVal = this.getPlotYAxes()[this.yIndex]["lineStyle"];
         if (propertyValue === oldVal) {

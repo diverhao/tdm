@@ -55,6 +55,6 @@ export class SidebarDataViewerChannelNames extends SidebarComponent {
 
     // --------------------------- updaters -------------------------
 
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => { };
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => { };
 
 }

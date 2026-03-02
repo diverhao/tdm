@@ -107,7 +107,7 @@ export class Calculator extends BaseWidget {
     };
 
     _ElementCalculator = () => {
-        const inputElementRef = React.useRef<any>(null);
+        const inputElementRef = React.useRef<HTMLInputElement>(null);
         const [inputLine, setInputLine] = React.useState("");
         const [historyLine, setHistoryLine] = React.useState("\u00A0");
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
@@ -198,7 +198,7 @@ export class Calculator extends BaseWidget {
                             marginBottom: 10,
                             width: "100%",
                         }}
-                        onSubmit={(event: any) => {
+                        onSubmit={(event) => {
                             event.preventDefault();
                             setInputLine((oldValue: string) => {
                                 setHistoryLine(oldValue);
@@ -234,17 +234,17 @@ export class Calculator extends BaseWidget {
                                 // paddingBottom: 5,
                                 caretColor: "rgba(255,255,255,1)",
                             }}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 event.preventDefault();
                                 setInputLine(event.target.value);
                             }}
-                            onFocus={(event: any) => {
+                            onFocus={(event) => {
                                 event.preventDefault();
                                 if (!g_widgets1.isEditing() && inputElementRef.current !== null) {
                                     inputElementRef.current.style["color"] = "rgba(0,255,0,1)";
                                 }
                             }}
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 event.preventDefault();
                                 if (!g_widgets1.isEditing() && inputElementRef.current !== null) {
                                     inputElementRef.current.style["color"] = "rgba(255,255,255,1)";
@@ -737,7 +737,7 @@ export class Calculator extends BaseWidget {
     };
 
     _ElementKey = ({ label, onClick }: any) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         if (`${label}`.startsWith("makeup-")) {
             return (
                 <div
@@ -787,25 +787,25 @@ export class Calculator extends BaseWidget {
                         if (elementRef.current !== null) {
                             elementRef.current.style["backgroundColor"] = "rgba(84, 88, 93, 1)";
                             // elementRef.current.style["cursor"] = "default";
-                            elementRef.current.style["opacity"] = 1;
+                            elementRef.current.style["opacity"] = "1";
                         }
                     }}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event) => {
                         if (g_widgets1.isEditing()) {
                             return;
                         }
                         event.preventDefault();
                         if (elementRef.current !== null) {
-                            elementRef.current.style["opacity"] = 0.5;
+                            elementRef.current.style["opacity"] = "0.5";
                         }
                     }}
-                    onMouseUp={(event: any) => {
+                    onMouseUp={(event) => {
                         if (g_widgets1.isEditing()) {
                             return;
                         }
                         event.preventDefault();
                         if (elementRef.current !== null) {
-                            elementRef.current.style["opacity"] = 1;
+                            elementRef.current.style["opacity"] = "1";
                         }
                     }}
                     onClick={onClick}

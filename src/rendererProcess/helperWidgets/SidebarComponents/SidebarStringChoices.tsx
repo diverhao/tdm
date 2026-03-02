@@ -27,7 +27,7 @@ export class SidebarStringChoices extends SidebarComponent {
                     </div>
                     <select
                         style={{ ...this.getInputStyle() }}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             this.updateWidget(event, event.target.value);
                         }}
                         defaultValue={this.getPropertyValue()}
@@ -59,7 +59,7 @@ export class SidebarStringChoices extends SidebarComponent {
                     </div>
                     <select
                         style={{ ...this.getInputStyle() }}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             this.updateWidget(event, event.target.value);
                         }}
                         defaultValue={this.getPropertyValue()}
@@ -81,7 +81,7 @@ export class SidebarStringChoices extends SidebarComponent {
     };
 
 
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         event?.preventDefault();
 
         if (typeof propertyValue !== "string") {

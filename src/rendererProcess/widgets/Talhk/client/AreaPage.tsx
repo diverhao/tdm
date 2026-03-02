@@ -39,12 +39,12 @@ export class AreaPage {
         return (
             <select
                 value={"AreaPage"}
-                onChange={(event: any) => {
+                onChange={(event) => {
                     // console.log(event.target.value)
                     if (event.target.value === "AreaPage") {
                         return;
                     } else {
-                        this.getMainPage().switchView(event.target.value);
+                        this.getMainPage().switchView(event.target.value as "TreePage" | "AreaPage" | "TablePage");
                     }
                 }}
             >

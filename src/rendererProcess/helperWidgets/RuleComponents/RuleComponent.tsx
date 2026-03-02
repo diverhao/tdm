@@ -69,7 +69,7 @@ export abstract class RuleComponent {
         return (
             <form
                 style={this.getRule().getFormStyle()}
-                onSubmit={(event: any) => {
+                onSubmit={(event) => {
                     this.updateBoolExpression(event, boolExpression)
                 }}
             >
@@ -84,7 +84,7 @@ export abstract class RuleComponent {
                 <input
                     style={{ ...this.getRule().getInputStyle() }}
                     value={boolExpression}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event.preventDefault();
                         setBoolExpression(event.target.value);
                     }}
@@ -97,7 +97,7 @@ export abstract class RuleComponent {
         return <this.ElementBoolExpression></this.ElementBoolExpression>;
     };
 
-    updateBoolExpression = (event: any, newExpression: string) => {
+    updateBoolExpression = (event: React.SyntheticEvent | null | undefined, newExpression: string) => {
         event?.preventDefault();
         const rule = this.getRule();
         if (newExpression !== rule.getBoolExpression()) {

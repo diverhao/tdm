@@ -1,6 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
-import { MouseEvent } from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -153,7 +152,7 @@ export class SeqGraph extends BaseWidget {
 
         this._seqProgram = new SeqProgram("Seq Program", this);
 
-        window.addEventListener("mousedown", (event: any) => {
+        window.addEventListener("mousedown", (event: MouseEvent) => {
             if (event.target !== null && event.target !== document.getElementById("edgePeekContent")) {
                 this.setShowEdgePeekContent(false);
             }
@@ -258,15 +257,15 @@ export class SeqGraph extends BaseWidget {
         this.setShowLog = setShowContent;
 
         const [logHeight, setLogHeight] = React.useState(200);
-        const showHideElementRef = React.useRef<any>(null);
-        const copyElementRef = React.useRef<any>(null);
+        const showHideElementRef = React.useRef<HTMLDivElement>(null);
+        const copyElementRef = React.useRef<HTMLDivElement>(null);
 
         const handleMouseDown = () => {
             window.addEventListener("mousemove", handleMouseMove);
             window.addEventListener("mouseup", handleMouseUp);
         }
 
-        const handleMouseMove = (event: any) => {
+        const handleMouseMove = (event: MouseEvent) => {
             const dy = event.movementY;
             setLogHeight((oldValue: number) => {
                 return Math.min(window.innerHeight * 0.6, Math.max(40, oldValue - dy));
@@ -291,7 +290,7 @@ export class SeqGraph extends BaseWidget {
                 flexDirection: "column",
                 userSelect: "text",
             }}
-                onMouseDown={(event: MouseEvent) => { event.stopPropagation() }}
+            onMouseDown={(event) => { event.stopPropagation() }}
 
             >
                 <div style={{
@@ -345,7 +344,7 @@ export class SeqGraph extends BaseWidget {
                             paddingRight: 5,
                             borderRadius: 2,
                         }}
-                        onMouseDown={(event: MouseEvent) => { event.stopPropagation() }}
+                        onMouseDown={(event) => { event.stopPropagation() }}
                         onClick={() => {
                             if (showContent === true) {
                                 setShowContent(false);
@@ -399,7 +398,7 @@ export class SeqGraph extends BaseWidget {
     }
 
     _ElementSeqGraph = () => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         // const rawChannelName = this.getChannelNames()[0];
         // const [channelName, setChannelName] = React.useState(rawChannelName === undefined? "": rawChannelName);
         const [channelName, setChannelName] = React.useState("");
@@ -515,7 +514,7 @@ export class SeqGraph extends BaseWidget {
                             backgroundColor: "rgba(245, 245, 245, 1)",
                             fontFamily: "monospace"
                         }}
-                        onMouseDown={(event: MouseEvent) => { event.stopPropagation() }}
+                        onMouseDown={(event) => { event.stopPropagation() }}
                     >
                         {/* {this.edgePeekContent} */}
                         {this.edgePeekContent.split("\n").map((line: string, index: number) => {
@@ -523,7 +522,7 @@ export class SeqGraph extends BaseWidget {
                                 const stateName = line.replace("// ----- conditions in state ", "").replace(" -----", "");
                                 return (
                                     <div
-                                        onMouseDown={(event: any) => { event.stopPropagation() }}
+                                        onMouseDown={(event) => { event.stopPropagation() }}
                                         style={{
                                             cursor: "pointer",
                                             fontWeight: "bold",
@@ -544,7 +543,7 @@ export class SeqGraph extends BaseWidget {
                                 const stateName = line.replace("// ----- state ", "").replace(" -----", "");
                                 return (
                                     <div
-                                        onMouseDown={(event: any) => { event.stopPropagation() }}
+                                        onMouseDown={(event) => { event.stopPropagation() }}
                                         style={{
                                             cursor: "pointer",
                                             fontWeight: "bold",
@@ -566,7 +565,7 @@ export class SeqGraph extends BaseWidget {
                                 return <div>{"\n"}</div>
                             } else {
                                 return (
-                                    <div key={index} onMouseDown={(event: any) => { event.stopPropagation() }}>
+                                    <div key={index} onMouseDown={(event) => { event.stopPropagation() }}>
                                         {line}
                                     </div>
                                 )
@@ -664,7 +663,7 @@ export class SeqGraph extends BaseWidget {
                 overflow: "hidden",
                 zIndex: 10001, // higher than peek page
             }}
-                onMouseDown={(event: MouseEvent) => {
+                onMouseDown={(event) => {
                     event.stopPropagation();
                 }
                 }
@@ -693,7 +692,7 @@ export class SeqGraph extends BaseWidget {
                         <input
                             type="checkbox"
                             checked={checked}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 this.setEmulateMode(!checked)
                                 setCheck(!checked);
                             }}
@@ -765,7 +764,7 @@ export class SeqGraph extends BaseWidget {
                                         borderRadius: 0,
                                     }}
                                     value={searchStr}
-                                    onChange={(event: any) => {
+                                    onChange={(event) => {
                                         setSearchStr(event.target.value);
                                     }}
                                     placeholder="Search"
@@ -798,15 +797,15 @@ export class SeqGraph extends BaseWidget {
                             draggable={false}
                             value={seqContent}
                             spellCheck={false}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 event.preventDefault();
                                 setSeqContent(event.target.value);
                                 this.getText()["seqContent"] = event.target.value;
                             }}
-                            onDragStart={(event: any) => {
+                            onDragStart={(event) => {
                                 event.preventDefault();
                             }}
-                            onDrop={(event: any) => {
+                            onDrop={(event) => {
                                 event.preventDefault();
                             }}
                         >
@@ -828,8 +827,7 @@ export class SeqGraph extends BaseWidget {
 
 
     private _ElementControl = () => {
-        const elementRef = React.useRef<any>(null);
-        const elementSettingsRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         const [, forceUpdate] = React.useState({});
 
         return (

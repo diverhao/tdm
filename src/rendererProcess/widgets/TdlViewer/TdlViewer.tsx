@@ -169,7 +169,6 @@ export class TdlViewer extends BaseWidget {
 
 
     _ElementTdlFileContents = ({ show }: any) => {
-        const elementRef = React.useRef<any>(null);
         return (
             <div style={{
                 display: show === true ? "inline-flex" : "none",
@@ -236,8 +235,6 @@ export class TdlViewer extends BaseWidget {
 
     _ElementScript = ({ show }: any) => {
         const scriptFullFileName = this.getText()["scriptFullFileName"];
-        const elementRef = React.useRef<any>(null);
-        const elemenEditRef = React.useRef<any>(null);
         return <div
             style={{
                 display: show === true ? "inline-flex" : "none",

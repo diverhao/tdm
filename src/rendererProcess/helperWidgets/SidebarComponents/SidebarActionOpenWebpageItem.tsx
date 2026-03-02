@@ -55,21 +55,21 @@ export class SidebarActionOpenWebpageItem {
                     <b>{`#${this.getIndex()} Open Webpage`}</b>
                     <div>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetMoveUpAction(event, this.getIndex());
                             }}
                         >
                             &#8593;{" "}
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetMoveDownAction(event, this.getIndex());
                             }}
                         >
                             &#8595;{" "}
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetRemoveAction(event, this.getIndex());
                             }}
                         >
@@ -117,7 +117,7 @@ export class SidebarActionOpenWebpageItem {
                                 setLabel(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = this.getTdl()["label"];
                                 if (orig !== label) {
                                     setLabel(orig);
@@ -159,7 +159,7 @@ export class SidebarActionOpenWebpageItem {
                                 setUrl(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = this.getTdl()["url"];
                                 if (orig !== url) {
                                     setUrl(orig);
@@ -174,7 +174,7 @@ export class SidebarActionOpenWebpageItem {
     };
 
 
-    updateWidgetLabel = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetLabel = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -196,7 +196,7 @@ export class SidebarActionOpenWebpageItem {
         g_flushWidgets();
     };
 
-    updateWidgetUrl = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetUrl = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }

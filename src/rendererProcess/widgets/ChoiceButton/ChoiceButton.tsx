@@ -93,7 +93,7 @@ export class ChoiceButton extends BaseWidget {
     };
 
     _ElementChoiceButton = () => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
 
         const allText = this.getAllText();
         const direction = allText["direction"];
@@ -113,8 +113,8 @@ export class ChoiceButton extends BaseWidget {
                     height: "100%",
                     backgroundColor: "rgba(0,0,0,0)",
                 }}
-                onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
-                onMouseLeave={(event: any) => this.handleMouseLeaveWriteWidget(event, elementRef)}
+                onMouseEnter={(event) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                onMouseLeave={(event) => this.handleMouseLeaveWriteWidget(event, elementRef)}
             >
                 {itemNames.map((name: string, index: number) => {
 
@@ -173,7 +173,7 @@ export class ChoiceButton extends BaseWidget {
                     width: width,
                     height: height,
                 }}
-                onClick={(event: any) => {
+                onClick={(event) => {
                     this.handleMouseClick(event, index);
                 }}
             >
@@ -190,7 +190,7 @@ export class ChoiceButton extends BaseWidget {
     /**
      * when the mouse is down or up on the button, do something
      */
-    handleMouseClick = (event: any, index: number) => {
+    handleMouseClick = (event: React.MouseEvent<HTMLElement>, index: number) => {
         event.preventDefault();
         // left button only
         if (event.button !== 0) {

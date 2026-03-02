@@ -45,14 +45,14 @@ export class SidebarGroupItem {
                     <b>{`# ${this.getIndex()}`}</b>
                     <div>
                         {/* <this.StyledButton
-							onClick={(event: any) => {
+							onClick={(event) => {
 								this.updateWidgetMoveUpItem(event);
 							}}
 						>
 							&#11105;{" "}
 						</this.StyledButton>
 						<this.StyledButton
-							onClick={(event: any) => {
+							onClick={(event) => {
 								this.updateWidgetMoveDownItem(event);
 							}}
 						>
@@ -60,7 +60,7 @@ export class SidebarGroupItem {
 						</this.StyledButton> */}
                         {mainWidget.getSelectedGroup() === this.getIndex() ? (
                             <this.StyledButton
-                                onClick={(event: any) => {
+                                onClick={(event) => {
                                     this.updateWidgetRemoveItem(event);
                                 }}
                             >
@@ -111,7 +111,7 @@ export class SidebarGroupItem {
                                 setItemName(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = mainWidget.getItemNames()[this.getIndex()];
                                 if (orig !== itemName) {
                                     setItemName(orig);
@@ -132,7 +132,7 @@ export class SidebarGroupItem {
                     <Collapsible
                         rgbColorStr={`${mainWidget.getItemBackgroundColors()[this.getIndex()]}`}
                         updateFromSidebar={(
-                            event: any,
+                            event: React.SyntheticEvent | null | undefined,
                             propertyName: string,
                             propertyValue: number | string | number[] | string[] | boolean | undefined
                         ) => {
@@ -145,7 +145,7 @@ export class SidebarGroupItem {
             </this._BlockBody>
         );
     };
-    updateWidgetName = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetName = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -167,7 +167,7 @@ export class SidebarGroupItem {
         g_flushWidgets();
     };
 
-    updateWidgetBackgroundColor = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetBackgroundColor = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -295,7 +295,7 @@ export class SidebarGroupItem {
     // 	g_flushWidgets();
     // };
 
-    updateWidgetRemoveItem = (event: any) => {
+    updateWidgetRemoveItem = (event: React.SyntheticEvent | null | undefined) => {
         if (event) {
             event.preventDefault();
         }

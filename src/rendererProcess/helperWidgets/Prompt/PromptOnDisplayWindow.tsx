@@ -60,7 +60,7 @@ export class PromptOnDisplayWindow extends Prompt {
                 <this._ElementInput
                     autoFocus={true}
                     value={fileName}
-                    handleChange={(event: any) => {
+                    handleChange={(event) => {
                         event.preventDefault();
                         setFileName(event.target.value);
                     }}

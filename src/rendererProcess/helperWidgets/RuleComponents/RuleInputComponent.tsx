@@ -55,7 +55,7 @@ export class RuleInputComponent extends RuleComponent {
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                         setPropertyValue(event.target.value);
                     }}
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const origStr = this.getRule().getPropertyValue();
                         if (origStr !== propertyValue) {
                             setPropertyValue(`${origStr}`);

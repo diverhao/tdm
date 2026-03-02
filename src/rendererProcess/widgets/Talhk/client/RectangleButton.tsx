@@ -16,8 +16,8 @@ export const ElementRectangleButtonHighlightTextColor = "rgba(255,255,255,1)";
 export const ElementRectangleButton = (
     {
         children,
-        handleClick = (event: any) => { },
-        handleMouseDown = (event: any) => { },
+        handleClick = (event: React.MouseEvent<HTMLElement>) => { },
+        handleMouseDown = (event: React.MouseEvent<HTMLElement>) => { },
         defaultBackgroundColor = ElementRectangleButtonDefaultBackgroundColor,
         highlightBackgroundColor = ElementRectangleButtonHighlightBackgroundColor,
         defaultTextColor = ElementRectangleButtonDefaultTextColor,
@@ -35,7 +35,7 @@ export const ElementRectangleButton = (
         additionalStyle = {}
     }: any) => {
 
-    const elementRef = React.useRef<any>(null);
+    const elementRef = React.useRef<HTMLDivElement>(null);
     return (
         <div
             ref={elementRef}
@@ -73,11 +73,11 @@ export const ElementRectangleButton = (
                     elementRef.current.style["cursor"] = "default";
                 }
             }}
-            onClick={(event: any) => {
+            onClick={(event) => {
                 event?.preventDefault();
                 handleClick(event);
             }}
-            onMouseDown={(event: any) => {
+            onMouseDown={(event) => {
                 event?.preventDefault();
                 handleMouseDown(event);
             }}

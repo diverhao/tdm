@@ -49,7 +49,7 @@ export class SidebarChannelNames extends SidebarComponent {
                         setChannelNamesStr(newVal);
                     }}
                     // must use enter to change the value
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         const mainWidget = this.getMainWidget();
                         // if (mainWidget instanceof PvTable) {
                         const orig = `${(mainWidget as PvTable).getChannelNamesLevel0()}`;
@@ -63,8 +63,8 @@ export class SidebarChannelNames extends SidebarComponent {
         );
     };
 
-    updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        event.preventDefault();
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+        event?.preventDefault();
         const mainWidget = this.getMainWidget() as PvTable;
 
         const newVal = propertyValue as string;

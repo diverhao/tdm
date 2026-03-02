@@ -185,7 +185,7 @@ export class FileBrowser extends BaseWidget {
 
     _ElementFileBrowser = () => {
         const [, forceUpdate] = React.useState({});
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
 
         this.forceUpdate = forceUpdate;
         React.useEffect(() => {
@@ -392,7 +392,7 @@ export class FileBrowser extends BaseWidget {
                                 justifyContent: 'center',
                                 alignItems: "center",
                             }}
-                                onMouseDown={(event: any) => {
+                                onMouseDown={(event) => {
                                     event.preventDefault();
                                     if (this.getSortingMethod() === type_sorting_method.name_ascending) {
                                         this.setSortingMethod(type_sorting_method.name_decending);
@@ -420,7 +420,7 @@ export class FileBrowser extends BaseWidget {
                                         paddingLeft: 4,
                                         paddingRight: 4,
                                     }}
-                                        onMouseDown={(event: any) => {
+                                        onMouseDown={(event) => {
                                             event.preventDefault();
                                             if (this.getSortingMethod() === type_sorting_method.time_ascending) {
                                                 this.setSortingMethod(type_sorting_method.time_decending);
@@ -447,7 +447,7 @@ export class FileBrowser extends BaseWidget {
                                         paddingLeft: 4,
                                         paddingRight: 4,
                                     }}
-                                        onMouseDown={(event: any) => {
+                                        onMouseDown={(event) => {
                                             event.preventDefault();
                                             if (this.getSortingMethod() === type_sorting_method.size_ascending) {
                                                 this.setSortingMethod(type_sorting_method.size_decending);
@@ -514,7 +514,7 @@ export class FileBrowser extends BaseWidget {
         this.setFilterText = setFilterText;
 
         return (
-            <form onSubmit={(event: any) => { event.preventDefault() }}
+            <form onSubmit={(event) => { event.preventDefault() }}
                 style={{
                     marginRight: 15,
                 }}
@@ -523,7 +523,7 @@ export class FileBrowser extends BaseWidget {
                 <input
                     type="text"
                     value={filterText}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         setFilterText(event.target.value);
                         this.filterText = event.target.value;
                         this.forceUpdate({});
@@ -616,7 +616,7 @@ export class FileBrowser extends BaseWidget {
                 }}>
                     {/* close the modal window */}
                     <ElementRectangleButton
-                        handleMouseDown={(event: any) => {
+                        handleMouseDown={() => {
                             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                             const ipcManager = displayWindowClient.getIpcManager();
                             const displayWindowId = displayWindowClient.getWindowId();
@@ -634,7 +634,7 @@ export class FileBrowser extends BaseWidget {
                     <ElementRectangleButton
                         defaultBackgroundColor={this.getSelectedItem()["name"] === "" ? "rgba(180, 180, 180, 1)" : "rgba(65, 115, 183, 1)"}
                         highlightBackgroundColor={this.getSelectedItem()["name"] === "" ? "rgba(180, 180, 180, 1)" : "rgba(65, 115, 183, 0.8)"}
-                        handleMouseDown={(event: any) => {
+                        handleMouseDown={() => {
                             const selectedItem = this.getSelectedItem();
                             if (selectedItem["name"] !== "") { // one item is selected
                                 // open file or folder
@@ -656,10 +656,10 @@ export class FileBrowser extends BaseWidget {
     _ElementFolderPath = () => {
         const [folderPath, setFolderPath] = React.useState(this.getFolderPath());
         this.setFolderPathInput = setFolderPath;
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLInputElement>(null);
         return (
             <form
-                onSubmit={(event: any) => {
+                onSubmit={(event) => {
                     event.preventDefault();
                     // like refresh, force fetch
                     this.setFolderPath(folderPath);
@@ -681,7 +681,7 @@ export class FileBrowser extends BaseWidget {
                     }}
                     type={"text"}
                     value={folderPath.replace("-ABCD", "")}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event.preventDefault();
                         setFolderPath(event.target.value);
                     }}
@@ -692,7 +692,7 @@ export class FileBrowser extends BaseWidget {
                         }
                     }}
                     onMouseLeave={() => {
-                        if (document.activeElement !== elementRef.current) {
+                        if (elementRef.current !== null && document.activeElement !== elementRef.current) {
                             elementRef.current.style["color"] = "rgba(0,0,0,1)";
                         }
                     }}
@@ -713,8 +713,8 @@ export class FileBrowser extends BaseWidget {
         )
     }
 
-    _ElementHeaderTemplate = ({ onMouseDown, text, id }: { onMouseDown: (event: any) => void, text: string, id: string }) => {
-        const elementRef = React.useRef<any>(null);
+    _ElementHeaderTemplate = ({ onMouseDown, text, id }: { onMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void, text: string, id: string }) => {
+        const elementRef = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 ref={elementRef}
@@ -733,13 +733,13 @@ export class FileBrowser extends BaseWidget {
                 id={id}
                 onMouseEnter={() => {
                     if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
-                        elementRef.current.style["opacity"] = 0.8;
+                        elementRef.current.style["opacity"] = "0.8";
                         elementRef.current.style.backgroundColor = "rgba(200, 200, 200, 1)";
                     }
                 }}
                 onMouseLeave={() => {
                     if (elementRef.current !== null && this.getFolderPath() !== "bookmarks-ABCD") {
-                        elementRef.current.style["opacity"] = 1;
+                        elementRef.current.style["opacity"] = "1";
                         elementRef.current.style.backgroundColor = "rgba(200, 200, 200, 0)";
                     }
                 }}
@@ -879,7 +879,7 @@ export class FileBrowser extends BaseWidget {
 
 
     _ElementTableRow = ({ element, index, isSelected, forceUpdateTable }: { element: type_single_file_folder, index: number, isSelected: boolean, forceUpdateTable: any }) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLTableRowElement>(null);
 
         return (
             <tr
@@ -1040,7 +1040,7 @@ export class FileBrowser extends BaseWidget {
                     style={{
                         width: "100%",
                     }}
-                    onSubmit={(event: any) => {
+                    onSubmit={(event) => {
                         event.stopPropagation();
                         event.preventDefault();
                         if (name !== name1) {
@@ -1060,11 +1060,11 @@ export class FileBrowser extends BaseWidget {
 
 
                     }}
-                    onMouseDown={(event: any) => {
+                    onMouseDown={(event) => {
                         // do not let the window capture this event, it will set the editing name to false
                         event.stopPropagation();
                     }}
-                    onDoubleClick={(event: any) => {
+                    onDoubleClick={(event) => {
                         event.stopPropagation();
                     }}
                 >
@@ -1079,7 +1079,7 @@ export class FileBrowser extends BaseWidget {
                         }}
                         spellCheck={false}
                         value={name1}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             setName1(event.target.value);
                         }}
                     >
@@ -1267,7 +1267,7 @@ export class FileBrowser extends BaseWidget {
         const [checked, setChecked] = React.useState(this.onlyShowTdmFiles);
 
         return (
-            <form onSubmit={(event: any) => {
+            <form onSubmit={(event) => {
                 event.preventDefault();
             }}
                 style={{
@@ -1294,7 +1294,7 @@ export class FileBrowser extends BaseWidget {
     _ElementThumbnail = ({ parentElementRef }: any) => {
         const [thumbnail, setThumbnail] = React.useState("../../../webpack/resources/webpages/blank.svg");
         this.setThumbnail = setThumbnail;
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
 
         return (
             <div

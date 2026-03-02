@@ -45,7 +45,7 @@ export class PromptOnMainWindow extends Prompt {
 
                 }}>You have about 15 seconds to input the password.</div>
                 <this._ElementForm
-                    handleSubmit={(event: any) => {
+                    handleSubmit={(event) => {
                         event.preventDefault();
                         this.getMainWindowClient().getIpcManager().sendFromRendererProcess("ssh-password-prompt-result", {
                             password: password,
@@ -59,7 +59,7 @@ export class PromptOnMainWindow extends Prompt {
                     <this._ElementInput
                         autoFocus={true}
                         value={password}
-                        handleChange={(event: any) => {
+                        handleChange={(event) => {
                             event.preventDefault();
                             setPasword(event.target.value);
                         }}
@@ -77,27 +77,24 @@ export class PromptOnMainWindow extends Prompt {
                     userSelect: "none",
                 }}>
                     <ElementRectangleButton
-                        handleClick={(event: React.MouseEvent) => {
-                            // event.preventDefault();
+                        handleClick={(_event: React.MouseEvent) => {
                             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("ssh-password-prompt-result", {
                                 password: password,
                                 sshMainProcessId: sshMainProcessId,
-                            })
+                            });
                             this.startEventListeners();
                             this.removeElement();
                         }}
-                        text={"Submit"}
                     >
                         Submit
                     </ElementRectangleButton>
                     &nbsp; &nbsp; &nbsp; &nbsp;
                     <ElementRectangleButton
-                        handleClick={(event: React.MouseEvent) => {
-                            // event.preventDefault();
+                        handleClick={(_event: React.MouseEvent) => {
                             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("ssh-password-prompt-result", {
                                 password: "",
                                 sshMainProcessId: sshMainProcessId,
-                            })
+                            });
                             this.startEventListeners();
                             this.removeElement();
                         }}

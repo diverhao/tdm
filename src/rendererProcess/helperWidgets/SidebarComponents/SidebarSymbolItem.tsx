@@ -133,21 +133,21 @@ export class SidebarSymbolItem {
                         </div>
 
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.updateWidgetMoveUpItem(event);
                             }}
                         >
                             &#8593;{" "}
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.updateWidgetMoveDownItem(event);
                             }}
                         >
                             &#8595;{" "}
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.updateWidgetRemoveItem(event);
                             }}
                         >
@@ -200,7 +200,7 @@ export class SidebarSymbolItem {
                                 setItemName(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = mainWidget.getItemNames()[this.getIndex()];
                                 if (orig !== itemName) {
                                     setItemName(orig);
@@ -236,7 +236,7 @@ export class SidebarSymbolItem {
                                 setItemValue(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = `${mainWidget.getItemValues()[this.getIndex()]}`;
                                 if (orig !== itemValue) {
                                     setItemValue(orig);
@@ -248,7 +248,7 @@ export class SidebarSymbolItem {
             </this._BlockBody>
         );
     };
-    updateWidgetName = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetName = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -270,7 +270,7 @@ export class SidebarSymbolItem {
         g_flushWidgets();
     };
 
-    updateWidgetValue = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetValue = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -301,7 +301,7 @@ export class SidebarSymbolItem {
         g_flushWidgets();
     };
 
-    updateWidgetMoveUpItem = (event: any) => {
+    updateWidgetMoveUpItem = (event: React.SyntheticEvent | null | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -343,7 +343,7 @@ export class SidebarSymbolItem {
         g_flushWidgets();
     };
 
-    updateWidgetMoveDownItem = (event: any) => {
+    updateWidgetMoveDownItem = (event: React.SyntheticEvent | null | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -385,7 +385,7 @@ export class SidebarSymbolItem {
         g_flushWidgets();
     };
 
-    updateWidgetRemoveItem = (event: any) => {
+    updateWidgetRemoveItem = (event: React.SyntheticEvent | null | undefined) => {
         if (event) {
             event.preventDefault();
         }

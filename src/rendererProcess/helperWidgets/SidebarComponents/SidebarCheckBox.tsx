@@ -36,7 +36,7 @@ export class SidebarCheckBox extends SidebarComponent {
         );
     };
 
-    updateWidget = (event: React.ChangeEvent<HTMLInputElement>, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateWidget = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // do not preventDefault()
 
         if (typeof propertyValue !== "boolean") {

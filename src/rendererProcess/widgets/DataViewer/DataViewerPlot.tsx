@@ -483,7 +483,7 @@ export class DataViewerPlot {
 
     // plot body
     _ElementPlot = () => {
-        const plotRef = React.useRef<any>(null);
+        const plotRef = React.useRef<HTMLDivElement>(null);
 
         if (g_widgets1.isEditing() === true) {
             return <this._ElementPlotDummy></this._ElementPlotDummy>
@@ -947,7 +947,7 @@ export class DataViewerPlot {
             )
         }
 
-        const elementAddTraceRef = React.useRef<any>(null);
+        const elementAddTraceRef = React.useRef<HTMLDivElement>(null);
 
         return (
             <div
@@ -1048,13 +1048,13 @@ export class DataViewerPlot {
                     onMouseEnter={() => {
                         if (elementAddTraceRef.current !== null) {
                             // elementAddTraceRef.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
-                            elementAddTraceRef.current.style["opacity"] = 1;
+                            elementAddTraceRef.current.style["opacity"] = "1";
                         }
                         this.setCursorValue("Add trace")
                     }}
                     onMouseLeave={() => {
                         if (elementAddTraceRef.current !== null) {
-                            elementAddTraceRef.current.style["opacity"] = 0.3;
+                            elementAddTraceRef.current.style["opacity"] = "0.3";
                         }
                         this.setCursorValue("")
                     }}

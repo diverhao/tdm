@@ -95,7 +95,7 @@ export class RadioButton extends BaseWidget {
 
     _ElementRadioButton = () => {
 
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLFormElement>(null);
 
         const itemNames = this.calcItemTexts();
 
@@ -129,8 +129,8 @@ export class RadioButton extends BaseWidget {
                         alignItems: "flex-start",
                         backgroundColor: formBackgroundColor,
                     }}
-                    onMouseEnter={(event: any) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
-                    onMouseLeave={(event: any) => this.handleMouseLeaveWriteWidget(event, elementRef)}
+                    onMouseEnter={(event) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                    onMouseLeave={(event) => this.handleMouseLeaveWriteWidget(event, elementRef)}
                 >
 
                     {itemNames.map((name: string, index: number) => {

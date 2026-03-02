@@ -199,7 +199,7 @@ export class FileConverter extends BaseWidget {
                     justifyContent: "flex-start",
                 }}>
                     <ElementRectangleButton
-                        handleClick={(event: any) => {
+                        handleClick={(event) => {
                             event.preventDefault();
                             if (status === "standby") {
                                 // clicked Start
@@ -272,7 +272,7 @@ export class FileConverter extends BaseWidget {
                     justifyContent: "flex-end",
                 }}>
                     Filter: &nbsp;
-                    <form onSubmit={(event: any) => {
+                    <form onSubmit={(event) => {
                         event.preventDefault();
                         this.filterText = filterText;
                         // filter data
@@ -283,7 +283,7 @@ export class FileConverter extends BaseWidget {
                     }}>
                         <input
                             value={filterText}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 event.preventDefault();
                                 const text = event.target.value;
                                 setFilterText(text);
@@ -377,14 +377,14 @@ export class FileConverter extends BaseWidget {
                 <div style={{ width: 150 }}>
                     Source file or folder:
                 </div>
-                <form onSubmit={(event: any) => {
+                <form onSubmit={(event) => {
                     event.preventDefault();
                 }}
                     style={{ width: "40%" }}
                 >
                     <input
                         value={src}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             event.preventDefault();
                             const text = event.target.value;
                             setSrc(text);
@@ -404,7 +404,7 @@ export class FileConverter extends BaseWidget {
                 {g_widgets1.getRoot().getDisplayWindowClient().getOsType() === "linux" ? null :
                     <ElementRectangleButton
                         marginLeft={20}
-                        handleClick={(event: any) => {
+                        handleClick={(event) => {
                             event.preventDefault();
                             // if (this.getStatus() === "converting") {
                             //     return;
@@ -451,14 +451,14 @@ export class FileConverter extends BaseWidget {
                 <div style={{ width: 150 }}>
                     Destination folder:
                 </div>
-                <form onSubmit={(event: any) => {
+                <form onSubmit={(event) => {
                     event.preventDefault();
                 }}
                     style={{ width: "40%" }}
                 >
                     <input
                         value={dest}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             event.preventDefault();
                             const text = event.target.value;
                             setDest(text);
@@ -481,7 +481,7 @@ export class FileConverter extends BaseWidget {
                     // ! select folder. To avoid confusion, let's hide this button
                     <ElementRectangleButton
                         marginLeft={20}
-                        handleClick={(event: any) => {
+                        handleClick={(event) => {
                             event.preventDefault();
                             // if (this.getStatus() === "converting") {
                             //     return;
@@ -528,14 +528,14 @@ export class FileConverter extends BaseWidget {
                 <div style={{ width: 150 }}>
                     Folder recursion depth:
                 </div>
-                <form onSubmit={(event: any) => {
+                <form onSubmit={(event) => {
                     event.preventDefault();
                 }}
                     style={{ width: "40%" }}
                 >
                     <input
                         value={`${depth}`}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             event.preventDefault();
                             const text = event.target.value;
                             const value = parseInt(text);
@@ -650,7 +650,7 @@ export class FileConverter extends BaseWidget {
     }
 
     _ElementDataTable = () => {
-        const tableRef = React.useRef<any>(null);
+        const tableRef = React.useRef<HTMLDivElement>(null);
 
         // this.tableRef = tableRef;
 
@@ -660,7 +660,9 @@ export class FileConverter extends BaseWidget {
 
 
         const scrollToBottom = () => {
-            tableRef.current.scrollTop = tableRef.current.scrollHeight;
+            if (tableRef.current !== null) {
+                tableRef.current.scrollTop = tableRef.current.scrollHeight;
+            }
         };
 
         let isScrolledToBottom = false;

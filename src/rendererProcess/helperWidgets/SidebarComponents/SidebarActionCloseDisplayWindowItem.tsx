@@ -47,21 +47,21 @@ export class SidebarActionCloseDisplayWindowItem {
                     <b>{`#${this.getIndex()} Close Window`}</b>
                     <div>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetMoveUpAction(event, this.getIndex());
                             }}
                         >
                             &#8593;
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetMoveDownAction(event, this.getIndex());
                             }}
                         >
                             &#8595;
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetRemoveAction(event, this.getIndex());
                             }}
                         >
@@ -103,7 +103,7 @@ export class SidebarActionCloseDisplayWindowItem {
                                 setLabel(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = this.getTdl()["label"];
                                 if (orig !== label) {
                                     setLabel(orig);
@@ -134,7 +134,7 @@ export class SidebarActionCloseDisplayWindowItem {
 				<input
 					type="checkbox"
 					checked={exitProgram}
-					onChange={(event: any) => {
+					onChange={(event) => {
 						// do not preventDefault()
 
                         const oldVal = this.getTdl()["quitTDM"];
@@ -161,7 +161,7 @@ export class SidebarActionCloseDisplayWindowItem {
 			</form>
 		);
 	};
-    updateWidgetLabel = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetLabel = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }

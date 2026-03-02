@@ -751,9 +751,9 @@ export class XYPlotPlot {
             );
         }
 
-        const copyElementRef = React.useRef<any>(null);
-        const settingsElementRef = React.useRef<any>(null);
-        const showLegendRef = React.useRef<any>(null);
+        const copyElementRef = React.useRef<HTMLDivElement>(null);
+        const settingsElementRef = React.useRef<HTMLDivElement>(null);
+        const showLegendRef = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 style={{
@@ -783,7 +783,7 @@ export class XYPlotPlot {
                         }
                         if (copyElementRef.current !== null) {
                             copyElementRef.current.style["cursor"] = "pointer";
-                            copyElementRef.current.style["opacity"] = 1;
+                            copyElementRef.current.style["opacity"] = "1";
                         }
                     }}
                     onMouseLeave={() => {
@@ -792,7 +792,7 @@ export class XYPlotPlot {
                         }
 
                         if (copyElementRef.current !== null) {
-                            copyElementRef.current.style["opacity"] = 0.25;
+                            copyElementRef.current.style["opacity"] = "0.25";
                             copyElementRef.current.style["cursor"] = "default";
                         }
                     }}
@@ -836,7 +836,7 @@ export class XYPlotPlot {
 
                         if (settingsElementRef.current !== null) {
                             settingsElementRef.current.style["cursor"] = "pointer";
-                            settingsElementRef.current.style["opacity"] = 1;
+                            settingsElementRef.current.style["opacity"] = "1";
                         }
                     }}
                     onMouseLeave={() => {
@@ -845,7 +845,7 @@ export class XYPlotPlot {
                         }
 
                         if (settingsElementRef.current !== null) {
-                            settingsElementRef.current.style["opacity"] = 0.25;
+                            settingsElementRef.current.style["opacity"] = "0.25";
                             settingsElementRef.current.style["cursor"] = "default";
                         }
                     }}
@@ -873,7 +873,7 @@ export class XYPlotPlot {
                         }
                         if (showLegendRef.current !== null) {
                             showLegendRef.current.style["cursor"] = "pointer";
-                            showLegendRef.current.style["opacity"] = 1;
+                            showLegendRef.current.style["opacity"] = "1";
                         }
                         this.forceUpdate({});
                     }}
@@ -883,7 +883,7 @@ export class XYPlotPlot {
                         }
                         if (showLegendRef.current !== null) {
                             showLegendRef.current.style["cursor"] = "default";
-                            showLegendRef.current.style["opacity"] = 0.25;
+                            showLegendRef.current.style["opacity"] = "0.25";
                         }
                         this.forceUpdate({});
                     }}
@@ -1133,7 +1133,7 @@ export class XYPlotPlot {
         return selectedYAxis === undefined ? "rgba(0, 0, 0, 1)" : selectedYAxis.lineColor;
     }
 
-    updateCursorValue = (event: any) => {
+    updateCursorValue = (event: MouseEvent) => {
         const pointX0 = getMouseEventClientX(event);
         const pointY0 = getMouseEventClientY(event);
         const allStyle = this.getMainWidget().getAllStyle();

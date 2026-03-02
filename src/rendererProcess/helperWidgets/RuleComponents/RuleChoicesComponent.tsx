@@ -34,7 +34,7 @@ export class RuleChoicesComponent extends RuleComponent {
                 </div>
                 <select
                     style={{ ...this.getInputStyle() }}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         event?.preventDefault();
 
                         const propertyValue = event.target.value; // always a string
@@ -62,7 +62,7 @@ export class RuleChoicesComponent extends RuleComponent {
         )
     };
 
-    updatePropertyValue = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updatePropertyValue = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         if (event) {
             event.preventDefault();
         }

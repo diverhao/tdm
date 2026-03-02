@@ -25,7 +25,7 @@ export class SidebarRepeaterRowsConfig extends SidebarComponent {
                 width: "100%",
             }}>
                 <ElementRectangleButton
-                    handleMouseDown={(event: any) => {
+                    handleMouseDown={(event) => {
                         const mainWidget = this.getSidebar().getMainWidget();
                         if (mainWidget instanceof Repeater) {
                             // mainWidget.showRowsConfigPage();
@@ -49,7 +49,7 @@ export class SidebarRepeaterRowsConfig extends SidebarComponent {
         );
     };
 
-    updateWidget = (event: any) => {
+    updateWidget = (event: React.SyntheticEvent | null | undefined) => {
         event?.preventDefault();
 
         // const oldVal = this.getStyle()["width"];

@@ -85,7 +85,7 @@ export class VideoRecorder {
             recordingSignDiv.style["fontSize"] = `${GlobalVariables.defaultFontSize}px`;
             recordingSignDiv.style["fontStyle"] = GlobalVariables.defaultFontStyle;
             recordingSignDiv.style["fontWeight"] = GlobalVariables.defaultFontWeight;
-            recordingSignDiv.addEventListener("click", (event: any) => {
+            recordingSignDiv.addEventListener("click", (_event: MouseEvent) => {
                 Log.info("stop recording");
                 this.stop();
             });
@@ -96,11 +96,11 @@ export class VideoRecorder {
                 count++;
                 recordingSignDiv.innerText = `${count}`;
             }, 1000)
-            recordingSignDiv.addEventListener("mouseover", (event: any) => {
+            recordingSignDiv.addEventListener("mouseover", (_event: MouseEvent) => {
                 recordingSignDiv.style["cursor"] = "pointer";
                 recordingSignDiv.style["outline"] = "solid 3px red";
             });
-            recordingSignDiv.addEventListener("mouseleave", (event: any) => {
+            recordingSignDiv.addEventListener("mouseleave", (_event: MouseEvent) => {
                 recordingSignDiv.style["cursor"] = "default";
                 recordingSignDiv.style["outline"] = "none";
             });

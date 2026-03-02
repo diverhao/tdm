@@ -86,7 +86,7 @@ export class DataViewerMainSettings {
 
     _ElementBackgroundColor = () => {
         const [showCollapsible, setShowCollapsible] = React.useState<boolean>(false);
-        const elementRefBackgroundColor = React.useRef<any>(null);
+        const elementRefBackgroundColor = React.useRef<HTMLDivElement>(null);
 
         return (
             <div
@@ -146,8 +146,8 @@ export class DataViewerMainSettings {
                         >
                             <CollapsibleWithoutTitle
                                 rgbColorStr={this.getMainWidget().getStyle()["backgroundColor"]}
-                                updateFromSidebar={(event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-                                    this.updateBackgroundColor(event, propertyValue);
+                                updateFromSidebar={(_event: React.SyntheticEvent | null | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+                                    this.updateBackgroundColor(undefined, propertyValue);
                                 }}
 
                                 title={" "}
@@ -222,7 +222,7 @@ export class DataViewerMainSettings {
                             const newVal = event.target.value;
                             setValue(newVal);
                         }}
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             const orig = `${text["updatePeriod"]}`;
                             if (orig !== value) {
                                 setValue(orig);
@@ -264,13 +264,13 @@ export class DataViewerMainSettings {
                         display: "inline-flex",
                         flexGrow: 1,
                     }}
-                    onSubmit={(event: any) => {
+                    onSubmit={(event) => {
                         event.preventDefault();
                     }}
                 >
                     <select
                         value={zoomFactor}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             const newFactor = event.target.value;
                             setZoomFactor(newFactor);
                             text["axisZoomFactor"] = parseFloat(newFactor);
@@ -463,7 +463,7 @@ export class DataViewerMainSettings {
 
 
 
-    updateBackgroundColor = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+    updateBackgroundColor = (event: React.SyntheticEvent | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
         // no event
 
         const newVal = GlobalMethods.rgbaArrayToRgbaStr(propertyValue as number[]);

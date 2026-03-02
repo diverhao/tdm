@@ -183,7 +183,7 @@ export class XYPlotPlotSettings {
                             const newVal = event.target.value;
                             setValue(newVal);
                         }}
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             const orig = `${axisData[fieldName]}`;
                             if (orig !== value) {
                                 setValue(orig);
@@ -241,7 +241,7 @@ export class XYPlotPlotSettings {
                         }}
 
                         checked={value}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             (axisData[fieldName] as boolean) = !value;
 
                             g_widgets1.addToForceUpdateWidgets(this.getPlot().getMainWidget().getWidgetKey());

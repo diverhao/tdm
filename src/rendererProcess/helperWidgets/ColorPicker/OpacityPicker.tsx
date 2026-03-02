@@ -67,7 +67,7 @@ const _OpacityPicker = ({ handleColorUpdate, rgb }: any) => {
 		}, 0);
 	}, []);
 
-	const handleMouseMove = (event: any) => {
+	const handleMouseMove = (event: MouseEvent) => {
 		event.preventDefault();
 		// calculate the coordinates first
 		let opacityX = x;
@@ -84,7 +84,7 @@ const _OpacityPicker = ({ handleColorUpdate, rgb }: any) => {
 		handleColorUpdate([rgb[0], rgb[1], rgb[2], x2opacity(opacityX, pickerSize, posRef)]);
 	};
 
-	const handleMouseDown = (event: any): void => {
+	const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
 		event.preventDefault();
 
 		let opacityX = x;
@@ -100,7 +100,7 @@ const _OpacityPicker = ({ handleColorUpdate, rgb }: any) => {
 		window.addEventListener("mouseup", handleMouseUp);
 	};
 
-	const handleMouseUp = (event: any) => {
+	const handleMouseUp = (event: MouseEvent) => {
 		event.preventDefault();
 		window.removeEventListener("mousemove", handleMouseMove);
 		window.removeEventListener("mouseup", handleMouseUp);

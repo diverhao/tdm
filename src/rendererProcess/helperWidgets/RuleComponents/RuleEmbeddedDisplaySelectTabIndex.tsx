@@ -35,7 +35,7 @@ export class RuleEmbeddedDisplaySelectTabIndex extends RuleComponent {
 						setTab(event.target.value);
 					}}
 					// must use enter to change the value
-					onBlur={(event: any) => {
+					onBlur={(event) => {
 						if (`${this.getRuleTdl()["propertyValue"]}` !== `${tab}`) {
 							setTab(`${this.getRuleTdl()["propertyValue"]}`);
 						}
@@ -45,7 +45,7 @@ export class RuleEmbeddedDisplaySelectTabIndex extends RuleComponent {
 		);
 	};
 
-	updatePropertyValue = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+	updatePropertyValue = (event: React.SyntheticEvent | null | undefined, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
 		if (event) {
 			event.preventDefault();
 		}

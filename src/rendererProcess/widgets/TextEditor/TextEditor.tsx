@@ -52,7 +52,7 @@ export class TextEditor extends BaseWidget {
         js.type = 'module';
         document.head.appendChild(js);
 
-        window.addEventListener("resize", (event: any) => {
+        window.addEventListener("resize", (_event: Event) => {
             if (this.updateHighlightArea !== undefined) {
                 this.updateHighlightArea();
             }
@@ -168,9 +168,9 @@ export class TextEditor extends BaseWidget {
         const [fileContents, setFileContents] = React.useState(this.getText()["fileName"] !== "" ? "" : this.getText()["initialFileContents"] === undefined ? "" : this.getText()["initialFileContents"]);
         const [fileName, setFileName] = React.useState(this.getFileName());
         const [reducedFileContents, setReducedFileContents] = React.useState("");
-        const elementCodeRef = React.useRef<any>(null);
-        const elementTextAreaRef = React.useRef<any>(null);
-        const elementCodeWrapperRef = React.useRef<any>(null);
+        const elementCodeRef = React.useRef<HTMLElement>(null);
+        const elementTextAreaRef = React.useRef<HTMLTextAreaElement>(null);
+        const elementCodeWrapperRef = React.useRef<HTMLDivElement>(null);
         this.setFileContentsState = setFileContents;
         this.setFileNameState = setFileName;
         const [, forceUpdate] = React.useState({});
@@ -189,7 +189,7 @@ export class TextEditor extends BaseWidget {
                 const lines = this.getFileContents().split("\n");
                 const sizes = elementTextAreaRef.current.getBoundingClientRect();
                 const boxHeight = sizes["height"];
-                const lineHeight = parseFloat(window.getComputedStyle(elementCodeRef.current)["lineHeight"]);
+                const lineHeight = parseFloat(window.getComputedStyle(elementCodeRef.current!)["lineHeight"]);
                 // pixel
                 const scrollTop = elementTextAreaRef.current.scrollTop;
                 const scrollTopLines = Math.floor(Math.abs(scrollTop) / lineHeight);
@@ -399,7 +399,7 @@ export class TextEditor extends BaseWidget {
                             }}
                             spellCheck={false}
                             value={fileContents}
-                            onChange={(event: any) => {
+                            onChange={(event) => {
                                 event.preventDefault();
                                 this.setWindowName(this.getFileName(), true);
                                 this.setModified(true);
@@ -408,7 +408,7 @@ export class TextEditor extends BaseWidget {
                                 });
                                 setReducedFileContents(calcReducedFileContents()["contents"])
                             }}
-                            onScroll={(event: any) => {
+                            onScroll={(event) => {
                                 let scrollTop = 0;
                                 let scrollLeft = 0;
                                 if (elementTextAreaRef.current !== null && elementCodeRef.current !== null) {
@@ -417,13 +417,15 @@ export class TextEditor extends BaseWidget {
                                     scrollLeft = elementTextAreaRef.current.scrollLeft;
                                     // set <code>'s scrollTop
                                     updateHighlightArea();
-                                    elementCodeWrapperRef.current.scrollLeft = scrollLeft;
+                                    if (elementCodeWrapperRef.current !== null) {
+                                        elementCodeWrapperRef.current.scrollLeft = scrollLeft;
+                                    }
                                 }
                             }}
-                            onDragStart={(event: any) => {
+                            onDragStart={(event) => {
                                 event.preventDefault();
                             }}
-                            onDrop={(event: any) => {
+                            onDrop={(event) => {
                                 event.preventDefault();
                             }}
                         >

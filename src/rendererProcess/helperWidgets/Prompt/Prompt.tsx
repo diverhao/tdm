@@ -112,7 +112,7 @@ export abstract class Prompt {
         </div >)
     }
 
-    _ElementForm = ({ children, handleSubmit, widthPercent }: any) => {
+    _ElementForm = ({ children, handleSubmit, widthPercent }: { children?: React.ReactNode; handleSubmit?: (event: React.FormEvent<HTMLFormElement>) => void; widthPercent?: number }) => {
         return (
             <form
                 style={{
@@ -131,7 +131,7 @@ export abstract class Prompt {
 
     }
 
-    _ElementInput = ({ autoFocus, value, handleChange, type }: any) => {
+    _ElementInput = ({ autoFocus, value, handleChange, type }: { autoFocus?: boolean; value?: string; handleChange?: (event: React.ChangeEvent<HTMLInputElement>) => void; type?: string }) => {
         return (
             <input
                 style={{
@@ -403,10 +403,10 @@ export abstract class Prompt {
                     style={{
                         width: "100%",
                     }}
-                    onSubmit={(event: any) => { event?.preventDefault() }}>
+                    onSubmit={(event) => { event?.preventDefault() }}>
                     <this._ElementInput
                         value={inputText}
-                        handleChange={(event: any) => {
+                        handleChange={(event) => {
                             setInputText(event.target.value);
                             this.setDialogInputBoxText(event.target.value);
                         }}

@@ -116,12 +116,12 @@ export class DataViewerTraceSettings {
 
     _ElementChannelNameInput = () => {
         const index = this.getPlot().getMainWidget().getSettingsIndex();
-        const elementRefChannelNameInput = React.useRef<any>(null);
+        const elementRefChannelNameInput = React.useRef<HTMLInputElement>(null);
         const channelName = this.getChannelNames()[index];
         const [channelNameInput, setChannelNameInput] = React.useState(channelName);
         // console.log("channel name Input", channelNameInput, "-->", channelName)
         // channel name hint
-        const formElementRef = React.useRef<any>(null);
+        const formElementRef = React.useRef<HTMLFormElement>(null);
 
         const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
         const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
@@ -150,7 +150,7 @@ export class DataViewerTraceSettings {
                     marginTop: 20,
                     marginBottom: 15,
                 }}
-                onSubmit={(event: any) => {
+                onSubmit={(event) => {
                     event.preventDefault();
                     setShowChannelNameHint(false);
 
@@ -174,7 +174,7 @@ export class DataViewerTraceSettings {
                     spellCheck={false}
                     value={channelNameInput}
                     onChange={
-                        (event: any) => {
+                        (event: React.ChangeEvent<HTMLInputElement>) => {
                             const newVal = event.target.value;
                             setChannelNameInput(newVal);
 
@@ -209,7 +209,7 @@ export class DataViewerTraceSettings {
 
                         }
                     }
-                    onBlur={(event: any) => {
+                    onBlur={(event) => {
                         setShowChannelNameHint(false);
                         setChannelNameHintData([]);
 
@@ -222,17 +222,17 @@ export class DataViewerTraceSettings {
                         }
                     }}
                     placeholder="Channel Name"
-                    onFocus={(event: any) => {
+                    onFocus={(event) => {
                         if (elementRefChannelNameInput.current !== null) {
                             elementRefChannelNameInput.current.style["color"] = "rgba(255,0,0,1)";
                         }
                     }}
-                    onMouseEnter={(event: any) => {
+                    onMouseEnter={(event) => {
                         if (elementRefChannelNameInput.current !== null) {
                             elementRefChannelNameInput.current.style["color"] = "rgba(255,0,0,1)";
                         }
                     }}
-                    onMouseLeave={(event: any) => {
+                    onMouseLeave={(event) => {
                         if (document.activeElement !== elementRefChannelNameInput.current &&
                             elementRefChannelNameInput.current !== null) {
                             elementRefChannelNameInput.current.style["color"] = "rgba(0,0,0,1)";
@@ -286,8 +286,8 @@ export class DataViewerTraceSettings {
                         event.preventDefault();
                         const orig = axisData[fieldName];
                         const valueNum = parseFloat(value);
-                        if (!isNaN(valueNum)) {
-                            (axisData[fieldName] as any) = valueNum;
+                        if (!isNaN(valueNum) && typeof axisData[fieldName] === "number") {
+                            (axisData as unknown as Record<string, number>)[fieldName] = valueNum;
 
                             g_widgets1.addToForceUpdateWidgets(this.getPlot().getMainWidget().getWidgetKey());
                             g_widgets1.addToForceUpdateWidgets("GroupSelection2");
@@ -309,7 +309,7 @@ export class DataViewerTraceSettings {
                             const newVal = event.target.value;
                             setValue(newVal);
                         }}
-                        onBlur={(event: any) => {
+                        onBlur={(event) => {
                             const orig = `${axisData[fieldName]}`;
                             if (orig !== value) {
                                 setValue(orig);
@@ -325,7 +325,7 @@ export class DataViewerTraceSettings {
 
     _ElementLineColor = () => {
         const [showCollapsible, setShowCollapsible] = React.useState(false);
-        const elementRefLineColor = React.useRef<any>(null);
+        const elementRefLineColor = React.useRef<HTMLDivElement>(null);
         const index = this.getPlot().getMainWidget().getSettingsIndex();
         const yAxis = this.getPlot().getSelectedYAxis();
 
@@ -389,7 +389,7 @@ export class DataViewerTraceSettings {
                             rgbColorStr={yAxis["lineColor"]}
                             updateFromSidebar={
                                 // (this.getSidebar() as DataViewerSidebar).getSidebarDataViewerChannelNames().updateWidgetLineColor
-                                (event: any, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
+                                (event: React.SyntheticEvent | undefined, propertyName: string, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
                                     if (event) {
                                         event.preventDefault();
                                     }
@@ -464,7 +464,7 @@ export class DataViewerTraceSettings {
                         }}
 
                         checked={value}
-                        onChange={(event: any) => {
+                        onChange={(event) => {
                             (axisData[fieldName] as boolean) = !value;
 
                             g_widgets1.addToForceUpdateWidgets(this.getPlot().getMainWidget().getWidgetKey());
@@ -527,8 +527,8 @@ export class DataViewerTraceSettings {
                             fontStyle: GlobalVariables.defaultFontStyle,
                             fontWeight: GlobalVariables.defaultFontWeight,
                         }}
-                        onChange={(event: any) => {
-                            this.getPlot().updateTraceScale(index, event.target.value);
+                        onChange={(event) => {
+                            this.getPlot().updateTraceScale(index, event.target.value as "Linear" | "Log10");
                         }}
                     >
                         <option selected>{"Linear"}</option>

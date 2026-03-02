@@ -69,7 +69,7 @@ export class PA {
             //     console.log('WebSocket connection established');
 
             // Set up audio processing
-            this.processor.onaudioprocess = (event: any) => {
+            this.processor.onaudioprocess = (event: AudioProcessingEvent) => {
                 // Get audio data and convert to 16-bit PCM
                 const audioData = event.inputBuffer.getChannelData(0);
                 const pcmData = this.convertFloat32ToInt16(audioData);
@@ -116,7 +116,7 @@ export class PA {
     }
 
     // Convert Float32 to Int16 (PCM)
-    convertFloat32ToInt16 = (buffer: Buffer) => {
+    convertFloat32ToInt16 = (buffer: Float32Array) => {
         const length = buffer.length;
         const int16Array = new Int16Array(length);
 

@@ -103,21 +103,21 @@ export class SidebarActionOpenDisplayItem {
                         }}
                     >
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetMoveUpAction(event, this.getIndex());
                             }}
                         >
                             &#8593;{" "}
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetMoveDownAction(event, this.getIndex());
                             }}
                         >
                             &#8595;{" "}
                         </this.StyledButton>
                         <this.StyledButton
-                            onClick={(event: any) => {
+                            onClick={(event) => {
                                 this.getItems().updateWidgetRemoveAction(event, this.getIndex());
                             }}
                         >
@@ -194,7 +194,7 @@ export class SidebarActionOpenDisplayItem {
                                 setLabel(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = this.getTdl()["label"];
                                 if (orig !== label) {
                                     setLabel(orig);
@@ -237,7 +237,7 @@ export class SidebarActionOpenDisplayItem {
                                 setFileName(newVal);
                             }}
                             // must use enter to change the value
-                            onBlur={(event: any) => {
+                            onBlur={(event) => {
                                 const orig = this.getTdl()["fileName"];
                                 if (orig !== fileName) {
                                     setFileName(orig);
@@ -356,7 +356,7 @@ export class SidebarActionOpenDisplayItem {
                 <input
                     type="checkbox"
                     checked={useParentMacros}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         // do not preventDefault()
 
                         const oldVal = this.getTdl()["useParentMacros"];
@@ -400,7 +400,7 @@ export class SidebarActionOpenDisplayItem {
                 <input
                     type="checkbox"
                     checked={openInSameWindow}
-                    onChange={(event: any) => {
+                    onChange={(event) => {
                         // do not preventDefault()
 
                         const oldVal = this.getTdl()["openInSameWindow"];
@@ -428,7 +428,7 @@ export class SidebarActionOpenDisplayItem {
         );
     };
 
-    updateWidgetLabel = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetLabel = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }
@@ -450,7 +450,7 @@ export class SidebarActionOpenDisplayItem {
         g_flushWidgets();
     };
 
-    updateWidgetFileName = (event: any, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
+    updateWidgetFileName = (event: React.SyntheticEvent | null | undefined, propertyValue: string | number | boolean | number[] | string[] | undefined) => {
         if (event) {
             event.preventDefault();
         }

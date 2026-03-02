@@ -1,5 +1,4 @@
 import * as React from "react";
-import { MouseEvent } from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
@@ -218,14 +217,14 @@ export class Repeater extends BaseWidget {
                     // backgroundColor: this.getItemBackgroundColors()[index],
                     // visibility: index === this.getSelectedGroup() ? "visible" : "hidden",
                 }}
-                onMouseDown={(event: any) => {
+                onMouseDown={(event) => {
                     this._handleMouseDown(event);
                     if (g_widgets1.isEditing()) {
                         this.updateGroup();
                         // this.selectGroup();
                     }
                 }}
-                onMouseUp={(event: any) => {
+                onMouseUp={(event) => {
                     // todo: why did we need this? It causes unexpected selection of the Group widget
                     // todo: when the mouse is up, even we are not selecting this widget
                     if (g_widgets1.isEditing()) {
@@ -239,7 +238,7 @@ export class Repeater extends BaseWidget {
     };
 
 
-    _handleMouseUpOnResizer(event: any, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
+    _handleMouseUpOnResizer(event: globalThis.MouseEvent, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
         super._handleMouseUpOnResizer(event, index);
         if (g_widgets1.isEditing()) {
             this.updateGroup();
@@ -403,7 +402,7 @@ export class Repeater extends BaseWidget {
 
     _ElementIframeInOperating = () => {
 
-        const iframeElementRef = React.useRef<any>(null);
+        const iframeElementRef = React.useRef<HTMLIFrameElement>(null);
 
         React.useEffect(() => {
             if (iframeElementRef.current !== null) {
