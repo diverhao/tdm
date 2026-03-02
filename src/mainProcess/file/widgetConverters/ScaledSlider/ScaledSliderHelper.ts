@@ -1,105 +1,24 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper, type_BaseWidget_tdl } from "../BaseWidget/BaseWidgetHelper";
-import * as GlobalMethods from "../../../../common/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
+import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
-
-export type type_ScaledSlider_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultScaledSliderTdl, type_ScaledSlider_tdl } from "../../../../common/types/type_widget_tdl";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
 
 export class ScaledSliderHelper extends BaseWidgetHelper {
-    // override BaseWidget
-    static _defaultTdl: type_ScaledSlider_tdl = {
-        type: "ScaledSlider",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 0,
-            top: 0,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(128, 255, 255, 1)",
-            // angle
-            transform: "rotate(0deg)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // border, it is different from the "alarmBorder" below
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            showUnit: true,
-            // PV related
-            minPvValue: 0,
-            maxPvValue: 100,
-            usePvLimits: false,
-            numTickIntervals: 10,
-            // layout
-            showPvValue: true,
-            showLabels: true,
-            // control
-            stepSize: 1,
-            invisibleInOperation: false,
-            // decimal, exponential, hexadecimal
-            format: "default",
-            // scale, >= 0
-            scale: 0,
-            compactScale: false,
-            // "contemporary" | "traditional"
-            appearance: "traditional",
-            // slide bar background color
-            fillColor: "rgba(180, 180, 180, 1)",
-            // slide bar highlight area color
-            // sliderBarBackgroundColor1: "rgba(180, 180, 180, 1)",
-            alarmBorder: true,
-            alarmText: false,
-            alarmFill: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-    };
 
-    // override
-    static generateDefaultTdl = (type: string): type_ScaledSlider_tdl => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        return result as type_ScaledSlider_tdl;
+    static generateDefaultTdl = (): type_ScaledSlider_tdl => {
+        const widgetKey = generateWidgetKey(defaultScaledSliderTdl.type);
+        return structuredClone({
+            ...defaultScaledSliderTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_ScaledSlider_tdl => {
         Log.info("\n------------", `Parsing "Motif Slider"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("ScaledSlider") as type_ScaledSlider_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         // there is no border settings in edl file, however in edm, there is a border line width setting
         // it shows in editing mode, but it does not show in operating mode
@@ -179,19 +98,19 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
                         "Text Color",
                         tdl
                     );
-                    tdl["text"]["sliderBarBackgroundColor1"] = EdlConverter.convertEdlColor(
-                        propertyValue,
-                        EdlConverter.convertEdlPv(edl["controlPv"]),
-                        "Text Color",
-                        tdl
-                    );
-                } else if (propertyName === "2ndBgColor") {
-                    tdl["text"]["sliderBarBackgroundColor"] = EdlConverter.convertEdlColor(
-                        propertyValue,
-                        EdlConverter.convertEdlPv(edl["controlPv"]),
-                        "Text Color",
-                        tdl
-                    );
+                    // tdl["text"]["sliderBarBackgroundColor1"] = EdlConverter.convertEdlColor(
+                    //     propertyValue,
+                    //     EdlConverter.convertEdlPv(edl["controlPv"]),
+                    //     "Text Color",
+                    //     tdl
+                    // );
+                    // } else if (propertyName === "2ndBgColor") {
+                    //     tdl["text"]["sliderBarBackgroundColor"] = EdlConverter.convertEdlColor(
+                    //         propertyValue,
+                    //         EdlConverter.convertEdlPv(edl["controlPv"]),
+                    //         "Text Color",
+                    //         tdl
+                    //     );
                 } else if (propertyName === "bgAlarm") {
                     alarmPropertyNames.push(propertyName);
                 } else if (propertyName === "increment") {
@@ -300,7 +219,7 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "scaledslider" | "scrollbar"): type_ScaledSlider_tdl => {
         Log.info("\n------------", `Parsing "${type}"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("ScaledSlider") as type_ScaledSlider_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm
@@ -346,8 +265,8 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
 
         let isHorizontal = true;
         let isTransparent = false;
-        tdl["style"]["x"] = 0;
-        tdl["style"]["y"] = 0;
+        tdl["style"]["left"] = 0;
+        tdl["style"]["top"] = 0;
         tdl["text"]["usePvLimits"] = true;
 
         if (type === "scaledslider") {

@@ -11,7 +11,7 @@ import { Log } from "../../../common/Log";
 import { XYPlotPlotSettings } from "./XYPlotPlotSettings";
 import { XYPlotPlotWebGl } from "./XYPlotPlotWebGl";
 import { Scale } from "../../helperWidgets/SharedElements/Scale";
-import { type_XYPlot_yAxis, type_XYPlot_ticksInfo, type_XYPlot_xAxis, defaultXYPlotTicksInfo } from "../../../common/types/type_widget_tdl";
+import { type_XYPlot_yAxis, type_XYPlot_ticksInfo, type_XYPlot_xAxis, defaultXYPlotTicksInfo, defaultXYPlotYAxis } from "../../../common/types/type_widget_tdl";
 
 // re-export for consumers that import from here
 export type type_yAxis = type_XYPlot_yAxis;
@@ -1096,25 +1096,11 @@ export class XYPlotPlot {
 
         const index1 = index % presetColors.length;
         const lineColor = presetColors[index1];
-
         return {
+            ...structuredClone(defaultXYPlotYAxis),
             label: `y${index}`,
-            valMin: 0,
-            valMax: 100,
-            lineWidth: 2,
             lineColor: lineColor,
-            autoScale: false,
-            lineStyle: "solid",
-            pointType: "none",
-            pointSize: 5,
-            showGrid: true,
-            numGrids: 5,
-            displayScale: "Linear",
-            // runtime data
-            xData: [],
-            yData: [],
-            ticksInfo: structuredClone(defaultXYPlotTicksInfo),
-        };
+        }
     };
 
     initRuntimeData = () => {

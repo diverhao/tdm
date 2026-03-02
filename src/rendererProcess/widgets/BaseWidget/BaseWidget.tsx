@@ -1119,7 +1119,7 @@ export abstract class BaseWidget {
             // the un-processed channel names
             channelNames: [...this.getChannelNamesLevel0()],
             groupNames: [...this.getGroupNames()],
-            rules: { ...this.getRulesTdl() },
+            rules: [ ...this.getRulesTdl() ],
         };
         // deselect tdl
         result.style.outlineStyle = "none";
@@ -1834,24 +1834,6 @@ export abstract class BaseWidget {
         }
         return this.getAllText()["containerColor"];
     }
-
-    _getElementAreaRawSelectedBackgroundStyle = (): string => {
-        const severity = this._getChannelSeverity();
-        const alarmSelectedBackground = this.getText().alarmBackground;
-        if (g_widgets1.isEditing()) {
-            return this.getText()["selectedBackgroundColor"];
-        }
-
-        if (alarmSelectedBackground === true) {
-            const alarmLevelStr = this.getText()["alarmLevel"];
-            const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
-            if (severity >= alarmLevel) {
-                return AlarmSelectedBackgroundStyle[severity];
-            }
-        }
-        return this.getAllText()["selectedBackgroundColor"];
-    }
-
 
     /**
      * Show a thick light gray outline when mouse enters the write widget

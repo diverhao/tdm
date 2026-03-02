@@ -1,105 +1,26 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper, type_BaseWidget_tdl } from "../BaseWidget/BaseWidgetHelper";
-import * as GlobalMethods from "../../../../common/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
+import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
+import { defaultChoiceButtonTdl, type_ChoiceButton_tdl } from "../../../../common/types/type_widget_tdl";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
 
-export type type_ChoiceButton_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    itemLabels: string[];
-    itemValues: (number | string | number[] | string[] | undefined)[];
-};
 
 export class ChoiceButtonHelper extends BaseWidgetHelper {
-    // override BaseWidget
-    static _defaultTdl: type_ChoiceButton_tdl = {
-        type: "ChoiceButton",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 0,
-            top: 0,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(128, 255, 255, 0)",
-            // angle
-            transform: "rotate(0deg)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // border, it is different from the alarmBorder below
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: false,
-            alarmBorder: true,
-            // colors
-            selectedBackgroundColor: "rgba(218, 218, 218, 1)",
-            unselectedBackgroundColor: "rgba(200, 200, 200, 1)",
-            useChannelItems: true,
-            invisibleInOperation: false,
-            direction: "horizontal",
-            // "contemporary" | "traditional"
-            appearance: "traditional",
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-            confirmOnWrite: false,
-            confirmOnWriteUsePassword: false,
-            confirmOnWritePassword: "",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        // could be more than two labels
-        itemLabels: ["Label 0", "Label 1"],
-        itemValues: [0, 1],
-    };
 
-    // override
-    static generateDefaultTdl = (type: string): type_ChoiceButton_tdl => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.itemLabels = structuredClone(this._defaultTdl.itemLabels);
-        result.itemValues = structuredClone(this._defaultTdl.itemValues);
-        return result as type_ChoiceButton_tdl;
+    static generateDefaultTdl = (): type_ChoiceButton_tdl => {
+        const widgetKey = generateWidgetKey(defaultChoiceButtonTdl.type);
+        return structuredClone({
+            ...defaultChoiceButtonTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_ChoiceButton_tdl => {
         Log.info("\n------------", `Parsing "Choice Button"`, "------------------\n");
         Log.info(edl)
-        const tdl = this.generateDefaultTdl("ChoiceButton") as type_ChoiceButton_tdl;
+        const tdl = this.generateDefaultTdl();
 
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
@@ -178,12 +99,8 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
                 } else if (propertyName === "orientation") {
                     tdl["text"]["direction"] = propertyValue.includes("horizontal") ? "horizontal" : "vertical";
                 } else if (propertyName === "visPv") {
-                    tdl["text"]["invisibleInOperation"] = EdlConverter.convertEdlVisPv(
-                        EdlConverter.convertEdlPv(propertyValue),
-                        edl["visMmin"],
-                        edl["visMax"],
-                        edl["visInvert"]
-                    );
+                    const newRules = EdlConverter.convertEdlVisPv(EdlConverter.convertEdlPv(propertyValue), edl["visMin"], edl["visMax"], edl["visInvert"]) as type_rules_tdl;
+                    tdl["rules"].push(...newRules);
                 } else if (propertyName === "font") {
                     const { fontFamily, fontWeight, fontSize, fontStyle } = EdlConverter.convertEdlFont(propertyValue);
                     tdl["style"]["fontFamily"] = fontFamily;
@@ -238,7 +155,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_ChoiceButton_tdl => {
         Log.info("\n------------", `Parsing "choice"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("ChoiceButton") as type_ChoiceButton_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm
@@ -274,7 +191,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
         tdl["style"]["top"] = 0;
         tdl["style"]["width"] = 100;
         tdl["style"]["height"] = 43;
-        tdl["itemLabels"] = ["Item 1", "Item 2"];
+        tdl["itemNames"] = ["Item 1", "Item 2"];
         tdl["text"]["appearance"] = "contemporary";
 
         for (const propertyName of propertyNames) {
@@ -316,9 +233,9 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
                 } else if (propertyName === "selected_color") {
                     tdl["text"]["selectedBackgroundColor"] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "items") {
-                    tdl["itemLabels"] = BobPropertyConverter.convertBobStrings(propertyValue, "item");
+                    tdl["itemNames"] = BobPropertyConverter.convertBobStrings(propertyValue, "item");
                 } else if (propertyName === "items_from_pv") {
-                    tdl["text"]["useChannelItems"] = BobPropertyConverter.convertBobColor(propertyValue);
+                    tdl["text"]["useChannelItems"] = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "horizontal") {
                     const isHorizontal = BobPropertyConverter.convertBobBoolean(propertyValue);
                     tdl["text"]["direction"] = isHorizontal === true ? "horizontal" : "vertical";
@@ -329,7 +246,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
         }
 
         tdl["itemValues"] = [];
-        for (let ii = 0; ii < tdl["itemLabels"].length; ii++) {
+        for (let ii = 0; ii < tdl["itemNames"].length; ii++) {
             tdl["itemValues"].push(ii);
         }
 

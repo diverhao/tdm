@@ -771,10 +771,9 @@ export class DisplayWindowAgent {
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
         const channelType = channelAgentsManager.determineChannelType(channelName);
 
-        if (channelAgentsManager.determineChannelType(channelName) === "pva") {
-            const promiseObj = this.promises.getPromise("fetch-pva-type");
+        if (channelType === "pva") {
+            const promiseObj = this.promises.getPromise("fetch-pva-type");  
             await promiseObj;
-
         } else {
             const promiseObj = this.promises.getPromise("tca-get-meta");
             await promiseObj;

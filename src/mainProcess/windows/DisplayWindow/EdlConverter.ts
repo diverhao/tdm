@@ -23,6 +23,7 @@ import { XYPlotHelper } from "../../file/widgetConverters/XYPlot/XYPlotHelper";
 import { Log } from "../../../common/Log";
 import { LEDHelper } from "../../file/widgetConverters/LED/LEDHelper";
 import path from "path";
+import { defaultXYPlotYAxis } from "../../../common/types/type_widget_tdl";
 
 export class EdlConverter {
 
@@ -2330,7 +2331,7 @@ export class EdlConverter {
             if (channelNameArray[1] !== undefined) {
                 const channelName = channelNameArray[1].replaceAll(`"`, "");
                 if (tdl["yAxes"][yIndex] === undefined) {
-                    tdl["yAxes"][yIndex] = XYPlotHelper.generateDefaultYAxis(ii);
+                    tdl["yAxes"][yIndex] = {...structuredClone(defaultXYPlotYAxis), label: `y${ii}`};
                 }
                 if (pvType === "x") {
                     tdl["channelNames"][2 * yIndex] = channelName;
@@ -2369,7 +2370,7 @@ export class EdlConverter {
             const color = this.convertEdlColor(colorStr);
 
             if (tdl["yAxes"][yIndex] === undefined) {
-                tdl["yAxes"][yIndex] = XYPlotHelper.generateDefaultYAxis(ii);
+                tdl["yAxes"][yIndex] = {...structuredClone(defaultXYPlotYAxis), label: `y${ii}`};
             }
             const yAxis = tdl["yAxes"][yIndex];
             yAxis["lineColor"] = color;
@@ -2401,7 +2402,7 @@ export class EdlConverter {
             }
 
             if (tdl["yAxes"][yIndex] === undefined) {
-                tdl["yAxes"][yIndex] = XYPlotHelper.generateDefaultYAxis(ii);
+                tdl["yAxes"][yIndex] = {...structuredClone(defaultXYPlotYAxis), label: `y${ii}`}
             }
             const yAxis = tdl["yAxes"][yIndex];
             yAxis["lineWidth"] = thickness;
@@ -2432,7 +2433,7 @@ export class EdlConverter {
             }
 
             if (tdl["yAxes"][yIndex] === undefined) {
-                tdl["yAxes"][yIndex] = XYPlotHelper.generateDefaultYAxis(ii);
+                tdl["yAxes"][yIndex] = {...structuredClone(defaultXYPlotYAxis), label: `y${ii}`}
             }
             const yAxis = tdl["yAxes"][yIndex];
             yAxis["lineStyle"] = style;
@@ -2468,7 +2469,7 @@ export class EdlConverter {
             }
 
             if (tdl["yAxes"][yIndex] === undefined) {
-                tdl["yAxes"][yIndex] = XYPlotHelper.generateDefaultYAxis(ii);
+                tdl["yAxes"][yIndex] = {...structuredClone(defaultXYPlotYAxis), label: `y${ii}`}
             }
             const yAxis = tdl["yAxes"][yIndex];
             yAxis["pointType"] = type;

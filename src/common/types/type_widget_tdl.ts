@@ -26,6 +26,7 @@ export const type_style_tdl_schema = {
     outlineStyle: "string",
     outlineWidth: "number",
     outlineColor: "string",
+    boxSizing: "string",
 } as const satisfies TypeSchema;
 
 export type type_style_tdl = Mutable<InferType<typeof type_style_tdl_schema>>;
@@ -109,6 +110,7 @@ export const defaultLabelTdl: type_Label_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         text: "Label text",
@@ -188,6 +190,7 @@ export const defaultPolylineTdl: type_Polyline_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         lineWidth: 3,
@@ -271,6 +274,7 @@ export const defaultRectangleTdl: type_Rectangle_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         lineWidth: 3,
@@ -354,6 +358,7 @@ export const defaultTankTdl: type_Tank_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         usePvLimits: false,
@@ -439,6 +444,7 @@ export const defaultLEDTdl: type_LED_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         wrapWord: false,
@@ -522,6 +528,7 @@ export const defaultLEDMultiStateTdl: type_LEDMultiState_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -607,6 +614,7 @@ export const defaultByteMonitorTdl: type_ByteMonitor_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -689,6 +697,7 @@ export const defaultSymbolTdl: type_Symbol_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -772,6 +781,7 @@ export const defaultTextSymbolTdl: type_TextSymbol_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -852,6 +862,7 @@ export const defaultTextUpdateTdl: type_TextUpdate_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -930,6 +941,7 @@ export const defaultTextEntryTdl: type_TextEntry_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -1016,6 +1028,7 @@ export const defaultScaledSliderTdl: type_ScaledSlider_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: "content-box",
     },
     text: {
         showUnit: true,
@@ -1108,6 +1121,7 @@ export const defaultBooleanButtonTdl: type_BooleanButton_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "rgba(0,0,0,1)",
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "center",
@@ -1200,6 +1214,7 @@ export const defaultCheckBoxTdl: type_CheckBox_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -1288,6 +1303,7 @@ export const defaultSlideButtonTdl: type_SlideButton_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -1380,6 +1396,7 @@ export const defaultChoiceButtonTdl: type_ChoiceButton_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -1470,6 +1487,7 @@ export const defaultComboBoxTdl: type_ComboBox_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "center",
@@ -1557,6 +1575,7 @@ export const defaultRadioButtonTdl: type_RadioButton_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -1672,14 +1691,16 @@ export const type_ActionButton_tdl_schema = {
     channelNames: "string[]",
     groupNames: "string[]",
     rules: { arrayOf: type_rule_tdl_schema },
-    actions: { arrayOfUnion: [
-        type_action_opendisplay_tdl_schema,
-        type_action_writepv_tdl_schema,
-        type_action_executescript_tdl_schema,
-        type_action_executecommand_tdl_schema,
-        type_action_openwebpage_tdl_schema,
-        type_action_closedisplaywindow_schema,
-    ] },
+    actions: {
+        arrayOfUnion: [
+            type_action_opendisplay_tdl_schema,
+            type_action_writepv_tdl_schema,
+            type_action_executescript_tdl_schema,
+            type_action_executecommand_tdl_schema,
+            type_action_openwebpage_tdl_schema,
+            type_action_closedisplaywindow_schema,
+        ]
+    },
 } as const satisfies TypeSchema;
 
 export type type_ActionButton_tdl = Omit<Mutable<InferType<typeof type_ActionButton_tdl_schema>>, "actions"> & { actions: type_actions_tdl };
@@ -1709,10 +1730,11 @@ export const defaultActionButtonTdl: type_ActionButton_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
-        text: "Button",
-        appearance: "contemporary",
+        text: "Action Button",
+        appearance: "traditional",
         horizontalAlign: "center",
         verticalAlign: "center",
         wrapWord: false,
@@ -1777,6 +1799,7 @@ export const defaultMediaTdl: type_Media_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
+        boxSizing: "content-box",
     },
     text: {
         fileName: "../../../webpack/resources/webpages/tdm-logo.svg",
@@ -1920,6 +1943,7 @@ export const defaultDataViewerTdl: type_DataViewer_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: "content-box",
     },
     text: {
         wrapWord: true,
@@ -2033,6 +2057,25 @@ export const defaultXYPlotTicksInfo: type_XYPlot_ticksInfo = {
     yTickPositions: [],
 };
 
+export const defaultXYPlotYAxis: type_XYPlot_yAxis = {
+    label: `y`,
+    valMin: 0,
+    valMax: 100,
+    lineWidth: 2,
+    lineColor: "rgba(0,0,0,1)",
+    autoScale: false,
+    lineStyle: "solid",
+    pointType: "none",
+    pointSize: 5,
+    showGrid: true,
+    numGrids: 5,
+    displayScale: "Linear",
+    // runtime data
+    xData: [],
+    yData: [],
+    ticksInfo: structuredClone(defaultXYPlotTicksInfo),
+}
+
 export const defaultXYPlotTdl: type_XYPlot_tdl = {
     type: "XYPlot",
     widgetKey: "",
@@ -2057,6 +2100,7 @@ export const defaultXYPlotTdl: type_XYPlot_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: "content-box",
     },
     text: {
         showLegend: false,

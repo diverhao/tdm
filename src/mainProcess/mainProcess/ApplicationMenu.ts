@@ -1,3 +1,4 @@
+import { Log } from "../../common/Log";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { BrowserWindow, Menu, systemPreferences } from "electron";
 

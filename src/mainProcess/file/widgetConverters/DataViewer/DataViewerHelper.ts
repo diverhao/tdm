@@ -1,135 +1,24 @@
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { Log } from "../../../../common/Log";
-import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
+import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
-import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
-import { v4 as uuidv4 } from "uuid";
-import { GlobalVariables } from "../../../../common/GlobalVariables";
 import path from "path";
 import { FileReader } from "../../../file/FileReader";
-
-
-export type type_DataViewer_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    yAxes: Record<string, any>[];
-    rules: type_rules_tdl;
-};
-
-
-type type_yAxis = {
-    label: string;
-    valMin: number;
-    valMax: number;
-    lineWidth: number;
-    lineColor: string;
-    // ticks and ticksText are not used in the plot, we simply divide the valMin and valMax to 5 intervals
-    ticks: number[];
-    ticksText: (number | string)[];
-    show: boolean;
-    bufferSize: number;
-    displayScale: "Linear" | "Log10";
-};
-
-type type_xAxis = {
-    label: string;
-    valMin: number;
-    valMax: number;
-    ticks: number[];
-    ticksText: string[]
-};
-
+import { defaultDataViewerTdl, defaultDataViewerTicksInfo, defaultDataViewerYAxis, type_DataViewer_tdl, type_DataViewer_yAxis } from "../../../../common/types/type_widget_tdl";
 
 export class DataViewerHelper extends BaseWidgetHelper {
 
-    // override BaseWidget
-    static _defaultTdl: type_DataViewer_tdl = {
-        type: "DataViewer",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(255, 255, 255, 1)",
-            left: 0,
-            top: 0,
-            width: 500,
-            height: 300,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 1,
-            borderColor: "rgba(0, 0, 0, 1)",
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            wrapWord: true,
-            showUnit: false,
-            alarmBorder: true,
-            highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-            overflowVisible: true,
-            singleWidget: false,
-            title: "Title",
-            updatePeriod: 1, // second
-            axisZoomFactor: 1.25,
-        },
-        channelNames: [],
-        groupNames: [],
-        yAxes: [],
-        rules: [],
+    static generateDefaultTdl = (): type_DataViewer_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultDataViewerTdl.type);
+        return structuredClone({
+            ...defaultDataViewerTdl,
+            widgetKey: widgetKey,
+        });
     };
-
-
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_DataViewer_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.yAxes = structuredClone(this._defaultTdl.yAxes);
-        return result;
-    };
-
-    static generateDefaultYAxis = (): type_yAxis => {
-        return {
-            label: "",
-            valMin: 0, // updated every time
-            valMax: 10, // updated every time
-            lineWidth: 2,
-            lineColor: `rgba(255, 0, 0, 1)`,
-            ticks: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // updated every time
-            ticksText: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // updated every time
-            show: true,
-            bufferSize: 50000,
-            displayScale: "Linear",
-        }
-    }
-
 
     static convertStpToTdl = (edl: Record<string, string>, type: "Data Viewer"): type_DataViewer_tdl => {
         Log.info("\n------------", `Parsing ${type}`, "------------------\n");
-        const tdl = this.generateDefaultTdl("DataViewer") as type_DataViewer_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
 
         const propertyNames: string[] = [
@@ -251,8 +140,8 @@ export class DataViewerHelper extends BaseWidgetHelper {
         let bufferSize = 5000;
         let lineWidth = 2;
         tdl.text.singleWidget = true;
-        tdl.style.boxSizing = "border-box";
-        tdl.style.padding = 5;
+        // tdl.style.boxSizing = "border-box";
+        // tdl.style.padding = 5;
 
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
@@ -299,7 +188,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
                         const name = propertyNameReducedArray[1];
                         if (!isNaN(index)) {
                             if (tdl["yAxes"][index] === undefined) {
-                                tdl["yAxes"][index] = this.generateDefaultYAxis();
+                                tdl["yAxes"][index] = structuredClone(defaultDataViewerYAxis);
                             }
                             if (tdl["channelNames"][index] === undefined) {
                                 tdl["channelNames"][index] = "";
@@ -358,7 +247,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
 
         for (let ii = 0; ii < tdl["yAxes"].length; ii++) {
             if (tdl["yAxes"][ii] === undefined) {
-                tdl["yAxes"][ii] = this.generateDefaultYAxis();
+                tdl["yAxes"][ii] = structuredClone(defaultDataViewerYAxis);
             }
             const yAxis = tdl["yAxes"][ii];
             yAxis["lineWidth"] = lineWidth;
@@ -377,7 +266,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = async (bobWidgetJson: Record<string, any>, type: "stripchart" | "databrowser", fullTdlFileName: string): Promise<type_DataViewer_tdl> => {
         Log.info("\n------------", `Parsing "stripchart"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("DataViewer") as type_DataViewer_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm
@@ -456,7 +345,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
                 } else if (propertyName === "rules") {
                     tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
                 } else if (propertyName === "visible") {
-                    tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
+                    // tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "foreground_color") {
                     tdl["style"]["color"] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "background_color") {
@@ -476,7 +365,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
                 } else if (propertyName === "y_axes") {
                     bobYAxes = BobPropertyConverter.convertBobStripchartYAxes(propertyValue);
                 } else if (propertyName === "file") {
-                    // read the file
+                    // read the file for DataBrowser
                     const fileName = BobPropertyConverter.convertBobString(propertyValue);
                     const currentFolder = path.dirname(fullTdlFileName);
                     const childTdlData = await FileReader.readTdlFile(fileName, undefined, currentFolder);
@@ -497,21 +386,19 @@ export class DataViewerHelper extends BaseWidgetHelper {
                 const channelName = yAxis["label"].trim();
                 tdl["channelNames"].push(channelName);
 
-                const bobYAxisIndex = yAxis["axis"];
+                const bobYAxisIndex = (yAxis as any)["axis"];
                 const bobYAxis = bobYAxes[bobYAxisIndex];
                 if (bobYAxis !== undefined) {
                     yAxis["valMin"] = bobYAxis["valMin"];
                     yAxis["valMax"] = bobYAxis["valMax"];
                     yAxis["displayScale"] = bobYAxis["displayScale"];
-                    yAxis["ticks"] = bobYAxis["ticks"];
-                    yAxis["ticksText"] = bobYAxis["ticksText"];
                 }
-                delete yAxis["axis"];
+                delete (yAxis as any)["axis"];
             }
         } else if (type === "databrowser") {
             tdl.text.singleWidget = false;
-            tdl.style.boxSizing = "border-box";
-            tdl.style.padding = 0;
+            // tdl.style.boxSizing = "border-box";
+            // tdl.style.padding = 0;
         }
 
         return tdl;
@@ -523,7 +410,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
      */
     static convertBobToTdl_databrowser = (bobWidgetJson: Record<string, any>): type_DataViewer_tdl => {
         Log.info("\n------------", `Parsing "databrowser"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("DataViewer") as type_DataViewer_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "title",
@@ -548,8 +435,8 @@ export class DataViewerHelper extends BaseWidgetHelper {
         let bobAxes: {
             valMin: number,
             valMax: number,
-            ticks: number[],
-            ticksText: number[],
+            // ticks: number[],
+            // ticksText: number[],
             show: boolean,
             displayScale: "Log10" | "Linear",
         }[] = [];
@@ -598,13 +485,27 @@ export class DataViewerHelper extends BaseWidgetHelper {
             }
         }
 
-        const yAxes: type_yAxis[] = [];
+        const yAxes: type_DataViewer_yAxis[] = [];
 
         for (const bobPv of bobPvs) {
             const axisIndex = bobPv["axisIndex"];
             const axisData = bobAxes[axisIndex];
             if (axisData !== undefined) {
-                yAxes.push({ ...bobPv, ...axisData });
+                const yAxisTmp = { ...bobPv, ...axisData };
+                const yAxis: type_DataViewer_yAxis = {
+                    label: yAxisTmp["label"],
+                    valMin: yAxisTmp["valMin"],
+                    valMax: yAxisTmp["valMax"],
+                    lineWidth: yAxisTmp["lineWidth"],
+                    lineColor: yAxisTmp["lineColor"],
+                    show:yAxisTmp["show"],
+                    bufferSize: yAxisTmp["bufferSize"],
+                    displayScale: yAxisTmp["displayScale"],
+                    xData: [],
+                    yData: [],
+                    ticksInfo: structuredClone(defaultDataViewerTicksInfo),
+                }
+                yAxes.push(yAxis);
                 tdl["channelNames"].push(bobPv["channelName"]);
                 delete (bobPv as any)["axisIndex"];
                 delete (bobPv as any)["channelName"];

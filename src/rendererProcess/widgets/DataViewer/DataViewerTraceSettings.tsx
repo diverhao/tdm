@@ -153,7 +153,6 @@ export class DataViewerTraceSettings {
                 onSubmit={(event) => {
                     event.preventDefault();
                     setShowChannelNameHint(false);
-
                     this.getPlot().renameTrace(index, channelNameInput, true)
                     setTimeout(() => {
                         this.getPlot().updatePlot();

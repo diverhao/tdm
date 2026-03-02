@@ -2,8 +2,9 @@ import { Channel_DBR_TYPES } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { settingsIndexChoices } from "./DataViewerPlot";
 import type { DataViewerPlot } from "./DataViewerPlot";
-import { traceColors} from "./DataViewerPlot";
+import { traceColors } from "./DataViewerPlot";
 import { defaultDataViewerYAxis } from "../../../common/types/type_widget_tdl";
+import { TcaChannel } from "../../channel/TcaChannel";
 
 
 /**
@@ -63,10 +64,14 @@ export class DataViewerPlotTraceHelper {
         // (5)
         const newTcaChannel = g_widgets1.createTcaChannel(newChannelName, plot.getMainWidget().getWidgetKey());
         if (newTcaChannel !== undefined) {
-            await newTcaChannel.getMeta(undefined);
-            await newTcaChannel.get(undefined, 1, Channel_DBR_TYPES.DBR_TIME_DOUBLE, true, undefined);
+            if (TcaChannel.checkChannelName(newChannelName) === "pva") {
+                newTcaChannel.fetchPvaType(undefined);
+            } else {
+                newTcaChannel.getMeta(undefined);
+            }
             newTcaChannel.monitor();
         }
+
     };
 
     /**
@@ -109,8 +114,11 @@ export class DataViewerPlotTraceHelper {
         // (5)
         const newTcaChannel = g_widgets1.createTcaChannel(newTraceName, plot.getMainWidget().getWidgetKey());
         if (newTcaChannel !== undefined) {
-            await newTcaChannel.getMeta(undefined);
-            await newTcaChannel.get(undefined, 1, Channel_DBR_TYPES.DBR_TIME_DOUBLE, true, undefined);
+            if (TcaChannel.checkChannelName(newTraceName) === "pva") {
+                newTcaChannel.fetchPvaType(undefined);
+            } else {
+                newTcaChannel.getMeta(undefined);
+            }
             newTcaChannel.monitor();
         }
     };

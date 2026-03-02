@@ -12,7 +12,7 @@ import * as os from "os";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import pidusage from "pidusage";
 import { spawn } from "child_process";
-import { Environment, type_network_stats } from "epics-tca";
+import { Environment } from "epics-tca";
 import { IpcEventArgType, type_DialogMessageBox } from "../../common/IpcEventArgType";
 import { fileToDataUri, generateKeyAndCert, scanSymbolGallery } from "../global/GlobalMethods";
 import { SshServer } from "./SshServer";
@@ -546,8 +546,6 @@ export class IpcManagerOnMainProcess {
         const windowId = data["windowId"];
         const reconnect = data["reconnect"];
         Log.info("-1", "register window", windowId, "for WebSocket IPC");
-
-        console.log("event -------------------------", event)
 
         if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-client") {
             // desktop mode: websocket client on main/display window

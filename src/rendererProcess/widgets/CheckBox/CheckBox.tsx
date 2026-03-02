@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { Channel_ACCESS_RIGHTS, GlobalVariables } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -7,7 +7,6 @@ import { CheckBoxSidebar } from "./CheckBoxSidebar";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { CheckBoxRule } from "./CheckBoxRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../common/Log";
 import { deepMerge } from "../../../common/GlobalMethods";
 import { type_CheckBox_tdl, defaultCheckBoxTdl } from "../../../common/types/type_widget_tdl";
 

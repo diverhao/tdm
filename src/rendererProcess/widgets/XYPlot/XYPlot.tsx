@@ -1,7 +1,6 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { XYPlotSidebar } from "./XYPlotSidebar";
 import { XYPlotPlot } from "./XYPlotPlot";

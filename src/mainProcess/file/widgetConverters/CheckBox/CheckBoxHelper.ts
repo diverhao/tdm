@@ -1,97 +1,22 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper, type_BaseWidget_tdl } from "../BaseWidget/BaseWidgetHelper";
+import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
-import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
-import { v4 as uuidv4 } from "uuid";
-
-export type type_CheckBox_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultCheckBoxTdl, type_CheckBox_tdl } from "../../../../common/types/type_widget_tdl";
 
 export class CheckBoxHelper extends BaseWidgetHelper {
-    // override BaseWidget
 
-    static _defaultTdl: type_CheckBox_tdl = {
-        type: "CheckBox",
-        widgetKey: "",
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 0,
-            top: 0,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(128, 255, 255, 0)",
-            // angle
-            transform: "rotate(0deg)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // border, it is different from the alarmBorder below
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: false,
-            alarmBorder: true,
-            bit: 0,
-            // round button size
-            size: 12,
-            text: "Label",
-            invisibleInOperation: false,
-            onLabel: "On",
-            offLabel: "Off",
-            onValue: 1,
-            offValue: 0,
-            confirmOnWrite: false,
-            confirmOnWriteUsePassword: false,
-            confirmOnWritePassword: "",
-
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
+    static generateDefaultTdl = (): type_CheckBox_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultCheckBoxTdl.type);
+        return structuredClone({
+            ...defaultCheckBoxTdl,
+            widgetKey: widgetKey,
+        });
     };
-
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        return result;
-    };
-
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_CheckBox_tdl => {
         Log.info("\n------------", `Parsing "checkbox"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("CheckBox") as type_CheckBox_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm
@@ -124,8 +49,6 @@ export class CheckBoxHelper extends BaseWidgetHelper {
         tdl["style"]["left"] = 0;
         tdl["style"]["width"] = 100;
         tdl["style"]["height"] = 20;
-        tdl["text"]["onLabel"] = "";
-        tdl["text"]["offLabel"] = "";
         
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -157,8 +80,8 @@ export class CheckBoxHelper extends BaseWidgetHelper {
                     tdl["text"]["bit"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "label") {
                     tdl["text"]["text"] = BobPropertyConverter.convertBobString(propertyValue);
-                    tdl["text"]["onLabel"] = BobPropertyConverter.convertBobString(propertyValue);
-                    tdl["text"]["offLabel"] = BobPropertyConverter.convertBobString(propertyValue);
+                    tdl["itemNames"][1] = BobPropertyConverter.convertBobString(propertyValue);
+                    tdl["itemNames"][0] = BobPropertyConverter.convertBobString(propertyValue);
                 } else if (propertyName === "font") {
                     const data = BobPropertyConverter.convertBobFont(propertyValue);
                     tdl["style"]["fontSize"] = data["fontSize"];

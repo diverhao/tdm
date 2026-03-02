@@ -816,7 +816,8 @@ export class DisplayWindowClient {
             const widgetTdl = DataViewer.generateWidgetTdl(utilityOptions);
             const widgetKey = widgetTdl.widgetKey;
             widgetTdl.text.singleWidget = true;
-            // widgetTdl.style.boxSizing = "border-box";
+            widgetTdl.style.boxSizing = "border-box";
+            widgetTdl.style.borderWidth = 0;
             // widgetTdl.style.padding = 5;
             tdl[widgetKey] = widgetTdl;
             tdl["Canvas"].style.backgroundColor = "rgba(255, 255, 255, 1)";

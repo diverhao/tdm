@@ -1,89 +1,26 @@
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { Log } from "../../../../common/Log";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import * as GlobalMethods from "../../../../common/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
+import { generateWidgetKey, rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
-import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { defaultTextUpdateTdl, type_TextUpdate_tdl } from "../../../../common/types/type_widget_tdl";
 
-export type type_TextUpdate_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
 
 export class TextUpdateHelper extends BaseWidgetHelper {
-    static _defaultTdl: type_TextUpdate_tdl = {
-        type: "TextUpdate",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(240, 240, 240, 1)",
-            // angle
-            transform: "rotate(0deg)",
-            // border, it is different from the "alarmBorder" below,
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // text
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: true,
-            // default, decimal, exponential, hexadecimal
-            format: "default",
-            // scale, >= 0
-            scale: 0,
-            // actually "alarm outline"
-            alarmBorder: true,
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-    };
 
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_TextUpdate_tdl => {
-        const result = super.generateDefaultTdl(type) as type_TextUpdate_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        return result;
+
+    static generateDefaultTdl = (): type_TextUpdate_tdl => {
+        const widgetKey = generateWidgetKey(defaultTextUpdateTdl.type);
+        return structuredClone({
+            ...defaultTextUpdateTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static convertEdlToTdl = (edl: Record<string, string>, type: "Text Update" | "Reg Text Update"): type_TextUpdate_tdl => {
         Log.info("\n------------", `Parsing ${type}`, "------------------\n");
-        const tdl = this.generateDefaultTdl("TextUpdate") as type_TextUpdate_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
 
         const propertyNames: string[] = [
@@ -270,7 +207,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
         type: "Text Control" | "Text Monitor" = "Text Control"
     ): type_TextUpdate_tdl => {
         Log.info("\n------------", `parsing ${type}`, "------------------\n");
-        const tdl = this.generateDefaultTdl("TextUpdate") as type_TextUpdate_tdl;
+        const tdl = this.generateDefaultTdl() as type_TextUpdate_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
@@ -540,7 +477,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_TextUpdate_tdl => {
         Log.info("\n------------", `Parsing "textupdate"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("TextUpdate");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm

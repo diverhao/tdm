@@ -51,6 +51,7 @@ import { EmbeddedDisplayHelper } from "../../file/widgetConverters/EmbeddedDispl
 import { GroupHelper } from "../../file/widgetConverters/Group/GroupHelper";
 import { RepeaterHelper } from "../../file/widgetConverters/Repeater/RepeaterHelper";
 import { UtilityWindow } from "../UtilityWindow/UtilityWindow";
+import { defaultDataViewerTicksInfo } from "../../../common/types/type_widget_tdl";
 
 export class BobPropertyConverter {
     constructor() { }
@@ -69,7 +70,8 @@ export class BobPropertyConverter {
 
         widgetTdl.text.singleWidget = true; // make it 100% width and height
         widgetTdl.style.boxSizing = "border-box";
-        widgetTdl.style.padding = 5;
+        widgetTdl.style.borderWidth = 0;
+        // widgetTdl.style.padding = 5;
 
         tdl[widgetKey] = widgetTdl;
     }
@@ -1267,32 +1269,18 @@ export class BobPropertyConverter {
                     "valMax": 1101.1, // will be determined in axis
                     "lineWidth": lineWidth,
                     "lineColor": lineColor,
-                    "ticks": [  // will be determined in axis
-                        0,
-                        200,
-                        400,
-                        600,
-                        800,
-                        1000
-                    ],
-                    "ticksText": [  // will be determined in axis
-                        0,
-                        200,
-                        400,
-                        600,
-                        800,
-                        1000
-                    ],
                     "show": show,
                     "bufferSize": 50000,
                     "displayScale": "Linear", // will be determined in axis
                     "axis": axis, // additional data, will be removed later
+                    "xData": [],
+                    "yData": [],
+                    "ticksInfo": structuredClone(defaultDataViewerTicksInfo),
                 }
             )
         }
         return result;
     }
-
     /**
      * Convert
      * 
@@ -1803,8 +1791,8 @@ export class BobPropertyConverter {
             label: label,
             valMin: valMin,
             valMax: valMax,
-            ticks: ticks,
-            ticksText: ticksText,
+            // ticks: ticks,
+            // ticksText: ticksText,
             autoScale: autoScale,
             showGrid: showGrid,
             numGrids: numGrids,
@@ -2213,8 +2201,8 @@ export class BobPropertyConverter {
         const result: {
             valMin: number,
             valMax: number,
-            ticks: number[],
-            ticksText: number[],
+            // ticks: number[],
+            // ticksText: number[],
             show: boolean,
             displayScale: "Log10" | "Linear",
         }[] = [];
@@ -2236,8 +2224,8 @@ export class BobPropertyConverter {
                 {
                     valMin,
                     valMax,
-                    ticks,
-                    ticksText,
+                    // ticks,
+                    // ticksText,
                     show,
                     displayScale,
                 }
@@ -2384,7 +2372,4 @@ export class BobPropertyConverter {
         }
         return result;
     }
-
-
-
 }

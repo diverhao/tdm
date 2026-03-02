@@ -1,81 +1,22 @@
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { Log } from "../../../../common/Log";
-import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
-import { v4 as uuidv4 } from "uuid";
-
-export type type_Media_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
+import { defaultMediaTdl, type_Media_tdl } from "../../../../common/types/type_widget_tdl";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
 
 export class MediaHelper extends BaseWidgetHelper {
-    static _defaultTdl: type_Media_tdl = {
-        type: "Media",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 0,
-            top: 0,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(0, 0, 0, 0)",
-            // angle
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            // border, it is different from the "alarmBorder" below
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // media file name, could be picture types, pdf, or video type
-            fileName: "../../../resources/webpages/tdm-logo.svg",
-            // opacity
-            opacity: 1,
-            // for picture
-            stretchToFit: false,
-            invisibleInOperation: false,
-            fileContents: "",
-            // actually "alarm outline"
-            alarmBorder: true,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
 
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-    };
-
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_Media_tdl => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_Media_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        return result;
+    static generateDefaultTdl = (): type_Media_tdl => {
+        const widgetKey = generateWidgetKey(defaultMediaTdl.type);
+        return structuredClone({
+            ...defaultMediaTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_Media_tdl => {
         Log.info("\n------------", `Parsing "GIF Image" or "PNG Image"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Media") as type_Media_tdl;
+        const tdl = this.generateDefaultTdl();
 
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
@@ -145,7 +86,7 @@ export class MediaHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Media_tdl => {
         Log.info("\n------------", `Parsing "picture"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Media");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "actions", // not in tdm
@@ -185,7 +126,7 @@ export class MediaHelper extends BaseWidgetHelper {
                 if (propertyName === "file") {
                     tdl["text"]["fileName"] = BobPropertyConverter.convertBobString(propertyValue);
                 } else if (propertyName === "line_width") {
-                    tdl["text"]["lineWidth"] = BobPropertyConverter.convertBobNum(propertyValue);
+                    // tdl["text"]["lineWidth"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "opacity") {
                     tdl["text"]["opacity"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "rotation") {

@@ -1,15 +1,15 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { Channel_ACCESS_RIGHTS, GlobalVariables } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { BaseWidget } from "../BaseWidget/BaseWidget";
+import { AlarmSelectedBackgroundStyle, BaseWidget } from "../BaseWidget/BaseWidget";
 import { ChoiceButtonSidebar } from "./ChoiceButtonSidebar";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { ChoiceButtonRule } from "./ChoiceButtonRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../common/Log";
 import { deepMerge } from "../../../common/GlobalMethods";
 import { type_ChoiceButton_tdl, defaultChoiceButtonTdl } from "../../../common/types/type_widget_tdl";
+import { ChannelSeverity } from "../../channel/TcaChannel";
 
 export class ChoiceButton extends BaseWidget {
 
@@ -128,6 +128,24 @@ export class ChoiceButton extends BaseWidget {
             </div>
         );
     };
+
+    _getElementAreaRawSelectedBackgroundStyle = (): string => {
+        const severity = this._getChannelSeverity();
+        const alarmSelectedBackground = this.getText().alarmBackground;
+        if (g_widgets1.isEditing()) {
+            return this.getText()["selectedBackgroundColor"];
+        }
+
+        if (alarmSelectedBackground === true) {
+            const alarmLevelStr = this.getText()["alarmLevel"];
+            const alarmLevel = ChannelSeverity[alarmLevelStr as keyof typeof ChannelSeverity];
+            if (severity >= alarmLevel) {
+                return AlarmSelectedBackgroundStyle[severity];
+            }
+        }
+        return this.getAllText()["selectedBackgroundColor"];
+    }
+
 
     _ElementChoiceButtonItem = ({ name, index }: any) => {
 

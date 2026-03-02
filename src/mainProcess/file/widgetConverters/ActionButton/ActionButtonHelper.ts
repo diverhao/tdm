@@ -2,145 +2,156 @@ import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import * as GlobalMethods from "../../../../common/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
+import { defaultActionButtonTdl, type_ActionButton_tdl, type_action_opendisplay_tdl_schema, type_action_opendisplay_tdl, type_actions_tdl } from "../../../../common/types/type_widget_tdl";
+import { generateWidgetKey, isOfType } from "../../../../common/GlobalMethods";
 
-export type type_action_opendisplay_tdl = {
-    type: "OpenDisplay";
-    label: string;
-    fileName: string;
-    externalMacros: [string, string][];
-    useParentMacros: boolean;
-    openInSameWindow: boolean;
-};
+// export type type_action_opendisplay_tdl = {
+//     type: "OpenDisplay";
+//     label: string;
+//     fileName: string;
+//     externalMacros: [string, string][];
+//     useParentMacros: boolean;
+//     openInSameWindow: boolean;
+// };
 
-export type type_action_writepv_tdl = {
-    type: "WritePV";
-    label: string;
-    channelName: string;
-    channelValue: string;
-    confirmOnWrite: boolean;
-    confirmOnWriteUsePassword: boolean;
-    confirmOnWritePassword: string;
-};
+// export type type_action_writepv_tdl = {
+//     type: "WritePV";
+//     label: string;
+//     channelName: string;
+//     channelValue: string;
+//     confirmOnWrite: boolean;
+//     confirmOnWriteUsePassword: boolean;
+//     confirmOnWritePassword: string;
+// };
 
-export type type_action_executescript_tdl = {
-    type: "ExecuteScript";
-    label: string;
-    fileName: string;
-};
+// export type type_action_executescript_tdl = {
+//     type: "ExecuteScript";
+//     label: string;
+//     fileName: string;
+// };
 
-export type type_action_executecommand_tdl = {
-    type: "ExecuteCommand";
-    label: string;
-    command: string;
-    confirmOnWrite: boolean;
-    confirmOnWriteUsePassword: boolean;
-    confirmOnWritePassword: string;
-};
+// export type type_action_executecommand_tdl = {
+//     type: "ExecuteCommand";
+//     label: string;
+//     command: string;
+//     confirmOnWrite: boolean;
+//     confirmOnWriteUsePassword: boolean;
+//     confirmOnWritePassword: string;
+// };
 
-export type type_action_closedisplaywindow = {
-    type: "CloseDisplayWindow";
-    label: string;
-};
+// export type type_action_closedisplaywindow = {
+//     type: "CloseDisplayWindow";
+//     label: string;
+// };
 
-export type type_action_openwebpage_tdl = {
-    type: "OpenWebPage";
-    label: string;
-    url: string;
-};
+// export type type_action_openwebpage_tdl = {
+//     type: "OpenWebPage";
+//     label: string;
+//     url: string;
+// };
 
-export type type_actions_tdl = (
-    | type_action_opendisplay_tdl
-    | type_action_writepv_tdl
-    | type_action_executecommand_tdl
-    | type_action_executescript_tdl
-    | type_action_openwebpage_tdl
-    | type_action_closedisplaywindow
-)[];
+// export type type_actions_tdl = (
+//     | type_action_opendisplay_tdl
+//     | type_action_writepv_tdl
+//     | type_action_executecommand_tdl
+//     | type_action_executescript_tdl
+//     | type_action_openwebpage_tdl
+//     | type_action_closedisplaywindow
+// )[];
 
-export type type_ActionButton_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    actions: type_actions_tdl;
-};
+// export type type_ActionButton_tdl = {
+//     type: string;
+//     widgetKey: string;
+//     key: string;
+//     style: Record<string, any>;
+//     text: Record<string, any>;
+//     channelNames: string[];
+//     groupNames: string[];
+//     rules: type_rules_tdl;
+//     actions: type_actions_tdl;
+// };
 
 export class ActionButtonHelper extends BaseWidgetHelper {
-    static _defaultTdl: type_ActionButton_tdl = {
-        type: "ActionButton",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(210, 210, 210, 1)",
-            // border, not related to the below alarmBorder
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // angle
-            transform: "rotate(0deg)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            wrapWord: false,
-            horizontalAlign: "center",
-            verticalAlign: "center",
-            // actually alarmOutline
-            alarmBorder: true,
-            text: "Action Button",
-            // becomes not visible in operation mode, but still clickable
-            invisibleInOperation: false,
-            // "contemporary" | "traditional"
-            appearance: "traditional",
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        actions: [],
-    };
+    // static _defaultTdl: type_ActionButton_tdl = {
+    //     type: "ActionButton",
+    //     widgetKey: "", // "key" is a reserved keyword
+    //     key: "",
+    //     style: {
+    //         // basics
+    //         position: "absolute",
+    //         display: "inline-flex",
+    //         // dimensions
+    //         left: 100,
+    //         top: 100,
+    //         width: 100,
+    //         height: 100,
+    //         backgroundColor: "rgba(210, 210, 210, 1)",
+    //         // border, not related to the below alarmBorder
+    //         borderStyle: "solid",
+    //         borderWidth: 0,
+    //         borderColor: "rgba(0, 0, 0, 1)",
+    //         // font
+    //         color: "rgba(0,0,0,1)",
+    //         fontFamily: GlobalVariables.defaultFontFamily,
+    //         fontSize: GlobalVariables.defaultFontSize,
+    //         fontStyle: GlobalVariables.defaultFontStyle,
+    //         fontWeight: GlobalVariables.defaultFontWeight,
+    //         // angle
+    //         transform: "rotate(0deg)",
+    //         // shows when the widget is selected
+    //         outlineStyle: "none",
+    //         outlineWidth: 1,
+    //         outlineColor: "black",
+    //     },
+    //     text: {
+    //         wrapWord: false,
+    //         horizontalAlign: "center",
+    //         verticalAlign: "center",
+    //         // actually alarmOutline
+    //         alarmBorder: true,
+    //         text: "Action Button",
+    //         // becomes not visible in operation mode, but still clickable
+    //         invisibleInOperation: false,
+    //         // "contemporary" | "traditional"
+    //         appearance: "traditional",
+    //         alarmText: false,
+    //         alarmBackground: false,
+    //         alarmLevel: "MINOR",
+    //     },
+    //     channelNames: [],
+    //     groupNames: [],
+    //     rules: [],
+    //     actions: [],
+    // };
 
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_ActionButton_tdl => {
-        const result = super.generateDefaultTdl(type) as type_ActionButton_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.actions = structuredClone(this._defaultTdl.actions);
-        return result;
+
+
+    // // not getDefaultTdl(), always generate a new key
+    // static generateDefaultTdl = (type: string): type_ActionButton_tdl => {
+    //     const result = super.generateDefaultTdl(type) as type_ActionButton_tdl;
+    //     result.style = structuredClone(this._defaultTdl.style);
+    //     result.text = structuredClone(this._defaultTdl.text);
+    //     result.channelNames = structuredClone(this._defaultTdl.channelNames);
+    //     result.groupNames = structuredClone(this._defaultTdl.groupNames);
+    //     result.actions = structuredClone(this._defaultTdl.actions);
+    //     return result;
+    // };
+
+
+    static generateDefaultTdl = (): type_ActionButton_tdl => {
+        const widgetKey = generateWidgetKey(defaultActionButtonTdl.type);
+        return structuredClone({
+            ...defaultActionButtonTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static convertEdlToTdl_ShellCommand = (edl: Record<string, any>, convertEdlSuffix: boolean = false): type_ActionButton_tdl => {
         Log.info("\n------------", `Parsing "Shell Command"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("ActionButton") as type_ActionButton_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
@@ -178,7 +189,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         tdl["text"]["wrapWord"] = false;
         tdl["text"]["alarmBorder"] = false;
         tdl["text"]["horizontalAlign"] = "center";
-        tdl["text"]["swapButtons"] = false;
+        // tdl["text"]["swapButtons"] = false;
         tdl["text"]["appearance"] = "traditional";
         tdl["text"]["text"] = "";
 
@@ -213,7 +224,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                 } else if (propertyName === "commandLabel") {
                     tdl["actions"] = EdlConverter.convertEdlShellCommands(propertyValue, edl["command"], convertEdlSuffix) as type_actions_tdl;
                 } else if (propertyName === "swapButtons") {
-                    tdl["text"]["swapButtons"] = true;
+                    // tdl["text"]["swapButtons"] = true;
                 } else {
                     Log.info("Skip property", `"${propertyName}"`);
                 }
@@ -225,7 +236,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
 
     static convertEdlToTdl_RelatedDisplay = (edl: Record<string, any>, convertEdlSuffix: boolean = false): type_ActionButton_tdl => {
         Log.info("\n------------", `Parsing "Related Display"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("ActionButton") as type_ActionButton_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
@@ -270,8 +281,8 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         tdl["text"]["wrapWord"] = false;
         tdl["text"]["alarmBorder"] = false;
         tdl["text"]["horizontalAlign"] = "center";
-        tdl["text"]["swapButtons"] = false;
-        tdl["text"]["button3Popup"] = false;
+        // tdl["text"]["swapButtons"] = false;
+        // tdl["text"]["button3Popup"] = false;
         tdl["text"]["text"] = "";
         tdl["text"]["appearance"] = "traditional";
 
@@ -303,13 +314,13 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                 } else if (propertyName === "buttonLabel") {
                     tdl["text"]["text"] = propertyValue.replaceAll(`"`, "").replaceAll(/\x01/g, " ");
                 } else if (propertyName === "displayFileName") {
-                    tdl["actions"] = EdlConverter.convertEdlRelatedDisplays(edl["menuLabel"], edl["displayFileName"], edl["symbols"], edl["propagateMacros"]) as type_actions_tdl;
+                    tdl["actions"] = EdlConverter.convertEdlRelatedDisplays(edl["menuLabel"], edl["displayFileName"], edl["symbols"], edl["propagateMacros"]) as any;
                 } else if (propertyName === "invisible") {
                     tdl["text"]["invisibleInOperation"] = EdlConverter.convertEdlBoolean(propertyValue);
                 } else if (propertyName === "swapButtons") {
-                    tdl["text"]["swapButtons"] = true;
+                    // tdl["text"]["swapButtons"] = true;
                 } else if (propertyName === "button3Popup") {
-                    tdl["text"]["button3Popup"] = true;
+                    // tdl["text"]["button3Popup"] = true;
                 } else {
                     Log.info("Skip property", `"${propertyName}"`);
                 }
@@ -329,11 +340,11 @@ export class ActionButtonHelper extends BaseWidgetHelper {
 
         // change .edl to ".tdl" so that TDM can read it
         for (const action of tdl["actions"]) {
-            const actionType = action["type"];
-            if (actionType === "OpenDisplay") {
-                const fileName = action["fileName"];
+            if (isOfType(action, type_action_opendisplay_tdl_schema)) {
+                const openDisplayAction = action as type_action_opendisplay_tdl;
+                const fileName = openDisplayAction["fileName"];
                 if (path.extname(fileName) === ".edl" && convertEdlSuffix === true) {
-                    action["fileName"] = action["fileName"].trim().replace(".edl", ".tdl");
+                    openDisplayAction["fileName"] = openDisplayAction["fileName"].trim().replace(".edl", ".tdl");
                 }
             }
         }
@@ -343,7 +354,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
 
     static convertEdlToTdl_ExitButton = (edl: Record<string, any>): type_ActionButton_tdl => {
         Log.info("\n------------", `Parsing "Exit Button"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("ActionButton") as type_ActionButton_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
 
@@ -373,7 +384,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         tdl["text"]["wrapWord"] = false;
         tdl["text"]["alarmBorder"] = false;
         tdl["text"]["horizontalAlign"] = "center";
-        tdl["text"]["swapButtons"] = false;
+        // tdl["text"]["swapButtons"] = false;
         tdl["text"]["appearance"] = "traditional";
         tdl["text"]["text"] = "";
 
@@ -416,7 +427,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>, convertBobSuffix: boolean): type_ActionButton_tdl => {
         Log.info("\n------------", `Parsing "action_button"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("ActionButton");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm
@@ -513,9 +524,9 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         const actions = tdl["actions"];
         for (const action of actions) {
             if (action["type"] === "WritePV" || action["type"] === "ExecuteCommand") {
-                action["confirmOnWrite"] = confirmDialog;
-                action["confirmOnWriteUsePassword"] = password === "" ? false : true;
-                action["confirmOnWritePassword"] = password;
+                (action as any)["confirmOnWrite"] = confirmDialog;
+                (action as any)["confirmOnWriteUsePassword"] = password === "" ? false : true;
+                (action as any)["confirmOnWritePassword"] = password;
             }
         }
         if (tdl["text"]["text"] === "$(actions)") {

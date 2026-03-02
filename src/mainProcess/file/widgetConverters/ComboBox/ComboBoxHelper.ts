@@ -1,95 +1,26 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import * as GlobalMethods from "../../../../common/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
+import { defaultComboBoxTdl, type_ComboBox_tdl } from "../../../../common/types/type_widget_tdl";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
 
-export type type_ComboBox_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    itemLabels: string[];
-    itemValues: (number | string | number[] | string[] | undefined)[];
-};
 
 export class ComboBoxHelper extends BaseWidgetHelper {
-    // override BaseWidget
-    
-    static _defaultTdl: type_ComboBox_tdl = {
-        type: "ComboBox",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 150,
-            height: 80,
-            backgroundColor: "rgba(210, 210, 210, 1)",
-            // angle
-            transform: "rotate(0deg)",
-            // border, it is different from the "alarmBorder" below,
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            horizontalAlign: "center",
-            // ! todo
-            // verticalAlign: "center",
-            alarmBorder: true,
-            useChannelItems: true,
-            invisibleInOperation: false,
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-            confirmOnWrite: false,
-            confirmOnWriteUsePassword: false,
-            confirmOnWritePassword: "",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        itemLabels: ["Label 0", "Label 1"],
-        itemValues: [0, 1],
-    };
+   
 
-    static generateDefaultTdl = (type: string): type_ComboBox_tdl => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_ComboBox_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.itemLabels = structuredClone(this._defaultTdl.itemLabels);
-        result.itemValues = structuredClone(this._defaultTdl.itemValues);
-        return result;
+    static generateDefaultTdl = (): type_ComboBox_tdl => {
+        const widgetKey = generateWidgetKey(defaultComboBoxTdl.type);
+        return structuredClone({
+            ...defaultComboBoxTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_ComboBox_tdl => {
         Log.info("\n------------", `Parsing "Menu Button"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("ComboBox") as type_ComboBox_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
 
         const propertyNames: string[] = [
@@ -152,7 +83,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
                     tdl["style"]["fontSize"] = fontSize;
                     tdl["style"]["fontWeight"] = fontWeight;
                 } else if (propertyName === "visPv") {
-                    const newRules = EdlConverter.convertEdlVisPv(propertyName, edl["visMin"], edl["visMax"], edl["visInvert"]) as type_rules_tdl;
+                    const newRules = EdlConverter.convertEdlVisPv(EdlConverter.convertEdlPv(propertyValue), edl["visMin"], edl["visMax"], edl["visInvert"]) as type_rules_tdl;
                     tdl["rules"].push(...newRules);
                 } else {
                     Log.info("Skip property", `"${propertyName}"`);
@@ -238,7 +169,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
      */
     static convertEdlToTdl_Menu_Mux = (edl: Record<string, any>): type_ComboBox_tdl => {
         Log.info("\n------------", `Parsing "Menu Mux"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("ComboBox") as type_ComboBox_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
 
         const propertyNames: string[] = [
@@ -265,7 +196,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
         // default differences
         tdl["text"]["alarmBorder"] = false;
         tdl["text"]["useChannelItems"] = false;
-        tdl["itemLabels"] = [];
+        tdl["itemNames"] = [];
         tdl["itemValues"] = [];
 
         const alarmPropertyNames: string[] = [];
@@ -291,7 +222,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
                 } else if (propertyName === "fgAlarm") {
                     alarmPropertyNames.push(propertyName);
                 } else if (propertyName === "symbolTag") {
-                    tdl["itemLabels"] = EdlConverter.convertMenuMuxSymbolTag(propertyValue);
+                    tdl["itemNames"] = EdlConverter.convertMenuMuxSymbolTag(propertyValue);
                 } else if (propertyName === "value0") {
                     tdl["itemValues"] = EdlConverter.convertMenuMuxValue0(propertyValue);
                 } else if (propertyName === "bgColor") {
@@ -340,7 +271,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_ComboBox_tdl => {
         Log.info("\n------------", `Parsing "combo"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("ComboBox") as type_ComboBox_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm
@@ -373,7 +304,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
         tdl["style"]["left"] = 0;
         tdl["style"]["width"] = 100;
         tdl["style"]["height"] = 30;
-        tdl["itemLabels"] = ["item 0"];
+        tdl["itemNames"] = ["item 0"];
         tdl["itemValues"] = [0];
         tdl["text"]["useChannelItems"] = true;
 
@@ -414,9 +345,9 @@ export class ComboBoxHelper extends BaseWidgetHelper {
                 } else if (propertyName === "background_color") {
                     tdl["style"]["backgroundColor"] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "items") {
-                    tdl["itemLabels"] = BobPropertyConverter.convertBobStrings(propertyValue, "item");
+                    tdl["itemNames"] = BobPropertyConverter.convertBobStrings(propertyValue, "item");
                 } else if (propertyName === "items_from_pv") {
-                    tdl["text"]["useChannelItems"] = BobPropertyConverter.convertBobColor(propertyValue);
+                    tdl["text"]["useChannelItems"] = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
                     Log.info("Skip property", `"${propertyName}"`);
                 }
@@ -424,7 +355,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
         }
 
         tdl["itemValues"] = [];
-        for (let ii = 0; ii < tdl["itemLabels"].length; ii++) {
+        for (let ii = 0; ii < tdl["itemNames"].length; ii++) {
             tdl["itemValues"].push(ii);
         }
 

@@ -1,100 +1,24 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper, type_BaseWidget_tdl } from "../BaseWidget/BaseWidgetHelper";
-import * as GlobalMethods from "../../../../common/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
+import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
-
-export type type_TextEntry_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultTextEntryTdl, type_TextEntry_tdl } from "../../../../common/types/type_widget_tdl";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
 
 export class TextEntryHelper extends BaseWidgetHelper {
-    // override BaseWidget
-    static _defaultTdl: type_TextEntry_tdl = {
-        type: "TextEntry",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 0,
-            top: 0,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(128, 255, 255, 1)",
-            // angle
-            transform: "rotate(0deg)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // border, it is different from the alarmBorder below
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // text positions and contents
-            horizontalAlign: "flex-start",
-            verticalAlign: "center",
-            wrapWord: false,
-            showUnit: true,
-            // when the input box is focused
-            highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-            invisibleInOperation: false,
-            // decimal, exponential, hexadecimal
-            format: "default",
-            // scale, >= 0
-            scale: 0,
-            // "contemporary" | "traditional"
-            appearance: "contemporary",
-            // actuall "alarm outline"
-            alarmBorder: true,
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-            confirmOnWrite: false,
-            confirmOnWriteUsePassword: false,
-            confirmOnWritePassword: "",
 
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-    };
-
-    // override
-    static generateDefaultTdl = (type: string): type_TextEntry_tdl => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_TextEntry_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        return result;
+    static generateDefaultTdl = (): type_TextEntry_tdl => {
+        const widgetKey = generateWidgetKey(defaultTextEntryTdl.type);
+        return structuredClone({
+            ...defaultTextEntryTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_TextEntry_tdl => {
         Log.info("\n------------", `Parsing "Text Entry"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("TextEntry") as type_TextEntry_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         // there is no border settings in edl file, however in edm, there is a border line width setting
         // it shows in editing mode, but it does not show in operating mode
@@ -219,7 +143,7 @@ export class TextEntryHelper extends BaseWidgetHelper {
 
     static convertEdlToTdl_TextControl = (edl: Record<string, string>): type_TextEntry_tdl => {
         Log.info("\n------------", `Parsing "Text Control"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("TextEntry") as type_TextEntry_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
@@ -436,7 +360,7 @@ export class TextEntryHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_TextEntry_tdl => {
         Log.info("\n------------", `Parsing "textentry"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("TextEntry") as type_TextEntry_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm

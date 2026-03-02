@@ -1,71 +1,24 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
-import { type_XYPlot_tdl, type_XYPlot_yAxis as type_yAxis, type_XYPlot_xAxis as type_xAxis, defaultXYPlotTdl } from "../../../../common/types/type_widget_tdl";
+import { type_XYPlot_tdl, defaultXYPlotTdl, defaultXYPlotTicksInfo, type_XYPlot_yAxis } from "../../../../common/types/type_widget_tdl";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
 
-export { type_XYPlot_tdl };
 
 export class XYPlotHelper extends BaseWidgetHelper {
-    // override BaseWidget
-    static _defaultTdl: type_XYPlot_tdl = structuredClone(defaultXYPlotTdl);
 
-    // override
-    static generateDefaultTdl = (type: string): type_XYPlot_tdl => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_XYPlot_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.xAxis = structuredClone(this._defaultTdl.xAxis);
-        result.yAxes = structuredClone(this._defaultTdl.yAxes);
-        return result;
-    };
-
-
-    static readonly presetColors: string[] = [
-        "rgba(0, 0, 0, 1)",
-        "rgba(255, 0, 0, 1)",
-        "rgba(0, 0, 255, 1)",
-        "rgba(0, 128, 0, 1)",
-        "rgba(128, 128, 0, 1)",
-        "rgba(0, 128, 128, 1)",
-        "rgba(128, 0, 128, 1)",
-        "rgba(255, 128, 0, 1)",
-    ];
-
-    static getANewColor = (len: number) => {
-        // const len = this.yAxes.length;
-        const index = len % this.presetColors.length;
-        return this.presetColors[index];
-    };
-
-
-    static generateDefaultYAxis = (index: number): type_yAxis => {
-        return {
-            label: `y${index}`,
-            valMin: 0,
-            valMax: 100,
-            lineWidth: 2,
-            lineColor: this.getANewColor(index),
-            autoScale: false,
-            lineStyle: "solid",
-            pointType: "none",
-            pointSize: 2,
-            showGrid: true,
-            numGrids: 5,
-            displayScale: "Linear",
-            xData: [],
-            yData: [],
-            ticksInfo: {} as any,
-        };
+    static generateDefaultTdl = (): type_XYPlot_tdl => {
+        const widgetKey = generateWidgetKey(defaultXYPlotTdl.type);
+        return structuredClone({
+            ...defaultXYPlotTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static convertEdlToTdl = (edl: Record<string, any>): type_XYPlot_tdl => {
         Log.info("\n------------", `Parsing "X-Y Graph"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("XYPlot") as type_XYPlot_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
 
         const propertyNames: string[] = [
@@ -192,7 +145,7 @@ export class XYPlotHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_XYPlot_tdl => {
         Log.info("\n------------", `Parsing "xyplot"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("XYPlot");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm
@@ -265,6 +218,7 @@ export class XYPlotHelper extends BaseWidgetHelper {
         tdl["style"]["height"] = 30;
 
         let bobYAxes: any[] = [];
+        let yAxesTmp: any = {};
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
@@ -299,32 +253,45 @@ export class XYPlotHelper extends BaseWidgetHelper {
                 } else if (propertyName === "y_axes") {
                     bobYAxes = BobPropertyConverter.convertBobXYPlotYAxes(propertyValue);
                 } else if (propertyName === "traces") {
-                    tdl["yAxes"] = BobPropertyConverter.convertBobXYPlotTraces(propertyValue);
+                    yAxesTmp = BobPropertyConverter.convertBobXYPlotTraces(propertyValue);
                 } else {
                     Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
-        for (const yAxis of tdl["yAxes"]) {
+        for (const yAxisTmp of yAxesTmp) {
             // channel name is the "label"
-            const xPv = (yAxis as any)["xPv"].trim();
-            const yPv = (yAxis as any)["yPv"].trim();
+            const xPv = yAxisTmp["xPv"].trim();
+            const yPv = yAxisTmp["yPv"].trim();
             tdl["channelNames"].push(xPv);
             tdl["channelNames"].push(yPv);
 
-            const bobYAxisIndex = (yAxis as any)["axis"];
+            const bobYAxisIndex = yAxisTmp["axis"];
             const bobYAxis = bobYAxes[bobYAxisIndex];
             if (bobYAxis !== undefined) {
-                yAxis["valMin"] = bobYAxis["valMin"];
-                yAxis["valMax"] = bobYAxis["valMax"];
-                yAxis["displayScale"] = bobYAxis["displayScale"];
-                yAxis["autoScale"] = bobYAxis["autoScale"];
-                yAxis["showGrid"] = bobYAxis["showGrid"];
+
+                const yAxis: type_XYPlot_yAxis = {
+                    label: yAxisTmp["label"],
+                    valMin: bobYAxis["valMin"],
+                    valMax: bobYAxis["valMax"],
+                    lineWidth: yAxisTmp["lineWidth"],
+                    lineColor: yAxisTmp["lineColor"],
+                    lineStyle: yAxisTmp["lineStyle"],
+                    pointType: yAxisTmp["pointType"],
+                    pointSize: yAxisTmp["pointSize"],
+                    showGrid: bobYAxis["showGrid"],
+                    autoScale: bobYAxis["autoScale"],
+                    numGrids: yAxisTmp["numGrids"],
+                    displayScale: bobYAxis["displayScale"],
+                    xData: [],
+                    yData: [],
+                    ticksInfo: structuredClone(defaultXYPlotTicksInfo),
+                };
+                tdl["yAxes"].push(yAxis);
             }
-            delete (yAxis as any)["xPv"];
-            delete (yAxis as any)["yPv"];
-            delete (yAxis as any)["axis"];
         }
+
+
 
         return tdl;
     };
