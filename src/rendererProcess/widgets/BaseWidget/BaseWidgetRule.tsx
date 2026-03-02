@@ -7,7 +7,7 @@ import { RuleY } from "../../helperWidgets/RuleComponents/RuleY";
 import { RuleBackgroundColor } from "../../helperWidgets/RuleComponents/RuleBackgroundColor";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
-import {evaluate} from "mathjs";
+import { evaluate } from "mathjs";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { RuleWidth } from "../../helperWidgets/RuleComponents/RuleWidth";
 import { RuleColor } from "../../helperWidgets/RuleComponents/RuleColor";
@@ -94,6 +94,11 @@ import { RuleEmbeddedDisplaySelectTabIndex } from "../../helperWidgets/RuleCompo
 import { BaseWidget } from "./BaseWidget";
 import { Log } from "../../../common/Log";
 import { RuleImageXmin } from "../../helperWidgets/RuleComponents/RuleImageXmin";
+import { RuleInputComponent } from "../../helperWidgets/RuleComponents/RuleInputComponent";
+import { RuleColorComponent } from "../../helperWidgets/RuleComponents/RuleColorComponent";
+import { RuleChoicesComponent } from "../../helperWidgets/RuleComponents/RuleChoicesComponent";
+import { RuleCheckBoxComponent } from "../../helperWidgets/RuleComponents/RuleCheckBoxComponent";
+import { FontsData } from "../../global/FontsData";
 
 export type type_rule_tdl = {
     boolExpression: string;
@@ -145,263 +150,392 @@ export abstract class BaseWidgetRule {
     static createRuleComponent = (rule: BaseWidgetRule): Record<string, () => any> => {
         const ruleComponents = {
             RuleX: () => {
-                return new RuleX(rule);
+                // return new RuleX(rule);
+                return new RuleInputComponent(rule, "style", "left", "number");
             },
             RuleY: () => {
-                return new RuleY(rule);
+                // return new RuleY(rule);
+                return new RuleInputComponent(rule, "style", "top", "number");
             },
             RuleWidth: () => {
-                return new RuleWidth(rule);
+                // return new RuleWidth(rule);
+                return new RuleInputComponent(rule, "style", "width", "number");
             },
             RuleHeight: () => {
-                return new RuleHeight(rule);
+                // return new RuleHeight(rule);
+                return new RuleInputComponent(rule, "style", "height", "number");
             },
             RuleAngle: () => {
                 return new RuleAngle(rule);
             },
             RuleBackgroundColor: () => {
-                return new RuleBackgroundColor(rule);
+                // return new RuleBackgroundColor(rule);
+                return new RuleColorComponent(rule, "style", "backgroundColor");
             },
             RuleColor: () => {
-                return new RuleColor(rule);
+                // return new RuleColor(rule);
+                return new RuleColorComponent(rule, "style", "color");
             },
             RuleBorderColor: () => {
-                return new RuleBorderColor(rule);
+                // return new RuleBorderColor(rule);
+                return new RuleColorComponent(rule, "style", "borderColor");
             },
             RuleBorderWidth: () => {
-                return new RuleBorderWidth(rule);
+                // return new RuleBorderWidth(rule);
+                return new RuleInputComponent(rule, "style", "borderWidth", "number");
             },
             RuleLineWidth: () => {
-                return new RuleLineWidth(rule);
+                // return new RuleLineWidth(rule);
+                return new RuleInputComponent(rule, "text", "lineWidth", "number");
             },
             RuleLineColor: () => {
-                return new RuleLineColor(rule);
+                // return new RuleLineColor(rule);
+                return new RuleColorComponent(rule, "text", "lineColor");
             },
-
             RuleLineStyle: () => {
-                return new RuleLineStyle(rule);
+                // return new RuleLineStyle(rule);
+                return new RuleChoicesComponent(rule, "text", "lineStyle", "string",
+                    {
+                        Solid: "solid",
+                        Dashed: "dashed",
+                        Dotted: "dotted",
+                        "Dash Dot": "dash-dot",
+                        "Dash Dot Dot": "dash-dot-dot"
+                    }
+                )
             },
             RuleShowArrowHead: () => {
-                return new RuleShowArrowHead(rule);
+                // return new RuleShowArrowHead(rule);
+                return new RuleCheckBoxComponent(rule, "text", "showArrowHead");
             },
             RuleShowArrowTail: () => {
-                return new RuleShowArrowTail(rule);
+                // return new RuleShowArrowTail(rule);
+                return new RuleCheckBoxComponent(rule, "text", "showArrowTail");
             },
             RuleFillColor: () => {
-                return new RuleFillColor(rule);
+                // return new RuleFillColor(rule);
+                return new RuleColorComponent(rule, "text", "fillColor");
             },
             RuleInvisibleInOperation: () => {
-                return new RuleInvisibleInOperation(rule);
+                // return new RuleInvisibleInOperation(rule);
+                return new RuleCheckBoxComponent(rule, "text", "invisibleInOperation");
             },
             RulePolylineSmootherize: () => {
-                return new RulePolylineSmootherize(rule);
+                // return new RulePolylineSmootherize(rule);
+                return new RuleCheckBoxComponent(rule, "text", "smootherize");
             },
             RulePolylineFill: () => {
-                return new RulePolylineFill(rule);
+                // return new RulePolylineFill(rule);
+                return new RuleCheckBoxComponent(rule, "text", "fill");
             },
             RulePolylineClosed: () => {
-                return new RulePolylineClosed(rule);
+                // return new RulePolylineClosed(rule);
+                return new RuleCheckBoxComponent(rule, "text", "closed");
             },
             RulePolylineArrowLength: () => {
-                return new RulePolylineArrowLength(rule);
+                // return new RulePolylineArrowLength(rule);
+                return new RuleInputComponent(rule, "text", "arrowLength", "number");
             },
             RulePolylineArrowWidth: () => {
-                return new RulePolylineArrowWidth(rule);
+                // return new RulePolylineArrowWidth(rule);
+                return new RuleInputComponent(rule, "text", "arrowWidth", "number");
             },
             RuleFontSize: () => {
-                return new RuleFontSize(rule);
+                // return new RuleFontSize(rule);
+                return new RuleChoicesComponent(rule, "style", "fontSize", "number", Object.fromEntries(FontsData.g_fontSizes.map((n) => [`${n}`, `${n}`])))
             },
             RuleText: () => {
-                return new RuleText(rule);
+                // return new RuleText(rule);
+                return new RuleInputComponent(rule, "text", "text", "string");
             },
             RuleWrapWord: () => {
-                return new RuleWrapWord(rule);
+                // return new RuleWrapWord(rule);
+                return new RuleCheckBoxComponent(rule, "text", "wrapWord");
             },
             RuleAlarmBorder: () => {
-                return new RuleAlarmBorder(rule);
+                // return new RuleAlarmBorder(rule);
+                return new RuleCheckBoxComponent(rule, "text", "alarmBorder");
             },
             RuleArcAngleStart: () => {
-                return new RuleArcAngleStart(rule);
+                // return new RuleArcAngleStart(rule);
+                return new RuleInputComponent(rule, "text", "angleStart", "number");
             },
             RuleArcAngleRange: () => {
-                return new RuleArcAngleRange(rule);
+                // return new RuleArcAngleRange(rule);
+                return new RuleInputComponent(rule, "text", "angleRange", "number");
             },
             RuleArcShowRadius: () => {
-                return new RuleArcShowRadius(rule);
+                // return new RuleArcShowRadius(rule);
+                return new RuleChoicesComponent(rule, "text", "showRadius", "string",
+                    {
+                        None: "none",
+                        Radius: "radius",
+                        Secant: "secant",
+                    }
+                )
             },
             RuleXAlign: () => {
-                return new RuleXAlign(rule);
+                // return new RuleXAlign(rule);
+                return new RuleChoicesComponent(rule, "text", "horizontalAlign", "string",
+                    {
+                        Left: "flex-start",
+                        Center: "center",
+                        Right: "flex-end",
+                    }
+                )
             },
             RuleYAlign: () => {
-                return new RuleYAlign(rule);
+                // return new RuleYAlign(rule);
+                return new RuleChoicesComponent(rule, "text", "verticalAlign", "string",
+                    {
+                        Top: "flex-start",
+                        Middle: "center",
+                        Bottom: "flex-end",
+                    }
+                )
             },
             RuleSlideButtonBoxWidth: () => {
-                return new RuleSlideButtonBoxWidth(rule);
+                // return new RuleSlideButtonBoxWidth(rule);
+                return new RuleInputComponent(rule, "text", "boxWidth", "number");
             },
             RuleShowUnit: () => {
-                return new RuleShowUnit(rule);
+                // return new RuleShowUnit(rule);
+                return new RuleCheckBoxComponent(rule, "text", "showUnit");
             },
             RuleChoiceButtonUseChannelItems: () => {
-                return new RuleChoiceButtonUseChannelItems(rule);
+                // return new RuleChoiceButtonUseChannelItems(rule);
+                return new RuleCheckBoxComponent(rule, "text", "useChannelItems");
             },
             RuleBooleanButtonUsePictures: () => {
-                return new RuleBooleanButtonUsePictures(rule);
+                // return new RuleBooleanButtonUsePictures(rule);
+                return new RuleCheckBoxComponent(rule, "text", "usePictures");
             },
             RuleBooleanButtonShowLED: () => {
-                return new RuleBooleanButtonShowLED(rule);
+                // return new RuleBooleanButtonShowLED(rule);
+                return new RuleCheckBoxComponent(rule, "text", "showLED");
             },
             RuleLEDBit: () => {
-                return new RuleLEDBit(rule);
+                // return new RuleLEDBit(rule);
+                return new RuleInputComponent(rule, "text", "bit", "number");
             },
             RuleLEDFallbackColor: () => {
-                return new RuleLEDFallbackColor(rule);
+                // return new RuleLEDFallbackColor(rule);
+                return new RuleColorComponent(rule, "text", "fallbackColor");
             },
             RuleChoiceButtonUnselectedBackgroundColor: () => {
-                return new RuleChoiceButtonUnselectedBackgroundColor(rule);
+                // return new RuleChoiceButtonUnselectedBackgroundColor(rule);
+                return new RuleColorComponent(rule, "text", "unselectedBackgroundColor");
             },
             RuleChoiceButtonSelectedBackgroundColor: () => {
-                return new RuleChoiceButtonSelectedBackgroundColor(rule);
+                // return new RuleChoiceButtonSelectedBackgroundColor(rule);
+                return new RuleColorComponent(rule, "text", "selectedBackgroundColor");
             },
             RuleCheckBoxSize: () => {
-                return new RuleCheckBoxSize(rule);
+                // return new RuleCheckBoxSize(rule);
+                return new RuleInputComponent(rule, "text", "size", "number");
             },
             RuleSlideButtonBoxRatio: () => {
-                return new RuleSlideButtonBoxRatio(rule);
+                // return new RuleSlideButtonBoxRatio(rule);
+                return new RuleInputComponent(rule, "text", "boxRatio", "number");
             },
             RuleProgressBarBackgroundColor: () => {
-                return new RuleProgressBarBackgroundColor(rule);
+                // return new RuleProgressBarBackgroundColor(rule);
+                return new RuleColorComponent(rule, "text", "backgroundColor");
             },
             RuleHighlightBackgroundColor: () => {
-                return new RuleHighlightBackgroundColor(rule);
+                // return new RuleHighlightBackgroundColor(rule);
+                return new RuleColorComponent(rule, "text", "highlightBackgroundColor");
             },
             RuleMaxPvValue: () => {
-                return new RuleMaxPvValue(rule);
+                // return new RuleMaxPvValue(rule);
+                return new RuleInputComponent(rule, "text", "maxPvValue", "number");
             },
             RuleMinPvValue: () => {
-                return new RuleMinPvValue(rule);
+                // return new RuleMinPvValue(rule);
+                return new RuleInputComponent(rule, "text", "minPvValue", "number");
             },
             RuleUsePvLimits: () => {
-                return new RuleUsePvLimits(rule);
+                // return new RuleUsePvLimits(rule);
+                return new RuleCheckBoxComponent(rule, "text", "usePvLimits");
             },
             RuleSliderBlockWidth: () => {
-                return new RuleSliderBlockWidth(rule);
+                // return new RuleSliderBlockWidth(rule);
+                return new RuleInputComponent(rule, "text", "sliderBlockWidth", "number");
             },
             RuleDirection: () => {
-                return new RuleDirection(rule);
+                // return new RuleDirection(rule);
+                return new RuleChoicesComponent(rule, "text", "direction", "string",
+                    {
+                        Horizontal: "horizontal",
+                        Vertical: "vertical",
+                    }
+                )
             },
             RuleShowPvValue: () => {
-                return new RuleShowPvValue(rule);
+                // return new RuleShowPvValue(rule);
+                return new RuleCheckBoxComponent(rule, "text", "showPvValue");
             },
             RuleStepSize: () => {
-                return new RuleStepSize(rule);
+                // return new RuleStepSize(rule);
+                return new RuleInputComponent(rule, "text", "stepSize", "number");
             },
             RuleUseLogScale: () => {
-                return new RuleUseLogScale(rule);
+                // return new RuleUseLogScale(rule);
+                return new RuleCheckBoxComponent(rule, "text", "useLogScale");
             },
             RuleInvalidSeverityColor: () => {
-                return new RuleInvalidSeverityColor(rule);
+                // return new RuleInvalidSeverityColor(rule);
+                return new RuleColorComponent(rule, "text", "invalidSeverityColor");
             },
             RuleMajorSeverityColor: () => {
-                return new RuleMajorSeverityColor(rule);
+                // return new RuleMajorSeverityColor(rule);
+                return new RuleColorComponent(rule, "text", "majorSeverityColor");
             },
             RuleMinorSeverityColor: () => {
-                return new RuleMinorSeverityColor(rule);
+                // return new RuleMinorSeverityColor(rule);
+                return new RuleColorComponent(rule, "text", "minorSeverityColor");
             },
             RuleMeterAngleRange: () => {
-                return new RuleMeterAngleRange(rule);
+                // return new RuleMeterAngleRange(rule);
+                return new RuleInputComponent(rule, "text", "angleRange", "number");
             },
             RuleMeterDialColor: () => {
-                return new RuleMeterDialColor(rule);
+                // return new RuleMeterDialColor(rule);
+                return new RuleColorComponent(rule, "text", "dialColor");
             },
             RuleMeterDialPercentage: () => {
-                return new RuleMeterDialPercentage(rule);
+                // return new RuleMeterDialPercentage(rule);
+                return new RuleInputComponent(rule, "text", "dialPercentage", "number");
             },
             RuleMeterDialThickness: () => {
-                return new RuleMeterDialThickness(rule);
+                // return new RuleMeterDialThickness(rule);
+                return new RuleInputComponent(rule, "text", "dialThickness", "number");
             },
             RuleMeterPointerColor: () => {
-                return new RuleMeterPointerColor(rule);
+                // return new RuleMeterPointerColor(rule);
+                return new RuleColorComponent(rule, "text", "pointerColor");
             },
             RuleMeterPointerLengthPercentage: () => {
-                return new RuleMeterPointerLengthPercentage(rule);
+                // return new RuleMeterPointerLengthPercentage(rule);
+                return new RuleInputComponent(rule, "text", "pointerLengthPercentage", "number");
             },
             RuleMeterPointerThickness: () => {
-                return new RuleMeterPointerThickness(rule);
+                // return new RuleMeterPointerThickness(rule);
+                return new RuleInputComponent(rule, "text", "pointerThickness", "number");
             },
             RuleMeterLabelPositionPercentage: () => {
-                return new RuleMeterLabelPositionPercentage(rule);
+                // return new RuleMeterLabelPositionPercentage(rule);
+                return new RuleInputComponent(rule, "text", "labelPositionPercentage", "number");
             },
             RuleMeterDialFontColor: () => {
-                return new RuleMeterDialFontColor(rule);
+                // return new RuleMeterDialFontColor(rule);
+                return new RuleColorComponent(rule, "text", "dialFontColor");
             },
             RuleMeterDialFontSize: () => {
-                return new RuleMeterDialFontSize(rule);
+                // return new RuleMeterDialFontSize(rule);
+                return new RuleChoicesComponent(rule, "text", "dialFontSize", "number", Object.fromEntries(FontsData.g_fontSizes.map((n) => [`${n}`, `${n}`])))
             },
             RuleTankShowLabels: () => {
-                return new RuleTankShowLabels(rule);
+                // return new RuleTankShowLabels(rule);
+                return new RuleCheckBoxComponent(rule, "text", "showLabels");
             },
             RuleThermometerBulbDiameter: () => {
-                return new RuleThermometerBulbDiameter(rule);
+                // return new RuleThermometerBulbDiameter(rule);
+                return new RuleInputComponent(rule, "text", "bulbDiameter", "number");
             },
             RuleThermometerTubeWidth: () => {
-                return new RuleThermometerTubeWidth(rule);
+                // return new RuleThermometerTubeWidth(rule);
+                return new RuleInputComponent(rule, "text", "tubeWidth", "number");
             },
             RuleThermometerWallThickness: () => {
-                return new RuleThermometerWallThickness(rule);
+                // return new RuleThermometerWallThickness(rule);
+                return new RuleInputComponent(rule, "text", "wallThickness", "number");
             },
             RuleThermometerWallColor: () => {
-                return new RuleThermometerWallColor(rule);
+                // return new RuleThermometerWallColor(rule);
+                return new RuleColorComponent(rule, "text", "wallColor");
             },
             RuleLEDShape: () => {
-                return new RuleLEDShape(rule);
+                // return new RuleLEDShape(rule);
+                return new RuleChoicesComponent(rule, "text", "dialFontSize", "number",
+                    {
+                        Round: "round",
+                        Square: "square",
+                    }
+                )
             },
             RuleLEDMultiStateFallbackText: () => {
-                return new RuleLEDMultiStateFallbackText(rule);
+                // return new RuleLEDMultiStateFallbackText(rule);
+                return new RuleInputComponent(rule, "text", "fallbackText", "string");
             },
             RuleByteMonitorBitStart: () => {
-                return new RuleByteMonitorBitStart(rule);
+                // return new RuleByteMonitorBitStart(rule);
+                return new RuleInputComponent(rule, "text", "bitStart", "number");
             },
             RuleByteMonitorBitLength: () => {
-                return new RuleByteMonitorBitLength(rule);
+                // return new RuleByteMonitorBitLength(rule);
+                return new RuleInputComponent(rule, "text", "bitLength", "number");
             },
             RuleByteMonitorSequence: () => {
-                return new RuleByteMonitorSequence(rule);
+                // return new RuleByteMonitorSequence(rule);
+                return new RuleChoicesComponent(rule, "text", "sequence", "string",
+                    {
+                        Positive: "positive",
+                        Reverse: "reverse",
+                    }
+                )
             },
             RuleRectangleCornerWidth: () => {
-                return new RuleRectangleCornerWidth(rule);
+                // return new RuleRectangleCornerWidth(rule);
+                return new RuleInputComponent(rule, "text", "cornerWidth", "number");
             },
             RuleRectangleCornerHeight: () => {
-                return new RuleRectangleCornerHeight(rule);
+                // return new RuleRectangleCornerHeight(rule);
+                return new RuleInputComponent(rule, "text", "cornerHeight", "number");
             },
             RulePictureOpacity: () => {
-                return new RulePictureOpacity(rule);
+                // return new RulePictureOpacity(rule);
+                return new RuleInputComponent(rule, "text", "opacity", "number");
             },
             RulePictureStretchToFit: () => {
-                return new RulePictureStretchToFit(rule);
+                // return new RulePictureStretchToFit(rule);
+                return new RuleCheckBoxComponent(rule, "text", "stretchToFit");
             },
             RuleMediaDefaultFileName: () => {
-                return new RuleMediaDefaultFileName(rule);
+                // return new RuleMediaDefaultFileName(rule);
+                return new RuleInputComponent(rule, "text", "fileName", "string");
             },
             RuleBooleanButtonOnColor: () => {
-                return new RuleBooleanButtonOnColor(rule);
+                // return new RuleBooleanButtonOnColor(rule);
+                return new RuleColorComponent(rule, "text", "onColor");
             },
             RuleBooleanButtonOffColor: () => {
-                return new RuleBooleanButtonOffColor(rule);
+                // return new RuleBooleanButtonOffColor(rule);
+                return new RuleColorComponent(rule, "text", "offColor");
             },
             RuleOutlineColor: () => {
-                return new RuleOutlineColor(rule);
+                // return new RuleOutlineColor(rule);
+                return new RuleColorComponent(rule, "style", "outlineColor");
             },
             RuleOutlineStyle: () => {
-                return new RuleOutlineStyle(rule);
+                // return new RuleOutlineStyle(rule);
+                return new RuleChoicesComponent(rule, "style", "outlineStyle", "string",
+                    {
+                        Solid: "solid",
+                        None: "none",
+                    }
+                )
             },
             RuleOutlineWidth: () => {
-                return new RuleOutlineWidth(rule);
+                // return new RuleOutlineWidth(rule);
+                return new RuleInputComponent(rule, "style", "outlineWidth", "number");
             },
             RuleEmbeddedDisplaySelectTabIndex: () => {
                 return new RuleEmbeddedDisplaySelectTabIndex(rule);
             },
             RuleImageXmin: () => {
-                return new RuleImageXmin(rule);
+                // return new RuleImageXmin(rule);
+                return new RuleInputComponent(rule, "text", "xMin", "number");
             },
         };
         return ruleComponents;
@@ -454,19 +588,9 @@ export abstract class BaseWidgetRule {
     getRuleComponent = () => {
         return this._ruleComponent;
     };
-    setRuleComponent = (newRuleComponent: RuleX) => {
+    setRuleComponent = (newRuleComponent: RuleComponent) => {
         this._ruleComponent = newRuleComponent;
     };
-
-    // removeRuleComponentTypes = (ruleComponentTypesToBeRemoved: string[]) => {
-    //     for (let ii = 0; ii < ruleComponentTypesToBeRemoved.length; ii++) {
-    //         const ruleComponentTypeToBeRemoved = ruleComponentTypesToBeRemoved[ii];
-    //         const index = this.getRuleComponentTypes().indexOf(ruleComponentTypeToBeRemoved);
-    //         if (index > -1) {
-    //             this.getRuleComponentTypes().splice(index, 1);
-    //         }
-    //     }
-    // }
 
     addRuleComponentTypes = (newRuleComponentTypes: string[]) => {
         this.getRuleComponentTypes().push(...newRuleComponentTypes);

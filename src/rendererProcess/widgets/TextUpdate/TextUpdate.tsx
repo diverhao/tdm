@@ -63,6 +63,8 @@ export class TextUpdate extends BaseWidget {
 
         const additionalStyle = g_widgets1.isEditing() ? {} : this.getElementBodyRawStyle();
 
+        const showUnit = allText["showUnit"];
+
         return (
             <div
                 style={{
@@ -86,7 +88,7 @@ export class TextUpdate extends BaseWidget {
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                {this.getFormattedChannelValue(true)}
+                {this.getFormattedChannelValue(showUnit)}
             </div>
         );
     };

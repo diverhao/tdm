@@ -18,7 +18,7 @@ export class PolylineSidebar extends BaseWidgetSidebar {
         super(polyline);
         const text = this.getMainWidget().getText();
         this._sidebarPolylineSmootherize = new SidebarCheckBox(this, text, "smootherize", "Smootherize");
-        this._sidebarPolylineFill = new SidebarStringInput(this, text, "fill", "Fill");
+        this._sidebarPolylineFill = new SidebarCheckBox(this, text, "fill", "Fill");
         this._sidebarPolylineClosed = new SidebarCheckBox(this, text, "closed", "Closed");
         this._sidebarPolylinePointsTable = new SidebarPolylinePointsTable(this);
     }
