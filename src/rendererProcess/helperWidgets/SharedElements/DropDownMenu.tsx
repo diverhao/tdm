@@ -7,7 +7,7 @@ import * as React from "react";
  * @param {callbacks} callbacks Drop down menu text and the callback function
  */
 export const ElementDropDownMenu = ({ callbacks, fontSize }: any) => {
-    const elementSelectRef = React.useRef<any>(null);
+    const elementSelectRef = React.useRef<HTMLSelectElement>(null);
     return (
         <div style={{
             display: "inline-flex",

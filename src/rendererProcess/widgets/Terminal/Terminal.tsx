@@ -904,7 +904,9 @@ export class Terminal extends BaseWidget {
                         } else {
                             // no match, do nothing
                         }
-                    } catch (e) { }
+                    } catch (e) {
+                        Log.error(e);
+                    }
                 }
             }
         }

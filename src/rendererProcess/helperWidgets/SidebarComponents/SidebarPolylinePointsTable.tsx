@@ -166,7 +166,7 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
     _ElementCoordinate = ({ dataArray, index, direction }: any) => {
         const sizeStr = direction === "x" ? "width" : "height";
         const size = this.getMainWidget().getStyle()[sizeStr];
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLInputElement>(null);
 
         React.useEffect(() => {
             setVal(`${dataArray[index] * size}`);

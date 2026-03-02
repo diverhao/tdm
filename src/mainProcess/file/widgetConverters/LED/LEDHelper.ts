@@ -4,20 +4,8 @@ import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobProperty
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
-
-export type type_LED_tdl = {
-	type: string;
-	widgetKey: string;
-	key: string;
-	style: Record<string, any>;
-	text: Record<string, any>;
-	channelNames: string[];
-	groupNames: string[];
-	rules: type_rules_tdl;
-	itemNames: string[];
-	itemColors: string[];
-	itemValues: (number | string | number[] | string[] | undefined)[];
-};
+import { defaultLEDTdl, type_LED_tdl } from "../../../../common/types/type_widget_tdl";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
 
 /**
  * edm does not have LED widget, but its Button widget may come with 
@@ -25,83 +13,21 @@ export type type_LED_tdl = {
  * button and a LED for this edm Button widget
  */
 export class LEDHelper extends BaseWidgetHelper {
-	static _defaultTdl: type_LED_tdl = {
-		type: "LED",
-		widgetKey: "", // "key" is a reserved keyword
-		key: "",
-		style: {
-			// basics
-			position: "absolute",
-			display: "inline-flex",
-			// dimensions
-			left: 0,
-			top: 0,
-			width: 100,
-			height: 100,
-			backgroundColor: "rgba(240, 240, 240, 0)",
-			// angle
-			transform: "rotate(0deg)",
-			// font
-			color: "rgba(0,0,0,1)",
-			fontFamily: GlobalVariables.defaultFontFamily,
-			fontSize: GlobalVariables.defaultFontSize,
-			fontStyle: GlobalVariables.defaultFontStyle,
-			fontWeight: GlobalVariables.defaultFontWeight,
-			// border, it is different from the "alarmBorder" below
-			borderStyle: "solid",
-			borderWidth: 0,
-			borderColor: "rgba(0, 0, 0, 1)",
-			// shows when the widget is selected
-			outlineStyle: "none",
-			outlineWidth: 1,
-			outlineColor: "black",
-		},
-		text: {
-			wrapWord: false,
-			showUnit: false,
-			alarmBorder: true,
-			// LED line style, not the border/outline line
-			lineWidth: 2,
-			lineStyle: "solid",
-			lineColor: "rgba(50, 50, 50, 0.698)",
-			// round or square
-			shape: "round",
-			// use channel value
-			bit: -1,
-			// if the value is not valid
-			fallbackColor: "rgba(255,0,255,1)",
-            fallbackText: "Err",
-			// use channel's value and label, only valid for EPICS enum channels
-			// that has "strings" property
-			useChannelItems: false,
-            invisibleInOperation: false,
-		},
-		channelNames: [],
-		groupNames: [],
-		rules: [],
-		itemNames: ["ZERO", "ONE"],
-		itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
-		itemValues: [0, 1],
-	};
-	// not getDefaultTdl(), always generate a new key
-	static generateDefaultTdl = (type: string): type_LED_tdl => {
-		const result = super.generateDefaultTdl("LED") as type_LED_tdl;
-		result.style = structuredClone(this._defaultTdl.style);
-		result.text = structuredClone(this._defaultTdl.text);
-		result.channelNames = structuredClone(this._defaultTdl.channelNames);
-		result.groupNames = structuredClone(this._defaultTdl.groupNames);
-		result.itemNames = structuredClone(this._defaultTdl.itemNames);
-		result.itemColors = structuredClone(this._defaultTdl.itemColors);
-		result.itemValues = structuredClone(this._defaultTdl.itemValues);
-		return result;
-	};
+
+    static generateDefaultTdl = (): type_LED_tdl => {
+        const widgetKey = generateWidgetKey(defaultLEDTdl.type);
+        return structuredClone({
+            ...defaultLEDTdl,
+            widgetKey: widgetKey,
+        });
+    };
 
     // if a edm Button has indicatorPv, we convert this widget to a BooleanButton and a LED
     // the Boolean Button is invisible, laying on the top, the LED shows the indicatorPv
     // edl does not have LED widget type, this type in edlJSON is simply a copy of edl Button
     static convertEdlToTdl_Button = (edl: Record<string, any>, type: "Button"): type_LED_tdl | undefined => {
         Log.info("\n------------", `Parsing "Button"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("LED") as type_LED_tdl;
+        const tdl = this.generateDefaultTdl() as type_LED_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
@@ -257,7 +183,7 @@ export class LEDHelper extends BaseWidgetHelper {
         //         id: uuidv4(),
         //     });
         // }
-        
+
         // if visPv exists in edl setting, but its value is not available in operation, the widget becomes invisible
         // These behaviors override the alarm-sensitive
         // this behavior is only for Button, not for "Message Button"
@@ -295,36 +221,36 @@ export class LEDHelper extends BaseWidgetHelper {
         return tdl;
     };
 
-	static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_LED_tdl => {
-		Log.info("\n------------", `Parsing "led"`, "------------------\n");
-		const tdl = this.generateDefaultTdl("LED");
-		// all properties for this widget
-		const propertyNames: string[] = [
-			"actions", // not in tdm
-			"bit",
-			"border_alarm_sensitive",
-			"class", // not in tdm
-			"font",
-			"foreground_color",
-			"height",
-			"labels_from_pv",
-			"line_color",
-			"name", // not in tdm
-			"off_color",
-			"off_label",
-			"on_color",
-			"on_label",
-			"pv_name",
-			"rules",
-			"scripts", // not in tdm
-			"square",
-			"tooltip", // not in tdm
-			"type", // not in tdm
-			"visible",
-			"width",
-			"x",
-			"y",
-		];
+    static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_LED_tdl => {
+        Log.info("\n------------", `Parsing "led"`, "------------------\n");
+        const tdl = this.generateDefaultTdl();
+        // all properties for this widget
+        const propertyNames: string[] = [
+            "actions", // not in tdm
+            "bit",
+            "border_alarm_sensitive",
+            "class", // not in tdm
+            "font",
+            "foreground_color",
+            "height",
+            "labels_from_pv",
+            "line_color",
+            "name", // not in tdm
+            "off_color",
+            "off_label",
+            "on_color",
+            "on_label",
+            "pv_name",
+            "rules",
+            "scripts", // not in tdm
+            "square",
+            "tooltip", // not in tdm
+            "type", // not in tdm
+            "visible",
+            "width",
+            "x",
+            "y",
+        ];
 
         tdl["style"]["top"] = 0;
         tdl["style"]["left"] = 0;
@@ -367,20 +293,20 @@ export class LEDHelper extends BaseWidgetHelper {
                 } else if (propertyName === "line_color") {
                     tdl["text"]["lineColor"] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "off_color") {
-                    tdl["itemColors"][0] =  BobPropertyConverter.convertBobColor(propertyValue);
+                    tdl["itemColors"][0] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "on_color") {
-                    tdl["itemColors"][1] =  BobPropertyConverter.convertBobColor(propertyValue);
+                    tdl["itemColors"][1] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "off_label") {
-                    tdl["itemNames"][0] =  BobPropertyConverter.convertBobString(propertyValue);
+                    tdl["itemNames"][0] = BobPropertyConverter.convertBobString(propertyValue);
                 } else if (propertyName === "on_label") {
-                    tdl["itemNames"][1] =  BobPropertyConverter.convertBobString(propertyValue);
+                    tdl["itemNames"][1] = BobPropertyConverter.convertBobString(propertyValue);
                 } else if (propertyName === "pv_name") {
                     tdl["channelNames"].push(BobPropertyConverter.convertBobString(propertyValue));
                 } else if (propertyName === "rules") {
                     tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
                 } else if (propertyName === "square") {
                     const isSquare = BobPropertyConverter.convertBobBoolean(propertyValue);
-                    tdl["text"]["shape"] = isSquare === true? "square" : "round";
+                    tdl["text"]["shape"] = isSquare === true ? "square" : "round";
                 } else if (propertyName === "visible") {
                     tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
@@ -388,7 +314,7 @@ export class LEDHelper extends BaseWidgetHelper {
                 }
             }
         }
-        
-		return tdl;
-	};
+
+        return tdl;
+    };
 }

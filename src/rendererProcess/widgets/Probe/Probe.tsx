@@ -127,13 +127,17 @@ export class Probe extends BaseWidget {
                 const rtypChannelName = this.getChannelNamesLevel5()[0];
                 const oldTcaChannel = g_widgets1.getTcaChannel(rtypChannelName + ".RTYP");
                 oldTcaChannel.destroy(this.getWidgetKey());
-            } catch (e) { }
+            } catch (e) {
+                Log.error(e);
+            }
         }
         for (let oldChannelNameLevel5 of this.getChannelNamesLevel5()) {
             try {
                 const oldTcaChannel = g_widgets1.getTcaChannel(oldChannelNameLevel5);
                 oldTcaChannel.destroy(this.getWidgetKey());
-            } catch (e) { }
+            } catch (e) {
+                Log.error(e);
+            }
         }
         // (2)
         this.getChannelNamesLevel0()[0] = newChannelName;
@@ -328,6 +332,7 @@ export class Probe extends BaseWidget {
                     const fieldTcaChannel = g_widgets1.getTcaChannel(channelNameLevel5);
                     fieldTcaChannel.destroy(this.getWidgetKey());
                 } catch (e) {
+                    Log.error(e);
                 }
             }
         }
@@ -472,6 +477,7 @@ export class Probe extends BaseWidget {
         try {
             tcaChannel = g_widgets1.getTcaChannel(channelName);
         } catch (e) {
+            Log.error(e);
         }
 
         const pvaData = tcaChannel?.getDbrData();
@@ -486,6 +492,7 @@ export class Probe extends BaseWidget {
                 jsonDataAndType = dataAndTypeFull["data"];
             } catch (e) {
                 // console.log(e)
+                Log.error(e);
             }
         }
 

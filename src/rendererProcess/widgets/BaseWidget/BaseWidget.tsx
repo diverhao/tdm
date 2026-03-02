@@ -150,7 +150,7 @@ export abstract class BaseWidget {
     _readWriteType: "read" | "write" = "write";
 
     // setTimeout and setInterval in this widget
-    _schedules: (NodeJS.Timeout | NodeJS.Timer)[] = [];
+    _schedules: ReturnType<typeof setTimeout>[] = [];
 
     // style and text computed from rule
     // todo: they are updated at each re-rendering and applied to when??
@@ -772,6 +772,9 @@ export abstract class BaseWidget {
 
     // element = <> body (area + resizer) + sidebar </>
 
+    // optional hook for widgets that support file selection (e.g. ActionButton, Media, Symbol)
+    handleSelectAFile?: (options: Record<string, any>, fileName: string) => void;
+
     // Body + sidebar
     abstract _ElementRaw: () => React.JSX.Element;
     abstract _Element: React.MemoExoticComponent<() => React.JSX.Element>;
@@ -986,60 +989,6 @@ export abstract class BaseWidget {
         },
     };
 
-    private _resizerStyles0: Record<string, any> = {
-        A: {
-            ...this._resizerStyle,
-            left: -5,
-            top: -5,
-            cursor: "nwse-resize",
-        },
-        B: {
-            ...this._resizerStyle,
-            left: 5,
-            top: -5,
-            width: "100%",
-            cursor: "ns-resize",
-        },
-        C: {
-            ...this._resizerStyle,
-            right: -5,
-            top: -5,
-            cursor: "nesw-resize",
-        },
-        D: {
-            ...this._resizerStyle,
-            right: -5,
-            top: 5,
-            cursor: "ew-resize",
-            height: "100%",
-        },
-        E: {
-            ...this._resizerStyle,
-            right: -5,
-            bottom: -5,
-            cursor: "nwse-resize",
-        },
-        F: {
-            ...this._resizerStyle,
-            left: 5,
-            bottom: -5,
-            cursor: "ns-resize",
-            width: "100%",
-        },
-        G: {
-            ...this._resizerStyle,
-            left: -5,
-            bottom: -5,
-            cursor: "nesw-resize",
-        },
-        H: {
-            ...this._resizerStyle,
-            top: 5,
-            left: -5,
-            cursor: "ew-resize",
-            height: "100%",
-        },
-    };
 
 
     // -------------------------- tdl -------------------------------
@@ -1164,13 +1113,13 @@ export abstract class BaseWidget {
             type: this.getType(),
             widgetKey: this.getWidgetKey(),
             key: this.getWidgetKey(),
-            style: {...this.getStyle()},
-            text: {...this.getText()},
+            style: { ...this.getStyle() },
+            text: { ...this.getText() },
             // channelNames: [...this.getChannelNames()],
             // the un-processed channel names
             channelNames: [...this.getChannelNamesLevel0()],
             groupNames: [...this.getGroupNames()],
-            rules: {...this.getRulesTdl()},
+            rules: { ...this.getRulesTdl() },
         };
         // deselect tdl
         result.style.outlineStyle = "none";
@@ -2622,16 +2571,14 @@ export abstract class BaseWidget {
         return this._schedules;
     }
 
-    addSchedule = (newSchedule: NodeJS.Timeout | NodeJS.Timer) => {
+    addSchedule = (newSchedule: ReturnType<typeof setTimeout>) => {
         this._schedules.push(newSchedule);
     }
 
     clearSchedule = () => {
         for (let schedule of this.getSchedules()) {
-            clearTimeout(schedule as any);
-            clearInterval(schedule as any);
+            clearTimeout(schedule);
+            clearInterval(schedule);
         }
     }
-
-
 }

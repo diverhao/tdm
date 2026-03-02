@@ -376,7 +376,7 @@ export class PvMonitor extends BaseWidget {
                 const oldTcaChannel = g_widgets1.getTcaChannel(oldChannelName);
                 oldTcaChannel.destroy(this.getWidgetKey());
             } catch (e) {
-
+                Log.error(e);
             }
             this.clearData();
 
@@ -431,7 +431,7 @@ export class PvMonitor extends BaseWidget {
                             const oldTcaChannel = g_widgets1.getTcaChannel(oldChannelName);
                             oldTcaChannel.destroy(this.getWidgetKey());
                         } catch (e) {
-
+                            Log.error(e);
                         }
                         this.clearData();
 

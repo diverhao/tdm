@@ -5,95 +5,21 @@ import * as GlobalMethods from "../../../../common/GlobalMethods";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
-
-export type type_Polyline_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    pointsX: number[];
-    pointsY: number[];
-};
+import { defaultPolylineTdl, type_Polyline_tdl } from "../../../../common/types/type_widget_tdl";
 
 export class PolylineHelper extends BaseWidgetHelper {
-    static _defaultTdl: type_Polyline_tdl = {
-        type: "Polyline",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 0,
-            top: 0,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(0,0,0,0)",
-            // angle
-            transform: "rotate(0deg)",
-            // line color, not text color
-            color: "rgba(0,0,255,1)",
-            // border
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        // the ElementBody style
-        text: {
-            // line styles
-            lineWidth: 3,
-            lineStyle: "solid",
-            lineColor: "rgba(0,0,255,1)",
-            // arrows, length and width are in unit of line width
-            arrowLength: 6,
-            arrowWidth: 3,
-            showArrowHead: false,
-            showArrowTail: false,
-            // curve
-            smootherize: false,
-            // when fill === true and closed === true, it is a polygon
-            fill: false,
-            closed: false,
-            fillColor: "rgba(50,50,255,1)",
-            invisibleInOperation: false,
-            alarmBorder: false,
-            alarmBackground: false,
-            alarmText: false,
-            alarmFill: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        pointsX: [],
-        pointsY: [],
-    };
-
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_Polyline_tdl => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_Polyline_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.pointsX = structuredClone(this._defaultTdl.pointsX);
-        result.pointsY = structuredClone(this._defaultTdl.pointsY);
-        return result;
+    
+    static generateDefaultTdl = (): type_Polyline_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultPolylineTdl["type"]);
+        return structuredClone({
+            ...defaultPolylineTdl,
+            widgetKey: widgetKey,
+        })
     };
 
     static convertEdlToTdl = (edl: Record<string, any>): type_Polyline_tdl | undefined => {
         Log.info("\n------------", `Parsing "Lines"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Polyline") as type_Polyline_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
@@ -286,7 +212,7 @@ export class PolylineHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "polygon" | "polyline"): type_Polyline_tdl => {
         Log.info("\n------------", `Parsing "polyline"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Polyline");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "actions", // not in tdm

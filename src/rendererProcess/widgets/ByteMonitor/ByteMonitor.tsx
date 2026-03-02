@@ -55,7 +55,7 @@ export class ByteMonitor extends BaseWidget {
         );
     };
 
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementAreaRaw = (): React.JSX.Element => {
         const whiteSpace = this.getAllText().wrapWord ? "normal" : "pre";
         const justifyContent = this.getAllText().horizontalAlign;
         const alignItems = this.getAllText().verticalAlign;
@@ -136,7 +136,7 @@ export class ByteMonitor extends BaseWidget {
         );
     };
 
-    _ElementLED = ({ bitValue }: any) => {
+    _ElementLED = ({ bitValue }: { bitValue: number | undefined }) => {
         if (this.getAllText()["shape"] === "round") {
             return (
                 <this._ElementLEDRound bitValue={bitValue}></this._ElementLEDRound>
@@ -148,7 +148,7 @@ export class ByteMonitor extends BaseWidget {
         }
     }
 
-    _ElementLEDSquare = ({ bitValue }: any) => {
+    _ElementLEDSquare = ({ bitValue }: { bitValue: number | undefined }) => {
         if (g_widgets1.isEditing()) {
             return (
                 <this._ElementLEDSquareEditing bitValue={bitValue}></this._ElementLEDSquareEditing>
@@ -160,7 +160,7 @@ export class ByteMonitor extends BaseWidget {
         }
     };
 
-    _ElementLEDSquareEditing = ({ bitValue }: any) => {
+    _ElementLEDSquareEditing = ({ bitValue }: { bitValue: number | undefined }) => {
         const allText = this.getAllText();
         const allStyle = this.getAllStyle();
         const direction = allText["direction"];
@@ -230,7 +230,7 @@ export class ByteMonitor extends BaseWidget {
         );
     };
 
-    _ElementLEDSquareOperating = ({ bitValue }: any) => {
+    _ElementLEDSquareOperating = ({ bitValue }: { bitValue: number | undefined }) => {
         const allText = this.getAllText();
         const allStyle = this.getAllStyle();
         const direction = allText["direction"];
@@ -281,7 +281,7 @@ export class ByteMonitor extends BaseWidget {
 
     };
 
-    _ElementLEDRound = ({ bitValue }: any) => {
+    _ElementLEDRound = ({ bitValue }: { bitValue: number | undefined }) => {
         if (g_widgets1.isEditing()) {
             return (
                 <this._ElementLEDRoundEditing bitValue={bitValue}></this._ElementLEDRoundEditing>
@@ -293,7 +293,7 @@ export class ByteMonitor extends BaseWidget {
         }
     };
 
-    _ElementLEDRoundEditing = ({ bitValue }: any) => {
+    _ElementLEDRoundEditing = ({ bitValue }: { bitValue: number | undefined }) => {
         const allText = this.getAllText();
         const allStyle = this.getAllStyle();
         const direction = allText["direction"];
@@ -350,7 +350,7 @@ export class ByteMonitor extends BaseWidget {
         );
     };
 
-    _ElementLEDRoundOperating = ({ bitValue }: any) => {
+    _ElementLEDRoundOperating = ({ bitValue }: { bitValue: number | undefined }) => {
         const allText = this.getAllText();
         const allStyle = this.getAllStyle();
         const direction = allText["direction"];
@@ -405,7 +405,7 @@ export class ByteMonitor extends BaseWidget {
 
     };
 
-    _ElementText = ({ index }: any) => {
+    _ElementText = ({ index }: { index: number }) => {
         const allText = this.getAllText();
 
         // fill in bit names

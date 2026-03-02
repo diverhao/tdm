@@ -736,7 +736,7 @@ export class ScaledSlider extends BaseWidget {
      * 
      * Does nothing in editing mode (when the display is being designed).
      */
-    handleMouseEnter = (event: React.MouseEvent<HTMLDivElement>, sliderRef: any) => {
+    handleMouseEnter = (event: React.MouseEvent<HTMLDivElement>, sliderRef: React.RefObject<HTMLDivElement | null>) => {
         event.preventDefault();
 
         if (g_widgets1.isEditing()) {
@@ -748,7 +748,7 @@ export class ScaledSlider extends BaseWidget {
         }
 
         // focus the element for key events
-        (sliderRef.current as any).focus();
+        sliderRef.current.focus();
         // outline: thick light grey
         this.hanldeMouseEnterWriteWidget(event, sliderRef)
 
@@ -766,12 +766,12 @@ export class ScaledSlider extends BaseWidget {
      * (4) Restore the default outline (e.g. thin 3D outline for traditional
      *     appearance, or "none" for contemporary)
      */
-    handleMouseLeave = (event: React.MouseEvent<HTMLDivElement>, sliderRef: any, outline: string) => {
+    handleMouseLeave = (event: React.MouseEvent<HTMLDivElement>, sliderRef: React.RefObject<HTMLDivElement | null>, outline: string) => {
         if (sliderRef.current === null) {
             return;
         }
         // (1)
-        (sliderRef.current as any).blur();
+        sliderRef.current.blur();
         // (2)
         clearTimeout(this.mouseDownIntervalTimer);
         clearTimeout(this.keyDownIntervalTimer);

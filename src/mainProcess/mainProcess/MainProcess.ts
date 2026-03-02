@@ -232,7 +232,7 @@ export class MainProcess {
              */
             // (1)
             const firstProfileName = this.getProfiles().getFirstProfileName();
-            this.getIpcManager().handleProfileSelected(undefined, {
+            this.getIpcManager().handleProfileSelected("", {
                 selectedProfileName: firstProfileName,
             })
         } else if (this.getMainProcessMode() === "ssh-server") {
@@ -424,6 +424,7 @@ export class MainProcess {
             }
         } catch (e) {
             // do nothing
+            Log.error(e);
         }
         return "";
     }

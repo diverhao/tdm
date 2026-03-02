@@ -1,12 +1,10 @@
 import * as React from "react";
-import { MouseEvent } from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { PolylineSidebar } from "./PolylineSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { PolylineSmoother } from "./PolylineSmoother";
 import { PolylineRule } from "./PolylineRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
@@ -81,7 +79,7 @@ export class Polyline extends BaseWidget {
         );
     };
 
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementAreaRaw = (): React.JSX.Element => {
         const outline = this._getElementAreaRawOutlineStyle();
         const position = "absolute";
         const overflow = "visible";
@@ -572,8 +570,7 @@ export class Polyline extends BaseWidget {
 
     // ---------------------- tdl ---------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-
+    static generateDefaultTdl = (): type_Polyline_tdl => {
         const widgetKey = GlobalMethods.generateWidgetKey(defaultPolylineTdl["type"]);
         return structuredClone({
             ...defaultPolylineTdl,
@@ -583,7 +580,6 @@ export class Polyline extends BaseWidget {
 
     generateDefaultTdl: () => any = Polyline.generateDefaultTdl;
 
-    // defined in super class
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
         result["pointsX"] = [];

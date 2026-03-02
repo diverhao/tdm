@@ -22,7 +22,11 @@ export type type_Calculator_tdl = {
 
 type type_Calculator_key = {
     label: string;
-    onClick: any;
+    onClick: (
+        setInputLine: React.Dispatch<React.SetStateAction<string>>,
+        setHistoryLine: React.Dispatch<React.SetStateAction<string>>,
+        inputElementRef: React.RefObject<HTMLInputElement | null>
+    ) => void;
     options: Record<string, any>;
 };
 export class Calculator extends BaseWidget {
@@ -76,7 +80,7 @@ export class Calculator extends BaseWidget {
     };
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementAreaRaw = (): React.JSX.Element => {
         return (
             <div
                 style={{
@@ -143,7 +147,13 @@ export class Calculator extends BaseWidget {
         );
     };
 
-    _ElementLcd = ({ inputLine, setInputLine, historyLine, setHistoryLine, inputElementRef }: any) => {
+    _ElementLcd = ({ inputLine, setInputLine, historyLine, setHistoryLine, inputElementRef }: {
+        inputLine: string;
+        setInputLine: React.Dispatch<React.SetStateAction<string>>;
+        historyLine: string;
+        setHistoryLine: React.Dispatch<React.SetStateAction<string>>;
+        inputElementRef: React.RefObject<HTMLInputElement | null>;
+    }) => {
         React.useEffect(() => {
             if (inputElementRef !== undefined && inputElementRef.current !== null && this.futureCursorPosition !== -1) {
                 inputElementRef.current.setSelectionRange(this.futureCursorPosition, this.futureCursorPosition);
@@ -262,7 +272,13 @@ export class Calculator extends BaseWidget {
     currentHistoryIndex = 0;
     futureCursorPosition = -1;
 
-    _ElementKeyPad = ({ inputLine, setInputLine, historyLine, setHistoryLine, inputElementRef }: any) => {
+    _ElementKeyPad = ({ inputLine, setInputLine, historyLine, setHistoryLine, inputElementRef }: {
+        inputLine: string;
+        setInputLine: React.Dispatch<React.SetStateAction<string>>;
+        historyLine: string;
+        setHistoryLine: React.Dispatch<React.SetStateAction<string>>;
+        inputElementRef: React.RefObject<HTMLInputElement | null>;
+    }) => {
         return (
             <div
                 style={{
@@ -300,7 +316,12 @@ export class Calculator extends BaseWidget {
         );
     };
 
-    _ElementKeypadRow = ({ index0, setInputLine, setHistoryLine, inputElementRef }: any) => {
+    _ElementKeypadRow = ({ index0, setInputLine, setHistoryLine, inputElementRef }: {
+        index0: number;
+        setInputLine: React.Dispatch<React.SetStateAction<string>>;
+        setHistoryLine: React.Dispatch<React.SetStateAction<string>>;
+        inputElementRef: React.RefObject<HTMLInputElement | null>;
+    }) => {
         return (
             <div style={{
                 width: "100%",
@@ -334,21 +355,21 @@ export class Calculator extends BaseWidget {
     keys: type_Calculator_key[] = [
         {
             label: "sin",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("sin(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "cos",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("cos(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "tan",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("tan(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
@@ -356,7 +377,7 @@ export class Calculator extends BaseWidget {
 
         {
             label: "COPY",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 if (g_widgets1.isEditing()) {
                     return;
                 }
@@ -369,7 +390,7 @@ export class Calculator extends BaseWidget {
         },
         {
             label: "PASTE",
-            onClick: async (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: async (setInputLine, setHistoryLine, inputElementRef) => {
                 if (g_widgets1.isEditing()) {
                     return;
                 }
@@ -381,7 +402,7 @@ export class Calculator extends BaseWidget {
                 if (inputElementRef !== undefined && inputElementRef.current !== null) {
                     const inputElementCursorPosition =
                         document.activeElement === inputElementRef.current
-                            ? inputElementRef.current.selectionStart
+                            ? (inputElementRef.current.selectionStart ?? inputElementRef.current.value.length)
                             : inputElementRef.current.value.length;
                     setInputLine((oldValue: string) => {
                         return [oldValue.slice(0, inputElementCursorPosition), text, oldValue.slice(inputElementCursorPosition)].join("");
@@ -393,14 +414,14 @@ export class Calculator extends BaseWidget {
         },
         {
             label: "CE",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 if (g_widgets1.isEditing()) {
                     return;
                 }
                 if (inputElementRef !== undefined && inputElementRef.current !== null) {
                     const inputElementCursorPosition =
                         document.activeElement === inputElementRef.current
-                            ? inputElementRef.current.selectionStart
+                            ? (inputElementRef.current.selectionStart ?? inputElementRef.current.value.length)
                             : inputElementRef.current.value.length;
                     if (inputElementCursorPosition <= 0) {
                         return;
@@ -416,7 +437,7 @@ export class Calculator extends BaseWidget {
 
         {
             label: "AC",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 if (g_widgets1.isEditing()) {
                     return;
                 }
@@ -432,21 +453,21 @@ export class Calculator extends BaseWidget {
 
         {
             label: "sinh",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("sinh(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "cosh",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("cosh(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "tanh",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("tanh(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
@@ -454,21 +475,21 @@ export class Calculator extends BaseWidget {
 
         {
             label: "(",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: ")",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick(")", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "FWD",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 if (g_widgets1.isEditing()) {
                     return;
                 }
@@ -487,7 +508,7 @@ export class Calculator extends BaseWidget {
 
         {
             label: "BACK",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 if (g_widgets1.isEditing()) {
                     return;
                 }
@@ -504,21 +525,21 @@ export class Calculator extends BaseWidget {
         },
         {
             label: "arcsin",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("arcsin(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "arccos",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("arccos(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "arctan",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("arctan(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
@@ -526,49 +547,49 @@ export class Calculator extends BaseWidget {
 
         {
             label: "7",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("7", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "8",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("8", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "9",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("9", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "\u00F7", // divide
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("\u00F7", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "x!",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("!", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "^",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("^", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "\u221A", // sqrt
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("sqrt(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
@@ -576,28 +597,28 @@ export class Calculator extends BaseWidget {
 
         {
             label: "4",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("4", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "5",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("5", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "6",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("6", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "\u00D7", // times
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("\u00D7", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
@@ -605,14 +626,14 @@ export class Calculator extends BaseWidget {
 
         {
             label: "log\u2081\u2080", // log10
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("log\u2081\u2080(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "log\u2082", // log2
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("log\u2082(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
@@ -620,42 +641,42 @@ export class Calculator extends BaseWidget {
 
         {
             label: "log\u2091", // loge
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("log\u2091(", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "1",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("1", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "2",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("2", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "3",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("3", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "\u2212", // minus sign
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("\u2212", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "e",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("e", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
@@ -663,7 +684,7 @@ export class Calculator extends BaseWidget {
 
         {
             label: "\u03C0", // pi
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("\u03C0", setInputLine, setHistoryLine, inputElementRef);
             },
 
@@ -672,26 +693,26 @@ export class Calculator extends BaseWidget {
 
         {
             label: "makeup-0", // makeup key,
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => { },
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => { },
             options: {},
         },
         {
             label: "0",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("0", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: ".",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick(".", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
         {
             label: "=",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 if (g_widgets1.isEditing()) {
                     return;
                 }
@@ -715,20 +736,22 @@ export class Calculator extends BaseWidget {
         },
         {
             label: "+",
-            onClick: (setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+            onClick: (setInputLine, setHistoryLine, inputElementRef) => {
                 this.keyOnClick("+", setInputLine, setHistoryLine, inputElementRef);
             },
             options: {},
         },
     ];
 
-    keyOnClick = (label: string, setInputLine: any, setHistoryLine: any, inputElementRef: any) => {
+    keyOnClick = (label: string, setInputLine: React.Dispatch<React.SetStateAction<string>>, setHistoryLine: React.Dispatch<React.SetStateAction<string>>, inputElementRef: React.RefObject<HTMLInputElement | null>) => {
         if (g_widgets1.isEditing()) {
             return;
         }
-        if (inputElementRef !== undefined && inputElementRef.current !== undefined) {
+        if (inputElementRef !== undefined && inputElementRef.current !== null) {
             const inputElementCursorPosition =
-                document.activeElement === inputElementRef.current ? inputElementRef.current.selectionStart : inputElementRef.current.value.length;
+                document.activeElement === inputElementRef.current
+                    ? (inputElementRef.current.selectionStart ?? inputElementRef.current.value.length)
+                    : inputElementRef.current.value.length;
             setInputLine((oldValue: string) => {
                 return [oldValue.slice(0, inputElementCursorPosition), label, oldValue.slice(inputElementCursorPosition)].join("");
             });
@@ -736,7 +759,10 @@ export class Calculator extends BaseWidget {
         }
     };
 
-    _ElementKey = ({ label, onClick }: any) => {
+    _ElementKey = ({ label, onClick }: {
+        label: string;
+        onClick: () => void;
+    }) => {
         const elementRef = React.useRef<HTMLDivElement>(null);
         if (`${label}`.startsWith("makeup-")) {
             return (
@@ -840,59 +866,6 @@ export class Calculator extends BaseWidget {
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
     _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
-
-    // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    // only for TextUpdate and TextEntry
-    // they are suitable to display array data in various formats,
-    // other types of widgets, such as Meter, Spinner, Tanks, ProgressBar, Thermometer, ScaledSlider are not for array data
-    _getChannelValue = (raw: boolean = false) => {
-        const channelValue = this.getChannelValueForMonitorWidget(raw);
-
-        if (typeof channelValue === "number" || typeof channelValue === "string") {
-            return this.formatScalarValue(channelValue);
-        } else if (Array.isArray(channelValue)) {
-            const result: any[] = [];
-            for (let element of channelValue) {
-                result.push(this.formatScalarValue(element));
-            }
-            if (this.getAllText()["format"] === "string") {
-                return result.join("");
-            } else {
-                return result;
-            }
-        } else {
-            return channelValue;
-        }
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
-        }
-    };
 
     // -------------------------- tdl -------------------------------
 

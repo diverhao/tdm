@@ -512,7 +512,7 @@ export class MainWindowStartupPage {
      * hold the appearance of the profile block
      */
     private _ElementProfileWrapper = ({ children }: any) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         const style = {
             position: "relative",
             display: "flex",

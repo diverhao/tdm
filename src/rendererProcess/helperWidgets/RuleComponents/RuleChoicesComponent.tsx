@@ -3,6 +3,7 @@ import { BaseWidgetRule } from "../../widgets/BaseWidget/BaseWidgetRule";
 import { RuleComponent } from "./RuleComponent";
 import * as mathjs from "mathjs";
 import { g_widgets1 } from "../../global/GlobalVariables";
+import { Log } from "../../../common/Log";
 
 export class RuleChoicesComponent extends RuleComponent {
     private _obj: Record<string, any>;
@@ -109,6 +110,7 @@ export class RuleChoicesComponent extends RuleComponent {
             result1[propertyName] = propertyValue;
             result[objName] = result1;
         } catch (e) {
+            Log.error(e);
         }
         return result;
     };

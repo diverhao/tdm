@@ -422,7 +422,7 @@ export class WindowAgentsManager {
                         }
                     }
                 }
-                ipcManager.createUtilityDisplayWindow(undefined, {
+                ipcManager.createUtilityDisplayWindow("", {
                     utilityType: "PvTable",
                     utilityOptions: { channelNames: channelNames },
                     windowId: windowId,

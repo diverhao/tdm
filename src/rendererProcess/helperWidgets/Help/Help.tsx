@@ -483,7 +483,7 @@ export class Help {
 
     NavigationItem = ({ articleName, linkPath, element, isSelected, insideChapter, chapterName }: any) => {
         const navigate = useNavigate();
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         const [, forceUpdate] = React.useState({});
 
         this.navigationUpdaters[linkPath] = forceUpdate;
@@ -585,9 +585,9 @@ export class Help {
 
     NavigationChapter = ({ chapterName, chapterLinkPath, articles, isSelected }: any) => {
 
-        const elementRef = React.useRef<any>(null);
-        const elementTitleRef = React.useRef<any>(null);
-        const elementDownArrowRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
+        const elementTitleRef = React.useRef<HTMLDivElement>(null);
+        const elementDownArrowRef = React.useRef<HTMLDivElement>(null);
 
         const linkPaths = articles.map((article: type_article) => {
             return article["linkPath"];

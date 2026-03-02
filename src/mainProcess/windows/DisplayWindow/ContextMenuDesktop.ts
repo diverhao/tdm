@@ -190,7 +190,7 @@ export class ContextMenuDesktop {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
                 }
                 if (mainProcessMode === "desktop") {
-                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
+                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles("",
                         {
                             options: {
                                 tdlFileNames: undefined, // open dialog
@@ -1031,7 +1031,7 @@ export class ContextMenuDesktop {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
                 }
                 if (mainProcessMode === "desktop") {
-                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
+                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles("",
                         {
                             options: {
                                 tdlFileNames: undefined, // open dialog
@@ -1321,7 +1321,7 @@ export class ContextMenuDesktop {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
                 }
                 if (mainProcessMode === "desktop") {
-                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
+                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles("",
                         {
                             options: {
                                 tdlFileNames: undefined, // open dialog

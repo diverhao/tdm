@@ -34,9 +34,9 @@ export class MainWindowProfileRunPage {
 
     // public element
     ProfileRunPage = () => {
-        const tdlOpenerRef = React.useRef<any>(null);
-        const refWsOpenerPort = React.useRef<any>(null);
-        const openFile = (event: any) => {
+        const tdlOpenerRef = React.useRef<HTMLDivElement>(null);
+        const refWsOpenerPort = React.useRef<HTMLDivElement>(null);
+        const openFile = () => {
             // window id
             // no tdl file name, no macro, do not replace macro
             // this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file", undefined, "operating", false, [], false);
@@ -54,7 +54,7 @@ export class MainWindowProfileRunPage {
                 }
             );
         };
-        const openRemoteFile = (event: any) => {
+        const openRemoteFile = () => {
             // open the large input
             this._largeInput.createElement("", (newValue: "string") => { }, "Remote TDL File Path", (newValue: string) => {
                 this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file",
@@ -77,7 +77,7 @@ export class MainWindowProfileRunPage {
         // };
 
 
-        const openFileBrowser = (event: any) => {
+        const openFileBrowser = () => {
             const mainWindowId = this.getMainWindowClient().getWindowId();
             // priority:
             // the valid input path variable which should be an absolute path
@@ -160,7 +160,7 @@ export class MainWindowProfileRunPage {
             forceUpdate({});
         };
 
-        const showProfileInfo = (event: any) => {
+        const showProfileInfo = () => {
             const mainWindowId = this.getMainWindowClient().getWindowId();
             // window id
             // no tdl file name, no macro, do not replace macro
@@ -172,7 +172,7 @@ export class MainWindowProfileRunPage {
                 }
             );
         };
-        const showLogInfo = (event: any) => {
+        const showLogInfo = () => {
             // window id
             const mainWindowId = this.getMainWindowClient().getWindowId();
             // no tdl file name, no macro, do not replace macro
@@ -185,10 +185,10 @@ export class MainWindowProfileRunPage {
             );
         };
 
-        const newTdmProcess = (event: any) => {
+        const newTdmProcess = () => {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("new-tdm-process", {});
         }
-        const openDefaultDisplayWindows = (event: any) => {
+        const openDefaultDisplayWindows = () => {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-default-display-windows", {
                 windowId: this.getMainWindowClient().getWindowId(),
             });
@@ -569,7 +569,7 @@ export class MainWindowProfileRunPage {
         setWindowName: (newName: string) => void;
         setTdlFileName: (newName: string) => void;
     }) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 ref={elementRef}
@@ -661,7 +661,7 @@ export class MainWindowProfileRunPage {
         // do nothing at first
     };
 
-    createNewDisplay = (event: any) => {
+    createNewDisplay = () => {
         this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-blank-display-window",
             {
                 windowId: this.getMainWindowClient().getWindowId(),

@@ -38,7 +38,7 @@ export class ChannelNameHint {
     }
 
     _ElementLine = ({ channelName , selectHint}: { channelName: string, selectHint: any }) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 ref={elementRef}

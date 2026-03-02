@@ -1253,7 +1253,7 @@ export class DisplayWindowClient {
             try {
                 currentTdlFolder = path.dirname(this.getTdlFileName());
             } catch (e) {
-
+                Log.error(e);
             }
 
             this.getIpcManager().sendFromRendererProcess("open-tdl-file", {

@@ -86,7 +86,7 @@ export class WsPvServer {
 
                 if (command === "GET") {
                     Log.debug("0", `WebSocket PV server, GET ${message}`);
-                    const dbrData = await this.getIpcManager().handleTcaGet(undefined,
+                    const dbrData = await this.getIpcManager().handleTcaGet("",
                         {
                             channelName: channelName,
                             displayWindowId: displayWindowId,
@@ -110,7 +110,7 @@ export class WsPvServer {
                         }
                     }
                     // if the channel does not exist, create and monitor it
-                    this.getIpcManager().handleTcaMonitor(undefined,
+                    this.getIpcManager().handleTcaMonitor("",
                         {
                             displayWindowId: displayWindowId,
                             channelName: channelName,
@@ -118,7 +118,7 @@ export class WsPvServer {
                     );
                 } else if (command === "PUT") {
                     const value = message["value"];
-                    this.getIpcManager().handleTcaPut(undefined,
+                    this.getIpcManager().handleTcaPut("",
                         {
                             channelName: channelName,
                             displayWindowId: displayWindowId,

@@ -1,98 +1,23 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
 import { Log } from "../../../../common/Log";
+import { defaultSymbolTdl, type_Symbol_tdl } from "../../../../common/types/type_widget_tdl";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
-import { v4 as uuidv4 } from "uuid";
-
-
-export type type_Symbol_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    itemNames: string[];
-    itemValues: (number | string | number[] | string[] | undefined)[];
-};
+import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 
 export class SymbolHelper extends BaseWidgetHelper {
 
 
-    // properties when we create a new TextUpdate
-    // the level 1 properties all have corresponding public or private variable in the widget
-    static _defaultTdl: type_Symbol_tdl = {
-        type: "Symbol",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(240, 240, 240, 0.2)",
-            left: 100,
-            top: 100,
-            width: 150,
-            height: 80,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: false,
-            fileName: "../../../webpack/resources/webpages/tdm-logo.svg",
-            opacity: 1,
-            stretchToFit: false,
-            showPvValue: false,
-            invisibleInOperation: false,
-            alarmBorder: true,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        itemNames: [],
-        itemValues: [],
+    static generateDefaultTdl = (): type_Symbol_tdl => {
+        const widgetKey = generateWidgetKey(defaultSymbolTdl.type);
+        return structuredClone({
+            ...defaultSymbolTdl,
+            widgetKey: widgetKey,
+        });
     };
-
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_Symbol_tdl => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.itemNames = structuredClone(this._defaultTdl.itemNames);
-        result.itemValues = structuredClone(this._defaultTdl.itemValues);
-        return result as type_Symbol_tdl;
-    };
-
-
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Symbol_tdl => {
         Log.info("\n------------", `Parsing symbol`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Symbol");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm

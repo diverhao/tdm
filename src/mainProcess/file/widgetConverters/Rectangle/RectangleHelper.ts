@@ -1,81 +1,27 @@
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { Log } from "../../../../common/Log";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
+import { generateWidgetKey, rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
+import { defaultRectangleTdl, type_Rectangle_tdl } from "../../../../common/types/type_widget_tdl";
 
-type type_Rectangle_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
 
 export class RectangleHelper extends BaseWidgetHelper {
-    static _defaultTdl: type_Rectangle_tdl = {
-        type: "Rectangle",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(0, 0, 0, 0)", // always transparent, background is controlled in fillColor
-            // angle
-            transform: "rotate(0deg)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // line
-            lineWidth: 3,
-            lineColor: "rgba(0, 0, 255, 1)",
-            lineStyle: "solid",
-            // fill
-            fillColor: "rgba(30, 144,255,1)",
-            fill: true,
-            // corner
-            cornerWidth: 0,
-            cornerHeight: 0,
-            invisibleInOperation: false,
-            alarmBorder: false,
-            alarmShape: false,
-            alarmFill: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-    };
 
-    static generateDefaultTdl = (type: string): type_Rectangle_tdl => {
-        const result = super.generateDefaultTdl("Rectangle") as type_Rectangle_tdl;
-
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        return result;
+    static generateDefaultTdl = (): type_Rectangle_tdl => {
+        const widgetKey = generateWidgetKey(defaultRectangleTdl.type);
+        return structuredClone({
+            ...defaultRectangleTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     // ------------------------- Converter ------------------------
 
     static convertEdlToTdl = (edl: Record<string, any>): type_Rectangle_tdl => {
         Log.info("\n------------", `Parsing "Rectangle"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Rectangle") as type_Rectangle_tdl;
+        const tdl = this.generateDefaultTdl() as type_Rectangle_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
@@ -112,8 +58,8 @@ export class RectangleHelper extends BaseWidgetHelper {
         const alarmPropertyNames: string[] = [];
 
         // default differences
-        tdl["text"]["verticalAlign"] = "center";
-        tdl["text"]["wrapWord"] = false;
+        // tdl["text"]["verticalAlign"] = "center";
+        // tdl["text"]["wrapWord"] = false;
         tdl["text"]["alarmBorder"] = false;
         tdl["text"]["lineWidth"] = 1;
         tdl["text"]["fill"] = false;
@@ -269,7 +215,7 @@ export class RectangleHelper extends BaseWidgetHelper {
     };
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Rectangle_tdl => {
         Log.info("\n------------", `Parsing "rectangle"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Rectangle") as type_Rectangle_tdl;
+        const tdl = this.generateDefaultTdl() as type_Rectangle_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
             "actions", // not in tdm

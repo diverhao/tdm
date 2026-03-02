@@ -1217,12 +1217,12 @@ export class Widgets {
         document.body.style.cursor = "crosshair";
         // (4)
         if (widgetType === "Polyline") {
-            this._tmp_handleMouseClickOnCreatingWidget = (event: any) => {
+            this._tmp_handleMouseClickOnCreatingWidget = (event: MouseEvent) => {
                 this._handleMouseClickOnCreatingPolylineWidget(event, widgetType);
             };
             window.addEventListener("click", this._tmp_handleMouseClickOnCreatingWidget);
         } else {
-            this._tmp_handleMouseDownOnCreatingWidget = (event: any) => {
+            this._tmp_handleMouseDownOnCreatingWidget = (event: MouseEvent) => {
                 this._handleMouseDownOnCreatingWidget(event, widgetType);
             };
             window.addEventListener("mousedown", this._tmp_handleMouseDownOnCreatingWidget);
@@ -1242,7 +1242,7 @@ export class Widgets {
      *
      * (5) listen to Escape key down event, when this key is pressed, cancel the widget creation <br>
      */
-    private _handleMouseDownOnCreatingWidget = (event: any, widgetType: type_widgetType) => {
+    private _handleMouseDownOnCreatingWidget = (event: MouseEvent, widgetType: type_widgetType) => {
         // cancel if any other mouse button down, undo the above createWidgetFromMouse() function
         if (event.button !== 0) {
             this.setRendererWindowStatus(rendererWindowStatus.editing);
@@ -1274,13 +1274,13 @@ export class Widgets {
         // (3)
         widget.simpleSelect(true);
         // (4)
-        this._tmp_handleMouseMoveOnCreatingWidget = (event: any) => this._handleMouseMoveOnCreatingWidget(event, widget, cursorX, cursorY);
-        this._tmp_handleMouseUpOnCreatingWidget = (event: any) => this._handleMouseUpOnCreatingWidget(event, widget);
+        this._tmp_handleMouseMoveOnCreatingWidget = (event: MouseEvent) => this._handleMouseMoveOnCreatingWidget(event, widget, cursorX, cursorY);
+        this._tmp_handleMouseUpOnCreatingWidget = (event: MouseEvent) => this._handleMouseUpOnCreatingWidget(event, widget);
         window.addEventListener("mousemove", this._tmp_handleMouseMoveOnCreatingWidget);
         window.addEventListener("mouseup", this._tmp_handleMouseUpOnCreatingWidget);
 
         // (5)
-        this._tmp_handleEscKeyOnCreatingWidget = (e: any) => {
+        this._tmp_handleEscKeyOnCreatingWidget = (e: KeyboardEvent) => {
             if (e.key == "Escape") {
                 // (1) cancel all events, reset renderer window status, restore mouse cursor shape
                 this._tmp_handleMouseUpOnCreatingWidget(undefined);
@@ -1304,7 +1304,7 @@ export class Widgets {
      * @param {number} cursorX0 The initial cursor X value when we create the widget
      * @param {number} cursorY0 The initial cursor Y value when we create the widget
      */
-    private _handleMouseMoveOnCreatingWidget = (event: any, widget: BaseWidget, cursorX0: number, cursorY0: number) => {
+    private _handleMouseMoveOnCreatingWidget = (event: MouseEvent, widget: BaseWidget, cursorX0: number, cursorY0: number) => {
         // const cursorX = event.clientX;
         // const cursorY = event.clientY;
         const cursorX = getMouseEventClientX(event);
@@ -1345,7 +1345,7 @@ export class Widgets {
      * (6) remove Escape key down event listener <br>
      *
      */
-    private _handleMouseUpOnCreatingWidget = (event: any, widget: BaseWidget) => {
+    private _handleMouseUpOnCreatingWidget = (event: MouseEvent | undefined, widget: BaseWidget) => {
         const canvas = this.getWidget2("Canvas");
 
         let xGridSize = 10;
@@ -1384,7 +1384,7 @@ export class Widgets {
 
     _tmp_polylineWidget: undefined | Polyline;
 
-    private _handleMouseClickOnCreatingPolylineWidget = (event: any, widgetType: type_widgetType) => {
+    private _handleMouseClickOnCreatingPolylineWidget = (event: MouseEvent, widgetType: type_widgetType) => {
         // handled by this._handleMouseDownOnCreatingWidget()
         if (widgetType !== "Polyline") {
             return;
@@ -1426,9 +1426,9 @@ export class Widgets {
             // widget.simpleSelect(true);
             // (3)
             // (4)
-            this._tmp_handleMouseMoveOnCreatingWidget = (event: any) =>
+            this._tmp_handleMouseMoveOnCreatingWidget = (event: MouseEvent) =>
                 this._handleMouseMoveOnCreatingPolylineWidget(event, widget, cursorX, cursorY);
-            this._tmp_handleMouseDoubleClickOnCreatingWidget = (event: any) => this._handleMouseDoubleClickOnCreatingPolylineWidget(event, widget);
+            this._tmp_handleMouseDoubleClickOnCreatingWidget = (event: MouseEvent) => this._handleMouseDoubleClickOnCreatingPolylineWidget(event, widget);
             window.addEventListener("mousemove", this._tmp_handleMouseMoveOnCreatingWidget);
             window.addEventListener("dblclick", this._tmp_handleMouseDoubleClickOnCreatingWidget);
         }
@@ -1445,7 +1445,7 @@ export class Widgets {
         // however, it requires the this._tmp_polylineWidget object. So, we remove the Esc keydown event then add it
         // to avoid multiple Esc keydown event listeners
         window.removeEventListener("keydown", this._tmp_handleEscKeyOnCreatingWidget);
-        this._tmp_handleEscKeyOnCreatingWidget = (e: any) => {
+        this._tmp_handleEscKeyOnCreatingWidget = (e: KeyboardEvent) => {
             if (e.key == "Escape") {
                 // (1) cancel all events, reset renderer window status, restore mouse cursor shape
                 this._tmp_handleMouseDoubleClickOnCreatingWidget(undefined, this._tmp_polylineWidget);
@@ -1460,7 +1460,7 @@ export class Widgets {
     };
 
     // create a virtual point, and flush this widget
-    private _handleMouseMoveOnCreatingPolylineWidget = (event: any, widget: BaseWidget, cursorX0: number, cursorY0: number) => {
+    private _handleMouseMoveOnCreatingPolylineWidget = (event: MouseEvent, widget: BaseWidget, cursorX0: number, cursorY0: number) => {
         // const cursorX = event.clientX;
         // const cursorY = event.clientY;
         const cursorX = getMouseEventClientX(event);
@@ -1473,7 +1473,7 @@ export class Widgets {
     /**
      * When event is "undefined", we are canceling the creation of this Polyline widget
      */
-    private _handleMouseDoubleClickOnCreatingPolylineWidget = (event: any, widget: BaseWidget) => {
+    private _handleMouseDoubleClickOnCreatingPolylineWidget = (event: MouseEvent | undefined, widget: BaseWidget) => {
         if (widget.getType() !== "Polyline") {
             return;
         }
@@ -1634,7 +1634,9 @@ export class Widgets {
                     widget.setMode(newMode, oldMode);
                 }
                 this.addToForceUpdateWidgets(widgetKey);
-            } catch (e) { }
+            } catch (e) {
+                Log.error(e);
+            }
         }
         // (6)
 
@@ -1859,6 +1861,7 @@ export class Widgets {
             tcaChannel.destroy(widgetKey);
         } catch (e) {
             // do nothing
+            Log.error(e);
         }
     };
 

@@ -142,7 +142,7 @@ export class ProfilesViewer extends BaseWidget {
     };
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementAreaRaw = (): React.JSX.Element => {
         const [selection, setSelection] = React.useState("profiles");
 
         React.useEffect(() => {
@@ -229,7 +229,7 @@ export class ProfilesViewer extends BaseWidget {
         );
     };
 
-    _ElementEpicsStats = ({ show }: any) => {
+    _ElementEpicsStats = ({ show }: {show: boolean}) => {
         const [channelFilterText, setChannelFilterText] = React.useState("");
         const [tcpFilterText, setTcpFilterText] = React.useState("");
 
@@ -339,7 +339,7 @@ export class ProfilesViewer extends BaseWidget {
         </div>
     }
 
-    _ElementEpicsStatsPlotWrapper = ({ show }: any) => {
+    _ElementEpicsStatsPlotWrapper = ({ show }: {show: boolean}) => {
         const elementRef = React.useRef<HTMLDivElement>(null);
         this.wrapperRef = elementRef;
         return <div
@@ -387,7 +387,7 @@ export class ProfilesViewer extends BaseWidget {
         }
     }
 
-    _ElementEpicsStatsChannelNames = ({ channels, startIndex, filterText }: any) => {
+    _ElementEpicsStatsChannelNames = ({ channels, startIndex, filterText }: { channels: string[]; startIndex: number; filterText: string }) => {
         const [showAll, setShowAll] = React.useState(true);
         return (
             showAll === true ?
@@ -492,7 +492,7 @@ export class ProfilesViewer extends BaseWidget {
         )
     }
 
-    _ElementChannelsText = ({ channelNames }: any) => {
+    _ElementChannelsText = ({ channelNames }: { channelNames: string[] }) => {
         const elementRef = React.useRef<HTMLDivElement>(null);
         return (
             <div
@@ -537,7 +537,7 @@ export class ProfilesViewer extends BaseWidget {
         return false;
     }
 
-    _ElementEpicsStatsChannelName = ({ channelName }: any) => {
+    _ElementEpicsStatsChannelName = ({ channelName }: { channelName: string }) => {
         const elementRef = React.useRef<HTMLDivElement>(null);
         return (
             <div
@@ -565,7 +565,7 @@ export class ProfilesViewer extends BaseWidget {
         )
     }
 
-    _ElementEpicsStatsFilter = ({ channelFilterText, tcpFilterText, setChannelFilterText, setTcpFilterText }: any) => {
+    _ElementEpicsStatsFilter = ({ channelFilterText, tcpFilterText, setChannelFilterText, setTcpFilterText }: { channelFilterText: string; tcpFilterText: string; setChannelFilterText: React.Dispatch<React.SetStateAction<string>>; setTcpFilterText: React.Dispatch<React.SetStateAction<string>> }) => {
         return (
             <div
                 style={{
@@ -639,7 +639,7 @@ export class ProfilesViewer extends BaseWidget {
         )
     }
 
-    _ElementSelectionButton = ({ text, selectionText, selection, onMouseDown }: any) => {
+    _ElementSelectionButton = ({ text, selectionText, selection, onMouseDown }: { text: string; selectionText: string; selection: string; onMouseDown: () => void }) => {
         const elementRef = React.useRef<HTMLDivElement>(null);
         return <div
             ref={elementRef}
@@ -672,7 +672,7 @@ export class ProfilesViewer extends BaseWidget {
 
     }
 
-    _ElementProfiles = ({ show }: any) => {
+    _ElementProfiles = ({ show }: { show: boolean }) => {
 
         const logFileOkToUse = (this.getText()["log-file-name-in-profiles"].trim() === this.getText()["log-file-name"].trim()) && (this.getText()["log-file-name"].trim() !== "");
 
@@ -747,7 +747,7 @@ export class ProfilesViewer extends BaseWidget {
         )
     }
 
-    _ElementProfileButton = ({ profileName, profileJson }: any) => {
+    _ElementProfileButton = ({ profileName, profileJson }: { profileName: string; profileJson: Record<string, unknown> }) => {
         const [showJson, setShowJson] = React.useState(true);
         return (
             <div
@@ -794,7 +794,7 @@ export class ProfilesViewer extends BaseWidget {
         )
     }
 
-    _ElementEpicsCaEnv = ({ show }: any) => {
+    _ElementEpicsCaEnv = ({ show }: { show: boolean }) => {
         const envJson = this.getText()["epics-ca-env"];
         let envUser: Record<string, any> = {}
         let envOs: Record<string, any> = {}
@@ -934,7 +934,7 @@ export class ProfilesViewer extends BaseWidget {
     }
 
 
-    _ElementProcesses = ({ show }: any) => {
+    _ElementProcesses = ({ show }: { show: boolean }) => {
         // "Type": "Display Window",
         // "Window ID": this.getId(),
         // "Visible": visible,
@@ -1112,7 +1112,7 @@ export class ProfilesViewer extends BaseWidget {
     }
 
 
-    _ElementThumbnail = ({ displayWindowId, imageBase64, visible, type, index }: any) => {
+    _ElementThumbnail = ({ displayWindowId, imageBase64, visible, type, index }: { displayWindowId: string; imageBase64: string; visible: string; type: string; index: number }) => {
         const elementRef = React.useRef<HTMLDivElement>(null);
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         return (
@@ -1146,7 +1146,7 @@ export class ProfilesViewer extends BaseWidget {
                     if (visible === "Yes") {
                         event.preventDefault();
                         if (event.button === 1) {
-                            displayWindowClient.getIpcManager().sendFromRendererProcess("close-window", displayWindowId);
+                            displayWindowClient.getIpcManager().sendFromRendererProcess("close-window", { displayWindowId: displayWindowId });
                             g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                             g_flushWidgets();
                             this.processesInfo.splice(index, 1);

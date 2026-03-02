@@ -6,81 +6,21 @@ import * as GlobalMethods from "../../../../common/GlobalMethods";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
-
-export type type_Label_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultLabelTdl, type_Label_tdl } from "../../../../common/types/type_widget_tdl";
 
 export class LabelHelper extends BaseWidgetHelper {
-    static _defaultTdl: type_Label_tdl = {
-        type: "Label",
-        widgetKey: "",
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(255,255,255,0)",
-            // angle
-            transform: "rotate(0deg)",
-            // border
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // text contents
-            text: "Label text",
-            // text align
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            invisibleInOperation: false,
-            alarmBorder: true,
-            alarmBackground: false,
-            alarmText: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-    };
 
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_Label_tdl => {
-        const result = super.generateDefaultTdl(type) as type_Label_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        return result;
+    static generateDefaultTdl = (): type_Label_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultLabelTdl.type);
+        return structuredClone({
+            ...defaultLabelTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static convertEdlToTdl = (edl: Record<string, any>): type_Label_tdl => {
         Log.info("\n------------", `Parsing "Static Text"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Label") as type_Label_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "object", // not in tdm
@@ -308,7 +248,7 @@ export class LabelHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Label_tdl => {
         Log.info("\n------------", `Parsing "label"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Label");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "actions", // not in tdm
@@ -356,13 +296,7 @@ export class LabelHelper extends BaseWidgetHelper {
                 }
                 continue;
             } else {
-                if (propertyName === "line_style") {
-                    tdl["text"]["lineStyle"] = BobPropertyConverter.convertBobLineStyle(propertyValue);
-                } else if (propertyName === "line_color") {
-                    tdl["text"]["lineColor"] = BobPropertyConverter.convertBobColor(propertyValue);
-                } else if (propertyName === "line_width") {
-                    tdl["text"]["lineWidth"] = BobPropertyConverter.convertBobNum(propertyValue);
-                } else if (propertyName === "x") {
+                if (propertyName === "x") {
                     tdl["style"]["left"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "y") {
                     tdl["style"]["top"] = BobPropertyConverter.convertBobNum(propertyValue);
@@ -370,10 +304,6 @@ export class LabelHelper extends BaseWidgetHelper {
                     tdl["style"]["width"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "height") {
                     tdl["style"]["height"] = BobPropertyConverter.convertBobNum(propertyValue);
-                } else if (propertyName === "start_angle") {
-                    tdl["text"]["angleStart"] = BobPropertyConverter.convertBobNum(propertyValue);
-                } else if (propertyName === "total_angle") {
-                    tdl["text"]["angleRange"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "visible") {
                     tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "background_color") {

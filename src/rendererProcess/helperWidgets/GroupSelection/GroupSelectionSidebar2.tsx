@@ -213,7 +213,7 @@ export class GroupSelectionSidebar2 {
     }
 
     private _ElementChangeFontSize = ({ dSize }: any) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         return <div
             ref={elementRef}
             style={{

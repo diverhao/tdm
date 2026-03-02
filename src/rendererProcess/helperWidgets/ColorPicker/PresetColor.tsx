@@ -94,7 +94,7 @@ const CheckMark = ({ rgb, show }: any) => {
 };
 
 const ElementColorBlock = ({presetColor, onClick, onMouseOver, onMouseOut}: any) => {
-    const refElement = React.useRef<any>(null);
+    const refElement = React.useRef<HTMLDivElement>(null);
     return (
         <div
             ref={refElement}

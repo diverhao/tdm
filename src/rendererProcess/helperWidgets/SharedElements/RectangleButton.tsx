@@ -54,7 +54,7 @@ export const ElementRectangleButton = (
         additionalStyle?: React.CSSProperties;
     }) => {
 
-    const elementRef = React.useRef<any>(null);
+    const elementRef = React.useRef<HTMLDivElement>(null);
     return (
         <div
             ref={elementRef}

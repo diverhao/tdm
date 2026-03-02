@@ -17,7 +17,7 @@ export class ApplicationMenu {
                 systemPreferences.setUserDefault('NSDisabledAutoFillContactMenuItem', 'boolean', true);
             }
         } catch (e) {
-
+            Log.error(e);
         }
     }
 

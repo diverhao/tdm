@@ -1,99 +1,22 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
 import { Log } from "../../../../common/Log";
+import { defaultLEDMultiStateTdl, type_LEDMultiState_tdl } from "../../../../common/types/type_widget_tdl";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-
-export type type_LEDMultiState_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    itemNames: string[];
-    itemColors: string[];
-    itemValues: (number | string | number[] | string[] | undefined)[];
-};
+import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 
 export class LEDMultiStateHelper extends BaseWidgetHelper {
 
-    static _defaultTdl: type_LEDMultiState_tdl = {
-        type: "LEDMultiState",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 0,
-            top: 0,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(0, 0, 0, 0)",
-            // angle
-            transform: "rotate(0deg)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // border, it is different from the "alarmBorder" below
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // text styles
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: false,
-            alarmBorder: true,
-            // LED line
-            lineWidth: 2,
-            lineStyle: "solid",
-            lineColor: "rgba(50, 50, 50, 0.698)",
-            // LED shape: round or square
-            shape: "round",
-            // if the value is not valid
-            fallbackColor: "rgba(255,0,255,1)",
-            fallbackText: "Err",
-            invisibleInOperation: false,
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        itemNames: ["False", "True"],
-        itemColors: ["rgba(60, 100, 60, 1)", "rgba(0, 255, 0, 1)"],
-        itemValues: [0, 1],
+    static generateDefaultTdl = (): type_LEDMultiState_tdl => {
+        const widgetKey = generateWidgetKey(defaultLEDMultiStateTdl.type);
+        return structuredClone({
+            ...defaultLEDMultiStateTdl,
+            widgetKey: widgetKey,
+        });
     };
-
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_LEDMultiState_tdl => {
-        const result = super.generateDefaultTdl("LEDMultiState") as type_LEDMultiState_tdl;
-
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.itemNames = structuredClone(this._defaultTdl.itemNames);
-        result.itemColors = structuredClone(this._defaultTdl.itemColors);
-        result.itemValues = structuredClone(this._defaultTdl.itemValues);
-        return result;
-    };
-
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_LEDMultiState_tdl => {
         Log.info("\n------------", `Parsing "led multi-state"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("LEDMultiState");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "actions", // not in tdm

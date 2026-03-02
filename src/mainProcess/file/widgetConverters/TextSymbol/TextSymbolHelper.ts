@@ -1,96 +1,23 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { generateRgbaColor, generateWidgetKey } from "../../../../common/GlobalMethods";
 import { Log } from "../../../../common/Log";
+import { defaultTextSymbolTdl, type_TextSymbol_tdl } from "../../../../common/types/type_widget_tdl";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
-import { v4 as uuidv4 } from "uuid";
+import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 
-
-export type type_TextSymbol_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    itemLabels: string[];
-    itemValues: (number | string | number[] | string[] | undefined)[];
-};
 
 export class TextSymbolHelper extends BaseWidgetHelper {
 
-
-    // properties when we create a new TextUpdate
-    // the level 1 properties all have corresponding public or private variable in the widget
-    static _defaultTdl: type_TextSymbol_tdl = {
-        type: "TextSymbol",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(240, 240, 240, 0.2)",
-            left: 100,
-            top: 100,
-            width: 150,
-            height: 80,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: false,
-            invisibleInOperation: false,
-            alarmBorder: true,
-            alarmBackground: false,
-            alarmText: false,
-            alarmLevel: "MINOR",
-            text: "",
-            showPvValue: false,
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        itemLabels: [],
-        itemValues: [],
+    static generateDefaultTdl = (): type_TextSymbol_tdl => {
+        const widgetKey = generateWidgetKey(defaultTextSymbolTdl.type);
+        return structuredClone({
+            ...defaultTextSymbolTdl,
+            widgetKey: widgetKey,
+        });
     };
-
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_TextSymbol_tdl => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.itemLabels = structuredClone(this._defaultTdl.itemLabels);
-        result.itemValues = structuredClone(this._defaultTdl.itemValues);
-        return result as type_TextSymbol_tdl;
-    };
-
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_TextSymbol_tdl => {
         Log.info("\n------------", `Parsing text-symbol`, "------------------\n");
-        const tdl = this.generateDefaultTdl("TextSymbol");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm
@@ -157,7 +84,7 @@ export class TextSymbolHelper extends BaseWidgetHelper {
                 } else if (propertyName === "border_alarm_sensitive") {
                     tdl["text"]["alarmBorder"] = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "symbols") {
-                    tdl["itemLabels"] = BobPropertyConverter.convertBobStrings(propertyValue, "symbol");
+                    tdl["itemNames"] = BobPropertyConverter.convertBobStrings(propertyValue, "symbol");
                 } else if (propertyName === "foreground_color") {
                     tdl["style"]["color"] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "background_color") {
@@ -180,8 +107,9 @@ export class TextSymbolHelper extends BaseWidgetHelper {
 
         }
 
-        for (let ii = 0; ii < tdl["itemLabels"].length; ii++) {
+        for (let ii = 0; ii < tdl["itemNames"].length; ii++) {
             tdl["itemValues"].push(ii);
+            tdl["itemColors"].push(generateRgbaColor(ii % 50));
         }
 
         if (isTransparent) {

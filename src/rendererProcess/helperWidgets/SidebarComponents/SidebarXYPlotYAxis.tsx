@@ -18,7 +18,7 @@ export class SidebarXYPlotYAxis {
     yIndex: number;
     yAxes: SidebarXYPlotYAxes;
     hideContents: boolean = false;
-    ElementInputLabel: any;
+    ElementInputLabel: SidebarXYPlotYAxes["_ElementInputLabel"];
 
     constructor(sidebarXYPlotYAxes: SidebarXYPlotYAxes, yIndex: number) {
         this.yAxes = sidebarXYPlotYAxes;
@@ -73,7 +73,7 @@ export class SidebarXYPlotYAxis {
         return (
             <div
                 style={{
-                    ...(this._styleForm as any),
+                    ...(this._styleForm),
                     width: "100%",
                     backgroundColor: "rgba(200, 200, 200, 1)",
                 }}
@@ -94,7 +94,7 @@ export class SidebarXYPlotYAxis {
 
 
     _ElementHideContents = () => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         const [hideContents, setHideContents] = React.useState(false);
         return (
             <div
@@ -106,13 +106,13 @@ export class SidebarXYPlotYAxis {
                 onMouseEnter={() => {
                     if (elementRef.current !== null) {
                         elementRef.current.style["cursor"] = "pointer";
-                        elementRef.current.style["opacity"] = 1;
+                        elementRef.current.style["opacity"] = "1";
                     }
                 }}
                 onMouseLeave={() => {
                     if (elementRef.current !== null) {
                         elementRef.current.style["cursor"] = "default";
-                        elementRef.current.style["opacity"] = 0.25;
+                        elementRef.current.style["opacity"] = "0.25";
                     }
                 }}
                 onClick={(event: React.MouseEvent) => {
@@ -135,7 +135,7 @@ export class SidebarXYPlotYAxis {
         );
     };
     _ElementRemoveYAxis = () => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 style={{
@@ -146,13 +146,13 @@ export class SidebarXYPlotYAxis {
                 onMouseEnter={() => {
                     if (elementRef.current !== null) {
                         elementRef.current.style["cursor"] = "pointer";
-                        elementRef.current.style["opacity"] = 1;
+                        elementRef.current.style["opacity"] = "1";
                     }
                 }}
                 onMouseLeave={() => {
                     if (elementRef.current !== null) {
                         elementRef.current.style["cursor"] = "default";
-                        elementRef.current.style["opacity"] = 0.25;
+                        elementRef.current.style["opacity"] = "0.25";
                     }
                 }}
                 onClick={(event: React.MouseEvent) => {
@@ -339,7 +339,7 @@ export class SidebarXYPlotYAxis {
         width: "55%",
     };
 
-    _styleForm = {
+    _styleForm: React.CSSProperties = {
         display: "inline-flex",
         flexDirection: "row",
         justifyContent: "space-between",
@@ -355,7 +355,7 @@ export class SidebarXYPlotYAxis {
             <form
                 spellCheck={false}
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetXChannelName(event, channelName)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <this.ElementInputLabel
                     value={channelName}
@@ -392,7 +392,7 @@ export class SidebarXYPlotYAxis {
             <form
                 spellCheck={false}
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetLabel(event, label)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <this.ElementInputLabel
                     value={label}
@@ -446,7 +446,7 @@ export class SidebarXYPlotYAxis {
             <form
                 spellCheck={false}
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetYChannelName(event, channelName)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <this.ElementInputLabel
                     value={channelName}
@@ -484,7 +484,7 @@ export class SidebarXYPlotYAxis {
             <form
                 spellCheck={false}
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetLineWidth(event, lineWidth)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <div>Line width:</div>
                 <input
@@ -544,7 +544,7 @@ export class SidebarXYPlotYAxis {
             <form
                 spellCheck={false}
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetYValMin(event, valMin)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <div>Y min</div>
                 <input
@@ -575,7 +575,7 @@ export class SidebarXYPlotYAxis {
             <form
                 spellCheck={false}
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetYValMax(event, valMax)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <div>Y max:</div>
                 <input
@@ -734,7 +734,7 @@ export class SidebarXYPlotYAxis {
             <form
                 spellCheck={false}
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetPointSize(event, pointSize)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <div>Point size</div>
                 <input
@@ -796,7 +796,7 @@ export class SidebarXYPlotYAxis {
             <form
                 spellCheck={false}
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetNumGrids(event, numGrids)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <div>Grid #</div>
                 <input
@@ -854,7 +854,7 @@ export class SidebarXYPlotYAxis {
     _ElementPointType = () => {
 
         return (
-            <form style={{ ...this._styleForm as any }}>
+            <form style={this._styleForm}>
                 <div>Point type</div>
                 <select
                     style={{ ...this._styleInput, width: "59%" }}
@@ -877,7 +877,7 @@ export class SidebarXYPlotYAxis {
     _ElementLineStyle = () => {
 
         return (
-            <form style={{ ...this._styleForm as any }}>
+            <form style={this._styleForm}>
                 <div>Line Style</div>
                 <select
                     style={{ ...this._styleInput, width: "59%" }}

@@ -2,113 +2,25 @@ import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import * as GlobalMethods from "../../../../common/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
+import { defaultTankTdl, type_Tank_tdl } from "../../../../common/types/type_widget_tdl";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
 
-export type type_Tank_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
 
 export class TankHelper extends BaseWidgetHelper {
-    static _defaultTdl: type_Tank_tdl = {
-        type: "Tank",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(240, 240, 240, 1)",
-            // angle
-            transform: "rotate(0deg)",
-            // border
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // outline
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // showUnit: true,
-            // channel
-            // showPvValue: true,
-            usePvLimits: false,
-            minPvValue: 0,
-            maxPvValue: 100,
-            useLogScale: false,
-            // tank and water colors
-            fillColor: "rgba(0,200,0,1)",
-            // fillColorMinor: "rgba(255, 150, 100, 1)",
-            // fillColorMajor: "rgba(255,0,0,1)",
-            // fillColorInvalid: "rgba(200,0,200,1)",
-            containerColor: "rgba(210,210,210,1)",
-            // layout
-            // direction: "vertical",
-            // dialPercentage: 75,
-            // labelPositionPercentage: 15,
-            // tick config
-            showLabels: true,
-            // dialFontColor: "rgba(0,0,255,1)",
-            // dialFontFamily: "Liberation Sans",
-            // dialFontSize: 14,
-            // dialFontStyle: "normal",
-            // dialFontWeight: "normal",
-            invisibleInOperation: false,
-            // decimal, exponential, hexadecimal
-            format: "default",
-            // scale, >= 0
-            // scale: 0,
-            numTickIntervals: 5,
-            compactScale: false,
-            // "left" | "right"
-            scalePosition: "right",
-            displayScale: "Linear", // "Linear" | "Log10"
-            alarmContainer: false,
-            alarmFill: false,
-            alarmText: false,
-            alarmBorder: true,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
+
+    static generateDefaultTdl = (): type_Tank_tdl => {
+        const widgetKey = generateWidgetKey(defaultTankTdl.type);
+        return structuredClone({
+            ...defaultTankTdl,
+            widgetKey: widgetKey,
+        });
     };
 
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_Tank_tdl => {
-        const result = super.generateDefaultTdl(type) as type_Tank_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        return result;
-    };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_Tank_tdl => {
-        const tdl = this.generateDefaultTdl("Tank") as type_Tank_tdl;
+        const tdl = this.generateDefaultTdl() as type_Tank_tdl;
         // all properties for this widget
         Log.info("edl ===", edl)
         const propertyNames: string[] = [
@@ -179,8 +91,6 @@ export class TankHelper extends BaseWidgetHelper {
                     tdl["style"]["height"] = EdlConverter.convertEdlWorH(propertyValue, undefined);
                 } else if (propertyName === "indicatorColor") {
                     tdl["text"]["fillColor"] = EdlConverter.convertEdlColor(propertyValue);
-                    tdl["text"]["fillColorMinor"] = tdl["text"]["fillColor"];
-                    tdl["text"]["fillColorMajor"] = tdl["text"]["fillColor"];
                 } else if (propertyName === "indicatorAlarm") {
                     tdl["text"]["alarmFill"] = true;
                 } else if (propertyName === "fgColor") {
@@ -203,10 +113,6 @@ export class TankHelper extends BaseWidgetHelper {
                     tdl["style"]["fontStyle"] = fontStyle;
                     tdl["style"]["fontSize"] = fontSize;
                     tdl["style"]["fontWeight"] = fontWeight;
-                    // tdl["text"]["dialFontFamily"] = fontFamily;
-                    // tdl["text"]["dialFontStyle"] = fontStyle;
-                    // tdl["text"]["dialFontSize"] = fontSize;
-                    // tdl["text"]["dialFontWeight"] = fontWeight;
                 } else if (propertyName === "border") {
                     tdl["style"]["borderWidth"] = 1;
                 } else if (propertyName === "labelTicks") {
@@ -252,8 +158,6 @@ export class TankHelper extends BaseWidgetHelper {
                 // const newRules = EdlConverter.convertEdlColorAlarm(EdlConverter.convertEdlPv(edl["indicatorPv"]), 1, "Water Color") as type_rules_tdl;
                 // tdl["rules"].push(...newRules);
                 tdl["text"]["fillColor"] = "rgba(0,200,0,1)";
-                tdl["text"]["fillColorMinor"] = "rgba(255,255,0,1)";
-                tdl["text"]["fillColorMajor"] = "rgba(255,0,0,1)";
             } else if (alarmPropertyName === "fgAlarm") {
                 const newRules_Labels = EdlConverter.convertEdlColorAlarm(EdlConverter.convertEdlPv(edl["indicatorPv"]), 1, "Dial Font Color") as type_rules_tdl;
                 tdl["rules"].push(...newRules_Labels);
@@ -297,7 +201,7 @@ export class TankHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "progressbar" | "tank"): type_Tank_tdl => {
         Log.info("\n------------", `Parsing ${type}`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Tank");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm

@@ -415,7 +415,7 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
                 return;
             }
 
-            mainProcess.getIpcManager().handleProfileSelected(undefined,
+            mainProcess.getIpcManager().handleProfileSelected("",
                 {
                     selectedProfileName: profileName,
                     args: {
@@ -439,7 +439,7 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
             // (4)
             const editable = `${selectedProfile.getEntry("EPICS Custom Environment", "Manually Opened TDL Editable")}`.toUpperCase() === "YES" ? true : false;
             mainProcess.getIpcManager().handleOpenTdlFiles(
-                undefined,
+                "",
                 {
                     options: {
                         // tdl?: type_tdl;

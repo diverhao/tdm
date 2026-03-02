@@ -65,7 +65,7 @@ export class Table {
     highlightColor = "rgba(188,215,251,1)";
 
     _ElementTableLine = ({ children, additionalStyle, lineIndex, selectable }: any) => {
-        const lineRef = React.useRef<any>(null);
+        const lineRef = React.useRef<HTMLDivElement>(null);
         if (additionalStyle === undefined) {
             additionalStyle = {};
         }
@@ -240,7 +240,7 @@ export class Table {
     }
 
     _ElementTableHeaderResizer = ({ columnIndex }: any) => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 ref={elementRef}

@@ -46,9 +46,9 @@ export class MainWindowProfileEditPage {
     // every time we return to the startup page, it should be reset to the below value
     private _localProfile: Record<string, any> = { undefined: "I am not defined yet" };
 
-    private _forceUpdatePage: any = () => { };
+    private _forceUpdatePage: () => void = () => {};
 
-    private newArrayPropertyItemAddress: string[] = [];
+    private newArrayPropertyItemAddress: (string | number)[] = [];
 
     constructor(mainWindowClient: MainWindowClient) {
         this._mainWindowClient = mainWindowClient;
@@ -57,7 +57,7 @@ export class MainWindowProfileEditPage {
 
     // ------------------------- main element ----------------------
 
-    private _Element = ({ profileName }: any) => {
+    private _Element = ({ profileName }: { profileName: string }) => {
         const style = {
             position: "relative",
             // flex extends over the whole screen
@@ -122,9 +122,15 @@ export class MainWindowProfileEditPage {
         );
     };
 
-    _ElementSidebarCategory = ({ categoryName, index, selectCategory, moveCategoryUp, moveCategoryDown }: any) => {
-        const refCategory = React.useRef<any>(null);
-        const refUpDownArrows = React.useRef<any>(null);
+    _ElementSidebarCategory = ({ categoryName, index, selectCategory, moveCategoryUp, moveCategoryDown }: {
+        categoryName: string;
+        index: number;
+        selectCategory: (event: React.MouseEvent<HTMLDivElement> | undefined, categoryName: string) => void;
+        moveCategoryUp: (name: string) => void;
+        moveCategoryDown: (name: string) => void;
+    }) => {
+        const refCategory = React.useRef<HTMLDivElement>(null);
+        const refUpDownArrows = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 ref={refCategory}
@@ -174,7 +180,7 @@ export class MainWindowProfileEditPage {
                         paddingLeft: "12px",
                         boxSizing: "border-box",
                     }}
-                    onClick={(event: any) => {
+                    onClick={(event) => {
                         selectCategory(event, categoryName);
                     }}
                 >
@@ -192,7 +198,7 @@ export class MainWindowProfileEditPage {
                         additionalStyle={{
                             fontSize: 19,
                         }}
-                        handleClick={(event: any) => {
+                        handleClick={(event: React.MouseEvent<HTMLDivElement>) => {
                             event.stopPropagation();
                             moveCategoryUp(categoryName);
                         }}
@@ -203,7 +209,7 @@ export class MainWindowProfileEditPage {
                         additionalStyle={{
                             fontSize: 19,
                         }}
-                        handleClick={(event: any) => {
+                        handleClick={(event: React.MouseEvent<HTMLDivElement>) => {
                             event.stopPropagation();
                             moveCategoryDown(categoryName);
                         }}
@@ -218,7 +224,11 @@ export class MainWindowProfileEditPage {
     /**
      * title area: the profile name and the control buttons for this page
      */
-    private _ElementTitle = ({ profileName, localProfileName, setLocalProfileName }: any) => {
+    private _ElementTitle = ({ profileName, localProfileName, setLocalProfileName }: {
+        profileName: string;
+        localProfileName: string;
+        setLocalProfileName: React.Dispatch<React.SetStateAction<string>>;
+    }) => {
 
         const style = {
             display: "flex",
@@ -228,7 +238,7 @@ export class MainWindowProfileEditPage {
             borderBottom: "solid rgb(64,64,64) 1px",
         } as React.CSSProperties;
 
-        const changeLocalProfileName = (event: any) => {
+        const changeLocalProfileName = (event: React.ChangeEvent<HTMLInputElement>) => {
             event.preventDefault();
             setLocalProfileName(event.target.value);
         };
@@ -283,9 +293,9 @@ export class MainWindowProfileEditPage {
             overflow: "clip",
         } as React.CSSProperties;
 
-        const selectCategory = (event: any, categoryName: string) => {
+        const selectCategory = (event: React.MouseEvent<HTMLDivElement> | undefined, categoryName: string) => {
             if (event) {
-                event.target.style.fontWeight = "bold";
+                (event.target as HTMLElement).style.fontWeight = "bold";
             }
             this.setSelectedCategoryName(categoryName);
             this._forceUpdatePage();
@@ -340,7 +350,9 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementSidebarControls = ({ selectCategory }: any) => {
+    private _ElementSidebarControls = ({ selectCategory }: {
+        selectCategory: (event: React.MouseEvent<HTMLDivElement> | undefined, categoryName: string) => void;
+    }) => {
 
         const style = {
             display: "inline-flex",
@@ -351,8 +363,8 @@ export class MainWindowProfileEditPage {
             justifyContent: "space-between",
         } as React.CSSProperties;
 
-        const generateEmptyCategory = (): Record<string, any> => {
-            let result: Record<string, any> = {};
+        const generateEmptyCategory = (): Record<string, string> => {
+            let result: Record<string, string> = {};
             result[`DESCRIPTION_${uuidv4()}`] = "Description of the category.";
             return result;
         };
@@ -430,7 +442,10 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementTitleControls = ({ localProfileName, profileName }: any) => {
+    private _ElementTitleControls = ({ localProfileName, profileName }: {
+        localProfileName: string;
+        profileName: string;
+    }) => {
 
         const style = {
             display: "flex",
@@ -561,7 +576,7 @@ export class MainWindowProfileEditPage {
      * 
      * contents is a reference, modifying it would directly modify the localProfile.current
      */
-    private _ElementCategory = ({ }: any) => {
+    private _ElementCategory = () => {
 
         const style = {
             display: "flex",
@@ -671,7 +686,12 @@ export class MainWindowProfileEditPage {
         );
     };
 
-    private _ElementCategoryFilter = ({ skipFilter, filterText, setFilterText }: any) => {
+    private _ElementCategoryFilter = ({ skipFilter, filterText, setFilterText }: {
+        skipFilter: boolean;
+        filterText: string;
+        setFilterText: React.Dispatch<React.SetStateAction<string>>;
+        category?: Record<string, any>;
+    }) => {
         const style = {
             display: "inline-flex",
             paddingLeft: 7,
@@ -703,7 +723,7 @@ export class MainWindowProfileEditPage {
                     value={filterText}
                     placeholder={"Filter properties"}
                     spellCheck={false}
-                    onChange={(event: any) => {
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                         setFilterText(event.target.value);
                     }}
                 >
@@ -712,7 +732,7 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementCategoryTitle = ({ }: any) => {
+    private _ElementCategoryTitle = () => {
 
         const style = {
             display: "flex",
@@ -769,7 +789,11 @@ export class MainWindowProfileEditPage {
         );
     };
 
-    private _ElementCategoryTitleName = ({ categoryName, setCategoryName, isEditing }: any) => {
+    private _ElementCategoryTitleName = ({ categoryName, setCategoryName, isEditing }: {
+        categoryName: string;
+        setCategoryName: React.Dispatch<React.SetStateAction<string>>;
+        isEditing: boolean;
+    }) => {
 
         const inputStyle = {
             fontSize: 25,
@@ -798,7 +822,7 @@ export class MainWindowProfileEditPage {
                 <input
                     style={inputStyle}
                     value={categoryName}
-                    onChange={(event: any) => {
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                         event.preventDefault();
                         setCategoryName(event.target.value);
                     }}
@@ -817,7 +841,14 @@ export class MainWindowProfileEditPage {
      * 
      * when the title is not being edited, we show the dropdown menu with 4 options: edit, delete, add primitive property, add array property
      */
-    private _ElementCategoryTitleControl = ({ isEditing, setCategoryName, setCategoryDescription, setIsEditing, categoryName, categoryDescription }: any) => {
+    private _ElementCategoryTitleControl = ({ isEditing, setCategoryName, setCategoryDescription, setIsEditing, categoryName, categoryDescription }: {
+        isEditing: boolean;
+        setCategoryName: React.Dispatch<React.SetStateAction<string>>;
+        setCategoryDescription: React.Dispatch<React.SetStateAction<string>>;
+        setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
+        categoryName: string;
+        categoryDescription: string;
+    }) => {
 
         const style = {
             display: "flex",
@@ -947,7 +978,7 @@ export class MainWindowProfileEditPage {
                         paddingBottom={3}
                         paddingLeft={5}
                         paddingRight={5}
-                        handleClick={(event: any) => {
+                        handleClick={() => {
                             setCategoryName(this.getSelectedCategoryName());
                             setCategoryDescription(this.getSelectedCategoryDescription());
                             setIsEditing(false);
@@ -970,7 +1001,11 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementCategoryTitleDescription = ({ categoryDescription, setCategoryDescription, isEditing }: any) => {
+    private _ElementCategoryTitleDescription = ({ categoryDescription, setCategoryDescription, isEditing }: {
+        categoryDescription: string;
+        setCategoryDescription: React.Dispatch<React.SetStateAction<string>>;
+        isEditing: boolean;
+    }) => {
 
         const styleDiv = {
             color: "rgb(180, 180, 180)",
@@ -1003,7 +1038,7 @@ export class MainWindowProfileEditPage {
                 <input
                     style={styleInput}
                     value={categoryDescription}
-                    onChange={(event: any) => {
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                         event.preventDefault();
                         setCategoryDescription(event.target.value);
                     }}
@@ -1017,7 +1052,10 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementPropertyTitle = ({ propertyName, category }: any) => {
+    private _ElementPropertyTitle = ({ propertyName, category }: {
+        propertyName: string;
+        category: Record<string, any>;
+    }) => {
         const [isEditing, setIsEditing] = React.useState(false);
         const [localPropertyName, setLocalPropertyName] = React.useState(propertyName);
         const [localPropertyDescription, setLocalPropertyDescription] = React.useState(category[propertyName]["DESCRIPTION"]);
@@ -1068,7 +1106,11 @@ export class MainWindowProfileEditPage {
         )
     };
 
-    private _ElementPropertyTitleName = ({ isEditing, localPropertyName, setLocalPropertyName }: any) => {
+    private _ElementPropertyTitleName = ({ isEditing, localPropertyName, setLocalPropertyName }: {
+        isEditing: boolean;
+        localPropertyName: string;
+        setLocalPropertyName: React.Dispatch<React.SetStateAction<string>>;
+    }) => {
         return (
             isEditing ?
                 <input
@@ -1085,7 +1127,7 @@ export class MainWindowProfileEditPage {
                         paddingBottom: 3,
                     }}
                     value={localPropertyName}
-                    onChange={(event: any) => {
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                         event.preventDefault();
                         setLocalPropertyName(event.target.value);
                     }}
@@ -1109,7 +1151,16 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementPropertyTitleControl = ({ isEditing, category, propertyName, localPropertyName, setLocalPropertyName, localPropertyDescription, setLocalPropertyDescription, setIsEditing }: any) => {
+    private _ElementPropertyTitleControl = ({ isEditing, category, propertyName, localPropertyName, setLocalPropertyName, localPropertyDescription, setLocalPropertyDescription, setIsEditing }: {
+        isEditing: boolean;
+        category: Record<string, any>;
+        propertyName: string;
+        localPropertyName: string;
+        setLocalPropertyName: React.Dispatch<React.SetStateAction<string>>;
+        localPropertyDescription: string;
+        setLocalPropertyDescription: React.Dispatch<React.SetStateAction<string>>;
+        setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
+    }) => {
 
         const deleteProperty = () => {
             delete category[propertyName];
@@ -1180,7 +1231,7 @@ export class MainWindowProfileEditPage {
                         paddingBottom={3}
                         paddingLeft={5}
                         paddingRight={5}
-                        handleClick={(event: any) => {
+                        handleClick={() => {
                             renamePropertyAndUpdateDescription();
                         }}
                     >
@@ -1192,7 +1243,7 @@ export class MainWindowProfileEditPage {
                         paddingBottom={3}
                         paddingLeft={5}
                         paddingRight={5}
-                        handleClick={(event: any) => {
+                        handleClick={() => {
                             setLocalPropertyName(propertyName);
                             setLocalPropertyDescription(category[propertyName]["DESCRIPTION"]);
                             setIsEditing(false);
@@ -1214,7 +1265,13 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementPropertyDescription = ({ isEditing, localPropertyDescription, setLocalPropertyDescription, envOsValue, envDefaultValue }: any) => {
+    private _ElementPropertyDescription = ({ isEditing, localPropertyDescription, setLocalPropertyDescription, envOsValue, envDefaultValue }: {
+        isEditing: boolean;
+        localPropertyDescription: string;
+        setLocalPropertyDescription: React.Dispatch<React.SetStateAction<string>>;
+        envOsValue: string | undefined;
+        envDefaultValue: string | undefined;
+    }) => {
         return (
             isEditing ?
                 <div
@@ -1248,7 +1305,7 @@ export class MainWindowProfileEditPage {
                             paddingBottom: 3,
                         }}
                         value={localPropertyDescription}
-                        onChange={(event: any) => {
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                             event.preventDefault();
                             setLocalPropertyDescription(event.target.value);
                         }}
@@ -1290,7 +1347,10 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementPropertyDefaultOsValues = ({ envDefaultValue, envOsValue }: any) => {
+    private _ElementPropertyDefaultOsValues = ({ envDefaultValue, envOsValue }: {
+        envDefaultValue: string | undefined;
+        envOsValue: string | undefined;
+    }) => {
         return (
             envDefaultValue === undefined ? null :
                 <table style={{
@@ -1325,8 +1385,11 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementArrayProperty = ({ propertyName, category }: any) => {
-        const refElement = React.useRef<any>(null);
+    private _ElementArrayProperty = ({ propertyName, category }: {
+        propertyName: string;
+        category: Record<string, any>;
+    }) => {
+        const refElement = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 ref={refElement}
@@ -1353,8 +1416,11 @@ export class MainWindowProfileEditPage {
         );
     };
 
-    private _ElementMapProperty = ({ propertyName, category }: any) => {
-        const refElement = React.useRef<any>(null);
+    private _ElementMapProperty = ({ propertyName, category }: {
+        propertyName: string;
+        category: Record<string, any>;
+    }) => {
+        const refElement = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 ref={refElement}
@@ -1381,8 +1447,11 @@ export class MainWindowProfileEditPage {
         );
     };
 
-    private _ElementPrimitiveProperty = ({ propertyName, category }: any) => {
-        const refElement = React.useRef<any>(null);
+    private _ElementPrimitiveProperty = ({ propertyName, category }: {
+        propertyName: string;
+        category: Record<string, any>;
+    }) => {
+        const refElement = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 ref={refElement}
@@ -1410,8 +1479,11 @@ export class MainWindowProfileEditPage {
     };
 
 
-    private _ElementChoiceProperty = ({ propertyName, category }: any) => {
-        const refElement = React.useRef<any>(null);
+    private _ElementChoiceProperty = ({ propertyName, category }: {
+        propertyName: string;
+        category: Record<string, any>;
+    }) => {
+        const refElement = React.useRef<HTMLDivElement>(null);
         const [isEditing, setIsEditing] = React.useState(false);
 
         return (
@@ -1441,7 +1513,11 @@ export class MainWindowProfileEditPage {
         );
     };
 
-    private _ElementChoicePropertyValue = ({ propertyName, category, isEditing }: any) => {
+    private _ElementChoicePropertyValue = ({ propertyName, category, isEditing }: {
+        propertyName: string;
+        category: Record<string, any>;
+        isEditing: boolean;
+    }) => {
         const [localPropertyValue, setLocalPropertyValue] = React.useState(category[propertyName]["value"]);
         const choices = category[propertyName]["choices"];
 
@@ -1481,7 +1557,7 @@ export class MainWindowProfileEditPage {
                 >
                     <select
                         value={localPropertyValue}
-                        onChange={(event: any) => {
+                        onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
                             event.preventDefault();
                             const newValue = `${event.target.value}`;
                             setLocalPropertyValue(newValue);
@@ -1497,10 +1573,15 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementChoicePropertyChoicesItem = ({ choice, index, category, propertyName }: any) => {
+    private _ElementChoicePropertyChoicesItem = ({ choice, index, category, propertyName }: {
+        choice: string;
+        index: number;
+        category: Record<string, any>;
+        propertyName: string;
+    }) => {
         const [localChoice, setLocalChoice] = React.useState(choice);
         const [showControl, setShowControl] = React.useState(false);
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
 
         const style = {
             display: "flex",
@@ -1549,7 +1630,7 @@ export class MainWindowProfileEditPage {
                 <input
                     style={styleInput}
                     value={localChoice}
-                    onChange={(event: any) => {
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                         setLocalChoice(event.target.value);
                         const property = category[propertyName];
                         const choices = property["choices"];
@@ -1579,7 +1660,12 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementChoicePropertyControls = ({ category, propertyName, isEditing, setIsEditing }: any) => {
+    private _ElementChoicePropertyControls = ({ category, propertyName, isEditing, setIsEditing }: {
+        category: Record<string, any>;
+        propertyName: string;
+        isEditing: boolean;
+        setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
+    }) => {
         const addChoice = () => {
             const choices = category[propertyName]["choices"];
             let newChoiceName = "new-choice";
@@ -1645,7 +1731,10 @@ export class MainWindowProfileEditPage {
         )
     }
 
-    private _ElementPrimitivePropertyValue = ({ propertyName, category }: any) => {
+    private _ElementPrimitivePropertyValue = ({ propertyName, category }: {
+        propertyName: string;
+        category: Record<string, any>;
+    }) => {
         const [localPropertyValue, setLocalPropertyValue] = React.useState(category[propertyName]["value"]);
 
         if (category[propertyName]["choices"] !== undefined) {
@@ -1660,7 +1749,7 @@ export class MainWindowProfileEditPage {
                 >
                     <select
                         value={localPropertyValue}
-                        onChange={(event: any) => {
+                        onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
                             event.preventDefault();
                             const newValue = `${event.target.value}`;
                             setLocalPropertyValue(newValue);
@@ -1688,7 +1777,7 @@ export class MainWindowProfileEditPage {
                         style={{
                             margin: 0,
                         }}
-                        onSubmit={(event: any) => {
+                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
                             event.preventDefault();
                             category[propertyName]["value"] = localPropertyValue;
                         }}
@@ -1706,11 +1795,11 @@ export class MainWindowProfileEditPage {
                                 fontSize: "13px",
                             }}
                             value={localPropertyValue}
-                            onChange={(event: any) => {
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                                 event.preventDefault();
                                 setLocalPropertyValue(event.target.value);
                             }}
-                            onBlur={(event: any) => {
+                            onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
                                 event.preventDefault();
                                 setLocalPropertyValue(category[propertyName]["value"]);
                             }}
@@ -1722,7 +1811,10 @@ export class MainWindowProfileEditPage {
     };
 
 
-    private _ElementArrayPropertyValue = ({ propertyName, category }: any) => {
+    private _ElementArrayPropertyValue = ({ propertyName, category }: {
+        propertyName: string;
+        category: Record<string, any>;
+    }) => {
         const style = {
             display: "flex",
             flexDirection: "column",
@@ -1757,7 +1849,10 @@ export class MainWindowProfileEditPage {
         );
     };
 
-    private _ElementMapPropertyValue = ({ propertyName, category }: any) => {
+    private _ElementMapPropertyValue = ({ propertyName, category }: {
+        propertyName: string;
+        category: Record<string, any>;
+    }) => {
         const style = {
             display: "flex",
             flexDirection: "column",
@@ -1792,7 +1887,10 @@ export class MainWindowProfileEditPage {
         );
     };
 
-    private _ElementArrayPropertyAddItemButton = ({ category, propertyName }: any) => {
+    private _ElementArrayPropertyAddItemButton = ({ category, propertyName }: {
+        category: Record<string, any>;
+        propertyName: string;
+    }) => {
 
         const style = {
             marginTop: "5px",
@@ -1820,7 +1918,7 @@ export class MainWindowProfileEditPage {
                     paddingBottom={3}
                     paddingLeft={5}
                     paddingRight={5}
-                    handleClick={(event: any) => {
+                    handleClick={() => {
                         addItem();
                         const stringArray = category[propertyName]["value"];
                         this.setNewArrayPropertyItemAddress([this.getSelectedCategoryName(), propertyName, stringArray.length - 1]);
@@ -1833,11 +1931,16 @@ export class MainWindowProfileEditPage {
     }
 
     // propertyValue is a string array
-    private _ElementArrayPropertyValueItem = ({ propertyName, propertyValue, index }: any) => {
+    private _ElementArrayPropertyValueItem = ({ propertyName, propertyValue, index }: {
+        propertyName: string;
+        propertyValue: string[];
+        propertyType?: string;
+        index: number;
+    }) => {
         const [localItemValue, setLocalItemValue] = React.useState(propertyValue[index]);
 
         const [isEditing, setIsEditing] = React.useState(false);
-        const refSubElement = React.useRef<any>(null);
+        const refSubElement = React.useRef<HTMLDivElement>(null);
 
         React.useEffect(() => {
             if (propertyName === this.getNewArrayPropertyItemAddress()[1] && index === this.getNewArrayPropertyItemAddress()[2]) {
@@ -1858,7 +1961,7 @@ export class MainWindowProfileEditPage {
                     index={index}
                     isEditing={isEditing}
                     setIsEditing={setIsEditing}
-                    setLocalItemValue={setLocalItemValue}
+                    setLocalItemValue={setLocalItemValue as (value: string | [string, string]) => void}
                     localItemValue={localItemValue}
                     refSubElement={refSubElement}
                 ></this._ElementArrayAndMapPropertyValueItemControls>
@@ -1866,11 +1969,15 @@ export class MainWindowProfileEditPage {
         )
     };
 
-    private _ElementArrayPropertyValueItemContent = ({ isEditing, localItemValue, setLocalItemValue }: any) => {
+    private _ElementArrayPropertyValueItemContent = ({ isEditing, localItemValue, setLocalItemValue }: {
+        isEditing: boolean;
+        localItemValue: string;
+        setLocalItemValue: (value: string) => void;
+    }) => {
 
         // console.log("render me", focus, isEditing, localItemValue, this.getNewArrayPropertyItemAddress())
 
-        const inputRef = React.useRef<any>(null);
+        const inputRef = React.useRef<HTMLInputElement>(null);
 
         const style = {
             backgroundColor: "rgba(0,0,0,0)",
@@ -1888,7 +1995,7 @@ export class MainWindowProfileEditPage {
                     ref={inputRef}
                     style={style}
                     value={localItemValue}
-                    onChange={(event: any) => {
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                         event.preventDefault();
                         setLocalItemValue(event.target.value);
                     }}
@@ -1909,11 +2016,16 @@ export class MainWindowProfileEditPage {
     };
 
     // propertyValue is an array with elements in form of 2-element string array ["ABC", "DEF"].
-    private _ElementMapPropertyValueItem = ({ propertyValue, index, propertyName }: any) => {
+    private _ElementMapPropertyValueItem = ({ propertyValue, index, propertyName }: {
+        propertyValue: [string, string][];
+        index: number;
+        propertyName: string;
+        propertyType?: string;
+    }) => {
         const [localItemValue, setLocalItemValue] = React.useState(propertyValue[index]);
 
         const [isEditing, setIsEditing] = React.useState(false);
-        const refSubElement = React.useRef<any>(null);
+        const refSubElement = React.useRef<HTMLDivElement>(null);
 
         React.useEffect(() => {
             if (propertyName === this.getNewArrayPropertyItemAddress()[1] && index === this.getNewArrayPropertyItemAddress()[2]) {
@@ -1935,7 +2047,7 @@ export class MainWindowProfileEditPage {
                     index={index}
                     isEditing={isEditing}
                     setIsEditing={setIsEditing}
-                    setLocalItemValue={setLocalItemValue}
+                    setLocalItemValue={setLocalItemValue as (value: string | [string, string]) => void}
                     localItemValue={localItemValue}
                     refSubElement={refSubElement}
                 ></this._ElementArrayAndMapPropertyValueItemControls>
@@ -1944,7 +2056,11 @@ export class MainWindowProfileEditPage {
         )
     };
 
-    private _ElementMapPropertyValueItemContent = ({ isEditing, localItemValue, setLocalItemValue }: any) => {
+    private _ElementMapPropertyValueItemContent = ({ isEditing, localItemValue, setLocalItemValue }: {
+        isEditing: boolean;
+        localItemValue: [string, string];
+        setLocalItemValue: (value: [string, string]) => void;
+    }) => {
         const style = {
             display: "flex",
             flexDirection: "row",
@@ -1983,7 +2099,7 @@ export class MainWindowProfileEditPage {
                     <input
                         style={styleInput}
                         value={localItemValue[0]}
-                        onChange={(event: any) => {
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                             event.preventDefault();
                             setLocalItemValue([event.target.value, localItemValue[1]]);
                         }}
@@ -1991,7 +2107,7 @@ export class MainWindowProfileEditPage {
                     <input
                         style={styleInput}
                         value={localItemValue[1]}
-                        onChange={(event: any) => {
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                             event.preventDefault();
                             setLocalItemValue([localItemValue[0], event.target.value]);
                         }}
@@ -2019,7 +2135,15 @@ export class MainWindowProfileEditPage {
     /**
      * The controls buttons on each item for map and array property
      */
-    private _ElementArrayAndMapPropertyValueItemControls = ({ propertyValue, index, isEditing, setIsEditing, setLocalItemValue, localItemValue, refSubElement }: any) => {
+    private _ElementArrayAndMapPropertyValueItemControls = ({ propertyValue, index, isEditing, setIsEditing, setLocalItemValue, localItemValue, refSubElement }: {
+        propertyValue: (string | [string, string])[];
+        index: number;
+        isEditing: boolean;
+        setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
+        setLocalItemValue: (value: string | [string, string]) => void;
+        localItemValue: string | [string, string];
+        refSubElement: React.RefObject<HTMLDivElement | null>;
+    }) => {
 
         const deleteItem = () => {
             propertyValue.splice(index, 1);
@@ -2062,7 +2186,7 @@ export class MainWindowProfileEditPage {
                         paddingBottom={3}
                         paddingLeft={5}
                         paddingRight={5}
-                        handleClick={(event: any) => {
+                        handleClick={() => {
                             propertyValue[index] = localItemValue;
                             setIsEditing(false);
                             this._forceUpdatePage();
@@ -2076,7 +2200,7 @@ export class MainWindowProfileEditPage {
                         paddingBottom={3}
                         paddingLeft={5}
                         paddingRight={5}
-                        handleClick={(event: any) => {
+                        handleClick={() => {
                             setLocalItemValue(propertyValue[index]);
                             setIsEditing(false);
                             this._forceUpdatePage();
@@ -2216,10 +2340,10 @@ export class MainWindowProfileEditPage {
         }
     };
 
-    getNewArrayPropertyItemAddress = () => {
+    getNewArrayPropertyItemAddress = (): (string | number)[] => {
         return this.newArrayPropertyItemAddress;
     }
-    setNewArrayPropertyItemAddress = (newAddress: string[]) => {
+    setNewArrayPropertyItemAddress = (newAddress: (string | number)[]) => {
         this.newArrayPropertyItemAddress = newAddress;
     }
 }

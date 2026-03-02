@@ -25,7 +25,7 @@ export class SidebarAngle extends SidebarComponent {
 			setAngle(propertyValue);
 		};
 
-		const elementRef = React.useRef(null);
+		const elementRef = React.useRef<HTMLDivElement>(null);
 		const [blockLeft, setBlockLeft] = React.useState(0);
 
 		const calcParameters = (x: number) => {
@@ -40,7 +40,7 @@ export class SidebarAngle extends SidebarComponent {
 				// width: 185
 				// x: 1295
 				// y: 320.25
-				const element = (elementRefCurrent as any).getBoundingClientRect();
+				const element = elementRefCurrent.getBoundingClientRect();
 				const barWidth = element.width;
 
 				const blockWidth = 10;
@@ -60,7 +60,7 @@ export class SidebarAngle extends SidebarComponent {
 		React.useEffect(() => {
 			const elementRefCurrent = elementRef.current;
 			if (elementRefCurrent !== null) {
-				const element = (elementRefCurrent as any).getBoundingClientRect();
+				const element = elementRefCurrent.getBoundingClientRect();
 				const barWidth = element.width;
 
 				const blockWidth = 10;

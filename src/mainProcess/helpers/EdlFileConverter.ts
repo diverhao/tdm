@@ -5,6 +5,7 @@ import * as fs from "fs";
 import crypto from "crypto";
 import { convertEpochTimeToString } from "../../common/GlobalMethods";
 import { argv } from "process";
+import { Log } from "../../common/Log";
 
 // iterate over all the files in the folder, calculate the MD5, save to a new JSON files
 // {file-full-path: md5} -- F2
@@ -33,7 +34,7 @@ import { argv } from "process";
 
 
 const exit = (e: Error | string | undefined | any = undefined) => {
-    console.log("exit");
+    Log.info("exit");
     if (e instanceof Error) {
         throw e;
     } else {
@@ -65,7 +66,7 @@ const toBeCopiedFiles: string[] = []
 
 const writeToLog = (text: string) => {
     try {
-        console.log(text);
+        Log.info(text);
         fs.writeFileSync(logFullName, text + "\n", { flag: "a+" });
     } catch (e) {
         exit(e);
@@ -102,9 +103,9 @@ const iterateFolder = (folderPath: string) => {
                 // console.log('Directory : ', fullPath);
                 iterateFolder(fullPath);
             } else if (stat.isSymbolicLink()) {
-                console.log("Skip symbolic link file", fullPath);
+                Log.info("Skip symbolic link file", fullPath);
             } else {
-                console.log("Skip file", fullPath);
+                Log.info("Skip file", fullPath);
             }
         } else {
             // large file, the md5 is stat
@@ -164,6 +165,7 @@ try {
     oldJsonContent = JSON.parse(fs.readFileSync(oldJsonFullName).toString());
 } catch (e) {
     // no throw
+    Log.error(e);
 }
 // save new md5 JSON
 try {

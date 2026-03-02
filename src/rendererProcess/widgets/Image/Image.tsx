@@ -2167,7 +2167,7 @@ export class Image extends BaseWidget {
                     }
 
                 } catch (e) {
-                    // console.log(g_widgets1.getTcaChannels());
+                    Log.error(e);
                 }
             }
         }

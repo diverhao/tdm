@@ -17,8 +17,8 @@ export class SidebarChannelName extends SidebarComponent {
             TcaChannel.checkChannelName(this.getMainWidget().getChannelNamesLevel0()[0]) !== undefined ? "black" : "red"
         );
 
-        const inputElementRef = React.useRef<any>(null);
-        const formElementRef = React.useRef<any>(null);
+        const inputElementRef = React.useRef<HTMLInputElement>(null);
+        const formElementRef = React.useRef<HTMLFormElement>(null);
 
         // channel name hint
         const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);

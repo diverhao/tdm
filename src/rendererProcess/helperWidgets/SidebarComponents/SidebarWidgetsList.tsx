@@ -41,8 +41,8 @@ export class SidebarWidgetsList {
     }
 
     _Element = () => {
-        const titleRef = React.useRef<any>(null);
-        const elementRef = React.useRef<any>(null);
+        const titleRef = React.useRef<HTMLDivElement>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         // subtract Canvas, GroupSelection2
         let totalNumWidgets = [...g_widgets1.getWidgets().keys()].length - 2;
         if (g_widgets1.getWidget("MouseSelectionRegion") !== undefined) {

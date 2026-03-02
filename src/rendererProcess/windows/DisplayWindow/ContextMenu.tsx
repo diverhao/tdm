@@ -198,7 +198,7 @@ export class ContextMenu {
     }
 
     _ElementMenuItem = ({ menuItem, }: any) => {
-        const refElement = React.useRef<any>(null);
+        const refElement = React.useRef<HTMLDivElement>(null);
         const [showSubMenu, setShowSubMenu] = React.useState(false);
 
         const label = menuItem["label"];

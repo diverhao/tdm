@@ -376,7 +376,7 @@ export abstract class Prompt {
         }
         // Log.debug("buttons", buttons)
 
-        const refInput = React.useRef<any>(null);
+        const refInput = React.useRef<HTMLInputElement>(null);
         const [inputText, setInputText] = React.useState(defaultInputText);
 
         return (<this._ElementBackground>

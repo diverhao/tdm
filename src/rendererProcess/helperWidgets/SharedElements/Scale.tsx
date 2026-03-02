@@ -102,7 +102,7 @@ export const ScaleLeft = ({ min, max, numIntervals, length, scale, color, compac
     }
 ) => {
 
-    const elementRef = React.useRef<any>(null);
+    const elementRef = React.useRef<HTMLDivElement>(null);
 
     const fontSize = GlobalVariables.defaultFontSize;
     const tickValues = calcTicks(min, max, numIntervals + 1, { scale: scale });
@@ -162,7 +162,7 @@ export const ScaleRight = ({ min, max, numIntervals, length, scale, color, compa
     }
 ) => {
 
-    const elementRef = React.useRef<any>(null);
+    const elementRef = React.useRef<HTMLDivElement>(null);
 
     const fontSize = GlobalVariables.defaultFontSize;
     const tickValues = calcTicks(min, max, numIntervals + 1, { scale: scale });
@@ -221,7 +221,7 @@ export const ScaleTop = ({ min, max, numIntervals, length, scale, color, compact
     }
 ) => {
 
-    const elementRef = React.useRef<any>(null);
+    const elementRef = React.useRef<HTMLDivElement>(null);
 
     const fontSize = GlobalVariables.defaultFontSize;
     const tickValues = calcTicks(min, max, numIntervals + 1, { scale: scale });
@@ -281,7 +281,7 @@ export const ScaleBottom = ({ min, max, numIntervals, length, scale, color, comp
     }
 ) => {
 
-    const elementRef = React.useRef<any>(null);
+    const elementRef = React.useRef<HTMLDivElement>(null);
 
     const fontSize = GlobalVariables.defaultFontSize;
     const tickValues = calcTicks(min, max, numIntervals + 1, { scale: scale });
@@ -327,7 +327,7 @@ export const ScaleBottom = ({ min, max, numIntervals, length, scale, color, comp
 };
 
 
-const Axis = ({ color, length, showAxis }: any) => {
+const Axis = ({ color, length, showAxis }: { color: string; length: number; showAxis: boolean }) => {
 
     if (showAxis === false) {
         return null;
@@ -352,7 +352,7 @@ const Axis = ({ color, length, showAxis }: any) => {
     )
 }
 
-const AxisTopBottom = ({ color, length, showAxis }: any) => {
+const AxisTopBottom = ({ color, length, showAxis }: { color: string; length: number; showAxis: boolean }) => {
 
     if (showAxis === false) {
         return null;
@@ -377,7 +377,7 @@ const AxisTopBottom = ({ color, length, showAxis }: any) => {
     )
 }
 
-const Ticks = ({ tickPositions, color, showTicks }: any) => {
+const Ticks = ({ tickPositions, color, showTicks }: { tickPositions: number[]; color: string; showTicks: boolean }) => {
 
     if (showTicks === false) {
         return null;
@@ -404,7 +404,7 @@ const Ticks = ({ tickPositions, color, showTicks }: any) => {
     )
 }
 
-const TicksTopBottom = ({ tickPositions, color, showTicks }: any) => {
+const TicksTopBottom = ({ tickPositions, color, showTicks }: { tickPositions: number[]; color: string; showTicks: boolean }) => {
 
     if (showTicks === false) {
         return null;
@@ -431,7 +431,7 @@ const TicksTopBottom = ({ tickPositions, color, showTicks }: any) => {
     )
 }
 
-const Tick = ({ position, color }: any) => {
+const Tick = ({ position, color }: { position: number; color: string }) => {
     const scaleTickSize = 10;
     return (
         <path
@@ -443,7 +443,7 @@ const Tick = ({ position, color }: any) => {
     )
 }
 
-const TickTopBottom = ({ position, color }: any) => {
+const TickTopBottom = ({ position, color }: { position: number; color: string }) => {
     const scaleTickSize = 10;
     return (
         <path
@@ -455,7 +455,7 @@ const TickTopBottom = ({ position, color }: any) => {
     )
 }
 
-const Labels = ({ tickPositions, refinedTicks, fontSize, compact, color, showLabels }: any) => {
+const Labels = ({ tickPositions, refinedTicks, fontSize, compact, color, showLabels }: { tickPositions: number[]; refinedTicks: string[]; fontSize: number; compact: boolean; color: string; showLabels: boolean }) => {
     if (showLabels === false) {
         return null;
     }
@@ -487,7 +487,7 @@ const Labels = ({ tickPositions, refinedTicks, fontSize, compact, color, showLab
     )
 }
 
-const LabelsTopBottom = ({ tickPositions, refinedTicks, fontSize, compact, color, showLabels }: any) => {
+const LabelsTopBottom = ({ tickPositions, refinedTicks, fontSize, compact, color, showLabels }: { tickPositions: number[]; refinedTicks: string[]; fontSize: number; compact: boolean; color: string; showLabels: boolean }) => {
 
     if (showLabels === false) {
         return null;
@@ -520,7 +520,7 @@ const LabelsTopBottom = ({ tickPositions, refinedTicks, fontSize, compact, color
     )
 }
 
-const Label = ({ position, text, index, numTicks, compact, color }: any) => {
+const Label = ({ position, text, index, numTicks, compact, color }: { position: number; text: string; index: number; numTicks: number; compact: boolean; color: string }) => {
 
     if (compact) {
         if (!(index === 0 || index === numTicks - 1)) {
@@ -552,7 +552,7 @@ const Label = ({ position, text, index, numTicks, compact, color }: any) => {
     )
 }
 
-const LabelTopBottom = ({ position, text, index, numTicks, compact, color }: any) => {
+const LabelTopBottom = ({ position, text, index, numTicks, compact, color }: { position: number; text: string; index: number; numTicks: number; compact: boolean; color: string }) => {
 
     if (compact) {
         if (!(index === 0 || index === numTicks - 1)) {

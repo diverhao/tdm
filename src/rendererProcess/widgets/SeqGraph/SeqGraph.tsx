@@ -1531,6 +1531,7 @@ ss volt_check {
                 const tcaChannel = g_widgets1.getTcaChannel(channelName);
                 tcaChannel.destroy(this.getWidgetKey());
             } catch (e) {
+                Log.error(e);
             }
         }
 
@@ -1763,7 +1764,7 @@ ss volt_check {
         try {
             this.buildSeqProgram();
         } catch (e) {
-
+            Log.error(e);
         }
         super.jobsAsEditingModeBegins();
     }

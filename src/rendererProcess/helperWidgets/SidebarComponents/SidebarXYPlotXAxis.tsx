@@ -3,11 +3,7 @@ import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
-import { PvTable } from "../../widgets/PvTable/PvTable";
-import { SidebarXYPlotYAxes } from "./SidebarXYPlotYAxes";
 import { XYPlot } from "../../widgets/XYPlot/XYPlot";
-import { Collapsible } from "../ColorPicker/Collapsible";
-import * as GlobalMethods from "../../../common/GlobalMethods";
 import { XYPlotSidebar } from "../../widgets/XYPlot/XYPlotSidebar";
 
 import { SidebarXYPlotYAxis } from "./SidebarXYPlotYAxis";
@@ -71,7 +67,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
         return (
             <div
                 style={{
-                    ...(this._styleForm as any),
+                    ...(this._styleForm),
                     backgroundColor: "rgba(200, 200, 200, 1)",
                     width: "100%",
 
@@ -84,7 +80,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
     };
 
     _ElementHideContents = () => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         const [hideContents, setHideContents] = React.useState(false);
         return (
             <div
@@ -96,13 +92,13 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                 onMouseEnter={() => {
                     if (elementRef.current !== null) {
                         elementRef.current.style["cursor"] = "pointer";
-                        elementRef.current.style["opacity"] = 1;
+                        elementRef.current.style["opacity"] = "1";
                     }
                 }}
                 onMouseLeave={() => {
                     if (elementRef.current !== null) {
                         elementRef.current.style["cursor"] = "default";
-                        elementRef.current.style["opacity"] = 0.25;
+                        elementRef.current.style["opacity"] = "0.25";
                     }
                 }}
                 onClick={(event: React.MouseEvent) => {
@@ -126,7 +122,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
     };
 
     _ElementAddYAxis = () => {
-        const elementRef = React.useRef<any>(null);
+        const elementRef = React.useRef<HTMLDivElement>(null);
         return (
             <div
                 style={{
@@ -136,13 +132,13 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                 onMouseEnter={() => {
                     if (elementRef.current !== null) {
                         elementRef.current.style["cursor"] = "pointer";
-                        elementRef.current.style["opacity"] = 1;
+                        elementRef.current.style["opacity"] = "1";
                     }
                 }}
                 onMouseLeave={() => {
                     if (elementRef.current !== null) {
                         elementRef.current.style["cursor"] = "default";
-                        elementRef.current.style["opacity"] = 0.25;
+                        elementRef.current.style["opacity"] = "0.25";
                     }
                 }}
                 onClick={(event: React.MouseEvent) => {
@@ -180,7 +176,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
         width: "55%",
     };
 
-    _styleForm = {
+    _styleForm: React.CSSProperties = {
         display: "inline-flex",
         flexDirection: "row",
         justifyContent: "space-between",
@@ -196,7 +192,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
             <form
                 spellCheck={false}
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetLabel(event, label)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <this._ElementInputLabel
                     value={label}
@@ -299,7 +295,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
         return (
             <form
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetShowGrid(event, showGrid)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <div>Show grid:</div>
                 <input
@@ -349,7 +345,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
             <form
                 spellCheck={false}
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetNumGrids(event, numGrids)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <div>Grid #:</div>
                 <input
@@ -411,7 +407,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
             <form
                 spellCheck={false}
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetXValMin(event, valMin)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <div>X Val Min:</div>
                 <input
@@ -442,7 +438,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
             <form
                 spellCheck={false}
                 onSubmit={(event: React.FormEvent<HTMLFormElement>) => this.updateWidgetXValMax(event, valMax)}
-                style={{ ...(this._styleForm as any) }}
+                style={this._styleForm}
             >
                 <div>X Val Max:</div>
                 <input

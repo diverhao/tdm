@@ -1,101 +1,24 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
+import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
-
-export type type_ByteMonitor_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    bitNames: string[];
-    itemColors: string[];
-};
+import { defaultByteMonitorTdl, type_ByteMonitor_tdl } from "../../../../common/types/type_widget_tdl";
 
 export class ByteMonitorHelper extends BaseWidgetHelper {
-    static _defaultTdl: type_ByteMonitor_tdl = {
-        type: "ByteMonitor",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            // clear background, use "itemColors"
-            backgroundColor: "rgba(0, 0, 0, 0)",
-            // angle
-            transform: "rotate(0deg)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // border, it is different from the "alarmBorder" below,
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: false,
-            alarmBorder: true,
-            // line style for each bit
-            lineWidth: 2,
-            lineStyle: "solid",
-            lineColor: "rgba(0, 0, 0, 1)",
-            // shape, round/square
-            shape: "round",
-            bitStart: 0,
-            bitLength: 8,
-            direction: "horizontal", // vs "vertical"
-            sequence: "positive", // vs "reverse"
-            // if the value is not valid
-            fallbackColor: "rgba(255,0,255,1)",
-            invisibleInOperation: false,
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        bitNames: [],
-        itemColors: ["rgba(60, 100, 60, 1)", "rgba(60, 255, 60, 1)"],
-    };
 
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_ByteMonitor_tdl => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_ByteMonitor_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.bitNames = structuredClone(this._defaultTdl.bitNames);
-        result.itemColors = structuredClone(this._defaultTdl.itemColors);
-        return result;
+    static generateDefaultTdl = (): type_ByteMonitor_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultByteMonitorTdl.type);
+        return structuredClone({
+            ...defaultByteMonitorTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_ByteMonitor_tdl => {
         Log.info("\n------------", `Parsing "Byte"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("ByteMonitor") as type_ByteMonitor_tdl;
+        const tdl = this.generateDefaultTdl() as type_ByteMonitor_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
@@ -198,7 +121,7 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_ByteMonitor_tdl => {
         Log.info("\n------------", `Parsing "byte_monitor"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("ByteMonitor");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "actions", // not in tdm

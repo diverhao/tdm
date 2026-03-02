@@ -259,7 +259,7 @@ export const ElementMacrosTableSingleColumnData = (
 
 
 export const ElementMacroInput = ({ rowIndex, columnIndex, macrosData, modifyCellCallback }: any) => {
-    const refElement = React.useRef<any>(null);
+    const refElement = React.useRef<HTMLInputElement>(null);
     const [value, setValue] = React.useState(macrosData[rowIndex][columnIndex]);
     return (
         <form
@@ -328,7 +328,7 @@ export const ElementMacroInput = ({ rowIndex, columnIndex, macrosData, modifyCel
 }
 
 export const ElementMacroInputSingleColumnData = ({widgetKey, rowIndex, macrosData }: any) => {
-    const refElement = React.useRef<any>(null);
+    const refElement = React.useRef<HTMLInputElement>(null);
     const [value, setValue] = React.useState(macrosData[rowIndex]);
     return (
         <form
@@ -427,7 +427,7 @@ export const ElementMacroTd = ({ children, style }: any) => {
 
 
 export const ElementSmallButton = ({ children, onMouseDown }: any) => {
-    const refElement = React.useRef<any>(null);
+    const refElement = React.useRef<HTMLDivElement>(null);
     return (
         <div
             ref={refElement}
@@ -443,12 +443,12 @@ export const ElementSmallButton = ({ children, onMouseDown }: any) => {
             }}
             onMouseEnter={() => {
                 if (refElement.current !== null) {
-                    refElement.current.style["opacity"] = 1;
+                    refElement.current.style["opacity"] = "1";
                 }
             }}
             onMouseLeave={() => {
                 if (refElement.current !== null) {
-                    refElement.current.style["opacity"] = 0.2;
+                    refElement.current.style["opacity"] = "0.2";
                 }
             }}
             onMouseDown={(event) => {
@@ -461,7 +461,7 @@ export const ElementSmallButton = ({ children, onMouseDown }: any) => {
 }
 
 export const ElementButton = ({ children, onClick, style }: { children?: React.ReactNode; onClick?: (event: React.MouseEvent<HTMLDivElement>) => void; style?: React.CSSProperties }) => {
-    const refElement = React.useRef<any>(null);
+    const refElement = React.useRef<HTMLDivElement>(null);
     return (
         <div
             ref={refElement}
@@ -478,12 +478,12 @@ export const ElementButton = ({ children, onClick, style }: { children?: React.R
             }}
             onMouseEnter={() => {
                 if (refElement.current !== null) {
-                    refElement.current.style["opacity"] = 1;
+                    refElement.current.style["opacity"] = "1";
                 }
             }}
             onMouseLeave={() => {
                 if (refElement.current !== null) {
-                    refElement.current.style["opacity"] = 0.3;
+                    refElement.current.style["opacity"] = "0.3";
                 }
             }}
             onClick={(event) => {

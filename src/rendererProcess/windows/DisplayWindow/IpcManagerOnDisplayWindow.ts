@@ -143,7 +143,7 @@ export class IpcManagerOnDisplayWindow {
             })
         }
 
-        client.onmessage = (event: any) => {
+        client.onmessage = (event: MessageEvent) => {
             const messageBuffer = event.data;
             // const message = JSON.parse(messageBuffer.toString(), (key, value) =>
             //     value === null ? undefined : value);
@@ -287,7 +287,7 @@ export class IpcManagerOnDisplayWindow {
     };
 
     handleObtainedIframeUuid = (
-        event: any,
+        event: string,
         options: IpcEventArgType2["obtained-iframe-uuid"]
     ) => {
         const widget = g_widgets1.getWidget2(options["widgetKey"]);
@@ -298,7 +298,7 @@ export class IpcManagerOnDisplayWindow {
     };
 
     handleReadEmbeddedDisplayTdl = (
-        event: any,
+        event: string,
         data: IpcEventArgType2["read-embedded-display-tdl"]
     ) => {
         // this macros is from parent EmbeddedDisplay and its ancestors
@@ -410,7 +410,7 @@ export class IpcManagerOnDisplayWindow {
         return newMap;
     }
 
-    handleRequestEpicsDbd = (event: any, result: IpcEventArgType2["request-epics-dbd"]) => {
+    handleRequestEpicsDbd = (event: string, result: IpcEventArgType2["request-epics-dbd"]) => {
         const widget = g_widgets1.getWidget(result["widgetKey"]);
         if (widget instanceof ChannelGraph || widget instanceof Probe) {
             widget.processDbd({
@@ -720,7 +720,7 @@ export class IpcManagerOnDisplayWindow {
         }
     };
 
-    handleTdlFileSaved = (event: any, data: IpcEventArgType2["tdl-file-saved"]) => {
+    handleTdlFileSaved = (event: string, data: IpcEventArgType2["tdl-file-saved"]) => {
         const { newTdlFileName } = data;
         Log.debug("TDL file saved to", newTdlFileName);
         this.getDisplayWindowClient().setTdlFileName(newTdlFileName);
@@ -744,7 +744,7 @@ export class IpcManagerOnDisplayWindow {
     };
 
 
-    handleSelectedProfileContents = (event: any, data: IpcEventArgType2["selected-profile-contents"]) => {
+    handleSelectedProfileContents = (event: string, data: IpcEventArgType2["selected-profile-contents"]) => {
         const { contents } = data;
         this.getDisplayWindowClient().setProfileContents(contents);
 
@@ -796,7 +796,7 @@ export class IpcManagerOnDisplayWindow {
      * 
      * @param newDbrData a dictionary of channel name and its new dbr data
      */
-    handleNewChannelData = (event: any, data: IpcEventArgType2["new-channel-data"]) => {
+    handleNewChannelData = (event: string, data: IpcEventArgType2["new-channel-data"]) => {
         const { newDbrData } = data;
 
         Log.debug("received data", JSON.stringify(newDbrData, null, 4));
@@ -819,12 +819,12 @@ export class IpcManagerOnDisplayWindow {
                     try {
                         tcaChannels.push(tcaChannel);
                     } catch (e) {
-
+                        Log.error(e);
                     }
                     try {
                         tcaChannels.push(g_widgets1.getTcaChannel(channelName + ".SEVR"));
                     } catch (e) {
-
+                        Log.error(e);
                     }
                 }
 
@@ -893,7 +893,7 @@ export class IpcManagerOnDisplayWindow {
         g_flushWidgets();
     };
 
-    handleNewArchiveData = (event: any, data: IpcEventArgType2["new-archive-data"]) => {
+    handleNewArchiveData = (event: string, data: IpcEventArgType2["new-archive-data"]) => {
         if (g_widgets1.isEditing()) {
             return;
         }
@@ -912,7 +912,7 @@ export class IpcManagerOnDisplayWindow {
     // (1) resolve IO, letting TcaChannel.get() to continue, writing the data to TcaChannel
     // (2) determine which widgets should be re-rendered
     // (3) flush widgets
-    handleTcaGetResult = (event: any, data: IpcEventArgType2["tca-get-result"]) => {
+    handleTcaGetResult = (event: string, data: IpcEventArgType2["tca-get-result"]) => {
         const { ioId, newDbrData, widgetKey } = data;
         // console.log(newDbrData);
         // console.log("receive", JSON.stringify(newDbrData));
@@ -935,7 +935,7 @@ export class IpcManagerOnDisplayWindow {
     // (1) resolve IO, letting TcaChannel.get() to continue, writing the data to TcaChannel
     // (2) determine which widgets should be re-rendered
     // (3) flush widgets
-    handleTcaPutResult = (event: any, result: IpcEventArgType2["tca-put-result"]) => {
+    handleTcaPutResult = (event: string, result: IpcEventArgType2["tca-put-result"]) => {
         // console.log(newDbrData);
         // console.log("receive", JSON.stringify(newDbrData));
         const readWriteIos = g_widgets1.getReadWriteIos();
@@ -943,7 +943,7 @@ export class IpcManagerOnDisplayWindow {
         readWriteIos.resolveIo(result["ioId"], result);
     };
 
-    handleFetchPvaType = (event: any, data: IpcEventArgType2["fetch-pva-type"]) => {
+    handleFetchPvaType = (event: string, data: IpcEventArgType2["fetch-pva-type"]) => {
         const { ioId, channelName, fullPvaType } = data;
         try {
             const readWriteIos = g_widgets1.getReadWriteIos();
@@ -962,7 +962,7 @@ export class IpcManagerOnDisplayWindow {
 
 
     handleNewTdl = (
-        event: any,
+        event: string,
         options: IpcEventArgType2["new-tdl"]
     ) => {
         Log.info("Received a new-tdl", options);
@@ -983,7 +983,7 @@ export class IpcManagerOnDisplayWindow {
         );
     };
 
-    handleSelectAFile = (event: any, data: IpcEventArgType2["select-a-file"]) => {
+    handleSelectAFile = (event: string, data: IpcEventArgType2["select-a-file"]) => {
         const { options, fileName } = data;
         const widgetKey = options["widgetKey"];
         if (widgetKey === undefined) {
@@ -994,22 +994,18 @@ export class IpcManagerOnDisplayWindow {
         try {
             const widget = g_widgets1.getWidget2(widgetKey);
             if (widget instanceof BaseWidget) {
-                const handleSelectAFile = (widget as any).handleSelectAFile;
-                if (handleSelectAFile) {
-                    handleSelectAFile(options, fileName);
+                if (widget.handleSelectAFile) {
+                    widget.handleSelectAFile(options, fileName);
                 }
             } else if (widget instanceof Canvas) {
-                const handleSelectAFile = (widget as any).handleSelectAFile;
-                if (handleSelectAFile) {
-                    handleSelectAFile(options, fileName);
-                }
+                widget.handleSelectAFile(options, fileName);
             }
         } catch (e) {
             Log.error(e);
         }
     };
 
-    handleWidgetSpecificAction = (event: any, data: IpcEventArgType2["widget-specific-action"]) => {
+    handleWidgetSpecificAction = (event: undefined, data: IpcEventArgType2["widget-specific-action"]) => {
         const { widgetKey, actionName } = data;
         if (widgetKey.includes("ScaledSlider")) {
             try {
@@ -1058,7 +1054,7 @@ export class IpcManagerOnDisplayWindow {
         if (widgetKey.includes("LogViewer") || widgetKey.includes("PvMonitor") || widgetKey.includes("CaSnooper") || widgetKey.includes("Casw") || widgetKey.includes("FileConverter") || widgetKey.includes("Table")) {
             try {
                 const widget = g_widgets1.getWidget2(widgetKey);
-                if ((widget instanceof LogViewer) || (widget instanceof PvMonitor) || (widget instanceof CaSnooper) || (widget instanceof Casw) || (widget instanceof FileConverter)|| (widget instanceof Table)) {
+                if ((widget instanceof LogViewer) || (widget instanceof PvMonitor) || (widget instanceof CaSnooper) || (widget instanceof Casw) || (widget instanceof FileConverter) || (widget instanceof Table)) {
                     type typeA = (keyof typeof widget.mouseRightButtonDownContextMenuActions);
                     const action = widget.mouseRightButtonDownContextMenuActions[actionName as typeA];
                     if (action !== undefined) {
@@ -1071,7 +1067,7 @@ export class IpcManagerOnDisplayWindow {
         }
     };
 
-    handleStartRecordVideo = (event: any, data: IpcEventArgType2["start-record-video"]) => {
+    handleStartRecordVideo = (event: string, data: IpcEventArgType2["start-record-video"]) => {
         const { sourceId, folder } = data;
         const displayWindowClient = this.getDisplayWindowClient();
         const videoRecorder = displayWindowClient.getVideoRecorder();
@@ -1079,7 +1075,7 @@ export class IpcManagerOnDisplayWindow {
         videoRecorder.start(folder);
     };
 
-    handleWindowWillBeClosed = (event: any, data: IpcEventArgType2["window-will-be-closed"]) => {
+    handleWindowWillBeClosed = (event: string, data: IpcEventArgType2["window-will-be-closed"]) => {
         Log.info("window will be closed")
         const history = this.getDisplayWindowClient().getActionHistory();
         const isUtilityWindow = this.getDisplayWindowClient().getIsUtilityWindow();
@@ -1210,7 +1206,7 @@ export class IpcManagerOnDisplayWindow {
         });
     };
 
-    handleSshFileContents = (event: any, data: IpcEventArgType2["ssh-file-contents"]) => {
+    handleSshFileContents = (event: string, data: IpcEventArgType2["ssh-file-contents"]) => {
         // find the widget
         const widget = g_widgets1.getWidget2(data["widgetKey"]);
         if (widget instanceof Media) {
@@ -1227,18 +1223,18 @@ export class IpcManagerOnDisplayWindow {
         this.getDisplayWindowClient().getPrompt().createElement("open-display-in-ssh-mode");
     }
 
-    handleShowAboutTdm = (event: any, info: IpcEventArgType2["show-about-tdm"]) => {
+    handleShowAboutTdm = (event: string, info: IpcEventArgType2["show-about-tdm"]) => {
         this.getDisplayWindowClient().getPrompt().createElement("about-tdm", info);
     }
 
-    handleFileConverterCommand = (event: any, info: IpcEventArgType2["file-converter-command"]) => {
+    handleFileConverterCommand = (event: string, info: IpcEventArgType2["file-converter-command"]) => {
         const widget = g_widgets1.getWidget2(info["widgetKey"]);
         if (widget instanceof FileConverter) {
             widget.handleNewData(info);
         }
     }
 
-    handleFetchFolderContent = (event: any, message: IpcEventArgType2["fetch-folder-content"]) => {
+    handleFetchFolderContent = (event: string, message: IpcEventArgType2["fetch-folder-content"]) => {
         const widget = g_widgets1.getWidget(message["widgetKey"]);
         if (widget instanceof FileBrowser) {
             if (message["success"] !== false) {
@@ -1250,7 +1246,7 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleFileBrowserCommand = (event: any, message: IpcEventArgType2["file-browser-command"]) => {
+    handleFileBrowserCommand = (event: string, message: IpcEventArgType2["file-browser-command"]) => {
         const widget = g_widgets1.getWidget(message["widgetKey"]);
         if (widget instanceof FileBrowser) {
 
@@ -1295,19 +1291,19 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleFetchThumbnail = (event: any, message: IpcEventArgType2["fetch-thumbnail"]) => {
+    handleFetchThumbnail = (event: string, message: IpcEventArgType2["fetch-thumbnail"]) => {
         const widget = g_widgets1.getWidget(message["widgetKey"]);
         if (widget instanceof FileBrowser) {
             widget.updateThumbnail(message);
         }
     }
 
-    handleSiteInfo = (event: any, siteInfo: IpcEventArgType2["site-info"]) => {
+    handleSiteInfo = (event: string, siteInfo: IpcEventArgType2["site-info"]) => {
         const displayWindowClient = this.getDisplayWindowClient();
         displayWindowClient.setSite(siteInfo["site"]);
     }
 
-    handleDialogShowMessageBox = (event: any, data: IpcEventArgType2["dialog-show-message-box"]) => {
+    handleDialogShowMessageBox = (event: undefined, data: IpcEventArgType2["dialog-show-message-box"]) => {
         const { info } = data;
         const command = info["command"];
         if (command === undefined) {
@@ -1379,7 +1375,7 @@ export class IpcManagerOnDisplayWindow {
         this.getDisplayWindowClient().getPrompt().createElement("dialog-message-box", info);
     };
 
-    handleDialogShowInputBox = (event: any, data: IpcEventArgType2["dialog-show-input-box"]) => {
+    handleDialogShowInputBox = (event: undefined, data: IpcEventArgType2["dialog-show-input-box"]) => {
         const { info } = data;
         const command = info["command"];
         const prompt = this.getDisplayWindowClient().getPrompt();
@@ -1539,12 +1535,12 @@ export class IpcManagerOnDisplayWindow {
     };
 
 
-    handleLocalFontNames = (event: any, data: IpcEventArgType2["local-font-names"]) => {
+    handleLocalFontNames = (event: string, data: IpcEventArgType2["local-font-names"]) => {
         const { localFontNames } = data;
         FontsData.g_localFonts = localFontNames;
     }
 
-    handleLoadDbFileContents = (event: any, data: IpcEventArgType2["load-db-file-contents"]) => {
+    handleLoadDbFileContents = (event: string, data: IpcEventArgType2["load-db-file-contents"]) => {
         const widgets = g_widgets1.getWidgets2().values();
         for (const widget of widgets) {
             if (widget instanceof ChannelGraph) {
@@ -1554,8 +1550,8 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleGetSymbolGallery = (event: any, data: IpcEventArgType2["get-symbol-gallery"]) => {
-        const {widgetKey, page, pageImages, pageNames} = data;
+    handleGetSymbolGallery = (event: string, data: IpcEventArgType2["get-symbol-gallery"]) => {
+        const { widgetKey, page, pageImages, pageNames } = data;
         const symbolGallery = this.getDisplayWindowClient().getSymbolGallery();
         const symbolGalleryHolderWidgetKey = symbolGallery.getHolderWidgetKey();
         if (widgetKey === symbolGalleryHolderWidgetKey) {
@@ -1570,7 +1566,7 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleTerminalCommandResult = (event: any, result: IpcEventArgType2["terminal-command-result"]) => {
+    handleTerminalCommandResult = (event: string, result: IpcEventArgType2["terminal-command-result"]) => {
         try {
             const widget = g_widgets1.getWidget2(result["widgetKey"]);
             if (widget instanceof Terminal) {
@@ -1584,7 +1580,7 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleProcessesInfo = (event: any, data: IpcEventArgType2["processes-info"]) => {
+    handleProcessesInfo = (event: string, data: IpcEventArgType2["processes-info"]) => {
         try {
             const widget = g_widgets1.getWidget2(data["widgetKey"]);
             if (widget instanceof ProfilesViewer) {
@@ -1596,7 +1592,7 @@ export class IpcManagerOnDisplayWindow {
     }
 
 
-    handleEpicsStats = (event: any, data: IpcEventArgType2["epics-stats"]) => {
+    handleEpicsStats = (event: string, data: IpcEventArgType2["epics-stats"]) => {
         try {
             const widget = g_widgets1.getWidget2(data["widgetKey"]);
             if (widget instanceof ProfilesViewer) {
@@ -1607,7 +1603,7 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleCaSnooperData = (event: any, data: IpcEventArgType2["ca-snooper-data"]) => {
+    handleCaSnooperData = (event: string, data: IpcEventArgType2["ca-snooper-data"]) => {
         const widgets = g_widgets1.getWidgets2();
         for (let widget of widgets.values()) {
             if (widget instanceof CaSnooper) {
@@ -1617,7 +1613,7 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleCaswData = (event: any, data: IpcEventArgType2["ca-sw-data"]) => {
+    handleCaswData = (event: string, data: IpcEventArgType2["ca-sw-data"]) => {
         const widgets = g_widgets1.getWidgets2();
         for (let widget of widgets.values()) {
             if (widget instanceof Casw) {
@@ -1627,7 +1623,7 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleTextFileContents = (event: any, result: IpcEventArgType2["text-file-contents"]) => {
+    handleTextFileContents = (event: string, result: IpcEventArgType2["text-file-contents"]) => {
         if (result["widgetKey"].startsWith("TextEditor_")) {
             const widget = g_widgets1.getWidget(result["widgetKey"]);
             if (widget instanceof TextEditor) {
@@ -1641,7 +1637,7 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleSaveTextFileStatus = (event: any, status: IpcEventArgType2["save-text-file-status"]) => {
+    handleSaveTextFileStatus = (event: string, status: IpcEventArgType2["save-text-file-status"]) => {
         if (status["widgetKey"].startsWith("TextEditor_")) {
             const widget = g_widgets1.getWidget(status["widgetKey"]);
             if (widget instanceof TextEditor) {
@@ -1659,7 +1655,7 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleNewLog = (event: any, result: IpcEventArgType2["new-log"]) => {
+    handleNewLog = (event: string, result: IpcEventArgType2["new-log"]) => {
         const { data } = result;
         const widgetKey = data["widgetKey"];
         const widget = g_widgets1.getWidget(widgetKey);
@@ -1668,7 +1664,7 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleDisplayWindowIdForOpenTdlFile = (event: any, data: IpcEventArgType2["display-window-id-for-open-tdl-file"]) => {
+    handleDisplayWindowIdForOpenTdlFile = (event: string, data: IpcEventArgType2["display-window-id-for-open-tdl-file"]) => {
         const { displayWindowId } = data;
         const currentSite = `https://${window.location.host}/`;
         const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
@@ -1680,7 +1676,7 @@ export class IpcManagerOnDisplayWindow {
      * 
      * the svg file is converted to uri instead of raw file content
      */
-    handleGetMediaContent = (event: any, data: IpcEventArgType2["get-media-content"]) => {
+    handleGetMediaContent = (event: string, data: IpcEventArgType2["get-media-content"]) => {
         const { content, widgetKey } = data;
         const widget = g_widgets1.getWidget(widgetKey);
         if (widget instanceof Media) {
@@ -1692,11 +1688,11 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handlePong = (event: any, data: IpcEventArgType2["pong"]) => {
+    handlePong = (event: string, data: IpcEventArgType2["pong"]) => {
         Log.info("Round trip time for ping-pong initiated by this Display Window:", performance.now() - data["time"], "ms");
     }
 
-    handleBounceBack = (event: any, message: IpcEventArgType2["bounce-back"]) => {
+    handleBounceBack = (event: string, message: IpcEventArgType2["bounce-back"]) => {
         const { eventName, data } = message;
         this.sendFromRendererProcess(eventName as any, data);
     }

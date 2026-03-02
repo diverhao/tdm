@@ -558,19 +558,14 @@ export class FileConverter extends BaseWidget {
         )
     }
 
-    handleSelectAFile = (options: {
-        displayWindowId: string,
-        widgetKey: string,
-        filterType: "tdl",
-        properties: ["openFile", "openDirectory"],
-        inputType: "src" | "dest",
-    }, fileName: string) => {
-        if (options['inputType'] === "src") {
+    handleSelectAFile = (options: Record<string, any>, fileName: string) => {
+        const inputType = options["inputType"] as "src" | "dest" | undefined;
+        if (inputType === "src") {
             if (this.setSrc !== undefined) {
                 this.setSrc(fileName);
                 this.src = fileName;
             }
-        } else if (options['inputType'] === "dest") {
+        } else if (inputType === "dest") {
             if (this.setDest !== undefined) {
                 this.setDest(fileName);
                 this.dest = fileName;

@@ -49,9 +49,9 @@ export class PvTable extends BaseWidget {
     _tmp_initX = 0;
     lineHeight: number;
 
-    _ElementTableCell: ({ children, columnIndex, additionalStyle }: any) => React.JSX.Element;
-    _ElementTableLine: ({ children, additionalStyle, lineIndex }: any) => React.JSX.Element;
-    _ElementTableHeaderResizer: ({ columnIndex }: any) => React.JSX.Element;
+    _ElementTableCell: ({ children, columnIndex, additionalStyle }: { children?: React.ReactNode; columnIndex: number; additionalStyle?: React.CSSProperties }) => React.JSX.Element;
+    _ElementTableLine: ({ children, additionalStyle, lineIndex, selectable }: { children?: React.ReactNode; additionalStyle?: React.CSSProperties; lineIndex?: number; selectable?: boolean }) => React.JSX.Element;
+    _ElementTableHeaderResizer: ({ columnIndex }: { columnIndex: number }) => React.JSX.Element;
     _ElementTableLineMemo: React.MemoExoticComponent<(input: any) => React.JSX.Element>;
 
     /**
@@ -207,7 +207,7 @@ export class PvTable extends BaseWidget {
     // toBeUpdatedIndex: number[] = [];
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementAreaRaw = (): React.JSX.Element => {
         return (
             <div
                 style={{
@@ -255,7 +255,7 @@ export class PvTable extends BaseWidget {
 
     // <this._ElementTableHeaderOptionsButton key={`${fieldName}-${index}-optionsButton`} columnIndex={index + 2}></this._ElementTableHeaderOptionsButton>
 
-    _ElementTableHeaderOptionsMenu = ({ columnIndex }: any) => {
+    _ElementTableHeaderOptionsMenu = ({ columnIndex }: { columnIndex: number }) => {
         return (
             <div style={{
                 backgroundColor: "rgba(0,0,0,0)",
@@ -317,7 +317,7 @@ export class PvTable extends BaseWidget {
         )
     }
 
-    _ElementTableLineOptionsMenu = ({ x, y, channelNameIndex }: any) => {
+    _ElementTableLineOptionsMenu = ({ x, y, channelNameIndex }: { x?: number; y?: number; channelNameIndex: number }) => {
         return (
             <div style={{
                 backgroundColor: "rgba(0,0,0,0)",
@@ -468,7 +468,7 @@ export class PvTable extends BaseWidget {
         }
     }
 
-    _ElementTableLineChannelName = ({ rowIndex }: any) => {
+    _ElementTableLineChannelName = ({ rowIndex }: { rowIndex: number }) => {
         // a level-5 channel name
         const [channelName, setChannelName] = React.useState<string>(this.getChannelNamesLevel5()[rowIndex - 1]);
         const elementRefInput = React.useRef<HTMLInputElement>(null);
@@ -707,7 +707,7 @@ export class PvTable extends BaseWidget {
         super.processChannelNames(this.getMacros(), false);
     }
 
-    _ElementTableHeaderFieldName = ({ columnIndex }: any) => {
+    _ElementTableHeaderFieldName = ({ columnIndex }: { columnIndex: number }) => {
         const [fieldName, setFieldName] = React.useState<string>(this.getFieldlNames()[columnIndex - 2]);
         const elementRefInput = React.useRef<HTMLInputElement>(null);
 
@@ -1122,7 +1122,7 @@ export class PvTable extends BaseWidget {
 
                                         </div>
                                         {/* Channel selected */}
-                                        <this._ElementTableCell columnIndex={0} AdditionalStyle={{ justifyContent: "space-between" }}>
+                                        <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
                                             <input
                                                 type="checkbox"
                                                 checked={this.getChannelSelects()[channelNameIndex]}
@@ -1133,7 +1133,7 @@ export class PvTable extends BaseWidget {
                                             />
                                         </this._ElementTableCell>
                                         {/* PV name */}
-                                        <this._ElementTableCell columnIndex={1} AdditionalStyle={{ justifyContent: "space-between" }}>
+                                        <this._ElementTableCell columnIndex={1} additionalStyle={{ justifyContent: "space-between" }}>
                                             <this._ElementTableLineChannelName key={`${channelNameLevel4}-${channelNameIndex}-channelName`} rowIndex={channelNameIndex + 1}></this._ElementTableLineChannelName>
                                             {/* <this._ElementTableLineOptionsButton channelNameIndex={channelNameIndex}></this._ElementTableLineOptionsButton> */}
                                             <this._ElementTableLineOptionsMenu channelNameIndex={channelNameIndex}></this._ElementTableLineOptionsMenu>
@@ -1184,7 +1184,7 @@ export class PvTable extends BaseWidget {
     };
 
 
-    _ElementChannelValueInputDiv = ({ channelNameLevel4, fieldName }: any) => {
+    _ElementChannelValueInputDiv = ({ channelNameLevel4, fieldName }: { channelNameLevel4: string; fieldName: string }) => {
         // always string type
         const currentValueRaw = this.getChannelValue(channelNameLevel4, fieldName);
         const currentValue = currentValueRaw === undefined ? "" : currentValueRaw;

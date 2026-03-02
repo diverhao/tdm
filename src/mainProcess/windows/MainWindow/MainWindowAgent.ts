@@ -444,7 +444,7 @@ export class MainWindowAgent {
         } catch (e) {
             // ! When the app quits, it may cause an unexpected error that pops up in GUI.
             // ! The worst part is I cannot catch it, as it happens in the worker thread.
-            // Log.error("0", e);
+            Log.error("0", e);
         }
         return thumbnail
     };

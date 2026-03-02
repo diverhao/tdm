@@ -37,10 +37,10 @@ export class GroupSelection2 {
     private _height0: number = -10000;
     private _cursorX0: number = -10000;
     private _cursorY0: number = -10000;
-    private _membersLeft0: Record<string, any> = {};
-    private _membersTop0: Record<string, any> = {};
-    private _membersWidth0: Record<string, any> = {};
-    private _membersHeight0: Record<string, any> = {};
+    private _membersLeft0: Record<string, number> = {};
+    private _membersTop0: Record<string, number> = {};
+    private _membersWidth0: Record<string, number> = {};
+    private _membersHeight0: Record<string, number> = {};
 
     // the absolute boundaries for all widgets current shown
     public _leftShown: number = 10000;
@@ -439,7 +439,7 @@ export class GroupSelection2 {
         }
     };
 
-    private _resizeFactors: Record<string, any> = {
+    private _resizeFactors: Record<string, Record<string, number>> = {
         A: {
             dWidth: -1,
             dHeight: -1,
@@ -507,8 +507,8 @@ export class GroupSelection2 {
                 }
                 // (4)
                 const dx = newVal - oldVal;
-                [...this.getWidgets().values()].map((widget: any) => {
-                    (widget as BaseWidget).move(dx, 0, false);
+                [...this.getWidgets().values()].map((widget: BaseWidget) => {
+                    widget.move(dx, 0, false);
                 });
                 break;
             case "top":
@@ -522,8 +522,8 @@ export class GroupSelection2 {
                 }
                 // (4)
                 const dy = newVal - oldVal;
-                [...this.getWidgets().values()].map((widget: any) => {
-                    (widget as BaseWidget).move(0, dy, false);
+                [...this.getWidgets().values()].map((widget: BaseWidget) => {
+                    widget.move(0, dy, false);
                 });
                 break;
             case "width":
@@ -576,8 +576,8 @@ export class GroupSelection2 {
         return (
             <>
                 <div style={{ ...this.getStyle() }}>
-                    {[...this.getWidgets().values()].map((widget: any) => {
-                        return (widget as BaseWidget).getElement();
+                    {[...this.getWidgets().values()].map((widget: BaseWidget) => {
+                        return widget.getElement();
                     })}
                 </div>
                 {this.showSidebar() ? this.getSidebarElement() : null}
@@ -665,14 +665,8 @@ export class GroupSelection2 {
         return structuredClone(this._defaultTdl);
     };
 
-    getTdlCopy = (newKey: boolean = true): Record<string, any> => {
-        const result: Record<string, any> = {
-            type: this.getType(),
-            widgetKey: this.getWidgetKey(),
-            key: this.getWidgetKey(),
-            style: { ...this.getStyle() },
-        };
-        return result;
+    getTdlCopy = (newKey: boolean = true) => {
+        return {};
     };
 
     getChannelNames = (): string[] => {

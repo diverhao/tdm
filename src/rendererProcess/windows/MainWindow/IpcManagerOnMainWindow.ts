@@ -105,7 +105,7 @@ export class IpcManagerOnMainWindow {
             // );
         };
 
-        client.onmessage = (event: any) => {
+        client.onmessage = (event: MessageEvent) => {
             const messageBuffer = event.data;
             const message = JSON.parse(messageBuffer.toString());
             this.replaceNullWithUndefined(message);
@@ -113,14 +113,12 @@ export class IpcManagerOnMainWindow {
             this.handleMessage(message);
         };
 
-        client.onerror = (event: any) => {
-            const message = event.data;
-            Log.debug("IPC error happens", message);
+        client.onerror = (event: Event) => {
+            Log.debug("IPC error happens", event);
         };
 
-        client.onclose = (event: any) => {
-            const message = event.data;
-            Log.error("IPC websocket connection closed", message);
+        client.onclose = (event: CloseEvent) => {
+            Log.error("IPC websocket connection closed", event);
             this.handleDialogShowMessageBox(undefined, {
                 info: {
                     messageType: "error",
@@ -224,7 +222,7 @@ export class IpcManagerOnMainWindow {
      * New windows inherit the parent window's macros.
      */
     startToListenDragAndDrop = () => {
-        document.addEventListener("drop", (event: any) => {
+        document.addEventListener("drop", (event: DragEvent) => {
             event.preventDefault();
 
             // do not listen to drag and drop in ssh-client mode
@@ -239,7 +237,7 @@ export class IpcManagerOnMainWindow {
             } else {
                 // regular display window
                 const tdlFileNames: string[] = [];
-                for (const file of event.dataTransfer.files) {
+                for (const file of event.dataTransfer?.files ?? []) {
                     // full name
                     // must use preload.js to resolve the full file path
                     const electronAPI = (window as any).electronAPI;
@@ -295,7 +293,7 @@ export class IpcManagerOnMainWindow {
         });
     };
 
-    _handleCmdLineSelectedProfile = (event: any, data: IpcEventArgType3["cmd-line-selected-profile"]) => {
+    _handleCmdLineSelectedProfile = (event: undefined, data: IpcEventArgType3["cmd-line-selected-profile"]) => {
         const { cmdLineSelectedProfile, args } = data;
         this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected",
 
@@ -306,15 +304,15 @@ export class IpcManagerOnMainWindow {
         );
     };
 
-    _handleUpdateWsOpenerPort = (event: any, data: IpcEventArgType3["update-ws-opener-port"]) => {
+    _handleUpdateWsOpenerPort = (event: undefined, data: IpcEventArgType3["update-ws-opener-port"]) => {
         const { newPort } = data;
         this.getMainWindowClient().setWsOpenerPort(newPort);
         this.getMainWindowClient().getProfileRunPage()?.forceUpdateWsOpenerPort();
     };
 
-    _handleNewThumbnail = (event: any, info: IpcEventArgType3["new-thumbnail"]) => {
+    _handleNewThumbnail = (event: undefined, info: IpcEventArgType3["new-thumbnail"]) => {
         const { data } = info;
-        Log.info("handle new thumbnail=========", data)
+        
         const profileRunPage = this.getMainWindowClient().getProfileRunPage();
         if (profileRunPage !== undefined) {
             profileRunPage.updateThumbnailGallery(data);
@@ -325,7 +323,7 @@ export class IpcManagerOnMainWindow {
      * After the main window GUI is created, the profiles and its file name are sent from main process. This function
      * is also invoked when the Profiles is changed. <br>
      */
-    private _handleAfterMainWindowGuiCreated = (event: any, data: IpcEventArgType3["after-main-window-gui-created"]) => {
+    private _handleAfterMainWindowGuiCreated = (event: undefined, data: IpcEventArgType3["after-main-window-gui-created"]) => {
         const { envDefault, envOs, profiles, profilesFileName, logFileName, site } = data;
         const mainWindowClient = this.getMainWindowClient();
         // in editing page, we need the env default and env os
@@ -345,7 +343,7 @@ export class IpcManagerOnMainWindow {
     /**
      * After the profile selected. The main process already prepared the EPICS context.
      */
-    private _handleAfterProfileSelected = (event: any, data: IpcEventArgType3["after-profile-selected"]) => {
+    private _handleAfterProfileSelected = (event: undefined, data: IpcEventArgType3["after-profile-selected"]) => {
         const { profileName } = data;
         this.getMainWindowClient().setSelectedProfileName(profileName);
         this.getMainWindowClient().setProfileRunPage(new MainWindowProfileRunPage(this.getMainWindowClient()));
@@ -360,7 +358,7 @@ export class IpcManagerOnMainWindow {
      * 
      * error, info, and warning are handled by diag-show-message-box event
      */
-    private _handleShowPrompt = (event: any, info: IpcEventArgType3["show-prompt"]) => {
+    private _handleShowPrompt = (event: undefined, info: IpcEventArgType3["show-prompt"]) => {
         const { data } = info;
         Log.debug("Show prompt of", data);
         const startupPage = this.getMainWindowClient().getStartupPage();
@@ -371,7 +369,7 @@ export class IpcManagerOnMainWindow {
         }
     }
 
-    handleDialogShowMessageBox = (event: any, data: IpcEventArgType3["dialog-show-message-box"]) => {
+    handleDialogShowMessageBox = (event: undefined, data: IpcEventArgType3["dialog-show-message-box"]) => {
 
         const { info } = data;
         const command = info["command"];
@@ -409,7 +407,7 @@ export class IpcManagerOnMainWindow {
         }
     };
 
-    handleDialogShowInputBox = (event: any, data: IpcEventArgType3["dialog-show-input-box"]) => {
+    handleDialogShowInputBox = (event: undefined, data: IpcEventArgType3["dialog-show-input-box"]) => {
         const { info } = data;
         const command = info["command"];
         const prompt = this.getMainWindowClient().getPrompt();
@@ -489,11 +487,11 @@ export class IpcManagerOnMainWindow {
     };
 
 
-    handleShowAboutTdm = (event: any, info: IpcEventArgType3["show-about-tdm"]) => {
+    handleShowAboutTdm = (event: undefined, info: IpcEventArgType3["show-about-tdm"]) => {
         this.getMainWindowClient().getPrompt().createElement("about-tdm", info);
     }
 
-    handleWindowWillBeClosed = (event: any, option: {}) => {
+    handleWindowWillBeClosed = (event: undefined, option: {}) => {
         const mainWindowId = this.getMainWindowClient().getWindowId();
         this.sendFromRendererProcess("main-window-will-be-closed", {
             mainWindowId: mainWindowId,
@@ -507,7 +505,7 @@ export class IpcManagerOnMainWindow {
      * 
      * If the log file defined in profiles is not writable, then the logFileName is ""
      */
-    handleLogFileName = (event: any, data: IpcEventArgType3["log-file-name"]) => {
+    handleLogFileName = (event: undefined, data: IpcEventArgType3["log-file-name"]) => {
         const { logFileName } = data;
         this.getMainWindowClient().setLogFileName(logFileName);
         // force update startup page, it contains the log file name
@@ -519,7 +517,7 @@ export class IpcManagerOnMainWindow {
     /**
      * only for ssh-client mode
      */
-    handleUpdateProfiles = (event: any, data: IpcEventArgType3["update-profiles"]) => {
+    handleUpdateProfiles = (event: undefined, data: IpcEventArgType3["update-profiles"]) => {
         const { windowId, profilesFullFileName, profilesJson } = data;
         const mainWindowClient = this.getMainWindowClient();
         const startupPage = mainWindowClient.getStartupPage();
@@ -536,7 +534,7 @@ export class IpcManagerOnMainWindow {
 
     }
 
-    handleBounceBack = (event: any, message: IpcEventArgType3["bounce-back"]) => {
+    handleBounceBack = (event: undefined, message: IpcEventArgType3["bounce-back"]) => {
         const { eventName, data } = message;
         this.sendFromRendererProcess(eventName as any, data);
     }

@@ -9,8 +9,8 @@ import { Log } from "../../../common/Log";
  * Shared elements used by Help widget
 */
 
-export const LINK = ({ link, to, widget, children }: any) => {
-    const elementRef = React.useRef<any>(null)
+export const LINK = ({ link, to, widget, children }: { link?: string; to?: string; widget?: Help; children?: React.ReactNode }) => {
+    const elementRef = React.useRef<HTMLAnchorElement>(null)
     if (to === undefined) {
         return (
             <span>
@@ -111,7 +111,7 @@ export const LINK = ({ link, to, widget, children }: any) => {
     }
 }
 
-export const H1 = ({ children, marginTop }: any) => {
+export const H1 = ({ children, marginTop }: { children: React.ReactNode; marginTop?: string | number }) => {
     return (<p style={{
         fontSize: 35,
         marginBottom: 20,
@@ -121,7 +121,7 @@ export const H1 = ({ children, marginTop }: any) => {
     }}>{children}</p>)
 }
 
-export const H2 = ({ children, marginTop, registry }: any) => {
+export const H2 = ({ children, marginTop, registry }: { children: string; marginTop?: string | number; registry?: React.MutableRefObject<Record<string, string[]>> }) => {
     // register 
     if (registry !== undefined) {
         registry.current[`${children}`] = [];
@@ -139,7 +139,7 @@ export const H2 = ({ children, marginTop, registry }: any) => {
     </p>)
 }
 
-export const H3 = ({ children, marginTop, registry }: any) => {
+export const H3 = ({ children, marginTop, registry }: { children: string; marginTop?: string | number; registry?: React.MutableRefObject<Record<string, string[]>> }) => {
     // register 
     if (registry !== undefined) {
         const parentH2 = Object.keys(registry.current)[Object.keys(registry.current).length - 1];
@@ -161,7 +161,7 @@ export const H3 = ({ children, marginTop, registry }: any) => {
     </p>)
 }
 
-export const P = ({ children }: any) => {
+export const P = ({ children }: { children: React.ReactNode }) => {
     return <p
         style={{
             lineHeight: 1.6,
@@ -176,7 +176,7 @@ export const P = ({ children }: any) => {
     </p>
 }
 
-export const IMG = ({ children, src, width }: any) => {
+export const IMG = ({ children, src, width }: { children?: React.ReactNode; src: string; width?: string | number }) => {
     return (
         <div style={{
             display: "inline-flex",
@@ -196,7 +196,7 @@ export const IMG = ({ children, src, width }: any) => {
     )
 }
 
-export const LI = ({ children }: any) => {
+export const LI = ({ children }: { children: React.ReactNode }) => {
     return (
         <li style={{
             lineHeight: 1.6,
@@ -206,7 +206,7 @@ export const LI = ({ children }: any) => {
     )
 }
 
-export const CODE = ({ children }: any) => {
+export const CODE = ({ children }: { children: React.ReactNode }) => {
     const lines: string[] = [];
     if (typeof children === "string") {
         children.split("\n").forEach((line: string, index: number) => {
@@ -216,7 +216,7 @@ export const CODE = ({ children }: any) => {
         });
     }
 
-    const elementCopyRef = React.useRef<any>(null);
+    const elementCopyRef = React.useRef<HTMLDivElement>(null);
     const [copyText, setCopyText] = React.useState("Copy");
 
     return (
@@ -301,7 +301,7 @@ export const CODE = ({ children }: any) => {
     )
 }
 
-export const SLIDESHOW = ({ images, titles, texts, width }: any) => {
+export const SLIDESHOW = ({ images, titles, texts, width }: { images: string[]; titles: string[]; texts: React.ReactNode[]; width?: string | number }) => {
     const [imageIndex, setImageIndex] = React.useState(0);
     return (
         <div style={{
@@ -379,8 +379,8 @@ export const SLIDESHOW = ({ images, titles, texts, width }: any) => {
     )
 }
 
-export const HASHLINK = ({ linkPath, text }: any) => {
-    const elementRef = React.useRef<any>(null);
+export const HASHLINK = ({ linkPath, text }: { linkPath: string; text: string }) => {
+    const elementRef = React.useRef<HTMLAnchorElement>(null);
     return (
         <HashLink
             ref={elementRef}
@@ -490,7 +490,7 @@ const parseLine = (lines: string[], lineNum: number, parentData: Record<string, 
     }
 }
 
-export const TREEWRAP = ({ tree, sideNote }: any) => {
+export const TREEWRAP = ({ tree, sideNote }: { tree: Record<string, any>; sideNote: Record<string, string> }) => {
     return (
         <div style={{
             border: "solid 1px rgba(200,200,200,1)",
@@ -550,7 +550,7 @@ export const TREE = ({ tree, sideNote, prefix }: { tree: Record<string, any>, si
     )
 }
 
-const TREEFOLDER = ({ name, value, sideNote, prefix }: any) => {
+const TREEFOLDER = ({ name, value, sideNote, prefix }: { name: string; value: Record<string, any>; sideNote: Record<string, string>; prefix: string }) => {
     const [expanded, setExpanded] = React.useState(false);
     const contentRef = React.useRef<HTMLDivElement>(null);
     const [maxHeight, setMaxHeight] = React.useState(0);
@@ -599,7 +599,7 @@ const TREEFOLDER = ({ name, value, sideNote, prefix }: any) => {
     )
 }
 
-const TREENAME = ({ name, type, expanded, setExpanded, sideNote, prefix }: any) => {
+const TREENAME = ({ name, type, expanded, setExpanded, sideNote, prefix }: { name: string; type: "file" | "folder"; expanded: boolean | undefined; setExpanded: React.Dispatch<React.SetStateAction<boolean>> | undefined; sideNote: Record<string, string>; prefix: string }) => {
     const [showSideNote, setShowSideNote] = React.useState(false);
     return (
         <span
@@ -639,7 +639,7 @@ const TREENAME = ({ name, type, expanded, setExpanded, sideNote, prefix }: any) 
     )
 }
 
-const TREESIDENOTE = ({ text }: any) => {
+const TREESIDENOTE = ({ text }: { text: string | undefined }) => {
     if (text === undefined || text === "") {
         return null;
     }
@@ -664,7 +664,7 @@ const TREESIDENOTE = ({ text }: any) => {
 }
 
 
-export const ARTICLE = ({ children, registry, title, linkPath }: any) => {
+export const ARTICLE = ({ children, registry, title, linkPath }: { children: React.ReactNode; registry?: React.MutableRefObject<Record<string, string[]>>; title: string; linkPath: string }) => {
     const [, forceUpdate] = React.useState({});
     React.useEffect(() => {
         forceUpdate({});

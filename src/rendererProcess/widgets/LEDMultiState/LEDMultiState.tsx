@@ -416,7 +416,6 @@ export class LEDMultiState extends BaseWidget {
 
     generateDefaultTdl: () => any = LEDMultiState.generateDefaultTdl;
 
-    // overload
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
         result["itemColors"] = structuredClone(this.getItemColors());
@@ -428,7 +427,6 @@ export class LEDMultiState extends BaseWidget {
 
     // --------------------- getters -------------------------
 
-    // override
     getItemNames() {
         return this._itemNames;
     };

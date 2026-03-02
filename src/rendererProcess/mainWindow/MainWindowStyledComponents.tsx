@@ -1,7 +1,7 @@
 import * as React from "react";
 
 export const ElementUpDownButtonOnSidebar = ({ children, additionalStyle, handleClick }: any) => {
-    const refElement = React.useRef<any>(null);
+    const refElement = React.useRef<HTMLDivElement>(null);
     return (
         <div
             ref={refElement}
@@ -40,7 +40,7 @@ export const ElementProfileBlockNameInput = ({ additionalStyle, value, onChange 
     value: string,
     onChange: React.ChangeEventHandler<HTMLInputElement>,
 }) => {
-    const refElement = React.useRef<any>(null);
+    const refElement = React.useRef<HTMLInputElement>(null);
     return (
         <input
             ref={refElement}
@@ -85,7 +85,7 @@ export const ElementProfileBlockNameInput = ({ additionalStyle, value, onChange 
 
 
 export const ElementArrayPropertyItemRight = ({ children, onClick, additionalStyle }: any) => {
-    const refElement = React.useRef<any>(null);
+    const refElement = React.useRef<HTMLDivElement>(null);
     return <div
         ref={refElement}
         style={{
@@ -104,13 +104,13 @@ export const ElementArrayPropertyItemRight = ({ children, onClick, additionalSty
         onMouseEnter={() => {
             if (refElement.current !== null) {
                 refElement.current.style["backgroundColor"] = "rgba(229, 229, 299, 1)";
-                refElement.current.style["opacity"] = 1;
+                refElement.current.style["opacity"] = "1";
             }
         }}
         onMouseLeave={() => {
             if (refElement.current !== null && document.activeElement !== refElement.current) {
                 refElement.current.style["backgroundColor"] = "rgba(229, 229, 299, 0)";
-                refElement.current.style["opacity"] = 0.2;
+                refElement.current.style["opacity"] = "0.2";
             }
         }}
     >
@@ -119,7 +119,7 @@ export const ElementArrayPropertyItemRight = ({ children, onClick, additionalSty
 }
 
 export const ElementArrayPropertyItem = ({ children, refSubElement }: any) => {
-    const refElement = React.useRef<any>(null);
+    const refElement = React.useRef<HTMLDivElement>(null);
     return (
         <div
             ref={refElement}

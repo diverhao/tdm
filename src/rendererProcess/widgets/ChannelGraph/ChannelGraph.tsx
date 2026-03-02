@@ -11,6 +11,7 @@ import { Network } from "vis-network/standalone";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { ChannelSeverity, menuScan, TcaChannel } from "../../channel/TcaChannel";
 import { DbdFiles } from "../../channel/DbdFiles";
+import { Log } from "../../../common/Log";
 import { ChannelGraphSidebar } from "./ChannelGraphSidebar";
 
 
@@ -707,6 +708,7 @@ export class ChannelGraph extends BaseWidget {
                 const tcaChannel = g_widgets1.getTcaChannel(channelName);
                 tcaChannel.destroy(this.getWidgetKey());
             } catch (e) {
+                Log.error(e);
             }
         }
 
@@ -754,7 +756,7 @@ export class ChannelGraph extends BaseWidget {
                         }
                     )
                 } catch (e) {
-
+                    Log.error(e);
                 }
             }
         }

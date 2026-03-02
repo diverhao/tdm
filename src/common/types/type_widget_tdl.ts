@@ -211,8 +211,8 @@ export const defaultPolylineTdl: type_Polyline_tdl = {
     channelNames: [],
     groupNames: [],
     rules: [],
-    pointsX: [0, 100],
-    pointsY: [100, 0],
+    pointsX: [],
+    pointsY: [],
 };
 
 // ======================== Rectangle TDL Schema ========================
@@ -535,7 +535,7 @@ export const defaultLEDMultiStateTdl: type_LEDMultiState_tdl = {
         shape: "round",
         invisibleInOperation: false,
         bit: -1,
-        useChannelItems: true,
+        useChannelItems: false,
         fallbackColor: "rgba(255,0,255,1)",
         fallbackText: "Wrong State",
     },

@@ -223,7 +223,7 @@ export class IpcManagerOnMainProcess {
     eventListeners: Record<string, (event: any, ...args: any) => any> = {};
 
     ipcMain = {
-        on: (channel: string, callback: (event: any, ...args: any) => any) => {
+        on: (channel: string, callback: (event: any, ...args: any) => void) => {
             this.eventListeners[channel] = callback;
         },
     };
@@ -347,7 +347,7 @@ export class IpcManagerOnMainProcess {
 
     // ---------------- TDM process ----------------------------
 
-    handleNewTdmProcess = (event: any, options: IpcEventArgType["new-tdm-process"]) => {
+    handleNewTdmProcess = (event: WebSocket | string, options: IpcEventArgType["new-tdm-process"]) => {
         const args = process.argv;
 
         const newProcess = spawn(args[0], args.slice(1), {
@@ -363,7 +363,7 @@ export class IpcManagerOnMainProcess {
     /**
      * Quit this process, initiated from main window
      */
-    handleQuitTdmProcess = (event: any, option: IpcEventArgType["quit-tdm-process"]) => {
+    handleQuitTdmProcess = (event: WebSocket | string, option: IpcEventArgType["quit-tdm-process"]) => {
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
 
         // in ssh-client mode, the quit-tdm-process is handled in ssh-server
@@ -455,7 +455,7 @@ export class IpcManagerOnMainProcess {
      * to the Main Window. These info are for Main Window startup page.
      * 
      */
-    handleWebsocketIpcConnectedOnDisplayWindow = async (event: any, data: IpcEventArgType["websocket-ipc-connected-on-display-window"]) => {
+    handleWebsocketIpcConnectedOnDisplayWindow = async (event: WebSocket | string, data: IpcEventArgType["websocket-ipc-connected-on-display-window"]) => {
         // the main processes' ipc manager
         const ipcManager = this.getMainProcess().getIpcManager();
         const mainProcess = this.getMainProcess();
@@ -537,7 +537,7 @@ export class IpcManagerOnMainProcess {
 
 
 
-    handleWebsocketIpcConnectedOnMainWindow = (event: any, data: IpcEventArgType["websocket-ipc-connected-on-main-window"]) => {
+    handleWebsocketIpcConnectedOnMainWindow = (event: WebSocket | string, data: IpcEventArgType["websocket-ipc-connected-on-main-window"]) => {
 
         // the main processes' ipc manager
         const ipcManager = this.getMainProcess().getIpcManager();
@@ -546,6 +546,8 @@ export class IpcManagerOnMainProcess {
         const windowId = data["windowId"];
         const reconnect = data["reconnect"];
         Log.info("-1", "register window", windowId, "for WebSocket IPC");
+
+        console.log("event -------------------------", event)
 
         if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-client") {
             // desktop mode: websocket client on main/display window
@@ -637,7 +639,7 @@ export class IpcManagerOnMainProcess {
      *
      * Only invoked in main window.
      */
-    handleOpenProfiles = async (event: any, options: IpcEventArgType["open-profiles"]) => {
+    handleOpenProfiles = async (event: WebSocket | string, options: IpcEventArgType["open-profiles"]) => {
         let { profilesFileName1 } = options;
         if (profilesFileName1 === undefined) {
             profilesFileName1 = "";
@@ -757,7 +759,7 @@ export class IpcManagerOnMainProcess {
      * @param {Record<string, any>} modifiedProfiles The JSON format profile
      * @returns {boolean} `true` if successfully save; `false` if failed.
      */
-    handleSaveProfiles = (event: any, options: IpcEventArgType["save-profiles"]): boolean => {
+    handleSaveProfiles = (event: WebSocket | string, options: IpcEventArgType["save-profiles"]): boolean => {
         const profiles = this.getMainProcess().getProfiles();
         let { filePath1, modifiedProfiles } = options;
         if (filePath1 === undefined) {
@@ -848,7 +850,7 @@ export class IpcManagerOnMainProcess {
     };
 
     // create new Profiles object
-    handleSaveProfilesAs = (event: any, options: IpcEventArgType["save-profiles-as"]): boolean => {
+    handleSaveProfilesAs = (event: WebSocket | string, options: IpcEventArgType["save-profiles-as"]): boolean => {
         let { filePath1, modifiedProfiles } = options;
         if (filePath1 === undefined) {
             filePath1 = "";
@@ -949,7 +951,7 @@ export class IpcManagerOnMainProcess {
      * (3) tell main window to show this profile's page, like this.handleProfileSelected(). Ignore command line parameters. <br>
      *
      */
-    handleBringUpMainWindow = async (event: any, options: IpcEventArgType["bring-up-main-window"]) => {
+    handleBringUpMainWindow = async (event: WebSocket | string, options: IpcEventArgType["bring-up-main-window"]) => {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         let mainWindowAgent = windowAgentsManager.getMainWindowAgent();
         if (mainWindowAgent instanceof MainWindowAgent) {
@@ -987,7 +989,7 @@ export class IpcManagerOnMainProcess {
         }
     };
 
-    handleFocusWindow = async (event: any, options: IpcEventArgType["focus-window"]) => {
+    handleFocusWindow = async (event: WebSocket | string, options: IpcEventArgType["focus-window"]) => {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(options["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
@@ -1001,7 +1003,7 @@ export class IpcManagerOnMainProcess {
      * This is the first step in closing a window. 
      * All the related data are handled in later events emitted by BrowserWindow such as "window-will-be-closed"
      */
-    handleCloseWindow = async (event: any, options: IpcEventArgType["close-window"]) => {
+    handleCloseWindow = async (event: WebSocket | string, options: IpcEventArgType["close-window"]) => {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const windowAgent = windowAgentsManager.getAgent(options["displayWindowId"]);
         if ((windowAgent instanceof DisplayWindowAgent) || (windowAgent instanceof MainWindowAgent)) {
@@ -1015,7 +1017,7 @@ export class IpcManagerOnMainProcess {
      * @param {string} windowId Window ID
      * @param {string} newTitle New title
      */
-    handleSetWindowTitle = (event: any, options: IpcEventArgType["set-window-title"]) => {
+    handleSetWindowTitle = (event: WebSocket | string, options: IpcEventArgType["set-window-title"]) => {
         const { windowId, newTitle, modified } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(windowId);
@@ -1037,7 +1039,7 @@ export class IpcManagerOnMainProcess {
      * 
      * If we choose not to close the window immediately, set the readyToClose back to false.
      */
-    handleWindowWillBeClosed = (event: any, data: IpcEventArgType["window-will-be-closed"]) => {
+    handleWindowWillBeClosed = (event: WebSocket | string, data: IpcEventArgType["window-will-be-closed"]) => {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(data["displayWindowId"]);
         // close browser window in desktop mode or ssh-server mode
@@ -1103,7 +1105,7 @@ export class IpcManagerOnMainProcess {
                             && data["displayWindowId"] !== undefined
                             && data["widgetKey"] !== undefined
                             && data["textEditorContents"]) {
-                            const saveSuccess = this.handleSaveTextFile(undefined, {
+                            const saveSuccess = this.handleSaveTextFile("", {
                                 displayWindowId: data["displayWindowId"],
                                 widgetKey: data["widgetKey"],
                                 fileContents: data["textEditorContents"],
@@ -1307,7 +1309,7 @@ export class IpcManagerOnMainProcess {
         }
     };
 
-    handleMainWindowWillBeClosed = (event: any, data: IpcEventArgType["main-window-will-be-closed"]) => {
+    handleMainWindowWillBeClosed = (event: WebSocket | string, data: IpcEventArgType["main-window-will-be-closed"]) => {
         const mainWindowAgent = this.getMainProcess().getWindowAgentsManager().getMainWindowAgent();
         const closeBrowserWindow = () => {
             const mode = this.getMainProcess().getMainProcessMode();
@@ -1379,7 +1381,7 @@ export class IpcManagerOnMainProcess {
      *
      * @param {string} args The command line arguments. We can select the profile from command line.
      */
-    handleProfileSelected = async (event: any, option: IpcEventArgType["profile-selected"]): Promise<any> => {
+    handleProfileSelected = async (event: WebSocket | string, option: IpcEventArgType["profile-selected"]): Promise<any> => {
         const { selectedProfileName, args, openDefaultDisplayWindows } = option;
 
         const mainProcess = this.getMainProcess();
@@ -1586,7 +1588,7 @@ export class IpcManagerOnMainProcess {
      * The main window asks for to update the profiles content from main process. 
      * The main process will provide the up-to-date profiles content.
      */
-    handleUpdateProfiles = (event: any, options: IpcEventArgType["update-profiles"]) => {
+    handleUpdateProfiles = (event: WebSocket | string, options: IpcEventArgType["update-profiles"]) => {
         const { windowId } = options;
 
         const windowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(windowId);
@@ -1611,7 +1613,7 @@ export class IpcManagerOnMainProcess {
     /**
      * Basically the same as profile-selected handler 
      */
-    handleOpenDefaultDisplayWindows = (event: any, options: IpcEventArgType["open-default-display-windows"]) => {
+    handleOpenDefaultDisplayWindows = (event: WebSocket | string, options: IpcEventArgType["open-default-display-windows"]) => {
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
             Log.error("0", `Profile not selected yet`);
@@ -1665,7 +1667,7 @@ export class IpcManagerOnMainProcess {
                         }
                     }
                 }
-                this.createUtilityDisplayWindow(undefined, {
+                this.createUtilityDisplayWindow("", {
                     utilityType: "PvTable",
                     utilityOptions: { channelNames: channelNames },
                     windowId: options["windowId"],
@@ -1716,7 +1718,7 @@ export class IpcManagerOnMainProcess {
      * 
      * @param sendContentsToWindow whether to send file back to display window, only used by .db 
      */
-    handleOpenTdlFiles = (event: any, data: IpcEventArgType["open-tdl-file"]) => {
+    handleOpenTdlFiles = (event: WebSocket | string, data: IpcEventArgType["open-tdl-file"]) => {
         const { options } = data;
         let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
@@ -1840,7 +1842,7 @@ export class IpcManagerOnMainProcess {
         }
     };
 
-    handleLoadDbFileContents = async (event: any, data: IpcEventArgType["load-db-file-contents"]) => {
+    handleLoadDbFileContents = async (event: WebSocket | string, data: IpcEventArgType["load-db-file-contents"]) => {
         const { widgetKey, displayWindowId, dbFileName } = data;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
@@ -1911,7 +1913,7 @@ export class IpcManagerOnMainProcess {
         }
     };
 
-    handleReadEmbeddedDisplayTdl = async (event: any, data: IpcEventArgType["read-embedded-display-tdl"]) => {
+    handleReadEmbeddedDisplayTdl = async (event: WebSocket | string, data: IpcEventArgType["read-embedded-display-tdl"]) => {
         const { displayWindowId, widgetKey, tdlFileName, currentTdlFolder, macros, widgetWidth, widgetHeight, resize } = data;
 
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
@@ -1960,7 +1962,7 @@ export class IpcManagerOnMainProcess {
      * 
      * @param displayWindowId the window ID that initiated the creation of blank display window
      */
-    handleCreateBlankDisplayWindow = (event: any, options: IpcEventArgType["create-blank-display-window"]) => {
+    handleCreateBlankDisplayWindow = (event: WebSocket | string, options: IpcEventArgType["create-blank-display-window"]) => {
         const windowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["windowId"]);
         if ((windowAgent instanceof DisplayWindowAgent) || windowAgent instanceof MainWindowAgent) {
             windowAgent.getWindowAgentsManager().createBlankDisplayWindow(options["windowId"]);
@@ -1986,7 +1988,7 @@ export class IpcManagerOnMainProcess {
      * 
      * @param {boolean} replaceMacros If the externally provided macros should replace internally defined macros
      */
-    handleLoadTdlFile = async (event: any, options: IpcEventArgType["load-tdl-file"],) => {
+    handleLoadTdlFile = async (event: WebSocket | string, options: IpcEventArgType["load-tdl-file"],) => {
         const { displayWindowId, tdlFileName, mode, editable, externalMacros, replaceMacros, currentTdlFolder } = options;
 
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
@@ -2043,7 +2045,7 @@ export class IpcManagerOnMainProcess {
      * @param {type_tdl} tdl The JSON-style object
      * @param {string} tdlFileName The file name to be saved. If the file name is empty, use dialog to save as.
      */
-    handleSaveTdlFile = (event: any, options: IpcEventArgType["save-tdl-file"]) => {
+    handleSaveTdlFile = (event: WebSocket | string, options: IpcEventArgType["save-tdl-file"]) => {
         const { windowId, tdl, tdlFileName1 } = options;
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
         if (mainProcessMode === "web") {
@@ -2149,13 +2151,14 @@ export class IpcManagerOnMainProcess {
             });
         } catch (e) {
             // errors should have been catched in callback
+            Log.error(e);
         }
     };
 
     /**
      * Save any type of data to a file
      */
-    handleSaveDataToFile = (event: any, options: IpcEventArgType["save-data-to-file"]) => {
+    handleSaveDataToFile = (event: WebSocket | string, options: IpcEventArgType["save-data-to-file"]) => {
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
         if (mainProcessMode === "web") {
             // do not save to web server
@@ -2230,6 +2233,7 @@ export class IpcManagerOnMainProcess {
             });
         } catch (e) {
             // errors should have been catched in callback
+            Log.error(e);
         }
     };
 
@@ -2240,7 +2244,7 @@ export class IpcManagerOnMainProcess {
      * process to show the pre-loaded window and update various fields. In this way, the pre-loaded window
      * does not flash.
      */
-    handleNewTdlRendered = async (event: any, options: IpcEventArgType["new-tdl-rendered"]) => {
+    handleNewTdlRendered = async (event: WebSocket | string, options: IpcEventArgType["new-tdl-rendered"]) => {
 
         const { displayWindowId, windowName, tdlFileName, mode } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
@@ -2299,7 +2303,7 @@ export class IpcManagerOnMainProcess {
 
     };
 
-    handleZoomWindow = (event: any, options: IpcEventArgType["zoom-window"]) => {
+    handleZoomWindow = (event: WebSocket | string, options: IpcEventArgType["zoom-window"]) => {
         const { displayWindowId, zoomDirection } = options;
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
@@ -2312,7 +2316,7 @@ export class IpcManagerOnMainProcess {
         }
     };
 
-    handleMoveWindow = (event: any, data: IpcEventArgType["move-window"]) => {
+    handleMoveWindow = (event: WebSocket | string, data: IpcEventArgType["move-window"]) => {
         const displayWindowId = data["displayWindowId"];
         const dx = data["dx"];
         const dy = data["dy"];
@@ -2331,7 +2335,7 @@ export class IpcManagerOnMainProcess {
         }
     }
 
-    handleSetWindowAlwaysOnTop = (event: any, data: IpcEventArgType["set-window-always-on-top"]) => {
+    handleSetWindowAlwaysOnTop = (event: WebSocket | string, data: IpcEventArgType["set-window-always-on-top"]) => {
         const displayWindowId = data["displayWindowId"];
         const state = data["state"];
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
@@ -2346,7 +2350,7 @@ export class IpcManagerOnMainProcess {
     /**
      * script is full path or empty string
      */
-    handleWindowAttachedScript = (event: any, data: IpcEventArgType["window-attached-script"]) => {
+    handleWindowAttachedScript = (event: WebSocket | string, data: IpcEventArgType["window-attached-script"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             // editing
@@ -2367,7 +2371,7 @@ export class IpcManagerOnMainProcess {
         }
     };
 
-    handleMainWindowShowContextMenu = (event: any, options: IpcEventArgType["main-window-show-context-menu"]) => {
+    handleMainWindowShowContextMenu = (event: WebSocket | string, options: IpcEventArgType["main-window-show-context-menu"]) => {
         const { menu } = options;
         const mainWidowAgent = this.getMainProcess().getWindowAgentsManager().getMainWindowAgent();
         if (mainWidowAgent !== undefined) {
@@ -2375,7 +2379,7 @@ export class IpcManagerOnMainProcess {
         }
     }
 
-    handleDuplicateDisplay = (event: any, data: IpcEventArgType["duplicate-display"],) => {
+    handleDuplicateDisplay = (event: WebSocket | string, data: IpcEventArgType["duplicate-display"],) => {
         const { options } = data;
         const { windowId, tdl, mode, externalMacros } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
@@ -2394,7 +2398,7 @@ export class IpcManagerOnMainProcess {
         );
     };
 
-    handlePing = (event: any, data: IpcEventArgType["ping"]) => {
+    handlePing = (event: WebSocket | string, data: IpcEventArgType["ping"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             displayWindowAgent.sendFromMainProcess("pong", data)
@@ -2408,7 +2412,7 @@ export class IpcManagerOnMainProcess {
      *
      * It should be invoked after the meta data is obtained, otherwise we do not know the
      */
-    handleTcaGet = async (event: any, options: IpcEventArgType["tca-get"]) => {
+    handleTcaGet = async (event: WebSocket | string, options: IpcEventArgType["tca-get"]) => {
         const { channelName,
             displayWindowId,
             widgetKey,
@@ -2446,7 +2450,7 @@ export class IpcManagerOnMainProcess {
     /**
      * Get the meta data, it is assumed
      */
-    handleTcaGetMeta = async (event: any, options: IpcEventArgType["tca-get-meta"]) => {
+    handleTcaGetMeta = async (event: WebSocket | string, options: IpcEventArgType["tca-get-meta"]) => {
         const { channelName,
             displayWindowId,
             widgetKey,
@@ -2492,7 +2496,7 @@ export class IpcManagerOnMainProcess {
         }
     };
 
-    handleFetchPvaType = async (event: any, options: IpcEventArgType["fetch-pva-type"]) => {
+    handleFetchPvaType = async (event: WebSocket | string, options: IpcEventArgType["fetch-pva-type"]) => {
         const { channelName,
             displayWindowId,
             widgetKey,
@@ -2516,7 +2520,7 @@ export class IpcManagerOnMainProcess {
         );
     };
 
-    handleTcaMonitor = (event: any, options: IpcEventArgType["tca-monitor"]) => {
+    handleTcaMonitor = (event: WebSocket | string, options: IpcEventArgType["tca-monitor"]) => {
         const { displayWindowId, channelName } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId) as DisplayWindowAgent;
@@ -2524,7 +2528,7 @@ export class IpcManagerOnMainProcess {
         displayWindowAgent.tcaMonitor(channelName);
     };
 
-    handleTcaDestroy = (event: any, options: IpcEventArgType["tca-destroy"]) => {
+    handleTcaDestroy = (event: WebSocket | string, options: IpcEventArgType["tca-destroy"]) => {
         const { displayWindowId, channelName } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId) as DisplayWindowAgent;
@@ -2546,7 +2550,7 @@ export class IpcManagerOnMainProcess {
      * @param {string} channelName Channel name
      * @param {number | undefined} ioTimeout Timeout [second]. If `undefined`, never time out.
      */
-    handleTcaPut = async (event: any, options: IpcEventArgType["tca-put"],) => {
+    handleTcaPut = async (event: WebSocket | string, options: IpcEventArgType["tca-put"],) => {
         let { channelName,
             displayWindowId,
             dbrData,
@@ -2602,7 +2606,7 @@ export class IpcManagerOnMainProcess {
      * 
      * @param windowId The display or main window ID that initiates the creation of utility window
     */
-    createUtilityDisplayWindow = (event: any, options: IpcEventArgType["create-utility-display-window"]) => {
+    createUtilityDisplayWindow = (event: WebSocket | string, options: IpcEventArgType["create-utility-display-window"]) => {
         let { utilityType, utilityOptions, windowId } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         if (utilityType === "ProfilesViewer") {
@@ -2717,7 +2721,7 @@ export class IpcManagerOnMainProcess {
 
     // ----------------------- context menu -----------------
 
-    handleShowContextMenu = (event: any, data: IpcEventArgType["show-context-menu"]) => {
+    handleShowContextMenu = (event: WebSocket | string, data: IpcEventArgType["show-context-menu"]) => {
         let { mode, displayWindowId, widgetKeys, options } = data;
         if (options === undefined) {
             options = {};
@@ -2729,7 +2733,7 @@ export class IpcManagerOnMainProcess {
     };
 
 
-    handleShowContextMenuSidebar = (event: any, data: IpcEventArgType["show-context-menu-sidebar"]) => {
+    handleShowContextMenuSidebar = (event: WebSocket | string, data: IpcEventArgType["show-context-menu-sidebar"]) => {
         let { mode, widgetKeys, options, displayWindowId } = data;
         if (options === undefined) {
             options = {};
@@ -2741,7 +2745,7 @@ export class IpcManagerOnMainProcess {
     };
 
     // ---------------------- general file --------------------------
-    handleSelectAFile = (event: any, data: IpcEventArgType["select-a-file"]) => {
+    handleSelectAFile = (event: WebSocket | string, data: IpcEventArgType["select-a-file"]) => {
         let { options, fileName1, } = data;
         if (fileName1 === undefined) {
             fileName1 = "";
@@ -2809,7 +2813,7 @@ export class IpcManagerOnMainProcess {
         }
     };
 
-    handleGetSymbolGallery = (event: any, options: IpcEventArgType["get-symbol-gallery"]) => {
+    handleGetSymbolGallery = (event: WebSocket | string, options: IpcEventArgType["get-symbol-gallery"]) => {
 
         const { page, update, displayWindowId, widgetKey } = options;
         const mainProcess = this.getMainProcess();
@@ -2861,7 +2865,7 @@ export class IpcManagerOnMainProcess {
     /**
      * (1) create display window agent
      */
-    handleObtainIframeUuid = (event: any, options: IpcEventArgType["obtain-iframe-uuid"],) => {
+    handleObtainIframeUuid = (event: WebSocket | string, options: IpcEventArgType["obtain-iframe-uuid"],) => {
 
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
 
@@ -2909,7 +2913,7 @@ export class IpcManagerOnMainProcess {
         }
     };
 
-    handleSwitchIframeDisplayTab = (event: any, options: IpcEventArgType["switch-iframe-display-tab"],) => {
+    handleSwitchIframeDisplayTab = (event: WebSocket | string, options: IpcEventArgType["switch-iframe-display-tab"],) => {
         Log.debug("0", "try to obtain iframe uuid");
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         FileReader.readTdlFile(options["tdlFileName"], selectedProfile, options["currentTdlFolder"])
@@ -2942,7 +2946,7 @@ export class IpcManagerOnMainProcess {
             });
     };
 
-    handleCloseIframeDisplay = (event: any, options: IpcEventArgType["close-iframe-display"]) => {
+    handleCloseIframeDisplay = (event: WebSocket | string, options: IpcEventArgType["close-iframe-display"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             displayWindowAgent.handleWindowClosed();
@@ -2951,7 +2955,7 @@ export class IpcManagerOnMainProcess {
 
     // ------------------------- actions ------------------------
 
-    handleOpenWebpage = (event: any, options: IpcEventArgType["open-webpage"]) => {
+    handleOpenWebpage = (event: WebSocket | string, options: IpcEventArgType["open-webpage"]) => {
         let { url } = options;
         // replace ${tdm_root} with the root path of TDM
         url = url.replace("${tdm_root}", path.join(__dirname, "..", "..", ".."));
@@ -2959,7 +2963,7 @@ export class IpcManagerOnMainProcess {
         windowAgentsManager.createWebDisplayWindow(url);
     };
 
-    handleExecuteCommand = (event: any, data: IpcEventArgType["execute-command"]) => {
+    handleExecuteCommand = (event: WebSocket | string, data: IpcEventArgType["execute-command"]) => {
         try {
             const command = data["command"];
             let commandArray = command.split(" ");
@@ -3030,7 +3034,7 @@ export class IpcManagerOnMainProcess {
 
     // --------------------- dataviewer ---------------------------
     handleDataViewerExportData = (
-        event: any,
+        event: WebSocket | string,
         options: IpcEventArgType["data-viewer-export-data"]
     ) => {
         let { fileName1, displayWindowId, data } = options;
@@ -3100,7 +3104,7 @@ export class IpcManagerOnMainProcess {
         }
     };
 
-    handleProcessesInfo = async (event: any, data: IpcEventArgType["processes-info"]) => {
+    handleProcessesInfo = async (event: WebSocket | string, data: IpcEventArgType["processes-info"]) => {
         const processesInfo: {
             "Type": string;
             "Window ID": string;
@@ -3186,7 +3190,7 @@ export class IpcManagerOnMainProcess {
         }
     }
 
-    handleEpicsStats = async (event: any, data: IpcEventArgType["epics-stats"]) => {
+    handleEpicsStats = async (event: WebSocket | string, data: IpcEventArgType["epics-stats"]) => {
 
         const channelAgentsManager = this.getMainProcess().getChannelAgentsManager();
         const epicsContext = channelAgentsManager.getContext();
@@ -3205,7 +3209,7 @@ export class IpcManagerOnMainProcess {
 
     }
 
-    handleCaSnooperCommand = (event: any, options: IpcEventArgType["ca-snooper-command"]) => {
+    handleCaSnooperCommand = (event: WebSocket | string, options: IpcEventArgType["ca-snooper-command"]) => {
         if (options["command"] === "start") {
             // start ca snooper server if not exist yet
             this.getMainProcess().createCaSnooperServer(options["displayWindowId"]);
@@ -3217,7 +3221,7 @@ export class IpcManagerOnMainProcess {
         }
     }
 
-    handleRequestEpicsDbd = (event: any, options: IpcEventArgType["request-epics-dbd"]) => {
+    handleRequestEpicsDbd = (event: WebSocket | string, options: IpcEventArgType["request-epics-dbd"]) => {
         const dbdFiles = this.getMainProcess().getChannelAgentsManager().getDbdFiles();
         const menus = dbdFiles.getMenus();
         const recordTypes = dbdFiles.getRecordTypes();
@@ -3233,7 +3237,7 @@ export class IpcManagerOnMainProcess {
 
 
 
-    handleCaswCommand = (event: any, options: IpcEventArgType["ca-sw-command"]) => {
+    handleCaswCommand = (event: WebSocket | string, options: IpcEventArgType["ca-sw-command"]) => {
         if (options["command"] === "start") {
             // start ca sw server if not exist yet
             this.getMainProcess().createCaswServer(options["displayWindowId"]);
@@ -3245,7 +3249,7 @@ export class IpcManagerOnMainProcess {
         }
     }
 
-    handleFetchFolderContent = (event: any, options: IpcEventArgType["fetch-folder-content"]) => {
+    handleFetchFolderContent = (event: WebSocket | string, options: IpcEventArgType["fetch-folder-content"]) => {
 
         // web mode: only the folders and their sub-folders explicitly defined in bookmarks can be visited
         if (this.getMainProcess().getMainProcessMode() === "web") {
@@ -3341,7 +3345,7 @@ export class IpcManagerOnMainProcess {
 
     }
 
-    handleFileBrowserCommand = (event: any, message: IpcEventArgType["file-browser-command"]) => {
+    handleFileBrowserCommand = (event: WebSocket | string, message: IpcEventArgType["file-browser-command"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(message["displayWindowId"]);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
             return;
@@ -3489,7 +3493,7 @@ export class IpcManagerOnMainProcess {
         }
     }
 
-    handleFetchThumbnail = async (event: any, message: IpcEventArgType["fetch-thumbnail"]) => {
+    handleFetchThumbnail = async (event: WebSocket | string, message: IpcEventArgType["fetch-thumbnail"]) => {
         // open this tdl file in preview display window
         if (this.getMainProcess().getMainProcessMode() !== "desktop") {
             return;
@@ -3569,7 +3573,7 @@ export class IpcManagerOnMainProcess {
     }
 
     // --------------------- ssh login ----------------------
-    handleSshPasswordPromptResult = (event: any, result: IpcEventArgType["ssh-password-prompt-result"]) => {
+    handleSshPasswordPromptResult = (event: WebSocket | string, result: IpcEventArgType["ssh-password-prompt-result"]) => {
         Log.info("0", result)
         const sshMainProcess = this.getMainProcess(); //.getMainProcesses().getProcess(result["sshMainProcessId"]);
         if (sshMainProcess instanceof MainProcess) {
@@ -3581,7 +3585,7 @@ export class IpcManagerOnMainProcess {
         }
     }
 
-    handleCancelSshConnection = (event: any, data: IpcEventArgType["cancel-ssh-connection"]) => {
+    handleCancelSshConnection = (event: WebSocket | string, data: IpcEventArgType["cancel-ssh-connection"]) => {
         const sshMainProcess = this.getMainProcess(); //.getMainProcesses().getProcess(data["sshMainProcessId"]);
         if (sshMainProcess instanceof MainProcess) {
             // simply quit
@@ -3592,7 +3596,7 @@ export class IpcManagerOnMainProcess {
 
     }
 
-    handleTerminalCommand = (event: any, data: IpcEventArgType["terminal-command"]) => {
+    handleTerminalCommand = (event: WebSocket | string, data: IpcEventArgType["terminal-command"]) => {
         let result: any = [];
         if (data["command"] === "os.homedir") {
             result = [os.homedir()];
@@ -3657,6 +3661,7 @@ export class IpcManagerOnMainProcess {
                         }
                     } catch (e) {
                         // do nothing, the timeout on TerminalIo will handle it
+                        Log.error(e);
                     }
                 })
             return;
@@ -3674,7 +3679,7 @@ export class IpcManagerOnMainProcess {
         }
     }
 
-    handleTakeScreenShot = (event: any, options: IpcEventArgType["take-screenshot"]) => {
+    handleTakeScreenShot = (event: WebSocket | string, options: IpcEventArgType["take-screenshot"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             if (options['destination'] === "file") {
@@ -3689,14 +3694,14 @@ export class IpcManagerOnMainProcess {
         }
     }
 
-    handlePrintDisplayWindow = (event: any, options: IpcEventArgType["print-display-window"]) => {
+    handlePrintDisplayWindow = (event: WebSocket | string, options: IpcEventArgType["print-display-window"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             displayWindowAgent.print();
         }
     }
 
-    handleRequestArchiveData = async (event: any, options: IpcEventArgType["request-archive-data"]) => {
+    handleRequestArchiveData = async (event: WebSocket | string, options: IpcEventArgType["request-archive-data"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
             return;
@@ -3730,7 +3735,7 @@ export class IpcManagerOnMainProcess {
      * 
      * It is for opening a new TextEditor window, which is done in create-utility-display-window event
      */
-    handleOpenTextFileInTextEditor = async (event: any, options: IpcEventArgType["open-text-file-in-text-editor"]) => {
+    handleOpenTextFileInTextEditor = async (event: WebSocket | string, options: IpcEventArgType["open-text-file-in-text-editor"]) => {
         // todo: control access to file in web mode
         let manualOpen = false;
         let openNewWindow = false;
@@ -3763,7 +3768,7 @@ export class IpcManagerOnMainProcess {
             // open a new window, fall back to `createUtilityDisplayWindow()`
             // do this before tthe "fileName" and manualOpen""
             if (openNewWindow) {
-                this.createUtilityDisplayWindow(undefined,
+                this.createUtilityDisplayWindow("",
                     {
                         utilityType: "TextEditor",
                         utilityOptions: {
@@ -3899,7 +3904,7 @@ export class IpcManagerOnMainProcess {
      * @returns {boolean} true upon successfully saved, false upon failed
      */
 
-    handleSaveTextFile = (event: any, data: IpcEventArgType["save-text-file"]): boolean => {
+    handleSaveTextFile = (event: WebSocket | string, data: IpcEventArgType["save-text-file"]): boolean => {
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
         if (mainProcessMode === "web") {
             // do not save in web server
@@ -3967,14 +3972,14 @@ export class IpcManagerOnMainProcess {
         return false;
     }
 
-    handleRegisterLogViewer = (event: any, options: IpcEventArgType["register-log-viewer"]) => {
+    handleRegisterLogViewer = (event: WebSocket | string, options: IpcEventArgType["register-log-viewer"]) => {
         // logs.registerLogViewer(info);
     }
-    handleUnregisterLogViewer = (event: any, options: IpcEventArgType["unregister-log-viewer"]) => {
+    handleUnregisterLogViewer = (event: WebSocket | string, options: IpcEventArgType["unregister-log-viewer"]) => {
         // logs.unregisterLogViewer(info);
     }
 
-    handleFileConverterCommand = (event: any, options: IpcEventArgType["file-converter-command"]) => {
+    handleFileConverterCommand = (event: WebSocket | string, options: IpcEventArgType["file-converter-command"]) => {
 
         if (options["command"] === "start") {
             const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
@@ -4036,7 +4041,7 @@ export class IpcManagerOnMainProcess {
         }
     }
 
-    handleSaveVideoFile = (event: any, data: IpcEventArgType["save-video-file"]) => {
+    handleSaveVideoFile = (event: WebSocket | string, data: IpcEventArgType["save-video-file"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
 
@@ -4070,7 +4075,7 @@ export class IpcManagerOnMainProcess {
         }
     }
 
-    handleGetMediaContent = (event: any, options: IpcEventArgType["get-media-content"]) => {
+    handleGetMediaContent = (event: WebSocket | string, options: IpcEventArgType["get-media-content"]) => {
         const { fullFileName, displayWindowId, widgetKey } = options;
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
