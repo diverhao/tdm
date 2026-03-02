@@ -1,4 +1,5 @@
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { Log } from "../../../../common/Log";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 
 export type type_Canvas_tdl = Record<string, any> & {
@@ -59,7 +60,7 @@ export class CanvasHelper {
 	// ------------------------------- converter ---------------------
 
 	static convertEdlToTdl = (edl: Record<string, string>): type_Canvas_tdl => {
-		console.log("\n------------", `Parsing "ScreenProperties"`, "------------------\n");
+		Log.info("\n------------", `Parsing "ScreenProperties"`, "------------------\n");
 		const tdl = this.generateDefaultTdl() as type_Canvas_tdl;
 		// all properties for this widget
 		// from act_win.cc
@@ -103,7 +104,7 @@ export class CanvasHelper {
 		for (const propertyName of propertyNames) {
 			const propertyValue = edl[propertyName];
 			if (propertyValue === undefined) {
-				console.log("Property", `"${propertyName}"`, "is not in edl file");
+				Log.info("Property", `"${propertyName}"`, "is not in edl file");
 				continue;
 			} else {
 				if (propertyName === "x") {
@@ -119,7 +120,7 @@ export class CanvasHelper {
 				} else if (propertyName === "bgColor") {
 					tdl["style"]["backgroundColor"] = EdlConverter.convertEdlColor(propertyValue);
 				} else {
-					console.log("Skip property", `"${propertyName}"`);
+					Log.info("Skip property", `"${propertyName}"`);
 				}
 			}
 		}
@@ -130,7 +131,7 @@ export class CanvasHelper {
 	 * Convert .bob to .tdl
 	 */
 	static convertBobToTdl = (bobJson: Record<string, any>): type_Canvas_tdl => {
-		console.log("---------------", `Parsing "display to Canvas"`, "------------------\n");
+		Log.info("---------------", `Parsing "display to Canvas"`, "------------------\n");
 		const tdl = this.generateDefaultTdl();
 		// all properties for this widget
 		const propertyNames: string[] = [
@@ -159,9 +160,9 @@ export class CanvasHelper {
 			const propertyValue = bobJson[propertyName];
 			if (propertyValue === undefined) {
 				if (propertyName === "widget") {
-					console.log(`There are one or more widgets inside "display"`);
+					Log.info(`There are one or more widgets inside "display"`);
 				} else {
-					console.log("Property", `"${propertyName}"`, "is not in bob file");
+					Log.info("Property", `"${propertyName}"`, "is not in bob file");
 				}
 				continue;
 			} else {
@@ -188,7 +189,7 @@ export class CanvasHelper {
 				} else if (propertyName === "rules") {
 					tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
 				} else {
-					console.log("Skip property", `"${propertyName}"`);
+					Log.info("Skip property", `"${propertyName}"`);
 				}
 			}
 		}

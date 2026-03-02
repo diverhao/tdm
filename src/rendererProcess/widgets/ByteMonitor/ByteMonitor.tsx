@@ -5,13 +5,14 @@ import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ByteMonitorSidebar } from "./ByteMonitorSidebar";
 import { deepMerge, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
-import { ByteMonitorRules } from "./ByteMonitorRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { ByteMonitorRule } from "./ByteMonitorRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { type_ByteMonitor_tdl, defaultByteMonitorTdl } from "../../../common/types/type_widget_tdl";
 
 export class ByteMonitor extends BaseWidget {
 
-    _rules: ByteMonitorRules;
+    _rules: BaseWidgetRules;
     _bitNames: string[];
     _itemColors: string[];
 
@@ -28,7 +29,7 @@ export class ByteMonitor extends BaseWidget {
         // must contain exactly 2 colors, representing value 0 and value 1
         this._itemColors.splice(2);
 
-        this._rules = new ByteMonitorRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, ByteMonitorRule);
     }
 
     // ------------------------------ elements ---------------------------------

@@ -2,15 +2,15 @@ import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { RectangleSidebar } from "./RectangleSidebar";
-import { RectangleRules } from "./RectangleRules";
+import { RectangleRule } from "./RectangleRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { defaultRectangleTdl, type_Rectangle_tdl } from "../../../common/types/type_widget_tdl";
 
 export class Rectangle extends BaseWidget {
 
-    _rules: RectangleRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_Rectangle_tdl) {
         super(widgetTdl);
@@ -18,7 +18,7 @@ export class Rectangle extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("read");
 
-        this._rules = new RectangleRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, RectangleRule);
     }
 
     // ------------------------------ elements ---------------------------------

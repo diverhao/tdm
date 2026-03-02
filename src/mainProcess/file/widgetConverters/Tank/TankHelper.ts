@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
@@ -109,7 +110,7 @@ export class TankHelper extends BaseWidgetHelper {
     static convertEdlToTdl = (edl: Record<string, string>): type_Tank_tdl => {
         const tdl = this.generateDefaultTdl("Tank") as type_Tank_tdl;
         // all properties for this widget
-        console.log("edl ===", edl)
+        Log.info("edl ===", edl)
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
             "major", // not in tdm
@@ -165,7 +166,7 @@ export class TankHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -221,7 +222,7 @@ export class TankHelper extends BaseWidgetHelper {
                         tdl["style"]["transform"] = "rotate(90deg)";
                     }
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -259,7 +260,7 @@ export class TankHelper extends BaseWidgetHelper {
                 const newRules_border = EdlConverter.convertEdlColorAlarm(EdlConverter.convertEdlPv(edl["indicatorPv"]), 1, "Border Color") as type_rules_tdl;
                 tdl["rules"].push(...newRules_border);
             } else {
-                console.log("Skip alarm-sensitive property", alarmPropertyName);
+                Log.info("Skip alarm-sensitive property", alarmPropertyName);
             }
         }
 
@@ -295,7 +296,7 @@ export class TankHelper extends BaseWidgetHelper {
 
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "progressbar" | "tank"): type_Tank_tdl => {
-        console.log("\n------------", `Parsing ${type}`, "------------------\n");
+        Log.info("\n------------", `Parsing ${type}`, "------------------\n");
         const tdl = this.generateDefaultTdl("Tank");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -352,9 +353,9 @@ export class TankHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -403,7 +404,7 @@ export class TankHelper extends BaseWidgetHelper {
                     horizontalDirection = BobPropertyConverter.convertBobBoolean(propertyValue);
                     tdl["style"]["transform"] = horizontalDirection === true ? "rotate(90deg)" : "rotate(0deg)";
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

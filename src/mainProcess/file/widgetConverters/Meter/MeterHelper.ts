@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 
@@ -103,7 +104,7 @@ export class MeterHelper extends BaseWidgetHelper {
 	};
 
 	static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Meter_tdl => {
-		console.log("\n------------", `Parsing "meter"`, "------------------\n");
+		Log.info("\n------------", `Parsing "meter"`, "------------------\n");
 		const tdl = this.generateDefaultTdl("Meter");
 		// all properties for this widget
 		const propertyNames: string[] = [
@@ -145,9 +146,9 @@ export class MeterHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -194,7 +195,7 @@ export class MeterHelper extends BaseWidgetHelper {
                 } else if (propertyName === "visible") {
                     tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

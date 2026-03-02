@@ -4,7 +4,8 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { ActionButtonSidebar } from "./ActionButtonSidebar";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { ActionButtonRules } from "./ActionButtonRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { ActionButtonRule } from "./ActionButtonRule";
 import path from "path";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
@@ -22,7 +23,7 @@ import {
 
 export class ActionButton extends BaseWidget {
 
-    _rules: ActionButtonRules;
+    _rules: BaseWidgetRules;
 
     // the <select /> component costs huge amount of resources during rendering
     // each such component takes about 2 ms to render, which is one order of magnitude 
@@ -38,7 +39,7 @@ export class ActionButton extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._rules = new ActionButtonRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, ActionButtonRule);
 
         this._actions = structuredClone(widgetTdl.actions);
     }

@@ -2,6 +2,7 @@
 import ReactDOM from "react-dom/client";
 import { Help } from "../../../rendererProcess/helperWidgets/Help/Help";
 import { FontsData_HelpWindow } from "../../../rendererProcess/global/FontsData_HelpWindow";
+import { Log } from "../../../common/Log";
 
 export class HelpWindowClient {
     constructor(){
@@ -15,7 +16,7 @@ export class HelpWindowClient {
                     document.fonts.add(fontFace);
                 }).catch((reason: any) => {
                     // Log.error(reason)
-                    console.log(reason);
+                    Log.error(reason);
                 });
             }
         }

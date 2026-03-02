@@ -1569,7 +1569,7 @@ export abstract class BaseWidget {
         }
         const tmp: any[] = [...this.getEqChannelArray()];
         const channelNames = this.getChannelNamesLevel4();
-        console.log("getEqChannelArray = ", this.getEqChannelArray())
+        // console.log("getEqChannelArray = ", this.getEqChannelArray())
 
         for (let index = 0; index < channelNames.length; index++) {
             const channelName = channelNames[index];
@@ -2340,7 +2340,7 @@ export abstract class BaseWidget {
         const allText = this.getAllText();
         const allStyle = this.getAllStyle();
         const appearance = allText["appearance"];
-        console.log("appearance", appearance)
+        // console.log("appearance", appearance)
         if (appearance !== "traditional") {
             return {
                 width: "",

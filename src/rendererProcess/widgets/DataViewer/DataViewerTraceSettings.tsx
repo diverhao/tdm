@@ -119,7 +119,7 @@ export class DataViewerTraceSettings {
         const elementRefChannelNameInput = React.useRef<any>(null);
         const channelName = this.getChannelNames()[index];
         const [channelNameInput, setChannelNameInput] = React.useState(channelName);
-        console.log("channel name Input", channelNameInput, "-->", channelName)
+        // console.log("channel name Input", channelNameInput, "-->", channelName)
         // channel name hint
         const formElementRef = React.useRef<any>(null);
 
@@ -182,7 +182,7 @@ export class DataViewerTraceSettings {
                             if (newVal.trim().length >= 2) {
                                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                 const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
-                                console.log(queryStr)
+                                // console.log(queryStr)
                                 if (queryStr !== "") {
                                     fetch(queryStr)
                                         .then(res => res.json())

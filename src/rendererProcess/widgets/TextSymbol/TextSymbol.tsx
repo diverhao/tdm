@@ -4,14 +4,15 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { TextSymbolSidebar } from "./TextSymbolSidebar";
-import { TextSymbolRules } from "./TextSymbolRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { TextSymbolRule } from "./TextSymbolRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { deepMerge } from "../../../common/GlobalMethods";
 import { type_TextSymbol_tdl, defaultTextSymbolTdl } from "../../../common/types/type_widget_tdl";
 
 export class TextSymbol extends BaseWidget {
 
-    _rules: TextSymbolRules;
+    _rules: BaseWidgetRules;
 
     _itemNames: string[];
     _itemColors: string[];
@@ -33,7 +34,7 @@ export class TextSymbol extends BaseWidget {
         this._itemColors.splice(numStates);
         this._itemValues.splice(numStates);
 
-        this._rules = new TextSymbolRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, TextSymbolRule);
     }
 
     // ------------------------------ elements ---------------------------------

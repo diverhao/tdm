@@ -1,4 +1,5 @@
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { Log } from "../../../../common/Log";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
@@ -91,7 +92,7 @@ export class PolylineHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, any>): type_Polyline_tdl | undefined => {
-        console.log("\n------------", `Parsing "Lines"`, "------------------\n");
+        Log.info("\n------------", `Parsing "Lines"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Polyline") as type_Polyline_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -137,13 +138,13 @@ export class PolylineHelper extends BaseWidgetHelper {
         tdl["text"]["lineWidth"] = 1;
         tdl["text"]["lineColor"] = "rgba(0,0,0,1)";
 
-        // console.log("edl", edl, alarmPropertyNames, tdl)
+        // Log.info("edl", edl, alarmPropertyNames, tdl)
 
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
 
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -209,11 +210,11 @@ export class PolylineHelper extends BaseWidgetHelper {
                         tdl["rules"].push(...newRules);
                     }
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
-        console.log("edl", edl, alarmPropertyNames, tdl)
+        Log.info("edl", edl, alarmPropertyNames, tdl)
 
         for (let alarmPropertyName of alarmPropertyNames) {
             if (alarmPropertyName === "lineAlarm") {
@@ -245,7 +246,7 @@ export class PolylineHelper extends BaseWidgetHelper {
                     });
                 }
             } else {
-                console.log("Skip alarm-sensitive property", alarmPropertyName);
+                Log.info("Skip alarm-sensitive property", alarmPropertyName);
             }
         }
         // if alarmPv exists in edl setting, but its value is not available in operation, the widget becomes invisible
@@ -284,7 +285,7 @@ export class PolylineHelper extends BaseWidgetHelper {
     };
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "polygon" | "polyline"): type_Polyline_tdl => {
-        console.log("\n------------", `Parsing "polyline"`, "------------------\n");
+        Log.info("\n------------", `Parsing "polyline"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Polyline");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -332,9 +333,9 @@ export class PolylineHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -370,7 +371,7 @@ export class PolylineHelper extends BaseWidgetHelper {
                     tdl["pointsX"] = points["pointsX"];
                     tdl["pointsY"] = points["pointsY"];
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

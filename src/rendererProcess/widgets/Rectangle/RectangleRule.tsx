@@ -1,9 +1,9 @@
-import { RectangleRules } from "./RectangleRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class RectangleRule extends BaseWidgetRule {
 
-	constructor(index: number, rules: RectangleRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 		this._ruleComponentTypesMap = {

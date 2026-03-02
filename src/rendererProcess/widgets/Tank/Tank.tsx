@@ -4,14 +4,15 @@ import { GlobalVariables } from "../../../common/GlobalVariables";
 import { TankSidebar } from "./TankSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { TankRules } from "./TankRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { TankRule } from "./TankRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Scale } from "../../helperWidgets/SharedElements/Scale";
 import { defaultTankTdl, type_Tank_tdl } from "../../../common/types/type_widget_tdl";
 
 
 export class Tank extends BaseWidget {
-    _rules: TankRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_Tank_tdl) {
         super(widgetTdl);
@@ -19,7 +20,7 @@ export class Tank extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("read");
 
-        this._rules = new TankRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, TankRule);
     }
 
     // ------------------------------ elements ---------------------------------

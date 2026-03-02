@@ -3,20 +3,21 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { TextUpdateSidebar } from "./TextUpdateSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { TextUpdateRules } from "./TextUpdateRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { TextUpdateRule } from "./TextUpdateRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { type_TextUpdate_tdl, defaultTextUpdateTdl } from "../../../common/types/type_widget_tdl";
 
 
 export class TextUpdate extends BaseWidget {
-    _rules: TextUpdateRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_TextUpdate_tdl) {
         super(widgetTdl);
         this.initStyle(widgetTdl);
         this.initText(widgetTdl);
         this.setReadWriteType("read");
-        this._rules = new TextUpdateRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, TextUpdateRule);
     }
 
     // ------------------------------ elements ---------------------------------

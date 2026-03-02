@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
@@ -93,7 +94,7 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_ByteMonitor_tdl => {
-        console.log("\n------------", `Parsing "Byte"`, "------------------\n");
+        Log.info("\n------------", `Parsing "Byte"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ByteMonitor") as type_ByteMonitor_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -127,7 +128,7 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
             const propertyValue = edl[propertyName];
 
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -172,7 +173,7 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
                 } else if (propertyName === "shift") {
                     tdl["text"]["bitStart"] = EdlConverter.convertEdlNumber(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -196,7 +197,7 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
     };
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_ByteMonitor_tdl => {
-        console.log("\n------------", `Parsing "byte_monitor"`, "------------------\n");
+        Log.info("\n------------", `Parsing "byte_monitor"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ByteMonitor");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -235,9 +236,9 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -285,7 +286,7 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
                 } else if (propertyName === "visible") {
                     tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

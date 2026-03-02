@@ -4,12 +4,13 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { TextEntrySidebar } from "./TextEntrySidebar";
-import { TextEntryRules } from "./TextEntryRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { TextEntryRule } from "./TextEntryRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { type_TextEntry_tdl, defaultTextEntryTdl } from "../../../common/types/type_widget_tdl";
 
 export class TextEntry extends BaseWidget {
-    _rules: TextEntryRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_TextEntry_tdl) {
         super(widgetTdl);
@@ -17,7 +18,7 @@ export class TextEntry extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._rules = new TextEntryRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, TextEntryRule);
     }
 
     // ------------------------------ elements ---------------------------------

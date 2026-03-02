@@ -2638,7 +2638,6 @@ export class Widgets {
             const defaultSearchPaths = this.getRoot().getDisplayWindowClient().getProfileEntry("EPICS Custom Environment", "Default Search Paths");
             if (Array.isArray(defaultSearchPaths)) {
                 for (const searchPath of defaultSearchPaths) {
-                    // console.log("     ", searchPath, path.isAbsolute(searchPath))
                     if (path.isAbsolute(searchPath)) {
                         openPath = searchPath;
                         break;
@@ -3246,7 +3245,7 @@ export class Widgets {
         try {
             await navigator.clipboard.writeText(JSON.stringify(result, null, 4));
         } catch (e) {
-            console.log(e);
+            Log.error(e);
         }
 
     };
@@ -3373,7 +3372,7 @@ export class Widgets {
         try {
             await navigator.clipboard.writeText(JSON.stringify(result, null, 4));
         } catch (e) {
-            console.log(e);
+            Log.error(e);
         }
 
     };
@@ -3389,7 +3388,7 @@ export class Widgets {
             try {
                 await navigator.clipboard.writeText(JSON.stringify(channelNames, null, 4));
             } catch (e) {
-                console.log(e);
+                Log.error(e);
             }
         }
     };
@@ -3414,7 +3413,7 @@ export class Widgets {
             try {
                 await navigator.clipboard.writeText(JSON.stringify(result, null, 4));
             } catch (e) {
-                console.log(e);
+                Log.error(e);
             }
         }
     };
@@ -3432,7 +3431,7 @@ export class Widgets {
         try {
             await navigator.clipboard.writeText(JSON.stringify(result, null, 4));
         } catch (e) {
-            console.log(e);
+            Log.error(e);
         }
     };
 
@@ -3440,7 +3439,7 @@ export class Widgets {
         try {
             await navigator.clipboard.writeText(JSON.stringify(Object.keys(this.getTcaChannels()), null, 4));
         } catch (e) {
-            console.log(e);
+            Log.error(e);
         }
     };
 
@@ -3797,7 +3796,7 @@ export class Widgets {
             try {
                 await navigator.clipboard.writeText(`${channelName}`);
             } catch (e) {
-                console.log(e);
+                Log.error(e);
             }
         }
     }

@@ -1,8 +1,8 @@
-import { TextUpdateRules } from "./TextUpdateRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class TextUpdateRule extends BaseWidgetRule {
-	constructor(index: number, rules: TextUpdateRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
         
 

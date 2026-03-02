@@ -8,14 +8,14 @@ import { ImageSidebar } from "./ImageSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 // import { TextUpdateRules } from "./TextUpdateRules";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 // import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Log } from "../../../common/Log";
 // import * as THREE from 'three';
 import { OrthographicCamera, Scene, WebGLRenderer, Vector3, BufferGeometry, BufferAttribute, ShaderMaterial, Points, Color, Vector2, DataTexture, UnsignedByteType, RGBAFormat, SRGBColorSpace, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, PlaneGeometry } from "three";
 import { TcaChannel } from "../../channel/TcaChannel";
-import { ImageRules } from "./ImageRules";
+import { ImageRule } from "./ImageRule";
 
 export type type_Image_roi = {
     xPv: string;
@@ -125,7 +125,7 @@ export type type_Image_tdl = {
 
 export class Image extends BaseWidget {
 
-    _rules: ImageRules;
+    _rules: BaseWidgetRules;
     axisWidth: number = 40;
     configHeight: number = 20;
     autoXY: boolean = true;
@@ -149,7 +149,7 @@ export class Image extends BaseWidget {
 
         this._regionOfInterest = structuredClone(widgetTdl.regionsOfInterest);
 
-        this._rules = new ImageRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, ImageRule);
 
     }
 

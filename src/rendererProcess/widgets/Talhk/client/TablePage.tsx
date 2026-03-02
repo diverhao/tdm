@@ -77,7 +77,7 @@ export class TablePage {
     _Element = () => {
         const [, forceUpdate] = React.useState({});
         this._forceUpdate = forceUpdate;
-        console.log("re-rendering Element")
+        // console.log("re-rendering Element")
 
         React.useEffect(() => {
             this.removeForceUpdateElement("/");
@@ -925,7 +925,7 @@ export class TablePage {
                     const description = pvData["description"] as string;
                     const severity = SEVERITES[status["severity"]];
                     const alarmStatus = ALARM_STATUS[status["alarm_status"]];
-                    console.log("===============", pathStr, pvName, filterText.toLowerCase())
+                    // console.log("===============", pathStr, pvName, filterText.toLowerCase())
                     if (pvName.toLowerCase().includes(filterText.toLowerCase()) === false
                         && description.toLowerCase().includes(filterText.toLowerCase()) === false
                         && severity.toLowerCase().includes(filterText.toLowerCase()) === false
@@ -933,7 +933,7 @@ export class TablePage {
                     ) {
                         return null;
                     }
-                    console.log("ok")
+                    // console.log("ok")
                     return (
                         <this._ElementTableLine
                             key={pathStr + `-${index}` + `${description}` + `${status["value"]}`}
@@ -1196,7 +1196,7 @@ export class TablePage {
             const pvsData = fieldValue["pvs"];
             if (pvsData !== undefined && typeof pvsData === "object") {
                 for (const [pvName, pvData] of Object.entries(pvsData)) {
-                    console.log(pvName)
+                    // console.log(pvName)
                     if (pvName !== "status" && typeof pvData === "object") {
                         const status = (pvData as any)["status"];
 
@@ -1232,7 +1232,7 @@ export class TablePage {
             const pvsData = fieldValue["pvs"];
             if (pvsData !== undefined && typeof pvsData === "object") {
                 for (const [pvName, pvData] of Object.entries(pvsData)) {
-                    console.log(pvName)
+                    // console.log(pvName)
                     if (pvName !== "status" && typeof pvData === "object") {
                         const status = (pvData as any)["status"];
 

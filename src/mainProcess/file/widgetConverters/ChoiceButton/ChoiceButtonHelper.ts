@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper, type_BaseWidget_tdl } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
@@ -96,8 +97,8 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_ChoiceButton_tdl => {
-        console.log("\n------------", `Parsing "Choice Button"`, "------------------\n");
-        console.log(edl)
+        Log.info("\n------------", `Parsing "Choice Button"`, "------------------\n");
+        Log.info(edl)
         const tdl = this.generateDefaultTdl("ChoiceButton") as type_ChoiceButton_tdl;
 
         const propertyNames: string[] = [
@@ -137,7 +138,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -190,7 +191,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
                     tdl["style"]["fontSize"] = fontSize;
                     tdl["style"]["fontWeight"] = fontWeight;
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -211,7 +212,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
             // tdl["rules"].push(...newRules_border);
             // }
             else {
-                console.log("Skip alarm-sensitive property", alarmPropertyName);
+                Log.info("Skip alarm-sensitive property", alarmPropertyName);
             }
         }
         if (edl["controlPv"] !== undefined) {
@@ -236,7 +237,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
 
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_ChoiceButton_tdl => {
-        console.log("\n------------", `Parsing "choice"`, "------------------\n");
+        Log.info("\n------------", `Parsing "choice"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ChoiceButton") as type_ChoiceButton_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -280,9 +281,9 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -322,7 +323,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
                     const isHorizontal = BobPropertyConverter.convertBobBoolean(propertyValue);
                     tdl["text"]["direction"] = isHorizontal === true ? "horizontal" : "vertical";
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

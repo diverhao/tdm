@@ -478,14 +478,14 @@ export class Probe extends BaseWidget {
         const pvaType = tcaChannel?.getPvaType();
         let jsonDataAndType: any = {};
         let jsonTypeName = "";
-        console.log("pvaData, pvaType", pvaData, pvaType, tcaChannel?.getFullPvaType())
+        // console.log("pvaData, pvaType", pvaData, pvaType, tcaChannel?.getFullPvaType())
         if (pvaData !== undefined && pvaType !== undefined) {
             try {
                 const dataAndTypeFull = mergePvaTypeAndData(pvaType, "", pvaData);
                 jsonTypeName = dataAndTypeFull["key"];
                 jsonDataAndType = dataAndTypeFull["data"];
             } catch (e) {
-                console.log(e)
+                // console.log(e)
             }
         }
 
@@ -586,12 +586,12 @@ export class Probe extends BaseWidget {
                                     if (newVal.trim().length >= 2) {
                                         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                         const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
-                                        console.log(queryStr)
+                                        // console.log(queryStr)
                                         if (queryStr !== "") {
                                             fetch(queryStr)
                                                 .then(res => res.json())
                                                 .then((data: any) => {
-                                                    console.log(data, inputElementRef.current, formElementRef.current);
+                                                    // console.log(data, inputElementRef.current, formElementRef.current);
                                                     if (Object.keys(data).length > 0 && formElementRef.current !== null) {
 
                                                         // const rectInput = inputElementRef.current.getBoundingClientRect();

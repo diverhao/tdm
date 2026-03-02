@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
@@ -90,7 +91,7 @@ export class SymbolHelper extends BaseWidgetHelper {
 
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Symbol_tdl => {
-        console.log("\n------------", `Parsing symbol`, "------------------\n");
+        Log.info("\n------------", `Parsing symbol`, "------------------\n");
         const tdl = this.generateDefaultTdl("Symbol");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -133,9 +134,9 @@ export class SymbolHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -170,7 +171,7 @@ export class SymbolHelper extends BaseWidgetHelper {
                 } else if (propertyName === "transparent") {
                     isTransparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
 

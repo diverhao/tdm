@@ -269,7 +269,7 @@ export class Table {
                     event.preventDefault();
                     this.resizeMouseX0 = event.clientX;
                     this.resizingColumnIndex = columnIndex;
-                    console.log("mouse down on resizer")
+                    // console.log("mouse down on resizer")
                     window.addEventListener("mousemove", this.resizeTableColumn);
                     window.addEventListener("mouseup", this.cancelResizeTableColumn);
                 }}

@@ -504,7 +504,6 @@ export class DisplayWindowClient {
                         || (widget instanceof Casw)
                         || widget instanceof Table
                     ) {
-                        console.log("TABLE <<<<<<<<<<<<<<<<<<<<<<<<<")
                         // Context menu for Table area of LogViewer, PvMonitor, Casw, and CaSnooper,
                         // Operations of copy/save data
                         const selection = window.getSelection();
@@ -526,7 +525,6 @@ export class DisplayWindowClient {
                                 }
                             }
                         }
-                        console.log(contextMenuOptions)
                         this.showContextMenu(widgetKeyResult, [event.clientX, event.clientY], contextMenuOptions);
                         return;
                     } else if (widget instanceof ChannelGraph) {

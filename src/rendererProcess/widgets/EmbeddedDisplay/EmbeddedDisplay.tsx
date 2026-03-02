@@ -5,10 +5,10 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { EmbeddedDisplaySidebar } from "./EmbeddedDisplaySidebar";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { rendererWindowStatus } from "../../global/Widgets";
-import { EmbeddedDisplayRules } from "./EmbeddedDisplayRules";
+import { EmbeddedDisplayRule } from "./EmbeddedDisplayRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import * as path from "path";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
@@ -32,7 +32,7 @@ export type type_EmbeddedDisplay_tdl = {
 
 export class EmbeddedDisplay extends BaseWidget {
 
-    _rules: EmbeddedDisplayRules;
+    _rules: BaseWidgetRules;
 
     _tdlFileNames: string[];
     _fullTdlFileName: string = "";
@@ -72,7 +72,7 @@ export class EmbeddedDisplay extends BaseWidget {
         this._itemMacros = structuredClone(widgetTdl["itemMacros"]);
         this._itemIsWebpage = structuredClone(widgetTdl["itemIsWebpage"]);
 
-        this._rules = new EmbeddedDisplayRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, EmbeddedDisplayRule);
     }
 
     // ------------------------------ elements ---------------------------------
@@ -570,7 +570,7 @@ export class EmbeddedDisplay extends BaseWidget {
             if (childWidget instanceof EmbeddedDisplay) {
                 childWidget.removeChildWidgets();
             }
-            console.log("removing", childWidgetKey)
+            // console.log("removing", childWidgetKey)
             g_widgets1.removeWidget(childWidgetKey, false, false, true);
 
         }

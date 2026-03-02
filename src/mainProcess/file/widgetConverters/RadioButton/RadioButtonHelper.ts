@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper, type_BaseWidget_tdl } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
@@ -89,7 +90,7 @@ export class RadioButtonHelper extends BaseWidgetHelper {
 	};
 
 	static convertEdlToTdl = (edl: Record<string, string>): type_RadioButton_tdl => {
-		console.log("\n------------", `Parsing "Radio Box"`, "------------------\n");
+		Log.info("\n------------", `Parsing "Radio Box"`, "------------------\n");
 		const tdl = this.generateDefaultTdl("RadioButton") as type_RadioButton_tdl;
 
 		const propertyNames: string[] = [
@@ -124,7 +125,7 @@ export class RadioButtonHelper extends BaseWidgetHelper {
 		for (const propertyName of propertyNames) {
 			const propertyValue = edl[propertyName];
 			if (propertyValue === undefined) {
-				console.log("Property", `"${propertyName}"`, "is not in edl file");
+				Log.info("Property", `"${propertyName}"`, "is not in edl file");
 				continue;
 			} else {
 				if (propertyName === "x") {
@@ -156,7 +157,7 @@ export class RadioButtonHelper extends BaseWidgetHelper {
 					tdl["style"]["fontSize"] = fontSize;
 					tdl["style"]["fontWeight"] = fontWeight;
 				} else {
-					console.log("Skip property", `"${propertyName}"`);
+					Log.info("Skip property", `"${propertyName}"`);
 				}
 			}
 		}
@@ -171,7 +172,7 @@ export class RadioButtonHelper extends BaseWidgetHelper {
 				) as type_rules_tdl;
 				tdl["rules"].push(...newRules_Labels);
 			} else {
-				console.log("Skip alarm-sensitive property", alarmPropertyName);
+				Log.info("Skip alarm-sensitive property", alarmPropertyName);
 			}
 		}
 		if (edl["controlPv"] !== undefined) {
@@ -188,7 +189,7 @@ export class RadioButtonHelper extends BaseWidgetHelper {
 
     
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_RadioButton_tdl => {
-        console.log("\n------------", `Parsing "radio"`, "------------------\n");
+        Log.info("\n------------", `Parsing "radio"`, "------------------\n");
         const tdl = this.generateDefaultTdl("RadioButton") as type_RadioButton_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -228,9 +229,9 @@ export class RadioButtonHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -266,7 +267,7 @@ export class RadioButtonHelper extends BaseWidgetHelper {
                     const isHorizontal = BobPropertyConverter.convertBobBoolean(propertyValue);
                     tdl["text"]["direction"] = isHorizontal === true ? "horizontal" : "vertical";
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

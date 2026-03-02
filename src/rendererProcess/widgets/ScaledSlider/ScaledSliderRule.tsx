@@ -1,8 +1,8 @@
-import { ScaledSliderRules } from "./ScaledSliderRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class ScaledSliderRule extends BaseWidgetRule {
-	constructor(index: number, rules: ScaledSliderRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 

@@ -180,12 +180,12 @@ export class CaswServer {
         this.udpServer = dgram.createSocket({ type: 'udp4', reuseAddr: true });
 
         this.udpServer.on('error', (err) => {
-            console.log(`Server error for casw:\n${err}`);
+            Log.error(`Server error for casw:\n${err}`);
             this.udpServer?.close();
         });
 
         this.udpServer.on("close", () => {
-            console.log("udp server closed");
+            Log.info("udp server closed");
         })
 
         this.udpServer.on('message', (msg: Buffer, rinfo: dgram.RemoteInfo) => {
@@ -208,7 +208,7 @@ export class CaswServer {
         this.udpServer.on('listening', () => {
             const address = this.udpServer?.address();
             if (address !== undefined) {
-                console.log(`Server listening ${address.address}:${address.port}`);
+                Log.info(`Server listening ${address.address}:${address.port}`);
             }
             // register to CA repeater
             const message = Buffer.from([0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7f, 0x00, 0x00, 0x01]);
@@ -222,7 +222,7 @@ export class CaswServer {
         try {
             this.udpServer?.close();
         } catch (e) {
-            console.log(e);
+            Log.error(e);
         }
     }
 

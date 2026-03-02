@@ -134,7 +134,6 @@ export class SshClient {
         const userName = sshServerConfig["userName"];
         const port = sshServerConfig["port"];
         const privateKeyFileName = sshServerConfig["privateKeyFile"];
-        console.log("         <<<<<<<< connecting", host, "with", userName)
 
         // const sshClient = this.getSshClient();
         const sshClient = new Client();
@@ -215,8 +214,6 @@ export class SshClient {
         const sshServerConfig2 = this.getSshServerConfigs()[1];
         await this.connectSsh(sshServerConfig1);
 
-        console.log("           <<<<<<<<<<<< 1 is connected")
-
         // resolved when SSH connection is established
         let resolveFunc: any;
         let rejectFunc: any;
@@ -224,11 +221,9 @@ export class SshClient {
             resolveFunc = resolve;
             rejectFunc = reject;
         })
-        console.log("           <<<<<<<<<<<< step 1.1")
 
         const sshClient1 = this.getSshClients()[this.getSshClients().length - 1];
         const sshClinet2 = new Client();
-        console.log("           <<<<<<<<<<<< step 1.3")
         sshClient1.forwardOut(
             "127.0.0.1",
             0,
@@ -249,11 +244,8 @@ export class SshClient {
                 })
             }
         )
-        console.log("           <<<<<<<<<<<< step 1.3")
 
         sshClinet2.on("ready", () => {
-            console.log("           <<<<<<<<<<<< 2 is connected")
-            console.log("connected to ...");
             this.getSshClients().push(sshClinet2);
             this.setSshClient(sshClinet2);
             resolveFunc();
@@ -322,16 +314,13 @@ export class SshClient {
                     });
                     // if there is an error on SSH stream
                     stream.on("error", (err: any) => {
-                        console.log("errr <<<<<<<<<<<<<<<<<<<<1,")
                         this.destroy(`SSH connection error on ${this.getServerIP()}:${this.getServerSshPort()}. ${err}`)
                     })
                 } else {
-                    console.log("errr <<<<<<<<<<<<<<<<<<<<2,")
                     this.destroy(`Failed to run TDM on ssh server ${this.getServerIP()} using command ${tdmCmd}`);
                 }
             }
         );
-        console.log(" <<<<<<<<<< aaa")
         // (2)
         return await promise;
     }
@@ -377,26 +366,22 @@ export class SshClient {
                 if (err !== undefined) {
                     this.destroy(`Failed to connect TCP server ${this.getServerIP()}${tcpServerPort} via SSH tunnel. ${err}`);
                 } else {
-                    console.log("         +>>>>>>>>>>>>>> 1")
                     // (1)
                     this._heartbeatInterval = setInterval(() => {
                         this.checkLastHeartbeatTime();
                     }, 1000)
 
                     // (2)
-                    console.log("         +>>>>>>>>>>>>>> 2")
                     this.registerTcpEventListeners();
                     tcpStream.on("data", (data: Buffer) => {
                         this.handleTcpData(data)
                     })
 
                     // (3)
-                    console.log("         +>>>>>>>>>>>>>> 3")
                     tcpStream.on("end", () => {
                         this.destroy(`TCP connection with ${this.getServerIP()}:${tcpServerPort} disconnected.`);
                     })
 
-                    console.log("         +>>>>>>>>>>>>>> 4")
                     tcpStream.on("error", (err: any) => {
                         this.destroy(`Error on TCP connection with ${this.getServerIP()}:${tcpServerPort}`);
                     })
@@ -414,13 +399,10 @@ export class SshClient {
                     }
 
                     // (5)
-                    console.log("         +>>>>>>>>>>>>>> 5")
-
                     resolveFunc(tcpStream);
                 }
             }
         )
-        console.log("         +>>>>>>>>>>>>>> 6")
 
         // (5.1)
         return await promise;
@@ -451,10 +433,8 @@ export class SshClient {
             // (1)
             await this.connectSshs();
 
-            console.log("abc -----------")
             // (2)
             const tcpServerPort = await this.startTdmOnServer();
-            console.log("       >>>>started tcp server")
 
             // (3)
             const tcpStream = await this.connectTcpServer(tcpServerPort);

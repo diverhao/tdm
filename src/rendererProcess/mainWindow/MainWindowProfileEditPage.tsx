@@ -1868,7 +1868,7 @@ export class MainWindowProfileEditPage {
 
     private _ElementArrayPropertyValueItemContent = ({ isEditing, localItemValue, setLocalItemValue }: any) => {
 
-        console.log("render me", focus, isEditing, localItemValue, this.getNewArrayPropertyItemAddress())
+        // console.log("render me", focus, isEditing, localItemValue, this.getNewArrayPropertyItemAddress())
 
         const inputRef = React.useRef<any>(null);
 

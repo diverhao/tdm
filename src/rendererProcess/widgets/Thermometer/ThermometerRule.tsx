@@ -1,8 +1,8 @@
-import { ThermometerRules } from "./ThermometerRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class ThermometerRule extends BaseWidgetRule {
-	constructor(index: number, rules: ThermometerRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 		this._ruleComponentTypesMap = {

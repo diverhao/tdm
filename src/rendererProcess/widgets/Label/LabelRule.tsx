@@ -1,8 +1,8 @@
-import { LabelRules } from "./LabelRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class LabelRule extends BaseWidgetRule {
-	constructor(index: number, rules: LabelRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 		this._ruleComponentTypesMap = {

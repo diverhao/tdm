@@ -693,22 +693,22 @@ export class TcaChannel {
         }
 
         // always reject if waitNotify === false
-        try {
-            const result = await this.getIoPromise(ioId);
-            // if waitNotify === false, it rejects at here, below is only for waitNotify === true
-            console.log("caput result = ", result)
-            // undefined if the CA operation fails, the IO ID for synchronous version (waitNotify = false), the ECA status code for asynchronous version (waitNotify = true). PVA always returns a Status
-            const status = result["status"];
-            return status;
-        } catch (e) {
-            Log.error(e);
-            if (waitNotify === true) {
-                return undefined;
-            } else {
-                // always return undefined if waitNotify === false
-                return undefined;
-            }
-        }
+        // try {
+        //     const result = await this.getIoPromise(ioId);
+        //     // if waitNotify === false, it rejects at here, below is only for waitNotify === true
+        //     console.log("caput result = ", result)
+        //     // undefined if the CA operation fails, the IO ID for synchronous version (waitNotify = false), the ECA status code for asynchronous version (waitNotify = true). PVA always returns a Status
+        //     const status = result["status"];
+        //     return status;
+        // } catch (e) {
+        //     Log.error(e);
+        //     if (waitNotify === true) {
+        //         return undefined;
+        //     } else {
+        //         // always return undefined if waitNotify === false
+        //         return undefined;
+        //     }
+        // }
     };
 
 

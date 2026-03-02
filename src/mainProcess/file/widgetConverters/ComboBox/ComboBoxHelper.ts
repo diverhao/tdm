@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
@@ -87,7 +88,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_ComboBox_tdl => {
-        console.log("\n------------", `Parsing "Menu Button"`, "------------------\n");
+        Log.info("\n------------", `Parsing "Menu Button"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ComboBox") as type_ComboBox_tdl;
         // all properties for this widget
 
@@ -125,7 +126,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -154,7 +155,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
                     const newRules = EdlConverter.convertEdlVisPv(propertyName, edl["visMin"], edl["visMax"], edl["visInvert"]) as type_rules_tdl;
                     tdl["rules"].push(...newRules);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -165,7 +166,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
                 const newRules = EdlConverter.convertEdlFgAlarm(edl["controlPv"], 0) as type_rules_tdl;
                 tdl["rules"].push(...newRules);
             } else {
-                console.log("Skip alarm-sensitive property", alarmPropertyName);
+                Log.info("Skip alarm-sensitive property", alarmPropertyName);
             }
         }
 
@@ -236,7 +237,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
      * handle the case where each item has multiple values
      */
     static convertEdlToTdl_Menu_Mux = (edl: Record<string, any>): type_ComboBox_tdl => {
-        console.log("\n------------", `Parsing "Menu Mux"`, "------------------\n");
+        Log.info("\n------------", `Parsing "Menu Mux"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ComboBox") as type_ComboBox_tdl;
         // all properties for this widget
 
@@ -272,7 +273,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -302,7 +303,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
                     tdl["style"]["fontSize"] = fontSize;
                     tdl["style"]["fontWeight"] = fontWeight;
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -313,7 +314,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
                 const newRules = EdlConverter.convertEdlFgAlarm(edl["controlPv"], 0) as type_rules_tdl;
                 tdl["rules"].push(...newRules);
             } else {
-                console.log("Skip alarm-sensitive property", alarmPropertyName);
+                Log.info("Skip alarm-sensitive property", alarmPropertyName);
             }
         }
 
@@ -338,7 +339,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
 
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_ComboBox_tdl => {
-        console.log("\n------------", `Parsing "combo"`, "------------------\n");
+        Log.info("\n------------", `Parsing "combo"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ComboBox") as type_ComboBox_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -380,9 +381,9 @@ export class ComboBoxHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -417,7 +418,7 @@ export class ComboBoxHelper extends BaseWidgetHelper {
                 } else if (propertyName === "items_from_pv") {
                     tdl["text"]["useChannelItems"] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

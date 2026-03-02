@@ -1,8 +1,8 @@
-import { CheckBoxRules } from "./CheckBoxRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class CheckBoxRule extends BaseWidgetRule {
-	constructor(index: number, rules: CheckBoxRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
         // widget-specific rule type name vs global rule type name

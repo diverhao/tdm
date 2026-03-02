@@ -378,7 +378,7 @@ const getDecimalPlaces = (step: number): number => {
  */
 const calcTicksLog10 = (valMin: number, valMax: number, numTicks: number): number[] => {
     if (valMin <= 0 || valMax <= 0) {
-        console.warn("Log10 scale requires positive values");
+        Log.error("Log10 scale requires positive values");
         return [valMin, valMax];
     }
 
@@ -959,7 +959,7 @@ export const mergePvaTypeAndData = (type: Record<string, any>, key: string | und
         };
     } else {
         // should not happen
-        console.log("NA encountered")
+        Log.error("NA encountered")
     }
     return {
         key: undefined,
@@ -1270,7 +1270,7 @@ function matchesSingleType(value: unknown, expectedType: FieldType, fieldPath: s
 
 export function isOfType(obj: unknown, schema: TypeSchema, _path: string = ""): boolean {
     if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
-        console.warn(`[isOfType] Type check failed at "${_path || "(root)"}": expected a plain object, got`, obj);
+        Log.error(`[isOfType] Type check failed at "${_path || "(root)"}": expected a plain object, got`, obj);
         return false;
     }
 
@@ -1283,14 +1283,14 @@ export function isOfType(obj: unknown, schema: TypeSchema, _path: string = ""): 
         // If expectedType is an array, the value must match any of the types in the array
         if (Array.isArray(expectedType)) {
             if (!expectedType.some((t) => matchesSingleType(value, t))) {
-                console.warn(`[isOfType] Type check failed at "${fieldPath}": expected one of`, expectedType, ", got", value);
+                Log.error(`[isOfType] Type check failed at "${fieldPath}": expected one of`, expectedType, ", got", value);
                 return false;
             }
             continue;
         }
 
         if (!matchesSingleType(value, expectedType)) {
-            console.warn(`[isOfType] Type check failed at "${fieldPath}": expected`, expectedType, ", got", value);
+            Log.error(`[isOfType] Type check failed at "${fieldPath}": expected`, expectedType, ", got", value);
             return false;
         }
     }

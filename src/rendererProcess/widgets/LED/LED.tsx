@@ -3,16 +3,16 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { LEDSidebar } from "./LEDSidebar";
 import { deepMerge, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
-import { LEDRules } from "./LEDRules";
+import { LEDRule } from "./LEDRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { defaultLEDTdl, type_LED_tdl } from "../../../common/types/type_widget_tdl";
 
 export class LED extends BaseWidget {
 
-    _rules: LEDRules;
+    _rules: BaseWidgetRules;
     _itemNames: string[];
     _itemColors: string[];
     _itemValues: number[];
@@ -33,7 +33,7 @@ export class LED extends BaseWidget {
         this._itemColors.splice(numStates);
         this._itemValues.splice(numStates);
 
-        this._rules = new LEDRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, LEDRule);
     }
 
     // ------------------------------ elements ---------------------------------

@@ -217,7 +217,7 @@ export abstract class Prompt {
                         try {
                             await navigator.clipboard.writeText(JSON.stringify(info, null, 4));
                         } catch (e) {
-                            console.log(e);
+                            Log.error(e);
                         }
                         this.removeElement();
                     }}

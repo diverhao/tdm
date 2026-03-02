@@ -1,4 +1,5 @@
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { Log } from "../../../../common/Log";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
@@ -73,7 +74,7 @@ export class RectangleHelper extends BaseWidgetHelper {
     // ------------------------- Converter ------------------------
 
     static convertEdlToTdl = (edl: Record<string, any>): type_Rectangle_tdl => {
-        console.log("\n------------", `Parsing "Rectangle"`, "------------------\n");
+        Log.info("\n------------", `Parsing "Rectangle"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Rectangle") as type_Rectangle_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -120,7 +121,7 @@ export class RectangleHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -169,7 +170,7 @@ export class RectangleHelper extends BaseWidgetHelper {
                     // const newRules = EdlConverter.convertEdlInvisible(propertyValue) as type_rules_tdl;
                     // tdl["rules"].push(...newRules);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -195,7 +196,7 @@ export class RectangleHelper extends BaseWidgetHelper {
             const rgbaArray = rgbaStrToRgbaArray(tdl["text"]["fillColor"]);
             rgbaArray[3] = 0;
             const rgbaStr = rgbaArrayToRgbaStr(rgbaArray);
-            console.log("new fill color", rgbaStr);
+            Log.info("new fill color", rgbaStr);
             tdl["text"]["fillColor"] = rgbaStr;
         }
 
@@ -227,7 +228,7 @@ export class RectangleHelper extends BaseWidgetHelper {
                     tdl["rules"].push(...newRules);
                 }
             } else {
-                console.log("Skip alarm-sensitive property", alarmPropertyName);
+                Log.info("Skip alarm-sensitive property", alarmPropertyName);
             }
         }
 
@@ -267,7 +268,7 @@ export class RectangleHelper extends BaseWidgetHelper {
         return tdl;
     };
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Rectangle_tdl => {
-        console.log("\n------------", `Parsing "rectangle"`, "------------------\n");
+        Log.info("\n------------", `Parsing "rectangle"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Rectangle") as type_Rectangle_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -304,9 +305,9 @@ export class RectangleHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -338,7 +339,7 @@ export class RectangleHelper extends BaseWidgetHelper {
                 } else if (propertyName === "visible") {
                     tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

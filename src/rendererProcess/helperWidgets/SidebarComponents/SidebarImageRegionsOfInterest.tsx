@@ -256,7 +256,6 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
 
                         const newVal = rgbaArrayToRgbaStr(propertyValue as number[]);
                         const oldVal = roi.color;
-                        console.log({ newVal, oldVal });
                         if (newVal === oldVal) {
                             return;
                         } else {

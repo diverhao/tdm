@@ -87,7 +87,6 @@ export class SidebarNumberChoices extends SidebarComponent {
 
 
     updateWidget = (event: any, propertyValue: number | string | number[] | string[] | boolean | undefined) => {
-        console.log("value ============", propertyValue, typeof propertyValue)
         event?.preventDefault();
 
         if (typeof propertyValue !== "number") {
@@ -101,8 +100,6 @@ export class SidebarNumberChoices extends SidebarComponent {
         } else {
             this.setPropertyValue(propertyValue);
         }
-
-        console.log("new value============", propertyValue)
 
         const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
         history.registerAction();

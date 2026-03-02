@@ -1,8 +1,8 @@
-import { BooleanButtonRules } from "./BooleanButtonRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class BooleanButtonRule extends BaseWidgetRule {
-	constructor(index: number, rules: BooleanButtonRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 

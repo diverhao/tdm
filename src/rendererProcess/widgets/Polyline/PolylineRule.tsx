@@ -1,8 +1,8 @@
-import { PolylineRules } from "./PolylineRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class PolylineRule extends BaseWidgetRule {
-	constructor(index: number, rules: PolylineRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 		// widget-specific rule type name vs global rule type name

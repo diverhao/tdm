@@ -3,7 +3,8 @@ import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { MediaRules } from "./MediaRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { MediaRule } from "./MediaRule";
 import { MediaSidebar } from "./MediaSidebar";
 import * as path from "path";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
@@ -14,7 +15,7 @@ import { type_Media_tdl, defaultMediaTdl } from "../../../common/types/type_widg
 
 export class Media extends BaseWidget {
 
-    _rules: MediaRules;
+    _rules: BaseWidgetRules;
 
     /**
      * in Desktop mode, the `src` or `data` for image or pdf is from text["fileName"], it could be 
@@ -33,7 +34,7 @@ export class Media extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("read");
 
-        this._rules = new MediaRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, MediaRule);
     }
 
 

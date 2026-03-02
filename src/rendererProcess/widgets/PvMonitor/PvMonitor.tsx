@@ -477,7 +477,7 @@ export class PvMonitor extends BaseWidget {
                             if (newVal.trim().length >= 2) {
                                 const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                 const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
-                                console.log(queryStr)
+                                // console.log(queryStr)
                                 if (queryStr !== "") {
                                     fetch(queryStr)
                                         .then(res => res.json())

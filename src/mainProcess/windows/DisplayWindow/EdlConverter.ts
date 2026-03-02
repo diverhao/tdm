@@ -1134,10 +1134,8 @@ export class EdlConverter {
 
     static generatePvUndefinedExpression = (propertyValue: string) => {
         const fullPv = this.convertEdlPv(propertyValue, true);
-        console.log("full PV", fullPv, propertyValue)
         // real pvs
         const pvList = this.extractPvsFromFullPv(fullPv);
-        console.log("  pv List", pvList)
         let result = "";
         for (let pv of pvList) {
             if (pv.replaceAll('"', "").trim() === "" || pv.startsWith(".") === true) {
@@ -2189,7 +2187,6 @@ export class EdlConverter {
     };
 
     static convertEdlPrecision = (propertyValue: string) => {
-        console.log("precision ===================", propertyValue);
         const result = parseInt(propertyValue);
         if (!isNaN(result)) {
             if (result < 0) {

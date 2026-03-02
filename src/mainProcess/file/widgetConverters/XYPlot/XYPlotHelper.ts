@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
@@ -63,7 +64,7 @@ export class XYPlotHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, any>): type_XYPlot_tdl => {
-        console.log("\n------------", `Parsing "X-Y Graph"`, "------------------\n");
+        Log.info("\n------------", `Parsing "X-Y Graph"`, "------------------\n");
         const tdl = this.generateDefaultTdl("XYPlot") as type_XYPlot_tdl;
         // all properties for this widget
 
@@ -122,7 +123,7 @@ export class XYPlotHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -174,7 +175,7 @@ export class XYPlotHelper extends BaseWidgetHelper {
                 } else if (propertyName === "plotStyle") {
                     EdlConverter.convertEdlXYGraphPlotStyle(propertyValue, edl, tdl);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -190,7 +191,7 @@ export class XYPlotHelper extends BaseWidgetHelper {
 
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_XYPlot_tdl => {
-        console.log("\n------------", `Parsing "xyplot"`, "------------------\n");
+        Log.info("\n------------", `Parsing "xyplot"`, "------------------\n");
         const tdl = this.generateDefaultTdl("XYPlot");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -269,9 +270,9 @@ export class XYPlotHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -300,7 +301,7 @@ export class XYPlotHelper extends BaseWidgetHelper {
                 } else if (propertyName === "traces") {
                     tdl["yAxes"] = BobPropertyConverter.convertBobXYPlotTraces(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

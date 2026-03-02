@@ -1,4 +1,5 @@
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { Log } from "../../../../common/Log";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
@@ -73,7 +74,7 @@ export class MediaHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_Media_tdl => {
-        console.log("\n------------", `Parsing "GIF Image" or "PNG Image"`, "------------------\n");
+        Log.info("\n------------", `Parsing "GIF Image" or "PNG Image"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Media") as type_Media_tdl;
 
         const propertyNames: string[] = [
@@ -100,7 +101,7 @@ export class MediaHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -134,7 +135,7 @@ export class MediaHelper extends BaseWidgetHelper {
                     // 	tdl["style"]["fontSize"] = fontSize;
                     // 	tdl["style"]["fontWeight"] = fontWeight;
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -143,7 +144,7 @@ export class MediaHelper extends BaseWidgetHelper {
     };
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Media_tdl => {
-        console.log("\n------------", `Parsing "picture"`, "------------------\n");
+        Log.info("\n------------", `Parsing "picture"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Media");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -175,9 +176,9 @@ export class MediaHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -205,7 +206,7 @@ export class MediaHelper extends BaseWidgetHelper {
                 } else if (propertyName === "visible") {
                     tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

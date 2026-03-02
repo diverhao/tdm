@@ -60,7 +60,6 @@ export class BobPropertyConverter {
     };
 
     static parsePlt = async (bobJson: Record<string, any>, tdl: Record<string, any>) => {
-        console.log("...", bobJson);
         const canvasWidgetTdl = UtilityWindow.creatUtilityBlankTdl("DataViewer")["Canvas"];
         tdl["Canvas"] = canvasWidgetTdl;
 
@@ -90,7 +89,6 @@ export class BobPropertyConverter {
         const bobWidgetsJson = bobJson["widget"];
         for (const bobWidgetJson of bobWidgetsJson) {
             const bobWidgetType = bobWidgetJson["$"]["type"];
-            console.log("bob widget tyep <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", bobWidgetType)
             if (bobWidgetType === "arc") {
                 const widgetTdl = ArcHelper.convertBobToTdl(bobWidgetJson, "arc");
                 const widgetKey = widgetTdl["widgetKey"];

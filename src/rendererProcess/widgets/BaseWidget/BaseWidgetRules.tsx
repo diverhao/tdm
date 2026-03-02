@@ -7,17 +7,24 @@ import { ElementButton } from "../../helperWidgets/SharedElements/MacrosTable";
 
 export type type_rules_tdl = type_rule_tdl[];
 
-export abstract class BaseWidgetRules {
+export class BaseWidgetRules {
 	_mainWidget: BaseWidget;
 	_rulesTdl: type_rules_tdl;
 	_rules: BaseWidgetRule[] = [];
 	_channelNames: string[] = [];
 	_forceUpdate: any;
     _showContents: boolean = false;
+    _RuleClass: new (index: number, rules: BaseWidgetRules) => BaseWidgetRule;
 
-	constructor(baseWidget: BaseWidget, widgetTdl: type_BaseWidget_tdl) {
+	constructor(
+		baseWidget: BaseWidget,
+		widgetTdl: type_BaseWidget_tdl,
+		RuleClass: new (index: number, rules: BaseWidgetRules) => BaseWidgetRule
+	) {
 		this._mainWidget = baseWidget;
 		this._rulesTdl = widgetTdl["rules"];
+		this._RuleClass = RuleClass;
+		this.initRules();
 	}
 
 	removeRule = (index: number) => {
@@ -82,8 +89,20 @@ export abstract class BaseWidgetRules {
 		}
 	};
 
-	abstract addRule: () => void;
-	abstract initRules: () => void;
+	initRules = () => {
+		for (let ii = 0; ii < this.getRulesTdl().length; ii++) {
+			const newRule = new this._RuleClass(ii, this);
+			this.getRules().push(newRule);
+		}
+	};
+
+	addRule = () => {
+		const newRuleTdl = this.generateNewRuleTdl();
+		this.getRulesTdl().push(newRuleTdl);
+		const newRule = new this._RuleClass(this.getRulesTdl().length - 1, this);
+		newRule.renewRuleComponent(true);
+		this.getRules().push(newRule);
+	};
 
 	_Element = () => {
 		const [, forceUpdate] = React.useState({});

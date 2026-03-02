@@ -1,4 +1,5 @@
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { Log } from "../../../../common/Log";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
@@ -99,7 +100,7 @@ export class ThermometerHelper extends BaseWidgetHelper {
     };
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Thermometer_tdl => {
-        console.log("\n------------", `Parsing "thermometer"`, "------------------\n");
+        Log.info("\n------------", `Parsing "thermometer"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Thermometer");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -133,9 +134,9 @@ export class ThermometerHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -162,7 +163,7 @@ export class ThermometerHelper extends BaseWidgetHelper {
                 } else if (propertyName === "maximum") {
                     tdl["text"]["minPvValue"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

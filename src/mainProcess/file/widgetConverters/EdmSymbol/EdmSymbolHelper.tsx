@@ -1,4 +1,5 @@
 // import { BobPropertyConverter } from "../../../mainProcess/windows/DisplayWindow/BobPropertyConverter";
+import { Log } from "../../../../common/Log";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 // import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as fs from "fs";
@@ -113,7 +114,7 @@ export class EdmSymbolHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, string>, parentEdlFileName: string | undefined) => {
-        console.log("\n------------", `Parsing Symbol`, "------------------\n");
+        Log.info("\n------------", `Parsing Symbol`, "------------------\n");
         // const tdl = this.generateDefaultTdl("TextUpdate") as type_TextUpdate_tdl;
         // all properties for this widget
         const tdls: Record<string, any> = {};
@@ -306,7 +307,7 @@ export class EdmSymbolHelper extends BaseWidgetHelper {
             EdlConverter.parseEdl(symbolFileJSON, symbolTdl);
             delete symbolTdl["Canvas"];
         } catch (e) {
-            console.log("Failed to read symbol file", symbolFileName);
+            Log.info("Failed to read symbol file", symbolFileName);
             return [];
         }
 
@@ -399,7 +400,7 @@ export class EdmSymbolHelper extends BaseWidgetHelper {
                 widgetTdl["style"]["width"] = (widgetTdl["style"]["width"] / maxW) * w;
                 widgetTdl["style"]["height"] = (widgetTdl["style"]["height"] / maxH) * h;
                 // scale polyline points
-                // console.log(widgetTdl["widgetKey"]);
+                // Log.info(widgetTdl["widgetKey"]);
                 if ((widgetTdl["widgetKey"] as string).startsWith("Polyline")) {
                     for (let ii = 0; ii < widgetTdl["pointsX"].length; ii++) {
                         widgetTdl["pointsX"][ii] = (widgetTdl["pointsX"][ii] * w) / maxW;
@@ -410,7 +411,7 @@ export class EdmSymbolHelper extends BaseWidgetHelper {
                 }
             }
         }
-        // console.log(JSON.stringify(symbolGroupsArray, null, 4));
+        // Log.info(JSON.stringify(symbolGroupsArray, null, 4));
 
         // -------------------------- min and max values --------------------------
         const minValuesRaw = edl["minValues"];
@@ -464,7 +465,7 @@ export class EdmSymbolHelper extends BaseWidgetHelper {
         }
         // ------------------------
 
-        // console.log(minValues, maxValues, controlPv);
+        // Log.info(minValues, maxValues, controlPv);
 
         let fallbackCondition = "false";
         for (let ii = 0; ii < minValues.length; ii++) {

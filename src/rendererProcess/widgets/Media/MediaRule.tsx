@@ -1,8 +1,8 @@
-import { MediaRules } from "./MediaRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class MediaRule extends BaseWidgetRule {
-	constructor(index: number, rules: MediaRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 		const a = {
 			style: {

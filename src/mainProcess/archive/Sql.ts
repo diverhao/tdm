@@ -266,10 +266,10 @@ export class Sql {
         }
         try {
             await connection.ping();
-            console.log("Connection is active.");
+            Log.debug("Connection is active.");
             return SqlState.CONNECTED;
         } catch (err) {
-            console.error("Connection lost:", err);
+            Log.error("Connection lost:", err);
             return SqlState.DISCONNECTED;
         }
     }

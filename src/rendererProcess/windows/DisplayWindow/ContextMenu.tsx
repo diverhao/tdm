@@ -462,7 +462,7 @@ export class ContextMenu {
                                 try {
                                     navigator.clipboard.writeText(selectedText)
                                 } catch (e) {
-                                    console.log(e);
+                                    Log.error(e);
                                 }
                             }
                         },
@@ -561,7 +561,7 @@ export class ContextMenu {
                             try {
                                 navigator.clipboard.writeText(selectedText)
                             } catch (e) {
-                                console.log(e);
+                                Log.error(e);
                             }
 
                         },

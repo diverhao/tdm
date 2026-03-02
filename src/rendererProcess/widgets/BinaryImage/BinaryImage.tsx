@@ -7,8 +7,8 @@ import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelecti
 import { BinaryImageSidebar } from "./BinaryImageSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { BinaryImageRules } from "./BinaryImageRules";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BinaryImageRule } from "./BinaryImageRule";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 // import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 
@@ -25,7 +25,7 @@ export type type_BinaryImage_tdl = {
 
 export class BinaryImage extends BaseWidget {
 
-    _rules: BinaryImageRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_BinaryImage_tdl) {
         super(widgetTdl);
@@ -33,7 +33,7 @@ export class BinaryImage extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("read");
 
-        this._rules = new BinaryImageRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, BinaryImageRule);
     }
 
     // ------------------------------ elements ---------------------------------

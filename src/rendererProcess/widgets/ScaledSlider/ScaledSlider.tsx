@@ -5,8 +5,8 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ScaledSliderSidebar } from "./ScaledSliderSidebar";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-import { ScaledSliderRules } from "./ScaledSliderRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { ScaledSliderRule } from "./ScaledSliderRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { parseIntAngle } from "../../../common/GlobalMethods";
 import { Log } from "../../../common/Log";
@@ -26,7 +26,7 @@ export class ScaledSlider extends BaseWidget {
     _pendingDragValue: number | undefined = undefined;
     _isDragging: boolean = false;
 
-    _rules: ScaledSliderRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_ScaledSlider_tdl) {
         super(widgetTdl);
@@ -34,7 +34,7 @@ export class ScaledSlider extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._rules = new ScaledSliderRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, ScaledSliderRule);
     }
 
     // ------------------------------ elements ---------------------------------

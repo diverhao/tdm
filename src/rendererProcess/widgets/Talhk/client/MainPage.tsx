@@ -89,7 +89,7 @@ export class MainPage extends BasePage {
         } else if (newPage === "TreePage") {
             this.setView(new TreePage(this));
         } else {
-            console.log("Failed to switch page to", newPage);
+            // console.log("Failed to switch page to", newPage);
             return;
         }
         const page = this.getView();
@@ -177,9 +177,9 @@ export class MainPage extends BasePage {
      * Each page has its own handler for "new-data" event
      */
     handleNewData = (messageData: { path: string[], newData: type_data }) => {
-        console.log("-------------- new data --------------")
+        // console.log("-------------- new data --------------")
 
-        console.log("new data arrives", messageData)
+        // console.log("new data arrives", messageData)
 
         const { path, newData } = messageData;
 
@@ -211,7 +211,7 @@ export class MainPage extends BasePage {
             }
         }
 
-        console.log(this.getData([]))
+        // console.log(this.getData([]))
 
         // View-specific handlers
         const view = this.getView();
@@ -236,7 +236,7 @@ export class MainPage extends BasePage {
     }
 
     handleAlarmedChannelsNewValues = (messageData: { newValues: Record<string, any> }) => {
-        console.log(JSON.stringify(messageData))
+        // console.log(JSON.stringify(messageData))
         const view = this.getView();
         if (view instanceof TablePage) {
             view.updateChannelValues(messageData["newValues"]);
@@ -339,7 +339,7 @@ export class MainPage extends BasePage {
             }
         }
 
-        console.log("...", data["status"]["severity_when_alarmed"] === SEVERITES.NO_ALARM ? "none" : "inline-flex")
+        // console.log("...", data["status"]["severity_when_alarmed"] === SEVERITES.NO_ALARM ? "none" : "inline-flex")
 
         const [value, setValue] = React.useState("");
 
@@ -412,13 +412,13 @@ export class MainPage extends BasePage {
                                 const title = newValue.replace("open-display-", "");
                                 const content = displays[title];
                                 const details = content["details"];
-                                console.log("open display", details);
+                                // console.log("open display", details);
                             } else {
                                 // todo: run command
                                 const title = newValue.replace("run-command-", "");
                                 const content = commands[title];
                                 const details = content["details"];
-                                console.log("run command", details);
+                                // console.log("run command", details);
                             }
                             setValue("run");
                         }}
@@ -473,7 +473,7 @@ export class MainPage extends BasePage {
             <ElementRectangleButton
                 handleClick={() => {
                     // todo: run command "details"
-                    console.log("run command", details);
+                    // console.log("run command", details);
                 }}
             >
                 {title}
@@ -585,12 +585,12 @@ export class MainPage extends BasePage {
                     // If server is back up, reload for real
                     window.location.reload();
                 } else {
-                    console.log("Server responded but not OK:", response.status);
+                    // console.log("Server responded but not OK:", response.status);
                 }
             })
             .catch(error => {
                 // Server still down — stay on this page
-                console.log("Server is still unreachable:", error);
+                // console.log("Server is still unreachable:", error);
             });
     }
 

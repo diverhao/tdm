@@ -46,7 +46,6 @@ export class StpConverter {
 
 
     static convertStpToJSON = (fileLines: string[]) => {
-        console.log("field lines", fileLines)
         const result: Record<string, string> = {};
         for (const line of fileLines) {
             if (line.trim() === "") {
@@ -61,7 +60,6 @@ export class StpConverter {
                 }
             }
         }
-        console.log(result)
         return result;
     }
 

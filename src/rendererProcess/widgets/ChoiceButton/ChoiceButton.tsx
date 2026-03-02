@@ -4,7 +4,8 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ChoiceButtonSidebar } from "./ChoiceButtonSidebar";
-import { ChoiceButtonRules } from "./ChoiceButtonRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { ChoiceButtonRule } from "./ChoiceButtonRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
 import { deepMerge } from "../../../common/GlobalMethods";
@@ -16,7 +17,7 @@ export class ChoiceButton extends BaseWidget {
     _itemColors: string[];
     _itemValues: number[];
 
-    _rules: ChoiceButtonRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_ChoiceButton_tdl) {
         super(widgetTdl);
@@ -35,7 +36,7 @@ export class ChoiceButton extends BaseWidget {
         this._itemColors.splice(numStates);
         this._itemValues.splice(numStates);
 
-        this._rules = new ChoiceButtonRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, ChoiceButtonRule);
     }
     // ------------------------------ elements ---------------------------------
 

@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper, type_BaseWidget_tdl } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
@@ -97,7 +98,7 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, string>): type_ScaledSlider_tdl => {
-        console.log("\n------------", `Parsing "Motif Slider"`, "------------------\n");
+        Log.info("\n------------", `Parsing "Motif Slider"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ScaledSlider") as type_ScaledSlider_tdl;
         // all properties for this widget
         // there is no border settings in edl file, however in edm, there is a border line width setting
@@ -158,7 +159,7 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -230,7 +231,7 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
                 } else if (propertyName === "precision") {
                     tdl["text"]["scale"] = EdlConverter.convertEdlPrecision(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -262,7 +263,7 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
                 ) as type_rules_tdl;
                 tdl["rules"].push(...newRules_Labels);
             } else {
-                console.log("Skip alarm-sensitive property", alarmPropertyName);
+                Log.info("Skip alarm-sensitive property", alarmPropertyName);
             }
         }
         if (edl["controlPv"] !== undefined) {
@@ -298,7 +299,7 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
 
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "scaledslider" | "scrollbar"): type_ScaledSlider_tdl => {
-        console.log("\n------------", `Parsing "${type}"`, "------------------\n");
+        Log.info("\n------------", `Parsing "${type}"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ScaledSlider") as type_ScaledSlider_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -365,9 +366,9 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -415,7 +416,7 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
                 } else if (propertyName === "transparent") {
                     isTransparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

@@ -4,7 +4,8 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { BooleanButtonSidebar } from "./BooleanButtonSidebar";
-import { BooleanButtonRules } from "./BooleanButtonRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { BooleanButtonRule } from "./BooleanButtonRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
 import { deepMerge } from "../../../common/GlobalMethods";
@@ -12,7 +13,7 @@ import { type_BooleanButton_tdl, defaultBooleanButtonTdl } from "../../../common
 
 export class BooleanButton extends BaseWidget {
 
-    _rules: BooleanButtonRules;
+    _rules: BaseWidgetRules;
     _itemNames: string[];
     _itemColors: string[];
     _itemValues: number[];
@@ -38,7 +39,7 @@ export class BooleanButton extends BaseWidget {
         this._itemColors.splice(numStates);
         this._itemValues.splice(numStates);
 
-        this._rules = new BooleanButtonRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, BooleanButtonRule);
     }
 
     // ------------------------------ elements ---------------------------------

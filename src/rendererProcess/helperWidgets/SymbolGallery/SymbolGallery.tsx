@@ -316,7 +316,6 @@ export class SymbolGallery {
                 {
                     Object.entries(pageImages).map(([imageName, imageContent]: [string, string], index: number) => {
                         const selected = this.getSelectedImageName() === imageName;
-                        console.log(selected)
                         return (
                             <this._ElementImage
                                 key={`${imageName}-${index}`}

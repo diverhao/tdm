@@ -1,4 +1,5 @@
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { Log } from "../../../../common/Log";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
@@ -127,7 +128,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
 
 
     static convertStpToTdl = (edl: Record<string, string>, type: "Data Viewer"): type_DataViewer_tdl => {
-        console.log("\n------------", `Parsing ${type}`, "------------------\n");
+        Log.info("\n------------", `Parsing ${type}`, "------------------\n");
         const tdl = this.generateDefaultTdl("DataViewer") as type_DataViewer_tdl;
         // all properties for this widget
 
@@ -255,9 +256,9 @@ export class DataViewerHelper extends BaseWidgetHelper {
 
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
-            console.log(propertyName, propertyName.match(/^Strip.Curve\.\d\.[a-zA-Z0-9]+$/), propertyValue)
+            Log.info(propertyName, propertyName.match(/^Strip.Curve\.\d\.[a-zA-Z0-9]+$/), propertyValue)
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in stp file");
+                Log.info("Property", `"${propertyName}"`, "is not in stp file");
                 continue;
             } else {
                 if (propertyName === "Strip.Time.NumSamples") {
@@ -292,7 +293,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
                 } else if (propertyName.match(/^Strip.Curve\.\d\.[a-zA-Z0-9]+$/) !== null) {
                     const propertyNameReduced = propertyName.replace("Strip.Curve.", "");
                     const propertyNameReducedArray = propertyNameReduced.trim().split(".");
-                    console.log("propertyNameReducedArray = ", propertyNameReducedArray)
+                    Log.info("propertyNameReducedArray = ", propertyNameReducedArray)
                     if (propertyNameReducedArray.length === 2) {
                         const index = parseInt(propertyNameReducedArray[0]);
                         const name = propertyNameReducedArray[1];
@@ -369,13 +370,13 @@ export class DataViewerHelper extends BaseWidgetHelper {
             }
         }
 
-        // console.log("===", tdl)
+        // Log.info("===", tdl)
         return tdl;
     };
 
 
     static convertBobToTdl = async (bobWidgetJson: Record<string, any>, type: "stripchart" | "databrowser", fullTdlFileName: string): Promise<type_DataViewer_tdl> => {
-        console.log("\n------------", `Parsing "stripchart"`, "------------------\n");
+        Log.info("\n------------", `Parsing "stripchart"`, "------------------\n");
         const tdl = this.generateDefaultTdl("DataViewer") as type_DataViewer_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -438,9 +439,9 @@ export class DataViewerHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -485,7 +486,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
                         tdl["channelNames"] = dataViewerWidgetTdl["channelNames"];
                     }
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -521,7 +522,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
      * it converts the contents inside <databrowser> ... </databrowser> to a DataViewer widget
      */
     static convertBobToTdl_databrowser = (bobWidgetJson: Record<string, any>): type_DataViewer_tdl => {
-        console.log("\n------------", `Parsing "databrowser"`, "------------------\n");
+        Log.info("\n------------", `Parsing "databrowser"`, "------------------\n");
         const tdl = this.generateDefaultTdl("DataViewer") as type_DataViewer_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -566,9 +567,9 @@ export class DataViewerHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -592,7 +593,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
                 } else if (propertyName === "pvlist") {
                     bobPvs = BobPropertyConverter.convertBobDataBrowserPvlist(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

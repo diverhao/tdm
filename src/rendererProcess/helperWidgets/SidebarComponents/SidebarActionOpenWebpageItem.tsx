@@ -178,7 +178,6 @@ export class SidebarActionOpenWebpageItem {
         if (event) {
             event.preventDefault();
         }
-        console.log("new label", propertyValue)
 
         const mainWidget = this.getMainWidget();
         const oldVal = this.getTdl()["label"];

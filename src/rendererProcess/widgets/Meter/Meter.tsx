@@ -4,8 +4,8 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { MeterSidebar } from "./MeterSidebar";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-import { MeterRules } from "./MeterRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { MeterRule } from "./MeterRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
 import { ChannelSeverity } from "../../channel/TcaChannel";
@@ -24,7 +24,7 @@ export type type_Meter_tdl = {
 
 export class Meter extends BaseWidget {
 
-    _rules: MeterRules;
+    _rules: BaseWidgetRules;
 
     readonly pi = 3.1415926;
 
@@ -34,7 +34,7 @@ export class Meter extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("read");
 
-        this._rules = new MeterRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, MeterRule);
     }
 
     // ------------------------------ elements ---------------------------------

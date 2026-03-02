@@ -4,8 +4,8 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { SpinnerSidebar } from "./SpinnerSidebar";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-import { SpinnerRules } from "./SpinnerRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { SpinnerRule } from "./SpinnerRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
@@ -27,7 +27,7 @@ export class Spinner extends BaseWidget {
     mouseDownIntervalTimer: any = undefined;
     readonly mouseDownDelay: number = 500; // ms
 
-    _rules: SpinnerRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_Spinner_tdl) {
         super(widgetTdl);
@@ -35,7 +35,7 @@ export class Spinner extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._rules = new SpinnerRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, SpinnerRule);
     }
 
     // ------------------------------ elements ---------------------------------

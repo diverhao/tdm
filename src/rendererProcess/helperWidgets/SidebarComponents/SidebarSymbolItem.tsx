@@ -77,7 +77,6 @@ export class SidebarSymbolItem {
                                         symbolName: string,
                                         symbolContent: string
                                     ) => {
-                                        console.log(symbolName, symbolContent, this.getMainWidget().getWidgetKey());
                                         this.updateWidgetName(undefined, symbolContent);
                                     },
                                     mainWidget.getWidgetKey(),

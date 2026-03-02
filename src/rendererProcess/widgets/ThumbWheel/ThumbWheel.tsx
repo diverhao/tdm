@@ -5,8 +5,8 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ThumbWheelSidebar } from "./ThumbWheelSidebar";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-import { ThumbWheelRules } from "./ThumbWheelRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { ThumbWheelRule } from "./ThumbWheelRule";
 import { Log } from "../../../common/Log";
 
 export type type_ThumbWheel_tdl = {
@@ -25,7 +25,7 @@ export class ThumbWheel extends BaseWidget {
     mouseDownIntervalTimer: any = undefined;
     readonly mouseDownDelay: number = 500; // ms
 
-    _rules: ThumbWheelRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_ThumbWheel_tdl) {
         super(widgetTdl);
@@ -33,7 +33,7 @@ export class ThumbWheel extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._rules = new ThumbWheelRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, ThumbWheelRule);
     }
 
     // ------------------------------ elements ---------------------------------

@@ -37,7 +37,7 @@ export class IpcManagerOnMainWindow {
         if (websocketClient === undefined) {
             this.connectIpcServer(true);
         } else if (websocketClient.readyState === WebSocket.CLOSED) {
-            console.log("websocket IPC is closed, re-connect")
+            Log.error("websocket IPC is closed, re-connect")
             this.connectIpcServer(true);
         }
         // else: it is good, do nothing
@@ -69,7 +69,7 @@ export class IpcManagerOnMainWindow {
                 this.getMainWindowClient().getPrompt().removeElement();
             }
 
-            console.log(JSON.stringify({
+            Log.info(JSON.stringify({
                 processId: this.getMainWindowClient().getProcessId(),
                 windowId: this.getMainWindowClient().getWindowId(),
                 eventName: "websocket-ipc-connected-on-main-window",
@@ -194,7 +194,7 @@ export class IpcManagerOnMainWindow {
                 );
             }
         } else {
-            console.log("This main window does not have a process Id yet.");
+            Log.error("This main window does not have a process Id yet.");
         }
     };
 
@@ -327,7 +327,6 @@ export class IpcManagerOnMainWindow {
      */
     private _handleAfterMainWindowGuiCreated = (event: any, data: IpcEventArgType3["after-main-window-gui-created"]) => {
         const { envDefault, envOs, profiles, profilesFileName, logFileName, site } = data;
-        console.log("after main window GUI created ---------------------")
         const mainWindowClient = this.getMainWindowClient();
         // in editing page, we need the env default and env os
         mainWindowClient.setEnvDefault(envDefault);
@@ -368,12 +367,12 @@ export class IpcManagerOnMainWindow {
         if (startupPage !== undefined) {
             this.getMainWindowClient().getPrompt().createElement(data["type"], data)
         } else {
-            console.log("Cannot find startup page");
+            Log.error("Cannot find startup page");
         }
     }
 
     handleDialogShowMessageBox = (event: any, data: IpcEventArgType3["dialog-show-message-box"]) => {
-        console.log("dia log show message box")
+
         const { info } = data;
         const command = info["command"];
         if (command === undefined) {

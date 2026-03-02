@@ -2,8 +2,8 @@ import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_setWidgets1, g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-import { ArcRules } from "./ArcRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { ArcRule } from "./ArcRule";
 import { ArcSidebar } from "./ArcSidebar";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 
@@ -20,7 +20,7 @@ export type type_Arc_tdl = {
 
 export class Arc extends BaseWidget {
 
-    _rules: ArcRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_Arc_tdl) {
         super(widgetTdl);
@@ -28,7 +28,7 @@ export class Arc extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("read");
 
-        this._rules = new ArcRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, ArcRule);
     }
 
     // ------------------------------ elements ---------------------------------

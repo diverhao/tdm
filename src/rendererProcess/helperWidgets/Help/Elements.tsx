@@ -2,6 +2,7 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { Help } from "./Help";
 import { HashLink } from "react-router-hash-link";
+import { Log } from "../../../common/Log";
 
 
 /**
@@ -206,7 +207,6 @@ export const LI = ({ children }: any) => {
 }
 
 export const CODE = ({ children }: any) => {
-    console.log("CODE", children);
     const lines: string[] = [];
     if (typeof children === "string") {
         children.split("\n").forEach((line: string, index: number) => {
@@ -482,7 +482,7 @@ const parseLine = (lines: string[], lineNum: number, parentData: Record<string, 
             const parentLevel = nextLineLevel - 1;
             const parentFolder = findLastFolderContentOnLevel(parentLevel, treeResult);
             if (parentFolder === undefined) {
-                console.error("Parent folder not found for level", parentLevel, "in", treeResult);
+                Log.error("Parent folder not found for level", parentLevel, "in", treeResult);
                 return;
             }
             parseLine(lines, lineNum + 1, parentFolder);

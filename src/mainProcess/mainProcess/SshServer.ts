@@ -60,7 +60,7 @@ export class SshServer {
         this.setPort(this.getPort() + 1);
         let port = this.getPort();
 
-        console.log("Creating TCP server on port", port);
+        Log.info("Creating TCP server on port", port);
 
         const mainProcess = this.getIpcManager().getMainProcess();
 
@@ -137,7 +137,7 @@ export class SshServer {
         // assign the tcpServer
         tcpServer.once("listening", () => {
             // ! important: the ssh client uses this magic string to connect tcp server
-            console.log(tcpPortStr, port);
+            Log.info(tcpPortStr, port);
             this.setTcpServer(tcpServer);
         })
         // listen to all network `interfaces
@@ -150,7 +150,7 @@ export class SshServer {
      * handle the tcp data from TCP client
      */
     handleTcpData = (data: Buffer) => {
-        console.log(`Received data from ssh TCP client: ${data.toString()}`);
+        Log.debug(`Received data from ssh TCP client: ${data.toString()}`);
         this.dataChunk = this.dataChunk + data.toString();
         for (const dataJSON of this.extractData()) {
 
@@ -186,11 +186,11 @@ export class SshServer {
         const tcpSocket = this.getTcpSocket();
         if (tcpSocket !== undefined) {
             if (print) {
-                console.log("send to TCP client", data)
+                Log.info("send to TCP client", data)
             }
             tcpSocket.write(data);
         } else {
-            console.log("TCP client socket not exist on SSH server. Failed to send", data);
+            Log.info("TCP client socket not exist on SSH server. Failed to send", data);
         }
     }
 

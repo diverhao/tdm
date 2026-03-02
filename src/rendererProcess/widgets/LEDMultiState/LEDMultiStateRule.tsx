@@ -1,8 +1,8 @@
-import { LEDMultiStateRules } from "./LEDMultiStateRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class LEDMultiStateRule extends BaseWidgetRule {
-	constructor(index: number, rules: LEDMultiStateRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 		const a = {

@@ -4,7 +4,8 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { CheckBoxSidebar } from "./CheckBoxSidebar";
-import { CheckBoxRules } from "./CheckBoxRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { CheckBoxRule } from "./CheckBoxRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
 import { deepMerge } from "../../../common/GlobalMethods";
@@ -12,7 +13,7 @@ import { type_CheckBox_tdl, defaultCheckBoxTdl } from "../../../common/types/typ
 
 export class CheckBox extends BaseWidget {
 
-    _rules: CheckBoxRules;
+    _rules: BaseWidgetRules;
     _itemNames: string[];
     _itemColors: string[];
     _itemValues: number[];
@@ -33,7 +34,7 @@ export class CheckBox extends BaseWidget {
         this._itemColors.splice(numStates);
         this._itemValues.splice(numStates);
 
-        this._rules = new CheckBoxRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, CheckBoxRule);
     }
 
     // ------------------------------ elements ---------------------------------
@@ -139,7 +140,6 @@ export class CheckBox extends BaseWidget {
      */
     calcCheckState = () => {
         const index = this.calcItemIndex();
-        console.log("calc check state", index)
         if (index === 0) {
             return false;
         } else if (index === 1) {

@@ -4,8 +4,8 @@ import { GlobalVariables } from "../../../common/GlobalVariables";
 import { LabelSidebar } from "./LabelSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-import { LabelRules } from "./LabelRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { LabelRule } from "./LabelRule";
 import katex from "katex";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
@@ -13,14 +13,14 @@ import { defaultLabelTdl, type_Label_tdl } from "../../../common/types/type_widg
 
 export class Label extends BaseWidget {
 
-    _rules: LabelRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_Label_tdl) {
         super(widgetTdl);
         this.initStyle(widgetTdl);
         this.initText(widgetTdl);
         this.setReadWriteType("read");
-        this._rules = new LabelRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, LabelRule);
     }
 
     // ------------------------------ elements ---------------------------------
@@ -103,7 +103,6 @@ export class Label extends BaseWidget {
                 const htmlContents = katex.renderToString(`${rawText}`.replace("latex://", ""), {
                     throwOnError: false,
                 });
-                console.log(htmlContents)
                 return <div dangerouslySetInnerHTML={{ __html: htmlContents }}></div>;
             } catch (e) {
                 Log.error(e);

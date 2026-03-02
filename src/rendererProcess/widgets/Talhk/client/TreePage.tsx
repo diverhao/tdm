@@ -64,7 +64,7 @@ export class TreePage {
             if (ii === path.length - 1) {
                 // currentData[name] = newData;
                 this.addToForceUpdateElement(JSON.stringify(path));
-                console.log("force update:", path)
+                // console.log("force update:", path)
                 this._forceUpdate({});
                 return;
             }
@@ -132,7 +132,7 @@ export class TreePage {
     _Element = () => {
         const [, forceUpdate] = React.useState({});
         this._forceUpdate = forceUpdate;
-        console.log("re-rendering Element")
+        // console.log("re-rendering Element")
 
         const [filterText, setFilterText] = React.useState("");
 

@@ -1,8 +1,8 @@
-import { MeterRules } from "./MeterRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class MeterRule extends BaseWidgetRule {
-	constructor(index: number, rules: MeterRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 		this._ruleComponentTypesMap = {

@@ -1,8 +1,8 @@
-import { ComboBoxRules } from "./ComboBoxRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class ComboBoxRule extends BaseWidgetRule {
-	constructor(index: number, rules: ComboBoxRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 

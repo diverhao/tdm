@@ -1,8 +1,8 @@
-import { TankRules } from "./TankRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class TankRule extends BaseWidgetRule {
-	constructor(index: number, rules: TankRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 

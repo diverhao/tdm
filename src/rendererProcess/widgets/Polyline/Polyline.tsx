@@ -6,16 +6,16 @@ import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelecti
 import { PolylineSidebar } from "./PolylineSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { PolylineSmoother } from "./PolylineSmoother";
-import { PolylineRules } from "./PolylineRules";
+import { PolylineRule } from "./PolylineRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { defaultPolylineTdl, type_Polyline_tdl } from "../../../common/types/type_widget_tdl";
 
 
 export class Polyline extends BaseWidget {
 
-    _rules: PolylineRules;
+    _rules: BaseWidgetRules;
 
     /**
      * normalized relative positions of points inside this widget, the widget's width and height 
@@ -39,7 +39,7 @@ export class Polyline extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("read");
 
-        this._rules = new PolylineRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, PolylineRule);
 
         // resize the widget to contain the line
         const maxX = Math.max(...widgetTdl.pointsX);
@@ -415,7 +415,7 @@ export class Polyline extends BaseWidget {
         const pointY = pointGlobalY - style["top"];
         const width = style["width"];
         const height = style["height"];
-        console.log(pointX, width, pointY, height)
+        // console.log(pointX, width, pointY, height)
         // x, resize the widget 
         if (pointX > width) {
             // if new point is on right side of widget

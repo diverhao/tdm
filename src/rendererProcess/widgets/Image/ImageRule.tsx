@@ -1,8 +1,8 @@
-import { ImageRules } from "./ImageRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class ImageRule extends BaseWidgetRule {
-	constructor(index: number, rules: ImageRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
         
 

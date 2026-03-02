@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
@@ -78,7 +79,7 @@ export class LabelHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, any>): type_Label_tdl => {
-        console.log("\n------------", `Parsing "Static Text"`, "------------------\n");
+        Log.info("\n------------", `Parsing "Static Text"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Label") as type_Label_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -126,9 +127,9 @@ export class LabelHelper extends BaseWidgetHelper {
 
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName]
-            console.log("propertyName", propertyName, propertyValue);
+            Log.info("propertyName", propertyName, propertyValue);
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -180,7 +181,7 @@ export class LabelHelper extends BaseWidgetHelper {
                 } else if (propertyName === "bgAlarm") {
                     alarmPropertyNames.push(propertyName);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -251,7 +252,7 @@ export class LabelHelper extends BaseWidgetHelper {
                     }
                 }
             } else {
-                console.log("Skip alarm-sensitive property", alarmPropertyName);
+                Log.info("Skip alarm-sensitive property", alarmPropertyName);
             }
         }
 
@@ -306,7 +307,7 @@ export class LabelHelper extends BaseWidgetHelper {
     };
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Label_tdl => {
-        console.log("\n------------", `Parsing "label"`, "------------------\n");
+        Log.info("\n------------", `Parsing "label"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Label");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -349,9 +350,9 @@ export class LabelHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -407,7 +408,7 @@ export class LabelHelper extends BaseWidgetHelper {
                 } else if (propertyName === "rules") {
                     tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

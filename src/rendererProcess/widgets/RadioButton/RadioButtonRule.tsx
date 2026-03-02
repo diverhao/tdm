@@ -1,8 +1,8 @@
-import { RadioButtonRules } from "./RadioButtonRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class RadioButtonRule extends BaseWidgetRule {
-	constructor(index: number, rules: RadioButtonRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 		// widget-specific rule type name vs global rule type name

@@ -4,14 +4,15 @@ import { deepMerge } from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { SymbolRules } from "./SymbolRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { SymbolRule } from "./SymbolRule";
 import { SymbolSidebar } from "./SymbolSidebar";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import path from "path";
 import { type_Symbol_tdl, defaultSymbolTdl } from "../../../common/types/type_widget_tdl";
 
 export class Symbol extends BaseWidget {
-    _rules: SymbolRules;
+    _rules: BaseWidgetRules;
     _itemNames: string[];
     _itemValues: number[];
 
@@ -29,7 +30,7 @@ export class Symbol extends BaseWidget {
         this._itemNames.splice(numStates);
         this._itemValues.splice(numStates);
 
-        this._rules = new SymbolRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, SymbolRule);
     }
 
     // ------------------------------ elements ---------------------------------
@@ -95,7 +96,6 @@ export class Symbol extends BaseWidget {
         const objectFit = allText["stretchToFit"] ? "fill" : "contain";
         const width = allStyle["width"];
         const height = allStyle["height"];
-        console.log("width", width)
 
         // find the corresponding image for current PV value
         let { index, value, fileName } = this.calcFileName();

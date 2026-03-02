@@ -1,8 +1,8 @@
-import { ActionButtonRules } from "./ActionButtonRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class ActionButtonRule extends BaseWidgetRule {
-	constructor(index: number, rules: ActionButtonRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
         // widget-specific rule type name vs global rule type name

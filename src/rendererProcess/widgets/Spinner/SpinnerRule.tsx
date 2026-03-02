@@ -1,8 +1,8 @@
-import { SpinnerRules } from "./SpinnerRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class SpinnerRule extends BaseWidgetRule {
-	constructor(index: number, rules: SpinnerRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
         
 

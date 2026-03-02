@@ -1,4 +1,5 @@
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { Log } from "../../../../common/Log";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
@@ -81,7 +82,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, string>, type: "Text Update" | "Reg Text Update"): type_TextUpdate_tdl => {
-        console.log("\n------------", `Parsing ${type}`, "------------------\n");
+        Log.info("\n------------", `Parsing ${type}`, "------------------\n");
         const tdl = this.generateDefaultTdl("TextUpdate") as type_TextUpdate_tdl;
         // all properties for this widget
 
@@ -129,7 +130,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -178,7 +179,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                 } else if (propertyName === "bgAlarm") {
                     alarmPropertyNames.push(propertyName);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -222,7 +223,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                 const newRules = EdlConverter.convertEdlBgAlarm(EdlConverter.convertEdlPv(edl["controlPv"]), 0) as type_rules_tdl;
                 tdl["rules"].push(...newRules);
             } else {
-                console.log("Skip alarm-sensitive property", alarmPropertyName);
+                Log.info("Skip alarm-sensitive property", alarmPropertyName);
             }
         }
 
@@ -268,7 +269,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
         edl: Record<string, string>,
         type: "Text Control" | "Text Monitor" = "Text Control"
     ): type_TextUpdate_tdl => {
-        console.log("\n------------", `parsing ${type}`, "------------------\n");
+        Log.info("\n------------", `parsing ${type}`, "------------------\n");
         const tdl = this.generateDefaultTdl("TextUpdate") as type_TextUpdate_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -369,7 +370,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -415,7 +416,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                 } else if (propertyName === "bgAlarm") {
                     alarmPropertyNames.push(propertyName);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -454,7 +455,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                     }
                 }
             } else {
-                console.log("Skip alarm-sensitive property", alarmPropertyName);
+                Log.info("Skip alarm-sensitive property", alarmPropertyName);
             }
         }
 
@@ -538,7 +539,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
     };
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_TextUpdate_tdl => {
-        console.log("\n------------", `Parsing "textupdate"`, "------------------\n");
+        Log.info("\n------------", `Parsing "textupdate"`, "------------------\n");
         const tdl = this.generateDefaultTdl("TextUpdate");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -584,9 +585,9 @@ export class TextUpdateHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -637,7 +638,7 @@ export class TextUpdateHelper extends BaseWidgetHelper {
                 } else if (propertyName === "transparent") {
                     isTransparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

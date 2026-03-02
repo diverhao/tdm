@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
@@ -138,7 +139,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl_ShellCommand = (edl: Record<string, any>, convertEdlSuffix: boolean = false): type_ActionButton_tdl => {
-        console.log("\n------------", `Parsing "Shell Command"`, "------------------\n");
+        Log.info("\n------------", `Parsing "Shell Command"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ActionButton") as type_ActionButton_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -184,7 +185,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -214,7 +215,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                 } else if (propertyName === "swapButtons") {
                     tdl["text"]["swapButtons"] = true;
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -223,7 +224,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl_RelatedDisplay = (edl: Record<string, any>, convertEdlSuffix: boolean = false): type_ActionButton_tdl => {
-        console.log("\n------------", `Parsing "Related Display"`, "------------------\n");
+        Log.info("\n------------", `Parsing "Related Display"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ActionButton") as type_ActionButton_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -278,7 +279,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -310,7 +311,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                 } else if (propertyName === "button3Popup") {
                     tdl["text"]["button3Popup"] = true;
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -341,7 +342,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl_ExitButton = (edl: Record<string, any>): type_ActionButton_tdl => {
-        console.log("\n------------", `Parsing "Exit Button"`, "------------------\n");
+        Log.info("\n------------", `Parsing "Exit Button"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ActionButton") as type_ActionButton_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -379,7 +380,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -405,7 +406,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                 } else if (propertyName === "invisible") {
                     tdl["text"]["invisibleInOperation"] = EdlConverter.convertEdlBoolean(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -414,7 +415,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
     };
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>, convertBobSuffix: boolean): type_ActionButton_tdl => {
-        console.log("\n------------", `Parsing "action_button"`, "------------------\n");
+        Log.info("\n------------", `Parsing "action_button"`, "------------------\n");
         const tdl = this.generateDefaultTdl("ActionButton");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -458,9 +459,9 @@ export class ActionButtonHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -503,7 +504,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
                 } else if (propertyName === "transparent") {
                     isTransparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

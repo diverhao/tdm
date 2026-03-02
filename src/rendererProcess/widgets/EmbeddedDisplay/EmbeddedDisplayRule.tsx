@@ -1,8 +1,8 @@
-import { EmbeddedDisplayRules } from "./EmbeddedDisplayRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class EmbeddedDisplayRule extends BaseWidgetRule {
-	constructor(index: number, rules: EmbeddedDisplayRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
         
 

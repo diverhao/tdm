@@ -4,14 +4,15 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { RadioButtonSidebar } from "./RadioButtonSidebar";
-import { RadioButtonRules } from "./RadioButtonRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { RadioButtonRule } from "./RadioButtonRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { deepMerge } from "../../../common/GlobalMethods";
 import { type_RadioButton_tdl, defaultRadioButtonTdl } from "../../../common/types/type_widget_tdl";
 
 export class RadioButton extends BaseWidget {
 
-    _rules: RadioButtonRules;
+    _rules: BaseWidgetRules;
 
     _itemNames: string[];
     _itemColors: string[];
@@ -33,7 +34,7 @@ export class RadioButton extends BaseWidget {
         this._itemColors.splice(numStates);
         this._itemValues.splice(numStates);
 
-        this._rules = new RadioButtonRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, RadioButtonRule);
     }
 
     // ------------------------------ elements ---------------------------------

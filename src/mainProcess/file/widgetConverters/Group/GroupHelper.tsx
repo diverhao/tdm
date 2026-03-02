@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
@@ -96,7 +97,7 @@ export class GroupHelper extends BaseWidgetHelper {
      * "group" and "tabs" are converted to Group
      */
     static convertBobToTdl = async (bobWidgetJson: Record<string, any>, type: "group" | "tabs", convertBobSuffix: boolean): Promise<type_Group_tdl> => {
-        console.log("\n------------", `Parsing "${type}"`, "------------------\n");
+        Log.info("\n------------", `Parsing "${type}"`, "------------------\n");
         const tdl = this.generateDefaultTdl("Group");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -148,9 +149,9 @@ export class GroupHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -192,7 +193,7 @@ export class GroupHelper extends BaseWidgetHelper {
                     widgetsTdl = tabsResult["widgetsTdl"];
                     tdl["widgetKeys"] = tabsResult["widgetKeys"];
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

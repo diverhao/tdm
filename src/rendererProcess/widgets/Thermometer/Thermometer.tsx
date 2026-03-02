@@ -4,8 +4,8 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { ThermometerSidebar } from "./ThermometerSidebar";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-import { ThermometerRules } from "./ThermometerRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { ThermometerRule } from "./ThermometerRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
 import { ChannelSeverity } from "../../channel/TcaChannel";
@@ -24,7 +24,7 @@ export type type_Thermometer_tdl = {
 
 export class Thermometer extends BaseWidget {
 
-    _rules: ThermometerRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_Thermometer_tdl) {
         super(widgetTdl);
@@ -32,7 +32,7 @@ export class Thermometer extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("read");
 
-        this._rules = new ThermometerRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, ThermometerRule);
     }
 
     // ------------------------------ elements ---------------------------------

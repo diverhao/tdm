@@ -370,7 +370,6 @@ export class WebServer {
                     //     httpResponse: response,
                     // });
                 } else if (command === "open-tdl-file") {
-                    console.log("command open tdl file ============================= 1", data)
                     const options = data;
                     options["postCommand"] = command;
                     // const {displayWindowId, tdlFileName, mode, macros,editable, replaceMacros } = options;

@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
@@ -101,7 +102,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
     };
 
     static convertEdlToTdl = (edl: Record<string, any>, convertEdlSufffix: boolean = false): type_EmbeddedDisplay_tdl | void => {
-        console.log("\n------------", `Parsing "Embedded Window"`, "------------------\n");
+        Log.info("\n------------", `Parsing "Embedded Window"`, "------------------\n");
         const tdl = this.generateDefaultTdl("EmbeddedDisplay") as type_EmbeddedDisplay_tdl;
         // all properties for this widget
 
@@ -145,7 +146,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -194,7 +195,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
                         }
                     } else {
                         // ! stringPv
-                        console.log("PV as embedded window file name not implemented");
+                        Log.info("PV as embedded window file name not implemented");
                     }
                     // --------------------------------
                     // } else if (propertyName === "controlPv") {
@@ -226,12 +227,12 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
                     // } else if (propertyName === "bgAlarm") {
                     // 	alarmPropertyNames.push(propertyName);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
 
-        // console.log(tdl);
+        // Log.info(tdl);
 
         // // all alarm-sensitive rules override others
         // for (let alarmPropertyName of alarmPropertyNames) {
@@ -254,7 +255,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
         // 		const newRules = EdlConverter.convertEdlBgAlarm(edl["controlPv"], 0) as type_rules_tdl;
         // 		tdl["rules"].push(...newRules);
         // 	} else {
-        // 		console.log("Skip alarm-sensitive property", alarmPropertyName);
+        // 		Log.info("Skip alarm-sensitive property", alarmPropertyName);
         // 	}
         // }
 
@@ -325,7 +326,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
     };
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "embedded" | "navtabs" | "webbrowser", convertBobSufffix: boolean = false): type_EmbeddedDisplay_tdl => {
-        console.log("\n------------", `Parsing "embedded"`, "------------------\n");
+        Log.info("\n------------", `Parsing "embedded"`, "------------------\n");
         const tdl = this.generateDefaultTdl("EmbeddedDisplay");
         // all properties for this widget
         const propertyNames: string[] = [
@@ -373,9 +374,9 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -421,7 +422,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
                     tdl["itemIsWebpage"].push(true);
                     tdl["itemNames"].push("");
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

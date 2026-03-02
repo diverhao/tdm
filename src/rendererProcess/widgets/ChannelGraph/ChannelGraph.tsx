@@ -503,22 +503,18 @@ export class ChannelGraph extends BaseWidget {
         const clickedNode = clickedNodes[0];
         if (clickedNode !== undefined) {
             // (2)
-            console.log("clicked node", clickedNode)
             const nodeLabel = clickedNode["label"];
             const channelName = nodeLabel.split("\n")[0].split(".")[0];
             const channelNameType = TcaChannel.checkChannelName(channelName);
             if (channelNameType !== "ca" && channelName !== "pva") {
-                console.log("Channel", channelName, "is not a valid CA or PVA channel. Stop expanding.");
                 return false;
             }
 
             // already expaned, or still in expansion
             if (this.getLinksStaticData()[channelName] !== undefined) {
-                console.log("static link data for", channelName, "already exist")
                 return false;
             }
             const success = await this.expandNode(nodeLabel);
-            console.log("create node", success, nodeLabel)
         }
         return true;
     }
@@ -534,7 +530,6 @@ export class ChannelGraph extends BaseWidget {
         const clickedNode = clickedNodes[0];
         if (clickedNode !== undefined) {
             // (2)
-            console.log("double clicked node", clickedNode)
             const nodeLabel = clickedNode["label"];
             const channelName = nodeLabel.split("\n")[0];
 
@@ -610,7 +605,6 @@ export class ChannelGraph extends BaseWidget {
                         if (newVal.trim().length >= 2) {
                             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                             const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
-                            console.log(queryStr)
                             if (queryStr !== "") {
                                 fetch(queryStr)
                                     .then(res => res.json())
@@ -780,7 +774,6 @@ export class ChannelGraph extends BaseWidget {
         // if the base channel name is not a valid CA or PVA channel, no need to expand, stop here
         const channelNameType = TcaChannel.checkChannelName(channelName);
         if (channelNameType !== "ca" && channelName !== "pva") {
-            console.log("Channel", channelName, "is not a valid CA or PVA channel. Stop expanding.");
             return false;
         }
 
@@ -788,10 +781,8 @@ export class ChannelGraph extends BaseWidget {
         // an entry in this this.linksStaticData
         const success = await this.createNode(channelName);
         if (success === false) {
-            console.log("Cannot create data for", channelName);
             return false;
         } else {
-            console.log("create node data:", this.getLinksStaticData())
         }
         const channelData = this.getLinksStaticData()[channelName];
 
@@ -811,7 +802,6 @@ export class ChannelGraph extends BaseWidget {
             }
         }
 
-        console.log("vis-network node", channelName, "does not exist, create a new one");
         const source = channelData["source"];
         const rtyp = channelData["rtyp"];
         const scan = channelData["scan"];
@@ -820,7 +810,6 @@ export class ChannelGraph extends BaseWidget {
             // create one
             this.currentId = this.currentId + 1;
             if (rtyp === undefined || rtyp === "") { // scan or calc can be empty
-                console.log("There is no rtyp for", nodeLabel);
                 return false;
             }
             const calcLabel = rtyp.includes("calc") ? ` (${calc})` : "";
@@ -836,7 +825,6 @@ export class ChannelGraph extends BaseWidget {
             };
             allNodes.add(mainNode)
         } else {
-            console.log("vis-network node", channelName, "already exists, update it");
             const calcLabel = rtyp.includes("calc") ? ` (${calc})` : "";
 
             // update the node's label and shape
@@ -887,7 +875,6 @@ export class ChannelGraph extends BaseWidget {
             for (let linkFieldName of Object.keys(links)) { // INP, INPA, FLNK, OUT, ...
 
                 const linkFieldValue = links[linkFieldName]; // "pv1.VAL3 NPP MS", "1", "@dev3 c5 s7", or undefined
-                // console.log("linkFieldName, linkfieldValue", linkFieldName, linkFieldValue)
                 if (linkFieldValue === "" || linkFieldValue === undefined) {
                     continue;
                 }
@@ -988,7 +975,6 @@ export class ChannelGraph extends BaseWidget {
     createNode = async (newChannelName: string): Promise<boolean> => {
         // this node already exists
         if (this.getLinksStaticData()[newChannelName] !== undefined) {
-            console.log("channel already exist, quit")
             return false;
         }
 
@@ -996,15 +982,12 @@ export class ChannelGraph extends BaseWidget {
         // new channel name must be a valid CA or PVA base name
         const newChannelNameType = TcaChannel.checkChannelName(newChannelName);
         if (newChannelNameType !== "pva" && newChannelNameType !== "ca") {
-            console.log(newChannelName, "is not a valid channel name")
             return false;
         }
         if (!isNaN(parseInt(newChannelName))) {
-            console.log(newChannelName, "is not a valid channel name")
             return false;
         }
         if (newChannelName.includes(".")) {
-            console.log(newChannelName, "is not a valid channel name")
             return false;
         }
 
@@ -1072,7 +1055,6 @@ export class ChannelGraph extends BaseWidget {
 
 
         if (typeof rtyp !== "string") {
-            console.log("RTYP of", newChannelName, "is", rtyp, "quit...")
             delete this.getLinksStaticData()[newChannelName];
             return false;
         }
@@ -1094,7 +1076,6 @@ export class ChannelGraph extends BaseWidget {
         if (channelJson === undefined) {
             this.getChannelNamesLevel0().push(newChannelName);
             this.processChannelNames();
-            console.log("this.getChannelNamesLevel0 = ", this.getChannelNamesLevel0())
         }
 
 
@@ -1114,7 +1095,6 @@ export class ChannelGraph extends BaseWidget {
         }
 
 
-        console.log("----------- step 1-----------------")
         const fieldValuesePromises: Promise<boolean>[] = [];
         const tcaChannels: TcaChannel[] = [];
         for (const [dataFieldName, links] of Object.entries(linksStaticData)) { // inLink, outLink, fwdLink
@@ -1190,8 +1170,6 @@ export class ChannelGraph extends BaseWidget {
 
         linksStaticData["status"] = type_nodeStatus.expaneded;
 
-        console.log(this.getLinksStaticData())
-        console.log("----------- step 2 -----------------")
         return true;
     };
 
@@ -1212,7 +1190,6 @@ export class ChannelGraph extends BaseWidget {
 
 
     getFieldValue = async (channelName: string, fieldType: "RTYP" | "SCAN" | "CALC", timeout: number) => {
-        console.log("getting field", fieldType, "of", channelName)
         // if (this.rtyp !== "" || this.rtyp === this.rtypWaitingName) {
         //     console.log("RTYP already obtained or waiting");
         //     return;
@@ -1232,7 +1209,6 @@ export class ChannelGraph extends BaseWidget {
             fieldTcaChannel.destroy(this.getWidgetKey());
             if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
                 const fieldValue = dbrData["value"];
-                console.log(fieldChannelName, "value is", fieldValue)
                 return fieldValue;
                 // if (rtyp !== undefined && this.rtyp === this.rtypWaitingName) {
                 //     this.rtyp = `${rtyp}`;
@@ -1240,13 +1216,11 @@ export class ChannelGraph extends BaseWidget {
                 //     return;
                 // }
             } else {
-                console.log("Failed to get value for", `${fieldChannelName}`);
                 // GET timeout, reconnect
                 // this.rtyp = "";
                 // this.mapDbrData();
             }
         } else {
-            console.log("Channel", `${fieldChannelName} does not exist`);
         }
         return undefined;
     }

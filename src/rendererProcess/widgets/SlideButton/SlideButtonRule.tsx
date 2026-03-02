@@ -1,8 +1,8 @@
-import { SlideButtonRules } from "./SlideButtonRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class SlideButtonRule extends BaseWidgetRule {
-	constructor(index: number, rules: SlideButtonRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 

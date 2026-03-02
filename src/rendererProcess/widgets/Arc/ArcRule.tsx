@@ -1,8 +1,8 @@
-import { ArcRules } from "./ArcRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class ArcRule extends BaseWidgetRule {
-	constructor(index: number, rules: ArcRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
         // widget-specific rule type name vs global rule type name

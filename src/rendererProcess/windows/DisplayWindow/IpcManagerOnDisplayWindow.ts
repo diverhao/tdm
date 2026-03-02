@@ -72,7 +72,7 @@ export class IpcManagerOnDisplayWindow {
         if (websocketClient === undefined) {
             this.connectIpcServer(true);
         } else if (websocketClient.readyState === WebSocket.CLOSED) {
-            console.log("websocket IPC is closed, re-connect")
+            Log.error("websocket IPC is closed, re-connect")
             this.connectIpcServer(true);
         }
         // else: it is good, do nothing
@@ -129,7 +129,6 @@ export class IpcManagerOnDisplayWindow {
 
         client.onerror = (err: any) => {
             Log.error("IPC websocket client error:", err)
-            console.log(err)
         }
 
         client.onclose = (ev: CloseEvent) => {

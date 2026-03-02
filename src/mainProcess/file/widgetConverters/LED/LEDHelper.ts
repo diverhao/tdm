@@ -1,4 +1,5 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
@@ -99,7 +100,7 @@ export class LEDHelper extends BaseWidgetHelper {
     // the Boolean Button is invisible, laying on the top, the LED shows the indicatorPv
     // edl does not have LED widget type, this type in edlJSON is simply a copy of edl Button
     static convertEdlToTdl_Button = (edl: Record<string, any>, type: "Button"): type_LED_tdl | undefined => {
-        console.log("\n------------", `Parsing "Button"`, "------------------\n");
+        Log.info("\n------------", `Parsing "Button"`, "------------------\n");
         const tdl = this.generateDefaultTdl("LED") as type_LED_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
@@ -164,7 +165,7 @@ export class LEDHelper extends BaseWidgetHelper {
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
             if (propertyValue === undefined) {
-                console.log("Property", `"${propertyName}"`, "is not in edl file");
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
                 continue;
             } else {
                 if (propertyName === "x") {
@@ -216,7 +217,7 @@ export class LEDHelper extends BaseWidgetHelper {
                     const newRules = EdlConverter.convertEdlInvisible(propertyValue) as type_rules_tdl;
                     tdl["rules"].push(...newRules);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
@@ -236,7 +237,7 @@ export class LEDHelper extends BaseWidgetHelper {
         //         const newRules = EdlConverter.convertEdlFgAlarm(EdlConverter.convertEdlPv(edl["controlPv"]), 1) as type_rules_tdl;
         //         tdl["rules"].push(...newRules);
         //     } else {
-        //         console.log("Skip alarm-sensitive property", alarmPropertyName);
+        //         Log.info("Skip alarm-sensitive property", alarmPropertyName);
         //     }
         // }
 
@@ -295,7 +296,7 @@ export class LEDHelper extends BaseWidgetHelper {
     };
 
 	static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_LED_tdl => {
-		console.log("\n------------", `Parsing "led"`, "------------------\n");
+		Log.info("\n------------", `Parsing "led"`, "------------------\n");
 		const tdl = this.generateDefaultTdl("LED");
 		// all properties for this widget
 		const propertyNames: string[] = [
@@ -335,9 +336,9 @@ export class LEDHelper extends BaseWidgetHelper {
             const propertyValue = bobWidgetJson[propertyName];
             if (propertyValue === undefined) {
                 if (propertyName === "widget") {
-                    console.log(`There are one or more widgets inside "display"`);
+                    Log.info(`There are one or more widgets inside "display"`);
                 } else {
-                    console.log("Property", `"${propertyName}"`, "is not in bob file");
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
                 }
                 continue;
             } else {
@@ -383,7 +384,7 @@ export class LEDHelper extends BaseWidgetHelper {
                 } else if (propertyName === "visible") {
                     tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else {
-                    console.log("Skip property", `"${propertyName}"`);
+                    Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }

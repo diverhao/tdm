@@ -1,8 +1,8 @@
-import { TextSymbolRules } from "./TextSymbolRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class TextSymbolRule extends BaseWidgetRule {
-	constructor(index: number, rules: TextSymbolRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
         
         const a = {

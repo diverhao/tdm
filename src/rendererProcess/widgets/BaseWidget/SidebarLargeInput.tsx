@@ -151,7 +151,7 @@ export class SidebarLargeInput {
                                     if (newVal.trim().length >= 2) {
                                         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                         const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
-                                        console.log(queryStr)
+                                        // console.log(queryStr)
                                         if (queryStr !== "") {
                                             fetch(queryStr)
                                                 .then(res => res.json())
@@ -184,7 +184,7 @@ export class SidebarLargeInput {
 
                                 // const orig = this.getMainWidget().getChannelNames()[0];
                                 const orig = this.getValue();
-                                console.log("blur:", orig, localValue)
+                                // console.log("blur:", orig, localValue)
                                 if (orig !== localValue) {
                                     setLocalValue(orig);
                                 }
@@ -303,7 +303,7 @@ export class SidebarLargeInput {
                             onBlur={(event: any) => {
                                 // const orig = this.getMainWidget().getChannelNames()[0];
                                 const orig = this.getValue();
-                                console.log("blur:", orig, localValue)
+                                // console.log("blur:", orig, localValue)
                                 if (orig !== localValue) {
                                     setLocalValue(orig);
                                 }

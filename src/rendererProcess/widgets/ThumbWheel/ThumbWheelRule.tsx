@@ -1,8 +1,8 @@
-import { ThumbWheelRules } from "./ThumbWheelRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class ThumbWheelRule extends BaseWidgetRule {
-	constructor(index: number, rules: ThumbWheelRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
         
 

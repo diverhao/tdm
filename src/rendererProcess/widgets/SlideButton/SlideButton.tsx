@@ -4,7 +4,8 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { SlideButtonSidebar } from "./SlideButtonSidebar";
-import { SlideButtonRules } from "./SlideButtonRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { SlideButtonRule } from "./SlideButtonRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { deepMerge } from "../../../common/GlobalMethods";
 import { type_SlideButton_tdl, defaultSlideButtonTdl } from "../../../common/types/type_widget_tdl";
@@ -12,7 +13,7 @@ import { type_SlideButton_tdl, defaultSlideButtonTdl } from "../../../common/typ
 
 export class SlideButton extends BaseWidget {
 
-    _rules: SlideButtonRules;
+    _rules: BaseWidgetRules;
     _itemNames: string[];
     _itemColors: string[];
     _itemValues: number[];
@@ -33,7 +34,7 @@ export class SlideButton extends BaseWidget {
         this._itemColors.splice(numStates);
         this._itemValues.splice(numStates);
 
-        this._rules = new SlideButtonRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, SlideButtonRule);
     }
 
 

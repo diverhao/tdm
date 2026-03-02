@@ -4,7 +4,8 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ComboBoxSidebar } from "./ComboBoxSidebar";
-import { ComboBoxRules } from "./ComboBoxRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
+import { ComboBoxRule } from "./ComboBoxRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
 import { deepMerge } from "../../../common/GlobalMethods";
@@ -16,7 +17,7 @@ export class ComboBox extends BaseWidget {
     _itemColors: string[];
     _itemValues: number[];
 
-    _rules: ComboBoxRules;
+    _rules: BaseWidgetRules;
 
     constructor(widgetTdl: type_ComboBox_tdl) {
         super(widgetTdl);
@@ -35,7 +36,7 @@ export class ComboBox extends BaseWidget {
         this._itemColors.splice(numStates);
         this._itemValues.splice(numStates);
 
-        this._rules = new ComboBoxRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, ComboBoxRule);
     }
 
     // ------------------------------ elements ---------------------------------

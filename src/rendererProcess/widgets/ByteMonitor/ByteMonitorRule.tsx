@@ -1,8 +1,8 @@
-import { ByteMonitorRules } from "./ByteMonitorRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class ByteMonitorRule extends BaseWidgetRule {
-	constructor(index: number, rules: ByteMonitorRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
 
 		this._ruleComponentTypesMap = {

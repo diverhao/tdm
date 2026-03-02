@@ -256,7 +256,7 @@ export const openTdlInNewInstance = (args: type_args) => {
      */
     app.on('second-instance', (event: any, argv: any, workingDirectory: any, argsFrom2ndInstance: any) => {
 
-        console.log("\n\n second instance requests: \n\n", argsFrom2ndInstance)
+        Log.info("\n\n second instance requests: \n\n", argsFrom2ndInstance)
 
         // (1)
         if (argsFrom2ndInstance === null) {
@@ -414,8 +414,6 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
                 // there is no profile available, stop
                 return;
             }
-
-            console.log("profile names:", profileName, passedProfileName, firstProfileName)
 
             mainProcess.getIpcManager().handleProfileSelected(undefined,
                 {

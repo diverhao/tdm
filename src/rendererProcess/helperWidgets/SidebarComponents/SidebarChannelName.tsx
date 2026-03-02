@@ -71,7 +71,6 @@ export class SidebarChannelName extends SidebarComponent {
                                 fetch(queryStr)
                                     .then(res => res.json())
                                     .then((data: any) => {
-                                        console.log(data);
                                         if (Object.keys(data).length > 0 && inputElementRef.current !== null && formElementRef.current !== null) {
 
                                             const rectInput = inputElementRef.current.getBoundingClientRect();

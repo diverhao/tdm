@@ -1032,7 +1032,7 @@ export class FileBrowser extends BaseWidget {
         const editing = this.getItemNameBeingEdited() === true && this.getSelectedItem()["name"] === name;
         const [name1, setName1] = React.useState(name);
         if (name === "Untitled-1.tdl") {
-            console.log(editing, name)
+            // console.log(editing, name)
         }
         if (editing === true) {
             return (

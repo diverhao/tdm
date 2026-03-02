@@ -1,8 +1,8 @@
-import { SymbolRules } from "./SymbolRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { BaseWidgetRule } from "../BaseWidget/BaseWidgetRule";
 
 export class SymbolRule extends BaseWidgetRule {
-	constructor(index: number, rules: SymbolRules) {
+	constructor(index: number, rules: BaseWidgetRules) {
 		super(index, rules);
         
 

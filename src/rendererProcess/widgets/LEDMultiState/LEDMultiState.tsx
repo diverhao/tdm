@@ -3,17 +3,17 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { LEDMultiStateSidebar } from "./LEDMultiStateSidebar";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { deepMerge, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
-import { LEDMultiStateRules } from "./LEDMultiStateRules";
+import { LEDMultiStateRule } from "./LEDMultiStateRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { defaultLEDMultiStateTdl, type_LEDMultiState_tdl } from "../../../common/types/type_widget_tdl";
 
 export class LEDMultiState extends BaseWidget {
 
-    _rules: LEDMultiStateRules;
+    _rules: BaseWidgetRules;
     _itemNames: string[];
     _itemColors: string[];
     _itemValues: number[];
@@ -34,7 +34,7 @@ export class LEDMultiState extends BaseWidget {
         this._itemColors.splice(numStates);
         this._itemValues.splice(numStates);
 
-        this._rules = new LEDMultiStateRules(this, widgetTdl);
+        this._rules = new BaseWidgetRules(this, widgetTdl, LEDMultiStateRule);
     }
 
     // ------------------------------ elements ---------------------------------
