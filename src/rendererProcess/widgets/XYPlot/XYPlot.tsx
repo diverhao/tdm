@@ -26,6 +26,9 @@ export class XYPlot extends BaseWidget {
         this._plot = new XYPlotPlot(this);
         this.getPlot().xAxis = deepMerge(this.generateDefaultTdl().xAxis, widgetTdl.xAxis);
         this.getPlot().yAxes = deepMerge(this.generateDefaultTdl().yAxes, widgetTdl.yAxes);
+
+        // the setting page needs it
+        this._sidebar = new XYPlotSidebar(this);
     }
 
 
@@ -148,5 +151,7 @@ export class XYPlot extends BaseWidget {
         // in here we should not remove duplicates
         this.processChannelNames([], false);
         this.getPlot().initRuntimeData();
+        this.getPlot().getSettings().createComponents();
+        console.log("create components =========================================")
     }
 }

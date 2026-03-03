@@ -2,14 +2,46 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { type_XYPlot_xAxis as type_xAxis, type_XYPlot_yAxis as type_yAxis } from "../../../common/types/type_widget_tdl";
 import { XYPlotPlot } from "./XYPlotPlot";
+import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 
 export class XYPlotPlotSettings {
     private _plot: XYPlotPlot;
+    private _xAxisComponents: (SidebarNumberInput | SidebarCheckBox)[] = [];
+    private _yAxesComponents: (SidebarNumberInput | SidebarCheckBox)[][] = [];
 
     constructor(plot: XYPlotPlot) {
         this._plot = plot;
+    }
+
+
+    createComponents = () => {
+        const yAxes = this.getPlot().yAxes;
+        const xAxis = this.getPlot().xAxis;
+        const sidebar = this.getPlot().getMainWidget().getSidebar();
+        if (sidebar === undefined) {
+            return;
+        }
+        this._xAxisComponents = [
+            new SidebarNumberInput(sidebar, xAxis, "valMin", "Min", false, {}),
+            new SidebarNumberInput(sidebar, xAxis, "valMax", "Max", false, {}),
+            new SidebarCheckBox(sidebar, xAxis, "showGrid", "Show grid"),
+            new SidebarNumberInput(sidebar, xAxis, "numGrids", "# of grids", false, {}),
+        ];
+
+        this._yAxesComponents = [];
+        for (const yAxis of yAxes) {
+            const yAxisComponents = [
+                new SidebarNumberInput(sidebar, yAxis, "valMin", "Min", false, {}),
+                new SidebarNumberInput(sidebar, yAxis, "valMax", "Max", false, {}),
+                new SidebarCheckBox(sidebar, yAxis, "showGrid", "Show grid"),
+                new SidebarNumberInput(sidebar, yAxis, "numGrids", "# of grids", false, {}),
+                new SidebarCheckBox(sidebar, yAxis, "autoScale", "Auto scale"),
+            ];
+            this._yAxesComponents.push(yAxisComponents);
+        }
+
     }
 
     _Element = () => {
@@ -17,8 +49,8 @@ export class XYPlotPlotSettings {
             return null;
         }
 
-        const yAxes = this.getPlot().yAxes;
-        const xAxis = this.getPlot().xAxis;
+
+        console.log("this.getXAxisComponents()", this.getXAxisComponents())
 
         return (
             <div
@@ -39,224 +71,22 @@ export class XYPlotPlotSettings {
                     border: "solid 1px rgba(0,0,0,1)",
                 }}
             >
-                <this._ElementAxis
-                    axisData={xAxis}
-                    isXaxis={true}
-                ></this._ElementAxis>
-                {yAxes.map((yAxis: type_yAxis, yIndex: number) => {
+                {this.getXAxisComponents().map((component: SidebarNumberInput | SidebarCheckBox, index: number) => {
                     return (
-                        <this._ElementAxis
-                            key={`${yIndex}`}
-                            axisData={yAxis}
-                            isXaxis={false}
-                        ></this._ElementAxis>
+                        component.getElement()
+                    )
+                })}
+                {this.getYAxesComponents().map((yAxisComponents: (SidebarNumberInput | SidebarCheckBox)[], index: number) => {
+                    return (
+                        yAxisComponents.map((component: SidebarNumberInput | SidebarCheckBox, index: number) => {
+                            return (
+                                component.getElement()
+                            )
+                        })
                     )
                 })}
                 <this._ElementOKButton></this._ElementOKButton>
             </div>
-        );
-    };
-
-    /**
-     * one axis, either x-axis or y-axis
-     */
-    _ElementAxis = ({ axisData, isXaxis }: { axisData: type_xAxis | type_yAxis, isXaxis: boolean }) => {
-
-        const axisType = (axisData as any)["xData"] === undefined ? "x" : "y";
-        const data = axisType === "x" ? axisData as type_xAxis : axisData as type_yAxis;
-        const label = data["label"];
-        const plot = this.getPlot();
-
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    flexDirection: "column",
-                    justifyContent: "flex-start",
-                    alignItems: "flex-start",
-                    width: "90%",
-                    boxSizing: "border-box",
-                    borderRadius: 10,
-                    backgroundColor: "rgba(230, 230, 230, 1)",
-                    padding: 10,
-                    marginBottom: 10,
-                }}
-            >
-                {/* label */}
-                <div
-                    style={{
-                        display: "inline-flex",
-                        padding: 5,
-                        fontWeight: "bold",
-                        alignItems: "center",
-                        flexDirection: "row",
-                    }}
-                >
-                    {axisType === "x" ? "" : "Trace"} &nbsp;
-                    {plot.convertLatexSourceToDiv(label)}
-                </div>
-                {/* min */}
-                <this._ElementNumVal
-                    axisData={data}
-                    fieldName={"valMin"}
-                ></this._ElementNumVal>
-                {/* max */}
-                <this._ElementNumVal
-                    axisData={data}
-                    fieldName={"valMax"}
-                ></this._ElementNumVal>
-                {/* show grid */}
-                <this._ElementBoolVal
-                    axisData={data}
-                    fieldName={"showGrid"}
-                ></this._ElementBoolVal>
-                {/* number of grids */}
-                <this._ElementNumVal
-                    axisData={data}
-                    fieldName={"numGrids"}
-                ></this._ElementNumVal>
-                {/* auto scale */}
-                {isXaxis === true ? null :
-                    <this._ElementBoolVal
-                        axisData={data}
-                        fieldName={"autoScale"}
-                    ></this._ElementBoolVal>
-                }
-            </div>
-        )
-    }
-
-    /**
-     * one numeric value
-     */
-    _ElementNumVal = ({ axisData, fieldName }: { axisData: type_xAxis | type_yAxis, fieldName: keyof (type_xAxis | type_yAxis) }) => {
-        // always string
-        const [value, setValue] = React.useState(`${axisData[fieldName]}`);
-
-        return (
-            <div
-                style={{
-                    width: "80%",
-                    boxSizing: "border-box",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    padding: 5,
-                }}
-            >
-                <div
-                    style={{
-                        width: "30%",
-                    }}
-                >
-                    {fieldName}
-                </div>
-                <form
-                    style={{
-                        display: "inline-flex",
-                        flexGrow: 1,
-                    }}
-                    spellCheck={false}
-                    onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                        event.preventDefault();
-                        const orig = axisData[fieldName];
-                        const valueNum = parseFloat(value);
-                        if (!isNaN(valueNum)) {
-                            (axisData[fieldName] as any) = valueNum;
-
-                            g_widgets1.addToForceUpdateWidgets(this.getPlot().getMainWidget().getWidgetKey());
-                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-                            g_flushWidgets();
-                        } else {
-                            setValue(`${orig}`);
-                        }
-                    }}
-                >
-                    <input
-                        style={{
-                            outline: "none",
-                            border: "none",
-                            borderRadius: 0,
-                            width: "50%",
-                        }}
-                        value={value}
-                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                            const newVal = event.target.value;
-                            setValue(newVal);
-                        }}
-                        onBlur={(event) => {
-                            const orig = `${axisData[fieldName]}`;
-                            if (orig !== value) {
-                                setValue(orig);
-                            }
-                        }}
-                    ></input>
-                </form>
-            </div>
-
-
-        );
-    };
-
-    /**
-     * one boolean value
-     */
-    _ElementBoolVal = ({ axisData, fieldName }: { axisData: type_xAxis | type_yAxis, fieldName: keyof (type_xAxis | type_yAxis) }) => {
-        // boolean
-        const [value, setValue] = React.useState<boolean>(axisData[fieldName] as boolean);
-
-        return (
-            <div
-                style={{
-                    width: "80%",
-                    boxSizing: "border-box",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    padding: 5,
-                }}
-            >
-                <div
-                    style={{
-                        width: "30%",
-                    }}
-                >
-                    {fieldName}
-                </div>
-
-                <form
-                    style={{
-                        display: "inline-flex",
-                        flexGrow: 1,
-                    }}
-                    onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-                        event.preventDefault();
-                    }}
-                >
-                    <input
-                        type="checkbox"
-                        style={{
-                            outline: "none",
-                            border: "none",
-                            borderRadius: 0,
-                            margin: 0,
-                        }}
-
-                        checked={value}
-                        onChange={(event) => {
-                            (axisData[fieldName] as boolean) = !value;
-
-                            g_widgets1.addToForceUpdateWidgets(this.getPlot().getMainWidget().getWidgetKey());
-                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-                            g_flushWidgets();
-                            setValue((prevVal: boolean) => {
-                                return !prevVal;
-                            });
-                        }}
-                    />
-                </form>
-            </div>
-
-
         );
     };
 
@@ -294,4 +124,12 @@ export class XYPlotPlotSettings {
         return <this._Element></this._Element>;
     };
 
+
+    getXAxisComponents = () => {
+        return this._xAxisComponents;
+    }
+
+    getYAxesComponents = () => {
+        return this._yAxesComponents;
+    }
 }

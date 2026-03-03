@@ -1222,4 +1222,8 @@ export class XYPlotPlot {
     setPlotHeight = (newHeight: number) => {
         this._plotHeight = newHeight;
     }
+
+    getSettings = () => {
+        return this._settings;
+    }
 }

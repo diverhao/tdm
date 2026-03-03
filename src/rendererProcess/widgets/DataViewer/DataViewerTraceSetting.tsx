@@ -18,16 +18,6 @@ export class DataViewerTraceSetting {
         this._index = index;
     }
 
-    getElement = () => {
-        const yAxis = this.getMainWidget().getPlot().yAxes[this.getMainWidget().getSettingsIndex()];
-        if (yAxis === undefined) {
-            return null;
-        } else {
-            return <this._Element yAxis={yAxis}></this._Element>
-        }
-    }
-
-    _Element = React.memo(({ yAxis }: { yAxis: type_DataViewer_yAxis }) => this._ElementRaw({ yAxis }));
     _ElementRaw = ({ yAxis }: { yAxis: type_DataViewer_yAxis }) => {
 
         const sidebar = this.getMainWidget().getSidebar();
@@ -303,6 +293,19 @@ export class DataViewerTraceSetting {
 
         )
     }
+
+        getElement = () => {
+        const yAxis = this.getMainWidget().getPlot().yAxes[this.getMainWidget().getSettingsIndex()];
+        if (yAxis === undefined) {
+            return null;
+        } else {
+            return <this._Element yAxis={yAxis}></this._Element>
+        }
+    }
+
+    _Element = React.memo(({ yAxis }: { yAxis: type_DataViewer_yAxis }) => this._ElementRaw({ yAxis }));
+
+    // ------------------- getters ----------------------
 
     getMainWidget = () => {
         return this._mainWidget;
