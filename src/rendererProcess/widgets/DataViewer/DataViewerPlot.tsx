@@ -16,6 +16,7 @@ import { DataViewerPlotTraceHelper } from "./DataViewerPlotTraceHelper";
 import { DataViewerPlotDataHelper } from "./DataViewerPlotDataHelper";
 import { DataViewerPlotMouseHelper } from "./DataViewerPlotMouseHelper";
 import { type_DataViewer_yAxis } from "../../../common/types/type_widget_tdl";
+import { DataViewerTraceSetting } from "./DataViewerTraceSetting";
 
 
 type type_xAxis = {
@@ -191,6 +192,7 @@ export class DataViewerPlot {
 
     // multiple y axes
     yAxes: type_DataViewer_yAxis[] = [];
+
 
     constructor(mainWidget: DataViewer) {
         this._mainWidget = mainWidget;
@@ -1542,11 +1544,9 @@ export class DataViewerPlot {
         return this._selectedTraceIndex;
     }
 
-    getSelectedYAxis = () => {
+    getSelectedYAxis = (): type_DataViewer_yAxis | undefined => {
         return this.yAxes[this.getSelectedTraceIndex()];
     }
-
-
 
     getPlotWidth = () => {
         return this._plotWidth;

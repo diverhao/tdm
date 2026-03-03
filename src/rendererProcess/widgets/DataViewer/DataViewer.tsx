@@ -10,13 +10,13 @@ import { type_DataViewer_tdl, defaultDataViewerTdl, defaultDataViewerTicksInfo }
 import { DataViewerMainSettings } from "./DataViewerMainSettings";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
-import { DataViewerTraceSettings } from "./DataViewerTraceSettings";
+import { DataViewerTraceSetting } from "./DataViewerTraceSetting";
 
 export class DataViewer extends BaseWidget {
 
     _plot: DataViewerPlot;
     _mainSettings: DataViewerMainSettings;
-    _traceSettings: DataViewerTraceSettings;
+    _traceSetting: DataViewerTraceSetting;
     updateInterval: ReturnType<typeof setInterval> | undefined = undefined;
 
     constructor(widgetTdl: type_DataViewer_tdl) {
@@ -35,7 +35,9 @@ export class DataViewer extends BaseWidget {
 
         // 2 setting pages
         this._mainSettings = new DataViewerMainSettings(this);
-        this._traceSettings = new DataViewerTraceSettings(this);
+        // this._traceSettings = new DataViewerTraceSettings(this);
+        this._traceSetting = new DataViewerTraceSetting(this);
+
 
         // the Settings page needs side bar component
         this.createSidebar();
@@ -52,7 +54,6 @@ export class DataViewer extends BaseWidget {
 
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
 
         this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
@@ -79,7 +80,7 @@ export class DataViewer extends BaseWidget {
                     <this._ElementArea></this._ElementArea>
                     {this.showResizers() ? <this._ElementResizer /> : null}
                     {this.getMainSettings().getElement()}
-                    {this.getTraceSettings().getElement()}
+                    {this.getTraceSetting().getElement()}
                 </div>
                 {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </ErrorBoundary>
@@ -198,10 +199,7 @@ export class DataViewer extends BaseWidget {
     getMainSettings = () => {
         return this._mainSettings;
     };
-    getTraceSettings = () => {
-        return this._traceSettings;
-    };
-
+    
     setSettingsIndex = (newIndex: settingsIndexChoices) => {
         this.getPlot().setSettingsIndex(newIndex);
     }
@@ -227,6 +225,14 @@ export class DataViewer extends BaseWidget {
     getYAxes = () => {
         return this.getPlot().yAxes;
     };
+
+    getTraceSetting = () => {
+        return this._traceSetting;
+    }
+
+    setTraceSetting = (newSetting: DataViewerTraceSetting) => {
+        this._traceSetting = newSetting;
+    }
 
     // -------------------------- tdl -------------------------------
 

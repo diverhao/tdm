@@ -148,6 +148,7 @@ export class DataViewerPlotDataHelper {
      */
     mapDbrDataWitNewData = (dbrDataList: Record<string, type_pva_value | type_pva_value[] | type_dbrData | type_dbrData[] | type_LocalChannel_data | undefined>) => {
         const plot = this.getPlot();
+        console.log(dbrDataList, plot.getChannelNames())
         if (g_widgets1.isEditing()) {
             return;
         }
@@ -173,6 +174,7 @@ export class DataViewerPlotDataHelper {
                     this.addOneDbrData(dataElement, yAxis);
                 }
             } else {
+                console.log("add one dbr data?")
                 this.addOneDbrData(data, yAxis);
             }
 
@@ -210,10 +212,15 @@ export class DataViewerPlotDataHelper {
         let nanoSeconds = 0;
         // let value: PvaRecord | Primitive | undefined = 0;
 
-        const value = data.value;
+        let value = data.value;
         if (typeof value !== "number") {
-            Log.debug("value is not valid", data);
-            return;
+            if (typeof value === "object" && !Array.isArray(value) && typeof value["index"] === "number") {
+                // pva enum
+                value = value["index"];
+            } else {
+                Log.debug("value is not valid", data);
+                return;
+            }
         }
 
         // get timestamp

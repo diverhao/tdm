@@ -27,39 +27,30 @@ export class DataViewerSidebar extends BaseWidgetSidebar {
         this._sidebarDataViewerChannelNames = new SidebarDataViewerChannelNames(this);
         const style = this.getMainWidget().getStyle();
         const text = this.getMainWidget().getText();
+        const extraStyle = {
+            backgroundColor: "rgba(255,255,255,1)",
+            width: "40%",
+            marginTop: 4,
+            marginBottom: 4,
+        };
 
         this._sidebarFontFamily_setting_page = new SidebarStringChoices(this, style, "fontFamily", "Font family", {
             "TDM Fonts": Object.fromEntries(Object.keys(FontsData.g_fonts).map((k) => [k, k])),
             "OS fonts (not recommended)": Object.fromEntries(FontsData.g_localFonts.map((k) => [k, k])),
-        }, {
-            backgroundColor: "rgba(255,255,255,1)",
-            width: "40%",
-        });
+        }, extraStyle);
         this._sidebarFontSize_setting_page = new SidebarNumberChoices(this, style, "fontSize", "Font size",
-            Object.fromEntries(FontsData.g_fontSizes.map((n) => [`${n}`, n])), {
-            backgroundColor: "rgba(255,255,255,1)",
-            width: "40%",
-        }
+            Object.fromEntries(FontsData.g_fontSizes.map((n) => [`${n}`, n])), extraStyle
         );
         this._sidebarFontStyle_setting_page = new SidebarStringChoices(this, style, "fontStyle", "Font style", {
             "normal": "normal",
             "italic": "italic",
-        }, {
-            backgroundColor: "rgba(255,255,255,1)",
-            width: "40%",
-        });
+        }, extraStyle);
         this._sidebarFontWeight_setting_page = new SidebarStringChoices(this, style, "fontWeight", "Font weight", {
             "normal": "normal",
             "bold": "bold",
-        }, {
-            backgroundColor: "rgba(255,255,255,1)",
-            width: "40%",
-        });
+        }, extraStyle);
         this._sidebarPeriod_setting_page = new SidebarNumberInput(this, text, "updatePeriod", "Update period [s]", false,
-            {
-                backgroundColor: "rgba(255,255,255,1)",
-                width: "37.8%",
-            }
+            { ...extraStyle, width: "37.8%" }
         );
         this._sidebarMouseWheelZoomFactor_setting_page = new SidebarNumberChoices(this, text, "axisZoomFactor", "Scroll zoom factor",
             {
@@ -69,10 +60,7 @@ export class DataViewerSidebar extends BaseWidgetSidebar {
                 "1.75": 1.75,
                 "2.0": 2.0,
             },
-            {
-                backgroundColor: "rgba(255,255,255,1)",
-                width: "40%",
-            }
+            extraStyle
         );
         this._sidebarBackgroundColor_setting_page = new SidebarColor(this, style, "backgroundColor", "Background color");
     }
