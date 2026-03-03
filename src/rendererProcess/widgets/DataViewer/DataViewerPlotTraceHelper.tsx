@@ -47,6 +47,10 @@ export class DataViewerPlotTraceHelper {
         mainWidget.getChannelNamesLevel0().push(newChannelName);
         mainWidget.processChannelNames([], false);
 
+        // (1.1)
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
+
         // (2)
         const yAxis = structuredClone(defaultDataViewerYAxis);
         yAxis["label"] = newChannelName;
@@ -91,6 +95,10 @@ export class DataViewerPlotTraceHelper {
         mainWidget.getChannelNamesLevel0()[index] = newTraceName;
         mainWidget.processChannelNames([], false);
 
+        // (1.1)
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
+
         // (2)
         const yAxis = plot.yAxes[index];
         if (yAxis === undefined) {
@@ -121,6 +129,7 @@ export class DataViewerPlotTraceHelper {
             }
             newTcaChannel.monitor();
         }
+
     };
 
     /**
@@ -148,6 +157,10 @@ export class DataViewerPlotTraceHelper {
         // (1)
         plot.getMainWidget().getChannelNamesLevel0().splice(index, 1);
         plot.getMainWidget().processChannelNames([], false);
+
+        // (1.1)
+        const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+        history.registerAction();
 
         // (2)
         plot.yAxes.splice(index, 1);

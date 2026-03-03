@@ -46,7 +46,7 @@ export class DataViewerTraceSetting {
         const yScaleComponent = new SidebarStringChoices(sidebar, yAxis, "displayScale", "Y scale", {
             Linear: "Linear",
             Log10: "Log10",
-        }, extraStyle);
+        }, {...extraStyle, width: "68.5%"});
         const lineColorComponent = new SidebarColor(sidebar, yAxis, "lineColor", "Line color");
 
         return (
@@ -77,7 +77,7 @@ export class DataViewerTraceSetting {
                         display: "inline-flex",
                         flexDirection: "column",
                         justifyContent: "flex-start",
-                        alignItems: "flex-start",
+                        alignItems: "center",
                         width: "90%",
                         boxSizing: "border-box",
                         borderRadius: 10,
@@ -88,13 +88,27 @@ export class DataViewerTraceSetting {
                 >
                     <this._ElementChannelNameInput></this._ElementChannelNameInput>
                     {Math.random()}
-                    {valMinComponent.getElement()}
-                    {valMaxComponent.getElement()}
-                    {lineWidthComponent.getElement()}
-                    {lineColorComponent.getElement()}
-                    {bufferSizeComponent.getElement()}
-                    {showComponent.getElement()}
-                    {yScaleComponent.getElement()}
+                    <div style={{
+                        width: "45%",
+                    }}>
+
+                        {valMinComponent.getElement()}
+                        {valMaxComponent.getElement()}
+                        {lineWidthComponent.getElement()}
+                        {bufferSizeComponent.getElement()}
+                        {showComponent.getElement()}
+                        {yScaleComponent.getElement()}
+                        <div
+                            style={{
+                                width: "50%",
+                                display: "inline-flex",
+                                flexDirection: "row",
+                            }}
+                        >
+
+                            {lineColorComponent.getElement()}
+                        </div>
+                    </div>
                 </div>
                 <div
                     style={{
