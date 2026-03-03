@@ -281,6 +281,10 @@ export abstract class BaseWidgetSidebar {
         return this._inputStyle;
     };
 
+    getSelectStyle = () => {
+        return this._selectStyle;
+    }
+
     getSidebarX = () => {
         return this._sidebarX;
     };
@@ -570,6 +574,20 @@ export abstract class BaseWidgetSidebar {
         width: "70%",
         fontFamily: GlobalVariables.defaultFontFamily,
         fontSize: GlobalVariables.defaultFontSize,
+        outline: "none",
+        border: "none",
+        paddingLeft: 5,
+        borderRadius: 0,
+        backgroundColor: "rgba(235, 235, 235, 1)",
+    };
+
+    _selectStyle: Record<string, any> = {
+        appearance: "none",
+        WebkitAppearance: "none",
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpolyline points='1,1 5,5 9,1' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right 4px center",
+        ...this.getInputStyle()
     };
 
     _formStyle: Record<string, any> = {
@@ -579,5 +597,6 @@ export abstract class BaseWidgetSidebar {
         alignItems: "center",
         marginTop: 2,
         marginBottom: 2,
+        width: "100%",
     };
 }

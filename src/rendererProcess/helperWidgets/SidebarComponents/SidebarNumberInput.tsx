@@ -9,12 +9,14 @@ export class SidebarNumberInput extends SidebarComponent {
     private readonly _propertyName: string;
     private readonly _label: string;
     private readonly _isUpdatedFromWidget: boolean;
-    constructor(sidebar: BaseWidgetSidebar, obj: Record<string, any>, propertyName: string, label: string, isUpdatedFromWidget: boolean = false) {
+    private readonly _extraStyle: Record<string, any>;
+    constructor(sidebar: BaseWidgetSidebar, obj: Record<string, any>, propertyName: string, label: string, isUpdatedFromWidget: boolean = false, extraStyle: Record<string, any> = {}) {
         super(sidebar);
         this._obj = obj;
         this._propertyName = propertyName;
         this._label = label;
         this._isUpdatedFromWidget = isUpdatedFromWidget;
+        this._extraStyle = extraStyle;
     }
 
     _Element = () => {
@@ -41,16 +43,12 @@ export class SidebarNumberInput extends SidebarComponent {
                 // todo
                 style={this.getFormStyle()}
             >
-                <this._ElementInputLabel
-                    value={numStr}
-                    setValue={setNumStr}
-                    readableText={this.getLabel()}
-                    updater={(newValue: string) => { this.updateWidget(undefined, newValue) }}
+                <div
                 >
                     {this.getLabel()}
-                </this._ElementInputLabel>
+                </div>
                 <input
-                    style={{ ...this.getInputStyle(), width: "65.6%" }}
+                    style={{ ...this.getInputStyle(), width: "65.6%",  ...this.getExtraStyle() }}
                     type="string"
                     name="text"
                     value={numStr}
@@ -112,6 +110,10 @@ export class SidebarNumberInput extends SidebarComponent {
 
     isUpdatedFromWidget = () => {
         return this._isUpdatedFromWidget;
+    }
+
+    getExtraStyle = () => {
+        return this._extraStyle;
     }
 
     setPropertyValue = (newValue: number) => {

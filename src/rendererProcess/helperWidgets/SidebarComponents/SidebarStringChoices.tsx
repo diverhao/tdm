@@ -9,12 +9,14 @@ export class SidebarStringChoices extends SidebarComponent {
     private readonly _propertyName: string;
     private readonly _label: string;
     private readonly _options: Record<string, string> | Record<string, Record<string, string>> = {};
-    constructor(sidebar: BaseWidgetSidebar, obj: Record<string, any>, propertyName: string, label: string, options: Record<string, string> | Record<string, Record<string, string>>) {
+    private readonly _extraStyle: Record<string, any>;
+    constructor(sidebar: BaseWidgetSidebar, obj: Record<string, any>, propertyName: string, label: string, options: Record<string, string> | Record<string, Record<string, string>>, extraStyle: Record<string, any> = {}) {
         super(sidebar);
         this._obj = obj;
         this._propertyName = propertyName;
         this._label = label;
         this._options = options;
+        this._extraStyle = extraStyle;
     }
 
     _Element = () => {
@@ -26,7 +28,7 @@ export class SidebarStringChoices extends SidebarComponent {
                         {this.getLabel()}
                     </div>
                     <select
-                        style={{ ...this.getInputStyle() }}
+                        style={{ ...this.getSelectStyle(), ...this.getExtraStyle() }}
                         onChange={(event) => {
                             this.updateWidget(event, event.target.value);
                         }}
@@ -58,7 +60,7 @@ export class SidebarStringChoices extends SidebarComponent {
                         {this.getLabel()}
                     </div>
                     <select
-                        style={{ ...this.getInputStyle() }}
+                        style={{ ...this.getSelectStyle(), ...this.getExtraStyle() }}
                         onChange={(event) => {
                             this.updateWidget(event, event.target.value);
                         }}
@@ -123,6 +125,10 @@ export class SidebarStringChoices extends SidebarComponent {
 
     getPropertyValue = () => {
         return this.getObj()[this.getPropertyName()];
+    }
+
+    getExtraStyle = () => {
+        return this._extraStyle;
     }
 
     setPropertyValue = (newValue: string) => {

@@ -64,6 +64,10 @@ export abstract class SidebarComponent {
         return this.getSidebar().getInputStyle();
     };
 
+    getSelectStyle = () => {
+        return this.getSidebar().getSelectStyle();
+    };
+
     getWidgetKey = () => {
         return this.getMainWidget().getWidgetKey();
     };

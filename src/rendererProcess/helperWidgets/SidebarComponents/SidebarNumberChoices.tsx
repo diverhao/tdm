@@ -10,12 +10,14 @@ export class SidebarNumberChoices extends SidebarComponent {
     private readonly _propertyName: string;
     private readonly _label: string;
     private readonly _options: Record<string, number> | Record<string, Record<string, number>> = {};
-    constructor(sidebar: BaseWidgetSidebar, obj: Record<string, any>, propertyName: string, label: string, options: Record<string, number> | Record<string, Record<string, number>>) {
+    private readonly _extraStyle: Record<string, any>;
+    constructor(sidebar: BaseWidgetSidebar, obj: Record<string, any>, propertyName: string, label: string, options: Record<string, number> | Record<string, Record<string, number>>, extraStyle: Record<string, any> = {}) {
         super(sidebar);
         this._obj = obj;
         this._propertyName = propertyName;
         this._label = label;
         this._options = options;
+        this._extraStyle = extraStyle;
     }
 
     _Element = () => {
@@ -27,7 +29,7 @@ export class SidebarNumberChoices extends SidebarComponent {
                         {this.getLabel()}
                     </div>
                     <select
-                        style={{ ...this.getInputStyle() }}
+                        style={{ ...this.getSelectStyle(), ...this.getExtraStyle() }}
                         onChange={(event) => {
                             this.updateWidget(event, event.target.value);
                         }}
@@ -59,11 +61,11 @@ export class SidebarNumberChoices extends SidebarComponent {
                         {this.getLabel()}
                     </div>
                     <select
-                        style={{ ...this.getInputStyle() }}
+                        style={{ ...this.getSelectStyle(), ...this.getExtraStyle() }}
                         onChange={(event) => {
                             let num = parseInt(event.target.value);
                             if (isNaN(num)) {
-                                num = GlobalVariables.defaultFontSize;
+                                num = 0;
                             }
                             this.updateWidget(event, num);
                         }}
@@ -110,27 +112,31 @@ export class SidebarNumberChoices extends SidebarComponent {
         g_flushWidgets();
     };
 
-    getObj = () => {
+    getObj = (): Record<string, any> => {
         return this._obj;
     }
 
-    getPropertyName = () => {
+    getPropertyName = (): string => {
         return this._propertyName;
     }
 
-    getLabel = () => {
+    getLabel = (): string => {
         return this._label;
     }
 
-    getOptions = () => {
+    getOptions = (): Record<string, number> | Record<string, Record<string, number>> => {
         return this._options;
     }
 
-    getPropertyValue = () => {
+    getExtraStyle = () => {
+        return this._extraStyle;
+    }
+    
+    getPropertyValue = (): any => {
         return this.getObj()[this.getPropertyName()];
     }
 
-    setPropertyValue = (newValue: number) => {
+    setPropertyValue = (newValue: number): void => {
         this.getObj()[this.getPropertyName()] = newValue;
     }
 }

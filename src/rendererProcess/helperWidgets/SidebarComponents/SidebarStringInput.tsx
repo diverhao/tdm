@@ -8,11 +8,13 @@ export class SidebarStringInput extends SidebarComponent {
     private readonly _obj: Record<string, any>;
     private readonly _propertyName: string;
     private readonly _label: string;
-    constructor(sidebar: BaseWidgetSidebar, obj: Record<string, any>, propertyName: string, label: string) {
+    private readonly _extraStyle: Record<string, any>;
+    constructor(sidebar: BaseWidgetSidebar, obj: Record<string, any>, propertyName: string, label: string, extraStyle: Record<string, any> = {}) {
         super(sidebar);
         this._obj = obj;
         this._propertyName = propertyName;
         this._label = label;
+        this._extraStyle = extraStyle;
     }
 
     _Element = () => {
@@ -35,7 +37,7 @@ export class SidebarStringInput extends SidebarComponent {
                     {this.getLabel()}
                 </this._ElementInputLabel>
                 <input
-                    style={{ ...this.getInputStyle(), width: "65.6%" }}
+                    style={{ ...this.getInputStyle(), width: "65.6%", ...this.getExtraStyle() }}
                     type="string"
                     name="text"
                     value={str}
@@ -93,6 +95,10 @@ export class SidebarStringInput extends SidebarComponent {
 
     getPropertyValue = () => {
         return this.getObj()[this.getPropertyName()];
+    }
+
+    getExtraStyle = () => {
+        return this._extraStyle;
     }
 
     setPropertyValue = (newValue: string) => {

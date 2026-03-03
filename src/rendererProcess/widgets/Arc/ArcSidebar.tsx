@@ -18,8 +18,8 @@ export class ArcSidebar extends BaseWidgetSidebar {
         super(arc);
         const text = this.getMainWidget().getText();
         this._sidebarPolylineFill = new SidebarStringInput(this, text, "fill", "Fill");
-        this._sidebarArcAngleStart = new SidebarNumberInput(this, text, "angelStart", "Start");
-        this._sidebarArcAngleRange = new SidebarNumberInput(this, text, "angelRange", "Range");
+        this._sidebarArcAngleStart = new SidebarNumberInput(this, text, "angleStart", "Start");
+        this._sidebarArcAngleRange = new SidebarNumberInput(this, text, "angleRange", "Range");
         this._sidebarArcShowRadius = new SidebarStringChoices(this, text, "showRadius", "Show", 
             {
                 None: "none",
