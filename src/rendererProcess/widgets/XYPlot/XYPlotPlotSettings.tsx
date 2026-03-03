@@ -23,20 +23,26 @@ export class XYPlotPlotSettings {
         if (sidebar === undefined) {
             return;
         }
+        const extraStyle = {
+            backgroundColor: "rgba(255,255,255,1)",
+            marginTop: 5,
+            marginBottom: 5,
+            width: "40%",
+        }
         this._xAxisComponents = [
-            new SidebarNumberInput(sidebar, xAxis, "valMin", "Min", false, {}),
-            new SidebarNumberInput(sidebar, xAxis, "valMax", "Max", false, {}),
+            new SidebarNumberInput(sidebar, xAxis, "valMin", "Min", false, extraStyle),
+            new SidebarNumberInput(sidebar, xAxis, "valMax", "Max", false, extraStyle),
             new SidebarCheckBox(sidebar, xAxis, "showGrid", "Show grid"),
-            new SidebarNumberInput(sidebar, xAxis, "numGrids", "# of grids", false, {}),
+            new SidebarNumberInput(sidebar, xAxis, "numGrids", "# of grids", false, extraStyle),
         ];
 
         this._yAxesComponents = [];
         for (const yAxis of yAxes) {
             const yAxisComponents = [
-                new SidebarNumberInput(sidebar, yAxis, "valMin", "Min", false, {}),
-                new SidebarNumberInput(sidebar, yAxis, "valMax", "Max", false, {}),
+                new SidebarNumberInput(sidebar, yAxis, "valMin", "Min", false, extraStyle),
+                new SidebarNumberInput(sidebar, yAxis, "valMax", "Max", false, extraStyle),
                 new SidebarCheckBox(sidebar, yAxis, "showGrid", "Show grid"),
-                new SidebarNumberInput(sidebar, yAxis, "numGrids", "# of grids", false, {}),
+                new SidebarNumberInput(sidebar, yAxis, "numGrids", "# of grids", false, extraStyle),
                 new SidebarCheckBox(sidebar, yAxis, "autoScale", "Auto scale"),
             ];
             this._yAxesComponents.push(yAxisComponents);
@@ -61,7 +67,7 @@ export class XYPlotPlotSettings {
                     width: "100%",
                     height: "100%",
                     backgroundColor: "white",
-                    overflowY: "scroll",
+                    overflowY: "auto",
                     padding: 15,
                     display: "inline-flex",
                     justifyContent: "flex-start",
@@ -71,20 +77,73 @@ export class XYPlotPlotSettings {
                     border: "solid 1px rgba(0,0,0,1)",
                 }}
             >
-                {this.getXAxisComponents().map((component: SidebarNumberInput | SidebarCheckBox, index: number) => {
-                    return (
-                        component.getElement()
-                    )
-                })}
-                {this.getYAxesComponents().map((yAxisComponents: (SidebarNumberInput | SidebarCheckBox)[], index: number) => {
-                    return (
-                        yAxisComponents.map((component: SidebarNumberInput | SidebarCheckBox, index: number) => {
+                <div
+                    style={{
+                        display: "inline-flex",
+                        width: "90%",
+                        backgroundColor: "rgba(230,230,230,1)",
+                        borderRadius: 10,
+                        boxSizing: "border-box",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        padding: 10,
+                        marginBottom: 10,
+                    }}
+                >
+                    <div
+                        style={{
+                            display: "inline-flex",
+                            width: "40%",
+                            boxSizing: "border-box",
+                            flexDirection: "column",
+                        }}
+                    >
+                        <b>{"X axis"}</b>
+                        {this.getXAxisComponents().map((component: SidebarNumberInput | SidebarCheckBox, index: number) => {
                             return (
                                 component.getElement()
                             )
-                        })
+                        })}
+                    </div>
+                </div>
+
+                {this.getYAxesComponents().map((yAxisComponents: (SidebarNumberInput | SidebarCheckBox)[], index: number) => {
+                    const yAxis = this.getPlot().yAxes[index];
+                    return (
+                        <div
+                            style={{
+                                display: "inline-flex",
+                                width: "90%",
+                                backgroundColor: "rgba(230,230,230,1)",
+                                borderRadius: 10,
+                                boxSizing: "border-box",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                padding: 10,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "inline-flex",
+                                    width: "40%",
+                                    boxSizing: "border-box",
+                                    flexDirection: "column",
+                                }}
+                            >
+
+                                <b>
+                                    Trace {this.getPlot().convertLatexSourceToDiv(yAxis.label)}
+                                </b>
+                                {yAxisComponents.map((component: SidebarNumberInput | SidebarCheckBox, index: number) => {
+                                    return (
+                                        component.getElement()
+                                    )
+                                })}
+                            </div>
+                        </div>
                     )
                 })}
+
                 <this._ElementOKButton></this._ElementOKButton>
             </div>
         );
