@@ -18,54 +18,26 @@ import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor, E
 import { Log } from "../../../common/Log";
 import { ElementJsonViewer } from "../../helperWidgets/SharedElements/JsonViewer";
 import { mergePvaTypeAndData } from "../../../common/GlobalMethods";
-
-export type type_Probe_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    recordTypes: Record<string, any>;
-    menus: Record<string, any>;
-};
+import { type_Probe_tdl, defaultProbeTdl } from "../../../common/types/type_widget_tdl";
+import { Table } from "../../helperWidgets/Table/Table";
 
 export class Probe extends BaseWidget {
     _dbdFiles: DbdFiles;
-    rtyp: string = "";
 
     // static data for a particular RTYP
     fieldNames: string[] = [];
     fieldMenus: (undefined | string[])[] = [];
     fieldDefaultValues: (string | number)[] = [];
     fieldIsLink: boolean[] = [];
-    readonly rtypWaitingName: string = uuidv4();
 
-    private _mappedDbrData: Record<string, any> = {};
-
-    private _dbrDataMapping: Record<string, string> = {
-        Value: "value",
-        "Value Count": "valueCount",
-        Severity: "severity",
-        "Alarm Status": "status",
-        Access: "accessRight",
-        Unit: "units",
-        "DBR Type": "DBR_TYPE",
-        Precision: "precision",
-        "Display Upper Limit": "upper_display_limit",
-        "Display Lower Limit": "lower_display_limit",
-        "Control Upper Limit": "upper_warning_limit",
-        "Control Lower Limit": "lower_warning_limit",
-        Time: "secondsSinceEpoch",
-        "Server Address": "serverAddress",
-    };
+    // private _mappedDbrData: Record<string, any> = {};
 
     _channelNamesLevel5: string[] = [];
-    getChannelNamesLevel5 = () => {
-        return this._channelNamesLevel5;
-    }
+    private readonly _basicInfoData: Record<string, string> = {};
+
+    _Table: Table;
+    _Line: ({ children, additionalStyle, lineIndex, selectable }: any) => React.JSX.Element;
+    _Cell: ({ children, columnIndex, additionalStyle }: any) => React.JSX.Element;
 
     constructor(widgetTdl: type_Probe_tdl) {
         super(widgetTdl);
@@ -73,363 +45,18 @@ export class Probe extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        // this.registerUtilityWindowResizeCallback((event: any) => {
-            
-        // })
+        // dbd files is loaded upon operating mode starts, after the request-epics-dbd reply
+        this._dbdFiles = new DbdFiles({}, {});
 
-        this._dbdFiles = new DbdFiles(structuredClone(widgetTdl.recordTypes), structuredClone(widgetTdl.menus));
+        this._Table = new Table([150, 300, 50], this);
+        this._Line = this._Table.getElementTableLine();
+        this._Cell = this._Table.getElementTableCell();
 
         this._sidebar = new ProbeSidebar(this);
     }
 
-    processChannelNames = (): void => {
-        super.processChannelNames();
-        this.getChannelNamesLevel5().length = 0;
-        const baseChannelName = this.getChannelNamesLevel4()[0];
-        const separator = TcaChannel.checkChannelName(baseChannelName) === "pva" ? "." : ".";
-        if (baseChannelName !== undefined) {
-            this.getChannelNamesLevel5().push(baseChannelName);
-            for (let fieldName of this.fieldNames) {
-                this.getChannelNamesLevel5().push(`${baseChannelName}${separator}${fieldName}`);
-            }
-        }
-        // console.log("channel names level 5", this.getChannelNamesLevel5())
-    }
-
-    getDbrData = () => {
-        const channelName = this.getChannelNames()[0];
-        if (channelName === undefined) {
-            return {} as type_dbrData;
-        }
-        try {
-            // this.mapDbrData();
-            return this._mappedDbrData;
-        } catch (e) {
-            Log.error(e);
-            return {} as type_dbrData;
-        }
-    };
-
-    /**
-     * Executed when we submit a new probe
-     * 
-     * (1) destroy the TcaChannels from this widget, this widget's .channelNames is updated at this step
-     * (2) empty this._channelNames
-     * (3) expand channel name, create TcaChannel for the new channel, then obtain the meta data and monitor
-     *     this channel
-     * (4) flush widgets
-     */
-    newProbe = (newChannelName: string) => {
-        // (1)
-        // we are still trying to connect the channel
-        if (this.rtyp === this.rtypWaitingName) {
-            try {
-                const rtypChannelName = this.getChannelNamesLevel5()[0];
-                const oldTcaChannel = g_widgets1.getTcaChannel(rtypChannelName + ".RTYP");
-                oldTcaChannel.destroy(this.getWidgetKey());
-            } catch (e) {
-                Log.error(e);
-            }
-        }
-        for (let oldChannelNameLevel5 of this.getChannelNamesLevel5()) {
-            try {
-                const oldTcaChannel = g_widgets1.getTcaChannel(oldChannelNameLevel5);
-                oldTcaChannel.destroy(this.getWidgetKey());
-            } catch (e) {
-                Log.error(e);
-            }
-        }
-        // (2)
-        this.getChannelNamesLevel0()[0] = newChannelName;
-        // (3)
-        this.processChannelNames();
-        const channelName = this.getChannelNames()[0];
-        if (channelName !== undefined) {
-            const tcaChannel = g_widgets1.createTcaChannel(channelName, this.getWidgetKey());
-            if (tcaChannel !== undefined) {
-                tcaChannel.getMeta(undefined);
-                tcaChannel.monitor();
-            }
-        }
-        this.destroyFieldChannels();
-        this.getRTYP();
-        // (4)
-        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-        g_flushWidgets();
-    };
-
-    getRTYP = async () => {
-        if (this.rtyp !== "" || this.rtyp === this.rtypWaitingName) {
-            Log.debug("RTYP already obtained or waiting");
-            return;
-        }
-
-
-        // in some cases, we won't even be bothered to obtain the RTYP
-        // channel name === undefined, demo:count.EGU, pva://demo:count.EGU, pva://demo:count/timeStamp, pva://demo:count/timeStamp.nanoseconds
-
-        // level-4 channel name
-        const channelNameLevel4 = this.getChannelNamesLevel4()[0];
-        // if this is an EPICS field channel, e.g. val1.SEVR, no rtype
-        if (channelNameLevel4 === undefined) {
-            this.rtyp = "";
-            return;
-        } else if (channelNameLevel4.includes(".")) {
-            // demo:abc.EGU, no RTYP
-            this.rtyp = "";
-            return;
-        } else if (channelNameLevel4.replace("pva://", "").includes("/")) {
-            this.rtyp = "";
-            return;
-        }
-        // else if (channelNameLevel4.includes(".") && TcaChannel.checkChannelName(channelNameLevel4) !== "pva") {
-        //     this.rtyp = "";
-        //     let pvaTcaChannel = undefined;
-        //     try {
-        //         pvaTcaChannel = g_widgets1.getTcaChannel(channelNameLevel4);
-        //     } catch (e) {
-        //         pvaTcaChannel = g_widgets1.createTcaChannel(channelNameLevel4, this.getWidgetKey());
-        //     }
-        //     if (pvaTcaChannel !== undefined) {
-        //         await pvaTcaChannel.fetchPvaType(undefined);
-        //         pvaTcaChannel.monitor();
-        //     }
-        //     return;
-        // }
-
-        let rtypChannelName = `${channelNameLevel4}.RTYP`;
-        if (TcaChannel.checkChannelName(channelNameLevel4) === "pva") {
-            rtypChannelName = `${channelNameLevel4}.RTYP`;
-        }
-        let rtypTcaChannel: TcaChannel | undefined = undefined;
-        try {
-            rtypTcaChannel = g_widgets1.getTcaChannel(rtypChannelName);
-        } catch (e) {
-            rtypTcaChannel = g_widgets1.createTcaChannel(rtypChannelName, this.getWidgetKey());
-        }
-        if (rtypTcaChannel !== undefined) {
-
-            this.rtyp = this.rtypWaitingName;
-            if (rtypTcaChannel.getProtocol() === "pva") {
-                await rtypTcaChannel.fetchPvaType(undefined);
-                const dbrData = await rtypTcaChannel.get(this.getWidgetKey(), 1, undefined, false);
-                if (dbrData["value"] === undefined) {
-                }
-                // const dbrData = undefined;
-
-                if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
-                    // this is a PVA V3 channel, it has fields, such as pva://demo:count.EGU
-                    const rtyp = dbrData["value"];
-                    if (rtyp !== undefined && this.rtyp === this.rtypWaitingName) {
-                        this.rtyp = `${rtyp}`;
-                        this.connectFieldChannels();
-                        return;
-                    }
-                } else {
-                    // this is a pure PVA V4 channel, no fields
-                    this.rtyp = "PVA_V4";
-                    // GET timeout, reconnect
-                    // this.rtyp = "";
-                    this.connectPvaV4Channel();
-                }
-            } else {
-                // console.log('get meta')
-                await rtypTcaChannel.getMeta(this.getWidgetKey());
-                // console.log('get meta 1')
-                const dbrData = await rtypTcaChannel.get(this.getWidgetKey(), undefined, undefined, false);
-                if ((dbrData !== undefined) && dbrData["value"] !== undefined) {
-                    const rtyp = dbrData["value"];
-                    if (rtyp !== undefined && this.rtyp === this.rtypWaitingName) {
-                        this.rtyp = `${rtyp}`;
-                        this.connectFieldChannels();
-                        return;
-                    }
-                } else {
-                    // GET timeout, reconnect
-                    this.rtyp = "";
-                    this.mapDbrData();
-                }
-
-            }
-        }
-    };
-
-    // (1) update this._channelNames, append field channel name
-    // (2) create field channels, get meta and monitor
-    // (3) update
-    connectFieldChannels = () => {
-        const recordType = this.getDbdFiles().getRecordTypes()[this.rtyp];
-        // console.log("recordType ================", recordType)
-        if (recordType !== undefined) {
-            this.fieldNames = this.getDbdFiles().getRecordTypeFieldNames(this.rtyp);
-            this.fieldMenus = this.getDbdFiles().getRecordTypeFieldMenus(this.rtyp);
-            this.fieldDefaultValues = this.getDbdFiles().getRecordTypeFieldDefaultValues(this.rtyp);
-            this.fieldIsLink = this.getDbdFiles().getRecordTypeFieldIsLink(this.rtyp);
-
-            this.processChannelNames();
-            for (const channelNameLevel5 of this.getChannelNamesLevel5()) {
-                try {
-                    const fieldTcaChannel = g_widgets1.getTcaChannel(channelNameLevel5);
-                    // trigger the data so that the
-                    if (TcaChannel.checkChannelName(channelNameLevel5) !== "pva") {
-                        fieldTcaChannel.getMeta(this.getWidgetKey());
-                    } else {
-                        fieldTcaChannel.fetchPvaType(undefined);
-                    }
-                    fieldTcaChannel.get(this.getWidgetKey(), undefined, undefined, true);
-                    fieldTcaChannel.monitor();
-                } catch (e) {
-                    const fieldTcaChannel = g_widgets1.createTcaChannel(channelNameLevel5, this.getWidgetKey());
-                    // console.log("field tca channel", fieldTcaChannel?.getChannelName())
-                    if (fieldTcaChannel !== undefined) {
-                        if (TcaChannel.checkChannelName(channelNameLevel5) !== "pva") {
-                            fieldTcaChannel.getMeta(this.getWidgetKey());
-                        } else {
-                            fieldTcaChannel.fetchPvaType(undefined);
-                        }
-                        // console.log("try to get", channelNameLevel5)
-                        fieldTcaChannel.get(this.getWidgetKey(), undefined, undefined, true);
-                        // fieldTcaChannel.getMeta(undefined);
-                        fieldTcaChannel.monitor();
-                    }
-                }
-            }
-        }
-    };
-
-    connectPvaV4Channel = () => {
-        const channelNameLevel4 = this.getChannelNamesLevel4()[0];
-        if (TcaChannel.checkChannelName(channelNameLevel4) !== "pva") {
-            return;
-        }
-        try {
-            const fieldTcaChannel = g_widgets1.getTcaChannel(channelNameLevel4);
-            // trigger the data so that the
-            fieldTcaChannel.fetchPvaType(undefined);
-            fieldTcaChannel.get(this.getWidgetKey(), undefined, undefined, true);
-            fieldTcaChannel.monitor();
-        } catch (e) {
-            const fieldTcaChannel = g_widgets1.createTcaChannel(channelNameLevel4, this.getWidgetKey());
-            // console.log("field tca channel", fieldTcaChannel?.getChannelName())
-            if (fieldTcaChannel !== undefined) {
-                fieldTcaChannel.fetchPvaType(undefined);
-                // console.log("try to get", channelNameLevel5)
-                fieldTcaChannel.get(this.getWidgetKey(), undefined, undefined, true);
-                // fieldTcaChannel.getMeta(undefined);
-                fieldTcaChannel.monitor();
-            }
-        }
-    };
-
-    destroyFieldChannels = () => {
-        this.rtyp = "";
-        const canvas = g_widgets1.getWidget2("Canvas") as Canvas;
-        const recordType = this.getDbdFiles().getRecordTypes()[this.rtyp];
-        if (recordType !== undefined) {
-            for (const channelNameLevel5 of this.getChannelNamesLevel5()) {
-                try {
-                    const fieldTcaChannel = g_widgets1.getTcaChannel(channelNameLevel5);
-                    fieldTcaChannel.destroy(this.getWidgetKey());
-                } catch (e) {
-                    Log.error(e);
-                }
-            }
-        }
-        this.fieldMenus = [];
-        this.fieldNames = [];
-        this.fieldDefaultValues = [];
-        this.fieldIsLink = [];
-    };
-
-    // convert value (number | string | number[] | string[]) to string
-    // a number[], e.g. [1.2, 3.4, 5.6] is converted to string "1.2,3.4,5.6"
-    mapDbrData = () => {
-        this.getRTYP();
-
-        const result: Record<string, any> = {};
-        const channelNameLevel4 = this.getChannelNamesLevel4()[0];
-        if (channelNameLevel4 === undefined) {
-            return {};
-        }
-        try {
-            const tcaChannel = g_widgets1.getTcaChannel(channelNameLevel4);
-
-            const dbrData = tcaChannel.getDbrData();
-            result["Name"] = channelNameLevel4;
-            for (let key of Object.keys(this._dbrDataMapping)) {
-                const key1 = this._dbrDataMapping[key];
-                if (dbrData[key1] === undefined) {
-                    // don't show it
-                } else {
-                    let value = dbrData[key1];
-                    if (key === "DBR Type") {
-                        value = Channel_DBR_TYPES[value] as string;
-                        if (value.includes("ENUM")) {
-                            const strings = dbrData["strings"] as string[];
-                            if (strings !== undefined) {
-                                const numStringUsed = dbrData["number_of_string_used"];
-                                result["Number of Enums"] = `${numStringUsed}`;
-                                for (let ii = 0; ii < numStringUsed; ii++) {
-                                    result[`Enum ${ii}`] = strings[ii];
-                                }
-                            }
-                        }
-                    } else if (key === "Severity") {
-                        value = tcaChannel.getSeverityStr();
-                    } else if (key === "Alarm Status") {
-                        value = tcaChannel.getStatusStr();
-                    } else if (key === "Time") {
-                        const us0 = Date.UTC(90, 0, 1, 0, 0, 0, 0);
-                        let us = value * 1000 + dbrData["nanoSeconds"] * 1e-6;
-                        let dateStr = new Date(us + us0).toString();
-                        let dateStr1 = dateStr.replace(" GMT", `.${dbrData["nanoSeconds"] * 1e-3} GMT`);
-                        let dateStr1Split = dateStr1.split(" ");
-                        value = `${dateStr1Split[1]} ${dateStr1Split[2]} ${dateStr1Split[3]} ${dateStr1Split[4]}`;
-                    }
-                    result[key] = `${value}`;
-                }
-            }
-        } catch (e) {
-            return {};
-        }
-
-        return result;
-    };
-
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
-
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -442,81 +69,17 @@ export class Probe extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
-                </>
+                <div style={{ ...this.getElementBodyRawStyle() }}>
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            <div style={{ ...this.getElementBodyRawStyle() }}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
-        this._mappedDbrData = this.mapDbrData();
-
-        // const [value, setValue] = React.useState(this._getChannelValue());
-        // const isFocused = React.useRef<boolean>(false);
-        const [channelName, setChannelName] = React.useState(this.getChannelNames()[0]);
-        // const channelNameInputRef: React.RefObject<null | HTMLInputElement> = React.useRef(null);
-        const filterElementRef = React.useRef<HTMLInputElement>(null);
-        const [filterValue, setFilterValue] = React.useState("");
-        const elementProcessRef = React.useRef<HTMLSpanElement>(null);
-        const elementGenerateRecord = React.useRef<HTMLSpanElement>(null);
-        const elementGenerateRecordShort = React.useRef<HTMLSpanElement>(null);
-
-        let tcaChannel: undefined | TcaChannel = undefined;
-        try {
-            tcaChannel = g_widgets1.getTcaChannel(channelName);
-        } catch (e) {
-            Log.error(e);
-        }
-
-        const pvaData = tcaChannel?.getDbrData();
-        const pvaType = tcaChannel?.getPvaType();
-        let jsonDataAndType: any = {};
-        let jsonTypeName = "";
-        // console.log("pvaData, pvaType", pvaData, pvaType, tcaChannel?.getFullPvaType())
-        if (pvaData !== undefined && pvaType !== undefined) {
-            try {
-                const dataAndTypeFull = mergePvaTypeAndData(pvaType, "", pvaData);
-                jsonTypeName = dataAndTypeFull["key"];
-                jsonDataAndType = dataAndTypeFull["data"];
-            } catch (e) {
-                // console.log(e)
-                Log.error(e);
-            }
-        }
-
-        React.useEffect(() => {
-            setChannelName(`${this.getChannelNames()[0]}`);
-        }, [this.getChannelNames()[0]]);
-
-
-        // channel name hint
-        const inputElementRef = React.useRef<HTMLInputElement>(null);
-        const formElementRef = React.useRef<HTMLFormElement>(null);
-
-        const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
-        const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
-        const [channelNameHintElementDimension, setChannelNameHintElementDimension] = React.useState({ width: 0, maxHeight: 0, left: 0, top: 0 });
-        const [channelNameHintData, setChannelNameHintData] = React.useState<string[]>([]);
-
-        const selectHint = (channelName: string) => {
-            this.newProbe(channelName);
-            // (event.currentTarget.elements[0] as HTMLInputElement).blur();
-            // setShowChannelNameHint(false);
-            setChannelName(channelName);
-            setShowChannelNameHint(false)
-        }
+    _ElementAreaRaw = (): React.JSX.Element => {
+        this.extractBasicInfo();
 
         return (
             <div
@@ -527,344 +90,296 @@ export class Probe extends BaseWidget {
                     width: "100%",
                     height: "100%",
                     userSelect: "none",
-                    // different from regular widget
-                    // overflow: this.getText().overflowVisible ? "visible" : "hidden",
                     flexDirection: "column",
-                    // whiteSpace: this.getText().wrapWord ? "pre-line" : "nowrap",
-                    // justifyContent: this.getText().horizontalAlign,
-                    // alignItems: this.getText().verticalAlign,
-                    // fontFamily: this.getText().fontFamily,
-                    fontSize: this.getText().fontSize,
-                    fontStyle: this.getText().fontStyle,
-                    // outline: this._getElementAreaRawOutlineStyle(),
+                    // fontSize: this.getText().fontSize,
+                    // fontStyle: this.getText().fontStyle,
                     paddingBottom: 0,
                     overflowX: "hidden",
-                    overflowY: "scroll",
+                    overflowY: "auto",
                 }}
                 // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                <div
-                    style={{
-                        position: "relative",
-                        display: "inline-flex",
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        width: "100%",
-                        fontSize: 25,
-                    }}
-                >
-                    <div style={{}}>
-                        <b>Probe&nbsp;for&nbsp;</b>
-                    </div>
-                    <div
-                        style={{
-                            flexGrow: 1,
-                        }}
-                    >
-                        <form
-                            ref={formElementRef}
-                            onSubmit={(event) => {
-                                event.preventDefault();
-                                this.newProbe(channelName);
-                                (event.currentTarget.elements[0] as HTMLInputElement).blur();
-                                setShowChannelNameHint(false);
-                            }}
-                            style={{
-                                fontSize: 25,
-                                backgroundColor: "rgba(255,255,0,0)",
-                                width: "100%",
-                                fontFamily: "bold",
-                            }}
-                        >
-                            <this.ElementPvInput
-                                ref={inputElementRef}
-                                type="text"
-                                name="channelName"
-                                placeholder="PV Name"
-                                value={channelName}
-                                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                    const newVal = event.target.value;
-                                    setChannelName(newVal);
+                <this._ElementProbe />
+            </div>
+        );
+    };
 
-                                    // send query for channel name if there are more than 1 character input
-                                    if (newVal.trim().length >= 2) {
-                                        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                                        const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
-                                        // console.log(queryStr)
-                                        if (queryStr !== "") {
-                                            fetch(queryStr)
-                                                .then(res => res.json())
-                                                .then((data: any) => {
-                                                    // console.log(data, inputElementRef.current, formElementRef.current);
-                                                    if (Object.keys(data).length > 0 && formElementRef.current !== null) {
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
-                                                        // const rectInput = inputElementRef.current.getBoundingClientRect();
-                                                        const recForm = formElementRef.current.getBoundingClientRect();
-                                                        setChannelNameHintElementDimension({
-                                                            left: 0, // rectInput.left, // - recForm.left,
-                                                            top: recForm.height + 5, //rectInput.top - recForm.top + rectInput.height,
-                                                            width: recForm.width - 5,
-                                                            maxHeight: 400,
-                                                        })
-                                                        setChannelNameHintData(Object.keys(data));
-                                                        setShowChannelNameHint(true);
-                                                    } else {
-                                                        setChannelNameHintData(data);
-                                                        setShowChannelNameHint(false);
-                                                    }
-                                                })
-                                        }
-                                    }
-
-                                }}
-                                onBlur={() => {
-                                    setShowChannelNameHint(false);
-                                    setChannelNameHintData([]);
-
-                                    const orig = this.getChannelNames()[0];
-                                    if (orig !== channelName) {
-                                        setChannelName(orig);
-                                    }
-                                }}
-                                onFocus={() => {
-                                    inputElementRef.current?.select();
-                                }}
-                            />
-                            <ChannelNameHintElement
-                                show={showChannelNameHint}
-                                additionalStyle={channelNameHintElementDimension}
-                                channelNames={channelNameHintData}
-                                selectHint={selectHint}
-                            ></ChannelNameHintElement>
-
-                        </form>
-                    </div>
+    _ElementProbe = () => {
+        if (g_widgets1.isEditing() === true) {
+            return (
+                <div>
+                    <h1>
+                        Probe
+                    </h1>
                 </div>
+            );
+        }
+
+        const [filterValue, setFilterValue] = React.useState("");
+
+        return (
+            <div>
+                <this._ElementTitle />
+                <this._ElementBasics></this._ElementBasics>
+                <this._ElementPvaData />
+                <this._ElementFieldDesc />
+                <this._ElementFilter filterValue={filterValue} setFilterValue={setFilterValue} />
+                <this._ElementFields filterValue={filterValue} />
+                <this._ElementCopyAllButton />
+
+            </div>
+        )
+    }
+
+    _ElementBasics = () => {
+        const basicInfoData = this.getBasicInfoData();
+
+        return (
+            <div>
                 <div>
                     <h3>Basics</h3>
                 </div>
-                <table
+                <div
                     style={{
                         outline: this._getElementAreaRawOutlineStyle(),
                     }}
                 >
-                    <tbody>
-                        <tr style={{
-                            backgroundColor: "rgba(245,245,245,1)",
-                        }}>
-                            <th
-                                style={{
-                                    width: "1%",
-                                    whiteSpace: "nowrap",
-                                    paddingRight: "10px",
-                                    textAlign: "left",
-                                }}
-                            >
-                                Property
-                            </th>
-                            <th
-                                style={{
-                                    paddingLeft: "10px",
-                                    textAlign: "left",
-                                }}
-                            >
-                                Value
-                            </th>
-                        </tr>
+                    {/* header line */}
+                    <this._Line selectable={false}>
+                        <this._Cell columnIndex={0}>
+                            <b>Property</b>
+                        </this._Cell>
+                        <this._Cell columnIndex={1}>
+                            <b>Value</b>
+                        </this._Cell>
+                        <this._Cell columnIndex={2}>
+                        </this._Cell>
+                    </this._Line>
 
-                        {Object.keys(this.getDbrData()).map((property: string, index: number) => {
-                            const dbrData = this.getDbrData();
-                            if (Object.keys(dbrData).length !== 0) {
-                                const value = dbrData[property];
-                                if (property === "Value") {
-                                    return (
-                                        <>
-                                            <this.TableLineWithInput index={index} property={property} value={value}></this.TableLineWithInput>
-                                            <this.TableLine index={index} property={property} value={value}></this.TableLine>
-                                        </>
-                                    );
+                    {Object.entries(basicInfoData).map(([key, value]: [string, string], index: number) => {
+
+
+                        if (key === "Value") {
+                            return (
+                                <React.Fragment key={`basics-${index}`}>
+                                    <this._Line lineIndex={index} selectable={false}>
+                                        <this._Cell columnIndex={0}>
+                                            {key}
+                                        </this._Cell>
+                                        <this._Cell columnIndex={1}>
+                                            <this._ElementValueInputForm></this._ElementValueInputForm>
+                                        </this._Cell>
+                                        <this._Cell columnIndex={2}>
+                                        </this._Cell>
+                                    </this._Line>
+                                    <this._Line lineIndex={index} selectable={false}>
+                                        <this._Cell columnIndex={0}>
+                                            {key}
+                                        </this._Cell>
+                                        <this._Cell columnIndex={1}>
+                                            {value}
+                                        </this._Cell>
+                                        <this._Cell columnIndex={2}>
+                                            <ElementRectangleButton
+                                                paddingLeft={3}
+                                                paddingRight={3}
+                                                paddingTop={1}
+                                                paddingBottom={1}
+                                                defaultBackgroundColor={"rgba(0,0,0,0)"}
+                                                defaultTextColor={"rgba(0,0,0,0)"}
+                                                highlightBackgroundColor={ElementRectangleButtonDefaultBackgroundColor}
+                                                highlightTextColor={ElementRectangleButtonDefaultTextColor}
+                                                handleClick={() => {
+                                                    const val = Object.values(basicInfoData)[index];
+                                                    navigator.clipboard.writeText(`${val}`);
+                                                }}
+                                            >
+                                                Copy
+                                            </ElementRectangleButton>
+                                        </this._Cell>
+                                    </this._Line>
+                                </React.Fragment>
+                            );
+                        }
+                        return (
+                            <this._Line key={`basics-${index}`} lineIndex={index} selectable={false}>
+                                <this._Cell columnIndex={0}>
+                                    {key}
+                                </this._Cell>
+                                <this._Cell columnIndex={1}>
+                                    {value}
+                                </this._Cell>
+                                <this._Cell columnIndex={2}>
+                                    <ElementRectangleButton
+                                        paddingLeft={3}
+                                        paddingRight={3}
+                                        paddingTop={1}
+                                        paddingBottom={1}
+                                        defaultBackgroundColor={"rgba(0,0,0,0)"}
+                                        defaultTextColor={"rgba(0,0,0,0)"}
+                                        highlightBackgroundColor={ElementRectangleButtonDefaultBackgroundColor}
+                                        highlightTextColor={ElementRectangleButtonDefaultTextColor}
+                                        handleClick={() => {
+                                            const val = Object.values(basicInfoData)[index];
+                                            navigator.clipboard.writeText(`${val}`);
+                                        }}
+                                    >
+                                        Copy
+                                    </ElementRectangleButton>
+                                </this._Cell>
+                            </this._Line>
+                        );
+                    })}
+                    <this._ElementLineProcess />
+                    <this._ElementLineRecordDefinition />
+                </div>
+            </div>
+        )
+    }
+
+    _ElementCopyAllButton = () => {
+        return (
+            <div
+                style={{
+                    paddingBottom: 20,
+                    marginTop: 10,
+                }}
+            >
+                <ElementRectangleButton
+                    handleClick={(event) => {
+                        const result: Record<string, string | number | string[] | number[] | undefined> = structuredClone(this.getBasicInfoData());
+                        for (let fieldName of this.fieldNames) {
+                            const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
+                            const value = g_widgets1.getChannelValue(channelName);
+                            result[fieldName] = value;
+                        }
+                        navigator.clipboard.writeText(JSON.stringify(result, null, 4));
+                    }}
+                >
+                    Copy All
+                </ElementRectangleButton>
+            </div>
+        );
+    };
+
+    _ElementFields = ({ filterValue }: { filterValue: string }) => {
+        return (
+            <div
+                style={{
+                    outline: this._getElementAreaRawOutlineStyle(),
+                }}
+            >
+                {
+                    this.fieldNames.map((fieldName: string, index: number) => {
+                        const filterValueArray = filterValue.trim().split(" ");
+                        let filterMatch = false;
+                        for (let filterValueElement of filterValueArray) {
+                            filterMatch = filterMatch || fieldName.includes(filterValueElement.trim().toUpperCase());
+                        }
+                        if (!filterMatch) {
+                            return null;
+                        }
+                        let separator = ".";
+                        if (TcaChannel.checkChannelName(this.getChannelNamesLevel4()[0]) === "pva") {
+                            separator = ".";
+                        }
+                        const channelName = `${this.getChannelNamesLevel4()[0]}${separator}${fieldName}`;
+                        const property = fieldName;
+
+                        const value = g_widgets1.getChannelValue(channelName);
+
+                        if (value !== undefined) {
+                            const fieldMenu = this.fieldMenus[index];
+                            const fieldDefaultValue = this.fieldDefaultValues[index];
+                            const fieldIsLink = this.fieldIsLink[index];
+                            if (fieldMenu !== undefined) {
+                                // it is a menu
+                                let choice = value;
+                                if (typeof value === "number") {
+                                    choice = fieldMenu[value];
                                 }
-                                return <this.TableLine index={index} property={property} value={value}></this.TableLine>;
-                            } else {
-                                return null;
+                                return (
+                                    <this._ElementTableLineField
+                                        index={index}
+                                        property={property}
+                                        value={choice}
+                                        defaultValue={fieldDefaultValue}
+                                        isLink={fieldIsLink}
+                                        isMenu={true}
+                                        channelName={channelName}
+                                        fieldMenu={fieldMenu}
+                                    ></this._ElementTableLineField>
+                                );
                             }
-                        })}
-
-
-                        {this.rtyp === "" || this.rtyp === this.rtypWaitingName ? null :
-                            <>
-                                <this.TableLine index={-1} property={"RTYP"} value={this.rtyp}></this.TableLine>
-                                <this.TableLine index={-1} property={"Process"} value={
-                                    <div
-                                        style={{
-                                            display: "inline-flex",
-                                        }}
-                                    >
-                                        Click<span ref={elementProcessRef}
-                                            style={{
-                                                cursor: "pointer",
-                                            }}
-                                            onClick={() => {
-                                                try {
-                                                    const channelName = this.getChannelNames()[0].split(".")[0]; // base channel name
-                                                    const tcaChannel = g_widgets1.getTcaChannel(channelName + ".PROC"); // .PROC
-                                                    // if user includes the unit, the put() should be able to parseInt() or praseFloat()
-                                                    // the text before unit
-                                                    const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                                                    tcaChannel.put(displayWindowId, { value: 1 }, 1);
-                                                } catch (e) {
-                                                    const errMsg = `Channel ${this.getChannelNames()} cannot be found`;
-                                                    Log.error(errMsg);
-                                                    Log.error(e);
-                                                }
-                                            }}
-                                            onMouseEnter={() => {
-                                                if (elementProcessRef.current !== null) {
-                                                    elementProcessRef.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
-                                                }
-                                            }}
-                                            onMouseLeave={() => {
-                                                if (elementProcessRef.current !== null) {
-                                                    elementProcessRef.current.style["outline"] = "none";
-                                                }
-                                            }}
-
-                                        >&nbsp;here&nbsp;</span>to process this channel
-                                    </div>
-                                }></this.TableLine>
-                                <this.TableLine index={-1} property={"Record definition"} value={
-                                    <div
-                                        style={{
-                                            display: "inline-flex",
-                                        }}
-                                    >
-                                        Click<span ref={elementGenerateRecord}
-                                            style={{
-                                                cursor: "pointer",
-                                            }}
-                                            onClick={() => {
-                                                const record = this.generateRecord();
-                                                if (record.startsWith("# failed to")) {
-                                                    const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-                                                    ipcManager.handleDialogShowMessageBox(undefined, {
-                                                        info: {
-                                                            // command?: string | undefined,
-                                                            messageType: "error", // | "warning" | "info", // symbol
-                                                            humanReadableMessages: [`Failed to generate record for channel ${this.getChannelNames()[0]}`], // each string has a new line
-                                                            rawMessages: ["Did not find the record type"], // computer generated messages
-                                                            // buttons?: type_DialogMessageBoxButton[] | undefined,
-                                                            // attachment?: any,
-                                                        }
-                                                    })
-                                                    return;
-                                                }
-                                                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                                                g_widgets1.openTextEditorWindow({
-                                                    displayWindowId: displayWindowId,
-                                                    widgetKey: this.getWidgetKey(),
-                                                    fileName: "",
-                                                    manualOpen: false,
-                                                    openNewWindow: true,
-                                                    fileContents: record,
-                                                })
-                                            }}
-                                            onMouseEnter={() => {
-                                                if (elementGenerateRecord.current !== null) {
-                                                    elementGenerateRecord.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
-                                                }
-                                            }}
-                                            onMouseLeave={() => {
-                                                if (elementGenerateRecord.current !== null) {
-                                                    elementGenerateRecord.current.style["outline"] = "none";
-                                                }
-                                            }}
-
-                                        >&nbsp;here&nbsp;</span>to show the full record,
-                                        <span ref={elementGenerateRecordShort}
-                                            style={{
-                                                cursor: "pointer",
-                                            }}
-                                            onClick={() => {
-                                                const record = this.generateRecord(true);
-                                                if (record.startsWith("# failed to")) {
-                                                    const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-                                                    ipcManager.handleDialogShowMessageBox(undefined, {
-                                                        info: {
-                                                            // command?: string | undefined,
-                                                            messageType: "error", // | "warning" | "info", // symbol
-                                                            humanReadableMessages: [`Failed to generate record for channel ${this.getChannelNames()[0]}`], // each string has a new line
-                                                            rawMessages: ["Did not find the record type"], // computer generated messages
-                                                            // buttons?: type_DialogMessageBoxButton[] | undefined,
-                                                            // attachment?: any,
-                                                        }
-                                                    })
-                                                    return;
-                                                }
-                                                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                                                g_widgets1.openTextEditorWindow({
-                                                    displayWindowId: displayWindowId,
-                                                    widgetKey: this.getWidgetKey(),
-                                                    fileName: "",
-                                                    manualOpen: false,
-                                                    openNewWindow: true,
-                                                    fileContents: record,
-                                                })
-                                            }}
-                                            onMouseEnter={() => {
-                                                if (elementGenerateRecordShort.current !== null) {
-                                                    elementGenerateRecordShort.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
-                                                }
-                                            }}
-                                            onMouseLeave={() => {
-                                                if (elementGenerateRecordShort.current !== null) {
-                                                    elementGenerateRecordShort.current.style["outline"] = "none";
-                                                }
-                                            }}
-
-                                        >&nbsp;here&nbsp;</span>
-                                        for short version.
-                                    </div>
-                                }></this.TableLine>
-                            </>
+                            return (
+                                <this._ElementTableLineField
+                                    index={index}
+                                    property={property}
+                                    value={value}
+                                    defaultValue={fieldDefaultValue}
+                                    isLink={fieldIsLink}
+                                    isMenu={false}
+                                    channelName={channelName}
+                                    fieldMenu={[]}
+                                ></this._ElementTableLineField>
+                            );
+                        } else {
+                            return null;
                         }
-                    </tbody>
-                </table>
-                {(tcaChannel !== undefined && tcaChannel.getProtocol() === "pva") ?
-                    <div>
-                        <h3>PV Access Raw Data {jsonTypeName === "" ? "" : "( " + jsonTypeName + ")"}</h3>
+                    })}
+            </div>
+        );
+    };
 
-                        {g_widgets1.getChannelProtocol(channelName) === "pva" && tcaChannel !== undefined ?
-                            <ElementJsonViewer json={jsonDataAndType} topLevel={true}></ElementJsonViewer>
-                            : null
-                        }
-                    </div>
-                    :
-                    null
+    _ElementPvaData = () => {
+        let tcaChannel: undefined | TcaChannel = undefined;
+        try {
+            tcaChannel = g_widgets1.getTcaChannel(this.getChannelNames()[0]);
+        } catch (e) {
+            Log.error(e);
+        }
+
+        if (tcaChannel === undefined || tcaChannel.getProtocol() !== "pva") {
+            return null;
+        }
+
+        const pvaData = tcaChannel.getDbrData();
+        const pvaType = tcaChannel.getPvaType();
+        let jsonDataAndType: any = {};
+        let jsonTypeName = "";
+        if (pvaData !== undefined && pvaType !== undefined) {
+            try {
+                const dataAndTypeFull = mergePvaTypeAndData(pvaType, "", pvaData);
+                jsonTypeName = dataAndTypeFull["key"];
+                jsonDataAndType = dataAndTypeFull["data"];
+            } catch (e) {
+                Log.error(e);
+            }
+        }
+
+        return (
+            <div>
+                <h3>PV Access Raw Data {jsonTypeName === "" ? "" : "( " + jsonTypeName + ")"}</h3>
+                {g_widgets1.getChannelProtocol(this.getChannelNames()[0]) === "pva" ?
+                    <ElementJsonViewer json={jsonDataAndType} topLevel={true}></ElementJsonViewer>
+                    : null
                 }
+            </div>
+        );
+    };
 
-                {/* basic info from pva data */}
-                {/* severity, status, alarm message, */}
-
-                <div>
-                    <h3>Fields</h3>
-                </div>
-                <div>
-                    <span style={{ color: "grey" }}>GREY</span>: field is not writable
-                </div>
-                <div>
-                    <span style={{ color: "green" }}>GREEN</span>: menu-type field, the value can be changed by selecting from the drop-down menu
-                </div>
-                <div>
-                    <span style={{ color: "blue" }}>BLUE</span>: link-type field, clicking the blue text will open a new Probe window for the linked
-                    PV
-                </div>
-                <div>
-                    <span style={{ color: "red" }}>RED</span>: field value is different from its default value
-                </div>
-                <div>&nbsp;</div>
+    _ElementFilter = ({ filterValue, setFilterValue }: {
+        filterValue: string,
+        setFilterValue: React.Dispatch<React.SetStateAction<string>>,
+    }) => {
+        const filterElementRef = React.useRef<HTMLInputElement>(null);
+        return (
+            <>
                 <div>
                     Filter:
                     <input
@@ -886,204 +401,302 @@ export class Probe extends BaseWidget {
                     ></input>
                 </div>
                 <div>&nbsp;</div>
-                <table
-                    style={{
-                        outline: this._getElementAreaRawOutlineStyle(),
-                    }}
-                // backgroundColor={this.getStyle().backgroundColor}
-                >
-                    <tbody>
-                        {this.rtyp === ""
-                            ? null
-                            : this.fieldNames.map((fieldName: string, index: number) => {
-                                const filterValueArray = filterValue.trim().split(" ");
-                                let filterMatch = false;
-                                for (let filterValueElement of filterValueArray) {
-                                    filterMatch = filterMatch || fieldName.includes(filterValueElement.trim().toUpperCase());
-                                }
-                                if (!filterMatch) {
-                                    return null;
-                                }
-                                let separator = ".";
-                                if (TcaChannel.checkChannelName(this.getChannelNamesLevel4()[0]) === "pva") {
-                                    separator = ".";
-                                }
-                                const channelName = `${this.getChannelNamesLevel4()[0]}${separator}${fieldName}`;
-                                const property = fieldName;
-                                const value = g_widgets1.getChannelValue(channelName);
-                                // console.log("rendering", fieldName, channelName, value)
-                                if (value !== undefined) {
-                                    const fieldMenu = this.fieldMenus[index];
-                                    const fieldDefaultValue = this.fieldDefaultValues[index];
-                                    const fieldIsLink = this.fieldIsLink[index];
-                                    if (fieldMenu !== undefined) {
-                                        // it is a menu
-                                        let choice = value;
-                                        if (typeof value === "number") {
-                                            choice = fieldMenu[value];
-                                        }
-                                        return (
-                                            <this.TableLineField
-                                                index={index}
-                                                property={property}
-                                                value={choice}
-                                                defaultValue={fieldDefaultValue}
-                                                isLink={fieldIsLink}
-                                                isMenu={true}
-                                                channelName={channelName}
-                                                fieldMenu={fieldMenu}
-                                            ></this.TableLineField>
-                                        );
-                                        // }
-                                    }
-                                    return (
-                                        <this.TableLineField
-                                            index={index}
-                                            property={property}
-                                            value={value}
-                                            defaultValue={fieldDefaultValue}
-                                            isLink={fieldIsLink}
-                                            isMenu={false}
-                                            channelName={channelName}
-                                            fieldMenu={[]}
-                                        ></this.TableLineField>
-                                    );
-                                } else {
-                                    return null;
-                                }
-                            })}
-                    </tbody>
-                </table>
+            </>
+        );
+    };
 
+    _ElementFieldDesc = () => {
+        return (
+            <>
+                <div>
+                    <h3>Fields</h3>
+                </div>
+                <div>
+                    <span style={{ color: "grey" }}>GREY</span>: field is not writable
+                </div>
+                <div>
+                    <span style={{ color: "green" }}>GREEN</span>: menu-type field, the value can be changed by selecting from the drop-down menu
+                </div>
+                <div>
+                    <span style={{ color: "blue" }}>BLUE</span>: link-type field, clicking the blue text will open a new Probe window for the linked
+                    PV
+                </div>
+                <div>
+                    <span style={{ color: "red" }}>RED</span>: field value is different from its default value
+                </div>
+                <div>&nbsp;</div>
+            </>
+        );
+    };
+
+    _ElementTitle = () => {
+        const [channelName, setChannelName] = React.useState(this.getChannelNames()[0]);
+
+        React.useEffect(() => {
+            setChannelName(`${this.getChannelNames()[0]}`);
+        }, [this.getChannelNames()[0]]);
+
+        // channel name hint
+        const inputElementRef = React.useRef<HTMLInputElement>(null);
+        const formElementRef = React.useRef<HTMLFormElement>(null);
+
+        const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
+        const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
+        const [channelNameHintElementDimension, setChannelNameHintElementDimension] = React.useState({ width: 0, maxHeight: 0, left: 0, top: 0 });
+        const [channelNameHintData, setChannelNameHintData] = React.useState<string[]>([]);
+
+        const selectHint = (channelName: string) => {
+            this.newProbe(channelName);
+            setChannelName(channelName);
+            setShowChannelNameHint(false)
+        }
+
+        return (
+            <div
+                style={{
+                    position: "relative",
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                    fontSize: 25,
+                }}
+            >
+                <div style={{}}>
+                    <b>Probe&nbsp;for&nbsp;</b>
+                </div>
                 <div
                     style={{
-                        paddingBottom: 20,
-                        marginTop: 10,
+                        flexGrow: 1,
                     }}
                 >
-                    <ElementRectangleButton
-                        handleClick={(event) => {
-                            const result = structuredClone(this._mappedDbrData);
-                            for (let fieldName of this.fieldNames) {
-                                const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
-                                const value = g_widgets1.getChannelValue(channelName);
-                                result[fieldName] = value;
-                            }
-
-                            navigator.clipboard.writeText(JSON.stringify(result, null, 4));
+                    <form
+                        ref={formElementRef}
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            this.newProbe(channelName);
+                            (event.currentTarget.elements[0] as HTMLInputElement).blur();
+                            setShowChannelNameHint(false);
+                        }}
+                        style={{
+                            fontSize: 25,
+                            backgroundColor: "rgba(255,255,0,0)",
+                            width: "100%",
+                            fontFamily: "bold",
                         }}
                     >
-                        Copy All
-                    </ElementRectangleButton>
+                        <this._ElementPvInput
+                            ref={inputElementRef}
+                            type="text"
+                            name="channelName"
+                            placeholder="PV Name"
+                            value={channelName}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                const newVal = event.target.value;
+                                setChannelName(newVal);
+
+                                // send query for channel name if there are more than 1 character input
+                                if (newVal.trim().length >= 2) {
+                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                    const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
+                                    if (queryStr !== "") {
+                                        fetch(queryStr)
+                                            .then(res => res.json())
+                                            .then((data: any) => {
+                                                if (Object.keys(data).length > 0 && formElementRef.current !== null) {
+                                                    const recForm = formElementRef.current.getBoundingClientRect();
+                                                    setChannelNameHintElementDimension({
+                                                        left: 0,
+                                                        top: recForm.height + 5,
+                                                        width: recForm.width - 5,
+                                                        maxHeight: 400,
+                                                    })
+                                                    setChannelNameHintData(Object.keys(data));
+                                                    setShowChannelNameHint(true);
+                                                } else {
+                                                    setChannelNameHintData(data);
+                                                    setShowChannelNameHint(false);
+                                                }
+                                            })
+                                    }
+                                }
+
+                            }}
+                            onBlur={() => {
+                                setShowChannelNameHint(false);
+                                setChannelNameHintData([]);
+
+                                const orig = this.getChannelNames()[0];
+                                if (orig !== channelName) {
+                                    setChannelName(orig);
+                                }
+                            }}
+                            onFocus={() => {
+                                inputElementRef.current?.select();
+                            }}
+                        />
+                        <ChannelNameHintElement
+                            show={showChannelNameHint}
+                            additionalStyle={channelNameHintElementDimension}
+                            channelNames={channelNameHintData}
+                            selectHint={selectHint}
+                        ></ChannelNameHintElement>
+
+                    </form>
                 </div>
-                {g_widgets1.isEditing() ?
-                    <div style={{
-                        position: "absolute",
-                        width: "100%",
-                        height: "100%",
-                        backgroundColor: "rgba(255,0,0,0)",
-                    }}>
-                    </div>
-                    : null
-                }
             </div>
         );
     };
 
-
-
-    generateRecord = (shortVersion: boolean = false) => {
-        if (this.rtyp === "" || (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i).test(this.rtyp)) {
-            const channelName = `${this.getChannelNamesLevel4()[0]}`;
-
-            return (
-                `# failed to generate record for ${channelName}. Reason: it does not have a record type.`
-            );
-        } else {
-            const baseChannelName = this.getChannelNamesLevel4()[0];
-            const result: string[] = [
-                `# Generated by TDM Probe using live data at ${new Date(Date.now()).toLocaleString()}`,
-                `# It includes ${shortVersion === true ? "changed" : "all"} fields of channel type "${this.rtyp}"`,
-                `# The field line is ${shortVersion === true ? "not shown" : "commented"} if this field's value equals to its default`,
-                `record(${this.rtyp}, "${baseChannelName}") {`];
-
-
-            this.fieldNames.map((fieldName: string, index: number) => {
-                if (fieldName === "NAME") {
-                    return;
-                }
-                const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
-                const fieldDefaultValue = this.fieldDefaultValues[index];
-                const value = g_widgets1.getChannelValue(channelName);
-                if (value !== undefined) {
-
-                    if (value === fieldDefaultValue) {
-                        if (shortVersion === false) {
-                            let line = `    # field(${fieldName}, "${value}")`;
-                            result.push(line);
-                        }
-
-                    } else {
-                        let line = `    field(${fieldName}, "${value}")`;
-                        const numSpaces = Math.max(line.length, 40) - line.length + 1;
-                        for (let ii = 0; ii < numSpaces; ii++) {
-                            line = line + " ";
-                        }
-                        line = line + `# default ` + `"${fieldDefaultValue}"`
-
-                        result.push(line);
-
-                    }
-
-                }
-            })
-            result.push("}");
-            return result.join("\n");
-        }
-    }
-
-
-    // concretize abstract method
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-
-    // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = () => {
-        return this._getFirstChannelValue();
-    };
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-    _getChannelUnit = () => {
-        return this._getFirstChannelUnit();
+    _ElementLineProcess = () => {
+        const elementProcessRef = React.useRef<HTMLSpanElement>(null);
+        return (
+            <this._Line lineIndex={-1} selectable={false}>
+                <this._Cell columnIndex={0}>
+                    Process
+                </this._Cell>
+                <this._Cell columnIndex={1}>
+                    <div
+                        style={{
+                            display: "inline-flex",
+                        }}
+                    >
+                        Click<span ref={elementProcessRef}
+                            style={{
+                                cursor: "pointer",
+                            }}
+                            onClick={() => {
+                                try {
+                                    const channelName = this.getChannelNames()[0].split(".")[0];
+                                    const tcaChannel = g_widgets1.getTcaChannel(channelName + ".PROC");
+                                    const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+                                    tcaChannel.put(displayWindowId, { value: 1 }, 1);
+                                } catch (e) {
+                                    const errMsg = `Channel ${this.getChannelNames()} cannot be found`;
+                                    Log.error(errMsg);
+                                    Log.error(e);
+                                }
+                            }}
+                            onMouseEnter={() => {
+                                if (elementProcessRef.current !== null) {
+                                    elementProcessRef.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
+                                }
+                            }}
+                            onMouseLeave={() => {
+                                if (elementProcessRef.current !== null) {
+                                    elementProcessRef.current.style["outline"] = "none";
+                                }
+                            }}
+                        >&nbsp;here&nbsp;</span>to process this channel
+                    </div>
+                </this._Cell>
+                <this._Cell columnIndex={2}>
+                </this._Cell>
+            </this._Line>
+        );
     };
 
-    // ----------------------- styles -----------------------
+    _ElementLineRecordDefinition = () => {
+        const elementGenerateRecord = React.useRef<HTMLSpanElement>(null);
+        const elementGenerateRecordShort = React.useRef<HTMLSpanElement>(null);
+        return (
+            <this._Line lineIndex={-1} selectable={false}>
+                <this._Cell columnIndex={0}>
+                    Record definition
+                </this._Cell>
+                <this._Cell columnIndex={1}>
+                    <div
+                        style={{
+                            display: "inline-flex",
+                        }}
+                    >
+                        Click<span ref={elementGenerateRecord}
+                            style={{
+                                cursor: "pointer",
+                            }}
+                            onClick={() => {
+                                const record = this.generateRecord();
+                                if (record.startsWith("# failed to")) {
+                                    const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
+                                    ipcManager.handleDialogShowMessageBox(undefined, {
+                                        info: {
+                                            messageType: "error",
+                                            humanReadableMessages: [`Failed to generate record for channel ${this.getChannelNames()[0]}`],
+                                            rawMessages: ["Did not find the record type"],
+                                        }
+                                    })
+                                    return;
+                                }
+                                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+                                g_widgets1.openTextEditorWindow({
+                                    displayWindowId: displayWindowId,
+                                    widgetKey: this.getWidgetKey(),
+                                    fileName: "",
+                                    manualOpen: false,
+                                    openNewWindow: true,
+                                    fileContents: record,
+                                })
+                            }}
+                            onMouseEnter={() => {
+                                if (elementGenerateRecord.current !== null) {
+                                    elementGenerateRecord.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
+                                }
+                            }}
+                            onMouseLeave={() => {
+                                if (elementGenerateRecord.current !== null) {
+                                    elementGenerateRecord.current.style["outline"] = "none";
+                                }
+                            }}
+                        >&nbsp;here&nbsp;</span>to show the full record,
+                        <span ref={elementGenerateRecordShort}
+                            style={{
+                                cursor: "pointer",
+                            }}
+                            onClick={() => {
+                                const record = this.generateRecord(true);
+                                if (record.startsWith("# failed to")) {
+                                    const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
+                                    ipcManager.handleDialogShowMessageBox(undefined, {
+                                        info: {
+                                            messageType: "error",
+                                            humanReadableMessages: [`Failed to generate record for channel ${this.getChannelNames()[0]}`],
+                                            rawMessages: ["Did not find the record type"],
+                                        }
+                                    })
+                                    return;
+                                }
+                                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+                                g_widgets1.openTextEditorWindow({
+                                    displayWindowId: displayWindowId,
+                                    widgetKey: this.getWidgetKey(),
+                                    fileName: "",
+                                    manualOpen: false,
+                                    openNewWindow: true,
+                                    fileContents: record,
+                                })
+                            }}
+                            onMouseEnter={() => {
+                                if (elementGenerateRecordShort.current !== null) {
+                                    elementGenerateRecordShort.current.style["outline"] = "solid 3px rgba(180, 180, 180, 1)";
+                                }
+                            }}
+                            onMouseLeave={() => {
+                                if (elementGenerateRecordShort.current !== null) {
+                                    elementGenerateRecordShort.current.style["outline"] = "none";
+                                }
+                            }}
+                        >&nbsp;here&nbsp;</span>
+                        for short version.
+                    </div>
+                </this._Cell>
+                <this._Cell columnIndex={2}>
+                </this._Cell>
+            </this._Line>
+        );
+    };
 
-    // defined in super class
-
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
-
-    ElementPvInput = ({ additionalStyle, type, name, placeholder, onChange, value, onBlur, onFocus }: any) => {
+    _ElementPvInput = ({ additionalStyle, type, name, placeholder, onChange, value, onBlur, onFocus }: any) => {
         const refElement = React.useRef<HTMLInputElement>(null);
         return (
             <input
@@ -1131,92 +744,9 @@ export class Probe extends BaseWidget {
         )
     };
 
-
-    private TableLineWithInput = ({ index, property, value }: any) => {
-        return (
-            <tr key={`table-${index}`}
-
-                style={{
-                    backgroundColor: index % 2 === 1 ? "rgba(245, 245, 245, 1)" : "rgba(245, 245, 245, 0)"
-                }}
-            >
-                <td
-                    style={{
-                        width: "1%",
-                        whiteSpace: "nowrap",
-                        paddingRight: "10px",
-                    }}
-                >
-                    {property}
-                </td>
-                <td
-                    style={{
-                        paddingLeft: "10px",
-                    }}
-                >
-                    {/* <this._ValueInputForm valueRaw={`${this.getDbrData().Value}`}></this._ValueInputForm> */}
-                    <this._ValueInputForm></this._ValueInputForm>
-                </td>
-                <td></td>
-            </tr>
-        );
-    };
-
-    private TableLine = ({ index, property, value }: any) => {
-        return (
-            <tr key={`table-${index}`}
-                style={{
-                    backgroundColor: index % 2 === 1 ? "rgba(245, 245, 245, 1)" : "rgba(245, 245, 245, 0)"
-                }}
-
-            >
-                <td
-                    style={{
-                        width: "1%",
-                        whiteSpace: "nowrap",
-                        paddingRight: "10px",
-                    }}
-                >
-                    {property}
-                </td>
-                <td
-                    style={{
-                        paddingLeft: "10px",
-                    }}
-                >
-                    {value}
-                </td>
-                <td
-                    style={{
-                        width: "1%",
-                        whiteSpace: "nowrap",
-                        textAlign: "right",
-                    }}
-                >
-                    <ElementRectangleButton
-                        paddingLeft={3}
-                        paddingRight={3}
-                        paddingTop={1}
-                        paddingBottom={1}
-                        defaultBackgroundColor={"rgba(0,0,0,0)"}
-                        defaultTextColor={"rgba(0,0,0,0)"}
-                        highlightBackgroundColor={ElementRectangleButtonDefaultBackgroundColor}
-                        highlightTextColor={ElementRectangleButtonDefaultTextColor}
-                        handleClick={(event) => {
-                            const value = Object.values(this.getDbrData())[index];
-                            navigator.clipboard.writeText(`${value}`);
-                        }}
-                    >
-                        Copy
-                    </ElementRectangleButton>
-                </td>
-            </tr>
-        );
-    };
-
-    private TableLineField = ({ index, property, value, defaultValue, isLink, isMenu, channelName, fieldMenu }: any) => {
+    _ElementTableLineField = ({ index, property, value, defaultValue, isLink, isMenu, channelName, fieldMenu }: any) => {
         const valueElementRef = React.useRef<HTMLInputElement>(null);
-        const nameElementRef = React.useRef<HTMLTableCellElement>(null);
+        const nameElementRef = React.useRef<HTMLDivElement>(null);
         // always a string
         const [inputValue, setInputValue] = React.useState(`${value}`);
 
@@ -1224,89 +754,67 @@ export class Probe extends BaseWidget {
             setInputValue(`${value}`);
         }, [value]);
 
-        // let accessRight = Channel_ACCESS_RIGHTS.READ_WRITE;
-        // try {
-        //     // const tcaChannel = g_widgets1.getTcaChannel(channelName);
-        //     if (g_widgets1.getChannelAccessRight(channelName) !== Channel_ACCESS_RIGHTS.READ_WRITE) {
-        //         accessRight = Channel_ACCESS_RIGHTS.NO_ACCESS;
-        //     }
-        // } catch (e) {
-        //     Log.error(e);
-        //     accessRight = Channel_ACCESS_RIGHTS.NO_ACCESS;
-        // }
         const accessRight = this._getChannelAccessRight();
 
         return (
-            <tr key={`table-${index}`}
-                style={{
-                    backgroundColor: index % 2 === 0 ? "rgba(245, 245, 245, 1)" : "rgba(245, 245, 245, 0)",
-                }}
-            >
-                <td
-                    ref={nameElementRef}
-                    style={{
-                        width: "1%",
-                        whiteSpace: "nowrap",
-                        paddingRight: "10px",
-                        color: isLink
-                            ? "rgba(0,0,255,1)"
-                            : isMenu
-                                ? "rgba(0, 120, 50, 1)"
-                                : accessRight !== Channel_ACCESS_RIGHTS.READ_WRITE
-                                    ? "rgba(150, 150, 150, 1)"
-                                    : "rgba(0,0,0,1)",
-                    }}
-                    onMouseEnter={() => {
-                        if (!isLink) {
-                            return;
-                        } else {
-                            if (nameElementRef.current !== null) {
-                                nameElementRef.current.style["cursor"] = "pointer";
-                            }
-                        }
-                    }}
-                    onMouseLeave={() => {
-                        if (!isLink) {
-                            return;
-                        } else {
-                            if (nameElementRef.current !== null) {
-                                nameElementRef.current.style["cursor"] = "default";
-                            }
-                        }
-                    }}
-                    onClick={() => {
-                        if (isLink && typeof value === "string" && value !== "") {
-                            // g_widgets1.openProbeWindow([this.getWidgetKey()]);
-                            // directly use the IPC, not the openProbeWindow function
-                            const channelName = value.split(" ")[0];
-                            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                            const displayWindowId = displayWindowClient.getWindowId();
-                            const mainProcessMode = displayWindowClient.getMainProcessMode();
-                            if (mainProcessMode === "web") {
-                                g_widgets1.openProbeWindow([], channelName);
+            <this._Line lineIndex={index} selectable={false}>
+                <this._Cell columnIndex={0} additionalStyle={{
+                    color: isLink
+                        ? "rgba(0,0,255,1)"
+                        : isMenu
+                            ? "rgba(0, 120, 50, 1)"
+                            : accessRight !== Channel_ACCESS_RIGHTS.READ_WRITE
+                                ? "rgba(150, 150, 150, 1)"
+                                : "rgba(0,0,0,1)",
+                }}>
+                    <div
+                        ref={nameElementRef}
+                        onMouseEnter={() => {
+                            if (!isLink) {
+                                return;
                             } else {
-                                g_widgets1
-                                    .getRoot()
-                                    .getDisplayWindowClient()
-                                    .getIpcManager()
-                                    .sendFromRendererProcess("create-utility-display-window",
-                                        {
-                                            utilityType: "Probe",
-                                            utilityOptions: { channelNames: [channelName] },
-                                            windowId: displayWindowId,
-                                        }
-                                    );
+                                if (nameElementRef.current !== null) {
+                                    nameElementRef.current.style["cursor"] = "pointer";
+                                }
                             }
-                        }
-                    }}
-                >
-                    {property}
-                </td>
-                <td
-                    style={{
-                        paddingLeft: "10px",
-                    }}
-                >
+                        }}
+                        onMouseLeave={() => {
+                            if (!isLink) {
+                                return;
+                            } else {
+                                if (nameElementRef.current !== null) {
+                                    nameElementRef.current.style["cursor"] = "default";
+                                }
+                            }
+                        }}
+                        onClick={() => {
+                            if (isLink && typeof value === "string" && value !== "") {
+                                const channelName = value.split(" ")[0];
+                                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                const displayWindowId = displayWindowClient.getWindowId();
+                                const mainProcessMode = displayWindowClient.getMainProcessMode();
+                                if (mainProcessMode === "web") {
+                                    g_widgets1.openProbeWindow([], channelName);
+                                } else {
+                                    g_widgets1
+                                        .getRoot()
+                                        .getDisplayWindowClient()
+                                        .getIpcManager()
+                                        .sendFromRendererProcess("create-utility-display-window",
+                                            {
+                                                utilityType: "Probe",
+                                                utilityOptions: { channelNames: [channelName] },
+                                                windowId: displayWindowId,
+                                            }
+                                        );
+                                }
+                            }
+                        }}
+                    >
+                        {property}
+                    </div>
+                </this._Cell>
+                <this._Cell columnIndex={1}>
                     {fieldMenu.length === 0 ? (
                         <div>
                             {/* {inputValue} */}
@@ -1393,14 +901,8 @@ export class Probe extends BaseWidget {
                             </select>
                         </div>
                     )}
-                </td>
-                <td
-                    style={{
-                        width: "1%",
-                        whiteSpace: "nowrap",
-                        textAlign: "right",
-                    }}
-                >
+                </this._Cell>
+                <this._Cell columnIndex={2}>
                     <ElementRectangleButton
                         defaultBackgroundColor={"rgba(0,0,0,0)"}
                         defaultTextColor={"rgba(0,0,0,0)"}
@@ -1411,66 +913,20 @@ export class Probe extends BaseWidget {
                         highlightBackgroundColor={ElementRectangleButtonDefaultBackgroundColor}
                         highlightTextColor={ElementRectangleButtonDefaultTextColor}
                         handleClick={(event) => {
-                            // const value = Object.values(this.getDbrData())[index];
-                            // const channelName = `${this._channelNames[0]}.${fieldName}`;
                             const value = g_widgets1.getChannelValue(channelName);
                             navigator.clipboard.writeText(JSON.stringify(value, null, 4));
                         }}
                     >
                         Copy
                     </ElementRectangleButton>
-                </td>
-            </tr>
+                </this._Cell>
+            </this._Line>
         );
     };
 
-    // ---------------------------- change value -------------------------
-
-    // copied from TextEntry
-    parseValue = () => {
-        const value = this._getChannelValue();
-        let unit = ` ${this._getChannelUnit()}`;
-        if (this._getChannelUnit() === undefined) {
-            unit = "";
-        }
-        if (g_widgets1.isEditing()) {
-            if (this.getChannelNames()[0] === undefined) {
-                return "";
-            } else {
-                return this.getChannelNames()[0];
-            }
-        }
-        if (value === undefined) {
-            if (this.getChannelNames()[0] === undefined) {
-                return "";
-            } else {
-                return this.getChannelNames()[0];
-            }
-        } else {
-            if (this.getAllText()["showUnit"] === true) {
-                return `${value}${unit}`;
-            } else {
-                return `${value}`;
-            }
-        }
-    };
-
-
-    _getChannelAccessRight = () => {
-        return this._getFirstChannelAccessRight();
-    };
-
-    // setFocusStatus = (newStatus: boolean) => {
-    //     this._focusStatus = newStatus;
-    // }
-
-    // private _focusStatus = false;
-
-
-    // _ValueInputForm = ({ valueRaw }: { valueRaw: string | number | string[] | number[] }) => {
-    _ValueInputForm = () => {
+    _ElementValueInputForm = () => {
         // const [value, setValue] = React.useState(`${valueRaw}`);
-        const valueRaw = this.parseValue();
+        const valueRaw = this.getChannelValueForMonitorWidget();
 
         const shadowWidth = 2;
 
@@ -1604,7 +1060,7 @@ export class Probe extends BaseWidget {
                     onBlur={(event) => {
                         isFocused.current = false;
                         // this.setFocusStatus(false);
-                        setValue(`${this.parseValue()}`);
+                        setValue(`${this.getChannelValueForMonitorWidget()}`);
                         if (keyRef.current !== null) {
                             // keyRef.current.style["backgroundColor"] = `rgba(0,0,0,0)`;
                             keyRef.current.style["backgroundColor"] = this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle();
@@ -1614,60 +1070,246 @@ export class Probe extends BaseWidget {
             </form>
         );
     };
+
+    // ---------------------------- helpers -------------------------
+
+    generateRecord = (shortVersion: boolean = false) => {
+        const rtyp = this.getBasicInfoData()["Type"];
+        if (rtyp === "" || (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i).test(rtyp)) {
+            const channelName = `${this.getChannelNamesLevel4()[0]}`;
+
+            return (
+                `# failed to generate record for ${channelName}. Reason: it does not have a record type.`
+            );
+        } else {
+            const baseChannelName = this.getChannelNamesLevel4()[0];
+            const result: string[] = [
+                `# Generated by TDM Probe using live data at ${new Date(Date.now()).toLocaleString()}`,
+                `# It includes ${shortVersion === true ? "changed" : "all"} fields of channel type "${rtyp}"`,
+                `# The field line is ${shortVersion === true ? "not shown" : "commented"} if this field's value equals to its default`,
+                `record(${rtyp}, "${baseChannelName}") {`];
+
+
+            this.fieldNames.map((fieldName: string, index: number) => {
+                if (fieldName === "NAME") {
+                    return;
+                }
+                const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
+                const fieldDefaultValue = this.fieldDefaultValues[index];
+                const value = g_widgets1.getChannelValue(channelName);
+                if (value !== undefined) {
+
+                    if (value === fieldDefaultValue) {
+                        if (shortVersion === false) {
+                            let line = `    # field(${fieldName}, "${value}")`;
+                            result.push(line);
+                        }
+
+                    } else {
+                        let line = `    field(${fieldName}, "${value}")`;
+                        const numSpaces = Math.max(line.length, 40) - line.length + 1;
+                        for (let ii = 0; ii < numSpaces; ii++) {
+                            line = line + " ";
+                        }
+                        line = line + `# default ` + `"${fieldDefaultValue}"`
+
+                        result.push(line);
+
+                    }
+
+                }
+            })
+            result.push("}");
+            return result.join("\n");
+        }
+    }
+
+    processChannelNames = (): void => {
+        super.processChannelNames();
+        this.getChannelNamesLevel5().length = 0;
+        const baseChannelName = this.getChannelNamesLevel4()[0];
+        if (baseChannelName !== undefined) {
+            this.getChannelNamesLevel5().push(baseChannelName);
+            for (let fieldName of this.fieldNames) {
+                this.getChannelNamesLevel5().push(`${baseChannelName}.${fieldName}`);
+            }
+        }
+    }
+
+    extractBasicInfo = (): void => {
+
+        // const result: Record<string, any> = {};
+        const channelNameLevel4 = this.getChannelNamesLevel4()[0];
+        if (channelNameLevel4 === undefined) {
+            return;
+        }
+        try {
+            const tcaChannel = g_widgets1.getTcaChannel(channelNameLevel4);
+
+            this.getBasicInfoData()["Value"] = `${tcaChannel.getValueForDisplay()}`;
+            this.getBasicInfoData()["Value count"] = `${tcaChannel.getValueCount()}`;
+            this.getBasicInfoData()["Severity"] = `${tcaChannel.getSeverityStr()}`;
+            this.getBasicInfoData()["Alarm status"] = `${tcaChannel.getStatusStr()}`;
+            this.getBasicInfoData()["Access right"] = `${tcaChannel.getAccessRightStr()}`;
+            this.getBasicInfoData()["Unit"] = `${tcaChannel.getUnit()}`;
+            this.getBasicInfoData()["DBR type"] = `${tcaChannel.getDbrType()}`;
+            this.getBasicInfoData()["Precision"] = `${tcaChannel.getPrecision()}`;
+            this.getBasicInfoData()["Alarm upper limit"] = `${tcaChannel.getUpperAlarmLimit()}`;
+            this.getBasicInfoData()["Alarm lower limit"] = `${tcaChannel.getLowerAlarmLimit()}`;
+            this.getBasicInfoData()["Display lower limit"] = `${tcaChannel.getLowerDisplayLimit()}`;
+            this.getBasicInfoData()["Display upper limit"] = `${tcaChannel.getUpperDisplayLimit()}`;
+            this.getBasicInfoData()["Display lower limit"] = `${tcaChannel.getLowerDisplayLimit()}`;
+            this.getBasicInfoData()["Control upper limit"] = `${tcaChannel.getUpperWarningLimit()}`;
+            this.getBasicInfoData()["Control lower limit"] = `${tcaChannel.getLowerWarningLimit()}`;
+            this.getBasicInfoData()["Time"] = `${tcaChannel.getTimeStamp()}`;
+            this.getBasicInfoData()["Server address"] = `${tcaChannel.getServerAddress()}`;
+        } catch (e) {
+            Log.error(e);
+            return;
+        }
+    };
+
+    /**
+     * invoked in the handler for "request-epics-dbd" reply
+     * 
+     * the EPICS runtime starts to work
+     */
+    processDbd = (result: {
+        menus: Record<string, any>,
+        recordTypes: Record<string, any>,
+    }) => {
+        this._dbdFiles = new DbdFiles(result["recordTypes"], result["menus"]);
+
+        if (g_widgets1.isEditing()) {
+            return;
+        } else {
+            const channelName = this.getChannelNames()[0];
+            if (typeof channelName === "string" && channelName.trim() !== "") {
+                this.newProbe(channelName);
+            }
+        }
+    }
+
+    /**
+     * 
+     * Executed when we submit a new probe
+     * 
+     * (1) destroy all existing TcaChannels from this widget, this widget's .channelNames is updated at this step
+     * (2) empty this._channelNames
+     * (3) expand channel name, create TcaChannel for the new channel, then obtain the meta data and monitor
+     *     this channel
+     * (4) flush widgets
+     */
+
+    newProbe = async (newChannelName: string) => {
+
+        // (1)
+        // destroy all Tca channels
+        g_widgets1.destroyAllTcaChannels();
+        
+        console.log(Object.keys(g_widgets1.getTcaChannels()));
+
+        // (2)
+        // process channel names
+        this.getChannelNamesLevel0().length = 0;
+        this.getChannelNamesLevel0()[0] = newChannelName;
+        this.processChannelNames();
+
+        // (3)
+        // fetch RTYP value
+        const channelName = this.getChannelNames()[0];
+        const rtyp = await this.fetchRTYP(channelName);
+        this.getBasicInfoData()["Type"] = rtyp;
+        if (rtyp === "undefined") {
+            return;
+        }
+
+        // (4)
+        // assign field arrays
+        this.fieldNames = this.getDbdFiles().getRecordTypeFieldNames(rtyp);
+        this.fieldMenus = this.getDbdFiles().getRecordTypeFieldMenus(rtyp);
+        this.fieldDefaultValues = this.getDbdFiles().getRecordTypeFieldDefaultValues(rtyp);
+        this.fieldIsLink = this.getDbdFiles().getRecordTypeFieldIsLink(rtyp);
+
+        // (5)
+        // process channel name again with field channels: expand macros ...
+        this.processChannelNames();
+
+        // (6)
+        // connect all channels
+        const widgetKey = this.getWidgetKey();
+        for (const channelNameLevel5 of this.getChannelNamesLevel5()) {
+            const fieldTcaChannel = g_widgets1.createTcaChannel(channelNameLevel5, widgetKey);
+            if (fieldTcaChannel === undefined) {
+                continue;
+            }
+            if (fieldTcaChannel.getProtocol() === "pva") {
+                fieldTcaChannel.fetchPvaType(widgetKey);
+            } else {
+                fieldTcaChannel.getMeta(widgetKey);
+            }
+            fieldTcaChannel.get(widgetKey, undefined, undefined, true);
+            fieldTcaChannel.monitor();
+        }
+
+        // (7)
+        // flush display
+        g_widgets1.addToForceUpdateWidgets(widgetKey);
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+        g_flushWidgets();
+
+    };
+
+
+    fetchRTYP = async (channelName: string): Promise<string> => {
+
+        // empty basic info data
+        for (const key in this._basicInfoData) {
+            delete this._basicInfoData[key];
+        }
+
+        const rtypChannelName = channelName.split(".")[0] + ".RTYP";
+        const tcaChannel = g_widgets1.createTcaChannel(rtypChannelName, this.getWidgetKey());
+        if (tcaChannel === undefined) {
+            return "undefined";
+        }
+        const widgetKey = this.getWidgetKey();
+        const rtypData = await tcaChannel.get(widgetKey, undefined, undefined, false);
+        const rtyp = rtypData["value"];
+
+
+        return `${rtyp}`;
+    };
+
+    // ------------------ getters -----------------------------
+
+
+    getChannelNamesLevel5 = () => {
+        return this._channelNamesLevel5;
+    }
+
+    getDbdFiles = () => {
+        return this._dbdFiles;
+    };
+
+    createSidebar = () => {
+        if (this._sidebar === undefined) {
+            this._sidebar = new ProbeSidebar(this);
+        }
+    }
+
+    getBasicInfoData = () => {
+        return this._basicInfoData;
+    }
+
     // -------------------------- tdl -------------------------------
 
     static generateDefaultTdl = () => {
 
-        const defaultTdl: type_Probe_tdl = {
-            type: "Probe",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(255, 255,255, 1)",
-                left: 0,
-                top: 0,
-                width: 500,
-                height: 500,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: true,
-                showUnit: false,
-                alarmBorder: true,
-                highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-                overflowVisible: true,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            // recordTypesFieldNames: {},
-            // recordTypesMenus: {},
-            recordTypes: {},
-            menus: {},
-        };
+        const defaultTdl: type_Probe_tdl = structuredClone(defaultProbeTdl);
 
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+        return defaultTdl;
     };
 
     generateDefaultTdl: () => any = Probe.generateDefaultTdl;
@@ -1676,8 +1318,6 @@ export class Probe extends BaseWidget {
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_Probe_tdl => {
         const result = this.generateDefaultTdl();
         result.channelNames = utilityOptions.channelNames as string[];
-        result.recordTypes = utilityOptions.recordTypes as Record<string, any>;
-        result.menus = utilityOptions.menus as Record<string, any>;
         return result;
     };
 
@@ -1689,67 +1329,12 @@ export class Probe extends BaseWidget {
         return result;
     }
 
-    // --------------------- getters -------------------------
-
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getupdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
-
-    // ------------------ dbd files ----------------------------------
-    getDbdFiles = () => {
-        return this._dbdFiles;
-    };
-    // -------------------------- sidebar ---------------------------
-    createSidebar = () => {
-        if (this._sidebar === undefined) {
-            this._sidebar = new ProbeSidebar(this);
-        }
-    }
+    // ------------------- jobs -------------------
 
     jobsAsEditingModeBegins(): void {
         super.jobsAsEditingModeBegins();
     }
 
-
-    processDbd = (result: {
-        menus: Record<string, any>,
-        recordTypes: Record<string, any>,
-    }) => {
-        this._dbdFiles = new DbdFiles(result["recordTypes"], result["menus"]);
-
-        if (g_widgets1.isEditing()) {
-            return;
-        } else {
-            if (this.getChannelNames().length > 0 && this.getChannelNames()[0].trim() !== "") {
-                this.newProbe(this.getChannelNames()[0]);
-            }
-        }
-    }
 
     jobsAsOperatingModeBegins() {
         super.jobsAsEditingModeBegins();
@@ -1775,3 +1360,5 @@ export class Probe extends BaseWidget {
         }
     }
 }
+
+

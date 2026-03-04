@@ -4,12 +4,6 @@ import { DataViewerPlot } from "./DataViewerPlot";
 import { toolbarHeight } from "./DataViewerPlot";
 import { settingsIndexChoices } from "./DataViewerPlot";
 
-/**
- * Toolbar controls for DataViewerPlot (zoom, pan, auto-scale, pause/play, export, etc.)
- *
- * Extracted from DataViewerPlot to reduce file size.
- * All access to plot state goes through `this.getPlot()`.
- */
 export class DataViewerPlotControls {
     private _plot: DataViewerPlot;
 
@@ -23,13 +17,11 @@ export class DataViewerPlotControls {
 
     _ElementControls = () => {
         const plot = this.getPlot();
-        const isSingleWidget = plot.getMainWidget().getText()["singleWidget"];
 
         return (
             <div
                 style={{
                     width: `100%`,
-                    // width: isSingleWidget === true ? window.innerWidth : plot.getMainWidget().getAllStyle()["width"],
                     height: `${toolbarHeight}`,
                     display: "inline-flex",
                     flexFlow: "row",

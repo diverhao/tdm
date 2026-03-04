@@ -2,7 +2,7 @@ import { GlobalVariables } from "../GlobalVariables";
 import { TypeSchema, InferType, Mutable } from "./type_schema";
 
 // Re-export schema infra so existing consumers don't break
-export { TypeSchema, FieldType, PrimitiveFieldType, ArrayOfSchema, ArrayOfUnionSchema, TupleSchema, ArrayOfTupleSchema, LiteralUnionSchema, InferType, Mutable } from "./type_schema";
+export { TypeSchema, FieldType, PrimitiveFieldType, ArrayOfSchema, ArrayOfUnionSchema, TupleSchema, ArrayOfTupleSchema, LiteralUnionSchema, DictionaryOfSchema, InferType, Mutable } from "./type_schema";
 
 // ======================== Widget Style Schema ========================
 
@@ -2119,4 +2119,70 @@ export const defaultXYPlotTdl: type_XYPlot_tdl = {
         numGrids: 10,
     },
     yAxes: [],
+};
+
+// ======================== Probe TDL Schema ========================
+
+export const type_Probe_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    highlightBackgroundColor: "string",
+    overflowVisible: "boolean",
+} as const satisfies TypeSchema;
+
+export const type_Probe_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_style_tdl_schema,
+    text: type_Probe_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_Probe_text_tdl = Mutable<InferType<typeof type_Probe_text_tdl_schema>>;
+export type type_Probe_tdl = Mutable<InferType<typeof type_Probe_tdl_schema>>;
+
+export const defaultProbeTdl: type_Probe_tdl = {
+    type: "Probe",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        left: 0,
+        top: 0,
+        width: 500,
+        height: 500,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(255, 0, 0, 1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: "content-box",
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: true,
+        showUnit: false,
+        alarmBorder: true,
+        highlightBackgroundColor: "rgba(255, 255, 0, 1)",
+        overflowVisible: true,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
 };

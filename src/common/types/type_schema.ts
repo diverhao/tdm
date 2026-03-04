@@ -45,6 +45,7 @@ export type ArrayOfUnionSchema = { arrayOfUnion: readonly TypeSchema[] };
 export type TupleSchema = { tuple: readonly PrimitiveFieldType[] };
 export type ArrayOfTupleSchema = { arrayOfTuple: readonly PrimitiveFieldType[] };
 export type LiteralUnionSchema = { literalUnion: readonly string[] };
+export type DictionaryOfSchema = { dictionaryOf: TypeSchema };
 
 // --- A single field descriptor ---
 export type FieldType =
@@ -55,7 +56,8 @@ export type FieldType =
     | ArrayOfUnionSchema            // array where each item matches one of several schemas
     | TupleSchema                   // fixed-length tuple of primitive types
     | ArrayOfTupleSchema            // array of tuples
-    | LiteralUnionSchema;           // string literal union
+    | LiteralUnionSchema            // string literal union
+    | DictionaryOfSchema;           // Record<string, T>
 
 // --- A schema = field name → field descriptor ---
 export interface TypeSchema extends Record<string, FieldType> {}
@@ -80,6 +82,7 @@ type MapSingle<T> =
     T extends TupleSchema ? InferTuple<T["tuple"]> :
     T extends LiteralUnionSchema ? T["literalUnion"][number] :
     T extends ArrayOfSchema ? InferType<T["arrayOf"]>[] :
+    T extends DictionaryOfSchema ? Record<string, InferType<T["dictionaryOf"]>> :
     T extends TypeSchema ? { [K in keyof T]: MapField<T[K]> } :
     never;
 

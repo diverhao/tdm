@@ -1,8 +1,11 @@
+import { type_dbd, type_dbd_menus } from "../../common/types/type_dbd";
+
 export class DbdFiles {
-	private _recordTypes: Record<string, any> = {};
-	private _menus: Record<string, Record<string, any>> = {};
-	constructor(recordTypes: Record<string, any>, menus: Record<string, Record<string, any>>) {
-		this._recordTypes = recordTypes;
+	private _recordTypes: type_dbd = {};
+	private _menus: type_dbd_menus = {};
+	constructor(recordTypes: type_dbd, menus: type_dbd_menus) {
+
+        this._recordTypes = recordTypes;
 		this._menus = menus;
 	}
 
@@ -71,24 +74,6 @@ export class DbdFiles {
 		}
 		return result;
 	};
-
-	// getAllRecordTypeFieldNames = (): Record<string, string[]> => {
-	// 	const types = Object.keys(this.getRecordTypes());
-	// 	const result: Record<string, string[]> = {};
-	// 	for (let type of types) {
-	// 		result[type] = this.getRecordTypeFieldNames(type);
-	// 	}
-	// 	return result;
-	// };
-
-	// getAllMenusChoices = (): Record<string, string[]> => {
-	// 	const menus = Object.keys(this.getMenus());
-	// 	const result: Record<string, string[]> = {};
-	// 	for (let menu of menus) {
-	// 		result[menu] = this.getMenuChoices(menu);
-	// 	}
-	// 	return result;
-	// };
 
     // get the menu for each field in a record type, if this field is not a DBF_MENU type, the corresponding value is undefined
 	getRecordTypeFieldMenus = (recrodType: string, type: "all" | "readable" = "readable"): (undefined | string[])[] => {
@@ -177,10 +162,10 @@ export class DbdFiles {
 		return this._menus;
 	};
 
-	setRecordTypes = (newTypes: Record<string, any>) => {
+	setRecordTypes = (newTypes: type_dbd) => {
 		this._recordTypes = newTypes;
 	};
-	setMenus = (newMenus: Record<string, Record<string, any>>) => {
+	setMenus = (newMenus: type_dbd_menus) => {
 		this._menus = newMenus;
 	};
 }

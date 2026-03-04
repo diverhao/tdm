@@ -1249,6 +1249,13 @@ function matchesSingleType(value: unknown, expectedType: FieldType, fieldPath: s
         return Array.isArray(value) && value.every((item, idx) => isOfType(item, (expectedType as any).arrayOf, `${fieldPath}[${idx}]`));
     }
 
+    // Dictionary of objects matching a schema: { dictionaryOf: TypeSchema }
+    if (typeof expectedType === "object" && !Array.isArray(expectedType) && "dictionaryOf" in expectedType) {
+        if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+        const dict = value as Record<string, unknown>;
+        return Object.entries(dict).every(([k, v]) => isOfType(v, (expectedType as any).dictionaryOf, `${fieldPath}.${k}`));
+    }
+
     // Nested schema (object)
     if (typeof expectedType === "object" && !Array.isArray(expectedType)) {
         return isOfType(value, expectedType, fieldPath);
@@ -1272,6 +1279,13 @@ export function isOfType(obj: unknown, schema: TypeSchema, _path: string = ""): 
     if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
         Log.error(`[isOfType] Type check failed at "${_path || "(root)"}": expected a plain object, got`, obj);
         return false;
+    }
+
+    // Top-level dictionaryOf: every value in obj must match the inner schema
+    if ("dictionaryOf" in schema && Object.keys(schema).length === 1) {
+        const innerSchema = (schema as any).dictionaryOf as TypeSchema;
+        const dict = obj as Record<string, unknown>;
+        return Object.entries(dict).every(([k, v]) => isOfType(v, innerSchema, _path ? `${_path}.${k}` : k));
     }
 
     const record = obj as Record<string, unknown>;

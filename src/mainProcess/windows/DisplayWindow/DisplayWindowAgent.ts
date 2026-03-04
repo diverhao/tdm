@@ -501,12 +501,14 @@ export class DisplayWindowAgent {
                 if (channelType === "ca") {
                     // (2)
                     const dbrTypeNum_GR = channelAgent.getDbrTypeNum_GR();
+                    const getDbrTypeNum_CTRL = channelAgent.getDbrTypeNum_CTRL();
                     if (dbrTypeNum_GR === undefined) {
                         Log.debug("0", `Channel ${channelName} does not have a GR type data.`);
                         return { value: undefined };
                     }
                     // only GET once, the get() method may destroy the channel if there is no user
-                    result = await channelAgent.get(this.getId(), dbrTypeNum_GR, ioTimeout);
+                    // result = await channelAgent.get(this.getId(), dbrTypeNum_GR, ioTimeout);
+                    result = await channelAgent.get(this.getId(), getDbrTypeNum_CTRL, ioTimeout);
 
                     // const dbrTypeNum_TIME = channelAgent.getDbrTypeNum_TIME();
                     // if (dbrTypeNum_TIME === undefined) {
@@ -516,6 +518,7 @@ export class DisplayWindowAgent {
                     // result = { ...result, ...dbrDataTime };
                     // }
 
+                    // convenient data field
                     if (result.value !== undefined) {
                         result.DBR_TYPE = dbrTypeNum_GR;
                         result.valueCount = channelAgent.getValueCount();
@@ -523,9 +526,12 @@ export class DisplayWindowAgent {
                         result.accessRight = channelAgent.getAccessRight();
                     }
                 } else if (channelType === "pva") {
+                    // todo: are we using tcaGetMeta for pva?
                     // (3)
                     result = await channelAgent.fetchPvaType();
-                    // result = await channelAgent.getPva(this.getId(), undefined, ""); // get the full type
+                    // access right can be obtained from EPICS v4 data structure
+                    result.valueCount = channelAgent.getValueCount();
+                    result.serverAddress = channelAgent.getServerAddress();
                 }
             }
         } else {
@@ -772,7 +778,7 @@ export class DisplayWindowAgent {
         const channelType = channelAgentsManager.determineChannelType(channelName);
 
         if (channelType === "pva") {
-            const promiseObj = this.promises.getPromise("fetch-pva-type");  
+            const promiseObj = this.promises.getPromise("fetch-pva-type");
             await promiseObj;
         } else {
             const promiseObj = this.promises.getPromise("tca-get-meta");

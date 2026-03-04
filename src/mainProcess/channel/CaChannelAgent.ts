@@ -265,6 +265,7 @@ export class CaChannelAgent {
             if (data === undefined) {
                 return { value: undefined };
             } else {
+                (data as any)["serverAddress"] = this.getServerAddress();
                 return data;
             }
         } catch (e) {

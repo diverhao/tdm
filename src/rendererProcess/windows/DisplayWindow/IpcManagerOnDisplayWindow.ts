@@ -35,6 +35,8 @@ import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 import { Image } from "../../../rendererProcess/widgets/Image/Image";
 import { IpcEventArgType, IpcEventArgType2 } from "../../../common/IpcEventArgType";
 import { Table } from "../../widgets/Table/Table";
+import { isOfType } from "../../../common/GlobalMethods";
+import { type_dbd_menu_schema, type_dbd_menus_schema, type_dbd_record_schema, type_dbd_schema } from "../../../common/types/type_dbd";
 
 
 // var recorder;

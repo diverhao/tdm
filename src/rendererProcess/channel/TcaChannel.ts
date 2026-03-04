@@ -218,8 +218,11 @@ export class TcaChannel {
                 // if there is no default protocol setting, use CA
                 return "ca";
             }
-
         }
+    }
+
+    getProtocol = () => {
+        return TcaChannel.checkChannelName(this.getChannelName());
     }
 
     /**
@@ -1157,6 +1160,27 @@ export class TcaChannel {
     // that the DBR_TIME is monitored.
     // they are meant to be used by the channel getters in Widgets, not recommended to invoke directly
 
+
+    getValueCount = () => {
+        let valueCount = this.getDbrData()["valueCount"];
+        if (this.getProtocol() === "ca") {
+            if (typeof valueCount === "number") {
+                return valueCount;
+            } else {
+                return 0;
+            }
+        } else {
+            // pva, glb:// and loc:// type, count the data number
+            // raw value
+            const value = this.getValueForDisplay(true);
+            if (Array.isArray(value)) {
+                return value.length;
+            } else {
+                return 1;
+            }
+        }
+    }
+
     /**
      * Get value of this channel from the cache. No network operation performed at here.
      * 
@@ -1390,11 +1414,15 @@ export class TcaChannel {
         return ChannelAlarmStatus.UDF;
     };
 
+
     getStatusStr = () => {
         const alarmStatusNum = this.getStatus();
         return ChannelAlarmStatus[alarmStatusNum];
     }
 
+    getServerAddress = () => {
+        return this.getDbrData()["serverAddress"];
+    }
 
     /**
      * Get record type of this channel. Valid only for CA channel.
@@ -1506,6 +1534,11 @@ export class TcaChannel {
         }
     };
 
+    getAccessRightStr = () => {
+        const right = this.getAccessRight();
+        return Channel_ACCESS_RIGHTS[right];
+    }
+
     /**
      * Get upper display limit.
      *
@@ -1519,7 +1552,7 @@ export class TcaChannel {
         if (this.getProtocol() === "ca") {
             return this.getDbrData()["upper_display_limit"];
         } else if (this.getProtocol() === "pva") {
-            return this.getPvaValue("control.limitHigh");
+            return this.getPvaValue("display.limitHigh");
         }
         return undefined;
 
@@ -1538,7 +1571,7 @@ export class TcaChannel {
         if (this.getProtocol() === "ca") {
             return this.getDbrData()["lower_display_limit"];
         } else if (this.getProtocol() === "pva") {
-            return this.getPvaValue("control.limitLow");
+            return this.getPvaValue("display.limitLow");
         }
         return undefined;
     };
@@ -1556,7 +1589,7 @@ export class TcaChannel {
         if (this.getProtocol() === "ca") {
             return this.getDbrData()["upper_warning_limit"];
         } else if (this.getProtocol() === "pva") {
-            return this.getPvaValue("alarmLimit.highWarningLimit");
+            return this.getPvaValue("valueAlarm.highWarningLimit");
         }
         return undefined;
     };
@@ -1571,10 +1604,35 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
+        console.log("get dbr data", this.getDbrData())
         if (this.getProtocol() === "ca") {
             return this.getDbrData()["lower_warning_limit"];
         } else if (this.getProtocol() === "pva") {
-            return this.getPvaValue("alarmLimit.lowWarningLimit");
+            return this.getPvaValue("valueAlarm.lowWarningLimit");
+        }
+        return undefined;
+    };
+
+    getUpperCtrlLimit = (): string | number | number[] | string[] | undefined => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return undefined;
+        }
+        if (this.getProtocol() === "ca") {
+            return this.getDbrData()["upper_ctrl_limit"];
+        } else if (this.getProtocol() === "pva") {
+            return this.getPvaValue("control.limitHigh");
+        }
+        return undefined;
+    };
+
+    getLowerCtrlLimit = (): string | number | number[] | string[] | undefined => {
+        if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
+            return undefined;
+        }
+        if (this.getProtocol() === "ca") {
+            return this.getDbrData()["lower_ctrl_limit"];
+        } else if (this.getProtocol() === "pva") {
+            return this.getPvaValue("control.limitLow");
         }
         return undefined;
     };
@@ -1592,7 +1650,7 @@ export class TcaChannel {
         if (this.getProtocol() === "ca") {
             return this.getDbrData()["upper_alarm_limit"];
         } else if (this.getProtocol() === "pva") {
-            return this.getPvaValue("alarmLimit.highAlarmLimit");
+            return this.getPvaValue("valueAlarm.highAlarmLimit");
         }
         return undefined;
     };
@@ -1610,7 +1668,7 @@ export class TcaChannel {
         if (this.getProtocol() === "ca") {
             return this.getDbrData()["lower_alarm_limit"];
         } else if (this.getProtocol() === "pva") {
-            return this.getPvaValue("alarmLimit.lowAlarmLimit");
+            return this.getPvaValue("valueAlarm.lowAlarmLimit");
         }
         return undefined;
     };
@@ -1912,9 +1970,6 @@ export class TcaChannel {
         return this.getReadWriteIos().getIoPromise(ioId);
     };
 
-    getProtocol = () => {
-        return TcaChannel.checkChannelName(this.getChannelName());
-    }
 
     /**
      * Get the pv request from channel name
