@@ -16,13 +16,8 @@ import { type_Probe_tdl, defaultProbeTdl } from "../../../common/types/type_widg
 import { Table } from "../../helperWidgets/Table/Table";
 
 export class Probe extends BaseWidget {
-    _dbdFiles: DbdFiles;
 
-    fieldNames: string[] = [];
-    fieldMenus: (undefined | string[])[] = [];
-    fieldDefaultValues: (string | number)[] = [];
-    fieldIsLink: boolean[] = [];
-
+    private _dbdFiles: DbdFiles;
     private readonly _channelNamesLevel5: string[] = [];
     private readonly _basicInfoData: Record<string, string> = {};
 
@@ -39,7 +34,8 @@ export class Probe extends BaseWidget {
         // dbd files is loaded upon operating mode starts, after the request-epics-dbd reply
         this._dbdFiles = new DbdFiles({}, {});
 
-        this._Table = new Table([150, 300, 50], this);
+        // 3 columns
+        this._Table = new Table([150, 400, 50], this);
         this._Line = this._Table.getElementTableLine();
         this._Cell = this._Table.getElementTableCell();
 
@@ -146,7 +142,6 @@ export class Probe extends BaseWidget {
             </div>
         )
     }
-
 
     _ElementTitle = () => {
         const [channelName, setChannelName] = React.useState(this.getChannelNames()[0]);
@@ -318,7 +313,7 @@ export class Probe extends BaseWidget {
                     );
                 })}
                 <this._ElementLineProcess />
-                <this._ElementLineRecordDefinition />
+                <this._ElementLineRecordGeneration />
             </div>
         )
     }
@@ -334,7 +329,7 @@ export class Probe extends BaseWidget {
                 <ElementRectangleButton
                     handleClick={(event) => {
                         const result: Record<string, string | number | string[] | number[] | undefined> = structuredClone(this.getBasicInfoData());
-                        for (let fieldName of this.fieldNames) {
+                        for (let fieldName of this.getFieldNames()) {
                             const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
                             const value = g_widgets1.getChannelValue(channelName);
                             result[fieldName] = value;
@@ -352,62 +347,50 @@ export class Probe extends BaseWidget {
         return (
             <div>
                 {
-                    this.fieldNames.map((fieldName: string, index: number) => {
+                    this.getFieldNames().map((fieldName: string, index: number) => {
+
+
                         const filterValueArray = filterValue.trim().split(" ");
                         let filterMatch = false;
                         for (let filterValueElement of filterValueArray) {
                             filterMatch = filterMatch || fieldName.includes(filterValueElement.trim().toUpperCase());
                         }
+
                         if (!filterMatch) {
                             return null;
                         }
-                        let separator = ".";
-                        if (TcaChannel.checkChannelName(this.getChannelNamesLevel4()[0]) === "pva") {
-                            separator = ".";
-                        }
-                        const channelName = `${this.getChannelNamesLevel4()[0]}${separator}${fieldName}`;
-                        const property = fieldName;
 
-                        const value = g_widgets1.getChannelValue(channelName);
 
-                        if (value !== undefined) {
-                            const fieldMenu = this.fieldMenus[index];
-                            const fieldDefaultValue = this.fieldDefaultValues[index];
-                            const fieldIsLink = this.fieldIsLink[index];
-                            if (fieldMenu !== undefined) {
-                                // it is a menu
-                                let choice = value;
-                                if (typeof value === "number") {
-                                    choice = fieldMenu[value];
-                                }
-                                return (
-                                    <this._ElementTableLineField
-                                        index={index}
-                                        property={property}
-                                        value={choice}
-                                        defaultValue={fieldDefaultValue}
-                                        isLink={fieldIsLink}
-                                        isMenu={true}
-                                        channelName={channelName}
-                                        fieldMenu={fieldMenu}
-                                    ></this._ElementTableLineField>
-                                );
-                            }
-                            return (
-                                <this._ElementTableLineField
-                                    index={index}
-                                    property={property}
-                                    value={value}
-                                    defaultValue={fieldDefaultValue}
-                                    isLink={fieldIsLink}
-                                    isMenu={false}
-                                    channelName={channelName}
-                                    fieldMenu={[]}
-                                ></this._ElementTableLineField>
-                            );
-                        } else {
+                        // do not show DBF_NOACCESS channel
+                        const rtyp = this.getRtyp();
+                        const fieldType = this.getDbdFiles().getFieldType(rtyp, fieldName);
+                        if (fieldType === "DBF_NOACCESS" || fieldType === undefined) {
                             return null;
                         }
+                        const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
+                        const value = g_widgets1.getChannelValue(channelName);
+                        if (value === undefined) {
+                            return null;
+                        }
+
+                        const fieldMenu = this.getDbdFiles().getFieldMenu(rtyp, fieldName);
+                        const fieldDefaultValue = this.getDbdFiles().getFieldDefaultValue(rtyp, fieldName);
+                        const fieldIsLink = this.getDbdFiles().fieldIsLink(rtyp, fieldName);
+
+                        const isMenuField = fieldMenu.length > 0;
+                        return(
+                            <this._ElementTableLineField
+                                index={index}
+                                property={fieldName}
+                                value={value}
+                                defaultValue={fieldDefaultValue}
+                                isLink={fieldIsLink}
+                                isMenu={isMenuField}
+                                channelName={channelName}
+                                fieldMenu={fieldMenu}
+                            ></this._ElementTableLineField>
+
+                        )
                     })}
             </div>
         );
@@ -554,7 +537,7 @@ export class Probe extends BaseWidget {
         );
     };
 
-    _ElementLineRecordDefinition = () => {
+    _ElementLineRecordGeneration = () => {
         const elementGenerateRecord = React.useRef<HTMLSpanElement>(null);
         const elementGenerateRecordShort = React.useRef<HTMLSpanElement>(null);
         return (
@@ -996,12 +979,14 @@ export class Probe extends BaseWidget {
                 `record(${rtyp}, "${baseChannelName}") {`];
 
 
-            this.fieldNames.map((fieldName: string, index: number) => {
+            this.getFieldNames().map((fieldName: string, index: number) => {
                 if (fieldName === "NAME") {
                     return;
                 }
                 const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
-                const fieldDefaultValue = this.fieldDefaultValues[index];
+                // const fieldDefaultValue = this.fieldDefaultValues[index];
+                const rtyp = this.getRtyp();
+                const fieldDefaultValue = this.getDbdFiles().getFieldDefaultValue(rtyp, fieldName);
                 const value = g_widgets1.getChannelValue(channelName);
                 if (value !== undefined) {
 
@@ -1032,11 +1017,22 @@ export class Probe extends BaseWidget {
 
     processChannelNames = (): void => {
         super.processChannelNames();
+
+        const rtyp = this.getRtyp();
+        if (rtyp === "") {
+            return;
+        }
+
         this.getChannelNamesLevel5().length = 0;
         const baseChannelName = this.getChannelNamesLevel4()[0];
         if (baseChannelName !== undefined) {
             this.getChannelNamesLevel5().push(baseChannelName);
-            for (let fieldName of this.fieldNames) {
+            for (let fieldName of this.getFieldNames()) {
+                // do not try to connect DBF_NOACCESS, it causes CA server error
+                const fieldType = this.getDbdFiles().getFieldType(rtyp, fieldName);
+                if (fieldType === "DBF_NOACCESS" || fieldType === "") {
+                    continue;
+                }
                 this.getChannelNamesLevel5().push(`${baseChannelName}.${fieldName}`);
             }
         }
@@ -1096,19 +1092,7 @@ export class Probe extends BaseWidget {
         }
     }
 
-    /**
-     * 
-     * Executed when we submit a new probe
-     * 
-     * (1) destroy all existing TcaChannels from this widget, this widget's .channelNames is updated at this step
-     * (2) empty this._channelNames
-     * (3) expand channel name, create TcaChannel for the new channel, then obtain the meta data and monitor
-     *     this channel
-     * (4) flush widgets
-     */
-
     newProbe = async (newChannelName: string) => {
-
         // (1)
         // destroy all Tca channels
         g_widgets1.destroyAllTcaChannels();
@@ -1129,17 +1113,10 @@ export class Probe extends BaseWidget {
         }
 
         // (4)
-        // assign field arrays
-        this.fieldNames = this.getDbdFiles().getRecordTypeFieldNames(rtyp);
-        this.fieldMenus = this.getDbdFiles().getRecordTypeFieldMenus(rtyp);
-        this.fieldDefaultValues = this.getDbdFiles().getRecordTypeFieldDefaultValues(rtyp);
-        this.fieldIsLink = this.getDbdFiles().getRecordTypeFieldIsLink(rtyp);
-
-        // (5)
         // process channel name again with field channels: expand macros ...
         this.processChannelNames();
 
-        // (6)
+        // (5)
         // connect all channels
         const widgetKey = this.getWidgetKey();
         for (const channelNameLevel5 of this.getChannelNamesLevel5()) {
@@ -1156,7 +1133,7 @@ export class Probe extends BaseWidget {
             fieldTcaChannel.monitor();
         }
 
-        // (7)
+        // (6)
         // flush display
         g_widgets1.addToForceUpdateWidgets(widgetKey);
         g_widgets1.addToForceUpdateWidgets("GroupSelection2");
@@ -1204,6 +1181,21 @@ export class Probe extends BaseWidget {
 
     getBasicInfoData = () => {
         return this._basicInfoData;
+    }
+
+    getFieldNames = () => {
+        const rtyp = this.getRtyp();
+        if (typeof rtyp === "string") {
+            const fieldNames = this.getDbdFiles().getFieldNames(rtyp);
+            return fieldNames;
+        } else {
+            return [];
+        }
+    }
+
+    getRtyp = () => {
+        const rtyp = this.getBasicInfoData()["Type"];
+        return rtyp;
     }
 
     // -------------------------- tdl -------------------------------

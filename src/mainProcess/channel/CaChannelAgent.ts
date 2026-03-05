@@ -215,6 +215,7 @@ export class CaChannelAgent {
             // default ioTimeout = 1 second
             const dataRaw = await channel.get(ioTimeout, dbrType);
             if (dataRaw === undefined) {
+                console.log("undefined", this.getChannelName())
                 data = { value: undefined };
             } else {
                 data = structuredClone(dataRaw);

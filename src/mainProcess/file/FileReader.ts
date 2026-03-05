@@ -11,6 +11,7 @@ import { MessagePort } from "worker_threads";
 import { StpConverter } from "../windows/DisplayWindow/StpConverter";
 import xml2js from 'xml2js';
 import { type_tdl } from "../../common/GlobalVariables";
+import { type_dbd, type_dbd_field } from "../../common/types/type_dbd";
 
 export class FileReader {
     static fetchWithTimeout = async (url: string, timeout: number = 10) => {
@@ -711,7 +712,8 @@ export class FileReader {
         let regFieldBodyElement = /([a-zA-Z0-9]+)\(([^)]*)\)/g;
 
         let fields = recordTypeBody.match(regField);
-        const result: Record<string, any>[] = [];
+        // const result: Record<string, any>[] = [];
+        const result: Record<string, type_dbd_field> = {};
 
         if (Array.isArray(fields)) {
             for (let field of fields) {
@@ -723,13 +725,12 @@ export class FileReader {
                         includeFileName = path.join(path.dirname(fileName), includeFileName);
                     }
                     const includeFileFields = this.readFieldsDbdFile(includeFileName);
-                    for (let includeField of includeFileFields) {
-                        result.push(structuredClone(includeField));
+                    for (let [fieldName, fieldData] of Object.entries(includeFileFields)) {
+                        result[fieldName] = structuredClone(fieldData);
                     }
                 } else {
                     // field
-                    // console.log("--->", field);
-                    const resultField: Record<string, any> = {};
+                    const resultField: type_dbd_field = {TYPE: "", NAME: ""};
                     const header = field.match(regFieldHead);
                     const body = field.match(regFieldBody);
                     // console.log("==> body", body);
@@ -791,7 +792,8 @@ export class FileReader {
                     } else {
                         Log.error("record body wrong");
                     }
-                    result.push(structuredClone(resultField));
+                    const resultFieldName = resultField["NAME"];
+                    result[resultFieldName] = structuredClone(resultField);
                 }
             }
         }

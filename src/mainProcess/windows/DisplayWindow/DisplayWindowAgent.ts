@@ -501,15 +501,14 @@ export class DisplayWindowAgent {
                 if (channelType === "ca") {
                     // (2)
                     const dbrTypeNum_GR = channelAgent.getDbrTypeNum_GR();
-                    const getDbrTypeNum_CTRL = channelAgent.getDbrTypeNum_CTRL();
+                    const dbrTypeNum_CTRL = channelAgent.getDbrTypeNum_CTRL();
                     if (dbrTypeNum_GR === undefined) {
                         Log.debug("0", `Channel ${channelName} does not have a GR type data.`);
                         return { value: undefined };
                     }
                     // only GET once, the get() method may destroy the channel if there is no user
                     // result = await channelAgent.get(this.getId(), dbrTypeNum_GR, ioTimeout);
-                    result = await channelAgent.get(this.getId(), getDbrTypeNum_CTRL, ioTimeout);
-
+                    result = await channelAgent.get(this.getId(), dbrTypeNum_CTRL, ioTimeout);
                     // const dbrTypeNum_TIME = channelAgent.getDbrTypeNum_TIME();
                     // if (dbrTypeNum_TIME === undefined) {
                     // Log.debug("0", `Channel ${channelName} does not have a TIME type data.`);
