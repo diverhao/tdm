@@ -262,6 +262,72 @@ export class Probe extends BaseWidget {
         );
     };
 
+    /**
+     * React component for channel name input in title, it is part of _ElementTitle
+     */
+    _ElementPvInput = ({ additionalStyle, onChange, value, onBlur }: any) => {
+        const refElement = React.useRef<HTMLInputElement>(null);
+        return (
+            <input
+                ref={refElement}
+                spellCheck={false}
+                style={{
+                    fontSize: 25,
+                    backgroundColor: "rgba(0, 0, 0, 0)",
+                    border: "none",
+                    outline: "none",
+                    width: "100%",
+                    fontWeight: "bold",
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                    ...additionalStyle
+                }}
+                value={value}
+                onFocus={(event) => {
+                    event.preventDefault();
+                    if (refElement.current !== null) {
+                        refElement.current.style["color"] = "red";
+                    }
+                }}
+                onBlur={(event) => {
+                    event.preventDefault();
+                    if (refElement.current !== null) {
+                        refElement.current.style["color"] = "rgba(0,0,0,1)";
+                    }
+                    onBlur();
+                }}
+                onMouseEnter={() => {
+                    if (refElement.current !== null) {
+                        refElement.current.style["color"] = "rgba(255, 0, 0, 1)";
+                    }
+                }}
+                onMouseLeave={() => {
+                    if (refElement.current !== null && document.activeElement !== refElement.current) {
+                        refElement.current.style["color"] = "rgba(0, 0, 0, 1)";
+                    }
+                }}
+                onChange={onChange}
+            >
+            </input>
+        )
+    };
+
+    /**
+     * Basics section of the Probe UI.
+     *
+     * Renders a three-column table (Property / Value / Copy) whose rows
+     * are derived from {@link _basicInfoData} (populated by
+     * {@link extractBasicInfo}).  The "Value" row embeds an editable
+     * {@link _ElementValueInputForm} so the user can write to the channel;
+     * every other row displays a read-only string with a per-row Copy
+     * button.
+     *
+     * Two special action rows are appended at the bottom:
+     * - {@link _ElementLineProcess} — force-processes the record.
+     * - {@link _ElementLineRecordGeneration} — generates an EPICS `.db`
+     *   record definition from live data.
+     */
     _ElementBasics = () => {
         const basicInfoData = this.getBasicInfoData();
 
@@ -323,178 +389,15 @@ export class Probe extends BaseWidget {
         )
     }
 
-    _ElementCopyAllButton = () => {
-        return (
-            <div
-                style={{
-                    paddingBottom: 20,
-                    marginTop: 10,
-                }}
-            >
-                <ElementRectangleButton
-                    handleClick={(event) => {
-                        const result: Record<string, string | number | string[] | number[] | undefined> = structuredClone(this.getBasicInfoData());
-                        for (let fieldName of this.getFieldNames()) {
-                            const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
-                            // value may be undefined for NOACCESS type data, that's fine
-                            const value = g_widgets1.getChannelValue(channelName);
-                            result[fieldName] = value;
-                        }
-                        navigator.clipboard.writeText(JSON.stringify(result, null, 4));
-                    }}
-                >
-                    Copy All
-                </ElementRectangleButton>
-            </div>
-        );
-    };
-
-    _ElementFields = ({ filterValue }: { filterValue: string }) => {
-        return (
-            <div>
-                {
-                    this.getFieldNames().map((fieldName: string, index: number) => {
-
-
-                        const filterValueArray = filterValue.trim().split(" ");
-                        let filterMatch = false;
-                        for (let filterValueElement of filterValueArray) {
-                            filterMatch = filterMatch || fieldName.includes(filterValueElement.trim().toUpperCase());
-                        }
-
-                        if (!filterMatch) {
-                            return null;
-                        }
-
-
-                        // do not show DBF_NOACCESS channel
-                        const rtyp = this.getRtyp();
-                        const fieldType = this.getDbdFiles().getFieldType(rtyp, fieldName);
-                        if (fieldType === "DBF_NOACCESS" || fieldType === undefined) {
-                            return null;
-                        }
-                        const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
-                        const value = g_widgets1.getChannelValue(channelName);
-                        if (value === undefined) {
-                            return null;
-                        }
-
-                        const fieldMenu = this.getDbdFiles().getFieldMenu(rtyp, fieldName);
-                        const fieldDefaultValue = this.getDbdFiles().getFieldDefaultValue(rtyp, fieldName);
-                        const fieldIsLink = this.getDbdFiles().fieldIsLink(rtyp, fieldName);
-
-                        const isMenuField = fieldMenu.length > 0;
-                        return (
-                            <this._ElementTableLineField
-                                index={index}
-                                property={fieldName}
-                                value={value}
-                                defaultValue={fieldDefaultValue}
-                                isLink={fieldIsLink}
-                                isMenu={isMenuField}
-                                channelName={channelName}
-                                fieldMenu={fieldMenu}
-                            ></this._ElementTableLineField>
-
-                        )
-                    })}
-            </div>
-        );
-    };
-
-    _ElementPvaData = () => {
-        let tcaChannel: undefined | TcaChannel = undefined;
-        try {
-            tcaChannel = g_widgets1.getTcaChannel(this.getChannelNames()[0]);
-        } catch (e) {
-            Log.error(e);
-        }
-
-        if (tcaChannel === undefined || tcaChannel.getProtocol() !== "pva") {
-            return null;
-        }
-
-        const pvaData = tcaChannel.getDbrData();
-        const pvaType = tcaChannel.getPvaType();
-        let jsonDataAndType: any = {};
-        let jsonTypeName = "";
-        if (pvaData !== undefined && pvaType !== undefined) {
-            try {
-                const dataAndTypeFull = mergePvaTypeAndData(pvaType, "", pvaData);
-                jsonTypeName = dataAndTypeFull["key"];
-                jsonDataAndType = dataAndTypeFull["data"];
-            } catch (e) {
-                Log.error(e);
-            }
-        }
-
-        return (
-            <div>
-                <h3>PV Access Raw Data {jsonTypeName === "" ? "" : "( " + jsonTypeName + ")"}</h3>
-                {g_widgets1.getChannelProtocol(this.getChannelNames()[0]) === "pva" ?
-                    <ElementJsonViewer json={jsonDataAndType} topLevel={true}></ElementJsonViewer>
-                    : null
-                }
-            </div>
-        );
-    };
-
-    _ElementFilter = ({ filterValue, setFilterValue }: {
-        filterValue: string,
-        setFilterValue: React.Dispatch<React.SetStateAction<string>>,
-    }) => {
-        const filterElementRef = React.useRef<HTMLInputElement>(null);
-        return (
-            <>
-                <div>
-                    Filter:
-                    <input
-                        ref={filterElementRef}
-                        style={{
-                            borderRadius: 0,
-                            outline: "none",
-                            border: "solid 1px rgba(0,0,0,1)",
-                            marginLeft: 5,
-                            fontSize: this.getAllStyle()["fontSize"],
-                        }}
-                        type="text"
-                        onChange={(event) => {
-                            event.preventDefault();
-                            const newValue = event.target.value;
-                            setFilterValue(newValue);
-                        }}
-                        value={filterValue}
-                    ></input>
-                </div>
-                <div>&nbsp;</div>
-            </>
-        );
-    };
-
-    _ElementFieldsTitle = () => {
-        return (
-            <>
-                <div>
-                    <h3>Fields</h3>
-                </div>
-                <div>
-                    <span style={{ color: "rgba(150, 150, 150, 1)" }}>GREY</span>: field is not writable
-                </div>
-                <div>
-                    <span style={{ color: "rgba(46, 180, 64, 1.0)" }}>GREEN</span>: menu-type field, the value can be changed by selecting from the drop-down menu
-                </div>
-                <div>
-                    <span style={{ color: "rgba(0,0,255,1)" }}>BLUE</span>: link-type field, clicking the blue text will open a new Probe window for the linked
-                    PV
-                </div>
-                <div>
-                    <span style={{ color: "rgba(255,0,0,1)" }}>RED</span>: field value is different from its default value
-                </div>
-                <div>&nbsp;</div>
-            </>
-        );
-    };
-
+    /**
+     * Table row that lets the user force-process the current record.
+     *
+     * Clicking the highlighted "here" text writes `1` to the channel's
+     * `.PROC` field via {@link TcaChannel.put}, which triggers the
+     * record's processing routine on the IOC.
+     *
+     * Used inside {@link _ElementBasics}.
+     */
     _ElementLineProcess = () => {
         const elementProcessRef = React.useRef<HTMLSpanElement>(null);
         return (
@@ -543,6 +446,21 @@ export class Probe extends BaseWidget {
         );
     };
 
+    /**
+     * Table row that lets the user generate an EPICS `.db` record
+     * definition from the live field values.
+     *
+     * Provides two clickable links:
+     * - **"here"** (full) — calls {@link generateRecord} with all fields,
+     *   unchanged fields are commented out.
+     * - **"here"** (short) — calls {@link generateRecord} with
+     *   `shortVersion = true`, omitting fields at their default values.
+     *
+     * The resulting text is opened in a new text-editor window. If the
+     * record type cannot be determined, an error dialog is shown instead.
+     *
+     * Used inside {@link _ElementBasics}.
+     */
     _ElementLineRecordGeneration = () => {
         const elementGenerateRecord = React.useRef<HTMLSpanElement>(null);
         const elementGenerateRecordShort = React.useRef<HTMLSpanElement>(null);
@@ -642,54 +560,228 @@ export class Probe extends BaseWidget {
         );
     };
 
-    _ElementPvInput = ({ additionalStyle, onChange, value, onBlur }: any) => {
-        const refElement = React.useRef<HTMLInputElement>(null);
+    /**
+     * Collapsible JSON tree showing the raw PV Access data.
+     *
+     * Only rendered when the current channel uses the `pva` protocol.
+     * Returns `null` for Channel Access channels or when the channel
+     * cannot be found.
+     *
+     * The PVA type and data are merged via {@link mergePvaTypeAndData}
+     * and displayed using {@link ElementJsonViewer}.  The PVA structure
+     * type name (e.g. `"epics:nt/NTScalar:1.0"`) is shown in the header.
+     */
+    _ElementPvaData = () => {
+        let tcaChannel: undefined | TcaChannel = undefined;
+        try {
+            tcaChannel = g_widgets1.getTcaChannel(this.getChannelNames()[0]);
+        } catch (e) {
+            Log.error(e);
+        }
+
+        if (tcaChannel === undefined || tcaChannel.getProtocol() !== "pva") {
+            return null;
+        }
+
+        const pvaData = tcaChannel.getDbrData();
+        const pvaType = tcaChannel.getPvaType();
+        let jsonDataAndType: any = {};
+        let jsonTypeName = "";
+        if (pvaData !== undefined && pvaType !== undefined) {
+            try {
+                const dataAndTypeFull = mergePvaTypeAndData(pvaType, "", pvaData);
+                jsonTypeName = dataAndTypeFull["key"];
+                jsonDataAndType = dataAndTypeFull["data"];
+            } catch (e) {
+                Log.error(e);
+            }
+        }
+
         return (
-            <input
-                ref={refElement}
-                spellCheck={false}
-                style={{
-                    fontSize: 25,
-                    backgroundColor: "rgba(0, 0, 0, 0)",
-                    border: "none",
-                    outline: "none",
-                    width: "100%",
-                    fontWeight: "bold",
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                    whiteSpace: "nowrap",
-                    ...additionalStyle
-                }}
-                value={value}
-                onFocus={(event) => {
-                    event.preventDefault();
-                    if (refElement.current !== null) {
-                        refElement.current.style["color"] = "red";
-                    }
-                }}
-                onBlur={(event) => {
-                    event.preventDefault();
-                    if (refElement.current !== null) {
-                        refElement.current.style["color"] = "rgba(0,0,0,1)";
-                    }
-                    onBlur();
-                }}
-                onMouseEnter={() => {
-                    if (refElement.current !== null) {
-                        refElement.current.style["color"] = "rgba(255, 0, 0, 1)";
-                    }
-                }}
-                onMouseLeave={() => {
-                    if (refElement.current !== null && document.activeElement !== refElement.current) {
-                        refElement.current.style["color"] = "rgba(0, 0, 0, 1)";
-                    }
-                }}
-                onChange={onChange}
-            >
-            </input>
-        )
+            <div>
+                <h3>PV Access Raw Data {jsonTypeName === "" ? "" : "( " + jsonTypeName + ")"}</h3>
+                {g_widgets1.getChannelProtocol(this.getChannelNames()[0]) === "pva" ?
+                    <ElementJsonViewer json={jsonDataAndType} topLevel={true}></ElementJsonViewer>
+                    : null
+                }
+            </div>
+        );
     };
 
+    /**
+     * Header and colour legend for the Fields section.
+     *
+     * Displays the "Fields" heading followed by a legend explaining the
+     * colour coding used in {@link _ElementFields}:
+     *
+     * - **Grey** — read-only field (no write access).
+     * - **Green** — menu-type field (selectable drop-down).
+     * - **Blue** — link-type field (click to open a new Probe).
+     * - **Red** — value differs from its default.
+     */
+    _ElementFieldsTitle = () => {
+        return (
+            <>
+                <div>
+                    <h3>Fields</h3>
+                </div>
+                <div>
+                    <span style={{ color: "rgba(150, 150, 150, 1)" }}>GREY</span>: field is not writable
+                </div>
+                <div>
+                    <span style={{ color: "rgba(46, 180, 64, 1.0)" }}>GREEN</span>: menu-type field, the value can be changed by selecting from the drop-down menu
+                </div>
+                <div>
+                    <span style={{ color: "rgba(0,0,255,1)" }}>BLUE</span>: link-type field, clicking the blue text will open a new Probe window for the linked
+                    PV
+                </div>
+                <div>
+                    <span style={{ color: "rgba(255,0,0,1)" }}>RED</span>: field value is different from its default value
+                </div>
+                <div>&nbsp;</div>
+            </>
+        );
+    };
+
+    /**
+     * Text input for filtering the displayed record fields.
+     *
+     * The user can type one or more space-separated tokens; a field is
+     * shown if its name contains any of the tokens (case-insensitive
+     * match performed in {@link _ElementFields}).
+     *
+     * @param filterValue - The current filter string.
+     * @param setFilterValue - State setter to update the filter string.
+     */
+    _ElementFilter = ({ filterValue, setFilterValue }: {
+        filterValue: string,
+        setFilterValue: React.Dispatch<React.SetStateAction<string>>,
+    }) => {
+        const filterElementRef = React.useRef<HTMLInputElement>(null);
+        return (
+            <>
+                <div>
+                    Filter:
+                    <input
+                        ref={filterElementRef}
+                        style={{
+                            borderRadius: 0,
+                            outline: "none",
+                            border: "solid 1px rgba(0,0,0,1)",
+                            marginLeft: 5,
+                            fontSize: this.getAllStyle()["fontSize"],
+                        }}
+                        type="text"
+                        onChange={(event) => {
+                            event.preventDefault();
+                            const newValue = event.target.value;
+                            setFilterValue(newValue);
+                        }}
+                        value={filterValue}
+                    ></input>
+                </div>
+                <div>&nbsp;</div>
+            </>
+        );
+    };
+
+    /**
+     * List of all record fields for the current channel.
+     *
+     * Iterates over every field name returned by the DBD definition,
+     * applies the space-separated filter from {@link _ElementFilter},
+     * skips `DBF_NOACCESS` fields, and renders each remaining field as
+     * an {@link _ElementTableLineField} row.
+     *
+     * Menu-type fields are rendered with a drop-down selector; link-type
+     * fields are clickable and open a new Probe window for the linked PV.
+     *
+     * @param filterValue - The current filter string used to match field
+     *   names (space-separated tokens, matched case-insensitively).
+     */
+    _ElementFields = ({ filterValue }: { filterValue: string }) => {
+        return (
+            <div>
+                {
+                    this.getFieldNames().map((fieldName: string, index: number) => {
+
+
+                        const filterValueArray = filterValue.trim().split(" ");
+                        let filterMatch = false;
+                        for (let filterValueElement of filterValueArray) {
+                            filterMatch = filterMatch || fieldName.includes(filterValueElement.trim().toUpperCase());
+                        }
+
+                        if (!filterMatch) {
+                            return null;
+                        }
+
+
+                        // do not show DBF_NOACCESS channel
+                        const rtyp = this.getRtyp();
+                        const fieldType = this.getDbdFiles().getFieldType(rtyp, fieldName);
+                        if (fieldType === "DBF_NOACCESS" || fieldType === undefined) {
+                            return null;
+                        }
+                        const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
+                        const value = g_widgets1.getChannelValue(channelName);
+                        if (value === undefined) {
+                            return null;
+                        }
+
+                        const fieldMenu = this.getDbdFiles().getFieldMenu(rtyp, fieldName);
+                        const fieldDefaultValue = this.getDbdFiles().getFieldDefaultValue(rtyp, fieldName);
+                        const fieldIsLink = this.getDbdFiles().fieldIsLink(rtyp, fieldName);
+
+                        const isMenuField = fieldMenu.length > 0;
+                        return (
+                            <this._ElementTableLineField
+                                index={index}
+                                property={fieldName}
+                                value={value}
+                                defaultValue={fieldDefaultValue}
+                                isLink={fieldIsLink}
+                                isMenu={isMenuField}
+                                channelName={channelName}
+                                fieldMenu={fieldMenu}
+                            ></this._ElementTableLineField>
+
+                        )
+                    })}
+            </div>
+        );
+    };
+
+    _ElementCopyAllButton = () => {
+        return (
+            <div
+                style={{
+                    paddingBottom: 20,
+                    marginTop: 10,
+                }}
+            >
+                <ElementRectangleButton
+                    handleClick={(event) => {
+                        const result: Record<string, string | number | string[] | number[] | undefined> = structuredClone(this.getBasicInfoData());
+                        for (let fieldName of this.getFieldNames()) {
+                            const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
+                            // value may be undefined for NOACCESS type data, that's fine
+                            const value = g_widgets1.getChannelValue(channelName);
+                            result[fieldName] = value;
+                        }
+                        navigator.clipboard.writeText(JSON.stringify(result, null, 4));
+                    }}
+                >
+                    Copy All
+                </ElementRectangleButton>
+            </div>
+        );
+    };
+
+
+    /**
+     * React component for 
+     */
     _ElementTableLineField = ({ index, property, value, defaultValue, isLink, isMenu, channelName, fieldMenu }: any) => {
         console.log(channelName, value)
         const valueElementRef = React.useRef<HTMLInputElement>(null);
@@ -949,6 +1041,29 @@ export class Probe extends BaseWidget {
 
     // ---------------------------- helpers -------------------------
 
+    /**
+     * Generate an EPICS record database definition for the current channel
+     * using live field values from the running IOC.
+     *
+     * The output is a multi-line string in `.db` format, e.g.
+     * ```
+     * record(ai, "CHANNEL:NAME") {
+     *     field(DESC, "some description")    # default ""
+     *     # field(SCAN, "Passive")
+     * }
+     * ```
+     *
+     * Fields whose value equals the default are commented out (full version)
+     * or omitted entirely (short version). A comment is appended to each
+     * non-default field showing its default value.
+     *
+     * Returns an error comment string if the channel has no record type.
+     *
+     * @param shortVersion - When `true`, only fields whose values differ from
+     *   their defaults are included. When `false` (default), all fields are
+     *   listed with unchanged ones commented out.
+     * @returns The record definition string in EPICS `.db` format.
+     */
     generateRecord = (shortVersion: boolean = false) => {
         const rtyp = this.getBasicInfoData()["Type"];
         if (rtyp === "" || (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i).test(rtyp)) {
@@ -971,7 +1086,6 @@ export class Probe extends BaseWidget {
                     return;
                 }
                 const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
-                // const fieldDefaultValue = this.fieldDefaultValues[index];
                 const rtyp = this.getRtyp();
                 const fieldDefaultValue = this.getDbdFiles().getFieldDefaultValue(rtyp, fieldName);
                 const value = g_widgets1.getChannelValue(channelName);
@@ -1002,6 +1116,19 @@ export class Probe extends BaseWidget {
         }
     }
 
+    /**
+     * Process channel names for the Probe widget.
+     *
+     * Extends the base class implementation by building the Level 5
+     * channel name list (`_channelNamesLevel5`), which includes the base
+     * channel name plus one entry per record field (e.g.
+     * `"CHANNEL:NAME.DESC"`, `"CHANNEL:NAME.SCAN"`, …).
+     *
+     * Fields of type `DBF_NOACCESS` are skipped because attempting to
+     * connect to them causes a Channel Access server error.
+     *
+     * @override
+     */
     processChannelNames = (): void => {
         super.processChannelNames();
 
@@ -1025,6 +1152,9 @@ export class Probe extends BaseWidget {
         }
     }
 
+    /**
+     * update the basic information
+     */
     extractBasicInfo = (): void => {
 
         const channelNameLevel4 = this.getChannelNamesLevel4()[0];
@@ -1058,9 +1188,19 @@ export class Probe extends BaseWidget {
     };
 
     /**
-     * invoked in the handler for "request-epics-dbd" reply
-     * 
-     * the EPICS runtime starts to work
+     * Handle the reply to the `"request-epics-dbd"` IPC message.
+     *
+     * Called once when the EPICS runtime becomes available. It initialises
+     * the {@link DbdFiles} instance with the record-type and menu
+     * definitions received from the main process, then kicks off a
+     * {@link newProbe} call for the current channel (if any) when the
+     * widget is in operating mode.
+     *
+     * In editing mode the DBD data is stored but no probe is started.
+     *
+     * @param result - The parsed DBD payload from the main process.
+     * @param result.menus - Menu definitions keyed by menu name.
+     * @param result.recordTypes - Record-type definitions keyed by record type name.
      */
     processDbd = (result: {
         menus: Record<string, any>,
@@ -1078,26 +1218,46 @@ export class Probe extends BaseWidget {
         }
     }
 
+    /**
+     * Start (or restart) a probe session for the given channel.
+     *
+     * This is the main entry point for inspecting a new PV. It tears down
+     * any existing connections and sets up fresh ones for every field of
+     * the target record. The steps are:
+     *
+     * 1. **Destroy** all existing {@link TcaChannel}s owned by this widget.
+     * 2. **Clear** the cached basic-info data so stale values are not shown.
+     * 3. **Update** the Level 0 channel name and run
+     *    {@link processChannelNames} to derive higher-level names.
+     * 4. **Fetch RTYP** — an asynchronous CA/PVA get that retrieves the
+     *    record type (e.g. `"ai"`, `"bo"`). If the type cannot be
+     *    determined the method returns early.
+     * 5. **Re-process** channel names now that the record type (and
+     *    therefore the field list) is known, populating the Level 5 names.
+     * 6. **Connect** every field channel: create a {@link TcaChannel},
+     *    fetch its metadata (or PVA type), perform an initial `get`, and
+     *    start monitoring for updates.
+     * 7. **Flush** the display so the UI re-renders with the new data.
+     *
+     * @param newChannelName - The PV / channel name to probe
+     *   (e.g. `"LINAC:QUAD:BDES"`).
+     */
     newProbe = async (newChannelName: string) => {
         // (1)
-        // destroy all Tca channels
         g_widgets1.destroyAllTcaChannels();
 
 
         // (2)
-        // clear basic info
         for (const key of Object.keys(this.getBasicInfoData())) {
             delete this.getBasicInfoData()[key];
         }
 
         // (3)
-        // process channel names
         this.getChannelNamesLevel0().length = 0;
         this.getChannelNamesLevel0()[0] = newChannelName;
         this.processChannelNames();
 
         // (4)
-        // fetch RTYP value
         const channelName = this.getChannelNames()[0];
         const rtyp = await this.fetchRTYP(channelName);
         this.getBasicInfoData()["Type"] = rtyp;
@@ -1107,11 +1267,9 @@ export class Probe extends BaseWidget {
         }
 
         // (5)
-        // process channel name again with field channels: expand macros ...
         this.processChannelNames();
 
         // (6)
-        // connect all channels
         const widgetKey = this.getWidgetKey();
         for (const channelNameLevel5 of this.getChannelNamesLevel5()) {
             const fieldTcaChannel = g_widgets1.createTcaChannel(channelNameLevel5, widgetKey);
@@ -1128,7 +1286,6 @@ export class Probe extends BaseWidget {
         }
 
         // (7)
-        // flush display
         g_widgets1.addToForceUpdateWidgets(widgetKey);
         g_widgets1.addToForceUpdateWidgets("GroupSelection2");
         g_flushWidgets();
@@ -1136,6 +1293,22 @@ export class Probe extends BaseWidget {
     };
 
 
+    /**
+     * Fetch the `RTYP` (record type) of a channel via Channel Access.
+     *
+     * Strips any field suffix from the channel name, appends `.RTYP`,
+     * creates a temporary {@link TcaChannel}, and performs a synchronous
+     * `get`. For example, given `"LINAC:QUAD:BDES.VAL"` it will query
+     * `"LINAC:QUAD:BDES.RTYP"`.
+     *
+     * Also clears the cached {@link _basicInfoData} before the request so
+     * that stale entries do not persist when switching channels.
+     *
+     * @param channelName - The fully-qualified channel name (may include a
+     *   field suffix such as `.VAL`).
+     * @returns The record type string (e.g. `"ai"`, `"bo"`), or
+     *   `"undefined"` if the channel could not be reached or has no RTYP.
+     */
     fetchRTYP = async (channelName: string): Promise<string> => {
 
         const rtypChannelName = channelName.split(".")[0] + ".RTYP";
@@ -1199,7 +1372,7 @@ export class Probe extends BaseWidget {
 
     generateDefaultTdl: () => any = Probe.generateDefaultTdl;
 
-    // static method for generating a widget tdl with external PV name
+    // static method for generating TDL for utility window
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_Probe_tdl => {
         const result = this.generateDefaultTdl();
         result.channelNames = utilityOptions.channelNames as string[];
@@ -1209,8 +1382,6 @@ export class Probe extends BaseWidget {
     // defined in super class
     getTdlCopy(newKey: boolean = true) {
         const result = super.getTdlCopy(newKey);
-        result.recordTypes = {};
-        result.menus = {};
         return result;
     }
 
