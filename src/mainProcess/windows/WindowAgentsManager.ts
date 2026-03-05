@@ -619,7 +619,7 @@ export class WindowAgentsManager {
         windowId: string,
     ) => {
         try {
-            if (utilityType === "Probe" || utilityType === "ChannelGraph") {
+            if (utilityType === "ChannelGraph") {
                 // utilityOptions["recordTypesFieldNames"] = this.getMainProcess().getDbdFiles().getAllRecordTypeFieldNames();
                 // utilityOptions["recordTypesMenus"] = this.getMainProcess().getDbdFiles().getAllMenusChoices();
                 utilityOptions["recordTypes"] = this.getMainProcess().getChannelAgentsManager().getDbdFiles().getRecordTypes();

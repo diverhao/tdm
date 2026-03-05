@@ -55,9 +55,14 @@ export class DataViewer extends BaseWidget {
     // ------------------------------ elements ---------------------------------
 
     _ElementRaw = () => {
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
+        React.useEffect(() => {
+            this.widgetBeingRendered = false;
+        });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
 
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
+        this.updateAllStyleAndText();
 
         // the web mode needs this to adjust the plot area in the beginning
         React.useEffect(() => {
@@ -199,7 +204,7 @@ export class DataViewer extends BaseWidget {
     getMainSettings = () => {
         return this._mainSettings;
     };
-    
+
     setSettingsIndex = (newIndex: settingsIndexChoices) => {
         this.getPlot().setSettingsIndex(newIndex);
     }

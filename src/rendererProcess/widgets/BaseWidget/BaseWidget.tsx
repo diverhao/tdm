@@ -213,6 +213,16 @@ export abstract class BaseWidget {
 
     // ------------------------ mouse events ----------------------------
 
+    /**
+     * callback function for window resize event, only for Utility windows where
+     * the widget width and height should fit into the browser window
+     * 
+     * this registrar 
+     * 
+     *  (1) calculates and change the style width and height
+     * 
+     *  (2) invoke the callback function
+     */
     registerUtilityWindowResizeCallback = (func: (event: UIEvent) => void) => {
         window.addEventListener("resize", (event: UIEvent) => {
             const isUtilityWindow = g_widgets1.getRoot().getDisplayWindowClient().getIsUtilityWindow()
@@ -222,6 +232,7 @@ export abstract class BaseWidget {
             const style = this.getStyle();
             style.width = window.innerWidth;
             style.height = window.innerHeight;
+            console.log("styel =========================", style.width, style.height)
             func(event);
         })
     }

@@ -3,17 +3,11 @@ import * as React from "react";
 import { Channel_ACCESS_RIGHTS } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { type_dbrData } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ProbeSidebar } from "./ProbeSidebar";
-import { Channel_DBR_TYPES } from "../../../common/GlobalVariables";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { DbdFiles } from "../../channel/DbdFiles";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import { TcaChannel } from "../../channel/TcaChannel";
-import { v4 as uuidv4 } from "uuid";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor, ElementRectangleButtonDefaultTextColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { ElementJsonViewer } from "../../helperWidgets/SharedElements/JsonViewer";
@@ -24,15 +18,12 @@ import { Table } from "../../helperWidgets/Table/Table";
 export class Probe extends BaseWidget {
     _dbdFiles: DbdFiles;
 
-    // static data for a particular RTYP
     fieldNames: string[] = [];
     fieldMenus: (undefined | string[])[] = [];
     fieldDefaultValues: (string | number)[] = [];
     fieldIsLink: boolean[] = [];
 
-    // private _mappedDbrData: Record<string, any> = {};
-
-    _channelNamesLevel5: string[] = [];
+    private readonly _channelNamesLevel5: string[] = [];
     private readonly _basicInfoData: Record<string, string> = {};
 
     _Table: Table;
@@ -53,6 +44,15 @@ export class Probe extends BaseWidget {
         this._Cell = this._Table.getElementTableCell();
 
         this._sidebar = new ProbeSidebar(this);
+
+
+        // single-window DataViewer does not use "100%" for width or height
+        // it needs explicit dimension for proper plotting of traces
+        // when the window is resized
+        this.registerUtilityWindowResizeCallback((event: UIEvent) => {
+            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+            g_flushWidgets();
+        })
     }
 
     // ------------------------------ elements ---------------------------------
@@ -69,7 +69,7 @@ export class Probe extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <div style={{ ...this.getElementBodyRawStyle() }}>
+                <div style={this.getElementBodyRawStyle()}>
                     <this._ElementArea></this._ElementArea>
                     {this.showResizers() ? <this._ElementResizer /> : null}
                 </div>
@@ -81,6 +81,8 @@ export class Probe extends BaseWidget {
     _ElementAreaRaw = (): React.JSX.Element => {
         this.extractBasicInfo();
 
+        const padding = g_widgets1.getRoot().getDisplayWindowClient().getIsUtilityWindow() ? 15 : 0;
+
         return (
             <div
                 style={{
@@ -91,13 +93,12 @@ export class Probe extends BaseWidget {
                     height: "100%",
                     userSelect: "none",
                     flexDirection: "column",
-                    // fontSize: this.getText().fontSize,
-                    // fontStyle: this.getText().fontStyle,
                     paddingBottom: 0,
                     overflowX: "hidden",
                     overflowY: "auto",
+                    padding: padding,
+                    boxSizing: "border-box",
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
@@ -110,12 +111,23 @@ export class Probe extends BaseWidget {
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
     _ElementProbe = () => {
+
         if (g_widgets1.isEditing() === true) {
             return (
-                <div>
-                    <h1>
-                        Probe
-                    </h1>
+                <div
+                    style={{
+                        position: "relative",
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        width: "100%",
+                        fontSize: 25,
+                    }}
+                >
+                    <div>
+                        <b>Probe&nbsp;&nbsp;</b>
+                    </div>
                 </div>
             );
         }
@@ -127,14 +139,128 @@ export class Probe extends BaseWidget {
                 <this._ElementTitle />
                 <this._ElementBasics></this._ElementBasics>
                 <this._ElementPvaData />
-                <this._ElementFieldDesc />
+                <this._ElementFieldsTitle />
                 <this._ElementFilter filterValue={filterValue} setFilterValue={setFilterValue} />
                 <this._ElementFields filterValue={filterValue} />
                 <this._ElementCopyAllButton />
-
             </div>
         )
     }
+
+
+    _ElementTitle = () => {
+        const [channelName, setChannelName] = React.useState(this.getChannelNames()[0]);
+
+        // channel name hint
+        const inputElementRef = React.useRef<HTMLInputElement>(null);
+        const formElementRef = React.useRef<HTMLFormElement>(null);
+        const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
+        const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
+        const [channelNameHintElementDimension, setChannelNameHintElementDimension] = React.useState({ width: 0, maxHeight: 0, left: 0, top: 0 });
+        const [channelNameHintData, setChannelNameHintData] = React.useState<string[]>([]);
+        const selectHint = (channelName: string) => {
+            this.newProbe(channelName);
+            setChannelName(channelName);
+            setShowChannelNameHint(false)
+        }
+
+        return (
+            <div
+                style={{
+                    position: "relative",
+                    display: "inline-flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                    fontSize: 25,
+                }}
+            >
+                <div>
+                    <b>Probe&nbsp;for&nbsp;</b>
+                </div>
+                <div
+                    style={{
+                        flexGrow: 1,
+                    }}
+                >
+                    <form
+                        ref={formElementRef}
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            this.newProbe(channelName);
+                            (event.currentTarget.elements[0] as HTMLInputElement).blur();
+                            setShowChannelNameHint(false);
+                        }}
+                        style={{
+                            fontSize: 25,
+                            backgroundColor: "rgba(255,255,0,0)",
+                            width: "100%",
+                            fontFamily: "bold",
+                        }}
+                    >
+                        <this._ElementPvInput
+                            ref={inputElementRef}
+                            type="text"
+                            name="channelName"
+                            placeholder="PV Name"
+                            value={channelName}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                const newVal = event.target.value;
+                                setChannelName(newVal);
+
+                                // send query for channel name if there are more than 1 character input
+                                if (newVal.trim().length >= 2) {
+                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+                                    const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
+                                    if (queryStr !== "") {
+                                        fetch(queryStr)
+                                            .then(res => res.json())
+                                            .then((data: any) => {
+                                                if (Object.keys(data).length > 0 && formElementRef.current !== null) {
+                                                    const recForm = formElementRef.current.getBoundingClientRect();
+                                                    setChannelNameHintElementDimension({
+                                                        left: 0,
+                                                        top: recForm.height + 5,
+                                                        width: recForm.width - 5,
+                                                        maxHeight: 400,
+                                                    })
+                                                    setChannelNameHintData(Object.keys(data));
+                                                    setShowChannelNameHint(true);
+                                                } else {
+                                                    setChannelNameHintData(data);
+                                                    setShowChannelNameHint(false);
+                                                }
+                                            })
+                                    }
+                                }
+
+                            }}
+                            onBlur={() => {
+                                setShowChannelNameHint(false);
+                                setChannelNameHintData([]);
+
+                                const orig = this.getChannelNames()[0];
+                                if (orig !== channelName) {
+                                    setChannelName(orig);
+                                }
+                            }}
+                            onFocus={() => {
+                                inputElementRef.current?.select();
+                            }}
+                        />
+                        <ChannelNameHintElement
+                            show={showChannelNameHint}
+                            additionalStyle={channelNameHintElementDimension}
+                            channelNames={channelNameHintData}
+                            selectHint={selectHint}
+                        ></ChannelNameHintElement>
+
+                    </form>
+                </div>
+            </div>
+        );
+    };
 
     _ElementBasics = () => {
         const basicInfoData = this.getBasicInfoData();
@@ -144,100 +270,55 @@ export class Probe extends BaseWidget {
                 <div>
                     <h3>Basics</h3>
                 </div>
-                <div
-                    style={{
-                        outline: this._getElementAreaRawOutlineStyle(),
-                    }}
-                >
-                    {/* header line */}
-                    <this._Line selectable={false}>
-                        <this._Cell columnIndex={0}>
-                            <b>Property</b>
-                        </this._Cell>
-                        <this._Cell columnIndex={1}>
-                            <b>Value</b>
-                        </this._Cell>
-                        <this._Cell columnIndex={2}>
-                        </this._Cell>
-                    </this._Line>
 
-                    {Object.entries(basicInfoData).map(([key, value]: [string, string], index: number) => {
+                {/* header line */}
+                <this._Line selectable={false}>
+                    <this._Cell columnIndex={0}>
+                        <b>Property</b>
+                    </this._Cell>
+                    <this._Cell columnIndex={1}>
+                        <b>Value</b>
+                    </this._Cell>
+                    <this._Cell columnIndex={2}>
+                    </this._Cell>
+                </this._Line>
 
-
-                        if (key === "Value") {
-                            return (
-                                <React.Fragment key={`basics-${index}`}>
-                                    <this._Line lineIndex={index} selectable={false}>
-                                        <this._Cell columnIndex={0}>
-                                            {key}
-                                        </this._Cell>
-                                        <this._Cell columnIndex={1}>
-                                            <this._ElementValueInputForm></this._ElementValueInputForm>
-                                        </this._Cell>
-                                        <this._Cell columnIndex={2}>
-                                        </this._Cell>
-                                    </this._Line>
-                                    <this._Line lineIndex={index} selectable={false}>
-                                        <this._Cell columnIndex={0}>
-                                            {key}
-                                        </this._Cell>
-                                        <this._Cell columnIndex={1}>
-                                            {value}
-                                        </this._Cell>
-                                        <this._Cell columnIndex={2}>
-                                            <ElementRectangleButton
-                                                paddingLeft={3}
-                                                paddingRight={3}
-                                                paddingTop={1}
-                                                paddingBottom={1}
-                                                defaultBackgroundColor={"rgba(0,0,0,0)"}
-                                                defaultTextColor={"rgba(0,0,0,0)"}
-                                                highlightBackgroundColor={ElementRectangleButtonDefaultBackgroundColor}
-                                                highlightTextColor={ElementRectangleButtonDefaultTextColor}
-                                                handleClick={() => {
-                                                    const val = Object.values(basicInfoData)[index];
-                                                    navigator.clipboard.writeText(`${val}`);
-                                                }}
-                                            >
-                                                Copy
-                                            </ElementRectangleButton>
-                                        </this._Cell>
-                                    </this._Line>
-                                </React.Fragment>
-                            );
-                        }
-                        return (
-                            <this._Line key={`basics-${index}`} lineIndex={index} selectable={false}>
-                                <this._Cell columnIndex={0}>
-                                    {key}
-                                </this._Cell>
-                                <this._Cell columnIndex={1}>
-                                    {value}
-                                </this._Cell>
-                                <this._Cell columnIndex={2}>
-                                    <ElementRectangleButton
-                                        paddingLeft={3}
-                                        paddingRight={3}
-                                        paddingTop={1}
-                                        paddingBottom={1}
-                                        defaultBackgroundColor={"rgba(0,0,0,0)"}
-                                        defaultTextColor={"rgba(0,0,0,0)"}
-                                        highlightBackgroundColor={ElementRectangleButtonDefaultBackgroundColor}
-                                        highlightTextColor={ElementRectangleButtonDefaultTextColor}
-                                        handleClick={() => {
-                                            const val = Object.values(basicInfoData)[index];
-                                            navigator.clipboard.writeText(`${val}`);
-                                        }}
-                                    >
-                                        Copy
-                                    </ElementRectangleButton>
-                                </this._Cell>
-                            </this._Line>
-                        );
-                    })}
-                    <this._ElementLineProcess />
-                    <this._ElementLineRecordDefinition />
-                </div>
+                {/* content lines */}
+                {Object.entries(basicInfoData).map(([key, value]: [string, string], index: number) => {
+                    return (
+                        <this._Line key={`basics-${index}`} lineIndex={index} selectable={false}>
+                            <this._Cell columnIndex={0}>
+                                {key}
+                            </this._Cell>
+                            <this._Cell columnIndex={1}>
+                                {key === "Value" ?
+                                    <this._ElementValueInputForm />
+                                    : value
+                                }
+                            </this._Cell>
+                            <this._Cell columnIndex={2}>
+                                <ElementRectangleButton
+                                    paddingLeft={3}
+                                    paddingRight={3}
+                                    paddingTop={1}
+                                    paddingBottom={1}
+                                    defaultBackgroundColor={"rgba(0,0,0,0)"}
+                                    defaultTextColor={"rgba(0,0,0,0)"}
+                                    highlightBackgroundColor={ElementRectangleButtonDefaultBackgroundColor}
+                                    highlightTextColor={ElementRectangleButtonDefaultTextColor}
+                                    handleClick={() => {
+                                        const val = Object.values(basicInfoData)[index];
+                                        navigator.clipboard.writeText(`${val}`);
+                                    }}
+                                >
+                                    Copy
+                                </ElementRectangleButton>
+                            </this._Cell>
+                        </this._Line>
+                    );
+                })}
+                <this._ElementLineProcess />
+                <this._ElementLineRecordDefinition />
             </div>
         )
     }
@@ -269,11 +350,7 @@ export class Probe extends BaseWidget {
 
     _ElementFields = ({ filterValue }: { filterValue: string }) => {
         return (
-            <div
-                style={{
-                    outline: this._getElementAreaRawOutlineStyle(),
-                }}
-            >
+            <div>
                 {
                     this.fieldNames.map((fieldName: string, index: number) => {
                         const filterValueArray = filterValue.trim().split(" ");
@@ -405,7 +482,7 @@ export class Probe extends BaseWidget {
         );
     };
 
-    _ElementFieldDesc = () => {
+    _ElementFieldsTitle = () => {
         return (
             <>
                 <div>
@@ -426,126 +503,6 @@ export class Probe extends BaseWidget {
                 </div>
                 <div>&nbsp;</div>
             </>
-        );
-    };
-
-    _ElementTitle = () => {
-        const [channelName, setChannelName] = React.useState(this.getChannelNames()[0]);
-
-        React.useEffect(() => {
-            setChannelName(`${this.getChannelNames()[0]}`);
-        }, [this.getChannelNames()[0]]);
-
-        // channel name hint
-        const inputElementRef = React.useRef<HTMLInputElement>(null);
-        const formElementRef = React.useRef<HTMLFormElement>(null);
-
-        const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
-        const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
-        const [channelNameHintElementDimension, setChannelNameHintElementDimension] = React.useState({ width: 0, maxHeight: 0, left: 0, top: 0 });
-        const [channelNameHintData, setChannelNameHintData] = React.useState<string[]>([]);
-
-        const selectHint = (channelName: string) => {
-            this.newProbe(channelName);
-            setChannelName(channelName);
-            setShowChannelNameHint(false)
-        }
-
-        return (
-            <div
-                style={{
-                    position: "relative",
-                    display: "inline-flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    width: "100%",
-                    fontSize: 25,
-                }}
-            >
-                <div style={{}}>
-                    <b>Probe&nbsp;for&nbsp;</b>
-                </div>
-                <div
-                    style={{
-                        flexGrow: 1,
-                    }}
-                >
-                    <form
-                        ref={formElementRef}
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            this.newProbe(channelName);
-                            (event.currentTarget.elements[0] as HTMLInputElement).blur();
-                            setShowChannelNameHint(false);
-                        }}
-                        style={{
-                            fontSize: 25,
-                            backgroundColor: "rgba(255,255,0,0)",
-                            width: "100%",
-                            fontFamily: "bold",
-                        }}
-                    >
-                        <this._ElementPvInput
-                            ref={inputElementRef}
-                            type="text"
-                            name="channelName"
-                            placeholder="PV Name"
-                            value={channelName}
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                const newVal = event.target.value;
-                                setChannelName(newVal);
-
-                                // send query for channel name if there are more than 1 character input
-                                if (newVal.trim().length >= 2) {
-                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                                    const queryStr = displayWindowClient.generateChannelLookupQuery(newVal);
-                                    if (queryStr !== "") {
-                                        fetch(queryStr)
-                                            .then(res => res.json())
-                                            .then((data: any) => {
-                                                if (Object.keys(data).length > 0 && formElementRef.current !== null) {
-                                                    const recForm = formElementRef.current.getBoundingClientRect();
-                                                    setChannelNameHintElementDimension({
-                                                        left: 0,
-                                                        top: recForm.height + 5,
-                                                        width: recForm.width - 5,
-                                                        maxHeight: 400,
-                                                    })
-                                                    setChannelNameHintData(Object.keys(data));
-                                                    setShowChannelNameHint(true);
-                                                } else {
-                                                    setChannelNameHintData(data);
-                                                    setShowChannelNameHint(false);
-                                                }
-                                            })
-                                    }
-                                }
-
-                            }}
-                            onBlur={() => {
-                                setShowChannelNameHint(false);
-                                setChannelNameHintData([]);
-
-                                const orig = this.getChannelNames()[0];
-                                if (orig !== channelName) {
-                                    setChannelName(orig);
-                                }
-                            }}
-                            onFocus={() => {
-                                inputElementRef.current?.select();
-                            }}
-                        />
-                        <ChannelNameHintElement
-                            show={showChannelNameHint}
-                            additionalStyle={channelNameHintElementDimension}
-                            channelNames={channelNameHintData}
-                            selectHint={selectHint}
-                        ></ChannelNameHintElement>
-
-                    </form>
-                </div>
-            </div>
         );
     };
 
@@ -696,7 +653,7 @@ export class Probe extends BaseWidget {
         );
     };
 
-    _ElementPvInput = ({ additionalStyle, type, name, placeholder, onChange, value, onBlur, onFocus }: any) => {
+    _ElementPvInput = ({ additionalStyle, onChange, value, onBlur }: any) => {
         const refElement = React.useRef<HTMLInputElement>(null);
         return (
             <input
@@ -925,15 +882,12 @@ export class Probe extends BaseWidget {
     };
 
     _ElementValueInputForm = () => {
-        // const [value, setValue] = React.useState(`${valueRaw}`);
-        const valueRaw = this.getChannelValueForMonitorWidget();
 
-        const shadowWidth = 2;
+        const valueRaw = this.getChannelValueForMonitorWidget();
 
         const [value, setValue] = React.useState(`${valueRaw}`);
         const isFocused = React.useRef<boolean>(false);
         const keyRef = React.useRef<HTMLInputElement>(null);
-        const keyRefForm = React.useRef<HTMLFormElement>(null);
 
         React.useEffect(() => {
             setValue((oldValue: string) => {
@@ -950,22 +904,11 @@ export class Probe extends BaseWidget {
 
             (event.currentTarget.elements[0] as HTMLInputElement).blur();
             if (this._getChannelAccessRight() < 1.5) {
-                // no write access, do not write
                 return;
             }
 
             this.putChannelValue(this.getChannelNames()[0], value);
         };
-
-        const calcInputSize = () => {
-            const width = this.getAllStyle()["width"];
-            const height = this.getAllStyle()["height"];
-            if (this.getAllText()["appearance"] === "traditional") {
-                return [width - shadowWidth * 2, height - shadowWidth * 2];
-            } else {
-                return [width, height];
-            }
-        }
 
         // press escape key to blur input box
         React.useEffect(() => {
@@ -980,90 +923,53 @@ export class Probe extends BaseWidget {
             };
         }, []);
 
+        const accessRight = this._getChannelAccessRight();
+
         return (
             <form
-                ref={keyRefForm}
                 onSubmit={handleSubmit}
                 style={{
                     width: "100%",
-                    height: "100%",
-                    opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1,
                 }}
             >
                 <input
                     ref={keyRef}
                     style={{
-                        backgroundColor: "rgba(0,0,0,0)",
-                        // border: "none",
-                        width: calcInputSize()[0],
-                        height: calcInputSize()[1],
+                        outline: "none",
+                        border: "none",
                         padding: 0,
                         margin: 0,
-                        textOverflow: "ellipsis",
-                        overflow: "visible",
-                        whiteSpace: "nowrap",
-                        outline: this.getAllText()["appearance"] === "traditional" ? "solid 1px rgba(100, 100, 250, 0.5)" : "none",
-                        textAlign:
-                            this.getAllText().horizontalAlign === "flex-start"
-                                ? "left"
-                                : this.getAllText().horizontalAlign === "center"
-                                    ? "center"
-                                    : "right",
-                        // color: this.getAllStyle()["color"],
-                        color: this._getElementAreaRawTextStyle(),
-                        fontFamily: this.getAllStyle()["fontFamily"],
+                        backgroundColor: "rgba(0,0,0,0)",
                         fontSize: this.getAllStyle()["fontSize"],
-                        fontStyle: this.getAllStyle()["fontStyle"],
-                        fontWeight: this.getAllStyle()["fontWeight"],
-                        // padding: 10,
-                        borderRight: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none",
-                        borderBottom: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(255,255,255,1)` : "none",
-                        borderLeft: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(100,100,100,1)` : "none",
-                        borderTop: this.getAllText()["appearance"] === "traditional" ? `solid ${shadowWidth}px rgba(100,100,100,1)` : "none",
-                    }}
-                    onMouseOver={(event) => {
-                        event.preventDefault();
-                        if (!g_widgets1.isEditing()) {
-                            if (this._getChannelAccessRight() > 1.5) {
-                                (event.target as HTMLElement).style["cursor"] = "text";
-                            } else {
-                                (event.target as HTMLElement).style["cursor"] = "not-allowed";
-                            }
-                        } else {
-                            (event.target as HTMLElement).style["cursor"] = "default";
-                        }
-                    }}
-                    onMouseOut={(event) => {
-                        event.preventDefault();
-                        (event.target as HTMLElement).style["cursor"] = "default";
+                        width: "90%",
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        cursor: accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? "text" : "not-allowed",
                     }}
                     type="text"
                     name="value"
                     value={value}
+                    readOnly={accessRight !== Channel_ACCESS_RIGHTS.READ_WRITE}
                     onFocus={(event) => {
                         isFocused.current = true;
-                        // this.setFocusStatus(true);
                         keyRef.current?.select();
-
                         if (keyRef.current !== null) {
                             keyRef.current.style["backgroundColor"] = this.getAllText()["highlightBackgroundColor"];
                         }
                     }}
                     onChange={(event) => {
                         event.preventDefault();
-                        if (this._getChannelAccessRight() < 1.5) {
-                            // no write access, do not update
+                        if (accessRight !== Channel_ACCESS_RIGHTS.READ_WRITE) {
                             return;
                         }
                         setValue(event.target.value);
                     }}
                     onBlur={(event) => {
                         isFocused.current = false;
-                        // this.setFocusStatus(false);
                         setValue(`${this.getChannelValueForMonitorWidget()}`);
                         if (keyRef.current !== null) {
-                            // keyRef.current.style["backgroundColor"] = `rgba(0,0,0,0)`;
-                            keyRef.current.style["backgroundColor"] = this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle();
+                            keyRef.current.style["backgroundColor"] = "rgba(0,0,0,0)";
                         }
                     }}
                 />
@@ -1206,8 +1112,6 @@ export class Probe extends BaseWidget {
         // (1)
         // destroy all Tca channels
         g_widgets1.destroyAllTcaChannels();
-        
-        console.log(Object.keys(g_widgets1.getTcaChannels()));
 
         // (2)
         // process channel names
@@ -1340,23 +1244,16 @@ export class Probe extends BaseWidget {
         super.jobsAsEditingModeBegins();
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const dbdAssigned = Object.keys(this.getDbdFiles().getRecordTypes()).length > 0;
-        const isUtilityWindow = displayWindowClient.getIsUtilityWindow();
-
-
-        if (isUtilityWindow) {
-        } else {
-            if (dbdAssigned) {
-                if (this.getChannelNames().length > 0 && this.getChannelNames()[0].trim() !== "") {
-                    this.newProbe(this.getChannelNames()[0]);
-                }
-            } else {
-                const ipcManager = displayWindowClient.getIpcManager();
-                // the reply will be handled by this.processDbd()
-                ipcManager.sendFromRendererProcess("request-epics-dbd", {
-                    displayWindowId: displayWindowClient.getWindowId(),
-                    widgetKey: this.getWidgetKey(),
-                })
+        if (dbdAssigned) {
+            if (this.getChannelNames().length > 0 && this.getChannelNames()[0].trim() !== "") {
+                this.newProbe(this.getChannelNames()[0]);
             }
+        } else {
+            const ipcManager = displayWindowClient.getIpcManager();
+            ipcManager.sendFromRendererProcess("request-epics-dbd", {
+                displayWindowId: displayWindowClient.getWindowId(),
+                widgetKey: this.getWidgetKey(),
+            })
         }
     }
 }

@@ -779,11 +779,8 @@ export class DisplayWindowClient {
         if (utilityType === "Probe") {
             const widgetTdl = Probe.generateWidgetTdl(utilityOptions);
             const widgetKey = widgetTdl.widgetKey;
-            const style = widgetTdl.style as Record<string, any>;
-            style.width = "100%";
-            style.height = "100%";
+            const style = widgetTdl.style;
             style.boxSizing = "border-box";
-            style.padding = "20px";
             tdl[widgetKey] = widgetTdl;
             tdl["Canvas"].style.backgroundColor = "rgba(255, 255, 255, 1)";
         } else if (utilityType === "PvMonitor") {
