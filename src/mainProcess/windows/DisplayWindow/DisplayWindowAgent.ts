@@ -405,11 +405,13 @@ export class DisplayWindowAgent {
      *
      */
     tcaGet = async (channelName: string, ioTimeout: number | undefined, dbrType: Channel_DBR_TYPES | undefined | string): Promise<type_dbrData | type_pva_value | { value: undefined }> => {
+
         const windowAgentsManager = this.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
         const channelType = channelAgentsManager.determineChannelType(channelName);
         let result: type_pva_value | type_LocalChannel_data | type_dbrData = { value: undefined };
+
 
         if (channelType === "ca" || channelType === "pva") {
             // (1)
@@ -422,7 +424,7 @@ export class DisplayWindowAgent {
             }
             let channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
-                Log.debug("0", `tcaGet: EPICS channel ${channelName} cannot be created/connected.`);
+                Log.error("0", `tcaGet: EPICS channel ${channelName} cannot be created/connected.`);
                 return { value: undefined };
             }
             // (2)
@@ -431,6 +433,8 @@ export class DisplayWindowAgent {
                 result = await channelAgent.get(this.getId(), dbrType, ioTimeout);
             } else if (channelProtocol === "pva" /**&& typeof dbrType === "string"**/) {
                 result = await channelAgent.getPva(this.getId(), ioTimeout);
+            } else {
+                Log.error("Unrecognized protocol", channelProtocol);
             }
         } else {
             // (1)

@@ -236,8 +236,13 @@ export class Probe extends BaseWidget {
                                 setChannelNameHintData([]);
 
                                 const orig = this.getChannelNames()[0];
+                                console.log("orig", orig, channelName)
                                 if (orig !== channelName) {
-                                    setChannelName(orig);
+                                    if (orig === undefined) {
+                                        setChannelName(orig);
+                                    } else {
+                                        setChannelName(orig);
+                                    }
                                 }
                             }}
                             onFocus={() => {
@@ -331,6 +336,7 @@ export class Probe extends BaseWidget {
                         const result: Record<string, string | number | string[] | number[] | undefined> = structuredClone(this.getBasicInfoData());
                         for (let fieldName of this.getFieldNames()) {
                             const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
+                            // value may be undefined for NOACCESS type data, that's fine
                             const value = g_widgets1.getChannelValue(channelName);
                             result[fieldName] = value;
                         }
@@ -378,7 +384,7 @@ export class Probe extends BaseWidget {
                         const fieldIsLink = this.getDbdFiles().fieldIsLink(rtyp, fieldName);
 
                         const isMenuField = fieldMenu.length > 0;
-                        return(
+                        return (
                             <this._ElementTableLineField
                                 index={index}
                                 property={fieldName}
@@ -472,17 +478,17 @@ export class Probe extends BaseWidget {
                     <h3>Fields</h3>
                 </div>
                 <div>
-                    <span style={{ color: "grey" }}>GREY</span>: field is not writable
+                    <span style={{ color: "rgba(150, 150, 150, 1)" }}>GREY</span>: field is not writable
                 </div>
                 <div>
-                    <span style={{ color: "green" }}>GREEN</span>: menu-type field, the value can be changed by selecting from the drop-down menu
+                    <span style={{ color: "rgba(46, 180, 64, 1.0)" }}>GREEN</span>: menu-type field, the value can be changed by selecting from the drop-down menu
                 </div>
                 <div>
-                    <span style={{ color: "blue" }}>BLUE</span>: link-type field, clicking the blue text will open a new Probe window for the linked
+                    <span style={{ color: "rgba(0,0,255,1)" }}>BLUE</span>: link-type field, clicking the blue text will open a new Probe window for the linked
                     PV
                 </div>
                 <div>
-                    <span style={{ color: "red" }}>RED</span>: field value is different from its default value
+                    <span style={{ color: "rgba(255,0,0,1)" }}>RED</span>: field value is different from its default value
                 </div>
                 <div>&nbsp;</div>
             </>
@@ -664,7 +670,7 @@ export class Probe extends BaseWidget {
                 onBlur={(event) => {
                     event.preventDefault();
                     if (refElement.current !== null) {
-                        refElement.current.style["color"] = "#937878";
+                        refElement.current.style["color"] = "rgba(0,0,0,1)";
                     }
                     onBlur();
                 }}
@@ -685,6 +691,7 @@ export class Probe extends BaseWidget {
     };
 
     _ElementTableLineField = ({ index, property, value, defaultValue, isLink, isMenu, channelName, fieldMenu }: any) => {
+        console.log(channelName, value)
         const valueElementRef = React.useRef<HTMLInputElement>(null);
         const nameElementRef = React.useRef<HTMLDivElement>(null);
         // always a string
@@ -695,38 +702,18 @@ export class Probe extends BaseWidget {
         }, [value]);
 
         const accessRight = this._getChannelAccessRight();
+        const canWrite = accessRight > Channel_ACCESS_RIGHTS.READ_ONLY;
+        const fieldNameColor = isMenu ? "rgba(46, 180, 64, 1.0)" : isLink ? "rgba(0,0,255,1)" : "rgba(0,0,0,1)";
+        const valueColor = value === defaultValue ? canWrite ? "rgba(0,0,0,1)" : "rgba(150, 150, 150, 1)" : "rgba(255,0,0,1)";
 
         return (
             <this._Line lineIndex={index} selectable={false}>
                 <this._Cell columnIndex={0} additionalStyle={{
-                    color: isLink
-                        ? "rgba(0,0,255,1)"
-                        : isMenu
-                            ? "rgba(0, 120, 50, 1)"
-                            : accessRight !== Channel_ACCESS_RIGHTS.READ_WRITE
-                                ? "rgba(150, 150, 150, 1)"
-                                : "rgba(0,0,0,1)",
+                    cursor: isLink ? "pointer" : "default",
+                    color: fieldNameColor,
                 }}>
                     <div
                         ref={nameElementRef}
-                        onMouseEnter={() => {
-                            if (!isLink) {
-                                return;
-                            } else {
-                                if (nameElementRef.current !== null) {
-                                    nameElementRef.current.style["cursor"] = "pointer";
-                                }
-                            }
-                        }}
-                        onMouseLeave={() => {
-                            if (!isLink) {
-                                return;
-                            } else {
-                                if (nameElementRef.current !== null) {
-                                    nameElementRef.current.style["cursor"] = "default";
-                                }
-                            }
-                        }}
                         onClick={() => {
                             if (isLink && typeof value === "string" && value !== "") {
                                 const channelName = value.split(" ")[0];
@@ -755,91 +742,88 @@ export class Probe extends BaseWidget {
                     </div>
                 </this._Cell>
                 <this._Cell columnIndex={1}>
-                    {fieldMenu.length === 0 ? (
-                        <div>
-                            {/* {inputValue} */}
-                            <form
-                                onSubmit={(event) => {
-                                    event.preventDefault();
-                                    try {
-                                        const tcaChannel = g_widgets1.getTcaChannel(channelName);
-                                        tcaChannel.put(g_widgets1.getRoot().getDisplayWindowClient().getWindowId(), { value: inputValue }, 1);
-                                    } catch (e) {
-                                        Log.error(e);
+                    {!isMenu ? (
+                        // input value
+                        <form
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                try {
+                                    const tcaChannel = g_widgets1.getTcaChannel(channelName);
+                                    tcaChannel.put(g_widgets1.getRoot().getDisplayWindowClient().getWindowId(), { value: inputValue }, 1);
+                                } catch (e) {
+                                    Log.error(e);
+                                }
+                                setInputValue(`${value}`);
+                            }}
+                        >
+                            <input
+                                ref={valueElementRef}
+                                onMouseEnter={() => {
+                                    if (valueElementRef.current !== null && accessRight !== Channel_ACCESS_RIGHTS.READ_WRITE) {
+                                        valueElementRef.current.style["cursor"] = "not-allowed";
                                     }
-                                    setInputValue(`${value}`);
                                 }}
-                            >
-                                <input
-                                    ref={valueElementRef}
-                                    onMouseEnter={() => {
-                                        if (valueElementRef.current !== null && accessRight !== Channel_ACCESS_RIGHTS.READ_WRITE) {
-                                            valueElementRef.current.style["cursor"] = "not-allowed";
-                                        }
-                                    }}
-                                    onMouseLeave={() => {
-                                        if (valueElementRef.current !== null) {
-                                            valueElementRef.current.style["cursor"] = "default";
-                                        }
-                                    }}
-                                    style={{
-                                        outline: "none",
-                                        border: "none",
-                                        padding: 0,
-                                        margin: 0,
-                                        backgroundColor: "rgba(0,0,0,0)",
-                                        fontSize: this.getAllStyle()["fontSize"],
-                                        width: "90%",
-                                        color: value === defaultValue ? "black" : "red",
-                                        cursor: accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? "default" : "not-allowed",
-                                    }}
-                                    type="text"
-                                    onChange={(event) => {
-                                        event.preventDefault();
-                                        setInputValue(event.target.value);
-                                    }}
-                                    readOnly={accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? false : true}
-                                    value={inputValue}
-                                ></input>
-                            </form>
-                        </div>
-                    ) : (
-                        <div>
-                            <select
+                                onMouseLeave={() => {
+                                    if (valueElementRef.current !== null) {
+                                        valueElementRef.current.style["cursor"] = "default";
+                                    }
+                                }}
                                 style={{
-                                    fontSize: this.getAllStyle()["fontSize"],
+                                    outline: "none",
+                                    border: "none",
                                     padding: 0,
                                     margin: 0,
-                                    border: "none",
-                                    outline: "none",
                                     backgroundColor: "rgba(0,0,0,0)",
-                                    color: value === defaultValue ? "black" : "red",
-                                    textIndent: 0,
-                                    WebkitAppearance: "none",
-                                    MozAppearance: "none",
-                                    appearance: "none",
+                                    fontSize: this.getAllStyle()["fontSize"],
+                                    width: "90%",
+                                    color: valueColor,
                                     cursor: accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? "default" : "not-allowed",
                                 }}
-                                disabled={accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? false : true}
+                                type="text"
                                 onChange={(event) => {
-                                    // do not change the selection until the new data arrives
                                     event.preventDefault();
-                                    try {
-                                        const tcaChannel = g_widgets1.getTcaChannel(channelName);
-                                        const newValue = event.target.value;
-                                        tcaChannel.put(g_widgets1.getRoot().getDisplayWindowClient().getWindowId(), { value: newValue }, 1);
-                                    } catch (e) {
-                                        Log.error(e);
-                                    }
+                                    setInputValue(event.target.value);
                                 }}
-                                // use "value={...}", do not use "select=true/false" in <option/>
-                                value={`${value}`}
-                            >
-                                {fieldMenu.map((item: string, menuIndex: number) => {
-                                    return <option>{item}</option>;
-                                })}
-                            </select>
-                        </div>
+                                readOnly={accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? false : true}
+                                value={inputValue}
+                            ></input>
+                        </form>
+                    ) : (
+                        // menu choices
+                        <select
+                            style={{
+                                fontSize: this.getAllStyle()["fontSize"],
+                                padding: 0,
+                                margin: 0,
+                                border: "none",
+                                outline: "none",
+                                backgroundColor: "rgba(0,0,0,0)",
+                                color: valueColor,
+                                textIndent: 0,
+                                WebkitAppearance: "none",
+                                MozAppearance: "none",
+                                appearance: "none",
+                                cursor: accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? "default" : "not-allowed",
+                            }}
+                            disabled={accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? false : true}
+                            onChange={(event) => {
+                                // do not change the selection until the new data arrives
+                                event.preventDefault();
+                                try {
+                                    const tcaChannel = g_widgets1.getTcaChannel(channelName);
+                                    const newValue = event.target.value;
+                                    tcaChannel.put(g_widgets1.getRoot().getDisplayWindowClient().getWindowId(), { value: newValue }, 1);
+                                } catch (e) {
+                                    Log.error(e);
+                                }
+                            }}
+                            // use "value={...}", do not use "select=true/false" in <option/>
+                            value={`${value}`}
+                        >
+                            {fieldMenu.map((item: string, menuIndex: number) => {
+                                return <option>{item}</option>;
+                            })}
+                        </select>
                     )}
                 </this._Cell>
                 <this._Cell columnIndex={2}>
@@ -907,6 +891,9 @@ export class Probe extends BaseWidget {
         }, []);
 
         const accessRight = this._getChannelAccessRight();
+        const cursor = accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? "text" : "not-allowed";
+        const fontSize = this.getAllStyle()["fontSize"];
+        const backgroundColor = this.getAllText()["highlightBackgroundColor"];
 
         return (
             <form
@@ -923,12 +910,12 @@ export class Probe extends BaseWidget {
                         padding: 0,
                         margin: 0,
                         backgroundColor: "rgba(0,0,0,0)",
-                        fontSize: this.getAllStyle()["fontSize"],
+                        fontSize: fontSize,
                         width: "90%",
                         textOverflow: "ellipsis",
                         overflow: "hidden",
                         whiteSpace: "nowrap",
-                        cursor: accessRight === Channel_ACCESS_RIGHTS.READ_WRITE ? "text" : "not-allowed",
+                        cursor: cursor,
                     }}
                     type="text"
                     name="value"
@@ -938,7 +925,7 @@ export class Probe extends BaseWidget {
                         isFocused.current = true;
                         keyRef.current?.select();
                         if (keyRef.current !== null) {
-                            keyRef.current.style["backgroundColor"] = this.getAllText()["highlightBackgroundColor"];
+                            keyRef.current.style["backgroundColor"] = backgroundColor;
                         }
                     }}
                     onChange={(event) => {
@@ -1040,7 +1027,6 @@ export class Probe extends BaseWidget {
 
     extractBasicInfo = (): void => {
 
-        // const result: Record<string, any> = {};
         const channelNameLevel4 = this.getChannelNamesLevel4()[0];
         if (channelNameLevel4 === undefined) {
             return;
@@ -1097,26 +1083,34 @@ export class Probe extends BaseWidget {
         // destroy all Tca channels
         g_widgets1.destroyAllTcaChannels();
 
+
         // (2)
+        // clear basic info
+        for (const key of Object.keys(this.getBasicInfoData())) {
+            delete this.getBasicInfoData()[key];
+        }
+
+        // (3)
         // process channel names
         this.getChannelNamesLevel0().length = 0;
         this.getChannelNamesLevel0()[0] = newChannelName;
         this.processChannelNames();
 
-        // (3)
+        // (4)
         // fetch RTYP value
         const channelName = this.getChannelNames()[0];
         const rtyp = await this.fetchRTYP(channelName);
         this.getBasicInfoData()["Type"] = rtyp;
         if (rtyp === "undefined") {
+            Log.error("Failed to create new probe: no RTYP value");
             return;
         }
 
-        // (4)
+        // (5)
         // process channel name again with field channels: expand macros ...
         this.processChannelNames();
 
-        // (5)
+        // (6)
         // connect all channels
         const widgetKey = this.getWidgetKey();
         for (const channelNameLevel5 of this.getChannelNamesLevel5()) {
@@ -1133,7 +1127,7 @@ export class Probe extends BaseWidget {
             fieldTcaChannel.monitor();
         }
 
-        // (6)
+        // (7)
         // flush display
         g_widgets1.addToForceUpdateWidgets(widgetKey);
         g_widgets1.addToForceUpdateWidgets("GroupSelection2");
@@ -1144,20 +1138,15 @@ export class Probe extends BaseWidget {
 
     fetchRTYP = async (channelName: string): Promise<string> => {
 
-        // empty basic info data
-        for (const key in this._basicInfoData) {
-            delete this._basicInfoData[key];
-        }
-
         const rtypChannelName = channelName.split(".")[0] + ".RTYP";
         const tcaChannel = g_widgets1.createTcaChannel(rtypChannelName, this.getWidgetKey());
         if (tcaChannel === undefined) {
+            Log.error("Failed to fetch RTYP for Probe");
             return "undefined";
         }
         const widgetKey = this.getWidgetKey();
         const rtypData = await tcaChannel.get(widgetKey, undefined, undefined, false);
         const rtyp = rtypData["value"];
-
 
         return `${rtyp}`;
     };
