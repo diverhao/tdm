@@ -7,26 +7,7 @@ import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/Globa
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
-
-export type type_Image_roi = {
-    xPv: string;
-    yPv: string;
-    widthPv: string;
-    heightPv: string;
-    color: string;
-}
-
-export type type_Image_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    regionsOfInterest: type_Image_roi[];
-};
+import { type_Image_tdl, type_Image_roi } from "../../../../common/types/type_widget_tdl";
 
 export class ImageHelper extends BaseWidgetHelper {
 

@@ -4,7 +4,8 @@ import { g_widgets1,  } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { ElementButton } from "../SharedElements/MacrosTable";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
-import { Image, type_Image_roi } from "../../widgets/Image/Image";
+import { Image } from "../../widgets/Image/Image";
+import { type_Image_roi } from "../../../common/types/type_widget_tdl";
 import { Collapsible } from "../ColorPicker/Collapsible";
 import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
 

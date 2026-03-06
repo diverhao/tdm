@@ -2186,3 +2186,107 @@ export const defaultProbeTdl: type_Probe_tdl = {
     groupNames: [],
     rules: [],
 };
+
+// ======================== Image Widget ========================
+
+export const type_Image_roi_schema = {
+    xPv: "string",
+    yPv: "string",
+    widthPv: "string",
+    heightPv: "string",
+    color: "string",
+} as const satisfies TypeSchema;
+
+export type type_Image_roi = Mutable<InferType<typeof type_Image_roi_schema>>;
+
+export const type_Image_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    invisibleInOperation: "boolean",
+    format: "string",
+    scale: "number",
+    alarmBorder: "boolean",
+    alarmText: "boolean",
+    alarmBackground: "boolean",
+    alarmLevel: "string",
+    colorMap: "string",
+    autoZ: "boolean",
+    initialAutoXY: "boolean",
+    zMin: "number",
+    zMax: "number",
+    xMin: "number",
+    xMax: "number",
+    yMin: "number",
+    yMax: "number",
+} as const satisfies TypeSchema;
+
+export const type_Image_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_style_tdl_schema,
+    text: type_Image_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+    regionsOfInterest: { arrayOf: type_Image_roi_schema },
+} as const satisfies TypeSchema;
+
+export type type_Image_text_tdl = Mutable<InferType<typeof type_Image_text_tdl_schema>>;
+export type type_Image_tdl = Mutable<InferType<typeof type_Image_tdl_schema>>;
+
+export const defaultImageTdl: type_Image_tdl = {
+    type: "Image",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 100,
+        top: 100,
+        width: 100,
+        height: 100,
+        backgroundColor: "rgba(240, 240, 240, 1)",
+        transform: "rotate(0deg)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(0, 0, 0, 1)",
+        color: "rgba(0,0,0,1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        boxSizing: "content-box",
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: false,
+        showUnit: true,
+        invisibleInOperation: false,
+        format: "default",
+        scale: 0,
+        alarmBorder: true,
+        alarmText: false,
+        alarmBackground: false,
+        alarmLevel: "MINOR",
+        colorMap: "parula",
+        autoZ: true,
+        initialAutoXY: true,
+        zMin: 0,
+        zMax: 100,
+        xMin: 0,
+        xMax: 255,
+        yMin: 0,
+        yMax: 255,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+    regionsOfInterest: [],
+};

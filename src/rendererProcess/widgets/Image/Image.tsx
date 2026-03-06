@@ -2,40 +2,16 @@ import * as React from "react";
 import { MouseEvent } from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables, NDArray_ColorMode } from "../../../common/GlobalVariables";
-import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { ImageSidebar } from "./ImageSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-// import { TextUpdateRules } from "./TextUpdateRules";
-import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
-// import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Log } from "../../../common/Log";
-// import * as THREE from 'three';
-import { OrthographicCamera, Scene, WebGLRenderer, Vector3, BufferGeometry, BufferAttribute, ShaderMaterial, Points, Color, Vector2, DataTexture, UnsignedByteType, RGBAFormat, SRGBColorSpace, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, PlaneGeometry } from "three";
+import { OrthographicCamera, Scene, WebGLRenderer, Vector3, Vector2, DataTexture, UnsignedByteType, RGBAFormat, SRGBColorSpace, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, PlaneGeometry } from "three";
 import { TcaChannel } from "../../channel/TcaChannel";
 import { ImageRule } from "./ImageRule";
-
-export type type_Image_roi = {
-    xPv: string;
-    yPv: string;
-    widthPv: string;
-    heightPv: string;
-    color: string;
-}
-
-export type type_Image_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    regionsOfInterest: type_Image_roi[];
-};
+import { type_Image_tdl, type_Image_roi, defaultImageTdl } from "../../../common/types/type_widget_tdl";
 
 // NT ND Array type
 // const type = {
@@ -6619,78 +6595,14 @@ export class Image extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_Image_tdl = {
-            type: "Image",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 100,
-                top: 100,
-                width: 100,
-                height: 100,
-                backgroundColor: "rgba(240, 240, 240, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // border, it is different from the "alarmBorder" below,
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // text
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: true,
-                invisibleInOperation: false,
-                // default, decimal, exponential, hexadecimal
-                format: "default",
-                // scale, >= 0
-                scale: 0,
-                // actually "alarm outline"
-                alarmBorder: true,
-                alarmText: false,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-                colorMap: "parula", // "jet", "gray", ...
-                autoZ: true,
-                initialAutoXY: true,
-                zMin: 0,
-                zMax: 100,
-                xMin: 0,
-                xMax: 255,
-                yMin: 0,
-                yMax: 255,
-                // roiX1ChannelName: "loc://aaa",
-                // roiX2ChannelName: "loc://bbb",
-                // roiY1ChannelName: "loc://ccc",
-                // roiY2ChannelName: "loc://ddd",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            regionsOfInterest: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_Image_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultImageTdl["type"]);
+        return structuredClone({
+            ...defaultImageTdl,
+            widgetKey: widgetKey,
+        });
     };
-
+    
     generateDefaultTdl: () => any = Image.generateDefaultTdl;
 
     getTdlCopy(newKey?: boolean): Record<string, any> {
