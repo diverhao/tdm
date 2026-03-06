@@ -8,6 +8,7 @@ import { SidebarImageRegionsOfInterest } from "../../helperWidgets/SidebarCompon
 import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
+import { colorMapFunctions } from "./ImageColorMaps";
 
 export class ImageSidebar extends BaseWidgetSidebar {
     sidebarImageXmin;
@@ -32,7 +33,7 @@ export class ImageSidebar extends BaseWidgetSidebar {
         this.sidebarImageZmax = new SidebarNumberInput(this, text, "zMax", "Z max");
         this.sidebarImageAutoZ = new SidebarCheckBox(this, text, "autoZ", "Auto range");
         this.sidebarImageColorMap = new SidebarStringChoices(this, text, "colorMap", "Style", 
-            Object.fromEntries(Object.keys((this.getMainWidget() as Image).colorMapFunctions).map((s) => [s.toUpperCase(), s]))
+            Object.fromEntries(Object.keys(colorMapFunctions).map((s) => [s.toUpperCase(), s]))
         )
         this.sidebarImageRegionsOfInterest = new SidebarImageRegionsOfInterest(this);
     }
