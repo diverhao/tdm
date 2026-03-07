@@ -16,7 +16,6 @@ import { DataViewerPlotTraceHelper } from "./DataViewerPlotTraceHelper";
 import { DataViewerPlotDataHelper } from "./DataViewerPlotDataHelper";
 import { DataViewerPlotMouseHelper } from "./DataViewerPlotMouseHelper";
 import { type_DataViewer_yAxis } from "../../../common/types/type_widget_tdl";
-import { DataViewerTraceSetting } from "./DataViewerTraceSetting";
 
 
 type type_xAxis = {

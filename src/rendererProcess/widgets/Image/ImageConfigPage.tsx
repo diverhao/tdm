@@ -73,6 +73,13 @@ export const ElementConfigBar = ({ image }: { image: Image }) => {
  * Contains X/Y range inputs and color map selector.
  */
 export const ElementConfigPage = ({ image }: { image: Image }) => {
+
+    const show = image.showConfigPage;
+
+    if (!show) {
+        return null;
+    }
+
     return (
         <div style={{
             position: "absolute",

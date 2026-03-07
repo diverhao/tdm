@@ -1,10 +1,7 @@
 import { DisplayWindowClient } from "./DisplayWindowClient";
 import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
-import { rendererWindowStatus, type_widget, Widgets } from "../../../rendererProcess/global/Widgets";
-import { type_dbrData } from "../../../common/GlobalVariables";
-import { type_pva_value } from "../../../common/GlobalVariables";
+import { rendererWindowStatus, type_widget } from "../../../rendererProcess/global/Widgets";
 import { g_flushWidgets } from "../../../rendererProcess/helperWidgets/Root/Root";
-// import { type_tdl } from "../../file/FileReader";
 import { type_tdl } from "../../../common/GlobalVariables";
 import { DataViewer } from "../../../rendererProcess/widgets/DataViewer/DataViewer";
 import { BaseWidget } from "../../../rendererProcess/widgets/BaseWidget/BaseWidget";
@@ -25,7 +22,7 @@ import { TextEditor } from "../../../rendererProcess/widgets/TextEditor/TextEdit
 import { LogViewer } from "../../../rendererProcess/widgets/LogViewer/LogViewer";
 import { PvMonitor } from "../../../rendererProcess/widgets/PvMonitor/PvMonitor";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
-import { ChannelSeverity, TcaChannel, type_pva_status } from "../../../rendererProcess/channel/TcaChannel";
+import { ChannelSeverity, TcaChannel } from "../../../rendererProcess/channel/TcaChannel";
 import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/ChannelGraph";
 import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
 import { Repeater } from "../../../rendererProcess/widgets/Repeater/Repeater";
@@ -35,8 +32,6 @@ import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 import { Image } from "../../../rendererProcess/widgets/Image/Image";
 import { IpcEventArgType, IpcEventArgType2 } from "../../../common/IpcEventArgType";
 import { Table } from "../../widgets/Table/Table";
-import { isOfType } from "../../../common/GlobalMethods";
-import { type_dbd_menu_schema, type_dbd_menus_schema, type_dbd_record_schema, type_dbd_schema } from "../../../common/types/type_dbd";
 
 
 // var recorder;
@@ -882,6 +877,7 @@ export class IpcManagerOnDisplayWindow {
 
         for (const widget of dbrDataMappedWidgets) {
             if (widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph || widget instanceof SeqGraph || widget instanceof Image) {
+                console.log("OKOKOK")
                 widget.mapDbrDataWitNewData(Object.keys(newDbrData));
             } else if (widget instanceof DataViewer) {
                 // remove force update, use the internal interval to update
