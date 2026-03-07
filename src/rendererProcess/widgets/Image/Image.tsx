@@ -10,11 +10,11 @@ import { Log } from "../../../common/Log";
 import { OrthographicCamera, Scene, WebGLRenderer, Vector3, Vector2, DataTexture, UnsignedByteType, RGBAFormat, SRGBColorSpace, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, PlaneGeometry } from "three";
 import { type_Image_tdl, defaultImageTdl } from "../../../common/types/type_widget_tdl";
 import { colorMapFunctions, grayColorMap } from "./ImageColorMaps";
-import { ElementXAxis, ElementYAxis } from "./ImageAxes";
 import { ElementColorMap } from "./ImageColorMapUi";
 import { ElementRoi, resizeRoiTopHandler, resizeRoiTopHandlerMouseUp, resizeRoiBottomHandler, resizeRoiBottomHandlerMouseUp, resizeRoiLeftHandler, resizeRoiLeftHandlerMouseUp, resizeRoiRightHandler, resizeRoiRightHandlerMouseUp } from "./ImageRoi";
 import { ElementConfigPage, ElementConfigBar } from "./ImageConfigPage";
 import { ImagePlot } from "./ImagePlot";
+import { getScaleWidthHeight } from "../../helperWidgets/SharedElements/Scale";
 
 // NT ND Array type
 // const type = {
@@ -103,9 +103,9 @@ import { ImagePlot } from "./ImagePlot";
 
 
 export const yAxisLabelWidth = 30;
-export const yAxisTickWidth = 30;
+export const yAxisTickWidth = getScaleWidthHeight();
 export const xAxisLabelHeight = 30;
-export const xAxisTickHeight = 30;
+export const xAxisTickHeight =getScaleWidthHeight();
 export const toolbarHeight = 30;
 export const colorbarWidth = 50;
 
@@ -124,9 +124,9 @@ export const colorbarWidth = 50;
  * | a  | i |                                                              |   l     |
  * | b  | c |                                                              |   o     |
  * | e  | k |                                                              |   r     |
- * | l  | s |                                                              |   b     |
+ * | l  | s |                                                              |   M     |
  * |    |   |                                                              |   a     |
- * |    |   |                                                              |   r     |
+ * |    |   |                                                              |   p     |
  * |---------------------------------------------------------------------------------|
  * |        |                                                              |         |
  * | E B    |                                                              |  E B    |
@@ -150,7 +150,7 @@ export class Image extends BaseWidget {
     // _rules: BaseWidgetRules;
     axisWidth: number = 40;
     configHeight: number = 20;
-    autoXY: boolean = true;
+    // autoXY: boolean = true;
     private _regionOfInterest: {
         xPv: string;
         yPv: string;
@@ -1254,7 +1254,7 @@ export class Image extends BaseWidget {
 
     jobsAsOperatingModeBegins(): void {
         super.jobsAsOperatingModeBegins();
-        this.autoXY = this.getText()["initialAutoXY"];
+        // this.autoXY = this.getText()["initialAutoXY"];
 
         this.getRegionsOfInterest().forEach((roi, index) => {
             this.resizeRoiTopHandlers[index] = (e: any) => {

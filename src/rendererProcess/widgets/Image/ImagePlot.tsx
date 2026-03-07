@@ -3,7 +3,7 @@ import * as React from "react";
 import { colorbarWidth, Image, toolbarHeight, xAxisLabelHeight, xAxisTickHeight, yAxisLabelWidth, yAxisTickWidth } from "./Image";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { Scale } from "../../helperWidgets/SharedElements/Scale";
-import { DataTexture, Mesh, MeshBasicMaterial, NearestFilter, OrthographicCamera, PlaneGeometry, RGBAFormat, Scene, SRGBColorSpace, UnsignedByteType, WebGLRenderer } from "three";
+import { DataTexture, Mesh, MeshBasicMaterial, NearestFilter, OrthographicCamera, PlaneGeometry, RGBAFormat, Scene, SRGBColorSpace, UnsignedByteType, Vector3, WebGLRenderer } from "three";
 import { NDArray_ColorMode } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { colorMapFunctions, grayColorMap } from "./ImageColorMaps";
@@ -14,8 +14,8 @@ export type type_Image_info = {
     imageShownXmax: number,
     imageShownYmin: number,
     imageShownYmax: number,
-    plotRegionWidth: number, // todo: more precise meaning
-    plotRegionHeight: number,
+    plotRegionWidth: number, // axis box width in screen pixels, same as xLength
+    plotRegionHeight: number, // axis box height in screen pixels, same as yLength
     xLength: number, // plot region width in unit of screen pixel
     yLength: number, 
     xTickValues: number[], // x ticks values, it indicates the image pixel number
@@ -57,6 +57,14 @@ export class ImagePlot {
 
     private _imageInfo: type_Image_info;
 
+    texture: DataTexture | undefined = undefined;
+    renderer: WebGLRenderer | undefined = undefined;
+    scene: Scene | undefined = undefined;
+    camera: OrthographicCamera | undefined = undefined;
+    textureData: Uint8Array | undefined = undefined;
+    autoXY: boolean = true;
+
+
 
     constructor(mainWidget: Image) {
         this._mainWidget = mainWidget;
@@ -91,7 +99,7 @@ export class ImagePlot {
                     <this._ElementYLabel />
                     <this._ElementYTicks />
                     <this._ElementImage />
-                    <this._ElementColorbar />
+                    <this._ElementColorMap />
                 </div>
                 <div
                     style={{
@@ -101,7 +109,7 @@ export class ImagePlot {
                         flexShrink: 0,
                         flexFlow: "row",
                         justifyContent: "flex-start",
-                        alignItems: "center",
+                        alignItems: "flex-start",
                     }}
                 >
                     <this._ElementBlankArea></this._ElementBlankArea>
@@ -109,6 +117,8 @@ export class ImagePlot {
                         style={{
                             display: "inline-flex",
                             flexDirection: "column",
+                            justifyContent: "flex-start",
+                            alignItems: "center",
                         }}
                     >
                         <this._ElementXTicks></this._ElementXTicks>
@@ -120,9 +130,6 @@ export class ImagePlot {
         )
     }
 
-    getElement = () => {
-        return <this._Element></this._Element>
-    }
 
     _ElementControls = () => {
 
@@ -131,6 +138,7 @@ export class ImagePlot {
                 style={{
                     width: "100%",
                     height: toolbarHeight,
+                    backgroundColor: "rgba(0,0,255,1)",
                 }}
             >
 
@@ -145,6 +153,7 @@ export class ImagePlot {
                     display: "inline-flex",
                     width: yAxisLabelWidth + yAxisTickWidth,
                     height: xAxisLabelHeight + xAxisTickHeight,
+                    backgroundColor: "rgba(0,255,0,0.3)",
                 }}
             >
                 BLANK
@@ -152,36 +161,12 @@ export class ImagePlot {
         )
     }
 
-    _ElementImage0 = () => {
-        return (
-            <div
-                style={{
-                    width: this.getPlotWidth(),
-                    height: this.getPlotHeight(),
-                    display: "inline-flex",
-                }}
-            >
-                IMAGE
-            </div>
-        )
-    }
-    texture: DataTexture | undefined = undefined;
-    renderer: WebGLRenderer | undefined = undefined;
-    scene: Scene | undefined = undefined;
-    camera: OrthographicCamera | undefined = undefined;
-    textureData: Uint8Array | undefined = undefined;
-    forceUpdateImage = (input: any) => { };
-    mountRef: any = undefined;
-    zoomLevel: number = 1;
-    autoXY: boolean = false;
-
     _ElementImage = () => {
 
         console.log("process =========================")
-        const { imageWidth, imageHeight, imageShownXmin, imageShownXmax, imageShownYmin, imageShownYmax } = this.getImageInfo();
+        const { imageWidth, imageHeight, imageShownXmin, imageShownXmax, imageShownYmin, imageShownYmax, plotRegionWidth, plotRegionHeight } = this.getImageInfo();
 
         const mountRef = React.useRef<HTMLDivElement>(null);
-        this.mountRef = mountRef;
 
         const fun1 = () => {
 
@@ -266,7 +251,7 @@ export class ImagePlot {
 
             // the image area, outside of this area is blank
             // this.calcImageSize();
-            renderer.setSize(imageWidth, imageHeight);
+            renderer.setSize(plotRegionWidth, plotRegionHeight);
             mountRef.current!.appendChild(renderer.domElement);
 
             const geometry = new PlaneGeometry(imageWidth, imageHeight);
@@ -321,17 +306,17 @@ export class ImagePlot {
             <div
                 ref={mountRef}
                 style={{
-                    width: imageWidth,
-                    height: imageHeight,
+                    width: this.getPlotWidth(),
+                    height: this.getPlotHeight(),
+                    backgroundColor: "rgba(255,0,255,1)",
                 }}
 
                 onMouseDown={(event) => {
-                    // todo: pan, isolate
-                    // if (event.button !== 0) {
-                    //     return;
-                    // }
-                    // window.addEventListener("mousemove", this.panImageEventListener);
-                    // window.addEventListener("mouseup", this.cancelPanImageEventListener);
+                    if (event.button !== 0) {
+                        return;
+                    }
+                    window.addEventListener("mousemove", this.panImageEventListener);
+                    window.addEventListener("mouseup", this.cancelPanImageEventListener);
                 }}
 
                 onMouseMove={() => {
@@ -353,184 +338,46 @@ export class ImagePlot {
                 }}
 
                 onWheel={(event) => {
-                    // todo: isolate
-                    // event.preventDefault();
+                    event.preventDefault();
 
-                    // const zoomFactor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
+                    const zoomFactor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
 
-                    // if (!this.camera || !mountRef.current) return;
+                    if (!this.camera || !mountRef.current) return;
 
-                    // const rect = mountRef.current.getBoundingClientRect();
+                    const rect = mountRef.current.getBoundingClientRect();
 
-                    // // Mouse position in NDC (-1 to +1)
-                    // const ndcX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-                    // const ndcY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                    // Mouse position in NDC (-1 to +1)
+                    const ndcX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                    const ndcY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-                    // // Convert NDC → world coordinates
-                    // const mouseWorld = new Vector3(ndcX, ndcY, 0);
-                    // mouseWorld.unproject(this.camera);
+                    // Convert NDC → world coordinates
+                    const mouseWorld = new Vector3(ndcX, ndcY, 0);
+                    mouseWorld.unproject(this.camera);
 
-                    // this.zoomImage(zoomFactor, mouseWorld.x, mouseWorld.y);
+                    this.zoomImage(zoomFactor, mouseWorld.x, mouseWorld.y);
                 }}
 
             >
-                abcd
+                
             </div>
         );
     };
 
-    _ElementColorbar = () => {
+    _ElementColorMap = () => {
         return (
             <div
                 style={{
                     width: colorbarWidth,
                     height: this.getPlotHeight(),
                     display: "inline-flex",
+                    backgroundColor: "rgba(255, 0, 0, 1)",
                 }}
             >
-                COLOR BAR
+                COLOR MAP
             </div>
         )
     }
 
-
-
-    mapDbrDataWitNewData = () => {
-        // pixelDepth is not used in displaying data
-        this.updateImageInfo();
-
-        const allText = this.getMainWidget().getAllText();
-        const { colorMode, imageWidth, imageHeight } = this.getImageInfo();
-        const zMin = allText["zMin"];
-        const zMax = allText["zMax"];
-        const autoZ = allText["autoZ"];
-        const colorMap = allText["colorMap"];
-
-
-        if (colorMode !== NDArray_ColorMode.mono && colorMode !== NDArray_ColorMode.rgb1 && colorMode !== NDArray_ColorMode.rgb2 && colorMode !== NDArray_ColorMode.rgb3) {
-            Log.error("We only support MONO, RGB1, RGB2, and RGB3 format data in Image widget");
-            return;
-        }
-
-        const size = imageWidth * imageHeight;
-
-        if (size === 0) {
-            Log.error("Image size is 0");
-            return;
-        }
-
-        if (this.textureData === undefined) {
-            // we always plot 8-bit RGBA
-            this.textureData = new Uint8Array(size * 4);
-        }
-
-        const dataRaw = this.getImageValue();
-        // console.log(width, height, colorMode, dataRaw.length)
-        if (Array.isArray(dataRaw) === false) {
-            Log.error("Image data should be an array");
-            return;
-        }
-
-        if (colorMode === NDArray_ColorMode.mono) {
-            if (dataRaw.length < size) {
-                Log.error("Image size smaller than dimension");
-                return;
-            }
-        } else if (colorMode === NDArray_ColorMode.rgb1 || colorMode === NDArray_ColorMode.rgb2 || colorMode === NDArray_ColorMode.rgb3) {
-            if (dataRaw.length < 3 * size) {
-                Log.error("Image size smaller than dimension, ...");
-                return;
-            }
-        }
-
-        // if (changeGeometry) {
-        //     // image dimension on screen
-        //     // this.calcImageSize();
-        // }
-
-        // color
-        let minValue = zMin;
-        let maxValue = zMax;
-        if (autoZ === true && colorMode === NDArray_ColorMode.mono) {
-            minValue = Math.min(...dataRaw);
-            maxValue = Math.max(...dataRaw);
-        }
-
-        // this.zMax = maxValue;
-        // this.zMin = minValue;
-
-        const currentColorMap = colorMap;
-        let colorMapFunc = colorMapFunctions[currentColorMap];
-        if (colorMapFunc === undefined) {
-            colorMapFunc = grayColorMap;
-        }
-
-        if (colorMode === NDArray_ColorMode.mono) {
-            for (let ii = 0; ii < size; ii++) {
-                const normalized = Math.max(Math.min(Math.round((dataRaw[ii] - minValue) / (maxValue - minValue) * 255)));
-                const [r, g, b] = colorMapFunc(normalized);
-                const idx = ii * 4;
-                this.textureData[idx] = r;
-                this.textureData[idx + 1] = g;
-                this.textureData[idx + 2] = b;
-                this.textureData[idx + 3] = 255; // opaque
-            }
-        } else if (colorMode === NDArray_ColorMode.rgb1) {
-            for (let ii = 0; ii < size; ii++) {
-                const rRaw = dataRaw[3 * ii];
-                const gRaw = dataRaw[3 * ii + 1];
-                const bRaw = dataRaw[3 * ii + 2];
-
-                const rNormalized = Math.max(Math.min(Math.round((rRaw - minValue) / (maxValue - minValue) * 255), 255), 0);
-                const gNormalized = Math.max(Math.min(Math.round((gRaw - minValue) / (maxValue - minValue) * 255), 255), 0);
-                const bNormalized = Math.max(Math.min(Math.round((bRaw - minValue) / (maxValue - minValue) * 255), 255), 0);
-
-                const idx = ii * 4;
-                this.textureData[idx] = rNormalized;
-                this.textureData[idx + 1] = gNormalized;
-                this.textureData[idx + 2] = bNormalized;
-                this.textureData[idx + 3] = 255; // opaque
-            }
-        } else if (colorMode === NDArray_ColorMode.rgb2) {
-            for (let ii = 0; ii < size; ii++) {
-                // i, j coordiate of pixel
-                const j = ii % imageWidth;
-                const i = (ii - j) / imageWidth;
-
-                const rRaw = dataRaw[3 * i * imageWidth + j];
-                const gRaw = dataRaw[3 * i * imageWidth + j + imageWidth];
-                const bRaw = dataRaw[3 * i * imageWidth + j + 2 * imageWidth];
-
-                const rNormalized = Math.max(Math.min(Math.round((rRaw - minValue) / (maxValue - minValue) * 255)));
-                const gNormalized = Math.max(Math.min(Math.round((gRaw - minValue) / (maxValue - minValue) * 255)));
-                const bNormalized = Math.max(Math.min(Math.round((bRaw - minValue) / (maxValue - minValue) * 255)));
-
-                const idx = ii * 4;
-                this.textureData[idx] = rNormalized;
-                this.textureData[idx + 1] = gNormalized;
-                this.textureData[idx + 2] = bNormalized;
-                this.textureData[idx + 3] = 255; // opaque
-            }
-        } else if (colorMode === NDArray_ColorMode.rgb3) {
-            for (let ii = 0; ii < size; ii++) {
-                const rRaw = dataRaw[ii];
-                const gRaw = dataRaw[size + ii];
-                const bRaw = dataRaw[size * 2 + ii];
-
-                const rNormalized = Math.max(Math.min(Math.round((rRaw - minValue) / (maxValue - minValue) * 255)));
-                const gNormalized = Math.max(Math.min(Math.round((gRaw - minValue) / (maxValue - minValue) * 255)));
-                const bNormalized = Math.max(Math.min(Math.round((bRaw - minValue) / (maxValue - minValue) * 255)));
-
-                const idx = ii * 4;
-                this.textureData[idx] = rNormalized;
-                this.textureData[idx + 1] = gNormalized;
-                this.textureData[idx + 2] = bNormalized;
-                this.textureData[idx + 3] = 255; // opaque
-            }
-        } else {
-
-        }
-    };
 
     _ElementXLabel = () => {
 
@@ -602,9 +449,9 @@ export class ImagePlot {
                     display: "inline-flex",
                     flexGrow: 0,
                     flexShrink: 0,
+                    backgroundColor: "rgba(255,255,0,1)",
                 }}
             >
-
                 <Scale
                     min={imageShownXmin}
                     max={imageShownXmax}
@@ -615,9 +462,9 @@ export class ImagePlot {
                     scale={"Linear"}
                     color={"rgba(0,0,0,1)"}
                     compact={false}
-                    showTicks={false}
+                    showTicks={true}
                     showLabels={true}
-                    showAxis={false}
+                    showAxis={true}
                 >
                 </Scale>
             </div>
@@ -721,6 +568,7 @@ export class ImagePlot {
                     display: "inline-flex",
                     flexGrow: 0,
                     flexShrink: 0,
+                    backgroundColor: "rgba(0,255,255,1)",
                 }}
             >
                 <Scale
@@ -733,17 +581,336 @@ export class ImagePlot {
                     scale={"Linear"}
                     color={"rgba(0,0,0,1)"}
                     compact={false}
-                    showTicks={false}
+                    showTicks={true}
                     showLabels={true}
-                    showAxis={false}
+                    showAxis={true}
                 >
                 </Scale>
             </div>
         )
     };
 
+
+    // ------------------ pan image --------------------
+
+    /**
+     * Pan the image by (dx, dy) screen pixels.
+     *
+     * Converts screen-pixel movement to image-pixel (world) units, shifts the
+     * OrthographicCamera frustum, updates the stored axis range, recomputes
+     * ticks, and re-renders.
+     */
+    panImage = (dx: number, dy: number) => {
+        if (!this.camera || !this.renderer || !this.scene) {
+            return;
+        }
+
+        const camera = this.camera;
+        const canvasWidth = this.renderer.domElement.clientWidth;
+        const canvasHeight = this.renderer.domElement.clientHeight;
+        if (canvasWidth === 0 || canvasHeight === 0) {
+            return;
+        }
+
+        // screen pixels per image pixel (world unit)
+        const screenPerWorldX = canvasWidth / (camera.right - camera.left);
+        const screenPerWorldY = canvasHeight / (camera.top - camera.bottom);
+
+        // convert screen-pixel delta → image-pixel (world) delta
+        const panX = dx / screenPerWorldX;
+        const panY = dy / screenPerWorldY;
+
+        // shift camera (drag-right → view moves left → subtract)
+        camera.left -= panX;
+        camera.right -= panX;
+        camera.top += panY;
+        camera.bottom += panY;
+        camera.updateProjectionMatrix();
+
+        // update stored axis range so ticks follow
+        const info = this.getImageInfo();
+        const newXmin = info.imageShownXmin - panX;
+        const newXmax = info.imageShownXmax - panX;
+        const newYmin = info.imageShownYmin + panY;
+        const newYmax = info.imageShownYmax + panY;
+
+        const { xLength, yLength, xTickValues, xTickPositions, yTickValues, yTickPositions } =
+            this._extractTicksInfo(newXmin, newXmax, newYmin, newYmax);
+
+        this.setImageInfo({
+            ...info,
+            imageShownXmin: newXmin,
+            imageShownXmax: newXmax,
+            imageShownYmin: newYmin,
+            imageShownYmax: newYmax,
+            xLength,
+            yLength,
+            xTickValues,
+            xTickPositions,
+            yTickValues,
+            yTickPositions,
+        });
+
+        this.renderer.render(this.scene, camera);
+        this.getMainWidget().forceUpdate({});
+    };
+
+    panImageEventListener = (e: MouseEvent) => {
+        this.panImage(e.movementX, e.movementY);
+    };
+
+    cancelPanImageEventListener = () => {
+        window.removeEventListener("mousemove", this.panImageEventListener);
+        window.removeEventListener("mouseup", this.cancelPanImageEventListener);
+    };
+
+    // ------------------ zoom image ----------------------------
+
+    /**
+     * Zoom the image around a point in world (image-pixel) coordinates.
+     *
+     * @param zoomFactor >1 zooms in, <1 zooms out
+     * @param centerX    world X coordinate that stays fixed on screen
+     * @param centerY    world Y coordinate that stays fixed on screen
+     */
+    zoomImage = (zoomFactor: number, centerX: number, centerY: number) => {
+        if (!this.camera || !this.renderer || !this.scene) {
+            return;
+        }
+
+        const cam = this.camera;
+
+        // Scale the frustum around the world-space center point
+        cam.left = centerX - (centerX - cam.left) / zoomFactor;
+        cam.right = centerX - (centerX - cam.right) / zoomFactor;
+        cam.bottom = centerY - (centerY - cam.bottom) / zoomFactor;
+        cam.top = centerY - (centerY - cam.top) / zoomFactor;
+        cam.updateProjectionMatrix();
+
+        // Derive the new axis range in image-pixel units.
+        // The camera frustum is in world coords where the image center is at origin,
+        // so camLeft = -imageWidth/2 + imageShownXmin  =>  imageShownXmin = camLeft + imageWidth/2
+        const info = this.getImageInfo();
+        const newXmin = cam.left + info.imageWidth / 2;
+        const newXmax = cam.right + info.imageWidth / 2;
+        const newYmin = cam.bottom + info.imageHeight / 2;
+        const newYmax = cam.top + info.imageHeight / 2;
+
+        const { xLength, yLength, xTickValues, xTickPositions, yTickValues, yTickPositions } =
+            this._extractTicksInfo(newXmin, newXmax, newYmin, newYmax);
+
+        this.setImageInfo({
+            ...info,
+            imageShownXmin: newXmin,
+            imageShownXmax: newXmax,
+            imageShownYmin: newYmin,
+            imageShownYmax: newYmax,
+            xLength,
+            yLength,
+            xTickValues,
+            xTickPositions,
+            yTickValues,
+            yTickPositions,
+        });
+
+        this.renderer.render(this.scene, cam);
+        this.getMainWidget().forceUpdate({});
+    };
+
     // --------------- helpers -------------------
 
+
+    /**
+     * Get 1-D waveform data
+     */
+    getImageValue = () => {
+        const mainWidget = this.getMainWidget();
+        if (mainWidget.playing === false) {
+            return mainWidget.imageValueBackup;
+        }
+        // {index: number, value: number[]}
+        const choiceValue = g_widgets1.getChannelValue(mainWidget.getChannelNames()[0]) as any;
+
+        if (typeof choiceValue === "object") {
+            return choiceValue["value"];
+        }
+        return undefined;
+    }
+
+    /**
+     * Process incoming PVA image data and populate `this.textureData` for three.js rendering.
+     *
+     * This method is called each time new image data arrives from the channel. It:
+     * 1. Calls `updateImageInfo()` to refresh image dimensions, axis range, ticks, etc.
+     * 2. Reads the raw pixel array from the channel value.
+     * 3. Validates data size against the image dimensions and color mode.
+     * 4. Normalizes pixel values to 0–255 using the Z-range (`zMin`/`zMax`, or auto-computed
+     *    from data when `autoZ` is true).
+     * 5. Applies the selected color map (for mono mode) or direct RGB mapping (for RGB modes).
+     * 6. Writes the result into `this.textureData` as an 8-bit RGBA `Uint8Array`
+     *    (4 bytes per pixel), which the `DataTexture` in `_ElementImage` uploads to the GPU.
+     *
+     * Supported color modes (from NTNDArray `ColorMode` attribute):
+     * - **mono**: single-channel data, color-mapped via the selected color map function
+     * - **rgb1**: interleaved `[R,G,B, R,G,B, ...]` — dimension order `[3, width, height]`
+     * - **rgb2**: planar per row `[RRR...GGG...BBB...]` per row — dimension order `[width, 3, height]`
+     * - **rgb3**: fully planar `[all R, all G, all B]` — dimension order `[width, height, 3]`
+     */
+    mapDbrDataWitNewData = () => {
+        // (1)
+        this.updateImageInfo();
+
+        const allText = this.getMainWidget().getAllText();
+        const { colorMode, imageWidth, imageHeight } = this.getImageInfo();
+        const zMin = allText["zMin"];
+        const zMax = allText["zMax"];
+        const autoZ = allText["autoZ"];
+        const colorMap = allText["colorMap"];
+
+
+        if (colorMode !== NDArray_ColorMode.mono && colorMode !== NDArray_ColorMode.rgb1 && colorMode !== NDArray_ColorMode.rgb2 && colorMode !== NDArray_ColorMode.rgb3) {
+            Log.error("We only support MONO, RGB1, RGB2, and RGB3 format data in Image widget");
+            return;
+        }
+
+        const size = imageWidth * imageHeight;
+
+        if (size === 0) {
+            Log.error("Image size is 0");
+            return;
+        }
+
+        if (this.textureData === undefined) {
+            // we always plot 8-bit RGBA
+            this.textureData = new Uint8Array(size * 4);
+        }
+
+        // (2)
+        const dataRaw = this.getImageValue();
+        if (Array.isArray(dataRaw) === false) {
+            Log.error("Image data should be an array");
+            return;
+        }
+
+        // (3)
+        if (colorMode === NDArray_ColorMode.mono) {
+            if (dataRaw.length < size) {
+                Log.error("Image size smaller than dimension");
+                return;
+            }
+        } else if (colorMode === NDArray_ColorMode.rgb1 || colorMode === NDArray_ColorMode.rgb2 || colorMode === NDArray_ColorMode.rgb3) {
+            if (dataRaw.length < 3 * size) {
+                Log.error("Image size smaller than dimension, ...");
+                return;
+            }
+        }
+
+
+        // (4)
+        let minValue = zMin;
+        let maxValue = zMax;
+        if (autoZ === true && colorMode === NDArray_ColorMode.mono) {
+            minValue = Math.min(...dataRaw);
+            maxValue = Math.max(...dataRaw);
+        }
+
+        // (5)
+        const currentColorMap = colorMap;
+        let colorMapFunc = colorMapFunctions[currentColorMap];
+        if (colorMapFunc === undefined) {
+            colorMapFunc = grayColorMap;
+        }
+
+        // (6)
+        this.generateTextureData(colorMode, size, imageWidth, dataRaw, minValue, maxValue, colorMapFunc);
+    };
+
+    /**
+     * Write normalized RGBA pixel data into `this.textureData`.
+     *
+     * For mono images the raw value is normalized to 0–255 and passed through
+     * `colorMapFunc`.  For RGB modes the three channels are normalized directly.
+     * The output is always 8-bit RGBA (4 bytes per pixel).
+     */
+    private generateTextureData = (
+        colorMode: NDArray_ColorMode,
+        size: number,
+        imageWidth: number,
+        dataRaw: number[],
+        minValue: number,
+        maxValue: number,
+        colorMapFunc: (v: number) => [number, number, number],
+    ) => {
+        if (this.textureData === undefined) {
+            return;
+        }
+
+        if (colorMode === NDArray_ColorMode.mono) {
+            for (let ii = 0; ii < size; ii++) {
+                const normalized = Math.max(Math.min(Math.round((dataRaw[ii] - minValue) / (maxValue - minValue) * 255)));
+                const [r, g, b] = colorMapFunc(normalized);
+                const idx = ii * 4;
+                this.textureData[idx] = r;
+                this.textureData[idx + 1] = g;
+                this.textureData[idx + 2] = b;
+                this.textureData[idx + 3] = 255; // opaque
+            }
+        } else if (colorMode === NDArray_ColorMode.rgb1) {
+            for (let ii = 0; ii < size; ii++) {
+                const rRaw = dataRaw[3 * ii];
+                const gRaw = dataRaw[3 * ii + 1];
+                const bRaw = dataRaw[3 * ii + 2];
+
+                const rNormalized = Math.max(Math.min(Math.round((rRaw - minValue) / (maxValue - minValue) * 255), 255), 0);
+                const gNormalized = Math.max(Math.min(Math.round((gRaw - minValue) / (maxValue - minValue) * 255), 255), 0);
+                const bNormalized = Math.max(Math.min(Math.round((bRaw - minValue) / (maxValue - minValue) * 255), 255), 0);
+
+                const idx = ii * 4;
+                this.textureData[idx] = rNormalized;
+                this.textureData[idx + 1] = gNormalized;
+                this.textureData[idx + 2] = bNormalized;
+                this.textureData[idx + 3] = 255; // opaque
+            }
+        } else if (colorMode === NDArray_ColorMode.rgb2) {
+            for (let ii = 0; ii < size; ii++) {
+                // i, j coordiate of pixel
+                const j = ii % imageWidth;
+                const i = (ii - j) / imageWidth;
+
+                const rRaw = dataRaw[3 * i * imageWidth + j];
+                const gRaw = dataRaw[3 * i * imageWidth + j + imageWidth];
+                const bRaw = dataRaw[3 * i * imageWidth + j + 2 * imageWidth];
+
+                const rNormalized = Math.max(Math.min(Math.round((rRaw - minValue) / (maxValue - minValue) * 255)));
+                const gNormalized = Math.max(Math.min(Math.round((gRaw - minValue) / (maxValue - minValue) * 255)));
+                const bNormalized = Math.max(Math.min(Math.round((bRaw - minValue) / (maxValue - minValue) * 255)));
+
+                const idx = ii * 4;
+                this.textureData[idx] = rNormalized;
+                this.textureData[idx + 1] = gNormalized;
+                this.textureData[idx + 2] = bNormalized;
+                this.textureData[idx + 3] = 255; // opaque
+            }
+        } else if (colorMode === NDArray_ColorMode.rgb3) {
+            for (let ii = 0; ii < size; ii++) {
+                const rRaw = dataRaw[ii];
+                const gRaw = dataRaw[size + ii];
+                const bRaw = dataRaw[size * 2 + ii];
+
+                const rNormalized = Math.max(Math.min(Math.round((rRaw - minValue) / (maxValue - minValue) * 255)));
+                const gNormalized = Math.max(Math.min(Math.round((gRaw - minValue) / (maxValue - minValue) * 255)));
+                const bNormalized = Math.max(Math.min(Math.round((bRaw - minValue) / (maxValue - minValue) * 255)));
+
+                const idx = ii * 4;
+                this.textureData[idx] = rNormalized;
+                this.textureData[idx + 1] = gNormalized;
+                this.textureData[idx + 2] = bNormalized;
+                this.textureData[idx + 3] = 255; // opaque
+            }
+        }
+    };
+
+    // ---------------------- image info ---------------------
     private _updatePlotWidthHeight = () => {
         const allStyle = this.getMainWidget().getAllStyle();
         const width = allStyle["width"];
@@ -894,39 +1061,17 @@ export class ImagePlot {
     }
 
     /**
-     * Computer the image plot size in unit of screen pixels
-     * 
-     * the image may be smaller than the plot region depending on the aspect ration of the image and the plot region
-     *
+     * The image always fills the entire axis box. The OrthographicCamera frustum
+     * maps the image-pixel range (imageShownXmin..Xmax, imageShownYmin..Ymax)
+     * onto the full screen-pixel canvas (plotWidth × plotHeight).
      */
     private _calcPlotRegionSize = () => {
-        const {imageShownXmin, imageShownXmax, imageShownYmin, imageShownYmax} = this.getImageInfo();
-        const xMin = imageShownXmin;
-        const xMax = imageShownXmax;
-        const yMin = imageShownYmin;
-        const yMax = imageShownYmax;
-        const width = xMax - xMin;
-        const height = yMax - yMin;
-
-        if (width === 0 || height === 0) {
-            // return [5, 5];
-            // this.imageSize = [0, 0];
+        const plotWidth = this.getPlotWidth();
+        const plotHeight = this.getPlotHeight();
+        if (plotWidth <= 0 || plotHeight <= 0) {
             return [0, 0];
         }
-        const containerWidth = this.getPlotWidth();
-        const containerHeight = this.getPlotHeight();
-        if (containerHeight <= 0 || containerWidth <= 0) {
-            // return [5, 5];
-            return [0, 0];
-        }
-        let result: [number, number] = [0, 0];
-        if (containerWidth / containerHeight > width / height) {
-            result = [containerHeight * width / height, containerHeight];
-        } else {
-            result = [containerWidth, containerWidth * height / width];
-
-        }
-        return result;
+        return [plotWidth, plotHeight];
     }
 
     updateImageInfo = () => {
@@ -936,10 +1081,38 @@ export class ImagePlot {
         const { imageWidth, imageHeight, colorMode, pixelDepth } = this._extractImageInfo();
 
         const allText = this.getMainWidget().getAllText();
-        let imageShownXmin = this.autoXY === true ? 0 : allText["xMin"];
-        let imageShownXmax = this.autoXY === true ? 0 : allText["xMax"];
-        let imageShownYmin = this.autoXY === true ? 0 : allText["yMin"];
-        let imageShownYmax = this.autoXY === true ? 0 : allText["yMax"];
+        let imageShownXmin: number;
+        let imageShownXmax: number;
+        let imageShownYmin: number;
+        let imageShownYmax: number;
+
+        if (this.autoXY === true) {
+            // Keep image pixel aspect ratio 1:1 (square pixels on screen).
+            // Compute a uniform scale (screen pixels per image pixel) so the
+            // entire image fits without cropping, then extend the axis range
+            // on the dimension that has leftover space.
+            const plotWidth = this.getPlotWidth();
+            const plotHeight = this.getPlotHeight();
+            if (imageWidth > 0 && imageHeight > 0 && plotWidth > 0 && plotHeight > 0) {
+                const scaleX = plotWidth / imageWidth;   // screen px per image px
+                const scaleY = plotHeight / imageHeight;
+                const scale = Math.min(scaleX, scaleY);
+                imageShownXmin = 0;
+                imageShownXmax = plotWidth / scale;   // in image-pixel units
+                imageShownYmin = 0;
+                imageShownYmax = plotHeight / scale;
+            } else {
+                imageShownXmin = 0;
+                imageShownXmax = imageWidth;
+                imageShownYmin = 0;
+                imageShownYmax = imageHeight;
+            }
+        } else {
+            imageShownXmin = allText["xMin"];
+            imageShownXmax = allText["xMax"];
+            imageShownYmin = allText["yMin"];
+            imageShownYmax = allText["yMax"];
+        }
 
         const { xLength, yLength, xTickValues, xTickPositions, yTickValues, yTickPositions, } = this._extractTicksInfo(imageShownXmin, imageShownXmax, imageShownYmin, imageShownYmax);
         const [plotRegionWidth, plotRegionHeight] = this._calcPlotRegionSize();
@@ -963,22 +1136,6 @@ export class ImagePlot {
         });
     }
 
-    /**
-     * Get 1-D waveform data
-     */
-    getImageValue = () => {
-        const mainWidget = this.getMainWidget();
-        if (mainWidget.playing === false) {
-            return mainWidget.imageValueBackup;
-        }
-        // {index: number, value: number[]}
-        const choiceValue = g_widgets1.getChannelValue(mainWidget.getChannelNames()[0]) as any;
-
-        if (typeof choiceValue === "object") {
-            return choiceValue["value"];
-        }
-        return undefined;
-    }
 
     // ------------------ getters --------------------
 
@@ -1012,5 +1169,9 @@ export class ImagePlot {
 
     getMainWidget = () => {
         return this._mainWidget;
+    }
+
+    getElement = () => {
+        return <this._Element></this._Element>
     }
 }

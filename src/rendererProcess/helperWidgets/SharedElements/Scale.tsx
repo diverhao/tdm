@@ -583,3 +583,7 @@ const LabelTopBottom = ({ position, text, index, numTicks, compact, color }: { p
 
     )
 }
+
+export const getScaleWidthHeight = () => {
+    return 2 + 10 + GlobalVariables.defaultFontSize + 10;
+}
