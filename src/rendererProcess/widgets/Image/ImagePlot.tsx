@@ -6,7 +6,8 @@ import { Scale } from "../../helperWidgets/SharedElements/Scale";
 import { DataTexture, Mesh, MeshBasicMaterial, NearestFilter, OrthographicCamera, PlaneGeometry, RGBAFormat, Scene, SRGBColorSpace, UnsignedByteType, Vector3, WebGLRenderer } from "three";
 import { NDArray_ColorMode } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
-import { colorMapFunctions, grayColorMap, colorMapArrays, grayColorMapArray } from "./ImageColorMaps";
+import { colorMapFunctions, grayColorMap } from "./ImageColorMapData";
+import { ImageColorMap } from "./ImageColorMap";
 import { ImageConfigPage } from "./ImageConfigPage";
 import { ElementRois, readRoiPvValue } from "./ImageRoi";
 
@@ -111,6 +112,7 @@ export class ImagePlot {
     // autoXY: boolean = true;
 
     private _configPage: ImageConfigPage;
+    private _colorMap: ImageColorMap;
 
     /**
      * Registry of per-ROI state updaters.  Each `ElementRoi` registers
@@ -149,6 +151,7 @@ export class ImagePlot {
         info.colorMap = text["colorMap"] ?? "gray";
 
         this._configPage = new ImageConfigPage(this);
+        this._colorMap = new ImageColorMap(this);
     }
     
     /**
@@ -448,22 +451,6 @@ export class ImagePlot {
         );
     };
 
-    /**
-     * Build a CSS `linear-gradient(to top, …)` string from the current color map.
-     */
-    private _generateGradientStops = (): string => {
-        const colorMapName = this.getImageInfo().colorMap;
-        let colorMapArray = colorMapArrays[colorMapName];
-        if (colorMapArray === undefined) {
-            colorMapArray = grayColorMapArray;
-        }
-        const colors: string[] = [];
-        for (let i = 0; i < colorMapArray.length; i += 3) {
-            colors.push(`rgb(${colorMapArray[i]}, ${colorMapArray[i + 1]}, ${colorMapArray[i + 2]})`);
-        }
-        return `linear-gradient(to top, ${colors.join(",")})`;
-    };
-
     _ElementColorMap = () => {
         const { zMin, zMax } = this.getImageInfo();
         const gradientBarWidth = 15;
@@ -484,7 +471,7 @@ export class ImagePlot {
                     style={{
                         width: gradientBarWidth,
                         height: "100%",
-                        background: this._generateGradientStops(),
+                        background: this._colorMap.generateGradientStops(),
                     }}
                 />
                 {/* Z-axis ticks */}
@@ -1425,6 +1412,10 @@ export class ImagePlot {
 
     getConfigPage = () => {
         return this._configPage;
+    }
+
+    getColorMap = () => {
+        return this._colorMap;
     }
 
     getElement = () => {

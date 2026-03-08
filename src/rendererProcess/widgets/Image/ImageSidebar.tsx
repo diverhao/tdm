@@ -8,7 +8,7 @@ import { SidebarImageRegionsOfInterest } from "../../helperWidgets/SidebarCompon
 import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
-import { colorMapFunctions } from "./ImageColorMaps";
+import { colorMapFunctions } from "./ImageColorMapData";
 
 export class ImageSidebar extends BaseWidgetSidebar {
     sidebarImageXmin;

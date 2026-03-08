@@ -1,7 +1,7 @@
 import * as React from "react";
 import type { ImagePlot } from "./ImagePlot";
 import { toolbarHeight } from "./Image";
-import { ElementSwitchColorMap } from "./ImageColorMapUi";
+
 import { NDArray_ColorMode } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 
@@ -257,7 +257,10 @@ export class ImageConfigPage {
                 >
                     <this._ElementXrangeInputs />
                     <this._ElementYrangeInputs />
-                    <ElementSwitchColorMap image={image} />
+                    {(() => {
+                        const SwitchColorMap = this._plot.getColorMap().ElementSwitchColorMap;
+                        return <SwitchColorMap />;
+                    })()}
                 </div>
             </div>
         );

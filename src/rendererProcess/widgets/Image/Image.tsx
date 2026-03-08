@@ -1,16 +1,11 @@
 import * as React from "react";
-import { MouseEvent } from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { NDArray_ColorMode } from "../../../common/GlobalVariables";
 import { ImageSidebar } from "./ImageSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
-import { Log } from "../../../common/Log";
-import { OrthographicCamera, Scene, WebGLRenderer, Vector3, Vector2, DataTexture, UnsignedByteType, RGBAFormat, SRGBColorSpace, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, PlaneGeometry } from "three";
 import { type_Image_tdl, defaultImageTdl, type_Image_text_tdl } from "../../../common/types/type_widget_tdl";
-import { colorMapFunctions, grayColorMap } from "./ImageColorMaps";
-
 import { ImagePlot } from "./ImagePlot";
 import { getScaleWidthHeight } from "../../helperWidgets/SharedElements/Scale";
 
@@ -110,10 +105,8 @@ export const colorbarWidth = 50;
 
 export class Image extends BaseWidget {
 
-    // _rules: BaseWidgetRules;
     axisWidth: number = 40;
     configHeight: number = 20;
-    // autoXY: boolean = true;
     private _regionOfInterest: {
         xPv: string;
         yPv: string;
@@ -124,39 +117,12 @@ export class Image extends BaseWidget {
 
 
     forceUpdate: React.Dispatch<React.SetStateAction<{}>> = (input: React.SetStateAction<{}>) => { };
-    forceUpdateColorMap = (input: any) => { };
-
     showConfigPage: boolean = false;
-    colorMapWidth: number = 50;
-    setHintText = (input: string) => { };
-    setXyzCursorValues = (input: any) => { };
-
-
-
-    // texture: DataTexture | undefined = undefined;
-    // renderer: WebGLRenderer | undefined = undefined;
-    // scene: Scene | undefined = undefined;
-    // camera: OrthographicCamera | undefined = undefined;
-    // textureData: Uint8Array | undefined = undefined;
-    forceUpdateImage = (input: any) => { };
-    // mountRef: any = undefined;
-    // zoomLevel: number = 1;
-
     playing: boolean = true;
     imageValueBackup: number[] = [];
     imageDimensionsBackup: { imageWidth: number, imageHeight: number, colorMode: NDArray_ColorMode, pixelDepth: number } = { imageWidth: -1, imageHeight: -1, colorMode: NDArray_ColorMode.mono, pixelDepth: 0 };
 
-    lastMouesPositions: [number, number] = [-1, -1];
-
-
-
-
-    // imageSize: [number, number] = [5, 5];
-
-    zMax: number = 0;
-    zMin: number = 0;
-
-    _plot: ImagePlot;
+    private readonly _plot: ImagePlot;
 
     constructor(widgetTdl: type_Image_tdl) {
         super(widgetTdl);
@@ -234,49 +200,10 @@ export class Image extends BaseWidget {
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
 
-    // --------------------- getters -----------------------
-
-    getElementFallbackFunction = () => {
-        return this._ElementFallback;
-    }
-    getRegionsOfInterest = () => {
-        return this._regionOfInterest;
-    };
-
-    getPlot = () => {
-        return this._plot;
-    }
-
     // -------------------- helper functions ----------------
 
     mapDbrDataWitNewData = (newDbrData: any) => {
-
         this.getPlot().mapDbrDataWitNewData();
-
-        // // new image data
-        // // if (newDbrData[this.getChannelNames()[0]] !== undefined) {
-        // // if new data arrives the first time, re-calc image size on screen
-        // if (this.imageSize[0] === 0 || this.imageSize[1] === 0) {
-        //     this.getPlot().processData(true);
-        //     // this.calcImageSize();
-        // } else {
-        //     this.getPlot().processData(false);
-        // }
-        // // }
-
-        // the last N * 4 channels are roi pvs
-        // return;
-        // if (this.resizingRoi === false) {
-        // const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-
-        // for (let index = 0; index < this.getRegionsOfInterest().length; index++) {
-        //     const roi = this.getRegionsOfInterest()[index];
-        //     const xPv = roi.xPv.split("=")[0] + "@window_" + displayWindowId;
-        //     const yPv = roi.yPv.split("=")[0] + "@window_" + displayWindowId;
-        //     const widthPv = roi.widthPv.split("=")[0] + "@window_" + displayWindowId;
-        //     const heightPv = roi.heightPv.split("=")[0] + "@window_" + displayWindowId;
-
-        // }
     }
     
     processChannelNames(widgetMacros: [string, string][] = [], removeDuplicated: boolean = true) {
@@ -293,21 +220,14 @@ export class Image extends BaseWidget {
         console.log("this. getChannel anmes", this.getChannelNames())
     }
 
+    // --------------------- getters -----------------------
 
-    /**
-     * Get 1-D waveform data
-     */
-    getImageValue = () => {
-        if (this.playing === false) {
-            return this.imageValueBackup;
-        }
-        // {index: number, value: number[]}
-        const choiceValue = g_widgets1.getChannelValue(this.getChannelNames()[0]) as any;
+    getRegionsOfInterest = () => {
+        return this._regionOfInterest;
+    };
 
-        if (typeof choiceValue === "object") {
-            return choiceValue["value"];
-        }
-        return undefined;
+    getPlot = () => {
+        return this._plot;
     }
 
     // -------------------------- tdl -------------------------------
