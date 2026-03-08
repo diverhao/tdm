@@ -16,15 +16,11 @@ import { colorMapFunctions, colorMapArrays, grayColorMapArray } from "./ImageCol
  * image and color-map components.
  */
 export const switchColorMap = (image: Image, newColorMap: string) => {
-    let currentColorMap = image.getText()["colorMap"];
-    if (currentColorMap === undefined) {
-        currentColorMap = "gray";
-    }
-
-    image.getText()["colorMap"] = newColorMap;
-    image.processData(false);
-    image.forceUpdateImage({});
-    image.forceUpdateColorMap({});
+    const plot = image.getPlot();
+    plot.setImageInfo({ ...plot.getImageInfo(), colorMap: newColorMap });
+    plot.mapDbrDataWitNewData();
+    plot.updateCameraFrustum();
+    image.forceUpdate({});
 }
 
 /**
@@ -33,7 +29,7 @@ export const switchColorMap = (image: Image, newColorMap: string) => {
  */
 export const generateGradientStops = (image: Image) => {
     let colors = [];
-    const colorMapName = image.getText()["colorMap"];
+    const colorMapName = image.getPlot().getImageInfo().colorMap;
     let colorMapArray = colorMapArrays[colorMapName];
     if (colorMapArray === undefined) {
         colorMapArray = grayColorMapArray;
@@ -52,170 +48,13 @@ export const generateGradientStops = (image: Image) => {
     return gradient;
 }
 
-// ───────────────────── ElementColorMap ─────────────────────
-
-/**
- * Vertical color-map gradient bar with Z-value tick marks, rendered to
- * the right of the image.
- */
-export const ElementColorMap = ({ image }: { image: Image }) => {
-    const [, forceUpdate] = React.useState({});
-
-    image.forceUpdateColorMap = forceUpdate;
-    const calcTicks = () => {
-
-        const min = image.zMin;
-        const max = image.zMax;
-        // console.log(min, max)
-        let dy = 1;
-        if (max - min > 50000) {
-            dy = 10000;
-        } else if (max - min > 20000) {
-            dy = 5000;
-        } else if (max - min > 10000) {
-            dy = 2000;
-        } else if (max - min > 5000) {
-            dy = 1000;
-        } else if (max - min > 2000) {
-            dy = 500;
-        } else if (max - min > 1000) {
-            dy = 200;
-        } else if (max - min > 500) {
-            dy = 100;
-        } else if (max - min > 200) {
-            dy = 50;
-        } else if (max - min > 100) {
-            dy = 20;
-        } else if (max - min > 50) {
-            dy = 10;
-        } else if (max - min > 20) {
-            dy = 5;
-        } else if (max - min > 10) {
-            dy = 2;
-        } else if (max - min > 1) {
-            dy = 1;
-        }
-
-        let yStart = Math.ceil(min / dy) * dy;
-
-        const slope = image.getImageSize()[1] / (max - min);
-
-
-        const result: [number, number][] = [];
-        for (let value = yStart; value < max; value = value + dy) {
-            result.push([Math.round(value), slope * (Math.round(value) - min)])
-        }
-        // console.log(slope, min, max, image.camera.left, image.camera.right)
-        // console.log(result)
-        return result;
-
-    };
-    return (
-        <div style={{
-            // position: "absolute",
-            // zIndex: 1000,
-            // right: 0,
-            // bottom: 0,
-            // marginLeft: 20,
-            // paddingLeft: 20,
-
-            // width: "100%",
-            // height: "100%",
-            height: image.getImageSize()[1],
-            // backgroundColor: "red",
-            position: "relative",
-            display: "inline-flex",
-            justifyContent: "flex-end",
-            marginBottom: image.axisWidth + image.configHeight,
-        }}>
-            {/* long vertical line */}
-            <svg
-                style={{
-                    height: "100%",
-                    width: "25px",
-                    // left: 80,
-                }}
-
-            >
-                <polyline
-                    points={`200,0 200,${image.getImageSize()[1]}`}
-                    strokeWidth={`2px`}
-                    stroke={"black"}
-                    fill="none"
-                ></polyline>
-            </svg>
-            {calcTicks().map(([value, y]) => {
-                return (
-                    <>
-                        <svg
-                            style={{
-                                position: "absolute",
-                                right: 0 + 15,
-                                top: image.getImageSize()[1] - y,
-                                width: 7,
-                                height: 3,
-                                display: "inline-flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                overflow: "visible",
-                                flexDirection: "column",
-                            }}
-
-                        >
-                            <polyline
-                                points={`0,0 7,0`}
-                                strokeWidth={`2px`}
-                                stroke={"black"}
-                                fill="none"
-                            >
-                            </polyline>
-                        </svg>
-                        <div
-                            style={{
-                                position: "absolute",
-                                right: 20 + 10,
-                                top: image.getImageSize()[1] - y,
-                                transform: "rotate(270deg)",
-                                width: 0,
-                                height: 0,
-                                // backgroundColor: "blue",
-                                display: "inline-flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                flexDirection: "column",
-                            }}
-                        >
-                            {value}
-                        </div>
-                    </>
-                )
-            })}
-            <div style={{
-                background: generateGradientStops(image),
-                height: "100%",
-                width: 15,
-                // position: "absolute",
-                // zIndex: 1000,
-                // left: 20,
-                // bottom: 0,
-                // backgroundColor: "rgba(255, 255,0, 0.5)",
-                // width: 100,
-                // height: 100,
-
-            }}>
-            </div>
-
-        </div>
-    )
-}
-
 // ───────────────────── ElementSwitchColorMap ─────────────────────
 
 /**
  * Dropdown selector for choosing the active color map.
  */
 export const ElementSwitchColorMap = ({ image }: { image: Image }) => {
-    const [colorMap, setColorMap] = React.useState(image.getText()["colorMap"]);
+    const [colorMap, setColorMap] = React.useState(image.getPlot().getImageInfo().colorMap);
     return (
         <div
             style={{
@@ -305,9 +144,11 @@ export const ElementZrange = ({ image }: { image: Image }) => {
                             return;
                         }
                         image.getText()["zMin"] = value;
-                        image.processData(false);
-                        image.forceUpdateColorMap({});
-                        image.forceUpdateImage({});
+                        const plot1 = image.getPlot();
+                        plot1.setImageInfo({ ...plot1.getImageInfo(), zMin: value });
+                        plot1.mapDbrDataWitNewData();
+                        plot1.updateCameraFrustum();
+                        image.forceUpdate({});
                     }
                 }
             >
@@ -353,9 +194,11 @@ export const ElementZrange = ({ image }: { image: Image }) => {
                             return;
                         }
                         image.getText()["zMax"] = value;
-                        image.processData(false);
-                        image.forceUpdateColorMap({});
-                        image.forceUpdateImage({});
+                        const plot2 = image.getPlot();
+                        plot2.setImageInfo({ ...plot2.getImageInfo(), zMax: value });
+                        plot2.mapDbrDataWitNewData();
+                        plot2.updateCameraFrustum();
+                        image.forceUpdate({});
                     }
                 }
             >
@@ -395,9 +238,11 @@ export const ElementZrange = ({ image }: { image: Image }) => {
                 onChange={(event) => {
                     image.getText()["autoZ"] = !autoZ;
                     setAutoZ(!autoZ);
-                    image.processData(false);
-                    image.forceUpdateColorMap({});
-                    image.forceUpdateImage({});
+                    const plot3 = image.getPlot();
+                    plot3.setImageInfo({ ...plot3.getImageInfo(), autoZ: !autoZ });
+                    plot3.mapDbrDataWitNewData();
+                    plot3.updateCameraFrustum();
+                    image.forceUpdate({});
                 }}
             >
             </input>

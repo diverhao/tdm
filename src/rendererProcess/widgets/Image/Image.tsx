@@ -8,11 +8,9 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Log } from "../../../common/Log";
 import { OrthographicCamera, Scene, WebGLRenderer, Vector3, Vector2, DataTexture, UnsignedByteType, RGBAFormat, SRGBColorSpace, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, PlaneGeometry } from "three";
-import { type_Image_tdl, defaultImageTdl } from "../../../common/types/type_widget_tdl";
+import { type_Image_tdl, defaultImageTdl, type_Image_text_tdl } from "../../../common/types/type_widget_tdl";
 import { colorMapFunctions, grayColorMap } from "./ImageColorMaps";
-import { ElementColorMap } from "./ImageColorMapUi";
 import { ElementRoi, resizeRoiTopHandler, resizeRoiTopHandlerMouseUp, resizeRoiBottomHandler, resizeRoiBottomHandlerMouseUp, resizeRoiLeftHandler, resizeRoiLeftHandlerMouseUp, resizeRoiRightHandler, resizeRoiRightHandlerMouseUp } from "./ImageRoi";
-import { ElementConfigPage, ElementConfigBar } from "./ImageConfigPage";
 import { ImagePlot } from "./ImagePlot";
 import { getScaleWidthHeight } from "../../helperWidgets/SharedElements/Scale";
 
@@ -105,45 +103,10 @@ import { getScaleWidthHeight } from "../../helperWidgets/SharedElements/Scale";
 export const yAxisLabelWidth = 30;
 export const yAxisTickWidth = getScaleWidthHeight();
 export const xAxisLabelHeight = 30;
-export const xAxisTickHeight =getScaleWidthHeight();
+export const xAxisTickHeight = getScaleWidthHeight();
 export const toolbarHeight = 30;
 export const colorbarWidth = 50;
 
-/**
- * -----------------------------------------------------------------------------------
- * |    |   |                                                              |         |
- * | E  | E |                                                              |   E     |
- * | l  | l |                                                              |   l     |
- * | e  | e |                                                              |   e     |
- * | m  | m |                                                              |   m     |
- * | e  | e |                                                              |   e     |
- * | n  | n |                                                              |   n     |
- * | t  | t |                      ElementImage                            |   t     |
- * | Y  | Y |                                                              |   C     |
- * | L  | T |                                                              |   o     |
- * | a  | i |                                                              |   l     |
- * | b  | c |                                                              |   o     |
- * | e  | k |                                                              |   r     |
- * | l  | s |                                                              |   M     |
- * |    |   |                                                              |   a     |
- * |    |   |                                                              |   p     |
- * |---------------------------------------------------------------------------------|
- * |        |                                                              |         |
- * | E B    |                                                              |  E B    |
- * | l l    |                      ElementXTicks                           |  l l    |
- * | e a    |                                                              |  e a    |
- * | m n    |                                                              |  m n    |
- * | e k    |--------------------------------------------------------------|  e k    |
- * | n A    |                                                              |  n A    |
- * | t r    |                                                              |  t r    |
- * |   e    |                      ElementXLabel                           |    e    |
- * |   a    |                                                              |    a    |
- * |---------------------------------------------------------------------------------|
- * |                                                                                 |
- * |                               ElementControls                                   |
- * |                                                                                 |
- * -----------------------------------------------------------------------------------
- */
 
 export class Image extends BaseWidget {
 
@@ -170,14 +133,14 @@ export class Image extends BaseWidget {
 
 
 
-    texture: DataTexture | undefined = undefined;
-    renderer: WebGLRenderer | undefined = undefined;
-    scene: Scene | undefined = undefined;
-    camera: OrthographicCamera | undefined = undefined;
-    textureData: Uint8Array | undefined = undefined;
+    // texture: DataTexture | undefined = undefined;
+    // renderer: WebGLRenderer | undefined = undefined;
+    // scene: Scene | undefined = undefined;
+    // camera: OrthographicCamera | undefined = undefined;
+    // textureData: Uint8Array | undefined = undefined;
     forceUpdateImage = (input: any) => { };
-    mountRef: any = undefined;
-    zoomLevel: number = 1;
+    // mountRef: any = undefined;
+    // zoomLevel: number = 1;
 
     playing: boolean = true;
     imageValueBackup: number[] = [];
@@ -201,7 +164,7 @@ export class Image extends BaseWidget {
     setRoisHeight: any[] = [];
     roisRef: any[] = [];
 
-    imageSize: [number, number] = [5, 5];
+    // imageSize: [number, number] = [5, 5];
 
     zMax: number = 0;
     zMin: number = 0;
@@ -275,9 +238,6 @@ export class Image extends BaseWidget {
                 }}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                {/* <this._ElementImageContainer />
-                <ElementColorMap image={this} />
-                <ElementConfigPage image={this} /> */}
                 {this.getPlot().getElement()}
             </div>
         );
@@ -286,751 +246,6 @@ export class Image extends BaseWidget {
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
-
-    /**
-     * x-axis, y-axis, image, and config
-     */
-    // _ElementImageContainer = () => {
-    //     const [, forceUpdate] = React.useState({});
-    //     this.forceUpdateImage = forceUpdate;
-
-    //     const width = this.getImageSize()[0] + this.axisWidth;
-    //     const height = this.getImageSize()[1] + this.axisWidth + this.configHeight;
-
-    //     return (
-    //         <div
-    //             style={{
-    //                 width: width,
-    //                 height: height,
-    //                 display: "inline-flex",
-    //                 flexDirection: 'column',
-    //             }}
-    //         >
-    //             {/* y axis and image */}
-    //             <div
-    //                 style={{
-    //                     display: "inline-flex",
-    //                     flexDirection: "row",
-    //                     width: this.getImageSize()[0] + this.axisWidth,
-    //                     height: this.getImageSize()[1],
-    //                     position: "relative",
-    //                 }}
-    //             >
-    //                 {/* y axis */}
-    //                 <div
-    //                     style={{
-    //                         width: this.axisWidth,
-    //                         height: this.getImageSize()[1],
-    //                     }}
-    //                 >
-    //                     <ElementYAxis image={this}/>
-
-    //                 </div>
-    //                 {/* image and roi */}
-    //                 <div
-    //                     style={{
-    //                         position: "relative",
-    //                     }}
-    //                 >
-    //                     {/* image */}
-    //                     <this._ElementImage />
-    //                     {this.getRegionsOfInterest().map((roi, index) => {
-    //                         return <ElementRoi key={index} index={index} image={this} />
-    //                     })}
-
-    //                 </div>
-    //             </div>
-
-    //             {/* bottom left corner and x axis */}
-    //             <div
-    //                 style={{
-    //                     display: "inline-flex",
-    //                     flexDirection: "row",
-    //                     width: this.getImageSize()[0] + this.axisWidth,
-    //                     height: this.axisWidth,
-    //                 }}
-    //             >
-    //                 {/* bottom left corner */}
-    //                 <div
-    //                     style={{
-    //                         // backgroundColor: "green",
-    //                         width: this.axisWidth,
-    //                         height: this.axisWidth,
-    //                     }}
-    //                 >
-    //                 </div>
-    //                 {/* x axis */}
-    //                 <div
-    //                     style={{
-    //                         width: this.getImageSize()[0],
-    //                         height: this.axisWidth,
-    //                     }}
-    //                 >
-    //                     <ElementXAxis image={this}
-    //                     // totalWidth={this.renderer === undefined ? 20 : this.renderer.domElement.width}
-    //                     />
-    //                 </div>
-    //             </div>
-    //             <ElementConfigBar image={this} />
-    //         </div>
-    //     )
-    // }
-
-    /**
-     * Reset all image-related stuff
-     */
-    resetImage = () => {
-        if (this.renderer !== undefined) {
-            this.mountRef?.current?.removeChild(this.renderer?.domElement);
-            this.renderer?.dispose();
-        }
-
-        this.texture = undefined;
-        this.renderer = undefined;
-        this.scene = undefined;
-        this.camera = undefined;
-        this.textureData = undefined;
-        this.mountRef = undefined;
-        this.imageSize[0] = 0;
-        this.imageSize[1] = 0;
-    }
-
-
-    /**
-     * Reset the view of the image: zoom level = 1; view area = full
-     */
-    // resetViewToFull = () => {
-    //     if (this.camera === undefined || this.scene === undefined || this.renderer === undefined) {
-    //         return;
-    //     }
-    //     this.zoomLevel = 1;
-    //     this.autoXY = true;
-    //     this.resetImage();
-    //     this.processData(true);
-    //     // this.calcImageSize();
-    //     this.forceUpdateImage({});
-
-    // }
-
-    // setPlaying = (playing: boolean) => {
-    //     if (this.playing === playing) {
-    //         return;
-    //     }
-    //     if (playing === false) {
-    //         this.imageValueBackup = structuredClone(this.getImageValue());
-    //         this.imageDimensionsBackup = structuredClone(this.getPlot().getImageDimensions());
-    //     } else {
-    //         this.imageValueBackup = [];
-    //         this.imageDimensionsBackup = { imageWidth: -1, imageHeight: -1, colorMode: NDArray_ColorMode.mono, pixelDepth: 0 };
-    //     }
-    //     this.playing = playing;
-    // }
-
-    // zoomImage = (zoomFactor: number, centerX: number, centerY: number) => {
-    //     if (!this.camera) return;
-
-    //     const cam = this.camera;
-    //     const width = cam.right - cam.left;
-    //     const height = cam.top - cam.bottom;
-
-    //     const newWidth = width / zoomFactor;
-    //     const newHeight = height / zoomFactor;
-
-    //     // Keep centerX and centerY fixed on screen
-    //     cam.left = centerX - (centerX - cam.left) / zoomFactor;
-    //     cam.right = cam.left + newWidth;
-    //     cam.bottom = centerY - (centerY - cam.bottom) / zoomFactor;
-    //     cam.top = cam.bottom + newHeight;
-
-    //     cam.updateProjectionMatrix();
-    //     this.forceUpdateImage({});
-    // };
-
-
-    // /**
-    //  * set to manual view: both plot region and view region
-    //  * zoom factor is set to 1
-    //  */
-    // setImageXyRange = () => {
-    //     if (!this.camera) return;
-    //     this.zoomLevel = 1;
-    //     this.autoXY = false;
-    //     // clean up everything
-    //     this.resetImage();
-    //     // process data
-    //     this.processData(true);
-    //     // compute the image size on screen
-    //     // this.calcImageSize();
-    //     this.forceUpdateImage({});
-    // };
-
-
-    // /**
-    //  * dx, dy: pixel on screen
-    //  */
-    // panImage = (dx: number, dy: number) => {
-    //     if (this.camera === undefined || this.scene === undefined || this.renderer === undefined) {
-    //         return;
-    //     }
-    //     // console.log("pan image")
-
-    //     const pixelActualSize = this.calcPixelSize();
-    //     const camera = this.camera;
-    //     const panX = dx / pixelActualSize[0];
-    //     const panY = dy / pixelActualSize[1];
-    //     camera.left = camera.left - panX
-    //     camera.right = camera.right - panX;
-    //     camera.top = camera.top + panY;
-    //     camera.bottom = camera.bottom + panY;
-
-
-    //     camera.updateProjectionMatrix();
-    //     this.forceUpdateImage({});
-    // }
-
-
-    // _ElementImage = () => {
-    //     const mountRef = React.useRef<HTMLDivElement>(null);
-    //     this.mountRef = mountRef;
-    //     const [, forceUpdate] = React.useState({});
-    //     // this.forceUpdateImage = forceUpdate;
-
-    //     // let processData = this.processData_GrayMap;
-    //     // if (this.getText()["colorMap"] === "jet") {
-    //     // const processData = this.processData;
-    //     // }
-
-
-    //     const fun1 = () => {
-    //         // console.log("fun1 running");
-    //         const { width, height } = this.getImageDimensions();
-    //         // the image data has not arrived yet
-    //         if (width === 0 || height === 0) {
-    //             return;
-    //         }
-
-    //         if (this.scene !== undefined) {
-    //             return;
-    //         }
-
-    //         // processData();
-    //         if (this.textureData === undefined) {
-    //             return;
-    //         }
-
-    //         // Create texture from data
-    //         const texture = new DataTexture(
-    //             this.textureData,
-    //             width,
-    //             height,
-    //             RGBAFormat, // always RGBA
-    //             UnsignedByteType
-    //         );
-    //         texture.colorSpace = SRGBColorSpace; // Replaces encoding in newer versions
-
-    //         // the first data point in this.textureData is plotted on top-left corner
-    //         texture.flipY = true;
-    //         texture.needsUpdate = true;
-    //         texture.generateMipmaps = false;
-    //         texture.minFilter = NearestFilter;
-    //         texture.magFilter = NearestFilter;
-
-    //         // texture.encoding = THREE.sRGBEncoding;
-
-
-
-    //         const scene = new Scene();
-
-    //         // xy view range
-    //         let xMax = this.getXmax();
-    //         let xMin = this.getXmin();
-    //         if (xMax < xMin) {
-    //             const tmp = xMax;
-    //             xMax = xMin;
-    //             xMin = tmp;
-    //         }
-
-
-    //         const camLeft = -width / 2 + xMin;
-    //         const camRight = -width / 2 + xMax;
-
-    //         let yMax = this.getYmax();
-    //         let yMin = this.getYmin();
-    //         if (yMax < yMin) {
-    //             const tmp = yMax;
-    //             yMax = yMin;
-    //             yMin = tmp;
-    //         }
-
-    //         const camBottom = -height / 2 + yMin;
-    //         const camTop = -height / 2 + yMax;
-
-    //         const camera = new OrthographicCamera(
-    //             camLeft,
-    //             camRight,
-    //             camTop,
-    //             camBottom,
-    //             // -width / 2 / zoom,
-    //             // width / 2 / zoom,
-    //             // height / 2 / zoom,
-    //             // -height / 2 / zoom,
-    //             0.1,
-    //             10
-    //         );
-
-    //         camera.position.z = 5;
-    //         camera.lookAt(0, 0, 0);
-
-    //         const renderer = new WebGLRenderer({ alpha: true });
-
-    //         // the image area, outside of this area is blank
-    //         // this.calcImageSize();
-    //         renderer.setSize(this.getImageSize()[0], this.getImageSize()[1]);
-    //         mountRef.current!.appendChild(renderer.domElement);
-
-    //         const geometry = new PlaneGeometry(width, height);
-    //         const material = new MeshBasicMaterial({ map: texture, color: 0xffffff });
-    //         const plane = new Mesh(geometry, material);
-    //         scene.add(plane);
-
-    //         material.transparent = true;
-    //         material.premultipliedAlpha = true;  // if your data has alpha
-
-
-    //         renderer.render(scene, camera);
-    //         // console.log("recreate stuff");
-    //         this.texture = texture;
-    //         this.renderer = renderer;
-    //         this.camera = camera;
-    //         this.scene = scene;
-    //         this.autoXY = false;
-
-    //     };
-
-    //     const fun2 = () => {
-    //         // console.log("fun2 running");
-    //         if (!this.texture || !this.renderer || !this.scene || !this.camera) {
-    //             return;
-    //         }
-    //         // console.log("fun2 running A");
-    //         const { width, height } = this.getImageDimensions();
-    //         // if (this.playing === true) {
-    //         // processData();
-    //         // }
-
-    //         // update cursor readout
-    //         if (this.lastMouesPositions[0] > -10000) {
-    //             this.handleMouseMoveOnImage(...this.lastMouesPositions);
-    //         }
-
-
-    //         // console.log("fun2 running B");
-    //         this.texture.needsUpdate = true; // upload changes to GPU
-    //         this.texture.generateMipmaps = false;
-    //         // this.texture.minFilter = LinearFilter; // No mipmaps, direct filtering
-    //         this.texture.minFilter = NearestFilter;
-    //         this.texture.magFilter = NearestFilter;
-
-    //         this.renderer.render(this.scene, this.camera);
-    //     };
-
-    //     React.useEffect(fun1);
-    //     React.useEffect(fun2);
-
-    //     return (
-    //         <div
-    //             ref={mountRef}
-    //             style={{
-    //                 width: this.getImageSize()[0],
-    //                 height: this.getImageSize()[1],
-    //             }}
-
-    //             onMouseDown={(event) => {
-    //                 if (event.button !== 0) {
-    //                     return;
-    //                 }
-    //                 window.addEventListener("mousemove", this.panImageEventListener);
-    //                 window.addEventListener("mouseup", this.cancelPanImageEventListener);
-    //             }}
-
-    //             onMouseMove={(event: MouseEvent) => {
-    //                 // event.stopPropagation();
-    //                 if (this.renderer === undefined || this.camera === undefined) {
-    //                     return;
-    //                 }
-    //                 this.lastMouesPositions = [event.clientX, event.clientY];
-    //                 this.handleMouseMoveOnImage(event.clientX, event.clientY);
-    //             }}
-
-    //             onMouseLeave={() => {
-    //                 this.lastMouesPositions = [-10000, -10000];
-    //                 this.setXyzCursorValues((oldValues: any) => {
-    //                     return [-10000, -10000, -10000];
-    //                 })
-    //             }}
-
-    //             onWheel={(event) => {
-    //                 event.preventDefault();
-
-    //                 const zoomFactor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
-
-    //                 if (!this.camera || !mountRef.current) return;
-
-    //                 const rect = mountRef.current.getBoundingClientRect();
-
-    //                 // Mouse position in NDC (-1 to +1)
-    //                 const ndcX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    //                 const ndcY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-    //                 // Convert NDC → world coordinates
-    //                 const mouseWorld = new Vector3(ndcX, ndcY, 0);
-    //                 mouseWorld.unproject(this.camera);
-
-    //                 this.zoomImage(zoomFactor, mouseWorld.x, mouseWorld.y);
-    //             }}
-
-    //         >
-    //         </div>
-    //     );
-    // };
-    // calcImageXyzFromPixel = (pixelX: number, pixelY: number) => {
-    //     if (this.renderer === undefined || this.camera === undefined) {
-    //         return [-1, -1, -1]; // Invalid pixel coordinates
-    //     }
-    //     const rect = this.renderer.domElement.getBoundingClientRect();
-    //     const { width, height } = this.getImageDimensions();
-    //     const mouse = new Vector2();
-    //     const raycaster = new Raycaster();
-
-
-    //     // Convert mouse to normalized device coordinates
-    //     mouse.x = ((pixelX - rect.left) / rect.width) * 2 - 1;
-    //     mouse.y = -((pixelY - rect.top) / rect.height) * 2 + 1;
-
-    //     // Get a ray from the camera
-    //     raycaster.setFromCamera(mouse, this.camera);
-
-    //     // Define the target plane in world space
-    //     // Example: XY-plane at z = 0
-    //     const planeZ = 0;
-    //     const origin = raycaster.ray.origin;
-    //     const direction = raycaster.ray.direction;
-
-    //     // t is the distance along the ray to the plane
-    //     const t = (planeZ - origin.z) / direction.z;
-
-    //     if (t >= 0) {
-    //         const point = origin.clone().add(direction.clone().multiplyScalar(t));
-
-    //         // Convert to pixel coords
-    //         const pixelX = Math.floor(point.x + width / 2);
-    //         const pixelY = Math.floor(height / 2 + point.y);
-    //         const pixelZ = (height - 1 - pixelY) * width + pixelX;
-    //         const valueZ = this.getImageValue()[pixelZ];
-    //         // console.log(`Pixel coords: (${pixelX}, ${pixelY})`, pixelZ, valueZ);
-    //         // this.setXyzCursorValues((oldValues: any) => {
-    //         return [pixelX, pixelY, valueZ];
-    //         // })
-    //     } else {
-    //         return [-1, -1, -1]; // Invalid pixel coordinates
-    //     }
-    // }
-
-
-    // handleMouseMoveOnImage = (clientX: number, clientY: number) => {
-    //     const xyz = this.calcImageXyzFromPixel(clientX, clientY);
-
-    //     this.setXyzCursorValues((oldValues: any) => {
-    //         return xyz;
-    //     })
-    // }
-
-    // processData = (changeGeometry: boolean) => {
-    //     // pixelDepth is not used in displaying data
-    //     const { width, height, colorMode, pixelDepth } = this.getImageDimensions();
-
-    //     if (colorMode !== NDArray_ColorMode.mono && colorMode !== NDArray_ColorMode.rgb1 && colorMode !== NDArray_ColorMode.rgb2 && colorMode !== NDArray_ColorMode.rgb3) {
-    //         Log.error("We only support MONO, RGB1, RGB2, and RGB3 format data in Image widget");
-    //         return;
-    //     }
-
-    //     const size = width * height;
-
-    //     if (size === 0) {
-    //         Log.error("Image size is 0");
-    //         return;
-    //     }
-
-    //     if (this.textureData === undefined) {
-    //         // we always plot 8-bit RGBA
-    //         this.textureData = new Uint8Array(size * 4);
-    //     }
-
-    //     const dataRaw = this.getImageValue();
-    //     // console.log(width, height, colorMode, dataRaw.length)
-    //     if (Array.isArray(dataRaw) === false) {
-    //         Log.error("Image data should be an array");
-    //         return;
-    //     }
-
-    //     if (colorMode === NDArray_ColorMode.mono) {
-    //         if (dataRaw.length < size) {
-    //             Log.error("Image size smaller than dimension");
-    //             return;
-    //         }
-    //     } else if (colorMode === NDArray_ColorMode.rgb1 || colorMode === NDArray_ColorMode.rgb2 || colorMode === NDArray_ColorMode.rgb3) {
-    //         if (dataRaw.length < 3 * size) {
-    //             Log.error("Image size smaller than dimension, ...");
-    //             return;
-    //         }
-    //     }
-
-    //     if (changeGeometry) {
-    //         // image dimension on screen
-    //         this.calcImageSize();
-    //     }
-
-    //     // color
-    //     let minValue = this.getText()["zMin"];
-    //     let maxValue = this.getText()["zMax"];
-    //     if (this.getText()["autoZ"] === true && colorMode === NDArray_ColorMode.mono) {
-    //         minValue = Math.min(...dataRaw);
-    //         maxValue = Math.max(...dataRaw);
-    //     }
-
-    //     this.zMax = maxValue;
-    //     this.zMin = minValue;
-
-    //     const currentColorMap = this.getText()["colorMap"];
-    //     let colorMapFunc = colorMapFunctions[currentColorMap];
-    //     if (colorMapFunc === undefined) {
-    //         colorMapFunc = grayColorMap;
-    //     }
-
-    //     if (colorMode === NDArray_ColorMode.mono) {
-    //         for (let ii = 0; ii < size; ii++) {
-    //             const normalized = Math.max(Math.min(Math.round((dataRaw[ii] - minValue) / (maxValue - minValue) * 255)));
-    //             const [r, g, b] = colorMapFunc(normalized);
-    //             const idx = ii * 4;
-    //             this.textureData[idx] = r;
-    //             this.textureData[idx + 1] = g;
-    //             this.textureData[idx + 2] = b;
-    //             this.textureData[idx + 3] = 255; // opaque
-    //         }
-    //     } else if (colorMode === NDArray_ColorMode.rgb1) {
-    //         for (let ii = 0; ii < size; ii++) {
-    //             const rRaw = dataRaw[3 * ii];
-    //             const gRaw = dataRaw[3 * ii + 1];
-    //             const bRaw = dataRaw[3 * ii + 2];
-
-    //             const rNormalized = Math.max(Math.min(Math.round((rRaw - minValue) / (maxValue - minValue) * 255), 255), 0);
-    //             const gNormalized = Math.max(Math.min(Math.round((gRaw - minValue) / (maxValue - minValue) * 255), 255), 0);
-    //             const bNormalized = Math.max(Math.min(Math.round((bRaw - minValue) / (maxValue - minValue) * 255), 255), 0);
-
-    //             const idx = ii * 4;
-    //             this.textureData[idx] = rNormalized;
-    //             this.textureData[idx + 1] = gNormalized;
-    //             this.textureData[idx + 2] = bNormalized;
-    //             this.textureData[idx + 3] = 255; // opaque
-    //         }
-    //     } else if (colorMode === NDArray_ColorMode.rgb2) {
-    //         for (let ii = 0; ii < size; ii++) {
-    //             // i, j coordiate of pixel
-    //             const j = ii % width;
-    //             const i = (ii - j) / width;
-
-    //             const rRaw = dataRaw[3 * i * width + j];
-    //             const gRaw = dataRaw[3 * i * width + j + width];
-    //             const bRaw = dataRaw[3 * i * width + j + 2 * width];
-
-    //             const rNormalized = Math.max(Math.min(Math.round((rRaw - minValue) / (maxValue - minValue) * 255)));
-    //             const gNormalized = Math.max(Math.min(Math.round((gRaw - minValue) / (maxValue - minValue) * 255)));
-    //             const bNormalized = Math.max(Math.min(Math.round((bRaw - minValue) / (maxValue - minValue) * 255)));
-
-    //             const idx = ii * 4;
-    //             this.textureData[idx] = rNormalized;
-    //             this.textureData[idx + 1] = gNormalized;
-    //             this.textureData[idx + 2] = bNormalized;
-    //             this.textureData[idx + 3] = 255; // opaque
-    //         }
-    //     } else if (colorMode === NDArray_ColorMode.rgb3) {
-    //         for (let ii = 0; ii < size; ii++) {
-    //             const rRaw = dataRaw[ii];
-    //             const gRaw = dataRaw[size + ii];
-    //             const bRaw = dataRaw[size * 2 + ii];
-
-    //             const rNormalized = Math.max(Math.min(Math.round((rRaw - minValue) / (maxValue - minValue) * 255)));
-    //             const gNormalized = Math.max(Math.min(Math.round((gRaw - minValue) / (maxValue - minValue) * 255)));
-    //             const bNormalized = Math.max(Math.min(Math.round((bRaw - minValue) / (maxValue - minValue) * 255)));
-
-    //             const idx = ii * 4;
-    //             this.textureData[idx] = rNormalized;
-    //             this.textureData[idx + 1] = gNormalized;
-    //             this.textureData[idx + 2] = bNormalized;
-    //             this.textureData[idx + 3] = 255; // opaque
-    //         }
-    //     } else {
-
-    //     }
-    // };
-
-
-    // calcPixelSize = () => {
-    //     const { width, height } = this.getImageDimensions();
-
-    //     if (width === 0 || height === 0) {
-    //         return [1, 1];
-    //     }
-
-    //     if (this.camera === undefined || this.scene === undefined || this.renderer === undefined) {
-    //         return [1, 1];
-    //     }
-    //     const camera = this.camera;
-
-    //     const viewportWidthInWorld = camera.right - camera.left;
-    //     const viewportHeightInWorld = camera.top - camera.bottom;
-
-    //     const worldPerPixelX = this.renderer?.domElement.clientWidth / viewportWidthInWorld;
-    //     const worldPerPixelY = this.renderer?.domElement.clientHeight / viewportHeightInWorld;
-    //     if (worldPerPixelX === undefined || worldPerPixelY === undefined) {
-    //         return [1, 1];
-    //     } else {
-    //         return [worldPerPixelX, worldPerPixelY];
-    //     }
-    // }
-
-    // panImageEventListener = (e: any) => {
-    //     const dx = e.movementX;
-    //     const dy = e.movementY;
-    //     this.panImage(dx, dy);
-    // };
-
-    // cancelPanImageEventListener = (e: any) => {
-    //     window.removeEventListener("mousemove", this.panImageEventListener);
-    //     window.removeEventListener("mouseup", this.cancelPanImageEventListener);
-    // }
-
-    /**
-     * Get 1-D waveform data
-     */
-    getImageValue = () => {
-        if (this.playing === false) {
-            return this.imageValueBackup;
-        }
-        // {index: number, value: number[]}
-        const choiceValue = g_widgets1.getChannelValue(this.getChannelNames()[0]) as any;
-
-        if (typeof choiceValue === "object") {
-            return choiceValue["value"];
-        }
-        return undefined;
-    }
-
-
-    // getImageDimensions = (): { width: number, height: number, colorMode: NDArray_ColorMode, pixelDepth: number } => {
-    //     if (this.playing === false) {
-    //         return this.imageDimensionsBackup;
-    //     }
-
-    //     try {
-    //         const channel = g_widgets1.getTcaChannel(this.getChannelNames()[0]);
-    //         const dbrData = channel.getDbrData();
-    //         if (dbrData !== undefined) {
-    //             const dimension = dbrData["dimension"];
-    //             const attribute = dbrData["attribute"];
-    //             const valueObj = dbrData["value"] as any as { value: any, index: number };
-
-    //             const valueIndex = valueObj["index"];
-    //             let pixelDepth = 0; // 8-bit
-
-    //             if (valueIndex === 0) {
-    //                 // boolean[] for value
-    //                 pixelDepth = 1;
-    //             } else if (valueIndex === 1 || valueIndex === 5) {
-    //                 // byte[] or ubyte[], 8-bit
-    //                 pixelDepth = 8;
-    //             } else if (valueIndex === 2 || valueIndex === 6) {
-    //                 // short[] or ushort[], 16-bit
-    //                 pixelDepth = 16;
-    //             } else if (valueIndex === 3 || valueIndex === 7) {
-    //                 // int[] or uint[], 32-bit
-    //                 pixelDepth = 32;
-    //             } else if (valueIndex === 4 || valueIndex === 8) {
-    //                 // long[] or ulong, 64-bit
-    //                 pixelDepth = 64;
-    //             } else if (valueIndex === 9 || valueIndex === 10) {
-    //                 // float[] or double[]
-    //                 pixelDepth = 8;
-    //             }
-
-
-
-    //             if (dimension !== undefined && dimension.length >= 2) {
-    //                 const dimension0 = dimension[0];
-    //                 const dimension1 = dimension[1];
-    //                 const dimension2 = dimension[2];
-
-    //                 // get color mode, default mono
-    //                 let colorMode = NDArray_ColorMode.mono;
-    //                 if (Array.isArray(attribute) && attribute.length >= 1) {
-    //                     const valueObj = attribute[0]["value"];
-    //                     if (valueObj !== undefined) {
-    //                         const colorModeValue = valueObj["value"];
-    //                         if (colorModeValue !== undefined && NDArray_ColorMode[colorModeValue] !== undefined) {
-    //                             colorMode = colorModeValue;
-    //                         }
-    //                     }
-    //                 }
-
-
-    //                 if (colorMode === NDArray_ColorMode.mono) {
-    //                     // mono color
-    //                     if (typeof dimension0["size"] === "number" && typeof dimension1["size"] === "number") {
-    //                         return {
-    //                             width: dimension0["size"],
-    //                             height: dimension1["size"],
-    //                             colorMode: colorMode,
-    //                             pixelDepth: pixelDepth
-    //                         };
-    //                     }
-    //                 } else if (colorMode === NDArray_ColorMode.rgb1) {
-    //                     if (typeof dimension2["size"] === "number" && typeof dimension1["size"] === "number") {
-    //                         return {
-    //                             width: dimension[1]["size"],
-    //                             height: dimension[2]["size"],
-    //                             colorMode: colorMode,
-    //                             pixelDepth: pixelDepth
-    //                         };
-    //                     }
-
-    //                 } else if (colorMode === NDArray_ColorMode.rgb2) {
-    //                     if (typeof dimension0["size"] === "number" && typeof dimension2["size"] === "number") {
-    //                         return {
-    //                             width: dimension[0]["size"],
-    //                             height: dimension[2]["size"],
-    //                             colorMode: colorMode,
-    //                             pixelDepth: pixelDepth
-    //                         };
-    //                     }
-
-    //                 } else if (colorMode === NDArray_ColorMode.rgb3) {
-    //                     if (typeof dimension0["size"] === "number" && typeof dimension1["size"] === "number") {
-    //                         return {
-    //                             width: dimension[0]["size"],
-    //                             height: dimension[1]["size"],
-    //                             colorMode: colorMode,
-    //                             pixelDepth: pixelDepth
-    //                         };
-    //                     }
-    //                 }
-
-    //             }
-    //         }
-    //     } catch (e) {
-    //         Log.error("Image getImageDimensions error: ", e);
-    //     }
-    //     return { width: 0, height: 0, colorMode: NDArray_ColorMode.mono, pixelDepth: 0 };
-    // }
 
     // --------------------- getters -----------------------
 
@@ -1046,85 +261,6 @@ export class Image extends BaseWidget {
     }
 
     // -------------------- helper functions ----------------
-
-    // getXmin = () => {
-    //     const { width, height } = this.getImageDimensions();
-    //     if (this.autoXY === true) {
-    //         return 0;
-    //     } else {
-    //         return this.getAllText()["xMin"];
-    //     }
-    // }
-
-    // getXmax = () => {
-    //     const { width, height } = this.getImageDimensions();
-    //     if (this.autoXY === true) {
-    //         return width;
-    //     } else {
-    //         return this.getText()["xMax"];
-    //     }
-    // }
-
-    // getYmin = () => {
-    //     const { width, height } = this.getImageDimensions();
-    //     if (this.autoXY === true) {
-    //         return 0;
-    //     } else {
-    //         return this.getText()["yMin"];
-    //     }
-    // }
-
-    // getYmax = () => {
-    //     const { width, height } = this.getImageDimensions();
-    //     if (this.autoXY === true) {
-    //         return height;
-    //     } else {
-    //         return this.getText()["yMax"];
-    //     }
-    // }
-
-    /**
-     * compute the image size in unite of screen pixel
-     */
-    getImageSize = () => {
-        return this.imageSize;
-    }
-
-    /**
-     * Computer the display area size in unit of image pixels
-     *
-     * The result is written to this.imageSize
-     * 
-     */
-    // calcImageSize = () => {
-    //     const xMin = this.getXmin();
-    //     const xMax = this.getXmax();
-    //     const yMin = this.getYmin();
-    //     const yMax = this.getYmax();
-    //     const width = xMax - xMin;
-    //     const height = yMax - yMin;
-
-    //     if (width === 0 || height === 0) {
-    //         // return [5, 5];
-    //         this.imageSize = [0, 0];
-    //         return;
-    //     }
-    //     const containerWidth = this.getAllStyle()["width"] - this.axisWidth - this.colorMapWidth;
-    //     const containerHeight = this.getAllStyle()["height"] - this.axisWidth - this.configHeight;
-    //     if (containerHeight <= 0 || containerWidth <= 0) {
-    //         // return [5, 5];
-    //         this.imageSize = [0, 0];
-    //         return;
-    //     }
-    //     let result: [number, number] = [0, 0];
-    //     if (containerWidth / containerHeight > width / height) {
-    //         result = [containerHeight * width / height, containerHeight];
-    //     } else {
-    //         result = [containerWidth, containerWidth * height / width];
-
-    //     }
-    //     this.imageSize = result;
-    // }
 
     mapDbrDataWitNewData = (newDbrData: any) => {
 
@@ -1155,49 +291,7 @@ export class Image extends BaseWidget {
 
         // }
     }
-
-
-    formatScalarValue = (channelValueElement: number | string | boolean | undefined): string => {
-
-
-        if (typeof channelValueElement === "number") {
-            const scale = Math.max(this.getAllText()["scale"], 0);
-            const format = this.getAllText()["format"];
-            if (format === "decimal") {
-                return channelValueElement.toFixed(scale);
-            } else if (format === "default") {
-                // const channelName = this.getChannelNames()[0];
-                // const defaultScale = g_widgets1.getChannelPrecision(channelName);
-                // if (defaultScale !== undefined) {
-                //     return channelValueElement.toFixed(defaultScale);
-                // } else {
-                return channelValueElement.toFixed(scale);
-                // }
-            } else if (format === "exponential") {
-                return channelValueElement.toExponential(scale);
-            } else if (format === "hexadecimal") {
-                return `0x${channelValueElement.toString(16)}`;
-            } else if (format === "string") {
-                // use a number array to represent a string
-                // MacOS ignores the non-displayable characters, but Linux shows rectangle for these characters
-                if (channelValueElement >= 32 && channelValueElement <= 126) {
-                    return `${String.fromCharCode(channelValueElement)}`;
-                } else {
-                    return "";
-                }
-            } else {
-                return `${channelValueElement}`;
-            }
-        } else {
-            if (g_widgets1.isEditing() === true) {
-                return `${channelValueElement}`;
-            } else {
-                return `${channelValueElement}`;
-            }
-
-        }
-    };
-
+    
     processChannelNames(widgetMacros: [string, string][] = [], removeDuplicated: boolean = true) {
         for (const regionOfInterest of this.getRegionsOfInterest()) {
             this.getChannelNamesLevel0().push(
@@ -1212,6 +306,22 @@ export class Image extends BaseWidget {
 
     }
 
+
+    /**
+     * Get 1-D waveform data
+     */
+    getImageValue = () => {
+        if (this.playing === false) {
+            return this.imageValueBackup;
+        }
+        // {index: number, value: number[]}
+        const choiceValue = g_widgets1.getChannelValue(this.getChannelNames()[0]) as any;
+
+        if (typeof choiceValue === "object") {
+            return choiceValue["value"];
+        }
+        return undefined;
+    }
 
     // -------------------------- tdl -------------------------------
 
@@ -1240,49 +350,63 @@ export class Image extends BaseWidget {
 
     jobsAsEditingModeBegins(): void {
         super.jobsAsEditingModeBegins();
-        this.resizeRoiTopHandlers = [];
-        this.resizeRoiTopHandlersMouseUp = [];
-        this.resizeRoiBottomHandlers = [];
-        this.resizeRoiBottomHandlersMouseUp = [];
-        this.resizeRoiLeftHandlers = [];
-        this.resizeRoiLeftHandlersMouseUp = [];
-        this.resizeRoiRightHandlers = [];
-        this.resizeRoiRightHandlersMouseUp = [];
-        this.resetImage();
+        // this.resizeRoiTopHandlers = [];
+        // this.resizeRoiTopHandlersMouseUp = [];
+        // this.resizeRoiBottomHandlers = [];
+        // this.resizeRoiBottomHandlersMouseUp = [];
+        // this.resizeRoiLeftHandlers = [];
+        // this.resizeRoiLeftHandlersMouseUp = [];
+        // this.resizeRoiRightHandlers = [];
+        // this.resizeRoiRightHandlersMouseUp = [];
+        // this.resetImage();
     }
 
 
     jobsAsOperatingModeBegins(): void {
         super.jobsAsOperatingModeBegins();
-        // this.autoXY = this.getText()["initialAutoXY"];
+        // this.getPlot().resetToTextDefaults();
 
-        this.getRegionsOfInterest().forEach((roi, index) => {
-            this.resizeRoiTopHandlers[index] = (e: any) => {
-                resizeRoiTopHandler(this, e, index);
-            };
-            this.resizeRoiTopHandlersMouseUp[index] = (e: any) => {
-                resizeRoiTopHandlerMouseUp(this, e, index);
-            };
-            this.resizeRoiBottomHandlers[index] = (e: any) => {
-                resizeRoiBottomHandler(this, e, index);
-            };
-            this.resizeRoiBottomHandlersMouseUp[index] = (e: any) => {
-                resizeRoiBottomHandlerMouseUp(this, e, index);
-            };
-            this.resizeRoiLeftHandlers[index] = (e: any) => {
-                resizeRoiLeftHandler(this, e, index);
-            };
-            this.resizeRoiLeftHandlersMouseUp[index] = (e: any) => {
-                resizeRoiLeftHandlerMouseUp(this, e, index);
-            };
-            this.resizeRoiRightHandlers[index] = (e: any) => {
-                resizeRoiRightHandler(this, e, index);
-            };
-            this.resizeRoiRightHandlersMouseUp[index] = (e: any) => {
-                resizeRoiRightHandlerMouseUp(this, e, index);
-            };
-        })
+        // this.getRegionsOfInterest().forEach((roi, index) => {
+        //     this.resizeRoiTopHandlers[index] = (e: any) => {
+        //         resizeRoiTopHandler(this, e, index);
+        //     };
+        //     this.resizeRoiTopHandlersMouseUp[index] = (e: any) => {
+        //         resizeRoiTopHandlerMouseUp(this, e, index);
+        //     };
+        //     this.resizeRoiBottomHandlers[index] = (e: any) => {
+        //         resizeRoiBottomHandler(this, e, index);
+        //     };
+        //     this.resizeRoiBottomHandlersMouseUp[index] = (e: any) => {
+        //         resizeRoiBottomHandlerMouseUp(this, e, index);
+        //     };
+        //     this.resizeRoiLeftHandlers[index] = (e: any) => {
+        //         resizeRoiLeftHandler(this, e, index);
+        //     };
+        //     this.resizeRoiLeftHandlersMouseUp[index] = (e: any) => {
+        //         resizeRoiLeftHandlerMouseUp(this, e, index);
+        //     };
+        //     this.resizeRoiRightHandlers[index] = (e: any) => {
+        //         resizeRoiRightHandler(this, e, index);
+        //     };
+        //     this.resizeRoiRightHandlersMouseUp[index] = (e: any) => {
+        //         resizeRoiRightHandlerMouseUp(this, e, index);
+        //     };
+        // })
 
-        this.resetImage();
+        const text = this.getText() as type_Image_text_tdl;
+        const plot = this.getPlot();
+        // plot.autoXY = text[""];
+        const info = plot.getImageInfo();
+        plot.setImageInfo({
+            ...info,
+            imageShownXmin: text["xMin"],
+            imageShownXmax: text["xMax"],
+            imageShownYmin: text["yMin"],
+            imageShownYmax: text["yMax"],
+            zMin: text["zMin"],
+            zMax: text["zMax"],
+            autoZ: text["autoZ"],
+            colorMap: text["colorMap"] ?? "gray",
+        });
     }
 }

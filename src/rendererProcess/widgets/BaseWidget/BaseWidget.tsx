@@ -1226,7 +1226,7 @@ export abstract class BaseWidget {
         return this._style;
     };
 
-    getText = (): Record<string, any> => {
+    getText = () => {
         return this._text;
     };
 
