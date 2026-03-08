@@ -726,7 +726,6 @@ export class TcaChannel {
             if (dbrData["type"] !== undefined) {
                 dbrDataType = dbrData["type"];
             }
-
             if (dbrDataType === "number") {
                 const result = parseFloat(`${dbrData["value"]}`);
                 if (isNaN(result)) {
@@ -788,6 +787,7 @@ export class TcaChannel {
             if (pvaType === undefined) {
                 return undefined;
             }
+            
             let subRequest = "";
             if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
                 subRequest = "value";

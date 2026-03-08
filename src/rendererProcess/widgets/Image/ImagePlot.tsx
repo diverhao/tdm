@@ -8,6 +8,7 @@ import { NDArray_ColorMode } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { colorMapFunctions, grayColorMap, colorMapArrays, grayColorMapArray } from "./ImageColorMaps";
 import { ImageConfigPage } from "./ImageConfigPage";
+import { ElementRois, readRoiPvValue } from "./ImageRoi";
 
 
 export type type_Image_info = {
@@ -110,6 +111,19 @@ export class ImagePlot {
     // autoXY: boolean = true;
 
     private _configPage: ImageConfigPage;
+
+    /**
+     * Registry of per-ROI state updaters.  Each `ElementRoi` registers
+     * its setters here on mount and unregisters on unmount.  Called by
+     * `mapDbrDataWitNewData()` to push PV-driven changes into the React
+     * state of the overlay boxes.
+     */
+    roiUpdaters: Map<number, {
+        setRoiX: (v: number) => void;
+        setRoiY: (v: number) => void;
+        setRoiW: (v: number) => void;
+        setRoiH: (v: number) => void;
+    }> = new Map();
 
     constructor(mainWidget: Image) {
         this._mainWidget = mainWidget;
@@ -335,6 +349,10 @@ export class ImagePlot {
             material.premultipliedAlpha = true;  // if your data has alpha
 
 
+            // Ensure the canvas sits below the ROI overlay (z-index: 0 < 1)
+            renderer.domElement.style.position = "relative";
+            renderer.domElement.style.zIndex = "0";
+
             renderer.render(scene, camera);
             // console.log("recreate stuff");
             this.texture = texture;
@@ -380,6 +398,7 @@ export class ImagePlot {
                 style={{
                     width: this.getPlotWidth(),
                     height: this.getPlotHeight(),
+                    position: "relative",
                 }}
 
                 onMouseDown={(event) => {
@@ -424,7 +443,7 @@ export class ImagePlot {
                 }}
 
             >
-
+                <ElementRois plot={this} />
             </div>
         );
     };
@@ -1019,6 +1038,30 @@ export class ImagePlot {
 
         // (6)
         this.generateTextureData(colorMode, size, imageWidth, dataRaw, minValue, maxValue, colorMapFunc);
+
+        // (7) Sync ROI overlays with their PV values.
+        this.updateRoisFromPvs();
+    };
+
+    /**
+     * Read the current PV values for every registered ROI and push them
+     * into the React state so the overlay boxes stay in sync with
+     * externally-updated PVs.
+     */
+    updateRoisFromPvs = () => {
+        const rois = this.getMainWidget().getRegionsOfInterest();
+        for (const [index, updaters] of this.roiUpdaters) {
+            const roi = rois[index];
+            if (roi === undefined) continue;
+            const x = readRoiPvValue(roi.xPv, undefined);
+            const y = readRoiPvValue(roi.yPv, undefined);
+            const w = readRoiPvValue(roi.widthPv, undefined);
+            const h = readRoiPvValue(roi.heightPv, undefined);
+            if (x !== undefined) updaters.setRoiX(x);
+            if (y !== undefined) updaters.setRoiY(y);
+            if (w !== undefined) updaters.setRoiW(Math.max(1, w));
+            if (h !== undefined) updaters.setRoiH(Math.max(1, h));
+        }
     };
 
     /**

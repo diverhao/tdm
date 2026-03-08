@@ -22,7 +22,7 @@ import { TextEditor } from "../../../rendererProcess/widgets/TextEditor/TextEdit
 import { LogViewer } from "../../../rendererProcess/widgets/LogViewer/LogViewer";
 import { PvMonitor } from "../../../rendererProcess/widgets/PvMonitor/PvMonitor";
 import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/FileConverter";
-import { ChannelSeverity, TcaChannel } from "../../../rendererProcess/channel/TcaChannel";
+import { ChannelSeverity, pvaValueDisplayType, TcaChannel } from "../../../rendererProcess/channel/TcaChannel";
 import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/ChannelGraph";
 import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
 import { Repeater } from "../../../rendererProcess/widgets/Repeater/Repeater";
@@ -950,6 +950,7 @@ export class IpcManagerOnDisplayWindow {
 
             const channel = g_widgets1.getTcaChannel(channelName);
             channel.setFullPvaType(fullPvaType);
+            channel.setPvaValueDisplayType(pvaValueDisplayType.PRIMITIVE_VALUE_FIELD);
         } catch (e) {
             const readWriteIos = g_widgets1.getReadWriteIos();
             readWriteIos.rejectIo(ioId, `${e}`);

@@ -1,314 +1,430 @@
 /**
- * ROI (Region of Interest) elements and resize handlers for the
- * Image widget.
+ * ROI (Region of Interest) overlay elements for the Image widget.
  *
- * Each ROI is a draggable/resizable rectangle overlaid on the image.
- * The four edges can be resized independently; the resulting pixel
- * coordinates are written back to local PVs via {@link updateRoiPvs}.
+ * Each ROI is stored in **image-pixel coordinates** (matching the axes)
+ * and rendered as a CSS-positioned rectangle overlay on the three.js canvas.
+ * The overlay automatically tracks with pan/zoom because screen positions
+ * are recomputed from the current view range (`imageInfo`) on every render.
+ *
+ * Interactions:
+ * - **Move**: mouseDown on the ROI interior → drag to reposition
+ * - **Resize**: mouseDown on an edge handle → drag to resize
+ * - On mouseUp the updated image-pixel position/size is written to the
+ *   four EPICS PVs (x, y, width, height) defined in `regionsOfInterest`.
  */
 import * as React from "react";
-import type { Image } from "./Image";
+import type { ImagePlot } from "./ImagePlot";
 import { TcaChannel } from "../../channel/TcaChannel";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { Log } from "../../../common/Log";
 
-// ───────────────────── resize handlers ─────────────────────
+// ────────────────────── PV helpers ──────────────────────
 
-export const resizeRoiTopHandler = (image: Image, event: MouseEvent | undefined, index: number) => {
-    if (event === undefined) {
-        return;
-    }
-    const dx = event.movementX;
-    const dy = event.movementY;
-    const setRoiTop = image.setRoisTop[index];
-    const setRoiHeight = image.setRoisHeight[index];
-    if (setRoiHeight === undefined || setRoiTop === undefined) {
-        return;
-    }
-    setRoiTop((oldTop: number) => {
-        return Math.max(oldTop + dy, 0);
-    });
-    setRoiHeight((oldHeight: number) => {
-        return Math.max(10, oldHeight - dy);
-    });
+/** Check if a PV name is a non-empty, recognized channel. */
+const isValidRoiPv = (pvName: string): boolean => {
+    if (!pvName) return false;
+    const kind = TcaChannel.checkChannelName(pvName);
+    return kind !== undefined;
 };
-
-// resizingRoi = false;
-
-export const resizeRoiTopHandlerMouseUp = (image: Image, event: MouseEvent | undefined, index: number) => {
-    // image.resizingRoi = false;
-    updateRoiPvs(image, index);
-    window.removeEventListener("mousemove", image.resizeRoiTopHandlers[index]);
-    window.removeEventListener("mouseup", image.resizeRoiTopHandlersMouseUp[index]);
-};
-
-export const resizeRoiBottomHandler = (image: Image, event: MouseEvent | undefined, index: number) => {
-    if (event === undefined) {
-        return;
-    }
-    const dx = event.movementX;
-    const dy = event.movementY;
-    const setRoiHeight = image.setRoisHeight[index];
-    if (setRoiHeight === undefined) {
-        return;
-    }
-
-    setRoiHeight((oldHeight: number) => {
-        return Math.max(oldHeight + dy, 10);
-    });
-};
-
-export const resizeRoiBottomHandlerMouseUp = (image: Image, event: MouseEvent | undefined, index: number) => {
-    // image.resizingRoi = false;
-    updateRoiPvs(image, index);
-    window.removeEventListener("mousemove", image.resizeRoiBottomHandlers[index]);
-    window.removeEventListener("mouseup", image.resizeRoiBottomHandlersMouseUp[index]);
-};
-
-export const resizeRoiLeftHandler = (image: Image, event: MouseEvent | undefined, index: number) => {
-    if (event === undefined) {
-        return;
-    }
-    const dx = event.movementX;
-    const dy = event.movementY;
-    const setRoiLeft = image.setRoisLeft[index];
-    const setRoiWidth = image.setRoisWidth[index];
-    if (setRoiLeft === undefined || setRoiWidth === undefined) {
-        return;
-    }
-
-    setRoiLeft((oldLeft: number) => {
-        return Math.max(0, oldLeft + dx);
-    });
-    setRoiWidth((oldWidth: number) => {
-        return Math.max(10, oldWidth - dx);
-    });
-};
-
-export const resizeRoiLeftHandlerMouseUp = (image: Image, event: MouseEvent | undefined, index: number) => {
-    // image.resizingRoi = false;
-    updateRoiPvs(image, index);
-    window.removeEventListener("mousemove", image.resizeRoiLeftHandlers[index]);
-    window.removeEventListener("mouseup", image.resizeRoiLeftHandlersMouseUp[index]);
-};
-
-export const resizeRoiRightHandler = (image: Image, event: MouseEvent | undefined, index: number) => {
-    if (event === undefined) {
-        return;
-    }
-    const dx = event.movementX;
-    const dy = event.movementY;
-    const setRoiWidth = image.setRoisWidth[index];
-    if (setRoiWidth === undefined) {
-        return;
-    }
-    setRoiWidth((oldWidth: number) => {
-        return Math.max(10, oldWidth + dx);
-    });
-};
-
-export const resizeRoiRightHandlerMouseUp = (image: Image, event: MouseEvent | undefined, index: number) => {
-    // image.resizingRoi = false;
-    updateRoiPvs(image, index);
-    window.removeEventListener("mousemove", image.resizeRoiRightHandlers[index]);
-    window.removeEventListener("mouseup", image.resizeRoiRightHandlersMouseUp[index]);
-};
-
-// ───────────────────── ROI PV update ─────────────────────
 
 /**
- * Write the current ROI rectangle (in image coordinates) back to the
- * four local PVs (x, y, width, height).
+ * Build the channel-key that `g_widgets1.getTcaChannel()` expects.
+ *
+ * - **local / global** channels: strip the `=initValue` suffix and
+ *   append `@window_<id>` (matching what `processChannelNames` produces).
+ * - **ca / pva** channels: use the raw PV name as-is.
  */
-export const updateRoiPvs = (image: Image, index: number) => {
-    const elementRef = image.roisRef[index];
-    const roiData = image.getRegionsOfInterest()[index];
-    if (elementRef !== undefined && elementRef.current !== null) {
-        if (
-            (TcaChannel.checkChannelName(roiData["xPv"]) === "global"
-                || TcaChannel.checkChannelName(roiData["xPv"]) === "local")
-            &&
-            (TcaChannel.checkChannelName(roiData["yPv"]) === "global"
-                || TcaChannel.checkChannelName(roiData["yPv"]) === "local")
-            &&
-            (TcaChannel.checkChannelName(roiData["widthPv"]) === "global"
-                || TcaChannel.checkChannelName(roiData["widthPv"]) === "local")
-            &&
-            (TcaChannel.checkChannelName(roiData["heightPv"]) === "global"
-                || TcaChannel.checkChannelName(roiData["heightPv"]) === "local")
-        ) {
-
-            const rectRoi = elementRef.current.getBoundingClientRect();
-
-            const xyzTopLeft = image.calcImageXyzFromPixel(rectRoi.left, rectRoi.top);
-            // const xyzBottomLeft = image.calcImageXyzFromPixel(rectRoi.left, rectRoi.top + rectRoi.height);
-            // const xyzTopRight = image.calcImageXyzFromPixel(rectRoi.left + rectRoi.width, rectRoi.top);
-            const xyzBottomRight = image.calcImageXyzFromPixel(rectRoi.left + rectRoi.width, rectRoi.top + rectRoi.height);
-            try {
-
-                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-                const tcaChannelX = g_widgets1.getTcaChannel(roiData["xPv"].split("=")[0] + "@window_" + displayWindowId);
-                const tcaChannelY = g_widgets1.getTcaChannel(roiData["yPv"].split("=")[0] + "@window_" + displayWindowId);
-                const tcaChannelWidth = g_widgets1.getTcaChannel(roiData["widthPv"].split("=")[0] + "@window_" + displayWindowId);
-                const tcaChannelHeight = g_widgets1.getTcaChannel(roiData["heightPv"].split("=")[0] + "@window_" + displayWindowId);
-                // console.log("===> ", xyzTopLeft[0], rectRoi);
-                if (tcaChannelX.getDbrData()["value"] !== xyzTopLeft[0]) {
-                    tcaChannelX.put(displayWindowId, { value: xyzTopLeft[0] }, 1);
-                }
-                if (tcaChannelY.getDbrData()["value"] !== xyzTopLeft[1]) {
-                    tcaChannelY.put(displayWindowId, { value: xyzTopLeft[1] }, 1);
-                }
-                if (tcaChannelWidth.getDbrData()["value"] !== (xyzBottomRight[0] - xyzTopLeft[0])) {
-                    tcaChannelWidth.put(displayWindowId, { value: xyzBottomRight[0] - xyzTopLeft[0] }, 1);
-                }
-                if (tcaChannelHeight.getDbrData()["value"] !== (xyzBottomRight[1] - xyzTopLeft[1])) {
-                    tcaChannelHeight.put(displayWindowId, { value: xyzBottomRight[1] - xyzTopLeft[1] }, 1);
-                }
-
-            } catch (e) {
-                Log.error(e);
-            }
-        }
+const roiChannelKey = (pvName: string): string => {
+    const kind = TcaChannel.checkChannelName(pvName);
+    if (kind === "local" || kind === "global") {
+        const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+        return pvName.split("=")[0] + "@window_" + displayWindowId;
     }
+    return pvName;
+};
+
+/**
+ * Read the current numeric value of a channel PV.
+ * Returns `defaultValue` when the PV name is empty or the channel
+ * is not yet available.
+ */
+export function readRoiPvValue(pvName: string, defaultValue: number): number;
+export function readRoiPvValue(pvName: string, defaultValue: undefined): number | undefined;
+export function readRoiPvValue(pvName: string, defaultValue: number | undefined): number | undefined {
+    if (!isValidRoiPv(pvName)) return defaultValue;
+    try {
+        const channel = g_widgets1.getTcaChannel(roiChannelKey(pvName));
+        const val = channel.getDbrData()["value"];
+        if (typeof val === "number") return val;
+    } catch (_e) {
+        /* channel may not be available yet */
+    }
+    // Fallback: parse initial value from PV name  (e.g. "loc://roi_x=42")
+    const parts = pvName.split("=");
+    if (parts.length >= 2) {
+        const parsed = parseFloat(parts[parts.length - 1]);
+        if (!isNaN(parsed)) return parsed;
+    }
+    return defaultValue;
 }
 
-// ───────────────────── ElementRoi ─────────────────────
+/** Write a numeric value to a channel PV.
+ *  Silently skipped when the PV name is empty. */
+const writeRoiPvValue = (pvName: string, value: number) => {
+    console.log("write ROI pv")
+    if (!isValidRoiPv(pvName)) return;
+    try {
+        const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+        const channel = g_widgets1.getTcaChannel(roiChannelKey(pvName));
+        channel.put(displayWindowId, { value: value }, 1);
+    } catch (e) {
+        Log.error("ROI writeRoiPvValue failed for", pvName, "value", value, e);
+    }
+};
+
+// ────────────────────── ElementRois ──────────────────────
 
 /**
- * A single draggable/resizable ROI rectangle overlaid on the image.
+ * Renders all ROI overlays for the image plot.
+ * Positioned as an absolute overlay on top of the three.js canvas.
  */
-export const ElementRoi = ({ image, index }: { image: Image, index: number }) => {
+export const ElementRois = ({ plot }: { plot: ImagePlot }) => {
+    const rois = plot.getMainWidget().getRegionsOfInterest();
+    if (rois.length === 0 || g_widgets1.isEditing()) {
+        return null;
+    }
+    return (
+        <div
+            style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                pointerEvents: "none",
+                overflow: "hidden",
+                zIndex: 1,
+            }}
+        >
+            {rois.map((roi, index) => (
+                <ElementRoi key={index} plot={plot} index={index} roiData={roi} />
+            ))}
+        </div>
+    );
+};
 
-    const roiData = image.getRegionsOfInterest()[index];
-    if (roiData === undefined) {
+// ────────────────────── ElementRoi ──────────────────────
+
+/** Screen pixels for each edge resize hit-area. */
+const HANDLE_THICKNESS = 6;
+/** Minimum ROI dimension in image pixels. */
+const MIN_ROI_SIZE = 1;
+
+/**
+ * A single ROI rectangle overlaid on the image.
+ *
+ * Coordinates in image-pixel space:
+ * - `roiX` : left edge   (X increases rightward)
+ * - `roiY` : bottom edge (Y increases upward, matching the axis)
+ * - `roiW` : width
+ * - `roiH` : height
+ *
+ * The rectangle covers `[roiX, roiX+roiW] × [roiY, roiY+roiH]` in image space.
+ */
+const ElementRoi = ({
+    plot,
+    index,
+    roiData,
+}: {
+    plot: ImagePlot;
+    index: number;
+    roiData: {
+        xPv: string;
+        yPv: string;
+        widthPv: string;
+        heightPv: string;
+        color: string;
+    };
+}) => {
+    // ── state: image-pixel coordinates ──
+    // Seeded from PV values when available; otherwise use sensible defaults
+    // so the ROI box is always visible.
+    const DEFAULT_XY = 20;
+    const DEFAULT_WH = 50;
+
+    const [roiX, setRoiX] = React.useState(() => readRoiPvValue(roiData.xPv, DEFAULT_XY));
+    const [roiY, setRoiY] = React.useState(() => readRoiPvValue(roiData.yPv, DEFAULT_XY));
+    const [roiW, setRoiW] = React.useState(
+        () => Math.max(MIN_ROI_SIZE, readRoiPvValue(roiData.widthPv, DEFAULT_WH))
+    );
+    const [roiH, setRoiH] = React.useState(
+        () => Math.max(MIN_ROI_SIZE, readRoiPvValue(roiData.heightPv, DEFAULT_WH))
+    );
+
+    // Register state setters so ImagePlot.updateRoisFromPvs() can push
+    // PV-driven updates into this component.
+    React.useEffect(() => {
+        plot.roiUpdaters.set(index, { setRoiX, setRoiY, setRoiW, setRoiH });
+        return () => { plot.roiUpdaters.delete(index); };
+    }, [plot, index]);
+
+    /** Write the rounded image-pixel position/size to the four PVs. */
+    const writePvs = (x: number, y: number, w: number, h: number) => {
+        writeRoiPvValue(roiData.xPv, Math.round(x));
+        writeRoiPvValue(roiData.yPv, Math.round(y));
+        writeRoiPvValue(roiData.widthPv, Math.round(w));
+        writeRoiPvValue(roiData.heightPv, Math.round(h));
+    };
+
+    // ── coordinate conversion ──
+
+    const info = plot.getImageInfo();
+    const { imageShownXmin, imageShownXmax, imageShownYmin, imageShownYmax } = info;
+    const plotW = plot.getPlotWidth();
+    const plotH = plot.getPlotHeight();
+    const xRange = imageShownXmax - imageShownXmin;
+    const yRange = imageShownYmax - imageShownYmin;
+
+    if (xRange <= 0 || yRange <= 0 || plotW <= 0 || plotH <= 0) {
         return null;
     }
 
-    if (TcaChannel.checkChannelName(roiData["xPv"]) !== "local") {
-        return null;
-    }
+    // image-pixel → screen-pixel CSS values
+    const screenLeft = ((roiX - imageShownXmin) / xRange) * plotW;
+    const screenTop = ((imageShownYmax - roiY - roiH) / yRange) * plotH;
+    const screenWidth = (roiW / xRange) * plotW;
+    const screenHeight = (roiH / yRange) * plotH;
 
-    if (TcaChannel.checkChannelName(roiData["yPv"]) !== "local") {
-        return null;
-    }
+    // conversion factors for drag deltas (constant during a drag session)
+    const imgPerScreenX = xRange / plotW;
+    const imgPerScreenY = yRange / plotH;
 
-    if (TcaChannel.checkChannelName(roiData["widthPv"]) !== "local") {
-        return null;
-    }
+    const borderColor = roiData.color || "yellow";
 
-    if (TcaChannel.checkChannelName(roiData["heightPv"]) !== "local") {
-        return null;
-    }
+    // ── move handler ──
 
-    // initialized to a fixed number, after the local channel is created, the value will be updated
-    const [top, setTop] = React.useState(10);
-    const [left, setLeft] = React.useState(10);
-    const [width, setWidth] = React.useState(20);
-    const [height, setHeight] = React.useState(20);
+    const handleMoveStart = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        let curX = roiX;
+        let curY = roiY;
+        const curW = roiW;
+        const curH = roiH;
 
-    image.setRoisTop[index] = setTop;
-    image.setRoisLeft[index] = setLeft;
-    image.setRoisWidth[index] = setWidth;
-    image.setRoisHeight[index] = setHeight;
+        const onMove = (ev: MouseEvent) => {
+            curX += ev.movementX * imgPerScreenX;
+            curY -= ev.movementY * imgPerScreenY; // screen Y is flipped
+            setRoiX(curX);
+            setRoiY(curY);
+        };
+        const onUp = () => {
+            writePvs(curX, curY, curW, curH);
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+        };
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+    };
 
-    const elementRef = React.useRef<HTMLDivElement>(null);
-    image.roisRef[index] = elementRef;
+    // ── resize handlers ──
 
     /**
-     * After each rendering, update the local pv values
+     * Screen-top edge = image-space top (roiY + roiH).
+     * Dragging up (negative screen dY) increases roiH; roiY unchanged.
      */
-    React.useEffect(() => {
-        // ! there is a bug here, loop
-        // updateRoiPvs(image, index);
-    })
+    const handleResizeTopStart = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        let curH = roiH;
+        const onMove = (ev: MouseEvent) => {
+            const dImgY = -ev.movementY * imgPerScreenY;
+            curH = Math.max(MIN_ROI_SIZE, curH + dImgY);
+            setRoiH(curH);
+        };
+        const onUp = () => {
+            writePvs(roiX, roiY, roiW, curH);
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+        };
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+    };
+
+    /**
+     * Screen-bottom edge = image-space bottom (roiY).
+     * Dragging down (positive screen dY, negative image dY) decreases roiY,
+     * increases roiH.
+     */
+    const handleResizeBottomStart = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        let curY = roiY;
+        let curH = roiH;
+        const onMove = (ev: MouseEvent) => {
+            const dImgY = -ev.movementY * imgPerScreenY;
+            const newY = curY + dImgY;
+            const newH = curH - dImgY;
+            if (newH >= MIN_ROI_SIZE) {
+                curY = newY;
+                curH = newH;
+                setRoiY(curY);
+                setRoiH(curH);
+            }
+        };
+        const onUp = () => {
+            writePvs(roiX, curY, roiW, curH);
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+        };
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+    };
+
+    /**
+     * Screen-left edge = image-space left (roiX).
+     * Dragging left (negative screen dX, negative image dX) decreases roiX,
+     * increases roiW.
+     */
+    const handleResizeLeftStart = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        let curX = roiX;
+        let curW = roiW;
+        const onMove = (ev: MouseEvent) => {
+            const dImgX = ev.movementX * imgPerScreenX;
+            const newX = curX + dImgX;
+            const newW = curW - dImgX;
+            if (newW >= MIN_ROI_SIZE) {
+                curX = newX;
+                curW = newW;
+                setRoiX(curX);
+                setRoiW(curW);
+            }
+        };
+        const onUp = () => {
+            writePvs(curX, roiY, curW, roiH);
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+        };
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+    };
+
+    /**
+     * Screen-right edge = image-space right (roiX + roiW).
+     * Dragging right increases roiW; roiX unchanged.
+     */
+    const handleResizeRightStart = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        let curW = roiW;
+        const onMove = (ev: MouseEvent) => {
+            const dImgX = ev.movementX * imgPerScreenX;
+            curW = Math.max(MIN_ROI_SIZE, curW + dImgX);
+            setRoiW(curW);
+        };
+        const onUp = () => {
+            writePvs(roiX, roiY, curW, roiH);
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+        };
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+    };
+
+    // ── render ──
 
     return (
         <div
-            ref={elementRef}
             style={{
                 position: "absolute",
-                top: top,
-                left: left,
-                width: width,
-                height: height,
-                border: "solid 3px yellow",
-                boxSizing: "border-box",
+                left: screenLeft,
+                top: screenTop,
+                width: screenWidth,
+                height: screenHeight,
+                pointerEvents: "none",
             }}
         >
-            {/* top */}
+            {/* Visible border */}
             <div
                 style={{
                     position: "absolute",
-                    backgroundColor: "red",
-                    top: -5,
-                    left: 0,
-                    width: "100%",
-                    height: 10,
-                    cursor: "ns-resize",
+                    inset: 0,
+                    border: `2px solid ${borderColor}`,
+                    boxSizing: "border-box",
+                    pointerEvents: "none",
                 }}
-                onMouseDown={(event) => {
-                    // image.resizingRoi = true;
-                    window.addEventListener("mousemove", image.resizeRoiTopHandlers[index]);
-                    window.addEventListener("mouseup", image.resizeRoiTopHandlersMouseUp[index]);
-                }}
-            >
-            </div>
-            {/* left */}
-            <div
-                style={{
-                    position: "absolute",
-                    backgroundColor: "blue",
-                    top: 0,
-                    left: -5,
-                    height: "100%",
-                    width: 10,
-                    cursor: "ew-resize",
+            />
 
-                }}
-                onMouseDown={(event) => {
-                    // image.resizingRoi = true;
-                    window.addEventListener("mousemove", image.resizeRoiLeftHandlers[index]);
-                    window.addEventListener("mouseup", image.resizeRoiLeftHandlersMouseUp[index]);
-                }}
-            >
-            </div>
-            {/* bottom */}
+            {/* Move handle (interior) */}
             <div
                 style={{
                     position: "absolute",
-                    backgroundColor: "red",
-                    bottom: -5,
-                    left: 0,
-                    height: 10,
-                    width: "100%",
-                    cursor: "ns-resize",
+                    top: HANDLE_THICKNESS / 2,
+                    left: HANDLE_THICKNESS / 2,
+                    right: HANDLE_THICKNESS / 2,
+                    bottom: HANDLE_THICKNESS / 2,
+                    cursor: "move",
+                    pointerEvents: "auto",
                 }}
-                onMouseDown={(event) => {
-                    // image.resizingRoi = true;
-                    window.addEventListener("mousemove", image.resizeRoiBottomHandlers[index]);
-                    window.addEventListener("mouseup", image.resizeRoiBottomHandlersMouseUp[index]);
-                }}
-            >
-            </div>
-            {/* right */}
-            <div
-                style={{
-                    position: "absolute",
-                    backgroundColor: "cyan",
-                    top: 0,
-                    right: -5,
-                    height: "100%",
-                    width: 10,
-                    cursor: "ew-resize",
-                }}
-                onMouseDown={(event) => {
-                    // image.resizingRoi = true;
-                    window.addEventListener("mousemove", image.resizeRoiRightHandlers[index]);
-                    window.addEventListener("mouseup", image.resizeRoiRightHandlersMouseUp[index]);
-                }}
-            >
-            </div>
+                onMouseDown={handleMoveStart}
+            />
 
+            {/* Top resize handle */}
+            <div
+                style={{
+                    position: "absolute",
+                    top: -HANDLE_THICKNESS / 2,
+                    left: HANDLE_THICKNESS / 2,
+                    right: HANDLE_THICKNESS / 2,
+                    height: HANDLE_THICKNESS,
+                    cursor: "ns-resize",
+                    pointerEvents: "auto",
+                }}
+                onMouseDown={handleResizeTopStart}
+            />
+
+            {/* Bottom resize handle */}
+            <div
+                style={{
+                    position: "absolute",
+                    bottom: -HANDLE_THICKNESS / 2,
+                    left: HANDLE_THICKNESS / 2,
+                    right: HANDLE_THICKNESS / 2,
+                    height: HANDLE_THICKNESS,
+                    cursor: "ns-resize",
+                    pointerEvents: "auto",
+                }}
+                onMouseDown={handleResizeBottomStart}
+            />
+
+            {/* Left resize handle */}
+            <div
+                style={{
+                    position: "absolute",
+                    left: -HANDLE_THICKNESS / 2,
+                    top: HANDLE_THICKNESS / 2,
+                    bottom: HANDLE_THICKNESS / 2,
+                    width: HANDLE_THICKNESS,
+                    cursor: "ew-resize",
+                    pointerEvents: "auto",
+                }}
+                onMouseDown={handleResizeLeftStart}
+            />
+
+            {/* Right resize handle */}
+            <div
+                style={{
+                    position: "absolute",
+                    right: -HANDLE_THICKNESS / 2,
+                    top: HANDLE_THICKNESS / 2,
+                    bottom: HANDLE_THICKNESS / 2,
+                    width: HANDLE_THICKNESS,
+                    cursor: "ew-resize",
+                    pointerEvents: "auto",
+                }}
+                onMouseDown={handleResizeRightStart}
+            />
         </div>
-    )
-}
+    );
+};

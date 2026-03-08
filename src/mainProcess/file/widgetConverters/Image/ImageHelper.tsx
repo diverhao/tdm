@@ -7,92 +7,22 @@ import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/Globa
 import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
-import { type_Image_tdl, type_Image_roi } from "../../../../common/types/type_widget_tdl";
+import { type_Image_tdl, type_Image_roi, defaultImageTdl } from "../../../../common/types/type_widget_tdl";
 
 export class ImageHelper extends BaseWidgetHelper {
 
 
-    static _defaultTdl: type_Image_tdl = {
-        type: "Image",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(240, 240, 240, 1)",
-            // angle
-            transform: "rotate(0deg)",
-            // border, it is different from the "alarmBorder" below,
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // text
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: true,
-            invisibleInOperation: false,
-            // default, decimal, exponential, hexadecimal
-            format: "default",
-            // scale, >= 0
-            scale: 0,
-            // actually "alarm outline"
-            alarmBorder: true,
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-            colorMap: "parula", // "jet", "gray", ...
-            autoZ: true,
-            initialAutoXY: true,
-            zMin: 0,
-            zMax: 100,
-            xMin: 0,
-            xMax: 255,
-            yMin: 0,
-            yMax: 255,
-            // roiX1ChannelName: "loc://aaa",
-            // roiX2ChannelName: "loc://bbb",
-            // roiY1ChannelName: "loc://ccc",
-            // roiY2ChannelName: "loc://ddd",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        regionsOfInterest: [],
-    };
-
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_Image_tdl => {
-        const result = super.generateDefaultTdl(type);
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.regionsOfInterest = structuredClone(this._defaultTdl.regionsOfInterest)
-        return result as type_Image_tdl;
+    static generateDefaultTdl = (): type_Image_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultImageTdl["type"]);
+        return structuredClone({
+            ...defaultImageTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Image_tdl => {
         Log.info("\n------------", `Parsing "image"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Image");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm

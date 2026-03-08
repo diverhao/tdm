@@ -10,7 +10,7 @@ import { Log } from "../../../common/Log";
 import { OrthographicCamera, Scene, WebGLRenderer, Vector3, Vector2, DataTexture, UnsignedByteType, RGBAFormat, SRGBColorSpace, NearestFilter, MeshBasicMaterial, Mesh, Raycaster, PlaneGeometry } from "three";
 import { type_Image_tdl, defaultImageTdl, type_Image_text_tdl } from "../../../common/types/type_widget_tdl";
 import { colorMapFunctions, grayColorMap } from "./ImageColorMaps";
-import { ElementRoi, resizeRoiTopHandler, resizeRoiTopHandlerMouseUp, resizeRoiBottomHandler, resizeRoiBottomHandlerMouseUp, resizeRoiLeftHandler, resizeRoiLeftHandlerMouseUp, resizeRoiRightHandler, resizeRoiRightHandlerMouseUp } from "./ImageRoi";
+
 import { ImagePlot } from "./ImagePlot";
 import { getScaleWidthHeight } from "../../helperWidgets/SharedElements/Scale";
 
@@ -149,20 +149,7 @@ export class Image extends BaseWidget {
     lastMouesPositions: [number, number] = [-1, -1];
 
 
-    resizeRoiTopHandlers: any[] = [];
-    resizeRoiTopHandlersMouseUp: any[] = [];
-    resizeRoiBottomHandlers: any[] = [];
-    resizeRoiBottomHandlersMouseUp: any[] = [];
-    resizeRoiLeftHandlers: any[] = [];
-    resizeRoiLeftHandlersMouseUp: any[] = [];
-    resizeRoiRightHandlers: any[] = [];
-    resizeRoiRightHandlersMouseUp: any[] = [];
 
-    setRoisTop: any[] = [];
-    setRoisLeft: any[] = [];
-    setRoisWidth: any[] = [];
-    setRoisHeight: any[] = [];
-    roisRef: any[] = [];
 
     // imageSize: [number, number] = [5, 5];
 
@@ -303,7 +290,7 @@ export class Image extends BaseWidget {
         }
 
         super.processChannelNames(widgetMacros, removeDuplicated);
-
+        console.log("this. getChannel anmes", this.getChannelNames())
     }
 
 
@@ -351,15 +338,6 @@ export class Image extends BaseWidget {
     jobsAsEditingModeBegins(): void {
         super.jobsAsEditingModeBegins();
         this.getPlot().resetScene();
-        // this.resizeRoiTopHandlers = [];
-        // this.resizeRoiTopHandlersMouseUp = [];
-        // this.resizeRoiBottomHandlers = [];
-        // this.resizeRoiBottomHandlersMouseUp = [];
-        // this.resizeRoiLeftHandlers = [];
-        // this.resizeRoiLeftHandlersMouseUp = [];
-        // this.resizeRoiRightHandlers = [];
-        // this.resizeRoiRightHandlersMouseUp = [];
-        // this.resetImage();
     }
 
 
@@ -367,36 +345,8 @@ export class Image extends BaseWidget {
         super.jobsAsOperatingModeBegins();
         this.getPlot().resetScene();
 
-        // this.getRegionsOfInterest().forEach((roi, index) => {
-        //     this.resizeRoiTopHandlers[index] = (e: any) => {
-        //         resizeRoiTopHandler(this, e, index);
-        //     };
-        //     this.resizeRoiTopHandlersMouseUp[index] = (e: any) => {
-        //         resizeRoiTopHandlerMouseUp(this, e, index);
-        //     };
-        //     this.resizeRoiBottomHandlers[index] = (e: any) => {
-        //         resizeRoiBottomHandler(this, e, index);
-        //     };
-        //     this.resizeRoiBottomHandlersMouseUp[index] = (e: any) => {
-        //         resizeRoiBottomHandlerMouseUp(this, e, index);
-        //     };
-        //     this.resizeRoiLeftHandlers[index] = (e: any) => {
-        //         resizeRoiLeftHandler(this, e, index);
-        //     };
-        //     this.resizeRoiLeftHandlersMouseUp[index] = (e: any) => {
-        //         resizeRoiLeftHandlerMouseUp(this, e, index);
-        //     };
-        //     this.resizeRoiRightHandlers[index] = (e: any) => {
-        //         resizeRoiRightHandler(this, e, index);
-        //     };
-        //     this.resizeRoiRightHandlersMouseUp[index] = (e: any) => {
-        //         resizeRoiRightHandlerMouseUp(this, e, index);
-        //     };
-        // })
-
         const text = this.getText() as type_Image_text_tdl;
         const plot = this.getPlot();
-        // plot.autoXY = text[""];
         const info = plot.getImageInfo();
         plot.setImageInfo({
             ...info,
