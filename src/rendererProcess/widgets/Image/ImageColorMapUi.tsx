@@ -72,13 +72,13 @@ export const ElementSwitchColorMap = ({ image }: { image: Image }) => {
                     width: "100%",
                 }}
             >
-                <div>Color map: </div>
+                <div>Color map </div>
 
                 <select
                     style={{
                         width: "8em",
                         outline: "none",
-                        border: "1px solid black",
+                        border: "none",
                     }}
                     id="myDropdown"
                     value={colorMap}

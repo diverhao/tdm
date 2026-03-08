@@ -3,6 +3,7 @@ import type { ImagePlot } from "./ImagePlot";
 import { toolbarHeight } from "./Image";
 import { ElementSwitchColorMap } from "./ImageColorMapUi";
 import { NDArray_ColorMode } from "../../../common/GlobalVariables";
+import { g_widgets1 } from "../../global/GlobalVariables";
 
 /**
  * Owns the bottom config bar (toolbar) and the config page overlay
@@ -111,7 +112,8 @@ export class ImageConfigPage {
 
     /**
      * Toggle play/pause. When pausing, back up current data so the
-     * frozen frame keeps displaying.
+     * frozen frame keeps displaying.  When resuming, immediately
+     * reprocess with the latest live data and re-render.
      */
     setPlaying = (playing: boolean) => {
         const mainWidget = this._plot.getMainWidget();
@@ -119,18 +121,41 @@ export class ImageConfigPage {
             return;
         }
         if (playing === false) {
+            // Freeze: snapshot current data so the paused frame persists
             mainWidget.imageValueBackup = structuredClone(this._plot.getImageValue());
             mainWidget.imageDimensionsBackup = structuredClone(this._plot.extractImageInfo());
         } else {
+            // Resume: clear backup so getImageValue() reads live channel data
             mainWidget.imageValueBackup = [];
             mainWidget.imageDimensionsBackup = { imageWidth: -1, imageHeight: -1, colorMode: NDArray_ColorMode.mono, pixelDepth: 0 };
         }
         mainWidget.playing = playing;
+
+        if (playing === true) {
+            // Immediately refresh with the newest data and current config
+            this._plot.mapDbrDataWitNewData();
+            this._plot.updateCameraFrustum();
+        }
     };
 
     // ---- config bar (bottom toolbar) ----
 
     ElementConfigBar = () => {
+        if (g_widgets1.isEditing()) {
+            return (
+                <div
+                    style={{
+                        width: "100%",
+                        height: toolbarHeight,
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    }}
+                >
+                </div>
+            )
+        }
         return (
             <div
                 style={{
@@ -179,8 +204,6 @@ export class ImageConfigPage {
         );
     };
 
-    // ---- config page overlay ----
-
     ElementConfigPage = () => {
         if (!this.showConfigPage) {
             return null;
@@ -194,20 +217,42 @@ export class ImageConfigPage {
                     left: 5,
                     padding: 20,
                     boxSizing: "border-box",
-                    borderRadius: 10,
-                    backgroundColor: "rgba(150,150,150,0.5)",
-                    backdropFilter: "blur(10px)",
-                    border: "1px solid white",
-                    outline: "1px solid black",
                     textShadow: `-0.5px -0.5px 0 white, 0.5px -0.5px 0 white, -0.5px 0.5px 0 white, 0.5px 0.5px 0 white`,
                     zIndex: 100,
+                    background: "rgba(255, 255, 255, 0.15)",
+                    backdropFilter: "blur(2px) saturate(180%)",
+                    border: "1px solid rgba(255, 255, 255, 0.8)",
+                    borderRadius: "2rem",
+                    boxShadow: "0 8px 32px rgba(31, 38, 135, 0.2), inset 0 4px 20px rgba(255, 255, 255, 0.3)",
+                    overflow: "hidden",
                 }}
                 onMouseDown={(event) => event.stopPropagation()}
             >
+                {/* ::after pseudo-element equivalent */}
+                <div
+                    style={{
+                        content: "''",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        background: "rgba(255, 255, 255, 0.1)",
+                        borderRadius: "2rem",
+                        backdropFilter: "blur(1px)",
+                        boxShadow: "inset -10px -8px 0px -11px rgba(255, 255, 255, 1), inset 0px -9px 0px -8px rgba(255, 255, 255, 1)",
+                        opacity: 0.6,
+                        zIndex: -1,
+                        filter: "blur(1px) drop-shadow(10px 4px 6px black) brightness(115%)",
+                        pointerEvents: "none",
+                    }}
+                />
                 <div
                     style={{
                         display: "inline-flex",
                         flexDirection: "column",
+                        position: "relative",
+                        zIndex: 1,
                     }}
                 >
                     <this._ElementXrangeInputs />
@@ -292,7 +337,7 @@ export class ImageConfigPage {
         return (
             <div
                 style={{ display: "inline-flex", justifyContent: "center", alignItems: "center" }}
-                onMouseOver={() => this.setHintText("Set XY to manual range")}
+                onMouseOver={() => this.setHintText("Set XY to original range")}
                 onMouseLeave={() => this.setHintText("")}
                 onMouseDown={() => this.setImageXyRange()}
             >
@@ -350,13 +395,16 @@ export class ImageConfigPage {
     };
 
     private _ElementCursorReadout = () => {
-        const [values, setValues] = React.useState([0, 0, 0]);
+        const [values, setValues] = React.useState<[number | string, number | string, number | string]>([-10000, -10000, -10000]);
         this.setXyzCursorValues = setValues;
-        if (this.lastMousePositions[0] === -10000) {
+
+        // Mouse is outside the image data area → show nothing
+        if (values[0] === -10000) {
             return null;
         }
+
         return (
-            <div>
+            <div style={{ whiteSpace: "nowrap" }}>
                 ({values[0]}, {values[1]}, {values[2]})
             </div>
         );
@@ -372,7 +420,7 @@ export class ImageConfigPage {
         return (
             <div style={{ display: "inline-flex", flexDirection: "column", width: "100%" }}>
                 <div style={{ display: "inline-flex", flexDirection: "row", justifyContent: "space-between", width: "100%", marginBottom: 3, alignItems: "center" }}>
-                    <div>X min.:</div>
+                    <div>X min</div>
                     <form onSubmit={(e) => {
                         e.preventDefault();
                         const v = parseFloat(xMin);
@@ -380,14 +428,14 @@ export class ImageConfigPage {
                         plot.setImageInfo({ ...plot.getImageInfo(), imageShownXmin: v });
                         this.applyManualXyRange();
                     }}>
-                        <input style={{ width: "5em", outline: "none", border: "1px solid black" }} value={xMin} type="text"
+                        <input style={{ width: "5em", outline: "none", border: "none" }} value={xMin} type="text"
                             onChange={(e) => setXmin(e.target.value)}
                             onBlur={() => { if (`${plot.getImageInfo().imageShownXmin}` !== xMin) setXmin(`${plot.getImageInfo().imageShownXmin}`); }}
                         />
                     </form>
                 </div>
                 <div style={{ display: "inline-flex", flexDirection: "row", justifyContent: "space-between", width: "100%", marginBottom: 3, alignItems: "center" }}>
-                    <div>X max.:</div>
+                    <div>X max</div>
                     <form onSubmit={(e) => {
                         e.preventDefault();
                         const v = parseFloat(xMax);
@@ -395,7 +443,7 @@ export class ImageConfigPage {
                         plot.setImageInfo({ ...plot.getImageInfo(), imageShownXmax: v });
                         this.applyManualXyRange();
                     }}>
-                        <input style={{ width: "5em", outline: "none", border: "1px solid black" }} value={xMax} type="text"
+                        <input style={{ width: "5em", outline: "none", border: "none" }} value={xMax} type="text"
                             onChange={(e) => setXmax(e.target.value)}
                             onBlur={() => { if (`${plot.getImageInfo().imageShownXmax}` !== xMax) setXmax(`${plot.getImageInfo().imageShownXmax}`); }}
                         />
@@ -413,7 +461,7 @@ export class ImageConfigPage {
         return (
             <div style={{ display: "inline-flex", flexDirection: "column", width: "100%" }}>
                 <div style={{ display: "inline-flex", flexDirection: "row", justifyContent: "space-between", width: "100%", marginBottom: 3, alignItems: "center" }}>
-                    <div>Y min.:</div>
+                    <div>Y min</div>
                     <form onSubmit={(e) => {
                         e.preventDefault();
                         const v = parseFloat(yMin);
@@ -421,14 +469,14 @@ export class ImageConfigPage {
                         plot.setImageInfo({ ...plot.getImageInfo(), imageShownYmin: v });
                         this.applyManualXyRange();
                     }}>
-                        <input style={{ width: "5em", outline: "none", border: "1px solid black" }} value={yMin} type="text"
+                        <input style={{ width: "5em", outline: "none", border: "none" }} value={yMin} type="text"
                             onChange={(e) => setYmin(e.target.value)}
                             onBlur={() => { if (`${plot.getImageInfo().imageShownYmin}` !== yMin) setYmin(`${plot.getImageInfo().imageShownYmin}`); }}
                         />
                     </form>
                 </div>
                 <div style={{ display: "inline-flex", flexDirection: "row", justifyContent: "space-between", width: "100%", marginBottom: 3, alignItems: "center" }}>
-                    <div>Y max.:</div>
+                    <div>Y max</div>
                     <form onSubmit={(e) => {
                         e.preventDefault();
                         const v = parseFloat(yMax);
@@ -436,7 +484,7 @@ export class ImageConfigPage {
                         plot.setImageInfo({ ...plot.getImageInfo(), imageShownYmax: v });
                         this.applyManualXyRange();
                     }}>
-                        <input style={{ width: "5em", outline: "none", border: "1px solid black" }} value={yMax} type="text"
+                        <input style={{ width: "5em", outline: "none", border: "none" }} value={yMax} type="text"
                             onChange={(e) => setYmax(e.target.value)}
                             onBlur={() => { if (`${plot.getImageInfo().imageShownYmax}` !== yMax) setYmax(`${plot.getImageInfo().imageShownYmax}`); }}
                         />

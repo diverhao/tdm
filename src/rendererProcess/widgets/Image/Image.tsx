@@ -350,6 +350,7 @@ export class Image extends BaseWidget {
 
     jobsAsEditingModeBegins(): void {
         super.jobsAsEditingModeBegins();
+        this.getPlot().resetScene();
         // this.resizeRoiTopHandlers = [];
         // this.resizeRoiTopHandlersMouseUp = [];
         // this.resizeRoiBottomHandlers = [];
@@ -364,7 +365,7 @@ export class Image extends BaseWidget {
 
     jobsAsOperatingModeBegins(): void {
         super.jobsAsOperatingModeBegins();
-        // this.getPlot().resetToTextDefaults();
+        this.getPlot().resetScene();
 
         // this.getRegionsOfInterest().forEach((roi, index) => {
         //     this.resizeRoiTopHandlers[index] = (e: any) => {

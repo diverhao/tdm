@@ -137,6 +137,23 @@ export class ImagePlot {
         this._configPage = new ImageConfigPage(this);
     }
     
+    /**
+     * Tear down three.js objects so the next render cycle (fun1) will
+     * recreate them in the current DOM.  Call this when the React tree
+     * is remounted (e.g. editing ↔ operating mode switch).
+     */
+    resetScene = () => {
+        if (this.renderer) {
+            this.renderer.dispose();
+        }
+        this.texture = undefined;
+        this.renderer = undefined;
+        this.scene = undefined;
+        this.camera = undefined;
+        this.textureData = undefined;
+        this.mountRef = undefined;
+    };
+
     _Element = () => {
         return (
             <div
@@ -369,8 +386,21 @@ export class ImagePlot {
                     if (event.button !== 0) {
                         return;
                     }
+                    // Hide config page if it's open
+                    if (this._configPage.showConfigPage) {
+                        this._configPage.showConfigPage = false;
+                        this.getMainWidget().forceUpdate({});
+                    }
                     window.addEventListener("mousemove", this.panImageEventListener);
                     window.addEventListener("mouseup", this.cancelPanImageEventListener);
+                }}
+
+                onMouseMove={(event) => {
+                    this.handleMouseMoveOnImage(event.clientX, event.clientY);
+                }}
+
+                onMouseLeave={() => {
+                    this.handleMouseLeaveImage();
                 }}
 
                 onWheel={(event) => {
@@ -536,7 +566,6 @@ export class ImagePlot {
                     display: "inline-flex",
                     flexGrow: 0,
                     flexShrink: 0,
-                    backgroundColor: "rgba(255,255,0,1)",
                 }}
             >
                 <Scale
@@ -655,7 +684,6 @@ export class ImagePlot {
                     display: "inline-flex",
                     flexGrow: 0,
                     flexShrink: 0,
-                    backgroundColor: "rgba(0,255,255,1)",
                 }}
             >
                 <Scale
@@ -677,6 +705,90 @@ export class ImagePlot {
         )
     };
 
+
+    // ------------------ cursor readout --------------------
+
+    /**
+     * Convert screen (client) coordinates to image-pixel coordinates and
+     * look up the raw pixel value (z).  Updates the cursor readout in the
+     * config bar.  If the image-pixel position falls outside the actual
+     * image data, the readout is cleared.
+     */
+    handleMouseMoveOnImage = (clientX: number, clientY: number) => {
+        const configPage = this.getConfigPage();
+        if (!this.mountRef?.current || !this.camera) {
+            return;
+        }
+        const rect = this.mountRef.current.getBoundingClientRect();
+        const info = this.getImageInfo();
+        const { imageShownXmin, imageShownXmax, imageShownYmin, imageShownYmax,
+            imageWidth, imageHeight, colorMode } = info;
+
+        // Fraction across the plot area (0 = left, 1 = right)
+        const fracX = (clientX - rect.left) / rect.width;
+        const fracY = (clientY - rect.top) / rect.height;
+
+        // Map to image-pixel coordinates
+        // X: left edge = imageShownXmin, right edge = imageShownXmax
+        const imgX = imageShownXmin + fracX * (imageShownXmax - imageShownXmin);
+        // Y: top edge = imageShownYmax, bottom edge = imageShownYmin (screen Y is flipped)
+        const imgY = imageShownYmax - fracY * (imageShownYmax - imageShownYmin);
+
+        // Integer pixel indices
+        const px = Math.floor(imgX);
+        const py = Math.floor(imgY);
+
+        // Outside actual image data → clear readout
+        if (px < 0 || px >= imageWidth || py < 0 || py >= imageHeight) {
+            configPage.lastMousePositions = [-10000, -10000];
+            configPage.setXyzCursorValues([-10000, -10000, -10000]);
+            return;
+        }
+
+        // Look up the raw pixel value from the data array
+        const dataRaw = this.getImageValue();
+        let z: number | string = "–";
+        if (Array.isArray(dataRaw)) {
+            const size = imageWidth * imageHeight;
+            // Row 0 is the top row in the data array (same as texture flipY)
+            const dataIndex = py * imageWidth + px;
+            if (colorMode === NDArray_ColorMode.mono) {
+                if (dataIndex < dataRaw.length) {
+                    z = dataRaw[dataIndex];
+                }
+            } else if (colorMode === NDArray_ColorMode.rgb1) {
+                if (3 * dataIndex + 2 < dataRaw.length) {
+                    const r = dataRaw[3 * dataIndex];
+                    const g = dataRaw[3 * dataIndex + 1];
+                    const b = dataRaw[3 * dataIndex + 2];
+                    z = `${r},${g},${b}`;
+                }
+            } else if (colorMode === NDArray_ColorMode.rgb2) {
+                const rIdx = 3 * py * imageWidth + px;
+                const gIdx = rIdx + imageWidth;
+                const bIdx = rIdx + 2 * imageWidth;
+                if (bIdx < dataRaw.length) {
+                    z = `${dataRaw[rIdx]},${dataRaw[gIdx]},${dataRaw[bIdx]}`;
+                }
+            } else if (colorMode === NDArray_ColorMode.rgb3) {
+                if (dataIndex + 2 * size < dataRaw.length) {
+                    z = `${dataRaw[dataIndex]},${dataRaw[size + dataIndex]},${dataRaw[2 * size + dataIndex]}`;
+                }
+            }
+        }
+
+        configPage.lastMousePositions = [clientX, clientY];
+        configPage.setXyzCursorValues([px, py, z]);
+    };
+
+    /**
+     * Clear the cursor readout when the mouse leaves the image area.
+     */
+    handleMouseLeaveImage = () => {
+        const configPage = this.getConfigPage();
+        configPage.lastMousePositions = [-10000, -10000];
+        configPage.setXyzCursorValues([-10000, -10000, -10000]);
+    };
 
     // ------------------ pan image --------------------
 

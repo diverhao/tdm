@@ -77,25 +77,60 @@ export class SidebarLargeInput {
                 display: "inline-flex",
                 width: "100%",
                 height: "100%",
-                backgroundColor: "rgba(0, 0, 0, 0.2)",
+                backgroundColor: "rgba(0, 0, 0, 0)",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                backdropFilter: "blur(10px)",
+                // backdropFilter: "blur(10px)",
             }}>
-                <div style={{
-                    display: "inline-flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "85%",
-                    height: "70%",
-                    backgroundColor: "rgba(20,20,20,1)",
-                    color: "rgba(210,210,210,1)",
-                    borderRadius: 6,
-                }}>
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "85%",
+                        height: "70%",
+                        backgroundColor: "rgba(20,20,20,1)",
+                        // backgroundColor: "rgba(20,20,20,1)",
+                        // color: "rgba(210,210,210,1)",
+                        // borderRadius: 6,
+                        // liquid glass blur effect
+                        boxSizing: "border-box",
+                        textShadow: `-0.5px -0.5px 0 white, 0.5px -0.5px 0 white, -0.5px 0.5px 0 white, 0.5px 0.5px 0 white`,
+                        zIndex: 100,
+                        background: "rgba(255, 255, 255, 0.15)",
+                        backdropFilter: "blur(2px) saturate(180%)",
+                        border: "1px solid rgba(255, 255, 255, 0.8)",
+                        borderRadius: "2rem",
+                        boxShadow: "0 8px 32px rgba(31, 38, 135, 0.2), inset 0 4px 20px rgba(255, 255, 255, 0.3)",
+                        overflow: "hidden",
+                    }}
+                    onMouseDown={(event) => event.stopPropagation()}
+                >
+                    {/* ::after pseudo-element equivalent */}
+                    {/* liquid glass blur effect */}
+                    <div
+                        style={{
+                            content: "''",
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            background: "rgba(255, 255, 255, 0.3)",
+                            borderRadius: "2rem",
+                            backdropFilter: "blur(1px)",
+                            boxShadow: "inset -10px -8px 0px -11px rgba(255, 255, 255, 1), inset 0px -9px 0px -8px rgba(255, 255, 255, 1)",
+                            opacity: 0.6,
+                            zIndex: -1,
+                            filter: "blur(1px) drop-shadow(10px 4px 6px black) brightness(115%)",
+                            pointerEvents: "none",
+                        }}
+                    />
+
                     <h2>
-                        Set value for <span style={{ color: "yellow" }}>{this.readableText}</span>
+                        Set value for <span style={{ color: "rgba(0,0,0,1)" }}>{this.readableText}</span>
                     </h2>
                     <p style={{ fontSize: 13, marginTop: 0 }}>
                         Hit Enter to confirm the input.
@@ -200,6 +235,12 @@ export class SidebarLargeInput {
 
                     </form>
                     <ElementRectangleButton
+                        defaultTextColor={"white"}
+                        highlightTextColor={"white"}
+                        additionalStyle={{
+                            textShadow: "none",
+                        }}
+
                         handleClick={() => {
                             if (withOkButton === true) {
                                 this.value = localValue;

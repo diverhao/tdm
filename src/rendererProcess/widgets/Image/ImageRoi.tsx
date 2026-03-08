@@ -8,7 +8,6 @@
  */
 import * as React from "react";
 import type { Image } from "./Image";
-import { Vector2, Raycaster } from "three";
 import { TcaChannel } from "../../channel/TcaChannel";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { Log } from "../../../common/Log";
