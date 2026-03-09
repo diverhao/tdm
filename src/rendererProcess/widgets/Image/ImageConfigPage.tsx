@@ -26,6 +26,9 @@ export class ImageConfigPage {
         this._plot = plot;
     }
 
+    /**
+     * config bar
+     */
     ElementConfigBar = () => {
 
         // hide config bar in editing mode
@@ -79,6 +82,9 @@ export class ImageConfigPage {
         );
     };
 
+    /**
+     * config page
+     */
     ElementConfigPage = () => {
         if (!this.showConfigPage) {
             return null;
@@ -639,41 +645,6 @@ export class ImageConfigPage {
         );
     };
 
-    // ───────────────── color-map actions & UI ─────────────────
-
-    /**
-     * Switch the active color map, re-process data, and force-update the
-     * image and color-map components.
-     */
-    switchColorMap = (newColorMap: string) => {
-        const plot = this._plot;
-        plot.setImageInfo({ ...plot.getImageInfo(), colorMap: newColorMap });
-        plot.mapDbrDataWitNewData();
-        plot.updateCameraFrustum();
-        plot.getMainWidget().forceUpdate({});
-    };
-
-    /**
-     * Build a CSS `linear-gradient(to top, ...)` string from the current
-     * color-map array for rendering the gradient bar.
-     */
-    generateGradientStops = (): string => {
-        const colorMapName = this._plot.getImageInfo().colorMap;
-        let colorMapArray = colorMapArrays[colorMapName];
-        if (colorMapArray === undefined) {
-            colorMapArray = grayColorMapArray;
-        }
-
-        const colors: string[] = [];
-        for (let i = 0; i < colorMapArray.length; i += 3) {
-            const r = colorMapArray[i];
-            const g = colorMapArray[i + 1];
-            const b = colorMapArray[i + 2];
-            colors.push(`rgb(${r}, ${g}, ${b})`);
-        }
-        return `linear-gradient(to top, ${colors.join(",")})`;
-    };
-
     /**
      * Dropdown selector for choosing the active color map.
      */
@@ -724,6 +695,39 @@ export class ImageConfigPage {
     };
 
     // ---------------------- helpers ------------------------
+
+    /**
+     * Switch the active color map, re-process data, and force-update the
+     * image and color-map components.
+     */
+    switchColorMap = (newColorMap: string) => {
+        const plot = this._plot;
+        plot.setImageInfo({ ...plot.getImageInfo(), colorMap: newColorMap });
+        plot.mapDbrDataWitNewData();
+        plot.updateCameraFrustum();
+        plot.getMainWidget().forceUpdate({});
+    };
+
+    /**
+     * Build a CSS `linear-gradient(to top, ...)` string from the current
+     * color-map array for rendering the gradient bar.
+     */
+    generateGradientStops = (): string => {
+        const colorMapName = this._plot.getImageInfo().colorMap;
+        let colorMapArray = colorMapArrays[colorMapName];
+        if (colorMapArray === undefined) {
+            colorMapArray = grayColorMapArray;
+        }
+
+        const colors: string[] = [];
+        for (let i = 0; i < colorMapArray.length; i += 3) {
+            const r = colorMapArray[i];
+            const g = colorMapArray[i + 1];
+            const b = colorMapArray[i + 2];
+            colors.push(`rgb(${r}, ${g}, ${b})`);
+        }
+        return `linear-gradient(to top, ${colors.join(",")})`;
+    };
 
     /**
      * Reset view to show the full image, fitted maximally into the plot
