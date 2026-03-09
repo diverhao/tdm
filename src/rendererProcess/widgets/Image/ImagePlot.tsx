@@ -7,7 +7,6 @@ import { DataTexture, Mesh, MeshBasicMaterial, NearestFilter, OrthographicCamera
 import { NDArray_ColorMode } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { colorMapFunctions, grayColorMap } from "./ImageColorMapData";
-import { ImageColorMap } from "./ImageColorMap";
 import { ImageConfigPage } from "./ImageConfigPage";
 import { ImageRoi } from "./ImageRoi";
 
@@ -150,10 +149,8 @@ export class ImagePlot {
     /** React ref to the container div where the three.js canvas is imperatively appended. */
     mountRef: React.RefObject<HTMLDivElement | null> | undefined = undefined;
 
-    /** Toolbar and configuration page overlay (zoom-to-full, cursor readout, settings). */
+    /** Toolbar and configuration page overlay (zoom-to-full, cursor readout, color-map UI, settings). */
     private _configPage: ImageConfigPage;
-    /** Color-map selector and gradient generation for the Z-axis colorbar. */
-    private _colorMap: ImageColorMap;
     /** Region-of-interest overlay system (drag, resize, PV read/write). */
     private _roi: ImageRoi;
 
@@ -209,7 +206,6 @@ export class ImagePlot {
 
         // create components
         this._configPage = new ImageConfigPage(this);
-        this._colorMap = new ImageColorMap(this);
         this._roi = new ImageRoi(this);
     }
 
@@ -506,7 +502,7 @@ export class ImagePlot {
                     style={{
                         width: gradientBarWidth,
                         height: "100%",
-                        background: this.getColorMap().generateGradientStops(),
+                        background: this.getConfigPage().generateGradientStops(),
                     }}
                 />
                 {/* Z-axis ticks */}
@@ -1379,10 +1375,6 @@ export class ImagePlot {
 
     getConfigPage = () => {
         return this._configPage;
-    }
-
-    getColorMap = () => {
-        return this._colorMap;
     }
 
     getRoi = () => {

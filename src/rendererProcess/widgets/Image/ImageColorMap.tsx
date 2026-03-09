@@ -107,4 +107,6 @@ export class ImageColorMap {
             </div>
         );
     };
+
+    
 }

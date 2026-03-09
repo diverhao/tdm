@@ -4,6 +4,7 @@ import { toolbarHeight } from "./Image";
 
 import { NDArray_ColorMode } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
+import { colorMapFunctions, colorMapArrays, grayColorMapArray } from "./ImageColorMapData";
 
 /**
  * The bottom config bar (toolbar) and the config page overlay
@@ -638,10 +639,89 @@ export class ImageConfigPage {
         );
     };
 
+    // ───────────────── color-map actions & UI ─────────────────
+
+    /**
+     * Switch the active color map, re-process data, and force-update the
+     * image and color-map components.
+     */
+    switchColorMap = (newColorMap: string) => {
+        const plot = this._plot;
+        plot.setImageInfo({ ...plot.getImageInfo(), colorMap: newColorMap });
+        plot.mapDbrDataWitNewData();
+        plot.updateCameraFrustum();
+        plot.getMainWidget().forceUpdate({});
+    };
+
+    /**
+     * Build a CSS `linear-gradient(to top, ...)` string from the current
+     * color-map array for rendering the gradient bar.
+     */
+    generateGradientStops = (): string => {
+        const colorMapName = this._plot.getImageInfo().colorMap;
+        let colorMapArray = colorMapArrays[colorMapName];
+        if (colorMapArray === undefined) {
+            colorMapArray = grayColorMapArray;
+        }
+
+        const colors: string[] = [];
+        for (let i = 0; i < colorMapArray.length; i += 3) {
+            const r = colorMapArray[i];
+            const g = colorMapArray[i + 1];
+            const b = colorMapArray[i + 2];
+            colors.push(`rgb(${r}, ${g}, ${b})`);
+        }
+        return `linear-gradient(to top, ${colors.join(",")})`;
+    };
+
+    /**
+     * Dropdown selector for choosing the active color map.
+     */
     private _ElementColorMapSelection = () => {
-        const SwitchColorMap = this.getPlot().getColorMap().ElementSwitchColorMap;
-        return <SwitchColorMap />;
-    }
+        const [colorMap, setColorMap] = React.useState(this._plot.getImageInfo().colorMap);
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    width: "100%",
+                }}
+            >
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        width: "100%",
+                    }}
+                >
+                    <div>Color map </div>
+                    <select
+                        style={{
+                            width: "8em",
+                            outline: "none",
+                            border: "none",
+                        }}
+                        id="myDropdown"
+                        value={colorMap}
+                        onChange={(event) => {
+                            setColorMap(event.target.value);
+                            this.switchColorMap(event.target.value);
+                        }}
+                    >
+                        {Object.keys(colorMapFunctions).map((key) => {
+                            return (
+                                <option key={key} value={key}>
+                                    {key.toUpperCase()}
+                                </option>
+                            );
+                        })}
+                    </select>
+                </div>
+            </div>
+        );
+    };
 
     // ---------------------- helpers ------------------------
 

@@ -12,10 +12,9 @@
  * - On mouseUp the updated image-pixel position/size is written to the
  *   four EPICS PVs (x, y, width, height) defined in `regionsOfInterest`.
  *
- * Follows the same single-class pattern used by {@link ImageConfigPage}
- * and {@link ImageColorMap}: the class holds a reference to its parent
- * {@link ImagePlot}, exposes public methods and `Element*` arrow-functions
- * for React sub-components.
+ * Follows the same single-class pattern used by {@link ImageConfigPage}:
+ * the class holds a reference to its parent {@link ImagePlot}, exposes
+ * public methods and `Element*` arrow-functions for React sub-components.
  */
 import * as React from "react";
 import type { ImagePlot } from "./ImagePlot";
