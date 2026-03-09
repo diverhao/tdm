@@ -9,6 +9,7 @@ import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/Sideba
 import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
 import { colorMapFunctions } from "./ImageColorMapData";
+import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
 
 export class ImageSidebar extends BaseWidgetSidebar {
     sidebarImageXmin;
@@ -20,6 +21,8 @@ export class ImageSidebar extends BaseWidgetSidebar {
     sidebarImageZmax;
     sidebarImageAutoZ;
     sidebarImageColorMap;
+    sidebarImageXLabel;
+    sidebarImageYLabel
     sidebarImageRegionsOfInterest: SidebarImageRegionsOfInterest;
     constructor(image: Image) {
         super(image);
@@ -32,6 +35,8 @@ export class ImageSidebar extends BaseWidgetSidebar {
         this.sidebarImageZmin = new SidebarNumberInput(this, text, "zMin", "Z min");
         this.sidebarImageZmax = new SidebarNumberInput(this, text, "zMax", "Z max");
         this.sidebarImageAutoZ = new SidebarCheckBox(this, text, "autoZ", "Auto range");
+        this.sidebarImageXLabel = new SidebarStringInput(this, text, "xLabel", "X label");
+        this.sidebarImageYLabel = new SidebarStringInput(this, text, "yLabel", "Y label");
         this.sidebarImageColorMap = new SidebarStringChoices(this, text, "colorMap", "Style", 
             Object.fromEntries(Object.keys(colorMapFunctions).map((s) => [s.toUpperCase(), s]))
         )
@@ -101,13 +106,8 @@ export class ImageSidebar extends BaseWidgetSidebar {
                 </this._BlockTitle>
                 <this._BlockBody>
                     {this.getSidebarChannelName().getElement()}
-                    {/* {this.getSidebarShowUnit().getElement()} */}
-                    {/* {this.getSidebarAlarmText().getElement()} */}
-                    {/* {this.getSidebarAlarmBackground().getElement()} */}
                     {this.getSidebarAlarmBorder().getElement()}
                     {this.getSidebarAlarmLevel().getElement()}
-                    {/* {this.getSidebarNumberScale().getElement()} */}
-                    {/* {this.getSidebarNumberFormat().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------- xy area -------------------------- */}
@@ -115,7 +115,6 @@ export class ImageSidebar extends BaseWidgetSidebar {
                     <b>XY Area</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {/* color */}
                     {this.getSidebarImageAutoXY().getElement()}
                     {this.getSidebarImageXmin().getElement()}
                     {this.getSidebarImageXmax().getElement()}
@@ -129,7 +128,6 @@ export class ImageSidebar extends BaseWidgetSidebar {
                     <b>Color Map</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {/* color map */}
                     {this.getSidebarImageColorMap().getElement()}
                     {this.getSidebarImageAutoZ().getElement()}
                     {this.getSidebarImageZmin().getElement()}
@@ -147,7 +145,6 @@ export class ImageSidebar extends BaseWidgetSidebar {
                     <b>Background</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {/* color */}
                     {this.getSidebarBackgroundColor().getElement()}
                     {this.getSidebarInvisibleInOperation().getElement()}
                 </this._BlockBody>
@@ -157,11 +154,9 @@ export class ImageSidebar extends BaseWidgetSidebar {
                     <b>Text</b>
                 </this._BlockTitle>
                 <this._BlockBody>
-                    {/* color */}
+                    {this.getSidebarImageXLabel().getElement()}
+                    {this.getSidebarImageYLabel().getElement()}
                     {this.getSidebarTextColor().getElement()}
-                    {/* {this.getSidebarXAlign().getElement()} */}
-                    {/* {this.getSidebarYAlign().getElement()} */}
-                    {/* {this.getSidebarWrapWord().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ----------------------- font --------------------------- */}
@@ -185,8 +180,9 @@ export class ImageSidebar extends BaseWidgetSidebar {
                 </this._BlockBody>{" "}
                 <this._HorizontalLine />
                 {/* ------------------------- rules ---------------------------- */}
-                {this.getMainWidget().getRules()?.getElement()}
-                <this._HorizontalLine />
+                {/* no rule in Image widget */}
+                {/* {this.getMainWidget().getRules()?.getElement()} */}
+                {/* <this._HorizontalLine /> */}
                 {/* ------------------------- widgets list ---------------------------- */}
                 {this.getSidebarWidgetsList().getElement()}
                 <this._HorizontalLine />
@@ -234,26 +230,12 @@ export class ImageSidebar extends BaseWidgetSidebar {
         return this.sidebarImageRegionsOfInterest;
     }
 
-    // defined in super class
-    // getElement()
-    // _HorizontalLine()
-    // _BlockBody()
-    // _BlockTitle()
+    getSidebarImageXLabel = () => {
+        return this.sidebarImageXLabel;
+    }
 
-    // ---------------------- getters --------------------------
+    getSidebarImageYLabel = () => {
+        return this.sidebarImageYLabel;
+    }
 
-    // defined in super class
-    // getWidgetKey()
-    // getMainWidget()
-    // getUpdateFromSidebar()
-    // getStyle()
-    // getFormStyle()
-    // getInputStyle()
-
-    // ------------------------- style -------------------------
-
-    // defined in super class
-    // _style
-    // _inputStyle
-    // _formStyle
 }

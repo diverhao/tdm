@@ -1,6 +1,5 @@
 import { XYPlot } from "./XYPlot";
 import * as React from "react";
-import katex from "katex";
 import { type_dbrData } from "epics-tca";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
@@ -233,7 +232,7 @@ export class XYPlotPlot {
                         whiteSpace: "nowrap",
                     }}
                 >
-                    {yAxis === undefined ? "" : this.convertLatexSourceToDiv(yAxis.label)}
+                    {yAxis === undefined ? "" : this.getMainWidget().expandText(yAxis.label)}
                 </div>
             </div>
         );
@@ -396,7 +395,7 @@ export class XYPlotPlot {
                     display: "inline-flex",
                 }}
             >
-                {this.convertLatexSourceToDiv(this.xAxis.label)}
+                {this.getMainWidget().expandText(this.xAxis.label)}
             </div>
         );
     };
@@ -591,7 +590,7 @@ export class XYPlotPlot {
                                     opacity: this.selectedTraceIndex === yIndex ? 1 : 0.25,
                                 }}
                             >
-                                {this.convertLatexSourceToDiv(yAxis.label)}
+                                {this.getMainWidget().expandText(yAxis.label)}
                             </div>
                         </div>
                     );
@@ -1074,23 +1073,6 @@ export class XYPlotPlot {
         )
     }
 
-    convertLatexSourceToDiv = (rawText: string) => {
-        // const rawText = this.getAllText()["text"];
-        if (`${rawText}`.startsWith("latex://")) {
-            // no additional parsing, pure latex
-            try {
-                const htmlContents = katex.renderToString(`${rawText}`.replace("latex://", ""), {
-                    throwOnError: false,
-                });
-                return <div dangerouslySetInnerHTML={{ __html: htmlContents }}></div>;
-            } catch (e) {
-                Log.error(e);
-                return `${rawText}`;
-            }
-        } else {
-            return `${rawText}`;
-        }
-    };
 
     generateDefaultYAxis = (index: number): type_yAxis => {
 

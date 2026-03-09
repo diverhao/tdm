@@ -136,16 +136,29 @@ export class ImagePlot {
     /** Runtime source of truth for the image display state (view bounds, ticks, color map, etc.). */
     private _imageInfo: type_Image_info;
 
+    /**
+     * Data flow per frame:
+     *
+     * (1) mapDbrDataWitNewData() writes normalized pixel values into textureData
+     * (2) texture.needsUpdate = true tells three.js to re-upload the buffer to the GPU
+     * (3) renderer.render(scene, camera) draws the textured plane through the camera frustum (field of view) onto the canvas
+     * 
+     * View changes (pan/zoom) only touch camera (shift/scale the frustum) and call renderer.render()
+     * no texture re-upload needed.
+     * 
+     * Scene teardown (resetScene()): disposes renderer, nulls everything. 
+     *                                The next React effect (fun1) recreates the whole chain from textureData upward.
+     */
     /** three.js DataTexture holding the RGBA pixel data uploaded to the GPU. */
     texture: DataTexture | undefined = undefined;
-    /** three.js WebGLRenderer that draws the scene onto an HTML canvas element. */
-    renderer: WebGLRenderer | undefined = undefined;
+    /** Raw 8-bit RGBA pixel buffer (4 bytes per pixel) backing the DataTexture. */
+    textureData: Uint8Array | undefined = undefined;
     /** three.js Scene containing the image plane mesh. */
     scene: Scene | undefined = undefined;
     /** Orthographic camera whose frustum maps image-pixel bounds to the screen-pixel canvas. */
     camera: OrthographicCamera | undefined = undefined;
-    /** Raw 8-bit RGBA pixel buffer (4 bytes per pixel) backing the DataTexture. */
-    textureData: Uint8Array | undefined = undefined;
+    /** three.js WebGLRenderer that draws the scene onto an HTML canvas element. */
+    renderer: WebGLRenderer | undefined = undefined;
     /** React ref to the container div where the three.js canvas is imperatively appended. */
     mountRef: React.RefObject<HTMLDivElement | null> | undefined = undefined;
 
@@ -187,12 +200,7 @@ export class ImagePlot {
         const style = this.getMainWidget().getStyle();
         const text = mainWidget.getText();
 
-        // Seed runtime imageInfo from the persisted text values.
-        // Use getText() (not getAllText()) because _allText is not yet
-        // populated at construction time — updateAllStyleAndText() runs
-        // during the first render.
         const info = structuredClone(defaultImageInfo);
-        this._imageInfo = info;
         info.plotRegionWidth = style.width - yAxisLabelWidth - yAxisTickWidth - colorbarWidth;
         info.plotRegionHeight = style.height - xAxisLabelHeight - xAxisTickHeight - toolbarHeight;
         info.imageShownXmin = text["xMin"];
@@ -203,6 +211,7 @@ export class ImagePlot {
         info.zMax = text["zMax"];
         info.autoZ = text["autoZ"];
         info.colorMap = text["colorMap"] ?? "gray";
+        this._imageInfo = info;
 
         // create components
         this._configPage = new ImageConfigPage(this);
@@ -211,7 +220,7 @@ export class ImagePlot {
 
     _Element = () => {
 
-        // update the axis/lables/colomaps according to the latest widget size
+        // update the axis/lables/colomaps according to the sidebar settings
         if (g_widgets1.isEditing()) {
             this.updateImageInfo();
         }
@@ -308,6 +317,27 @@ export class ImagePlot {
         const mountRef = React.useRef<HTMLDivElement>(null);
         this.mountRef = mountRef;
 
+        /**
+         * One-time setup of the three.js rendering pipeline.
+         *
+         * Runs once after the first image data arrives (when `this.scene`
+         * is still `undefined`) and builds the full chain below.  All
+         * objects persist until `resetScene()` tears them down; subsequent
+         * frames only overwrite `textureData` bytes and call `fun2`.
+         *
+         * ```
+         * textureData (Uint8Array)        ← rewritten each frame
+         *     │
+         *     ▼
+         * texture (DataTexture)           ← wraps textureData; re-uploaded via needsUpdate
+         *     │
+         *     ▼
+         * MeshBasicMaterial ─┐
+         *   (map = texture)  ├─► Mesh ──► Scene ──┐
+         * PlaneGeometry ─────┘                    ├──► renderer.render(scene, camera) ──► canvas
+         *                                 Camera ─┘
+         * ```
+         */
         const fun1 = () => {
 
             // the image data has not arrived yet
@@ -315,6 +345,7 @@ export class ImagePlot {
                 return;
             }
 
+            // guard for 
             if (this.scene !== undefined) {
                 return;
             }
@@ -403,12 +434,10 @@ export class ImagePlot {
             renderer.domElement.style.zIndex = "0";
 
             renderer.render(scene, camera);
-            // console.log("recreate stuff");
             this.texture = texture;
             this.renderer = renderer;
             this.camera = camera;
             this.scene = scene;
-            // this.autoXY = false;
         };
 
         const fun2 = () => {
@@ -532,8 +561,9 @@ export class ImagePlot {
         );
     }
 
-
     _ElementXLabel = () => {
+
+        const rawLabel = this.getMainWidget().getText()["xLabel"];
 
         return (
             <div
@@ -543,7 +573,7 @@ export class ImagePlot {
                     alignItems: "center",
                 }}
             >
-                X
+                {this.getMainWidget().expandText(rawLabel)}
             </div>
         );
     };
@@ -593,6 +623,8 @@ export class ImagePlot {
 
     _ElementYLabel = () => {
 
+        const rawLabel = this.getMainWidget().getText()["yLabel"];
+
         return (
             <div
                 style={{
@@ -610,7 +642,7 @@ export class ImagePlot {
                         whiteSpace: "nowrap",
                     }}
                 >
-                    Y
+                    {this.getMainWidget().expandText(rawLabel)}
                 </div>
             </div>
         );
@@ -752,7 +784,7 @@ export class ImagePlot {
         configPage.setXyzCursorValues([-10000, -10000, -10000]);
     };
 
-    // ------------------ pan image --------------------
+    // ------------------ pan and zoom image --------------------
 
     /**
      * Pan the image by (dx, dy) screen pixels.
@@ -825,8 +857,6 @@ export class ImagePlot {
         window.removeEventListener("mouseup", this.cancelPanImageEventListener);
     };
 
-    // ------------------ zoom image ----------------------------
-
     /**
      * Zoom the image around a point in world (image-pixel) coordinates.
      *
@@ -881,16 +911,6 @@ export class ImagePlot {
     };
 
     // --------------- helpers -------------------
-
-
-    /**
-     * todo:
-     */
-    updateImage = () => {
-        this.mapDbrDataWitNewData();
-        this.updateCameraFrustum();
-        this.getMainWidget().forceUpdate({});
-    };
 
     /**
      * Get 1-D waveform data
@@ -998,6 +1018,25 @@ export class ImagePlot {
     };
 
     /**
+     * Full refresh of the displayed image.
+     * 
+     * Invoked when the view is changed, not when the EPICS data is updated
+     *
+     * 1. `mapDbrDataWitNewData()` — read the latest channel data, update
+     *    `imageInfo` (dimensions, ticks, Z-range), and rewrite `textureData`.
+     * 2. `updateCameraFrustum()` — sync the OrthographicCamera frustum with
+     *    the current view bounds and re-render the scene.
+     * 3. `forceUpdate()` — trigger a React re-render so axes, ticks, and
+     *    toolbar readouts reflect the new state.
+     */
+    updateImageView = () => {
+        this.mapDbrDataWitNewData();
+        this.updateCameraFrustum();
+        this.getMainWidget().forceUpdate({});
+    };
+
+
+    /**
      * Write normalized RGBA pixel data into `this.textureData`.
      *
      * For mono images the raw value is normalized to 0–255 and passed through
@@ -1083,8 +1122,8 @@ export class ImagePlot {
     };
 
     /**
-     * Updates the OrthographicCamera
-     * frustum from the current `imageInfo` and re-renders without tearing down
+     * Updates the OrthographicCamera frustum (field of view) from the current 
+     * `imageInfo` and re-renders without tearing down
      * or recreating the Scene, WebGLRenderer, Mesh, Geometry, or DataTexture.
      *
      * Use for view changes (XY-range edits, zoom-to-full, Z-range / autoZ
@@ -1274,7 +1313,7 @@ export class ImagePlot {
     updateImageInfo = () => {
 
         const allStyle = this.getMainWidget().getAllStyle();
-        
+
         const width = allStyle["width"];
         const height = allStyle["height"];
         this._imageInfo.plotRegionWidth = width - yAxisLabelWidth - yAxisTickWidth - colorbarWidth;

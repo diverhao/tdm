@@ -1,11 +1,10 @@
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { NDArray_ColorMode } from "../../../common/GlobalVariables";
 import { ImageSidebar } from "./ImageSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
-import { type_Image_tdl, defaultImageTdl, type_Image_text_tdl } from "../../../common/types/type_widget_tdl";
+import { type_Image_tdl, defaultImageTdl, type_Image_text_tdl, type_Image_roi } from "../../../common/types/type_widget_tdl";
 import { ImagePlot } from "./ImagePlot";
 import { getScaleWidthHeight } from "../../helperWidgets/SharedElements/Scale";
 
@@ -107,13 +106,7 @@ export class Image extends BaseWidget {
 
     axisWidth: number = 40;
     configHeight: number = 20;
-    private _regionOfInterest: {
-        xPv: string;
-        yPv: string;
-        widthPv: string;
-        heightPv: string;
-        color: string;
-    }[] = [];
+    private _regionOfInterest: type_Image_roi[] = [];
 
 
     forceUpdate: React.Dispatch<React.SetStateAction<{}>> = (input: React.SetStateAction<{}>) => { };

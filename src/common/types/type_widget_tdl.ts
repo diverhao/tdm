@@ -2220,6 +2220,8 @@ export const type_Image_text_tdl_schema = {
     xMax: "number",
     yMin: "number",
     yMax: "number",
+    xLabel: "string",
+    yLabel: "string",
 } as const satisfies TypeSchema;
 
 export const type_Image_tdl_schema = {
@@ -2284,6 +2286,8 @@ export const defaultImageTdl: type_Image_tdl = {
         xMax: 255,
         yMin: 0,
         yMax: 255,
+        xLabel: "X",
+        yLabel: "Y",
     },
     channelNames: [],
     groupNames: [],

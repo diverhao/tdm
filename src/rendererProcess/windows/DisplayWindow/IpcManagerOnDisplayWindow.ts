@@ -796,7 +796,7 @@ export class IpcManagerOnDisplayWindow {
     handleNewChannelData = (event: string, data: IpcEventArgType2["new-channel-data"]) => {
         const { newDbrData } = data;
 
-        Log.debug("received data", JSON.stringify(newDbrData, null, 4));
+        Log.info("received data", JSON.stringify(newDbrData, null, 4));
 
         let channelNames = Object.keys(newDbrData);
 

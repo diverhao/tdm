@@ -21,13 +21,16 @@ import type { ImagePlot } from "./ImagePlot";
 import { TcaChannel } from "../../channel/TcaChannel";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { Log } from "../../../common/Log";
+import { type_Image_roi } from "../../../common/types/type_widget_tdl";
 
 /** Screen pixels for each edge resize hit-area. */
 const HANDLE_THICKNESS = 6;
+
 /** Minimum ROI dimension in image pixels. */
 const MIN_ROI_SIZE = 1;
 
 export class ImageRoi {
+
     private readonly _plot: ImagePlot;
 
     /**
@@ -43,109 +46,32 @@ export class ImageRoi {
         setRoiH: (v: number) => void;
     }> = new Map();
 
+    /**
+     * Indices of ROIs currently being dragged (move or resize).
+     * `updateRoisFromPvs()` skips these so that incoming PV values
+     * (which haven't been updated yet — PVs are written on mouseUp)
+     * don't overwrite the in-progress drag position.
+     */
+    private draggingIndices: Set<number> = new Set();
+
     constructor(plot: ImagePlot) {
         this._plot = plot;
     }
-
-    getPlot = () => this._plot;
-
-    // ───────────────────── PV helpers ─────────────────────
-
-    /** Check if a PV name is a non-empty, recognized channel. */
-    private isValidRoiPv = (pvName: string): boolean => {
-        if (!pvName) return false;
-        const kind = TcaChannel.checkChannelName(pvName);
-        return kind !== undefined;
-    };
-
-    /**
-     * Build the channel-key that `g_widgets1.getTcaChannel()` expects.
-     *
-     * - **local / global** channels: strip the `=initValue` suffix and
-     *   append `@window_<id>` (matching what `processChannelNames` produces).
-     * - **ca / pva** channels: use the raw PV name as-is.
-     */
-    private roiChannelKey = (pvName: string): string => {
-        const kind = TcaChannel.checkChannelName(pvName);
-        if (kind === "local" || kind === "global") {
-            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-            return pvName.split("=")[0] + "@window_" + displayWindowId;
-        }
-        return pvName;
-    };
-
-    /**
-     * Read the current numeric value of a channel PV.
-     * Returns `defaultValue` when the PV name is empty or the channel
-     * is not yet available.
-     */
-    readRoiPvValue(pvName: string, defaultValue: number): number;
-    readRoiPvValue(pvName: string, defaultValue: undefined): number | undefined;
-    readRoiPvValue(pvName: string, defaultValue: number | undefined): number | undefined {
-        if (!this.isValidRoiPv(pvName)) return defaultValue;
-        try {
-            const channel = g_widgets1.getTcaChannel(this.roiChannelKey(pvName));
-            const val = channel.getDbrData()["value"];
-            if (typeof val === "number") return val;
-        } catch (_e) {
-            /* channel may not be available yet */
-        }
-        // Fallback: parse initial value from PV name  (e.g. "loc://roi_x=42")
-        const parts = pvName.split("=");
-        if (parts.length >= 2) {
-            const parsed = parseFloat(parts[parts.length - 1]);
-            if (!isNaN(parsed)) return parsed;
-        }
-        return defaultValue;
-    }
-
-    /** Write a numeric value to a channel PV.
-     *  Silently skipped when the PV name is empty or invalid. */
-    private writeRoiPvValue = (pvName: string, value: number) => {
-        if (!this.isValidRoiPv(pvName)) return;
-        try {
-            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
-            const channel = g_widgets1.getTcaChannel(this.roiChannelKey(pvName));
-            channel.put(displayWindowId, { value: value }, 1);
-        } catch (e) {
-            Log.error("ROI writeRoiPvValue failed for", pvName, "value", value, e);
-        }
-    };
-
-    // ───────────────────── actions ─────────────────────
-
-    /**
-     * Read the current PV values for every registered ROI and push them
-     * into the React state so the overlay boxes stay in sync with
-     * externally-updated PVs.
-     */
-    updateRoisFromPvs = () => {
-        const rois = this._plot.getMainWidget().getRegionsOfInterest();
-        for (const [index, updaters] of this.roiUpdaters) {
-            const roi = rois[index];
-            if (roi === undefined) continue;
-            const x = this.readRoiPvValue(roi.xPv, undefined);
-            const y = this.readRoiPvValue(roi.yPv, undefined);
-            const w = this.readRoiPvValue(roi.widthPv, undefined);
-            const h = this.readRoiPvValue(roi.heightPv, undefined);
-            if (x !== undefined) updaters.setRoiX(x);
-            if (y !== undefined) updaters.setRoiY(y);
-            if (w !== undefined) updaters.setRoiW(Math.max(1, w));
-            if (h !== undefined) updaters.setRoiH(Math.max(1, h));
-        }
-    };
-
-    // ───────────────────── React elements ─────────────────────
 
     /**
      * Renders all ROI overlays for the image plot.
      * Positioned as an absolute overlay on top of the three.js canvas.
      */
     ElementRois = () => {
-        const rois = this._plot.getMainWidget().getRegionsOfInterest();
+
+        /**
+         * ROI config from text["regionsOfInterest"]
+         */
+        const rois = this.getPlot().getMainWidget().getRegionsOfInterest();
         if (rois.length === 0 || g_widgets1.isEditing()) {
             return null;
         }
+
         return (
             <div
                 style={{
@@ -159,8 +85,12 @@ export class ImageRoi {
                     zIndex: 1,
                 }}
             >
-                {rois.map((roi, index) => (
-                    <this._ElementRoi key={index} index={index} roiData={roi} />
+                {rois.map((roi: type_Image_roi, index: number) => (
+                    <this._ElementRoi
+                        key={index}
+                        index={index}
+                        roiData={roi}
+                    />
                 ))}
             </div>
         );
@@ -182,15 +112,9 @@ export class ImageRoi {
         roiData,
     }: {
         index: number;
-        roiData: {
-            xPv: string;
-            yPv: string;
-            widthPv: string;
-            heightPv: string;
-            color: string;
-        };
+        roiData: type_Image_roi;
     }) => {
-        const plot = this._plot;
+        const plot = this.getPlot();
 
         // -- state: image-pixel coordinates --
         // Seeded from PV values when available; otherwise use sensible defaults
@@ -215,15 +139,6 @@ export class ImageRoi {
             return () => { this.roiUpdaters.delete(index); };
         }, [index]);
 
-        /** Write the rounded image-pixel position/size to the four PVs. */
-        const writePvs = (x: number, y: number, w: number, h: number) => {
-            this.writeRoiPvValue(roiData.xPv, Math.round(x));
-            this.writeRoiPvValue(roiData.yPv, Math.round(y));
-            this.writeRoiPvValue(roiData.widthPv, Math.round(w));
-            this.writeRoiPvValue(roiData.heightPv, Math.round(h));
-        };
-
-        // -- coordinate conversion --
 
         const info = plot.getImageInfo();
         const { imageShownXmin, imageShownXmax, imageShownYmin, imageShownYmax } = info;
@@ -248,11 +163,20 @@ export class ImageRoi {
 
         const borderColor = roiData.color || "yellow";
 
-        // -- move handler --
+        // handlers fro move and resize
+
+        /** Write the rounded image-pixel position/size to the four PVs. */
+        const writePvs = (x: number, y: number, w: number, h: number) => {
+            this.writeRoiPvValue(roiData.xPv, Math.round(x));
+            this.writeRoiPvValue(roiData.yPv, Math.round(y));
+            this.writeRoiPvValue(roiData.widthPv, Math.round(w));
+            this.writeRoiPvValue(roiData.heightPv, Math.round(h));
+        };
 
         const handleMoveStart = (e: React.MouseEvent) => {
             e.stopPropagation();
             e.preventDefault();
+            this.draggingIndices.add(index);
             let curX = roiX;
             let curY = roiY;
             const curW = roiW;
@@ -265,6 +189,7 @@ export class ImageRoi {
                 setRoiY(curY);
             };
             const onUp = () => {
+                this.draggingIndices.delete(index);
                 writePvs(curX, curY, curW, curH);
                 window.removeEventListener("mousemove", onMove);
                 window.removeEventListener("mouseup", onUp);
@@ -273,8 +198,6 @@ export class ImageRoi {
             window.addEventListener("mouseup", onUp);
         };
 
-        // -- resize handlers --
-
         /**
          * Screen-top edge = image-space top (roiY + roiH).
          * Dragging up (negative screen dY) increases roiH; roiY unchanged.
@@ -282,6 +205,7 @@ export class ImageRoi {
         const handleResizeTopStart = (e: React.MouseEvent) => {
             e.stopPropagation();
             e.preventDefault();
+            this.draggingIndices.add(index);
             let curH = roiH;
             const onMove = (ev: MouseEvent) => {
                 const dImgY = -ev.movementY * imgPerScreenY;
@@ -289,6 +213,7 @@ export class ImageRoi {
                 setRoiH(curH);
             };
             const onUp = () => {
+                this.draggingIndices.delete(index);
                 writePvs(roiX, roiY, roiW, curH);
                 window.removeEventListener("mousemove", onMove);
                 window.removeEventListener("mouseup", onUp);
@@ -305,6 +230,7 @@ export class ImageRoi {
         const handleResizeBottomStart = (e: React.MouseEvent) => {
             e.stopPropagation();
             e.preventDefault();
+            this.draggingIndices.add(index);
             let curY = roiY;
             let curH = roiH;
             const onMove = (ev: MouseEvent) => {
@@ -319,6 +245,7 @@ export class ImageRoi {
                 }
             };
             const onUp = () => {
+                this.draggingIndices.delete(index);
                 writePvs(roiX, curY, roiW, curH);
                 window.removeEventListener("mousemove", onMove);
                 window.removeEventListener("mouseup", onUp);
@@ -335,6 +262,7 @@ export class ImageRoi {
         const handleResizeLeftStart = (e: React.MouseEvent) => {
             e.stopPropagation();
             e.preventDefault();
+            this.draggingIndices.add(index);
             let curX = roiX;
             let curW = roiW;
             const onMove = (ev: MouseEvent) => {
@@ -349,6 +277,7 @@ export class ImageRoi {
                 }
             };
             const onUp = () => {
+                this.draggingIndices.delete(index);
                 writePvs(curX, roiY, curW, roiH);
                 window.removeEventListener("mousemove", onMove);
                 window.removeEventListener("mouseup", onUp);
@@ -364,6 +293,7 @@ export class ImageRoi {
         const handleResizeRightStart = (e: React.MouseEvent) => {
             e.stopPropagation();
             e.preventDefault();
+            this.draggingIndices.add(index);
             let curW = roiW;
             const onMove = (ev: MouseEvent) => {
                 const dImgX = ev.movementX * imgPerScreenX;
@@ -371,6 +301,7 @@ export class ImageRoi {
                 setRoiW(curW);
             };
             const onUp = () => {
+                this.draggingIndices.delete(index);
                 writePvs(roiX, roiY, curW, roiH);
                 window.removeEventListener("mousemove", onMove);
                 window.removeEventListener("mouseup", onUp);
@@ -378,9 +309,7 @@ export class ImageRoi {
             window.addEventListener("mousemove", onMove);
             window.addEventListener("mouseup", onUp);
         };
-
-        // -- render --
-
+        
         return (
             <div
                 style={{
@@ -475,4 +404,95 @@ export class ImageRoi {
             </div>
         );
     };
+
+
+    // ---------------------- helpers ----------------------
+
+    /** Check if a PV name is a non-empty, recognized channel. */
+    private isValidRoiPv = (pvName: string): boolean => {
+        if (!pvName) return false;
+        const kind = TcaChannel.checkChannelName(pvName);
+        return kind !== undefined;
+    };
+
+    /**
+     * Build the channel-key that `g_widgets1.getTcaChannel()` expects.
+     *
+     * - **local / global** channels: strip the `=initValue` suffix and
+     *   append `@window_<id>` (matching what `processChannelNames` produces).
+     * - **ca / pva** channels: use the raw PV name as-is.
+     */
+    private roiChannelKey = (pvName: string): string => {
+        const kind = TcaChannel.checkChannelName(pvName);
+        if (kind === "local" || kind === "global") {
+            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+            return pvName.split("=")[0] + "@window_" + displayWindowId;
+        }
+        return pvName;
+    };
+
+    /**
+     * Read the current numeric value of a channel PV.
+     * Returns `defaultValue` when the PV name is empty or the channel
+     * is not yet available.
+     */
+    readRoiPvValue(pvName: string, defaultValue: number): number;
+    readRoiPvValue(pvName: string, defaultValue: undefined): number | undefined;
+    readRoiPvValue(pvName: string, defaultValue: number | undefined): number | undefined {
+        if (!this.isValidRoiPv(pvName)) return defaultValue;
+        try {
+            const channel = g_widgets1.getTcaChannel(this.roiChannelKey(pvName));
+            const val = channel.getDbrData()["value"];
+            if (typeof val === "number") return val;
+        } catch (_e) {
+            /* channel may not be available yet */
+        }
+        // Fallback: parse initial value from PV name  (e.g. "loc://roi_x=42")
+        const parts = pvName.split("=");
+        if (parts.length >= 2) {
+            const parsed = parseFloat(parts[parts.length - 1]);
+            if (!isNaN(parsed)) return parsed;
+        }
+        return defaultValue;
+    }
+
+    /** Write a numeric value to a channel PV.
+     *  Silently skipped when the PV name is empty or invalid. */
+    private writeRoiPvValue = (pvName: string, value: number) => {
+        if (!this.isValidRoiPv(pvName)) return;
+        try {
+            const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+            const channel = g_widgets1.getTcaChannel(this.roiChannelKey(pvName));
+            channel.put(displayWindowId, { value: value }, 1);
+        } catch (e) {
+            Log.error("ROI writeRoiPvValue failed for", pvName, "value", value, e);
+        }
+    };
+
+    /**
+     * Read the current PV values for every registered ROI and push them
+     * into the React state so the overlay boxes stay in sync with
+     * externally-updated PVs.
+     */
+    updateRoisFromPvs = () => {
+        const rois = this.getPlot().getMainWidget().getRegionsOfInterest();
+        for (const [index, updaters] of this.roiUpdaters) {
+            if (this.draggingIndices.has(index)) continue;
+            const roi = rois[index];
+            if (roi === undefined) continue;
+            const x = this.readRoiPvValue(roi.xPv, undefined);
+            const y = this.readRoiPvValue(roi.yPv, undefined);
+            const w = this.readRoiPvValue(roi.widthPv, undefined);
+            const h = this.readRoiPvValue(roi.heightPv, undefined);
+            if (x !== undefined) updaters.setRoiX(x);
+            if (y !== undefined) updaters.setRoiY(y);
+            if (w !== undefined) updaters.setRoiW(Math.max(1, w));
+            if (h !== undefined) updaters.setRoiH(Math.max(1, h));
+        }
+    };
+
+    // ------------------- getters --------------------
+
+    getPlot = () => this._plot;
+
 }

@@ -1,7 +1,6 @@
 import * as React from "react";
 import type { ImagePlot } from "./ImagePlot";
 import { toolbarHeight } from "./Image";
-
 import { NDArray_ColorMode } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { colorMapFunctions, colorMapArrays, grayColorMapArray } from "./ImageColorMapData";
@@ -212,7 +211,7 @@ export class ImageConfigPage {
                             imageShownYmin: text["yMin"],
                             imageShownYmax: text["yMax"],
                         });
-                        this.getPlot().updateImage();
+                        this.getPlot().updateImageView();
                     }}
                 >
                     <input
@@ -270,7 +269,7 @@ export class ImageConfigPage {
                             imageShownYmin: text["yMin"],
                             imageShownYmax: text["yMax"],
                         });
-                        this.getPlot().updateImage();
+                        this.getPlot().updateImageView();
 
                     }}
                 >
@@ -324,7 +323,7 @@ export class ImageConfigPage {
                             setZmax(`${plot.getImageInfo().zMax}`);
                         }
 
-                        plot.updateImage();
+                        plot.updateImageView();
                     }}
                 />
             </div>
@@ -359,7 +358,7 @@ export class ImageConfigPage {
                         imageShownYmin: text["yMin"],
                         imageShownYmax: text["yMax"],
                     });
-                    plot.updateImage();
+                    plot.updateImageView();
                 }}
             >
                 <img
@@ -493,7 +492,7 @@ export class ImageConfigPage {
                             ...plot.getImageInfo(),
                             imageShownXmin: value,
                         });
-                        plot.updateImage();
+                        plot.updateImageView();
                     }}>
                         <input
                             style={{
@@ -540,7 +539,7 @@ export class ImageConfigPage {
                                 imageShownXmax: value
                             });
 
-                            plot.updateImage();
+                            plot.updateImageView();
                         }}>
 
                         <input
@@ -601,7 +600,7 @@ export class ImageConfigPage {
                             ...plot.getImageInfo(),
                             imageShownYmin: value
                         });
-                        plot.updateImage();
+                        plot.updateImageView();
                     }}>
                         <input style={{ width: "5em", outline: "none", border: "none" }} value={yMin} type="text"
                             onChange={(e) => setYmin(e.target.value)}
@@ -633,7 +632,7 @@ export class ImageConfigPage {
                             ...plot.getImageInfo(),
                             imageShownYmax: value
                         });
-                        plot.updateImage();
+                        plot.updateImageView();
                     }}>
                         <input style={{ width: "5em", outline: "none", border: "none" }} value={yMax} type="text"
                             onChange={(e) => setYmax(e.target.value)}
@@ -783,7 +782,7 @@ export class ImageConfigPage {
             imageShownYmax: visibleH,
         });
 
-        plot.updateImage();
+        plot.updateImageView();
     };
 
     /**

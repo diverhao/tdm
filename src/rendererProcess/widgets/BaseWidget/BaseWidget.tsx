@@ -1,4 +1,4 @@
-
+import katex from "katex";
 import * as React from "react";
 import { Channel_ACCESS_RIGHTS, getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
@@ -182,6 +182,8 @@ export abstract class BaseWidget {
     _channelNamesLevel2: string[] = [];
     /**
      * macro/windowId expanded, meta data kept
+     * 
+     * loc://xxx is expaned to loc://xxx@window_yyy where yyy is the display window ID
      */
     _channelNamesLevel3: string[] = [];
     /**
@@ -232,7 +234,6 @@ export abstract class BaseWidget {
             const style = this.getStyle();
             style.width = window.innerWidth;
             style.height = window.innerHeight;
-            console.log("styel =========================", style.width, style.height)
             func(event);
         })
     }
@@ -1130,7 +1131,7 @@ export abstract class BaseWidget {
             // the un-processed channel names
             channelNames: [...this.getChannelNamesLevel0()],
             groupNames: [...this.getGroupNames()],
-            rules: [ ...this.getRulesTdl() ],
+            rules: [...this.getRulesTdl()],
         };
         // deselect tdl
         result.style.outlineStyle = "none";
@@ -1582,7 +1583,6 @@ export abstract class BaseWidget {
 
     static extractLocalChannelName = (localChannelName: string) => {
         if (TcaChannel.checkChannelName(localChannelName) === "local" || TcaChannel.checkChannelName(localChannelName) === "global") {
-            // return localChannelName.split(/[\(<]+/)[0];
             return localChannelName.split(/(=)|(:[\s]*\[)/)[0].trim()
         } else {
             return localChannelName;
@@ -1598,6 +1598,8 @@ export abstract class BaseWidget {
      * The macros may propagate, e.g. ["SYS", "${RNG}"], we have to expand it resursively.
      * 
      * The local/global channel name should not contain any initial value or type def
+     * 
+     * the local channel name (loc://xxx) is expaneded to loc://xxx@window_yyy where yyy is the display window ID
      */
     static expandChannelName(str: string, macros: [string, string][], honorDisplayWindowId: boolean = true) {
         try {
@@ -2331,6 +2333,57 @@ export abstract class BaseWidget {
         }
 
     }
+
+    /**
+     * expand a string to latex or macros
+     * 
+     * if this text start with `latex://`, then try to parse it as a latex formula
+     * and return a <div /> enclosing the latex formula
+     * 
+     * if the text contains macros `$(XXX)`, then expand the macros
+     * 
+     * otherwise, return the raw text
+     */
+    expandText = (rawText: string) => {
+        // latex
+        if (`${rawText}`.startsWith("latex://")) {
+            try {
+                const htmlContents = katex.renderToString(`${rawText}`.replace("latex://", ""), {
+                    throwOnError: false,
+                });
+                return <div dangerouslySetInnerHTML={{ __html: htmlContents }}></div>;
+            } catch (e) {
+                Log.error(e);
+                return `${rawText}`;
+            }
+        } else {
+            try {
+                const macros = this.getAllMacros();
+                // macros
+                const expandedText = BaseWidget.expandChannelName(rawText, macros, true);
+                // new line feed
+                // user types "\n", it is saved as "\\n" in tdl file, in here we convert it back to "\n"
+                const textArray = expandedText.replaceAll("\\n", "\n").split("\n");
+                if (textArray.length <= 1) {
+                    return expandedText;
+                } else {
+                    return (
+                        <>
+                            {textArray.map((text: string, index: number) => {
+                                return <>
+                                    {index === 0 ? null : <br />}
+                                    {text}
+                                </>
+                            })}
+                        </>
+                    )
+                }
+            } catch (e) {
+                Log.error(e);
+                return ""
+            }
+        }
+    };
 
 
     // -------------------- putters ----------------------------------

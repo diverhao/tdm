@@ -1,14 +1,11 @@
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import { LabelSidebar } from "./LabelSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { LabelRule } from "./LabelRule";
-import katex from "katex";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../common/Log";
 import { defaultLabelTdl, type_Label_tdl } from "../../../common/types/type_widget_tdl";
 
 export class Label extends BaseWidget {
@@ -95,44 +92,7 @@ export class Label extends BaseWidget {
      */
     getTextText = () => {
         const rawText = this.getAllText()["text"];
-        // latex
-        if (`${rawText}`.startsWith("latex://")) {
-            try {
-                const htmlContents = katex.renderToString(`${rawText}`.replace("latex://", ""), {
-                    throwOnError: false,
-                });
-                return <div dangerouslySetInnerHTML={{ __html: htmlContents }}></div>;
-            } catch (e) {
-                Log.error(e);
-                return `${rawText}`;
-            }
-        } else {
-            try {
-                const macros = this.getAllMacros();
-                // macros
-                const expandedText = BaseWidget.expandChannelName(rawText, macros, true);
-                // new line feed
-                // user types "\n", it is saved as "\\n" in tdl file, in here we convert it back to "\n"
-                const textArray = expandedText.replaceAll("\\n", "\n").split("\n");
-                if (textArray.length <= 1) {
-                    return expandedText;
-                } else {
-                    return (
-                        <>
-                            {textArray.map((text: string, index: number) => {
-                                return <>
-                                    {index === 0 ? null : <br />}
-                                    {text}
-                                </>
-                            })}
-                        </>
-                    )
-                }
-            } catch (e) {
-                Log.error(e);
-                return ""
-            }
-        }
+        return this.expandText(rawText);
     };
 
     // -------------------------- tdl -------------------------------
