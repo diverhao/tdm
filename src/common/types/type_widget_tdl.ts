@@ -296,6 +296,94 @@ export const defaultRectangleTdl: type_Rectangle_tdl = {
     rules: [],
 };
 
+// ======================== Arc TDL Schema ========================
+
+export const type_Arc_text_tdl_schema = {
+    lineWidth: "number",
+    lineStyle: "string",
+    lineColor: "string",
+    fillColor: "string",
+    fill: "boolean",
+    angleStart: "number",
+    angleRange: "number",
+    showRadius: "string",
+    showArrowTail: "boolean",
+    showArrowHead: "boolean",
+    arrowLength: "number",
+    arrowWidth: "number",
+    invisibleInOperation: "boolean",
+    alarmBorder: "boolean",
+    alarmShape: "boolean",
+    alarmFill: "boolean",
+    alarmBackground: "boolean",
+    alarmLevel: "string",
+} as const satisfies TypeSchema;
+
+export const type_Arc_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_style_tdl_schema,
+    text: type_Arc_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_Arc_text_tdl = Mutable<InferType<typeof type_Arc_text_tdl_schema>>;
+export type type_Arc_tdl = Mutable<InferType<typeof type_Arc_tdl_schema>>;
+
+export const defaultArcTdl: type_Arc_tdl = {
+    type: "Arc",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 0,
+        top: 0,
+        width: 0,
+        height: 0,
+        backgroundColor: "rgba(255, 255, 255, 0)",
+        transform: "rotate(0deg)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(255, 0, 0, 1)",
+        color: "rgba(0,0,255,1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        boxSizing: "content-box",
+    },
+    text: {
+        lineWidth: 3,
+        lineStyle: "solid",
+        lineColor: "rgba(0,0,255,1)",
+        fillColor: "rgba(30, 144, 255, 1)",
+        fill: true,
+        angleStart: 0,
+        angleRange: 135,
+        showRadius: "radius",
+        showArrowTail: false,
+        showArrowHead: false,
+        arrowLength: 6,
+        arrowWidth: 6,
+        invisibleInOperation: false,
+        alarmBorder: true,
+        alarmShape: false,
+        alarmFill: false,
+        alarmBackground: false,
+        alarmLevel: "MINOR",
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
 // ======================== Tank TDL Schema ========================
 
 export const type_Tank_text_tdl_schema = {

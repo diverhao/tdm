@@ -7,6 +7,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
+import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 
 export class ArcSidebar extends BaseWidgetSidebar {
     _sidebarPolylineFill;
@@ -17,7 +18,7 @@ export class ArcSidebar extends BaseWidgetSidebar {
     constructor(arc: Arc) {
         super(arc);
         const text = this.getMainWidget().getText();
-        this._sidebarPolylineFill = new SidebarStringInput(this, text, "fill", "Fill");
+        this._sidebarPolylineFill = new SidebarCheckBox(this, text, "fill", "Fill");
         this._sidebarArcAngleStart = new SidebarNumberInput(this, text, "angleStart", "Start");
         this._sidebarArcAngleRange = new SidebarNumberInput(this, text, "angleRange", "Range");
         this._sidebarArcShowRadius = new SidebarStringChoices(this, text, "showRadius", "Show", 
@@ -152,8 +153,6 @@ export class ArcSidebar extends BaseWidgetSidebar {
                 {this.getSidebarLineShowArrowTail().getElement()}
                 {this.getSidebarLineArrowLength().getElement()}
                 {this.getSidebarLineArrowWidth().getElement()}
-                {/* ---------------- points table -------------------------- */}
-                {/* {this.getSidebarPolylinePointsTable().getElement()} */}
                 {/* ---------------- angle -------------------------- */}
                 <this._BlockTitle>
                     <b>Angle</b>
@@ -163,27 +162,6 @@ export class ArcSidebar extends BaseWidgetSidebar {
                     {this.getSidebarArcAngleRange().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ---------------- text -------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Text</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarXAlign().getElement()}
-					{this.getSidebarYAlign().getElement()}
-					{this.getSidebarWrapWord().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
-                {/* ----------------------- font --------------------------- */}
-                {/* <this._BlockTitle>
-					<b>Font</b>
-				</this._BlockTitle>
-				<this._BlockBody>
-					{this.getSidebarFontFamily().getElement()}
-					{this.getSidebarFontSize().getElement()}
-					{this.getSidebarFontStyle().getElement()}
-					{this.getSidebarFontWeight().getElement()}
-				</this._BlockBody>
-				<this._HorizontalLine /> */}
                 {/* ---------------- border -------------------------- */}
                 <this._BlockTitle>
                     <b>Border</b>
@@ -202,27 +180,5 @@ export class ArcSidebar extends BaseWidgetSidebar {
             </div>
         );
     };
-
-    // defined in super class
-    // getElement()
-    // _HorizontalLine()
-    // _BlockBody()
-    // _BlockTitle()
-
-    // ---------------------- getters --------------------------
-
-    // defined in super class
-    // getWidgetKey()
-    // getMainWidget()
-    // getUpdateFromSidebar()
-    // getStyle()
-    // getFormStyle()
-    // getInputStyle()
-
-    // ------------------------- style -------------------------
-
-    // defined in super class
-    // _style
-    // _inputStyle
-    // _formStyle
+    
 }

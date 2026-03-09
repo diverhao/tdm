@@ -6,17 +6,8 @@ import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ArcRule } from "./ArcRule";
 import { ArcSidebar } from "./ArcSidebar";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
+import { defaultArcTdl, type_Arc_tdl, type_Label_tdl } from "../../../common/types/type_widget_tdl";
 
-export type type_Arc_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
 
 export class Arc extends BaseWidget {
 
@@ -26,6 +17,7 @@ export class Arc extends BaseWidget {
         super(widgetTdl);
         this.initStyle(widgetTdl);
         this.initText(widgetTdl);
+
         this.setReadWriteType("read");
 
         this._rules = new BaseWidgetRules(this, widgetTdl, ArcRule);
@@ -33,51 +25,37 @@ export class Arc extends BaseWidget {
 
     // ------------------------------ elements ---------------------------------
 
-    // Body + sidebar
     _ElementRaw = () => {
-        this.setRulesStyle({});
-        this.setRulesText({});
-        const rulesValues = this.getRules()?.getValues();
-        if (rulesValues !== undefined) {
-            this.setRulesStyle(rulesValues["style"]);
-            this.setRulesText(rulesValues["text"]);
-        }
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+        // guard the widget from double rendering
         this.widgetBeingRendered = true;
         React.useEffect(() => {
             this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this._sidebar?.getElement() : null}
-                </>
+                <div style={this.getElementBodyRawStyle()}>
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this._sidebar?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    // Text area and resizers
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
+    _ElementAreaRaw = (): React.JSX.Element => {
 
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+        const allText = this.getAllText();
+        const whiteSpace = allText.wrapWord ? "normal" : "pre";
+        const justifyContent = allText.horizontalAlign;
+        const alignItems = allText.verticalAlign;
+        const outline = this._getElementAreaRawOutlineStyle();
+        const backgroundColor = this._getElementAreaRawBackgroundStyle();
+
         return (
-            // <div
             <div
                 style={{
                     display: "inline-flex",
@@ -88,40 +66,122 @@ export class Arc extends BaseWidget {
                     userSelect: "none",
                     position: "absolute",
                     overflow: "visible",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllStyle().fontFamily,
-                    fontSize: this.getAllStyle().fontSize,
-                    fontStyle: this.getAllStyle().fontStyle,
-                    fontWeight: this.getAllStyle().fontWeight,
-                    outline: this._getElementAreaRawOutlineStyle(),
-                    backgroundColor: this.getAllText()["invisibleInOperation"] ? "rgba(0,0,0,0)" : this._getElementAreaRawBackgroundStyle(),
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    outline: outline,
+                    backgroundColor: backgroundColor,
                 }}
-                // title={"tooltip"}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
-                {/* {this.getChannelNames().map((channelName: string, index: number) => {
-					if (g_widgets1.isEditing()) {
-						return null;
-					}
-					if (index > 1) {
-						return null;
-					}
-					return (
-						<this.StyledToolTipText width={this.getStyle().width} height={this.getStyle().height}>
-							{channelName}: {this._getChannelValue()}
-						</this.StyledToolTipText>
-					);
-				})} */}
-
-                {/* {`${this._getChannelValue()}${this.getText().showUnit ? this._getChannelUnit() : ""}`} */}
-                {/* abcde */}
                 <this._ElementArc></this._ElementArc>
             </div>
         );
     };
+
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
+
+    _ElementArc = () => {
+
+        const allStyle = this.getAllStyle();
+        const allText = this.getAllText();
+
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+        const arrowLength = allText["arrowLength"];
+        const arrowWidth = allText["arrowWidth"];
+        const lineWidth = allText["lineWidth"];
+        const lineColor = this._getElementAreaRawShapeStyle();
+
+        // center and radius of the arc
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const rX = centerX - lineWidth / 2;
+        const rY = centerY - lineWidth / 2;
+
+        // arc points
+        const points = this.calcPoints();
+
+        // if the arc is larger than 180 degrees
+        const angleRange = allText["angleRange"];
+        const largeArcFlag = Math.abs(angleRange) > 180 ? "1" : "0";
+
+        // show radius lines or not
+        const showRadius = allText["showRadius"];
+        const showRadiusCommand =
+            showRadius === "radius"
+                ? `L ${centerX} ${centerY} L ${points[0][0]} ${points[0][1]}`
+                : showRadius === "secant"
+                    ? "z"
+                    : "";
+
+
+        // fill color for arrow and arc body
+        const fillColor = this._getElementAreaRawFillStyle();
+        const fillArcArea = allText["fill"];
+        const arcFillColor = fillArcArea ? fillColor : "none"
+
+        // head and tail arrows
+        const showArrowTail = allText["showArrowTail"];
+        const showArrowHead = allText["showArrowHead"];
+
+        // Compute tangent angle (SVG rotation degrees) at a point on the
+        // ellipse.  The tangent follows the CCW (sweep-flag=0) path direction.
+        const tangentAngleDeg = (px: number, py: number): number => {
+            const tdx = rX * (py - centerY) / rY;
+            const tdy = -rY * (px - centerX) / rX;
+            return Math.atan2(tdy, tdx) * 180 / Math.PI;
+        };
+        // Arrow size in SVG user units (original markers used markerUnits="strokeWidth")
+        const aLen = arrowLength * lineWidth;
+        const aHalf = arrowWidth * lineWidth / 2;
+
+        // line is dashed/dotted/...
+        const lineData = this.calcStrokeDasharray();
+
+        return (
+            <svg
+                width="100%"
+                height="100%"
+                x="0"
+                y="0"
+                style={{
+                    position: "absolute",
+                    overflow: "visible",
+                }}
+            >
+                {/* Arc + radius/secant closing lines */}
+                <path
+                    d={`M ${points[0][0]} ${points[0][1]} A ${rX} ${rY} 0 ${largeArcFlag} 0 ${points[1][0]} ${points[1][1]} ${showRadiusCommand}`}
+                    strokeWidth={lineWidth}
+                    stroke={lineColor}
+                    strokeDasharray={lineData}
+                    strokeLinecap={"butt"}
+                    fill={arcFillColor}
+                ></path>
+                {/* Arrow tail at path start (points[0]) */}
+                {showArrowTail && (
+                    <polygon
+                        points={`0,${-aHalf} ${-aLen},0 0,${aHalf}`}
+                        fill={lineColor}
+                        transform={`translate(${points[0][0]},${points[0][1]}) rotate(${tangentAngleDeg(points[0][0], points[0][1])})`}
+                    />
+                )}
+                {/* Arrow head at path end (points[1]) */}
+                {showArrowHead && (
+                    <polygon
+                        points={`0,${-aHalf} ${aLen},0 0,${aHalf}`}
+                        fill={lineColor}
+                        transform={`translate(${points[1][0]},${points[1][1]}) rotate(${tangentAngleDeg(points[1][0], points[1][1])})`}
+                    />
+                )}
+            </svg>
+        );
+    };
+
+    // -------------------- helper functions ----------------
 
     calcPoints = (): [[number, number], [number, number]] => {
         const pi = 3.1415926;
@@ -162,200 +222,21 @@ export class Arc extends BaseWidget {
                 return "";
         }
     };
-    _ElementArc = () => {
-        const length = this.getAllText()["arrowLength"];
-        const width = this.getAllText()["arrowWidth"];
-
-        const centerX = this.getAllStyle()["width"] / 2;
-        const centerY = this.getAllStyle()["height"] / 2;
-        const rX = centerX - this.getAllText()["lineWidth"] / 2;
-        const rY = centerY - this.getAllText()["lineWidth"] / 2;
-        const points = this.calcPoints();
-        const largeArcFlag = Math.abs(this.getAllText()["angleRange"]) > 180 ? "1" : "0";
-        const showRadiusCommand =
-            this.getAllText()["showRadius"] === "radius"
-                ? `L ${centerX} ${centerY} L ${points[0][0]} ${points[0][1]}`
-                : this.getAllText()["showRadius"] === "secant"
-                    ? "z"
-                    : "";
-
-        return (
-            <svg
-                width="100%"
-                height="100%"
-                x="0"
-                y="0"
-                style={{
-                    position: "absolute",
-                    overflow: "visible",
-                }}
-            >
-                <defs>
-                    <marker
-                        id={`arrowTail-${this.getWidgetKey()}`}
-                        viewBox={`0 0 ${length} ${width}`}
-                        refX="0"
-                        refY={`${width / 2}`}
-                        markerUnits="strokeWidth"
-                        markerWidth={`${length}`}
-                        markerHeight={`${width}`}
-                        orient="auto"
-                    >
-                        <path
-                            d={`M 0 0 L ${length} ${width / 2} L 0 ${width} z`}
-                            // fill={`${this.getAllText()["lineColor"]}`}
-                            fill={`${this._getElementAreaRawFillStyle()}`}
-                        />
-                    </marker>
-                    <marker
-                        id={`arrowHead-${this.getWidgetKey()}`}
-                        viewBox={`${-1 * length} ${-1 * width} ${2 * length} ${2 * width}`}
-                        refX="0"
-                        refY={`${width / 2}`}
-                        markerUnits="strokeWidth"
-                        markerWidth={`${2 * length}`}
-                        markerHeight={`${2 * width}`}
-                        orient="auto"
-                    >
-                        <path
-                            d={`M 0 0 L ${-1 * length} ${width / 2} L 0 ${width} z`}
-                            // fill={`${this.getAllText()["lineColor"]}`} 
-                            fill={`${this._getElementAreaRawFillStyle()}`}
-                        />
-                    </marker>
-                </defs>
-                <path
-                    d={`M ${points[0][0]} ${points[0][1]} A ${rX} ${rY} 0 ${largeArcFlag} 0 ${points[1][0]} ${points[1][1]} ${showRadiusCommand}`}
-                    strokeWidth={this.getAllText()["lineWidth"]}
-                    // stroke={this.getAllText()["lineColor"]}
-                    stroke={this._getElementAreaRawShapeStyle()}
-                    strokeDasharray={this.calcStrokeDasharray()}
-                    markerEnd={this.getAllText()["showArrowTail"] ? `url(#arrowTail-${this.getWidgetKey()})` : ""}
-                    markerStart={this.getAllText()["showArrowHead"] ? `url(#arrowHead-${this.getWidgetKey()})` : ""}
-                    strokeLinecap={"butt"}
-                    // fill={this.getAllText()["fill"] ? this.getAllText()["fillColor"] : "none"}
-                    fill={this.getAllText()["fill"] ? this._getElementAreaRawFillStyle() : "none"}
-                    opacity={this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : 1}
-                ></path>
-            </svg>
-        );
-    };
-
-    // ------------------------- polyline ------------------------------------
-
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
-
-    // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = () => {
-        const value = this._getFirstChannelValue();
-        if (value === undefined) {
-            return "";
-        } else {
-            return value;
-        }
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
-        }
-    };
-
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
+    static generateDefaultTdl = (): type_Arc_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultArcTdl.type);
+        return structuredClone({
+            ...defaultArcTdl,
+            widgetKey: widgetKey,
+        });
 
-        const defaultTdl: type_Arc_tdl = {
-            type: "Arc",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                width: 0,
-                height: 0,
-                // background color for the whole widget
-                backgroundColor: "rgba(255, 255, 255, 0)",
-                // angle
-                transform: "rotate(0deg)",
-                // line color, there is no text in this widget
-                color: "rgba(0,0,255,1)",
-                // border, it is different from the "alarmBorder" below
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // arc line styles, line color is in above
-                lineWidth: 3,
-                lineStyle: "solid",
-                lineColor: "rgba(0,0,255,1)",
-                // fill color
-                fillColor: "rgba(30, 144, 255, 1)",
-                // if fill or not
-                fill: true,
-                // angle
-                angleStart: 0,
-                angleRange: 135,
-                // show the none/radius/secant
-                showRadius: "radius",
-                // arrows
-                showArrowTail: false,
-                showArrowHead: false,
-                arrowLength: 6,
-                arrowWidth: 6,
-                // becomes not visible in operation mode, but still clickable
-                invisibleInOperation: false,
-                alarmBorder: true,
-                alarmShape: false,
-                alarmFill: false,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
     };
 
     generateDefaultTdl: () => any = Arc.generateDefaultTdl;
 
     // -------------------------- sidebar ---------------------------
+
     createSidebar = () => {
         if (this._sidebar === undefined) {
             this._sidebar = new ArcSidebar(this);
