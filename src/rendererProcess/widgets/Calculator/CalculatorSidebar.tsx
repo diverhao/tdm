@@ -54,7 +54,7 @@ export class CalculatorSidebar extends BaseWidgetSidebar {
             <div style={{ ...this.getStyle() }}
                 onMouseDown={this.handleMouseDown}
             >
-                <h3>Terminal</h3>
+                <h3>Calculator</h3>
                 {/* ---------------- positions -------------------------- */}
                 <this._BlockTitle>
                     <b>Position</b>

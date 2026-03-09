@@ -813,6 +813,8 @@ export class DisplayWindowClient {
             const widgetTdl = DataViewer.generateWidgetTdl(utilityOptions);
             const widgetKey = widgetTdl.widgetKey;
             widgetTdl.text.singleWidget = true;
+            widgetTdl.style.width = window.innerWidth;
+            widgetTdl.style.height = window.innerHeight;
             widgetTdl.style.boxSizing = "border-box";
             widgetTdl.style.borderWidth = 0;
             // widgetTdl.style.padding = 5;
@@ -891,12 +893,10 @@ export class DisplayWindowClient {
             tdl[widgetKey] = widgetTdl;
             tdl["Canvas"].style.backgroundColor = "rgba(0, 0, 0, 1)";
         } else if (utilityType === "Calculator") {
-            // default size is 100%
             const widgetTdl = Calculator.generateWidgetTdl(utilityOptions);
             const widgetKey = widgetTdl.widgetKey;
-            // widgetTdl.text.singleWidget = true;
-            // widgetTdl.style.boxSizing = "border-box";
-            // widgetTdl.style["top"] = 0;
+            widgetTdl.style.width = window.innerWidth;
+            widgetTdl.style.height = window.innerHeight;
             tdl[widgetKey] = widgetTdl;
             // tdl["Canvas"].style.backgroundColor = "rgba(0, 0, 0, 1)";
         } else if (utilityType === "ChannelGraph") {
@@ -1801,4 +1801,3 @@ export class DisplayWindowClient {
 
 
 (window as any).DisplayWindowClientClass = DisplayWindowClient;
-

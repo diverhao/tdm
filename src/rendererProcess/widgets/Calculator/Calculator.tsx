@@ -1,24 +1,13 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { CalculatorSidebar } from "./CalculatorSidebar";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
 import { evaluate } from "mathjs";
-
-export type type_Calculator_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultCalculatorTdl, type_Calculator_tdl } from "../../../common/types/type_widget_tdl";
 
 type type_Calculator_key = {
     label: string;
@@ -31,324 +20,9 @@ type type_Calculator_key = {
 };
 export class Calculator extends BaseWidget {
 
-    constructor(widgetTdl: type_Calculator_tdl) {
-        super(widgetTdl);
-        this.initStyle(widgetTdl);
-        this.initText(widgetTdl);
-        this.setReadWriteType("write");
-
-        this._sidebar = new CalculatorSidebar(this);
-    }
-
-    // ------------------------------ elements ---------------------------------
-
-    // Body + sidebar
-    _ElementRaw = () => {
-        // guard the widget from double rendering
-        this.widgetBeingRendered = true;
-        React.useEffect(() => {
-            this.widgetBeingRendered = false;
-        });
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-
-        this.updateAllStyleAndText();
-
-        return (
-            <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this._sidebar?.getElement() : null}
-                </>
-            </ErrorBoundary>
-        );
-    };
-
-    getElementFallbackFunction = () => {
-        return this._ElementFallback;
-    };
-
-    // Text area and resizers
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = (): React.JSX.Element => {
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    userSelect: "none",
-                    overflow: "hidden",
-                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getAllText().horizontalAlign,
-                    alignItems: this.getAllText().verticalAlign,
-                    fontFamily: this.getAllStyle().fontFamily,
-                    fontSize: this.getAllStyle().fontSize,
-                    fontStyle: this.getAllStyle().fontStyle,
-                    fontWeight: this.getAllStyle().fontWeight,
-                    outline: this._getElementAreaRawOutlineStyle(),
-                    color: this.getAllStyle()["color"],
-                }}
-                // title={"tooltip"}
-                onMouseDown={this._handleMouseDown}
-                onDoubleClick={this._handleMouseDoubleClick}
-            >
-                <this._ElementCalculator></this._ElementCalculator>
-            </div>
-        );
-    };
-
-    _ElementCalculator = () => {
-        const inputElementRef = React.useRef<HTMLInputElement>(null);
-        const [inputLine, setInputLine] = React.useState("");
-        const [historyLine, setHistoryLine] = React.useState("\u00A0");
-        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        const mode = displayWindowClient.getMainProcessMode();
-        return (
-            <div
-                style={{
-                    width: mode === "web" ? 500 : "100%",
-                    height: mode === "web" ? 550 : "100%",
-                    display: "inline-flex",
-                    flexDirection: "column",
-                    backgroundColor: "rgba(29, 30, 33, 1)",
-                    padding: 10,
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}
-            >
-                <this._ElementLcd
-                    inputLine={inputLine}
-                    setInputLine={setInputLine}
-                    historyLine={historyLine}
-                    setHistoryLine={setHistoryLine}
-                    inputElementRef={inputElementRef}
-                ></this._ElementLcd>
-                <this._ElementKeyPad
-                    inputLine={inputLine}
-                    setInputLine={setInputLine}
-                    historyLine={historyLine}
-                    setHistoryLine={setHistoryLine}
-                    inputElementRef={inputElementRef}
-                ></this._ElementKeyPad>
-            </div>
-        );
-    };
-
-    _ElementLcd = ({ inputLine, setInputLine, historyLine, setHistoryLine, inputElementRef }: {
-        inputLine: string;
-        setInputLine: React.Dispatch<React.SetStateAction<string>>;
-        historyLine: string;
-        setHistoryLine: React.Dispatch<React.SetStateAction<string>>;
-        inputElementRef: React.RefObject<HTMLInputElement | null>;
-    }) => {
-        React.useEffect(() => {
-            if (inputElementRef !== undefined && inputElementRef.current !== null && this.futureCursorPosition !== -1) {
-                inputElementRef.current.setSelectionRange(this.futureCursorPosition, this.futureCursorPosition);
-                this.futureCursorPosition = -1;
-            }
-        });
-        return (
-            <div
-                style={{
-                    height: "25%",
-                    width: "100%",
-                    backgroundColor: "rgba(29, 30, 33, 0)",
-                    color: "rgba(255, 255, 255, 1)",
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    // marginTop: 10,
-                    marginBottom: 10,
-                }}
-            >
-                <div
-                    style={{
-                        display: "inline-flex",
-                        border: "solid rgba(150, 150, 150, 1) 1px",
-                        borderRadius: 5,
-                        width: "100%",
-                        height: "100%",
-                        // margin: 10,
-                        flexDirection: "column",
-                        justifyContent: "space-between",
-                        alignItems: "flex-end",
-                    }}
-                >
-                    <div
-                        style={{
-                            width: "100%",
-                            paddingLeft: 10,
-                            paddingRight: 10,
-                            display: "inline-flex",
-                            justifyContent: "flex-end",
-                            backgroundColor: "rgba(0,0,0,0)",
-                            color: "rgba(150, 150, 150, 1)",
-                            fontSize: 18,
-                        }}
-                    >
-                        {historyLine}
-                    </div>
-                    <form
-                        style={{
-                            marginLeft: 10,
-                            marginRight: 10,
-                            marginBottom: 10,
-                            width: "100%",
-                        }}
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            setInputLine((oldValue: string) => {
-                                setHistoryLine(oldValue);
-                                this.inputLineHistory.push(oldValue);
-                                try {
-                                    const result = evaluate(this.replaceSpecialCharacters(oldValue));
-                                    if (typeof result !== "number") {
-                                        const errMsg = `Parse error: ${oldValue}`;
-                                        throw new Error(errMsg);
-                                    }
-                                    return `${result}`;
-                                } catch (e) {
-                                    Log.error(e);
-                                    return "Error";
-                                }
-                            });
-                        }}
-                    >
-                        <input
-                            ref={inputElementRef}
-                            style={{
-                                backgroundColor: "rgba(0,255,0,0)",
-                                border: "none",
-                                outline: "none",
-                                color: "rgba(255, 255, 255, 1)",
-                                textAlign: "right",
-                                width: "100%",
-                                fontSize: 25,
-                                // height:40,
-                                textIndent: 5,
-                                overflowY: "visible",
-                                cursor: "default", // do not change to text style
-                                // paddingBottom: 5,
-                                caretColor: "rgba(255,255,255,1)",
-                            }}
-                            onChange={(event) => {
-                                event.preventDefault();
-                                setInputLine(event.target.value);
-                            }}
-                            onFocus={(event) => {
-                                event.preventDefault();
-                                if (!g_widgets1.isEditing() && inputElementRef.current !== null) {
-                                    inputElementRef.current.style["color"] = "rgba(0,255,0,1)";
-                                }
-                            }}
-                            onBlur={(event) => {
-                                event.preventDefault();
-                                if (!g_widgets1.isEditing() && inputElementRef.current !== null) {
-                                    inputElementRef.current.style["color"] = "rgba(255,255,255,1)";
-                                }
-                            }}
-                            value={inputLine}
-                        ></input>
-                    </form>
-                </div>
-            </div>
-        );
-    };
-
     inputLineHistory: string[] = [];
     currentHistoryIndex = 0;
     futureCursorPosition = -1;
-
-    _ElementKeyPad = ({ inputLine, setInputLine, historyLine, setHistoryLine, inputElementRef }: {
-        inputLine: string;
-        setInputLine: React.Dispatch<React.SetStateAction<string>>;
-        historyLine: string;
-        setHistoryLine: React.Dispatch<React.SetStateAction<string>>;
-        inputElementRef: React.RefObject<HTMLInputElement | null>;
-    }) => {
-        return (
-            <div
-                style={{
-                    height: "60%",
-                    width: "100%",
-                    bottom: 0,
-                    left: 0,
-                    backgroundColor: "rgba(29, 30, 34, 1)",
-                    color: "rgba(255, 255, 0, 1)",
-                    fontSize: 15,
-                    display: "inline-flex",
-                    justifyContent: "space-around",
-                    alignItems: "center",
-                    marginTop: 2,
-                    marginBottom: 10,
-                    columnGap: 10,
-                    rowGap: 3,
-                    flexWrap: "wrap",
-                }}
-            >
-                {this.keys.map((key: type_Calculator_key, index: number) => {
-                    if (index % 7 === 0) {
-                        return (<this._ElementKeypadRow
-                            index0={index}
-                            setHistoryLine={setHistoryLine}
-                            setInputLine={setInputLine}
-                            inputElementRef={inputElementRef}
-                        >
-                        </this._ElementKeypadRow>)
-                    } else {
-                        return null;
-                    }
-                })}
-            </div>
-        );
-    };
-
-    _ElementKeypadRow = ({ index0, setInputLine, setHistoryLine, inputElementRef }: {
-        index0: number;
-        setInputLine: React.Dispatch<React.SetStateAction<string>>;
-        setHistoryLine: React.Dispatch<React.SetStateAction<string>>;
-        inputElementRef: React.RefObject<HTMLInputElement | null>;
-    }) => {
-        return (
-            <div style={{
-                width: "100%",
-                height: "15%",
-                padding: 0,
-                margin: 0,
-                display: "inline-flex",
-                alignItems: 'center',
-                justifyContent: "space-between",
-            }}>
-                {[0, 1, 2, 3, 4, 5, 6].map((offset: number, index: number) => {
-                    const key = this.keys[index0 + index];
-                    const label = key["label"];
-                    const onClick = key["onClick"];
-                    return (
-                        <this._ElementKey
-                            key={`${label}-${index0 + index}`}
-                            label={label}
-                            onClick={() => {
-                                onClick(setInputLine, setHistoryLine, inputElementRef);
-                            }}
-                        ></this._ElementKey>
-                    );
-                })}
-            </div>
-        )
-    }
 
     inputLine: string = "";
 
@@ -743,6 +417,317 @@ export class Calculator extends BaseWidget {
         },
     ];
 
+
+    constructor(widgetTdl: type_Calculator_tdl) {
+        super(widgetTdl);
+        this.initStyle(widgetTdl);
+        this.initText(widgetTdl);
+        this.setReadWriteType("write");
+
+        this._sidebar = new CalculatorSidebar(this);
+
+        // Utility-window Calculator keeps numeric width/height and resizes with the window.
+        this.registerUtilityWindowResizeCallback((event: UIEvent) => {
+            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+            g_flushWidgets();
+        });
+    }
+
+    // ------------------------------ elements ---------------------------------
+
+    _ElementRaw = () => {
+        // guard the widget from double rendering
+        this.widgetBeingRendered = true;
+        React.useEffect(() => {
+            this.widgetBeingRendered = false;
+        });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
+
+        return (
+            <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
+                <div style={this.getElementBodyRawStyle()}>
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this._sidebar?.getElement() : null}
+            </ErrorBoundary>
+        );
+    };
+
+
+
+    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
+    _ElementAreaRaw = (): React.JSX.Element => {
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    userSelect: "none",
+                    overflow: "hidden",
+                    whiteSpace: this.getAllText().wrapWord ? "normal" : "pre",
+                    justifyContent: this.getAllText().horizontalAlign,
+                    alignItems: this.getAllText().verticalAlign,
+                    fontFamily: this.getAllStyle().fontFamily,
+                    fontSize: this.getAllStyle().fontSize,
+                    fontStyle: this.getAllStyle().fontStyle,
+                    fontWeight: this.getAllStyle().fontWeight,
+                    outline: this._getElementAreaRawOutlineStyle(),
+                    color: this.getAllStyle()["color"],
+                }}
+                // title={"tooltip"}
+                onMouseDown={this._handleMouseDown}
+                onDoubleClick={this._handleMouseDoubleClick}
+            >
+                <this._ElementCalculator></this._ElementCalculator>
+            </div>
+        );
+    };
+
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
+
+
+    _ElementCalculator = () => {
+        const inputElementRef = React.useRef<HTMLInputElement>(null);
+        const [inputLine, setInputLine] = React.useState("");
+        const [historyLine, setHistoryLine] = React.useState("\u00A0");
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const mode = displayWindowClient.getMainProcessMode();
+        return (
+            <div
+                style={{
+                    width: mode === "web" ? 500 : "100%",
+                    height: mode === "web" ? 550 : "100%",
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    backgroundColor: "rgba(29, 30, 33, 1)",
+                    padding: 10,
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
+                <this._ElementLcd
+                    inputLine={inputLine}
+                    setInputLine={setInputLine}
+                    historyLine={historyLine}
+                    setHistoryLine={setHistoryLine}
+                    inputElementRef={inputElementRef}
+                ></this._ElementLcd>
+                <this._ElementKeyPad
+                    inputLine={inputLine}
+                    setInputLine={setInputLine}
+                    historyLine={historyLine}
+                    setHistoryLine={setHistoryLine}
+                    inputElementRef={inputElementRef}
+                ></this._ElementKeyPad>
+            </div>
+        );
+    };
+
+    _ElementLcd = ({ inputLine, setInputLine, historyLine, setHistoryLine, inputElementRef }: {
+        inputLine: string;
+        setInputLine: React.Dispatch<React.SetStateAction<string>>;
+        historyLine: string;
+        setHistoryLine: React.Dispatch<React.SetStateAction<string>>;
+        inputElementRef: React.RefObject<HTMLInputElement | null>;
+    }) => {
+        React.useEffect(() => {
+            if (inputElementRef !== undefined && inputElementRef.current !== null && this.futureCursorPosition !== -1) {
+                inputElementRef.current.setSelectionRange(this.futureCursorPosition, this.futureCursorPosition);
+                this.futureCursorPosition = -1;
+            }
+        });
+        return (
+            <div
+                style={{
+                    height: "25%",
+                    width: "100%",
+                    backgroundColor: "rgba(29, 30, 33, 0)",
+                    color: "rgba(255, 255, 255, 1)",
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    // marginTop: 10,
+                    marginBottom: 10,
+                }}
+            >
+                <div
+                    style={{
+                        display: "inline-flex",
+                        border: "solid rgba(150, 150, 150, 1) 1px",
+                        borderRadius: 5,
+                        width: "100%",
+                        height: "100%",
+                        // margin: 10,
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        alignItems: "flex-end",
+                    }}
+                >
+                    <div
+                        style={{
+                            width: "100%",
+                            paddingLeft: 10,
+                            paddingRight: 10,
+                            display: "inline-flex",
+                            justifyContent: "flex-end",
+                            backgroundColor: "rgba(0,0,0,0)",
+                            color: "rgba(150, 150, 150, 1)",
+                            fontSize: 18,
+                        }}
+                    >
+                        {historyLine}
+                    </div>
+                    <form
+                        style={{
+                            marginLeft: 10,
+                            marginRight: 10,
+                            marginBottom: 10,
+                            width: "100%",
+                        }}
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            setInputLine((oldValue: string) => {
+                                setHistoryLine(oldValue);
+                                this.inputLineHistory.push(oldValue);
+                                try {
+                                    const result = evaluate(this.replaceSpecialCharacters(oldValue));
+                                    if (typeof result !== "number") {
+                                        const errMsg = `Parse error: ${oldValue}`;
+                                        throw new Error(errMsg);
+                                    }
+                                    return `${result}`;
+                                } catch (e) {
+                                    Log.error(e);
+                                    return "Error";
+                                }
+                            });
+                        }}
+                    >
+                        <input
+                            ref={inputElementRef}
+                            style={{
+                                backgroundColor: "rgba(0,255,0,0)",
+                                border: "none",
+                                outline: "none",
+                                color: "rgba(255, 255, 255, 1)",
+                                textAlign: "right",
+                                width: "100%",
+                                fontSize: 25,
+                                // height:40,
+                                textIndent: 5,
+                                overflowY: "visible",
+                                cursor: "default", // do not change to text style
+                                // paddingBottom: 5,
+                                caretColor: "rgba(255,255,255,1)",
+                            }}
+                            onChange={(event) => {
+                                event.preventDefault();
+                                setInputLine(event.target.value);
+                            }}
+                            onFocus={(event) => {
+                                event.preventDefault();
+                                if (!g_widgets1.isEditing() && inputElementRef.current !== null) {
+                                    inputElementRef.current.style["color"] = "rgba(0,255,0,1)";
+                                }
+                            }}
+                            onBlur={(event) => {
+                                event.preventDefault();
+                                if (!g_widgets1.isEditing() && inputElementRef.current !== null) {
+                                    inputElementRef.current.style["color"] = "rgba(255,255,255,1)";
+                                }
+                            }}
+                            value={inputLine}
+                        ></input>
+                    </form>
+                </div>
+            </div>
+        );
+    };
+
+    _ElementKeyPad = ({ inputLine, setInputLine, historyLine, setHistoryLine, inputElementRef }: {
+        inputLine: string;
+        setInputLine: React.Dispatch<React.SetStateAction<string>>;
+        historyLine: string;
+        setHistoryLine: React.Dispatch<React.SetStateAction<string>>;
+        inputElementRef: React.RefObject<HTMLInputElement | null>;
+    }) => {
+        return (
+            <div
+                style={{
+                    height: "60%",
+                    width: "100%",
+                    bottom: 0,
+                    left: 0,
+                    backgroundColor: "rgba(29, 30, 34, 1)",
+                    color: "rgba(255, 255, 0, 1)",
+                    fontSize: 15,
+                    display: "inline-flex",
+                    justifyContent: "space-around",
+                    alignItems: "center",
+                    marginTop: 2,
+                    marginBottom: 10,
+                    columnGap: 10,
+                    rowGap: 3,
+                    flexWrap: "wrap",
+                }}
+            >
+                {this.keys.map((key: type_Calculator_key, index: number) => {
+                    if (index % 7 === 0) {
+                        return (<this._ElementKeypadRow
+                            index0={index}
+                            setHistoryLine={setHistoryLine}
+                            setInputLine={setInputLine}
+                            inputElementRef={inputElementRef}
+                        >
+                        </this._ElementKeypadRow>)
+                    } else {
+                        return null;
+                    }
+                })}
+            </div>
+        );
+    };
+
+    _ElementKeypadRow = ({ index0, setInputLine, setHistoryLine, inputElementRef }: {
+        index0: number;
+        setInputLine: React.Dispatch<React.SetStateAction<string>>;
+        setHistoryLine: React.Dispatch<React.SetStateAction<string>>;
+        inputElementRef: React.RefObject<HTMLInputElement | null>;
+    }) => {
+        return (
+            <div style={{
+                width: "100%",
+                height: "15%",
+                padding: 0,
+                margin: 0,
+                display: "inline-flex",
+                alignItems: 'center',
+                justifyContent: "space-between",
+            }}>
+                {[0, 1, 2, 3, 4, 5, 6].map((offset: number, index: number) => {
+                    const key = this.keys[index0 + index];
+                    const label = key["label"];
+                    const onClick = key["onClick"];
+                    return (
+                        <this._ElementKey
+                            key={`${label}-${index0 + index}`}
+                            label={label}
+                            onClick={() => {
+                                onClick(setInputLine, setHistoryLine, inputElementRef);
+                            }}
+                        ></this._ElementKey>
+                    );
+                })}
+            </div>
+        )
+    }
     keyOnClick = (label: string, setInputLine: React.Dispatch<React.SetStateAction<string>>, setHistoryLine: React.Dispatch<React.SetStateAction<string>>, inputElementRef: React.RefObject<HTMLInputElement | null>) => {
         if (g_widgets1.isEditing()) {
             return;
@@ -863,73 +848,24 @@ export class Calculator extends BaseWidget {
             .replaceAll("log\u2082", "log2");
     };
 
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
+    // --------------------- getters ------------------------------
+
+    getElementFallbackFunction = () => {
+        return this._ElementFallback;
+    };
 
     // -------------------------- tdl -------------------------------
 
     static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_Calculator_tdl = {
-            type: "Calculator",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                // default is "100%"
-                width: "100%",
-                height: "100%",
-                backgroundColor: "rgba(240, 240, 240, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // border, it is different from the "alarmBorder" below,
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // text
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: true,
-                // actually "alarm outline"
-                alarmBorder: true,
-                invisibleInOperation: false,
-                // default, decimal, exponential, hexadecimal
-                format: "default",
-                // scale, >= 0
-                scale: 0,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
+        const defaultTdl: type_Calculator_tdl = structuredClone(defaultCalculatorTdl);
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+        return defaultTdl;
     };
 
     generateDefaultTdl: () => any = Calculator.generateDefaultTdl;
 
-    // static method for generating a widget tdl with external PV name
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_Calculator_tdl => {
-        // utilityOptions = {} for it
+        // utilityOptions is {}
         const result = this.generateDefaultTdl();
         return result as type_Calculator_tdl;
     };
