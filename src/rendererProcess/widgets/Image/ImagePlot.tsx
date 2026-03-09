@@ -9,30 +9,68 @@ import { Log } from "../../../common/Log";
 import { colorMapFunctions, grayColorMap } from "./ImageColorMapData";
 import { ImageColorMap } from "./ImageColorMap";
 import { ImageConfigPage } from "./ImageConfigPage";
-import { ElementRois, readRoiPvValue } from "./ImageRoi";
+import { ImageRoi } from "./ImageRoi";
 
-
+/**
+ * Runtime image display state.
+ *
+ * This is the **runtime source of truth** for the image plot — it
+ * describes what portion of the image is currently shown, the plot
+ * region dimensions, tick layout, and color-mapping parameters.
+ *
+ * Coordinates use two separate systems:
+ * - **Image pixels** – the detector/source pixel grid (e.g. 1024×768).
+ *   `imageShownX/Ymin/max`, `imageWidth/Height`, tick *values*.
+ * - **Screen pixels** – CSS pixels on the rendered canvas.
+ *   `plotRegionWidth/Height`, tick *positions*.
+ *
+ * The camera frustum maps the image-pixel range onto the screen-pixel
+ * region; pan/zoom change the `imageShown*` bounds while the
+ * screen-pixel sizes stay fixed (until the widget is resized).
+ */
 export type type_Image_info = {
-    imageShownXmin: number, // X min of the image shown, in unit of image pixel, it could be larger or smaller than the image size
+    /** Left edge of the visible image region, in image pixels.
+     *  Can be < 0 or > imageWidth when panned beyond the image. */
+    imageShownXmin: number,
+    /** Right edge of the visible image region, in image pixels. */
     imageShownXmax: number,
+    /** Bottom edge of the visible image region, in image pixels. */
     imageShownYmin: number,
+    /** Top edge of the visible image region, in image pixels. */
     imageShownYmax: number,
-    plotRegionWidth: number, // axis box width in screen pixels, same as xLength
-    plotRegionHeight: number, // axis box height in screen pixels, same as yLength
-    xLength: number, // plot region width in unit of screen pixel
-    yLength: number,
-    xTickValues: number[], // x ticks values, it indicates the image pixel number
-    xTickPositions: number[], // x ticks positions, it is the position in unit of screen pixel
+    /** Width of the plot/axis box in screen (CSS) pixels. */
+    plotRegionWidth: number,
+    /** Height of the plot/axis box in screen (CSS) pixels. */
+    plotRegionHeight: number,
+    /** X-axis tick values expressed in image-pixel coordinates. */
+    xTickValues: number[],
+    /** X-axis tick positions in screen pixels, corresponding 1-to-1 with `xTickValues`. */
+    xTickPositions: number[],
+    /** Y-axis tick values expressed in image-pixel coordinates. */
     yTickValues: number[],
+    /** Y-axis tick positions in screen pixels, corresponding 1-to-1 with `yTickValues`. */
     yTickPositions: number[],
-    imageWidth: number, // image width in unit of image pixel
+    /** Full image width in image pixels (from the NTNDArray dimension). */
+    imageWidth: number,
+    /** Full image height in image pixels (from the NTNDArray dimension). */
     imageHeight: number,
-    colorMode: NDArray_ColorMode, // image color mode
-    pixelDepth: number, // image pixel depth in bit
-    zMin: number, // actual Z min used for color mapping
-    zMax: number, // actual Z max used for color mapping
-    autoZ: boolean, // whether Z range is auto-computed from data
-    colorMap: string, // active color map name
+    /** NDArray color mode (mono, RGB1, RGB2, RGB3). */
+    colorMode: NDArray_ColorMode,
+    /** Bits per pixel channel (e.g. 8, 16, 32). */
+    pixelDepth: number,
+    /** X-axis binning factor from the NTNDArray dimension (1 = no binning). */
+    xBinning: number,
+    /** Y-axis binning factor from the NTNDArray dimension (1 = no binning). */
+    yBinning: number,
+    /** Lower bound of the Z (intensity) range used for color mapping. */
+    zMin: number,
+    /** Upper bound of the Z (intensity) range used for color mapping. */
+    zMax: number,
+    /** When `true`, `zMin`/`zMax` are auto-computed from the image data
+     *  on every frame; when `false`, they are user-specified. */
+    autoZ: boolean,
+    /** Name of the active color map (e.g. `"gray"`, `"jet"`, `"hot"`). */
+    colorMap: string,
 };
 
 export const defaultImageInfo: type_Image_info = {
@@ -40,10 +78,8 @@ export const defaultImageInfo: type_Image_info = {
     imageShownXmax: 100,
     imageShownYmin: 0,
     imageShownYmax: 100,
-    plotRegionWidth: 0,
-    plotRegionHeight: 0,
-    xLength: 10,
-    yLength: 10,
+    plotRegionWidth: 100,
+    plotRegionHeight: 100,
     xTickValues: [],
     xTickPositions: [],
     yTickValues: [],
@@ -52,6 +88,8 @@ export const defaultImageInfo: type_Image_info = {
     imageHeight: 0,
     colorMode: NDArray_ColorMode.mono,
     pixelDepth: 0,
+    xBinning: 1,
+    yBinning: 1,
     zMin: 0,
     zMax: 255,
     autoZ: true,
@@ -96,51 +134,70 @@ export const defaultImageInfo: type_Image_info = {
 export class ImagePlot {
     private readonly _mainWidget: Image;
 
-    // plot
-    _plotWidth: number;
-    _plotHeight: number;
-    lastCursorPointXY: [number, number] = [-100000, -100000];
-
+    /** Runtime source of truth for the image display state (view bounds, ticks, color map, etc.). */
     private _imageInfo: type_Image_info;
 
+    /** three.js DataTexture holding the RGBA pixel data uploaded to the GPU. */
     texture: DataTexture | undefined = undefined;
+    /** three.js WebGLRenderer that draws the scene onto an HTML canvas element. */
     renderer: WebGLRenderer | undefined = undefined;
+    /** three.js Scene containing the image plane mesh. */
     scene: Scene | undefined = undefined;
+    /** Orthographic camera whose frustum maps image-pixel bounds to the screen-pixel canvas. */
     camera: OrthographicCamera | undefined = undefined;
+    /** Raw 8-bit RGBA pixel buffer (4 bytes per pixel) backing the DataTexture. */
     textureData: Uint8Array | undefined = undefined;
+    /** React ref to the container div where the three.js canvas is imperatively appended. */
     mountRef: React.RefObject<HTMLDivElement | null> | undefined = undefined;
-    // autoXY: boolean = true;
 
+    /** Toolbar and configuration page overlay (zoom-to-full, cursor readout, settings). */
     private _configPage: ImageConfigPage;
+    /** Color-map selector and gradient generation for the Z-axis colorbar. */
     private _colorMap: ImageColorMap;
+    /** Region-of-interest overlay system (drag, resize, PV read/write). */
+    private _roi: ImageRoi;
 
-    /**
-     * Registry of per-ROI state updaters.  Each `ElementRoi` registers
-     * its setters here on mount and unregisters on unmount.  Called by
-     * `mapDbrDataWitNewData()` to push PV-driven changes into the React
-     * state of the overlay boxes.
-     */
-    roiUpdaters: Map<number, {
-        setRoiX: (v: number) => void;
-        setRoiY: (v: number) => void;
-        setRoiW: (v: number) => void;
-        setRoiH: (v: number) => void;
-    }> = new Map();
+    /** Whether the image is live-updating (`true`) or frozen/paused (`false`). */
+    playing: boolean = true;
+
+    /** Snapshot of the raw 1-D pixel array captured when playback is paused.
+     *  While `playing` is `false`, `getImageValue()` returns this array
+     *  instead of the live channel data so the frozen frame stays on screen. */
+    imageValueBackup: number[] = [];
+
+    /** Snapshot of the image dimensions captured alongside `imageValueBackup`
+     *  when playback is paused.  `extractImageInfo()` returns this object
+     *  while `playing` is `false` so the geometry, color mode, and binning
+     *  stay consistent with the frozen pixel data. */
+    imageDimensionsBackup: {
+        imageWidth: number,
+        imageHeight: number,
+        colorMode: NDArray_ColorMode,
+        pixelDepth: number,
+        xBinning: number,
+        yBinning: number
+    } = {
+            imageWidth: -1,
+            imageHeight: -1,
+            colorMode: NDArray_ColorMode.mono,
+            pixelDepth: 0,
+            xBinning: 1,
+            yBinning: 1
+        };
 
     constructor(mainWidget: Image) {
         this._mainWidget = mainWidget;
         const style = this.getMainWidget().getStyle();
-        this._plotWidth = style.width - yAxisLabelWidth - yAxisTickWidth - colorbarWidth;
-        this._plotHeight = style.height - xAxisLabelHeight - xAxisTickHeight - toolbarHeight;
+        const text = mainWidget.getText();
+
         // Seed runtime imageInfo from the persisted text values.
         // Use getText() (not getAllText()) because _allText is not yet
         // populated at construction time — updateAllStyleAndText() runs
         // during the first render.
-
-        // runtime image plot info
-        const text = mainWidget.getText();
         const info = structuredClone(defaultImageInfo);
         this._imageInfo = info;
+        info.plotRegionWidth = style.width - yAxisLabelWidth - yAxisTickWidth - colorbarWidth;
+        info.plotRegionHeight = style.height - xAxisLabelHeight - xAxisTickHeight - toolbarHeight;
         info.imageShownXmin = text["xMin"];
         info.imageShownXmax = text["xMax"];
         info.imageShownYmin = text["yMin"];
@@ -150,28 +207,19 @@ export class ImagePlot {
         info.autoZ = text["autoZ"];
         info.colorMap = text["colorMap"] ?? "gray";
 
+        // create components
         this._configPage = new ImageConfigPage(this);
         this._colorMap = new ImageColorMap(this);
+        this._roi = new ImageRoi(this);
     }
-    
-    /**
-     * Tear down three.js objects so the next render cycle (fun1) will
-     * recreate them in the current DOM.  Call this when the React tree
-     * is remounted (e.g. editing ↔ operating mode switch).
-     */
-    resetScene = () => {
-        if (this.renderer) {
-            this.renderer.dispose();
-        }
-        this.texture = undefined;
-        this.renderer = undefined;
-        this.scene = undefined;
-        this.camera = undefined;
-        this.textureData = undefined;
-        this.mountRef = undefined;
-    };
 
     _Element = () => {
+
+        // update the axis/lables/colomaps according to the latest widget size
+        if (g_widgets1.isEditing()) {
+            this.updateImageInfo();
+        }
+
         return (
             <div
                 style={{
@@ -248,12 +296,18 @@ export class ImagePlot {
         const {
             imageWidth,
             imageHeight,
+            xBinning,
+            yBinning,
             imageShownXmin,
             imageShownXmax,
             imageShownYmin,
             imageShownYmax,
             plotRegionWidth,
             plotRegionHeight } = this.getImageInfo();
+
+        // Full detector dimensions (each data pixel covers binning×binning detector pixels)
+        const fullWidth = imageWidth * xBinning;
+        const fullHeight = imageHeight * yBinning;
 
         const mountRef = React.useRef<HTMLDivElement>(null);
         this.mountRef = mountRef;
@@ -290,10 +344,6 @@ export class ImagePlot {
             texture.minFilter = NearestFilter;
             texture.magFilter = NearestFilter;
 
-            // texture.encoding = THREE.sRGBEncoding;
-
-
-
             const scene = new Scene();
 
             // xy view range
@@ -306,8 +356,8 @@ export class ImagePlot {
             }
 
 
-            const camLeft = -imageWidth / 2 + xMin;
-            const camRight = -imageWidth / 2 + xMax;
+            const camLeft = -fullWidth / 2 + xMin;
+            const camRight = -fullWidth / 2 + xMax;
 
             let yMax = imageShownYmax;
             let yMin = imageShownYmin;
@@ -317,18 +367,14 @@ export class ImagePlot {
                 yMin = tmp;
             }
 
-            const camBottom = -imageHeight / 2 + yMin;
-            const camTop = -imageHeight / 2 + yMax;
+            const camBottom = -fullHeight / 2 + yMin;
+            const camTop = -fullHeight / 2 + yMax;
 
             const camera = new OrthographicCamera(
                 camLeft,
                 camRight,
                 camTop,
                 camBottom,
-                // -width / 2 / zoom,
-                // width / 2 / zoom,
-                // height / 2 / zoom,
-                // -height / 2 / zoom,
                 0.1,
                 10
             );
@@ -341,9 +387,13 @@ export class ImagePlot {
             // the image area, outside of this area is blank
             // this.calcImageSize();
             renderer.setSize(plotRegionWidth, plotRegionHeight);
-            mountRef.current!.appendChild(renderer.domElement);
+            // Remove any leftover canvas elements to prevent ghost images.
+            // Only remove <canvas> nodes — leave React-managed children alone.
+            const mount = mountRef.current!;
+            mount.querySelectorAll("canvas").forEach((c) => c.remove());
+            mount.appendChild(renderer.domElement);
 
-            const geometry = new PlaneGeometry(imageWidth, imageHeight);
+            const geometry = new PlaneGeometry(fullWidth, fullHeight);
             const material = new MeshBasicMaterial({ map: texture, color: 0xffffff });
             const plane = new Mesh(geometry, material);
             scene.add(plane);
@@ -366,26 +416,11 @@ export class ImagePlot {
         };
 
         const fun2 = () => {
-            // console.log("fun2 running");
             if (!this.texture || !this.renderer || !this.scene || !this.camera) {
                 return;
             }
-            // console.log("fun2 running A");
-            // if (this.playing === true) {
-            // processData();
-            // }
-
-            // update cursor readout
-            // todo: isolate
-            // if (this.lastMouesPositions[0] > -10000) {
-            //     this.handleMouseMoveOnImage(...this.lastMouesPositions);
-            // }
-
-
-            // console.log("fun2 running B");
             this.texture.needsUpdate = true; // upload changes to GPU
             this.texture.generateMipmaps = false;
-            // this.texture.minFilter = LinearFilter; // No mipmaps, direct filtering
             this.texture.minFilter = NearestFilter;
             this.texture.magFilter = NearestFilter;
 
@@ -446,7 +481,7 @@ export class ImagePlot {
                 }}
 
             >
-                <ElementRois plot={this} />
+                <this._roi.ElementRois />
             </div>
         );
     };
@@ -471,7 +506,7 @@ export class ImagePlot {
                     style={{
                         width: gradientBarWidth,
                         height: "100%",
-                        background: this._colorMap.generateGradientStops(),
+                        background: this.getColorMap().generateGradientStops(),
                     }}
                 />
                 {/* Z-axis ticks */}
@@ -504,20 +539,6 @@ export class ImagePlot {
 
     _ElementXLabel = () => {
 
-        if (g_widgets1.isEditing()) {
-            return (
-                <div
-                    style={{
-                        display: "inline-flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                    }}
-                >
-                    X
-                </div>
-            )
-        }
-
         return (
             <div
                 style={{
@@ -533,30 +554,11 @@ export class ImagePlot {
 
     _ElementXTicks = () => {
 
-        if (g_widgets1.isEditing()) {
-            return (
-                <div
-                    style={{
-                        position: "relative",
-                        height: xAxisTickHeight,
-                        width: this.getPlotWidth(),
-                        display: "inline-flex",
-                        flexGrow: 0,
-                        flexShrink: 0,
-                    }}
-                >
-                </div>
-            );
-        }
-
-
         const {
             imageShownXmin,
             imageShownXmax,
             imageShownYmin,
             imageShownYmax,
-            xLength,
-            yLength,
             xTickValues,
             xTickPositions,
             yTickValues,
@@ -595,22 +597,6 @@ export class ImagePlot {
 
     _ElementYLabel = () => {
 
-        if (g_widgets1.isEditing()) {
-            return (
-                <div
-                    style={{
-                        display: "inline-flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        width: yAxisLabelWidth,
-                        height: "100%",
-                    }}
-                >
-                    Y
-                </div>
-            );
-        }
-
         return (
             <div
                 style={{
@@ -636,45 +622,11 @@ export class ImagePlot {
 
     _ElementYTicks = () => {
 
-        if (g_widgets1.isEditing()) {
-            return (
-                <div
-                    style={{
-                        position: "relative",
-                        width: yAxisTickWidth,
-                        height: this.getPlotHeight(),
-                        display: "inline-flex",
-                        flexGrow: 0,
-                        flexShrink: 0,
-                    }}
-                >
-                    <Scale
-                        min={0}
-                        max={10}
-                        numIntervals={5}
-                        position={"left"}
-                        show={true}
-                        length={this.getPlotHeight()}
-                        scale={"Linear"}
-                        color={"rgba(0,0,0,1)"}
-                        compact={false}
-                        showTicks={false}
-                        showLabels={true}
-                        showAxis={false}
-                    >
-                    </Scale>
-
-                </div>
-            );
-        }
-
         const {
             imageShownXmin,
             imageShownXmax,
             imageShownYmin,
             imageShownYmax,
-            xLength,
-            yLength,
             xTickValues,
             xTickPositions,
             yTickValues,
@@ -728,28 +680,36 @@ export class ImagePlot {
         const rect = this.mountRef.current.getBoundingClientRect();
         const info = this.getImageInfo();
         const { imageShownXmin, imageShownXmax, imageShownYmin, imageShownYmax,
-            imageWidth, imageHeight, colorMode } = info;
+            imageWidth, imageHeight, xBinning, yBinning, colorMode } = info;
+
+        // Full detector dimensions
+        const fullWidth = imageWidth * xBinning;
+        const fullHeight = imageHeight * yBinning;
 
         // Fraction across the plot area (0 = left, 1 = right)
         const fracX = (clientX - rect.left) / rect.width;
         const fracY = (clientY - rect.top) / rect.height;
 
-        // Map to image-pixel coordinates
+        // Map to full-detector pixel coordinates
         // X: left edge = imageShownXmin, right edge = imageShownXmax
         const imgX = imageShownXmin + fracX * (imageShownXmax - imageShownXmin);
         // Y: top edge = imageShownYmax, bottom edge = imageShownYmin (screen Y is flipped)
         const imgY = imageShownYmax - fracY * (imageShownYmax - imageShownYmin);
 
-        // Integer pixel indices
+        // Integer pixel indices (full-detector coordinates)
         const px = Math.floor(imgX);
         const py = Math.floor(imgY);
 
-        // Outside actual image data → clear readout
-        if (px < 0 || px >= imageWidth || py < 0 || py >= imageHeight) {
+        // Outside full detector range → clear readout
+        if (px < 0 || px >= fullWidth || py < 0 || py >= fullHeight) {
             configPage.lastMousePositions = [-10000, -10000];
             configPage.setXyzCursorValues([-10000, -10000, -10000]);
             return;
         }
+
+        // Convert full-detector pixel to data-buffer index
+        const dataPx = Math.floor(px / xBinning);
+        const dataPy = Math.floor(py / yBinning);
 
         // Look up the raw pixel value from the data array
         const dataRaw = this.getImageValue();
@@ -757,7 +717,7 @@ export class ImagePlot {
         if (Array.isArray(dataRaw)) {
             const size = imageWidth * imageHeight;
             // Row 0 is the top row in the data array (same as texture flipY)
-            const dataIndex = py * imageWidth + px;
+            const dataIndex = dataPy * imageWidth + dataPx;
             if (colorMode === NDArray_ColorMode.mono) {
                 if (dataIndex < dataRaw.length) {
                     z = dataRaw[dataIndex];
@@ -770,7 +730,7 @@ export class ImagePlot {
                     z = `${r},${g},${b}`;
                 }
             } else if (colorMode === NDArray_ColorMode.rgb2) {
-                const rIdx = 3 * py * imageWidth + px;
+                const rIdx = 3 * dataPy * imageWidth + dataPx;
                 const gIdx = rIdx + imageWidth;
                 const bIdx = rIdx + 2 * imageWidth;
                 if (bIdx < dataRaw.length) {
@@ -839,7 +799,7 @@ export class ImagePlot {
         const newYmin = info.imageShownYmin + panY;
         const newYmax = info.imageShownYmax + panY;
 
-        const { xLength, yLength, xTickValues, xTickPositions, yTickValues, yTickPositions } =
+        const { plotRegionWidth, plotRegionHeight, xTickValues, xTickPositions, yTickValues, yTickPositions } =
             this._extractTicksInfo(newXmin, newXmax, newYmin, newYmax);
 
         this.setImageInfo({
@@ -848,8 +808,8 @@ export class ImagePlot {
             imageShownXmax: newXmax,
             imageShownYmin: newYmin,
             imageShownYmax: newYmax,
-            xLength,
-            yLength,
+            plotRegionWidth,
+            plotRegionHeight,
             xTickValues,
             xTickPositions,
             yTickValues,
@@ -892,16 +852,18 @@ export class ImagePlot {
         cam.top = centerY - (centerY - cam.top) / zoomFactor;
         cam.updateProjectionMatrix();
 
-        // Derive the new axis range in image-pixel units.
+        // Derive the new axis range in full-detector pixel units.
         // The camera frustum is in world coords where the image center is at origin,
-        // so camLeft = -imageWidth/2 + imageShownXmin  =>  imageShownXmin = camLeft + imageWidth/2
+        // so camLeft = -fullWidth/2 + imageShownXmin  =>  imageShownXmin = camLeft + fullWidth/2
         const info = this.getImageInfo();
-        const newXmin = cam.left + info.imageWidth / 2;
-        const newXmax = cam.right + info.imageWidth / 2;
-        const newYmin = cam.bottom + info.imageHeight / 2;
-        const newYmax = cam.top + info.imageHeight / 2;
+        const fullWidth = info.imageWidth * info.xBinning;
+        const fullHeight = info.imageHeight * info.yBinning;
+        const newXmin = cam.left + fullWidth / 2;
+        const newXmax = cam.right + fullWidth / 2;
+        const newYmin = cam.bottom + fullHeight / 2;
+        const newYmax = cam.top + fullHeight / 2;
 
-        const { xLength, yLength, xTickValues, xTickPositions, yTickValues, yTickPositions } =
+        const { plotRegionWidth, plotRegionHeight, xTickValues, xTickPositions, yTickValues, yTickPositions } =
             this._extractTicksInfo(newXmin, newXmax, newYmin, newYmax);
 
         this.setImageInfo({
@@ -910,8 +872,8 @@ export class ImagePlot {
             imageShownXmax: newXmax,
             imageShownYmin: newYmin,
             imageShownYmax: newYmax,
-            xLength,
-            yLength,
+            plotRegionWidth,
+            plotRegionHeight,
             xTickValues,
             xTickPositions,
             yTickValues,
@@ -926,12 +888,21 @@ export class ImagePlot {
 
 
     /**
+     * todo:
+     */
+    updateImage = () => {
+        this.mapDbrDataWitNewData();
+        this.updateCameraFrustum();
+        this.getMainWidget().forceUpdate({});
+    };
+
+    /**
      * Get 1-D waveform data
      */
     getImageValue = () => {
         const mainWidget = this.getMainWidget();
-        if (mainWidget.playing === false) {
-            return mainWidget.imageValueBackup;
+        if (this.playing === false) {
+            return this.imageValueBackup;
         }
         // {index: number, value: number[]}
         const choiceValue = g_widgets1.getChannelValue(mainWidget.getChannelNames()[0]) as any;
@@ -1027,28 +998,7 @@ export class ImagePlot {
         this.generateTextureData(colorMode, size, imageWidth, dataRaw, minValue, maxValue, colorMapFunc);
 
         // (7) Sync ROI overlays with their PV values.
-        this.updateRoisFromPvs();
-    };
-
-    /**
-     * Read the current PV values for every registered ROI and push them
-     * into the React state so the overlay boxes stay in sync with
-     * externally-updated PVs.
-     */
-    updateRoisFromPvs = () => {
-        const rois = this.getMainWidget().getRegionsOfInterest();
-        for (const [index, updaters] of this.roiUpdaters) {
-            const roi = rois[index];
-            if (roi === undefined) continue;
-            const x = readRoiPvValue(roi.xPv, undefined);
-            const y = readRoiPvValue(roi.yPv, undefined);
-            const w = readRoiPvValue(roi.widthPv, undefined);
-            const h = readRoiPvValue(roi.heightPv, undefined);
-            if (x !== undefined) updaters.setRoiX(x);
-            if (y !== undefined) updaters.setRoiY(y);
-            if (w !== undefined) updaters.setRoiW(Math.max(1, w));
-            if (h !== undefined) updaters.setRoiH(Math.max(1, h));
-        }
+        this.getRoi().updateRoisFromPvs();
     };
 
     /**
@@ -1150,7 +1100,11 @@ export class ImagePlot {
             return;
         }
         const { imageShownXmin, imageShownXmax, imageShownYmin, imageShownYmax,
-            imageWidth, imageHeight } = this.getImageInfo();
+            imageWidth, imageHeight, xBinning, yBinning } = this.getImageInfo();
+
+        // Full detector dimensions
+        const fullWidth = imageWidth * xBinning;
+        const fullHeight = imageHeight * yBinning;
 
         let xMin = imageShownXmin;
         let xMax = imageShownXmax;
@@ -1160,10 +1114,10 @@ export class ImagePlot {
         let yMax = imageShownYmax;
         if (yMax < yMin) { const tmp = yMax; yMax = yMin; yMin = tmp; }
 
-        this.camera.left = -imageWidth / 2 + xMin;
-        this.camera.right = -imageWidth / 2 + xMax;
-        this.camera.bottom = -imageHeight / 2 + yMin;
-        this.camera.top = -imageHeight / 2 + yMax;
+        this.camera.left = -fullWidth / 2 + xMin;
+        this.camera.right = -fullWidth / 2 + xMax;
+        this.camera.bottom = -fullHeight / 2 + yMin;
+        this.camera.top = -fullHeight / 2 + yMax;
         this.camera.updateProjectionMatrix();
 
         if (this.texture) {
@@ -1174,23 +1128,14 @@ export class ImagePlot {
     };
 
     // ---------------------- image info ---------------------
-    private _updatePlotWidthHeight = () => {
-        const allStyle = this.getMainWidget().getAllStyle();
-        const width = allStyle["width"];
-        const height = allStyle["height"];
-        const plotWidth = width - yAxisLabelWidth - yAxisTickWidth - colorbarWidth;
-        const plotHeight = height - xAxisLabelHeight - xAxisTickHeight - toolbarHeight;
-        this.setPlotWidth(plotWidth);
-        this.setPlotHeight(plotHeight);
-    }
 
     /**
      * read image pva data, obtain the width, height, color mode, and pixel depth (in unit of bit) for this image
      */
-    extractImageInfo = (): { imageWidth: number, imageHeight: number, colorMode: NDArray_ColorMode, pixelDepth: number } => {
+    extractImageInfo = (): { imageWidth: number, imageHeight: number, colorMode: NDArray_ColorMode, pixelDepth: number, xBinning: number, yBinning: number } => {
         const mainWidget = this.getMainWidget();
-        if (mainWidget.playing === false) {
-            return mainWidget.imageDimensionsBackup;
+        if (this.playing === false) {
+            return this.imageDimensionsBackup;
         }
 
         try {
@@ -1225,11 +1170,14 @@ export class ImagePlot {
                 }
 
 
-
                 if (dimension !== undefined && dimension.length >= 2) {
                     const dimension0 = dimension[0];
                     const dimension1 = dimension[1];
                     const dimension2 = dimension[2];
+
+                    // Extract binning info from dimension descriptors (default 1 = no binning)
+                    const xBinning = typeof dimension0["binning"] === "number" ? dimension0["binning"] : 1;
+                    const yBinning = typeof dimension1["binning"] === "number" ? dimension1["binning"] : 1;
 
                     // get color mode, default mono
                     let colorMode = NDArray_ColorMode.mono;
@@ -1251,7 +1199,9 @@ export class ImagePlot {
                                 imageWidth: dimension0["size"],
                                 imageHeight: dimension1["size"],
                                 colorMode: colorMode,
-                                pixelDepth: pixelDepth
+                                pixelDepth: pixelDepth,
+                                xBinning,
+                                yBinning,
                             };
                         }
                     } else if (colorMode === NDArray_ColorMode.rgb1) {
@@ -1260,7 +1210,9 @@ export class ImagePlot {
                                 imageWidth: dimension[1]["size"],
                                 imageHeight: dimension[2]["size"],
                                 colorMode: colorMode,
-                                pixelDepth: pixelDepth
+                                pixelDepth: pixelDepth,
+                                xBinning,
+                                yBinning,
                             };
                         }
 
@@ -1270,7 +1222,9 @@ export class ImagePlot {
                                 imageWidth: dimension[0]["size"],
                                 imageHeight: dimension[2]["size"],
                                 colorMode: colorMode,
-                                pixelDepth: pixelDepth
+                                pixelDepth: pixelDepth,
+                                xBinning,
+                                yBinning,
                             };
                         }
 
@@ -1280,7 +1234,9 @@ export class ImagePlot {
                                 imageWidth: dimension[0]["size"],
                                 imageHeight: dimension[1]["size"],
                                 colorMode: colorMode,
-                                pixelDepth: pixelDepth
+                                pixelDepth: pixelDepth,
+                                xBinning,
+                                yBinning,
                             };
                         }
                     }
@@ -1290,7 +1246,7 @@ export class ImagePlot {
         } catch (e) {
             Log.error("Image getImageDimensions error: ", e);
         }
-        return { imageWidth: 0, imageHeight: 0, colorMode: NDArray_ColorMode.mono, pixelDepth: 0 };
+        return { imageWidth: 255, imageHeight: 255, colorMode: NDArray_ColorMode.mono, pixelDepth: 16, xBinning: 1, yBinning: 1 };
     }
 
 
@@ -1298,24 +1254,20 @@ export class ImagePlot {
         const scale = "Linear";
 
 
-        const xLength = this.getPlotWidth();
-        const yLength = this.getPlotHeight();
+        const plotRegionWidth = this.getPlotWidth();
+        const plotRegionHeight = this.getPlotHeight();
         // fixed numbers
         const numXgrid = 5;
         const numYgrid = 5;
 
 
         const xTickValues = GlobalMethods.calcTicks(xValMin, xValMax, numXgrid + 1, { scale: scale });
-        const xTickPositions = GlobalMethods.calcTickPositions(xTickValues, xValMin, xValMax, xLength, { scale: scale }, "horizontal");
+        const xTickPositions = GlobalMethods.calcTickPositions(xTickValues, xValMin, xValMax, plotRegionWidth, { scale: scale }, "horizontal");
         const yTickValues = GlobalMethods.calcTicks(yValMin, yValMax, numYgrid + 1, { scale: scale });
-        const yTickPositions = GlobalMethods.calcTickPositions(yTickValues, yValMin, yValMax, yLength, { scale: scale }, "vertical");
+        const yTickPositions = GlobalMethods.calcTickPositions(yTickValues, yValMin, yValMax, plotRegionHeight, { scale: scale }, "vertical");
         return {
-            // xValMin,
-            // xValMax,
-            // yValMin,
-            // yValMax,
-            xLength,
-            yLength,
+            plotRegionWidth,
+            plotRegionHeight,
             xTickValues,
             xTickPositions,
             yTickValues,
@@ -1323,25 +1275,16 @@ export class ImagePlot {
         };
     }
 
-    /**
-     * The image always fills the entire axis box. The OrthographicCamera frustum
-     * maps the image-pixel range (imageShownXmin..Xmax, imageShownYmin..Ymax)
-     * onto the full screen-pixel canvas (plotWidth × plotHeight).
-     */
-    private _calcPlotRegionSize = () => {
-        const plotWidth = this.getPlotWidth();
-        const plotHeight = this.getPlotHeight();
-        if (plotWidth <= 0 || plotHeight <= 0) {
-            return [0, 0];
-        }
-        return [plotWidth, plotHeight];
-    }
-
     updateImageInfo = () => {
 
-        this._updatePlotWidthHeight();
+        const allStyle = this.getMainWidget().getAllStyle();
+        
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+        this._imageInfo.plotRegionWidth = width - yAxisLabelWidth - yAxisTickWidth - colorbarWidth;
+        this._imageInfo.plotRegionHeight = height - xAxisLabelHeight - xAxisTickHeight - toolbarHeight;
 
-        const { imageWidth, imageHeight, colorMode, pixelDepth } = this.extractImageInfo();
+        const { imageWidth, imageHeight, colorMode, pixelDepth, xBinning, yBinning } = this.extractImageInfo();
 
         const currentInfo = this.getImageInfo();
         const imageShownXmin = currentInfo.imageShownXmin;
@@ -1349,8 +1292,14 @@ export class ImagePlot {
         const imageShownYmin = currentInfo.imageShownYmin;
         const imageShownYmax = currentInfo.imageShownYmax;
 
-        const { xLength, yLength, xTickValues, xTickPositions, yTickValues, yTickPositions, } = this._extractTicksInfo(imageShownXmin, imageShownXmax, imageShownYmin, imageShownYmax);
-        const [plotRegionWidth, plotRegionHeight] = this._calcPlotRegionSize();
+        const { xTickValues, xTickPositions, yTickValues, yTickPositions, } = this._extractTicksInfo(imageShownXmin, imageShownXmax, imageShownYmin, imageShownYmax);
+        // Clamp: if either dimension is non-positive, zero both out.
+        let plotRegionWidth = this.getPlotWidth();
+        let plotRegionHeight = this.getPlotHeight();
+        if (plotRegionWidth <= 0 || plotRegionHeight <= 0) {
+            plotRegionWidth = 0;
+            plotRegionHeight = 0;
+        }
         this.setImageInfo({
             imageShownXmin,
             imageShownXmax,
@@ -1358,8 +1307,6 @@ export class ImagePlot {
             imageShownYmax,
             plotRegionWidth,
             plotRegionHeight,
-            xLength,
-            yLength,
             xTickValues,
             xTickPositions,
             yTickValues,
@@ -1368,6 +1315,8 @@ export class ImagePlot {
             imageHeight,
             colorMode,
             pixelDepth,
+            xBinning,
+            yBinning,
             zMin: this.getImageInfo().zMin,
             zMax: this.getImageInfo().zMax,
             autoZ: this.getImageInfo().autoZ,
@@ -1376,25 +1325,43 @@ export class ImagePlot {
     }
 
 
+    /**
+     * Tear down three.js objects so the next render cycle (fun1) will
+     * recreate them in the current DOM.  Call this when the React tree
+     * is remounted (e.g. editing ↔ operating mode switch).
+     */
+    resetScene = () => {
+        if (this.renderer) {
+            // Remove the canvas element from the DOM before disposing
+            // to prevent ghost canvases on mode switches.
+            const canvas = this.renderer.domElement;
+            if (canvas.parentNode) {
+                canvas.parentNode.removeChild(canvas);
+            }
+            this.renderer.dispose();
+        }
+        this.texture = undefined;
+        this.renderer = undefined;
+        this.scene = undefined;
+        this.camera = undefined;
+        this.textureData = undefined;
+        this.mountRef = undefined;
+    };
+
     // ------------------ getters --------------------
 
     /**
-     * get the image area (plot) width
+     * Get the image area (plot) width in screen (CSS) pixels.
      */
     getPlotWidth = () => {
-        return this._plotWidth;
+        return this._imageInfo.plotRegionWidth;
     }
 
+    /**
+     * Get the image area (plot) height in screen (CSS) pixels.
+     */
     getPlotHeight = () => {
-        return this._plotHeight;
-    }
-
-    setPlotWidth = (newWidth: number) => {
-        this._plotWidth = newWidth;
-    }
-
-    setPlotHeight = (newHeight: number) => {
-        this._plotHeight = newHeight;
+        return this._imageInfo.plotRegionHeight;
     }
 
 
@@ -1416,6 +1383,10 @@ export class ImagePlot {
 
     getColorMap = () => {
         return this._colorMap;
+    }
+
+    getRoi = () => {
+        return this._roi;
     }
 
     getElement = () => {

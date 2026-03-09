@@ -117,10 +117,6 @@ export class Image extends BaseWidget {
 
 
     forceUpdate: React.Dispatch<React.SetStateAction<{}>> = (input: React.SetStateAction<{}>) => { };
-    showConfigPage: boolean = false;
-    playing: boolean = true;
-    imageValueBackup: number[] = [];
-    imageDimensionsBackup: { imageWidth: number, imageHeight: number, colorMode: NDArray_ColorMode, pixelDepth: number } = { imageWidth: -1, imageHeight: -1, colorMode: NDArray_ColorMode.mono, pixelDepth: 0 };
 
     private readonly _plot: ImagePlot;
 
@@ -184,8 +180,8 @@ export class Image extends BaseWidget {
                 onMouseDown={(event) => {
                     // click any place to hide config page
                     this._handleMouseDown(event);
-                    if (this.showConfigPage === true) {
-                        this.showConfigPage = false;
+                    if (this.getPlot().getConfigPage().showConfigPage === true) {
+                        this.getPlot().getConfigPage().showConfigPage = false;
                         this.forceUpdate({});
                     }
                 }}
@@ -205,8 +201,12 @@ export class Image extends BaseWidget {
     mapDbrDataWitNewData = (newDbrData: any) => {
         this.getPlot().mapDbrDataWitNewData();
     }
-    
+
     processChannelNames(widgetMacros: [string, string][] = [], removeDuplicated: boolean = true) {
+        // console.log("this.getChannelNamesLevel0()", this.getChannelNamesLevel0())
+        // if (this.getChannelNamesLevel0().length > 1) {
+        //     this.getChannelNamesLevel0().length = 1;
+        // }
         for (const regionOfInterest of this.getRegionsOfInterest()) {
             this.getChannelNamesLevel0().push(
                 regionOfInterest["xPv"],
@@ -217,7 +217,7 @@ export class Image extends BaseWidget {
         }
 
         super.processChannelNames(widgetMacros, removeDuplicated);
-        console.log("this. getChannel anmes", this.getChannelNames())
+        // console.log("this.getChannelNamesLevel0() aaa", this.getChannelNamesLevel0())
     }
 
     // --------------------- getters -----------------------
@@ -244,6 +244,10 @@ export class Image extends BaseWidget {
 
     getTdlCopy(newKey?: boolean): Record<string, any> {
         const result = super.getTdlCopy(newKey);
+        // only keep the first channel name
+        if (result["channelNames"].length > 1) {
+            result["channelNames"].length = 1;
+        }
         result["regionsOfInterest"] = structuredClone(this.getRegionsOfInterest());
         return result;
     }

@@ -2248,7 +2248,7 @@ export const defaultImageTdl: type_Image_tdl = {
         top: 100,
         width: 100,
         height: 100,
-        backgroundColor: "rgba(240, 240, 240, 1)",
+        backgroundColor: "rgba(255, 255, 2550, 1)",
         transform: "rotate(0deg)",
         borderStyle: "solid",
         borderWidth: 0,
