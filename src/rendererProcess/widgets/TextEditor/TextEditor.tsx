@@ -1,5 +1,11 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
+import { Compartment, EditorState } from "@codemirror/state";
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { EditorView, keymap } from "@codemirror/view";
+import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { json } from "@codemirror/lang-json";
+import { python } from "@codemirror/lang-python";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -9,87 +15,111 @@ import { ElementRectangleButton } from "../../helperWidgets/SharedElements/Recta
 import path from "path";
 import { defaultTextEditorTdl, type_TextEditor_tdl } from "../../../common/types/type_widget_tdl";
 
-// fix up everytime the <code> is re-rendered, the .js file is compressed, it is modified to export Prism
-// we add module.exports = Prism; to the end of the file
-const Prism1 = require("../../../common/resources/js/prism.js");
+/**
+ * tdl comes with text["fileName"] and text["fileContent"]
+ * 
+ * if fileName is an empty string, then skip trying to read the file,
+ * honor the fileContent, no matter if it is empty or not; 
+ * 
+ * if fileName is not empty, ignore the fileContent, try to read the file
+ * 
+ */
 
 export class TextEditor extends BaseWidget {
-    // private _fileName: string = "";
-    // private _fileContents: string = "";
-    private setFileContentsState: any;
+    private setFileContent: any;
     setFileNameState: any;
-    // 2.5 MB text file contains more than 2.5 million characters, it is considered large
-    // when the text is larger than this number, disable the <textarea>
+
+    // private setFileWritableState: React.Dispatch<React.SetStateAction<boolean>> | undefined;
+    // private fileWritable: boolean = false;
+
+    // private _fileContent: string = "";
+    private _fileName: string = "";
+
+    // 2.5 MB text file contains more than 2.5 million characters.
+    // Above this threshold, keep the editor in read-only mode.
     private fileLimit: number = 2.5 * 1024 * 1024;
-    updateHighlightArea: any;
-    initialFileContents: string | undefined = undefined;
 
     constructor(widgetTdl: type_TextEditor_tdl) {
         super(widgetTdl);
         this.initStyle(widgetTdl);
         this.initText(widgetTdl);
-        this.setReadWriteType("read");
+        this.setReadWriteType("write");
 
-        // dynamically load css and js
-        const css = document.createElement('link');
-        css.rel = 'stylesheet';
-        css.href = '../../../webpack/resources/css/prism.css'; // Make sure the path is correct relative to your HTML file
-        document.head.appendChild(css);
-        const js = document.createElement('script');
-        js.src = '../../../webpack/resources/js/prism.js';
-        // js.type = 'text/javascript';
-        js.type = 'module';
-        document.head.appendChild(js);
+        this._fileName = widgetTdl.text["fileName"];
+        // if (this._fileName === "") {
+        // this._fileContent = widgetTdl.text["fileContent"]
+        // }
 
-        window.addEventListener("resize", (_event: Event) => {
-            if (this.updateHighlightArea !== undefined) {
-                this.updateHighlightArea();
-            }
-        });
-
-        this.registerUtilityWindowResizeCallback((_event: UIEvent) => {
-            if (this.updateHighlightArea !== undefined) {
-                this.updateHighlightArea();
-            }
-        });
+        // this.fileWritable = widgetTdl.text["fileName"] === "";
     }
-
 
     // ------------------------------ elements ---------------------------------
 
     // concretize abstract method
     _ElementRaw = () => {
-        this.setAllStyle({ ...this.getStyle(), ...this.getRulesStyle() });
-        this.setAllText({ ...this.getText(), ...this.getRulesText() });
-
-        // must do it for every widget
-        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+        // guard the widget from double rendering
         this.widgetBeingRendered = true;
         React.useEffect(() => {
             this.widgetBeingRendered = false;
         });
+        g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
+
+        this.updateAllStyleAndText();
+
 
         return (
             <ErrorBoundary style={{ ...this.getStyle(), boxSizing: "border-box" }} widgetKey={this.getWidgetKey()}>
-                    <div
-                        style={{
-                            ...this.getElementBodyRawStyle(),
-                            overflow: "hidden",
-                        }
-                        }
-                    >
-                        <this._ElementArea></this._ElementArea>
-                    </div>
+                <div
+                    style={{
+                        ...this.getElementBodyRawStyle(),
+                        overflow: "hidden",
+                    }
+                    }
+                >
+                    <this._ElementArea></this._ElementArea>
+                </div>
             </ErrorBoundary>
         );
     };
 
+    getFileContent = () => {return ""};
+
+    getLanguageExtension = (fileName: string) => {
+        const extension = path.extname(fileName).toLowerCase();
+        if (extension === ".json") {
+            return json();
+        }
+        if (extension === ".py") {
+            return python();
+        }
+        return [];
+    };
+
     _ElementAreaRaw = (): React.JSX.Element => {
-        // run once when the display window is first created
+        // const initialFileName = this.getFileName();
+        // const initialFileContents = initialFileName === "" ? this.getText()["fileContent"] : "";
+
+        const [fileContent, setFileContent] = React.useState(this.getText()["fileName"] === "" ? this.getText()["fileContent"] : "");
+        this.setFileContent = setFileContent;
+        this.getFileContent = () => {return fileContent};
+
+        const [fileName, setFileName] = React.useState(this.getFileName());
+        this.setFileNameState = setFileName;
+
+        // const [fileWritable, setFileWritable] = React.useState(this.fileWritable);
+        const editorContainerRef = React.useRef<HTMLDivElement>(null);
+        const editorViewRef = React.useRef<EditorView | null>(null);
+        const languageCompartment = React.useRef(new Compartment()).current;
+        // const fileContentRef = React.useRef(fileContent);
+        const suppressEditorChangeRef = React.useRef(false);
+        // this.setFileContent = setFileContent;
+        // this.setFileNameState = setFileName;
+        // this.setFileWritableState = setFileWritable;
+        // const isEditorReadOnly = !(fileWritable && fileContents.length <= this.fileLimit);
+
+        // request file content if the file name is not empty
         React.useEffect(() => {
-            if (this.getFileName() === "" && this.getText()["initialFileContents"] !== undefined) {
-                // show a string
-                forceUpdate({});
+            if (this.getFileName() === "") {
                 return;
             }
             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
@@ -97,92 +127,116 @@ export class TextEditor extends BaseWidget {
                 displayWindowId: displayWindowClient.getWindowId(),
                 widgetKey: this.getWidgetKey(),
                 fileName: this.getFileName(),
-                // executed this display window is opened, try to automatically read and open the file
-                // if the file name is empty, i.e. "", this file can definitely not be opened, then do nothing
-                // if the file name is not empty, try to open the file
                 manualOpen: false,
                 openNewWindow: false,
-            })
-        }, [])
+            });
+        }, []);
 
-        // highlight <code /> every time it renders
+        // create the editor element, it will be attached under element editorContainerRef.current
         React.useEffect(() => {
-            if (elementCodeRef.current !== null) {
-                if (fileContents.length <= this.fileLimit) {
-                    const data = calcReducedFileContents()["contents"];
-                    elementCodeRef.current.textContent = data + ((data.charCodeAt(data.length - 1) === 10 || data.charCodeAt(data.length - 1) === 13) ? " " : "");
-                    Prism1.highlightElement(elementCodeRef.current);
-                } else {
-                    const data = fileContents;
-                    elementCodeRef.current.textContent = data + ((data.charCodeAt(data.length - 1) === 10 || data.charCodeAt(data.length - 1) === 13) ? " " : "");
-                    Prism1.highlightElement(elementCodeRef.current);
-                }
-            }
-        })
-
-        const [fileContents, setFileContents] = React.useState(this.getText()["fileName"] !== "" ? "" : this.getText()["initialFileContents"] === undefined ? "" : this.getText()["initialFileContents"]);
-        const [fileName, setFileName] = React.useState(this.getFileName());
-        const [reducedFileContents, setReducedFileContents] = React.useState("");
-        const elementCodeRef = React.useRef<HTMLElement>(null);
-        const elementTextAreaRef = React.useRef<HTMLTextAreaElement>(null);
-        const elementCodeWrapperRef = React.useRef<HTMLDivElement>(null);
-        this.setFileContentsState = setFileContents;
-        this.setFileNameState = setFileName;
-        const [, forceUpdate] = React.useState({});
-        this.getFileContents = () => {
-            return fileContents;
-        }
-        const calcReducedFileContents = () => {
-            if (this.getFileContents().length >= this.fileLimit) {
-                return {
-                    scrollTop: 3.1415926,
-                    displayHeight: -1,
-                    contents: ""
-                };
-            }
-            if (elementTextAreaRef.current !== null) {
-                const lines = this.getFileContents().split("\n");
-                const sizes = elementTextAreaRef.current.getBoundingClientRect();
-                const boxHeight = sizes["height"];
-                const lineHeight = parseFloat(window.getComputedStyle(elementCodeRef.current!)["lineHeight"]);
-                // pixel
-                const scrollTop = elementTextAreaRef.current.scrollTop;
-                const scrollTopLines = Math.floor(Math.abs(scrollTop) / lineHeight);
-                const displayLines = Math.ceil(boxHeight / lineHeight);
-                const resultArray: string[] = [];
-                for (let ii = scrollTopLines; ii <= scrollTopLines + displayLines; ii++) {
-                    if (lines[ii] !== undefined) {
-                        resultArray.push(lines[ii]);
-                    }
-                }
-                const result = resultArray.join("\n");
-                return {
-                    scrollTop: scrollTop % lineHeight,
-                    displayHeight: displayLines * lineHeight,
-                    contents: result,
-                };
-            } else {
-                return {
-                    scrollTop: 3.1415926,
-                    displayHeight: -1,
-                    contents: this.getFileContents()
-                }
-            }
-        }
-
-        const updateHighlightArea = () => {
-            if (this.getFileContents().length >= this.fileLimit) {
+            if (editorContainerRef.current === null) {
                 return;
             }
-            const reducedFileContentsData = calcReducedFileContents();
-            if (elementCodeRef.current !== null && elementCodeWrapperRef.current !== null) {
-                elementCodeWrapperRef.current.scrollTop = reducedFileContentsData["scrollTop"];
-                setReducedFileContents(reducedFileContentsData["contents"]);
-            }
-        }
 
-        this.updateHighlightArea = updateHighlightArea;
-        const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
+            editorViewRef.current = new EditorView({
+                state: EditorState.create({
+                    // doc: fileContentsRef.current,
+                    // initial content displayed
+                    doc: fileContent,
+                    extensions: [
+                        history(),
+                        keymap.of([...defaultKeymap, ...historyKeymap]),
+                        syntaxHighlighting(defaultHighlightStyle),
+                        languageCompartment.of(this.getLanguageExtension(fileName)),
+                        // user edit callback function
+                        // it is also invoked when the content is changed programtically, however
+                        // the suppressEditorChangeRef.current guards the change, preventing
+                        // the editor to doubly update
+                        EditorView.updateListener.of((update) => {
+                            // if document is not change, or when the program is automatically updating the content
+                            // stop here
+                            if (!update.docChanged || suppressEditorChangeRef.current) {
+                                return;
+                            }
+                            const newFileContents = update.state.doc.toString();
+                            // if (this.getFileName() === "") {
+                            //     this.getText()["fileContent"] = newFileContents;
+                            // }
+                            // this.currentFileContents = newFileContents;
+                            // this.setWindowName(this.getFileName(), true, newFileContents);
+                            // this.setModified(true);
+                            setFileContent(newFileContents);
+                        }),
+                        EditorView.theme({
+                            "&": {
+                                height: "100%",
+                                fontSize: `${GlobalVariables.defaultFontSize}px`,
+                                backgroundColor: "rgba(255, 255, 255, 1)",
+                            },
+                            ".cm-scroller": {
+                                overflow: "auto",
+                                fontFamily: "Consolas,Monaco,'Andale Mono','Ubuntu Mono',monospace",
+                                lineHeight: "1.5",
+                            },
+                            ".cm-content": {
+                                padding: "0",
+                                caretColor: "rgba(0,0,0,1)",
+                            },
+                            ".cm-line": {
+                                padding: "0",
+                            },
+                            "&.cm-focused": {
+                                outline: "none",
+                            },
+                            ".cm-selectionBackground, ::selection": {
+                                backgroundColor: "rgba(173, 214, 255, 0.45)",
+                            },
+                        }),
+                    ],
+                }),
+                parent: editorContainerRef.current,
+            });
+
+            return () => {
+                editorViewRef.current?.destroy();
+                editorViewRef.current = null;
+            };
+        }, []);
+
+        // programtically change the file content: e.g. when the file content is read
+        // this is triggered by this.setFileContent(...)
+        React.useEffect(() => {
+            const editorView = editorViewRef.current;
+            if (editorView === null) {
+                return;
+            }
+
+            const currentDoc = editorView.state.doc.toString();
+            if (currentDoc === fileContent) {
+                return;
+            }
+
+            suppressEditorChangeRef.current = true;
+            editorView.dispatch({
+                changes: {
+                    from: 0,
+                    to: currentDoc.length,
+                    insert: fileContent,
+                },
+            });
+            suppressEditorChangeRef.current = false;
+        }, [fileContent]);
+
+        React.useEffect(() => {
+            const editorView = editorViewRef.current;
+            if (editorView === null) {
+                return;
+            }
+
+            editorView.dispatch({
+                effects: languageCompartment.reconfigure(this.getLanguageExtension(fileName)),
+            });
+        }, [fileName, languageCompartment]);
 
         return (
             <div
@@ -195,6 +249,7 @@ export class TextEditor extends BaseWidget {
                     height: "100%",
                 }}
             >
+                {/* editor title, open/save/save as buttons */}
                 <div style={{
                     paddingLeft: 30,
                     paddingTop: 15,
@@ -213,74 +268,25 @@ export class TextEditor extends BaseWidget {
                         paddingRight: 0,
                         boxSizing: "border-box",
                     }}>
-                        <ElementRectangleButton
-                            marginRight={10}
-                            handleClick={() => {
-                                if (mainProcessMode === "web") {
-                                    g_widgets1.getRoot().getDisplayWindowClient().openTextFileInTextEditorInWebMode(this);
-                                } else {
-                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                                    displayWindowClient.getIpcManager().sendFromRendererProcess("open-text-file-in-text-editor", {
-                                        displayWindowId: displayWindowClient.getWindowId(),
-                                        widgetKey: this.getWidgetKey(),
-                                        fileName: "",
-                                        manualOpen: true,
-                                        openNewWindow: false,
-                                    })
-                                }
-                            }}>
-                            {mainProcessMode === "web" ? "Open file on this computer" : "Open File"}
-                        </ElementRectangleButton>
-                        <ElementRectangleButton
-                            additionalStyle={{
-                                display: mainProcessMode === "web" ? "none" : "inline-flex",
-                            }}
-                            marginRight={10}
-                            handleClick={() => {
-                                const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                                displayWindowClient.getIpcManager().sendFromRendererProcess("save-text-file", {
-                                    displayWindowId: displayWindowClient.getWindowId(),
-                                    widgetKey: this.getWidgetKey(),
-                                    fileName: this.getFileName(), // if it is "", do the "save as"
-                                    fileContents: this.getFileContents(),
-                                })
-                            }}>
-                            Save File
-                        </ElementRectangleButton>
-                        <ElementRectangleButton
-                            marginRight={10}
-                            handleClick={() => {
-                                if (mainProcessMode === "web") {
-                                    const blob = new Blob([this.getFileContents()], { type: 'text/text' });
-                                    const relativePath = path.basename(this.getFileName());
-                                    g_widgets1.getRoot().getDisplayWindowClient().downloadData(blob, relativePath, "Save Text File", "text/text", []);
-                                } else {
-                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                                    displayWindowClient.getIpcManager().sendFromRendererProcess("save-text-file", {
-                                        displayWindowId: displayWindowClient.getWindowId(),
-                                        widgetKey: this.getWidgetKey(),
-                                        fileName: "", // if it is "", do the "save as"
-                                        fileContents: this.getFileContents(),
-                                    })
-                                }
-                            }}>
-                            {mainProcessMode === "web" ? "Save file to this computer" : "Save File As"}
-                        </ElementRectangleButton>
+                        <this.TextEditorOpenFileButton />
+                        <this.TextEditorSaveFileButton />
+                        <this.TextEditorSaveFileAsButton />
                     </div>
                 </div>
+                {/* file name */}
                 <div style={{
                     paddingLeft: 30,
-                    // paddingTop: 15,
                     boxSizing: "border-box",
                     fontSize: GlobalVariables.defaultFontSize * 1,
                 }}>
                     <div>
-                        {fileName === "" ? "[Empty file name]" : (fileName + (this.getWritable() === true ? "" : " [Read Only]"))}
+                        {fileName === "" ? "[Empty file name]" : fileName}
                     </div>
                     <div style={{ marginTop: 10 }}>
-                        {fileContents.length > this.fileLimit ? <div style={{ color: "rgba(255,0,0,1)" }}>The file is larger than 2.5 MB, you can only view it. This editor is designed for casual editing.</div> : ""}
+                        {fileContent.length > this.fileLimit ? <div style={{ color: "rgba(255,0,0,1)" }}>The file is larger than 2.5 MB, you can only view it. This editor is designed for casual editing.</div> : ""}
                     </div>
                 </div>
+                {/* separator line */}
                 <div style={{
                     width: "100%",
                     minHeight: 3,
@@ -290,102 +296,23 @@ export class TextEditor extends BaseWidget {
                     marginTop: 10,
                 }}>
                 </div>
+                {/* file content */}
                 <div style={{
                     position: "relative",
                     width: "100%",
                     height: "100%",
-                    overflowX: "scroll",
-                    overflowY: "scroll",
                     overflow: "hidden",
                     paddingLeft: 30,
                     paddingTop: 0,
                     boxSizing: "border-box",
                 }}>
                     <div style={{
-                        overflowX: "scroll",
-                        overflowY: "scroll",
-                        position: "relative",
-                        // width: fileContents.length > this.fileLimit ? 0 : "100%",
                         width: "100%",
                         height: "100%",
-                        // visibility: fileContents.length > this.fileLimit ? "hidden" : "visible",
+                        minHeight: 0,
                     }}
-                        ref={elementCodeWrapperRef}
-                    >
-                        <code
-                            className={this.determineSyntaxHighlighterClassName()}
-                            ref={elementCodeRef}
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                whiteSpace: "pre",
-                                backgroundColor: "rgba(0,255,0,0)",
-                            }}>
-                            {
-                                fileContents.length > this.fileLimit ? fileContents : reducedFileContents + ((reducedFileContents.charCodeAt(reducedFileContents.length - 1) === 10 || reducedFileContents.charCodeAt(reducedFileContents.length - 1) === 13) ? " " : "")
-                            }
-                        </code>
-                    </div>
-                    {fileContents.length > this.fileLimit ? null :
-                        <textarea
-                            ref={elementTextAreaRef}
-                            style={{
-                                position: "absolute",
-                                top: 0,
-                                left: 30,
-                                right: 0,
-                                width: "calc(100% - 30px)",
-                                height: "100%",
-                                overflowY: "scroll",
-                                overflowX: "scroll",
-                                fontFamily: "Consolas,Monaco,'Andale Mono','Ubuntu Mono',monospace",
-                                fontSize: "1em",
-                                fontWeight: 700,
-                                color: fileContents.length > this.fileLimit ? "rgba(0,0,0,1)" : "rgba(255, 0, 0, 0)",
-                                // color: "rgba(255, 0, 0, 1)",
-                                lineHeight: 1.5,
-                                border: "none",
-                                outline: "none",
-                                padding: 0,
-                                caretColor: "rgba(0,0,0,1)",
-                                whiteSpace: "pre",
-                                backgroundColor: "rgba(255,0,0,0)",
-                                resize: "none",
-                            }}
-                            spellCheck={false}
-                            value={fileContents}
-                            onChange={(event) => {
-                                event.preventDefault();
-                                this.setWindowName(this.getFileName(), true);
-                                this.setModified(true);
-                                setFileContents((prevFileContents: string) => {
-                                    return event.target.value;
-                                });
-                                setReducedFileContents(calcReducedFileContents()["contents"])
-                            }}
-                            onScroll={(event) => {
-                                let scrollTop = 0;
-                                let scrollLeft = 0;
-                                if (elementTextAreaRef.current !== null && elementCodeRef.current !== null) {
-                                    // get <textarea>'s scrollTop
-                                    scrollTop = elementTextAreaRef.current.scrollTop;
-                                    scrollLeft = elementTextAreaRef.current.scrollLeft;
-                                    // set <code>'s scrollTop
-                                    updateHighlightArea();
-                                    if (elementCodeWrapperRef.current !== null) {
-                                        elementCodeWrapperRef.current.scrollLeft = scrollLeft;
-                                    }
-                                }
-                            }}
-                            onDragStart={(event) => {
-                                event.preventDefault();
-                            }}
-                            onDrop={(event) => {
-                                event.preventDefault();
-                            }}
-                        >
-                        </textarea>
-                    }
+                        ref={editorContainerRef}
+                    />
                 </div>
             </div>
         );
@@ -394,51 +321,39 @@ export class TextEditor extends BaseWidget {
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
-    determineSyntaxHighlighterClassName = () => {
-        const fileName = `${this.getFileName()}`;
-        if (fileName.endsWith(".py")) {
-            return "language-python";
-        } else if (fileName.endsWith(".js") || fileName.endsWith(".ts")) {
-            return "language-javascript";
-        } else if (fileName.endsWith(".sh") || fileName.endsWith(".cmd")) { // st.cmd
-            return "language-bash";
-        } else if (fileName.endsWith(".java")) {
-            return "language-java";
-        } else if (fileName.endsWith(".pl")) {
-            return "language-perl";
-        } else if (fileName.endsWith(".json") || fileName.endsWith(".tdl")) {
-            return "language-json";
-        } else if (fileName.endsWith(".db") || fileName.endsWith(".template") || fileName.endsWith(".substitutions") || fileName.endsWith(".dbd")) {
-            return "language-julia";
-        } else if (fileName.endsWith(".svg")) {
-            return "language-svg";
-        } else if (fileName.endsWith(".ini")) {
-            return "language-ini";
-        } else if (fileName.endsWith(".xml") || fileName.endsWith(".bob") || fileName.endsWith(".opi")) {
-            return "language-xml";
-        } else if (fileName.endsWith(".html")) {
-            return "language-html";
-        } else if (fileName.endsWith(".css")) {
-            return "language-css";
-        } else if (fileName.endsWith(".c") || fileName.endsWith(".cc") || fileName.endsWith(".cpp") || fileName.endsWith(".h")) {
-            return "language-clike";
-        } else if (fileName.endsWith(".toml")) {
-            return "language-toml";
-        } else if (fileName.endsWith(".sql")) {
-            return "language-sql";
-        } else if (fileName.endsWith(".tex")) {
-            return "language-latex";
-        } else if (fileName.endsWith(".ps1")) {
-            return "language-powershell";
-        } else if (fileName.endsWith(".md")) {
-            return "language-markdown";
-        } else if (fileName.includes("Makefile") || fileName.includes("configure/CONFIG") || fileName.includes("configure/RULES") || fileName.includes("configure/RELEASE") || fileName.includes("envPaths")) {
-            return "language-makefile";
-        } else {
-            return "language-plain";
-        }
-    }
 
+    TextEditorOpenFileButton = () => {
+        const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
+        return (
+            <ElementRectangleButton marginRight={10} handleClick={this.openFile}>
+                {mainProcessMode === "web" ? "Open file on this computer" : "Open File"}
+            </ElementRectangleButton>
+        );
+    };
+
+    TextEditorSaveFileButton = () => {
+        const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
+        return (
+            <ElementRectangleButton
+                additionalStyle={{
+                    display: mainProcessMode === "web" ? "none" : "inline-flex",
+                }}
+                marginRight={10}
+                handleClick={this.saveFile}
+            >
+                Save File
+            </ElementRectangleButton>
+        );
+    };
+
+    TextEditorSaveFileAsButton = () => {
+        const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
+        return (
+            <ElementRectangleButton marginRight={10} handleClick={this.saveFileAs}>
+                {mainProcessMode === "web" ? "Save file to this computer" : "Save File As"}
+            </ElementRectangleButton>
+        );
+    };
 
     // -------------------- helpers ----------------
 
@@ -452,50 +367,90 @@ export class TextEditor extends BaseWidget {
         readable: boolean,
         writable: boolean,
     }) => {
-        // this.setFileContents(result["fileContents"]);
+        // this.currentFileContents = result["fileContents"];
+        // this.setModified(false);
+        // this.setWritable(result["writable"]);
+        // this.setFileName(result["fileName"], false, result["fileContents"]);
         this.setFileName(result["fileName"]);
-        this.setWritable(result["writable"]);
-        if (this.setFileContentsState !== undefined) {
-            this.setFileContentsState(result["fileContents"]);
-        }
         if (this.setFileNameState !== undefined) {
-            this.setFileNameState(this.getFileName());
+            this.setFileNameState(result["fileName"]);
         }
-        this.setWindowName(result["fileName"], false);
-        this.setModified(false);
+        if (this.setFileContent !== undefined) {
+            this.setFileContent(result["fileContents"]);
+        }
+        // if (this.setFileNameState !== undefined) {
+        // this.setFileNameState(this.getFileName());
+        // }
     }
 
-    getFileName = () => {
-        return this.getAllText()["fileName"];
+
+    openFile = () => {
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        if (displayWindowClient.getMainProcessMode() === "web") {
+            displayWindowClient.openTextFileInTextEditorInWebMode(this);
+            return;
+        }
+        displayWindowClient.getIpcManager().sendFromRendererProcess("open-text-file-in-text-editor", {
+            displayWindowId: displayWindowClient.getWindowId(),
+            widgetKey: this.getWidgetKey(),
+            fileName: "",
+            manualOpen: true,
+            openNewWindow: false,
+        });
     }
 
-    getFileContents = () => {
-        return "";
+    saveFile = () => {
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        displayWindowClient.getIpcManager().sendFromRendererProcess("save-text-file", {
+            displayWindowId: displayWindowClient.getWindowId(),
+            widgetKey: this.getWidgetKey(),
+            fileName: this.getFileName(),
+            fileContents: this.getFileContent(),
+        });
     }
 
-    setFileName = (newFileName: string, modified: boolean = false) => {
-        this.getText()["fileName"] = newFileName;
-        // update window title
-        this.setWindowName(newFileName, modified);
+    saveFileAs = () => {
+        // todo
+        // const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        // if (displayWindowClient.getMainProcessMode() === "web") {
+        //     const blob = new Blob([this.getFileContents()], { type: "text/text" });
+        //     const relativePath = path.basename(this.getFileName());
+        //     displayWindowClient.downloadData(blob, relativePath, "Save Text File", "text/text", []);
+        //     return;
+        // }
+        // displayWindowClient.getIpcManager().sendFromRendererProcess("save-text-file", {
+        //     displayWindowId: displayWindowClient.getWindowId(),
+        //     widgetKey: this.getWidgetKey(),
+        //     fileName: "",
+        //     fileContents: this.getFileContents(),
+        // });
     }
 
-    setWindowName = (newFileName: string, modified: boolean = false) => {
+    // setFileName = (newFileName: string, modified: boolean = false, fileContents: string = this.currentFileContents) => {
+    //     this.getText()["fileName"] = newFileName;
+    //     this.getText()["fileContent"] = newFileName === "" ? fileContents : "";
+    //     // update window title
+    //     this.setWindowName(newFileName, modified, fileContents);
+    // }
+
+    setWindowName = (newFileName: string, modified: boolean = false, fileContents: string) => {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const canvas = g_widgets1.getWidget("Canvas");
         if (canvas instanceof Canvas) {
             let oldWindowName = canvas.getWindowName();
             let newWindowName = "";
+            const writable = this.getWritable(fileContents);
             if (newFileName === "") {
                 newWindowName = "TDM Text Editor -- [Empty file name]";
             } else {
                 if (modified) {
-                    if (this.getWritable() === false) {
+                    if (writable === false) {
                         newWindowName = "TDM Text Editor -- " + newFileName + " [Read Only]" + " [Modified]";
                     } else {
                         newWindowName = "TDM Text Editor -- " + newFileName + " [Modified]";
                     }
                 } else {
-                    if (this.getWritable() === false) {
+                    if (writable === false) {
                         newWindowName = "TDM Text Editor -- " + newFileName + " [Read Only]";
                     } else {
                         newWindowName = "TDM Text Editor -- " + newFileName;
@@ -519,14 +474,37 @@ export class TextEditor extends BaseWidget {
         displayWindowClient.setTextEditorModified(newState);
     }
 
-    getWritable = () => {
-        return this.getAllText()["writable"];
+    getWritable = (fileContents: string) => {
+        // return this.fileWritable === true && fileContents.length <= this.fileLimit;
+        // todo
+        return true;
     }
 
     setWritable = (writable: boolean) => {
-        this.getText()["writable"] = writable;
+        // this.fileWritable = writable;
+        // if (this.setFileWritableState !== undefined) {
+        //     this.setFileWritableState(writable);
+        // }
+        // this.setWindowName(this.getFileName(), this.getModified());
     }
 
+    // -------------------- getters and setters ---------------------
+
+    // getFileContent = () => {
+    //     return this._fileContent;
+    // }
+
+    // setFileContent = (newContent: string) => {
+    //     this._fileContent = newContent;
+    // }
+
+    getFileName = () => {
+        return this._fileName;
+    }
+
+    setFileName = (newName: string) => {
+        this._fileName = newName;
+    }
 
     // -------------------------- tdl -------------------------------
 
@@ -538,13 +516,17 @@ export class TextEditor extends BaseWidget {
 
     generateDefaultTdl: () => any = TextEditor.generateDefaultTdl;
 
-    // static method for generating a widget tdl with external PV name
+    getTdlCopy(newKey: boolean = true): Record<string, any> {
+        const result = super.getTdlCopy(newKey);
+        // todo
+        // result["text"]["fileContent"] = result["text"]["fileName"] === "" ? this.getFileContents() : "";
+        return result;
+    }
+
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_TextEditor_tdl => {
         const result = this.generateDefaultTdl();
         result.text["fileName"] = utilityOptions["fileName"];
-        if (utilityOptions["fileContents"] !== undefined) {
-            result.text["initialFileContents"] = utilityOptions["fileContents"];
-        }
+        result.text["fileContent"] = utilityOptions["fileContent"] ?? "";
         return result;
     };
 

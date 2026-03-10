@@ -711,6 +711,7 @@ export class Terminal extends BaseWidget {
                     fileName: fileName, // when "", do not open anything, when not "", open whatever we have
                     manualOpen: false, // use dialog to open, valid only when fileName is empty (""), if true, open the dialog to choose file, if false, open whatever we have
                     openNewWindow: true, // open in new TextEditor window, without using the dialog
+                    fileContent: "",
                 })
             } else {
                 this.getTerminal().write(`Syntax error for command ${line}`);

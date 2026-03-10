@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2026-03-10T00:40:01Z",
+    "buildDate": "2026-03-10T06:04:46Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
@@ -56,6 +56,11 @@
         "webpack-dev-server": "^5.2.2"
     },
     "dependencies": {
+        "@codemirror/commands": "^6.10.2",
+        "@codemirror/lang-json": "^6.0.2",
+        "@codemirror/lang-python": "^6.2.1",
+        "@codemirror/state": "^6.5.4",
+        "@codemirror/view": "^6.39.16",
         "@types/cors": "^2.8.19",
         "@types/dom-to-image": "^2.6.7",
         "@types/express-session": "^1.18.2",

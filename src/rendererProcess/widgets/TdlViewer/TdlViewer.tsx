@@ -288,6 +288,7 @@ export class TdlViewer extends BaseWidget {
                             fileName: scriptFullFileName, // practically the only info that we need, because we are going to open it in a new window
                             manualOpen: false,  // do not show dialog
                             openNewWindow: true, // open in new TextEditor window
+                            fileContent: "",
                         })
                     }}
                 >

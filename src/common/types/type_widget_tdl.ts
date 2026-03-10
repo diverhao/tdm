@@ -2347,8 +2347,7 @@ export const defaultCalculatorTdl: type_Calculator_tdl = {
 
 export const type_TextEditor_text_tdl_schema = {
     fileName: "string",
-    writable: "boolean",
-    initialFileContents: ["string", "undefined"],
+    fileContent: "string",
 } as const satisfies TypeSchema;
 
 export const type_TextEditor_tdl_schema = {
@@ -2393,8 +2392,7 @@ export const defaultTextEditorTdl: type_TextEditor_tdl = {
     },
     text: {
         fileName: "",
-        writable: false,
-        initialFileContents: undefined,
+        fileContent: "",
     },
     channelNames: [],
     groupNames: [],
@@ -2464,7 +2462,7 @@ export const defaultImageTdl: type_Image_tdl = {
         top: 100,
         width: 100,
         height: 100,
-        backgroundColor: "rgba(255, 255, 2550, 1)",
+        backgroundColor: "rgba(255, 255, 255, 1)",
         transform: "rotate(0deg)",
         borderStyle: "solid",
         borderWidth: 0,

@@ -472,6 +472,7 @@ export class IpcManagerOnDisplayWindow {
                                 fileName: fileFullName,
                                 manualOpen: false,
                                 openNewWindow: false,
+                                fileContent: "",
                             })
                         }
                         return;
@@ -1119,7 +1120,9 @@ export class IpcManagerOnDisplayWindow {
                                 tdl: undefined,
                                 // TextEditor utility window specific contents
                                 textEditorFileName: textEditorWidget.getFileName(),
-                                textEditorContents: textEditorWidget.getFileContents(),
+                                // todo:
+                                // textEditorContents: textEditorWidget.getFileContents(),
+                                textEditorContents: "",
                                 widgetKey: textEditorWidget.getWidgetKey(),
                             });
                             return;
@@ -1640,8 +1643,9 @@ export class IpcManagerOnDisplayWindow {
         if (status["widgetKey"].startsWith("TextEditor_")) {
             const widget = g_widgets1.getWidget(status["widgetKey"]);
             if (widget instanceof TextEditor) {
-                widget.setWindowName(status["fileName"], false);
-                widget.setFileName(status["fileName"], false);
+                // todo:
+                // widget.setWindowName(status["fileName"], false);
+                // widget.setFileName(status["fileName"], false);
                 widget.setModified(false);
                 // re-render
                 if (widget.setFileNameState !== undefined) {

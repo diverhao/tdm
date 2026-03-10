@@ -314,7 +314,7 @@ export class MainWindowProfileRunPage {
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
                 {
                     utilityType: "TextEditor",
-                    utilityOptions: { fileName: "" },
+                    utilityOptions: { fileName: "/Users/1h7/projects/tdm/package.json", fileContent: "afdssadf" },
                     windowId: mainWindowId,
                 }
             );

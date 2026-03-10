@@ -425,15 +425,14 @@ export class ChannelGraph extends BaseWidget {
                                                 }}
                                                 src={`../../../webpack/resources/webpages/modify-symbol.svg`}
                                                 onClick={() => {
-                                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                                                    const displayWindowId = displayWindowClient.getWindowId();
-                                                    displayWindowClient.getIpcManager().sendFromRendererProcess("create-utility-display-window",
-                                                        {
-                                                            utilityType: "TextEditor",
-                                                            utilityOptions: { fileName: dbFileName },
-                                                            windowId: displayWindowId,
-                                                        }
-                                                    );
+                                                    g_widgets1.openTextEditorWindow({
+                                                        displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                                                        widgetKey: this.getWidgetKey(),
+                                                        manualOpen: false,
+                                                        openNewWindow: true,
+                                                        fileName: dbFileName,
+                                                        fileContent: "",
+                                                    })
                                                 }}
                                             >
                                             </img>

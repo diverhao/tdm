@@ -499,7 +499,7 @@ export class Probe extends BaseWidget {
                                     fileName: "",
                                     manualOpen: false,
                                     openNewWindow: true,
-                                    fileContents: record,
+                                    fileContent: record,
                                 })
                             }}
                             onMouseEnter={() => {
@@ -537,7 +537,7 @@ export class Probe extends BaseWidget {
                                     fileName: "",
                                     manualOpen: false,
                                     openNewWindow: true,
-                                    fileContents: record,
+                                    fileContent: record,
                                 })
                             }}
                             onMouseEnter={() => {
@@ -1409,5 +1409,4 @@ export class Probe extends BaseWidget {
         }
     }
 }
-
 
