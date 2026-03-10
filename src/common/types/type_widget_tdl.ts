@@ -2343,6 +2343,64 @@ export const defaultCalculatorTdl: type_Calculator_tdl = {
     rules: [],
 };
 
+// ======================== TextEditor TDL Schema ========================
+
+export const type_TextEditor_text_tdl_schema = {
+    fileName: "string",
+    writable: "boolean",
+    initialFileContents: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_TextEditor_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_style_tdl_schema,
+    text: type_TextEditor_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_TextEditor_text_tdl = Mutable<InferType<typeof type_TextEditor_text_tdl_schema>>;
+export type type_TextEditor_tdl = Mutable<InferType<typeof type_TextEditor_tdl_schema>>;
+
+export const defaultTextEditorTdl: type_TextEditor_tdl = {
+    type: "TextEditor",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(255, 255,255, 1)",
+        left: 0,
+        top: 0,
+        width: 500,
+        height: 500,
+        boxSizing: "border-box",
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(255, 0, 0, 1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+    },
+    text: {
+        fileName: "",
+        writable: false,
+        initialFileContents: undefined,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
 // ======================== Image Widget ========================
 
 export const type_Image_roi_schema = {

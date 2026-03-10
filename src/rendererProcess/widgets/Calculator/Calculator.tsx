@@ -148,6 +148,7 @@ export class Calculator extends BaseWidget {
         const whiteSpace = allText.wrapWord ? "normal" : "pre";
         const justifyContent = allText.horizontalAlign;
         const alignItems = allText.verticalAlign;
+        const isUtilityWindow = g_widgets1.getRoot().getDisplayWindowClient().getIsUtilityWindow();
         
 
         return (
@@ -164,6 +165,7 @@ export class Calculator extends BaseWidget {
                     justifyContent: justifyContent,
                     alignItems: alignItems,
                     outline: "none",
+                    borderRadius: isUtilityWindow ? 0 : 12,
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
@@ -183,6 +185,7 @@ export class Calculator extends BaseWidget {
         const [historyLine, setHistoryLine] = React.useState("\u00A0");
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const mode = displayWindowClient.getMainProcessMode();
+        const isUtilityWindow = displayWindowClient.getIsUtilityWindow();
         return (
             <div
                 style={{
@@ -194,6 +197,8 @@ export class Calculator extends BaseWidget {
                     padding: 10,
                     justifyContent: "center",
                     alignItems: "center",
+                    borderRadius: isUtilityWindow ? 0 : 12,
+                    overflow: "hidden",
                 }}
             >
                 <this._ElementLcd

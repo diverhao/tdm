@@ -3,26 +3,15 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import path from "path";
+import { defaultTextEditorTdl, type_TextEditor_tdl } from "../../../common/types/type_widget_tdl";
 
 // fix up everytime the <code> is re-rendered, the .js file is compressed, it is modified to export Prism
 // we add module.exports = Prism; to the end of the file
 const Prism1 = require("../../../common/resources/js/prism.js");
-
-export type type_TextEditor_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
 
 export class TextEditor extends BaseWidget {
     // private _fileName: string = "";
@@ -56,39 +45,15 @@ export class TextEditor extends BaseWidget {
             if (this.updateHighlightArea !== undefined) {
                 this.updateHighlightArea();
             }
-        })
+        });
+
+        this.registerUtilityWindowResizeCallback((_event: UIEvent) => {
+            if (this.updateHighlightArea !== undefined) {
+                this.updateHighlightArea();
+            }
+        });
     }
 
-    // ------------------------- event ---------------------------------
-    // concretize abstract method
-    // empty
-
-    // defined in super class
-    // _handleMouseDown()
-    // _handleMouseMove()
-    // _handleMouseUp()
-    // _handleMouseDownOnResizer()
-    // _handleMouseMoveOnResizer()
-    // _handleMouseUpOnResizer()
-    // _handleMouseDoubleClick()
-
-    // ----------------------------- geometric operations ----------------------------
-
-    // defined in super class
-    // simpleSelect()
-    // selectGroup()
-    // select()
-    // simpleDeSelect()
-    // deselectGroup()
-    // deSelect()
-    // move()
-    // resize()
-
-    // ------------------------------ group ------------------------------------
-
-    // defined in super class
-    // addToGroup()
-    // removeFromGroup()
 
     // ------------------------------ elements ---------------------------------
 
@@ -106,30 +71,20 @@ export class TextEditor extends BaseWidget {
 
         return (
             <ErrorBoundary style={{ ...this.getStyle(), boxSizing: "border-box" }} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                </>
+                    <div
+                        style={{
+                            ...this.getElementBodyRawStyle(),
+                            overflow: "hidden",
+                        }
+                        }
+                    >
+                        <this._ElementArea></this._ElementArea>
+                    </div>
             </ErrorBoundary>
         );
     };
 
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            <div
-                style={{
-                    ...this.getElementBodyRawStyle(),
-                    overflow: "hidden",
-                }
-                }
-            >
-                <this._ElementArea></this._ElementArea>
-            </div>
-        );
-    };
-
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementAreaRaw = (): React.JSX.Element => {
         // run once when the display window is first created
         React.useEffect(() => {
             if (this.getFileName() === "" && this.getText()["initialFileContents"] !== undefined) {
@@ -436,6 +391,9 @@ export class TextEditor extends BaseWidget {
         );
     };
 
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
+
     determineSyntaxHighlighterClassName = () => {
         const fileName = `${this.getFileName()}`;
         if (fileName.endsWith(".py")) {
@@ -481,6 +439,10 @@ export class TextEditor extends BaseWidget {
         }
     }
 
+
+    // -------------------- helpers ----------------
+
+
     /**
      * Invoked upon the "text-file-contents" event 
      */
@@ -503,44 +465,10 @@ export class TextEditor extends BaseWidget {
         this.setModified(false);
     }
 
-
-    // concretize abstract method
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-
-    // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = () => {
-        return this._getFirstChannelValue();
-    };
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-    _getChannelUnit = () => {
-        return this._getFirstChannelUnit();
-    };
-
     getFileName = () => {
         return this.getAllText()["fileName"];
     }
 
-    // getFileContents = () => {
-    //     return this.getAllText()["fileContents"];
-    // }
     getFileContents = () => {
         return "";
     }
@@ -591,11 +519,6 @@ export class TextEditor extends BaseWidget {
         displayWindowClient.setTextEditorModified(newState);
     }
 
-
-    // setFileContents = (newContents: string) => {
-    //     this.getText()["fileContents"] = newContents;
-    // }
-
     getWritable = () => {
         return this.getAllText()["writable"];
     }
@@ -605,58 +528,12 @@ export class TextEditor extends BaseWidget {
     }
 
 
-
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
     static generateDefaultTdl = () => {
-        const defaultTdl: type_TextEditor_tdl = {
-            type: "TextEditor",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(255, 255,255, 1)",
-                left: 0,
-                top: 0,
-                width: "100%",
-                height: "100%",
-                boxSizing: "border-box",
-                overflow: "scroll",
-                outlineStyle: "none",
-                // outlineWidth: 1,
-                // outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-            },
-            // the ElementBody style
-            text: {
-                fileName: "",
-                // fileContents: "",
-                writable: false,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
+        const defaultTdl: type_TextEditor_tdl = structuredClone(defaultTextEditorTdl);
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+        return defaultTdl;
     };
 
     generateDefaultTdl: () => any = TextEditor.generateDefaultTdl;
@@ -671,38 +548,6 @@ export class TextEditor extends BaseWidget {
         return result;
     };
 
-    // getTdlCopy()
-
-    // --------------------- getters -------------------------
-
-    // defined in super class
-    // getType()
-    // getWidgetKey()
-    // getStyle()
-    // getText()
-    // getSidebar()
-    // getGroupName()
-    // getGroupNames()
-    // getupdateFromWidget()
-    // getResizerStyle()
-    // getResizerStyles()
-
-    // ---------------------- setters -------------------------
-
-    // ---------------------- channels ------------------------
-
-    // defined in super class
-
-    // getChannelNames()
-    // expandChannelNames()
-    // getExpandedChannelNames()
-    // setExpandedChannelNames()
-    // expandChannelNameMacro()
-
-    // ------------------------ z direction --------------------------
-
-    // defined in super class
-    // moveInZ()
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
     }

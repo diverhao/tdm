@@ -868,6 +868,8 @@ export class DisplayWindowClient {
         } else if (utilityType === "TextEditor") {
             const widgetTdl = TextEditor.generateWidgetTdl(utilityOptions);
             const widgetKey = widgetTdl.widgetKey;
+            widgetTdl.style.width = window.innerWidth;
+            widgetTdl.style.height = window.innerHeight;
             // widgetTdl.text.singleWidget = true;
             // widgetTdl.style.boxSizing = "border-box";
             // widgetTdl.style.padding = 5;
