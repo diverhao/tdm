@@ -132,7 +132,7 @@ export class XYPlotPlotSettings {
                             >
 
                                 <div>
-                                    Trace {this.getPlot().convertLatexSourceToDiv(yAxis.label)}
+                                    Trace {this.getPlot().getMainWidget().expandText(yAxis.label)}
                                 </div>
                                 {yAxisComponents.map((component: SidebarNumberInput | SidebarCheckBox, index: number) => {
                                     return (
