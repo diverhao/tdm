@@ -264,7 +264,7 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("ca-snooper-data", this.handleCaSnooperData)
         this.ipcRenderer.on("ca-sw-data", this.handleCaswData)
         this.ipcRenderer.on("text-file-contents", this.handleTextFileContents)
-        this.ipcRenderer.on("save-text-file-status", this.handleSaveTextFileStatus)
+        this.ipcRenderer.on("update-text-editor-file-name", this.handleUpdateTextEditorFileName)
         this.ipcRenderer.on("new-log", this.handleNewLog)
         this.ipcRenderer.on("file-converter-command", this.handleFileConverterCommand);
         // file browser
@@ -1352,26 +1352,26 @@ export class IpcManagerOnDisplayWindow {
                     );
                 };
             }
-        } else if (command === "open-text-file-large-confirm") {
-            const buttons = info["buttons"];
-            if (buttons !== undefined && buttons.length === 2) {
-                const attachment = info["attachment"];
-                // Yes
-                buttons[0]["handleClick"] = () => {
-                    // this command is from TextEditor window, we should use open-text-file event
-                    this.sendFromRendererProcess("open-text-file-in-text-editor",
-                        { ...attachment, largeFileConfirmOpen: "Yes" }
-                    );
-                };
-                // No
-                buttons[1]["handleClick"] = () => {
-                    // do nothing, do not send back the attachment, otherwise
-                    // the open file dialog pops again
-                    // this.sendFromRendererProcess("open-text-file",
-                    //     { ...attachment, largeFileConfirmOpen: "No" }
-                    // );
-                };
-            }
+        // } else if (command === "open-text-file-large-confirm") {
+        //     const buttons = info["buttons"];
+        //     if (buttons !== undefined && buttons.length === 2) {
+        //         const attachment = info["attachment"];
+        //         // Yes
+        //         buttons[0]["handleClick"] = () => {
+        //             // this command is from TextEditor window, we should use open-text-file event
+        //             this.sendFromRendererProcess("open-text-file",
+        //                 { ...attachment }
+        //             );
+        //         };
+        //         // No
+        //         buttons[1]["handleClick"] = () => {
+        //             // do nothing, do not send back the attachment, otherwise
+        //             // the open file dialog pops again
+        //             // this.sendFromRendererProcess("open-text-file",
+        //             //     { ...attachment, largeFileConfirmOpen: "No" }
+        //             // );
+        //         };
+        //     }
         }
 
         this.getDisplayWindowClient().getPrompt().createElement("dialog-message-box", info);
@@ -1505,7 +1505,7 @@ export class IpcManagerOnDisplayWindow {
                     const fileName = prompt.getDialogInputBoxText();
                     if (fileName !== "") {
                         attachment["fileName"] = fileName;
-                        this.sendFromRendererProcess("open-text-file-in-text-editor",
+                        this.sendFromRendererProcess("open-text-file",
                             attachment,
                         );
                     }
@@ -1631,7 +1631,7 @@ export class IpcManagerOnDisplayWindow {
             if (widget instanceof TextEditor) {
                 widget.loadFileContents({
                     fileName: result["fileName"],
-                    fileContents: result["fileContents"],
+                    fileContent: result["fileContent"],
                     readable: result["readable"],
                     writable: result["writable"],
                 })
@@ -1639,7 +1639,7 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleSaveTextFileStatus = (event: string, status: IpcEventArgType2["save-text-file-status"]) => {
+    handleUpdateTextEditorFileName = (event: string, status: IpcEventArgType2["update-text-editor-file-name"]) => {
         if (status["widgetKey"].startsWith("TextEditor_")) {
             const widget = g_widgets1.getWidget(status["widgetKey"]);
             if (widget instanceof TextEditor) {
@@ -1650,9 +1650,6 @@ export class IpcManagerOnDisplayWindow {
                 // re-render
                 if (widget.setFileNameState !== undefined) {
                     widget.setFileNameState(status["fileName"]);
-                }
-                if (status["status"] === "success") {
-                    widget.setWritable(true);
                 }
             }
         }

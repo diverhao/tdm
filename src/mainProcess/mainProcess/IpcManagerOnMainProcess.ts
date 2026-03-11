@@ -19,6 +19,7 @@ import { SshServer } from "./SshServer";
 import https from "https";
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import { IncomingMessage } from "http";
+import { TextEditorHandlers } from "../ipc/TextEditor/TextEditorHandlers";
 
 /**
  * Manage IPC messages sent from renderer process.
@@ -33,10 +34,19 @@ export class IpcManagerOnMainProcess {
     private keyAndCert = generateKeyAndCert();
     private clients: Record<string, WebSocket | string> = {};
 
+    private _textEditorHandlers: TextEditorHandlers;
+
     constructor(mainProcess: MainProcess) {
         this._mainProcess = mainProcess;
+        this._textEditorHandlers = new TextEditorHandlers(this);
+
         this.createWebSocketIpcServer();
         this.startToListen();
+
+    }
+
+    getTextEditorHandlers = () => {
+        return this._textEditorHandlers;
     }
 
 
@@ -331,7 +341,8 @@ export class IpcManagerOnMainProcess {
 
         // ----------------- Text editor -------------------------
         this.ipcMain.on("open-text-file-in-text-editor", this.handleOpenTextFileInTextEditor)
-        this.ipcMain.on("save-text-file", this.handleSaveTextFile)
+        this.ipcMain.on("save-text-file", this.getTextEditorHandlers().handleSaveTextFile)
+        this.ipcMain.on("open-text-file", this.getTextEditorHandlers().handleOpenTextFile)
 
         // ------------------ log viewer -------------------------
         this.ipcMain.on("register-log-viewer", this.handleRegisterLogViewer)
@@ -1103,7 +1114,7 @@ export class IpcManagerOnMainProcess {
                             && data["displayWindowId"] !== undefined
                             && data["widgetKey"] !== undefined
                             && data["textEditorContents"]) {
-                            const saveSuccess = this.handleSaveTextFile("", {
+                            const saveSuccess = this.getTextEditorHandlers().handleSaveTextFile("", {
                                 displayWindowId: data["displayWindowId"],
                                 widgetKey: data["widgetKey"],
                                 fileContents: data["textEditorContents"],
@@ -3753,7 +3764,7 @@ export class IpcManagerOnMainProcess {
                 displayWindowAgent.sendFromMainProcess("text-file-contents", {
                     ...options,
                     fileName: fileName,
-                    fileContents: options["fileContents"],
+                    fileContent: options["fileContents"],
                     readable: true,
                     writable: true,
                 }
@@ -3880,7 +3891,7 @@ export class IpcManagerOnMainProcess {
                 displayWindowAgent.sendFromMainProcess("text-file-contents", {
                     ...options,
                     fileName: fileName,
-                    fileContents: fileContents,
+                    fileContent: fileContents,
                     readable: readable,
                     writable: writable,
                 }
@@ -3896,78 +3907,6 @@ export class IpcManagerOnMainProcess {
                 })
             }
         }
-    }
-
-    /**
-     * @returns {boolean} true upon successfully saved, false upon failed
-     */
-
-    handleSaveTextFile = (event: WebSocket | string, data: IpcEventArgType["save-text-file"]): boolean => {
-        const mainProcessMode = this.getMainProcess().getMainProcessMode();
-        if (mainProcessMode === "web") {
-            // do not save in web server
-            return false;
-        }
-        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
-        let fileName: string | undefined = data["fileName"];
-        if (displayWindowAgent instanceof DisplayWindowAgent) {
-            try {
-                // save as
-                if (fileName === "") {
-                    if (this.getMainProcess().getMainProcessMode() === "desktop") {
-                        fileName = dialog.showSaveDialogSync({
-                            title: "Save file to",
-                        });
-                        // cancel the dialog, return immediately
-                        if (fileName === undefined) {
-                            return false;
-                        }
-                    } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
-                        displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
-                            {
-                                info: {
-                                    command: "save-text-file",
-                                    humanReadableMessages: ["Save file to"], // each string has a new line
-                                    buttons: [
-                                        {
-                                            text: "OK",
-                                        },
-                                        {
-                                            text: "Cancel",
-                                        }
-                                    ],
-                                    defaultInputText: "",
-                                    attachment: data,
-                                }
-                            }
-                        );
-
-                        return false;
-                    }
-
-                }
-                fs.writeFileSync(fileName, data["fileContents"]);
-                // tell the display window the file name (if save-as)
-                displayWindowAgent.sendFromMainProcess("save-text-file-status", {
-                    displayWindowId: data["displayWindowId"],
-                    widgetKey: data["widgetKey"],
-                    status: "success",
-                    fileName: fileName,
-                })
-                return true;
-            } catch (e) {
-                displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    info: {
-                        messageType: "error",
-                        humanReadableMessages: [`Error saving file ${fileName}`],
-                        rawMessages: [`${e}`],
-                    }
-                })
-                Log.error("0", e);
-                return false;
-            }
-        }
-        return false;
     }
 
     handleRegisterLogViewer = (event: WebSocket | string, options: IpcEventArgType["register-log-viewer"]) => {

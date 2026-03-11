@@ -11,6 +11,7 @@ import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
+import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import path from "path";
 import { defaultTextEditorTdl, type_TextEditor_tdl } from "../../../common/types/type_widget_tdl";
@@ -51,6 +52,11 @@ export class TextEditor extends BaseWidget {
         // }
 
         // this.fileWritable = widgetTdl.text["fileName"] === "";
+
+        this.registerUtilityWindowResizeCallback((_event: UIEvent) => {
+            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+            g_flushWidgets();
+        });
     }
 
     // ------------------------------ elements ---------------------------------
@@ -325,7 +331,7 @@ export class TextEditor extends BaseWidget {
     TextEditorOpenFileButton = () => {
         const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
         return (
-            <ElementRectangleButton marginRight={10} handleClick={this.openFile}>
+            <ElementRectangleButton marginRight={10} handleClick={this.openTextFile}>
                 {mainProcessMode === "web" ? "Open file on this computer" : "Open File"}
             </ElementRectangleButton>
         );
@@ -363,7 +369,7 @@ export class TextEditor extends BaseWidget {
      */
     loadFileContents = (result: {
         fileName: string,
-        fileContents: string
+        fileContent: string
         readable: boolean,
         writable: boolean,
     }) => {
@@ -376,7 +382,7 @@ export class TextEditor extends BaseWidget {
             this.setFileNameState(result["fileName"]);
         }
         if (this.setFileContent !== undefined) {
-            this.setFileContent(result["fileContents"]);
+            this.setFileContent(result["fileContent"]);
         }
         // if (this.setFileNameState !== undefined) {
         // this.setFileNameState(this.getFileName());
@@ -384,18 +390,32 @@ export class TextEditor extends BaseWidget {
     }
 
 
-    openFile = () => {
+    /**
+     * raise prompt to let user select a file to open
+     * 
+     * if this window's fileName and fileContent are both "", open the file in the
+     * current window; if not, open in new window
+     */
+    openTextFile = () => {
+        console.log("------------------->")
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         if (displayWindowClient.getMainProcessMode() === "web") {
             displayWindowClient.openTextFileInTextEditorInWebMode(this);
             return;
         }
-        displayWindowClient.getIpcManager().sendFromRendererProcess("open-text-file-in-text-editor", {
+
+        let openNewWindow = false;
+        if (this.getFileName() !== "" || this.getFileContent() !== "") {
+            openNewWindow = true;
+        }
+
+        displayWindowClient.getIpcManager().sendFromRendererProcess("open-text-file", {
             displayWindowId: displayWindowClient.getWindowId(),
             widgetKey: this.getWidgetKey(),
             fileName: "",
+            fileContent: "",
             manualOpen: true,
-            openNewWindow: false,
+            openNewWindow: openNewWindow,
         });
     }
 

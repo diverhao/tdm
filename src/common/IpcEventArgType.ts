@@ -577,6 +577,15 @@ export type IpcEventArgType = {
         windowId: string
     }
 
+    "open-text-file": {
+        displayWindowId: string,
+        widgetKey: string,
+        fileName: string,
+        fileContent: string,
+        manualOpen: boolean,
+        openNewWindow: boolean,
+    }
+
 };
 
 
@@ -769,15 +778,14 @@ export type IpcEventArgType2 = {
         displayWindowId: string,
         widgetKey: string
         fileName: string,
-        fileContents: string,
+        fileContent: string,
         readable: boolean,
         writable: boolean,
     },
 
-    "save-text-file-status": {
+    "update-text-editor-file-name": {
         displayWindowId: string,
         widgetKey: string,
-        status: "success" | "fail",
         fileName: string
     },
 

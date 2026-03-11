@@ -1327,7 +1327,7 @@ export class DisplayWindowClient {
                     const fileContents = event.target.result;
                     widget.loadFileContents({
                         fileName: fileName,
-                        fileContents: fileContents,
+                        fileContent: fileContents,
                         readable: true,
                         writable: true,
                     })
@@ -1345,7 +1345,7 @@ export class DisplayWindowClient {
                 const fileContents = event.target.result;
                 widget.loadFileContents({
                     fileName: fileName,
-                    fileContents: fileContents,
+                    fileContent: fileContents,
                     readable: true,
                     writable: true,
                 })
