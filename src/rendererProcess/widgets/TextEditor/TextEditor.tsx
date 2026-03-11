@@ -128,14 +128,7 @@ export class TextEditor extends BaseWidget {
             if (this.getFileName() === "") {
                 return;
             }
-            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-            displayWindowClient.getIpcManager().sendFromRendererProcess("open-text-file-in-text-editor", {
-                displayWindowId: displayWindowClient.getWindowId(),
-                widgetKey: this.getWidgetKey(),
-                fileName: this.getFileName(),
-                manualOpen: false,
-                openNewWindow: false,
-            });
+            this.openTextFile(this.getFileName(), "", false);
         }, []);
 
         // create the editor element, it will be attached under element editorContainerRef.current
@@ -331,7 +324,9 @@ export class TextEditor extends BaseWidget {
     TextEditorOpenFileButton = () => {
         const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
         return (
-            <ElementRectangleButton marginRight={10} handleClick={this.openTextFile}>
+            <ElementRectangleButton marginRight={10} handleClick={() => {
+                this.openTextFile("", "", true);
+            }}>
                 {mainProcessMode === "web" ? "Open file on this computer" : "Open File"}
             </ElementRectangleButton>
         );
@@ -396,8 +391,8 @@ export class TextEditor extends BaseWidget {
      * if this window's fileName and fileContent are both "", open the file in the
      * current window; if not, open in new window
      */
-    openTextFile = () => {
-        console.log("------------------->")
+    openTextFile = (fileName: string, fileContent: string, manualOpen: boolean) => {
+
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         if (displayWindowClient.getMainProcessMode() === "web") {
             displayWindowClient.openTextFileInTextEditorInWebMode(this);

@@ -1,21 +1,56 @@
-import { dialog } from "electron";
-import { IpcManagerOnMainProcess } from "../../mainProcess/IpcManagerOnMainProcess";
 import { DisplayWindowAgent } from "../../windows/DisplayWindow/DisplayWindowAgent";
-import { MainWindowAgent } from "../../windows/MainWindow/MainWindowAgent";
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
-import { Log } from "../../../common/Log";
+import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
 
+type type_DialogShowMessageBoxInfo = IpcEventArgType2["dialog-show-message-box"]["info"];
+type type_DialogShowMessageBoxExtraInfo = Omit<Partial<type_DialogShowMessageBoxInfo>, "messageType" | "humanReadableMessages" | "rawMessages">;
 
-export const showDisplayWindowNotification = (displayWindowAgent: DisplayWindowAgent,
-    messageType: "error" | "info" | "warning",
-    humanReadableMessage: string[],
-    rawMessages: string[],
-) => {
+export function showDisplayWindowNotification(
+    displayWindowAgent: DisplayWindowAgent,
+    info: type_DialogShowMessageBoxInfo,
+): void {
     displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-        info: {
-            messageType: messageType,
-            humanReadableMessages: humanReadableMessage,
-            rawMessages: rawMessages,
-        }
-    })
+        info: info,
+    });
+}
+
+export function showDisplayWindowError(
+    displayWindowAgent: DisplayWindowAgent,
+    humanReadableMessages: string[],
+    rawMessages: string[] = [],
+    extraInfo: type_DialogShowMessageBoxExtraInfo = {},
+): void {
+    showDisplayWindowNotification(displayWindowAgent, {
+        ...extraInfo,
+        messageType: "error",
+        humanReadableMessages,
+        rawMessages,
+    });
+}
+
+export function showDisplayWindowInfo(
+    displayWindowAgent: DisplayWindowAgent,
+    humanReadableMessages: string[],
+    rawMessages: string[] = [],
+    extraInfo: type_DialogShowMessageBoxExtraInfo = {},
+): void {
+    showDisplayWindowNotification(displayWindowAgent, {
+        ...extraInfo,
+        messageType: "info",
+        humanReadableMessages,
+        rawMessages,
+    });
+}
+
+export function showDisplayWindowWarning(
+    displayWindowAgent: DisplayWindowAgent,
+    humanReadableMessages: string[],
+    rawMessages: string[] = [],
+    extraInfo: type_DialogShowMessageBoxExtraInfo = {},
+): void {
+    showDisplayWindowNotification(displayWindowAgent, {
+        ...extraInfo,
+        messageType: "warning",
+        humanReadableMessages,
+        rawMessages,
+    });
 }

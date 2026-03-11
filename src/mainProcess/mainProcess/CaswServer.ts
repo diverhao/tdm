@@ -2,6 +2,7 @@ import { MainProcess } from "./MainProcess";
 import dgram from "dgram";
 import { Log } from "../../common/Log";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
+import { showDisplayWindowError } from "../ipc/shared/SharedServices";
 
 type type_CaUdpMessage = {
     command: number,
@@ -97,16 +98,7 @@ export class CaswServer {
 
         if (displayWindowAgent instanceof DisplayWindowAgent) {
 
-            displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                info: {
-                    // command?: string | undefined,
-                    messageType: "error", // | "warning" | "info", // symbol
-                    humanReadableMessages: [`Failed to start CA snooper service`], // each string has a new line
-                    rawMessages: [errMsg], // computer generated messages
-                    // buttons?: type_DialogMessageBoxButton[] | undefined,
-                    // attachment?: any,
-                }
-            })
+            showDisplayWindowError(displayWindowAgent, [`Failed to start CA snooper service`], [errMsg]);
         }
 
 

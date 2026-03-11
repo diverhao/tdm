@@ -5,7 +5,7 @@ import { DisplayWindowAgent } from "../../windows/DisplayWindow/DisplayWindowAge
 import path from "path";
 import { IpcManagerOnMainProcess } from "../../mainProcess/IpcManagerOnMainProcess";
 import { Log } from "../../../common/Log";
-import { showDisplayWindowNotification } from "../shared/SharedServices";
+import { showDisplayWindowError } from "../shared/SharedServices";
 
 const textEditorHardFileSizeLimit = 10 * 1024 * 1024;
 
@@ -71,12 +71,7 @@ export class TextEditorHandlers {
 
         if (fileNameToBeOpened !== "") {
             if (path.isAbsolute(fileNameToBeOpened) === false) {
-                showDisplayWindowNotification(
-                    displayWindowAgent,
-                    "error",
-                    [`Text file path must be absolute: ${fileNameToBeOpened}`],
-                    [],
-                )
+                showDisplayWindowError(displayWindowAgent, [`Text file path must be absolute: ${fileNameToBeOpened}`]);
                 return;
             }
 
@@ -84,12 +79,7 @@ export class TextEditorHandlers {
                 fs.accessSync(fileNameToBeOpened, fs.constants.F_OK);
                 fs.accessSync(fileNameToBeOpened, fs.constants.R_OK);
             } catch (e) {
-                showDisplayWindowNotification(
-                    displayWindowAgent,
-                    "error",
-                    [`Error opening file ${fileNameToBeOpened}`],
-                    [`${e}`],
-                )
+                showDisplayWindowError(displayWindowAgent, [`Error opening file ${fileNameToBeOpened}`], [`${e}`]);
                 return;
             }
         } else {
@@ -126,12 +116,7 @@ export class TextEditorHandlers {
             const fileStats = fs.statSync(fileNameToBeOpened);
             const fileSize = fileStats.size;
             if (fileSize >= textEditorHardFileSizeLimit) {
-                showDisplayWindowNotification(
-                    displayWindowAgent,
-                    "error",
-                    [`This file is too large (${Math.round(fileSize / 1024 / 1024)} MB) to open. Please select a smaller file.`],
-                    [],
-                );
+                showDisplayWindowError(displayWindowAgent, [`This file is too large (${Math.round(fileSize / 1024 / 1024)} MB) to open. Please select a smaller file.`]);
                 return;
             }
             try {
@@ -146,12 +131,7 @@ export class TextEditorHandlers {
                 });
             } catch (e) {
                 Log.error(e);
-                showDisplayWindowNotification(
-                    displayWindowAgent,
-                    "error",
-                    [`Failed to open file ${fileNameToBeOpened}`],
-                    [`${e}`]
-                )
+                showDisplayWindowError(displayWindowAgent, [`Failed to open file ${fileNameToBeOpened}`], [`${e}`]);
             }
         }
     }
@@ -209,12 +189,7 @@ export class TextEditorHandlers {
             }
             return true;
         } catch (e) {
-            showDisplayWindowNotification(
-                displayWindowAgent,
-                "error",
-                [`Error saving file ${fileName}`],
-                [`${e}`],
-            );
+            showDisplayWindowError(displayWindowAgent, [`Error saving file ${fileName}`], [`${e}`]);
             Log.error("0", e);
             return false;
         }

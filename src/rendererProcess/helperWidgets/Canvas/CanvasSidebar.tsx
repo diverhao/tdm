@@ -7,7 +7,7 @@ import { Log } from "../../../common/Log";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { g_flushWidgets } from "../Root/Root";
-import { ElementMacroInput, ElementMacroTr, ElementButton, ElementMacroTd, ElementMacrosTable } from "../SharedElements/MacrosTable";
+import { ElementMacrosTable } from "../SharedElements/MacrosTable";
 import { SidebarLargeInput } from "../../widgets/BaseWidget/SidebarLargeInput";
 
 

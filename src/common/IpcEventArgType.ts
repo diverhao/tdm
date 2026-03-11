@@ -533,16 +533,6 @@ export type IpcEventArgType = {
         fileContents: string, // base64 data
     },
 
-    "open-text-file-in-text-editor": {
-        displayWindowId: string,
-        widgetKey: string,
-        fileName: string, // when "", do not open anything, when not "", open whatever we have
-        manualOpen: boolean, // use dialog to open, valid only when fileName is empty (""), if true, open the dialog to choose file, if false, open whatever we have
-        openNewWindow: boolean, // open in new TextEditor window, without using the dialog
-        largeFileConfirmOpen?: "Yes" | "No", // if the file is large, confirm to open it
-        fileContents?: string, // if undefined, open the above file, if a string, show the string
-    },
-
     "save-text-file": {
         displayWindowId: string,
         widgetKey: string,

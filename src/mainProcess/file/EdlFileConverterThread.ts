@@ -3,6 +3,7 @@ import { MainProcess } from "../mainProcess/MainProcess";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { Worker } from 'worker_threads';
 import { Log } from "../../common/Log";
+import { showDisplayWindowError, showDisplayWindowInfo } from "../ipc/shared/SharedServices";
 
 
 export class EdlFileConverterThread {
@@ -34,13 +35,7 @@ export class EdlFileConverterThread {
                     widgetKey: options["widgetKey"],
                 });
 
-                displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    info: {
-                        messageType: "error",
-                        humanReadableMessages: [`There is already a file converter session running.`, "TDM can only run one file converter at a time"],
-                        rawMessages: [],
-                    }
-                })
+                showDisplayWindowError(displayWindowAgent, [`There is already a file converter session running.`, "TDM can only run one file converter at a time"]);
             }
         } else {
             worker = new Worker(path.join(__dirname, '../helpers/EdlFileConverterThread.js'), {
@@ -91,13 +86,7 @@ export class EdlFileConverterThread {
                         status: "success",
                         widgetKey: options["widgetKey"],
                     });
-                    displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        info: {
-                            messageType: "info",
-                            humanReadableMessages: [`All files successfully converted.`],
-                            rawMessages: [],
-                        }
-                    })
+                    showDisplayWindowInfo(displayWindowAgent, [`All files successfully converted.`]);
                 } else {
                 }
             });
@@ -117,13 +106,7 @@ export class EdlFileConverterThread {
                     widgetKey: options["widgetKey"],
                 });
 
-                displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                    info: {
-                        messageType: "error",
-                        humanReadableMessages: [`File converter tool quits unexpectedly.`],
-                        rawMessages: [`${error}`],
-                    }
-                })
+                showDisplayWindowError(displayWindowAgent, [`File converter tool quits unexpectedly.`], [`${error}`]);
             });
 
             worker.on('exit', (code) => {
@@ -142,13 +125,7 @@ export class EdlFileConverterThread {
                         status: "success",
                         widgetKey: options["widgetKey"],
                     });
-                    displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        info: {
-                            messageType: "info",
-                            humanReadableMessages: [`All files successfully converted.`],
-                            rawMessages: [],
-                        }
-                    })
+                    showDisplayWindowInfo(displayWindowAgent, [`All files successfully converted.`]);
                 } else {
                     // externally terminated, code === 1, i.e. the Stop button is clicked
                     this.stopThread("User request to quit file converter thread");
