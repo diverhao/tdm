@@ -788,6 +788,11 @@ export type IpcEventArgType2 = {
         fileName: string
     },
 
+    "update-text-editor-modified-status": {
+        displayWindowId: string,
+        widgetKey: string,
+    },
+
     "new-log": {
         data: type_logData
     },

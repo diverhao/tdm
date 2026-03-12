@@ -185,6 +185,10 @@ export class TextEditorHandlers {
                     fileName: fileName,
                 })
             }
+            displayWindowAgent.sendFromMainProcess("update-text-editor-modified-status", {
+                displayWindowId: data["displayWindowId"],
+                widgetKey: data["widgetKey"],
+            });
             return true;
         } catch (e) {
             showDisplayWindowError(displayWindowAgent, [`Error saving file ${fileName}`], [`${e}`]);

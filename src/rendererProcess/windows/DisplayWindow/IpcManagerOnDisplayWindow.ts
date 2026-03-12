@@ -265,6 +265,7 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("ca-sw-data", this.handleCaswData)
         this.ipcRenderer.on("text-file-contents", this.handleTextFileContents)
         this.ipcRenderer.on("update-text-editor-file-name", this.handleUpdateTextEditorFileName)
+        this.ipcRenderer.on("update-text-editor-modified-status", this.handleUpdateTextEditorModifiedStatus)
         this.ipcRenderer.on("new-log", this.handleNewLog)
         this.ipcRenderer.on("file-converter-command", this.handleFileConverterCommand);
         // file browser
@@ -1720,6 +1721,16 @@ export class IpcManagerOnDisplayWindow {
             widget.updateFileName(status["fileName"]);
         } else {
             Log.error("Cannot update TextEditor file name: widget is missing or not TextEditor", status["widgetKey"]);
+        }
+    }
+
+    handleUpdateTextEditorModifiedStatus = (event: string, status: IpcEventArgType2["update-text-editor-modified-status"]) => {
+        const widget = g_widgets1.getWidget(status["widgetKey"]);
+        if (widget instanceof TextEditor) {
+            widget.setModified(false);
+            widget.upateWindowTitle(widget.getFileName());
+        } else {
+            Log.error("Cannot update TextEditor modified status: widget is missing or not TextEditor", status["widgetKey"]);
         }
     }
 

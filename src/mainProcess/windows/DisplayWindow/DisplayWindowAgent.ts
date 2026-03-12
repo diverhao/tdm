@@ -1,14 +1,11 @@
-import { nativeImage, BrowserWindow, MenuItem, Menu, dialog, clipboard, desktopCapturer, webFrame, webContents, Tray, app, screen } from "electron";
+import { nativeImage, BrowserWindow, MenuItem, Menu, dialog, clipboard, desktopCapturer, webFrame, webContents, Tray, screen } from "electron";
 import * as path from "path";
-import * as url from "url";
 import { type_options_createDisplayWindow, WindowAgentsManager } from "../../windows/WindowAgentsManager";
-import { CaChannelAgent, DisplayOperations } from "../../channel/CaChannelAgent";
-import { type_dbrData, Channel_DBR_TYPES } from "../../../common/GlobalVariables";
+import { CaChannelAgent } from "../../channel/CaChannelAgent";
+import { type_dbrData, Channel_DBR_TYPES, type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { ContextMenuDesktop } from "./ContextMenuDesktop";
 import fs, { read } from "fs";
 import { LocalChannelAgent } from "../../channel/LocalChannelAgent";
-import { type_LocalChannel_data } from "../../../common/GlobalVariables";
-import { ChannelAgentsManager } from "../../channel/ChannelAgentsManager";
 import { homedir } from "os";
 import { WebSocket } from "ws";
 import { Worker } from "worker_threads";
@@ -17,10 +14,10 @@ import { Log } from "../../../common/Log";
 import { v4 as uuidv4 } from "uuid";
 import { generateAboutInfo } from "../../global/GlobalMethods";
 import pidusage from "pidusage";
-import * as os from "os";
 import { getCurrentDateTimeStr } from "../../global/GlobalMethods";
-import { Promises, PVA_STATUS_TYPE, type_pva_status, type_pva_value } from "epics-tca";
+import { Promises, type_pva_status, type_pva_value } from "epics-tca";
 import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
+import { DisplayWindowChannelsManager } from "./DisplayWindowChannelsManager";
 import { DisplayWindowFile } from "./DisplayWindowFile";
 import { DisplayWindowLifeCycleManager } from "./DisplayWindowLifeCycleManager";
 
@@ -54,16 +51,6 @@ export class DisplayWindowAgent {
     private _browserWindow: any; //BrowserWindow | undefined;
 
     /**
-     * The CA channels (`CaChannelAgent`) this display window has. <br>
-     *
-     * For each CA channel `CaChannelAgent`, there is a counter part object: `_displayWindowAgents` <br>
-     *
-     * **Note**: It only contains the MONITOR operation channels, it does not contain the GET/PUT
-     * operation channels, as they always have a timeout.
-     */
-    private _channelAgents: Record<string, CaChannelAgent | LocalChannelAgent> = {};
-
-    /**
      * Manager of this agent
      */
     private _windowAgentsManager: WindowAgentsManager;
@@ -73,17 +60,7 @@ export class DisplayWindowAgent {
      */
     private readonly _options: Record<string, any>;
 
-    /**
-     * setInterval for sending new channel data to display window
-     */
-    private _sendChannelsDataInterval: NodeJS.Timeout;
     _takeThumbnailInterval: NodeJS.Timeout | undefined = undefined;
-
-    /**
-     * New channel data on this display window. Updated in ChannelAgentsManager.
-     */
-    // private _newChannelData: Record<string, type_dbrData | { value: undefined }> = {};
-    private _newChannelData: Record<string, type_pva_value | type_pva_value[] | type_dbrData | type_dbrData[] | { value: undefined }> = {};
 
     /**
      * The context menu is initiated on display window in renderer process, but it is configured and realized in main process.
@@ -105,6 +82,8 @@ export class DisplayWindowAgent {
     private forFileBrowserWidgetKey: string = '';
 
     private readonly _displayWindowFile: DisplayWindowFile;
+
+    private readonly _displayWindowChannelsManager: DisplayWindowChannelsManager;
 
     private readonly _displayWindowLifeCycleManager: DisplayWindowLifeCycleManager;
 
@@ -210,6 +189,7 @@ export class DisplayWindowAgent {
         this.hiddenWindow = options["hide"];
         this._contextMenu = new ContextMenuDesktop(this);
         this._displayWindowFile = new DisplayWindowFile(this);
+        this._displayWindowChannelsManager = new DisplayWindowChannelsManager(this);
         this._displayWindowLifeCycleManager = new DisplayWindowLifeCycleManager(this);
         // this._mainProcessId = this.getWindowAgentsManager().getMainProcess().getProcessId();
         // obtain and assign display window ID
@@ -219,20 +199,7 @@ export class DisplayWindowAgent {
         // } else {
         this._id = id;
         // }
-
-        this._sendChannelsDataInterval = setInterval(() => {
-            this.checkChannelsState();
-            // this._newChannelData is modified in this.addNewChannelData() which is invoked in
-            // channel monitor's callback function (in CaChannelAgent.createMonitor())
-            if (Object.keys(this._newChannelData).length > 0) {
-                this.sendFromMainProcess("new-channel-data", {
-                    newDbrData: this._newChannelData
-                });
-                // console.log("sending new channel data", this._newChannelData)
-                this._newChannelData = {};
-            }
-        }, 100);
-
+        this._displayWindowChannelsManager.startChannelsDataInterval();
 
         this.promises.appendPromise("tca-get-meta", false);
         this.promises.appendPromise("fetch-pva-type", false);
@@ -375,286 +342,18 @@ export class DisplayWindowAgent {
 
 
     // -------------------- channels -----------------------
-    // General behaviros for the GET/GET_META/PUT/PUT_META/MONITR operations
-    // (1) they will create or connect the channel if the channel agent does not exist.
-    //     This is realized by .addAndConnectChannel() or .addAndConnectLocalChannel() function.
-    // (2) Before each operation in CA channel, the displayWindowId must be added to the channel agent's
-    //     .displayWindowsOperations, when the operation is finished (or timeout),
-    //     the displayWindowId is removed from .displayWindowsOperations
-    //     This rule does not apply to Local channel. The Local channel adds to .displayWindowsOperations
-    //     only for MONITOR operation.
-    // (3) At the end of each operation, the .checkChannelOperations() must be invoked to check
-    //     if there is any active operation. If not, remove the channel. This rules does not
-    //     apply to the PUT_META operation because this operation is used for initialization of a
-    //     Local channel.
-
-    /**
-     * GET. Create the channel if not exist. <br>
-     *
-     * (1) If the channel does not exist, create and connect it. If failed, return `undefined`.
-     *     This function is blocked until the PV name is resolved.<br>
-     *
-     * (2) Get. There is always a time out for this function. <br>
-     *
-     * (3) Reduce the number of clients on `CaChannelAgent`, and check the lifecycle of the `CaChannelAgent`..
-     *
-     * @param {string} channelName Channel name
-     * 
-     * @param {Channel_DBR_TYPES | undefined | string} dbrType the desired DBR type (CA) or the pv rquest (PVA)
-     * 
-     * @param {number} ioTimeout Time out [second].
-     *
-     */
     tcaGet = async (channelName: string, ioTimeout: number | undefined, dbrType: Channel_DBR_TYPES | undefined | string): Promise<type_dbrData | type_pva_value | { value: undefined }> => {
-
-        const windowAgentsManager = this.getWindowAgentsManager();
-        const mainProcess = windowAgentsManager.getMainProcess();
-        const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelType = channelAgentsManager.determineChannelType(channelName);
-        let result: type_pva_value | type_LocalChannel_data | type_dbrData = { value: undefined };
-
-
-        if (channelType === "ca" || channelType === "pva") {
-            // (1)
-            const t0 = Date.now();
-            const connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
-            const t1 = Date.now();
-            // timeout
-            if (t1 - t0 > (ioTimeout === undefined ? 10000000 : ioTimeout) * 1000) {
-                return { value: undefined };
-            }
-            let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-            if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
-                Log.error("0", `tcaGet: EPICS channel ${channelName} cannot be created/connected.`);
-                return { value: undefined };
-            }
-            // (2)
-            const channelProtocol = channelAgent.getProtocol();
-            if (channelProtocol === "ca" && (typeof dbrType === "number" || dbrType === undefined)) {
-                result = await channelAgent.get(this.getId(), dbrType, ioTimeout);
-            } else if (channelProtocol === "pva" /**&& typeof dbrType === "string"**/) {
-                result = await channelAgent.getPva(this.getId(), ioTimeout);
-            } else {
-                Log.error("Unrecognized protocol", channelProtocol);
-            }
-        } else {
-            // (1)
-            const connectSuccess = this.addAndConnectLocalChannel(channelName);
-            let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-            if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-                Log.debug("0", `tcaGet: Local channel ${channelName} cannot be created/connected.`);
-                return result;
-            }
-            // (2)
-            result = channelAgent.getDbrData();
-        }
-
-        // (3)
-        if (this.checkChannelOperations(channelName) === false) {
-            this.removeChannel(channelName);
-        }
-        return result;
+        return await this.getDisplayWindowChannelsManager().tcaGet(channelName, ioTimeout, dbrType);
     };
 
-    /**
-     * Get the meta data from CA/PVA/Local channel, if timeout = undefined, no timeout, no dbr data type specified <br>
-     *
-     * (1) if the channel agent does not exist, and/or the CA/PVA/Local channel is not connected, create/connect it.<br>
-     *     For CA/PVA channel, connecting to the channel does not time out.  <br>
-     *     For Local channel, the channel agent creation is synchronous.<br>
-     *     Then the corresponding data structure is created. <br>
-     *
-     * (2) If the channel is CA channel, asynchronously obtain GR and TIME type data, then add the "value count",
-     *     server address, and native dbr type to the result.<br>
-     *     If the channel is Local channel, synchronously get the dbr data. <br>
-     * 
-     * (3) If the channel is PVA, get the channel PVA type and the value with pv request "".
-     *
-     * (4) Check if there is any active operations for this channel. If not, destry it.
-     */
-
     tcaGetMeta = async (channelName: string, ioTimeout: number | undefined): Promise<type_dbrData | type_LocalChannel_data | { value: undefined }> => {
-        const windowAgentsManager = this.getWindowAgentsManager();
-        const mainProcess = windowAgentsManager.getMainProcess();
-        const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelType = channelAgentsManager.determineChannelType(channelName);
-        let result: type_LocalChannel_data | type_dbrData = { value: undefined };
-
-        if (channelType === "ca" || channelType === "pva") {
-            const t0 = Date.now();
-
-            let connectSuccess = false;
-            connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
-
-            const t1 = Date.now();
-            // timeout
-            if (ioTimeout !== undefined) {
-                if (t1 - t0 > ioTimeout * 1000) {
-                    return { value: undefined };
-                }
-            }
-
-            let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-
-            if (!connectSuccess || channelAgent === undefined) {
-                Log.debug("0", `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
-                return { value: undefined };
-            }
-
-
-            if (channelAgent instanceof CaChannelAgent) {
-                if (channelType === "ca") {
-                    // (2)
-                    const dbrTypeNum_GR = channelAgent.getDbrTypeNum_GR();
-                    const dbrTypeNum_CTRL = channelAgent.getDbrTypeNum_CTRL();
-                    if (dbrTypeNum_GR === undefined) {
-                        Log.debug("0", `Channel ${channelName} does not have a GR type data.`);
-                        return { value: undefined };
-                    }
-                    // only GET once, the get() method may destroy the channel if there is no user
-                    // result = await channelAgent.get(this.getId(), dbrTypeNum_GR, ioTimeout);
-                    result = await channelAgent.get(this.getId(), dbrTypeNum_CTRL, ioTimeout);
-                    // const dbrTypeNum_TIME = channelAgent.getDbrTypeNum_TIME();
-                    // if (dbrTypeNum_TIME === undefined) {
-                    // Log.debug("0", `Channel ${channelName} does not have a TIME type data.`);
-                    // } else {
-                    // const dbrDataTime = await channelAgent.get(this.getId(), dbrTypeNum_GR, ioTimeout);
-                    // result = { ...result, ...dbrDataTime };
-                    // }
-
-                    // convenient data field
-                    if (result.value !== undefined) {
-                        result.DBR_TYPE = dbrTypeNum_GR;
-                        result.valueCount = channelAgent.getValueCount();
-                        result.serverAddress = channelAgent.getServerAddress();
-                        result.accessRight = channelAgent.getAccessRight();
-                    }
-                } else if (channelType === "pva") {
-                    // todo: are we using tcaGetMeta for pva?
-                    // (3)
-                    result = await channelAgent.fetchPvaType();
-                    // access right can be obtained from EPICS v4 data structure
-                    result.valueCount = channelAgent.getValueCount();
-                    result.serverAddress = channelAgent.getServerAddress();
-                }
-            }
-        } else {
-            // loc://
-            // (1) no time out
-            let connectSuccess = false;
-            connectSuccess = this.addAndConnectLocalChannel(channelName);
-            let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-            if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-                Log.debug("0", `tcaGetMeta: Local channel ${channelName} cannot be created/connected.`);
-                return result;
-            }
-
-            // (2)
-            // no need to add and remove channel operations
-            result = channelAgent.getDbrData();
-        }
-
-        // (4)
-        if (this.checkChannelOperations(channelName) === false) {
-            // ! shall we remove channel after get meta?
-            // this.removeChannel(channelName);
-        }
-
-        this.promises.resolvePromise("tca-get-meta", "");
-
-        return result;
+        return await this.getDisplayWindowChannelsManager().tcaGetMeta(channelName, ioTimeout);
     };
 
     fetchPvaType = async (channelName: string, ioTimeout: number | undefined): Promise<Record<string, any> | undefined> => {
-        const windowAgentsManager = this.getWindowAgentsManager();
-        const mainProcess = windowAgentsManager.getMainProcess();
-        const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelType = channelAgentsManager.determineChannelType(channelName);
-        let result: type_LocalChannel_data | type_dbrData = { value: undefined };
-
-        if (channelType !== "pva") {
-            return undefined;
-        }
-        const t0 = Date.now();
-
-        let connectSuccess = false;
-        connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
-
-        const t1 = Date.now();
-        // timeout
-        if (ioTimeout !== undefined) {
-            if (t1 - t0 > ioTimeout * 1000) {
-                return undefined;
-            }
-        }
-
-        let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-
-        if (!connectSuccess || channelAgent === undefined) {
-            Log.debug("0", `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
-            return undefined;
-        }
-
-
-        if (channelAgent instanceof CaChannelAgent) {
-
-            // (3)
-            result = await channelAgent.fetchPvaType();
-        }
-
-        // (4)
-        if (this.checkChannelOperations(channelName) === false) {
-            // ! shall we remove channel after get meta?
-            // this.removeChannel(channelName);
-        }
-
-        this.promises.resolvePromise("fetch-pva-type", "");
-
-        return result;
+        return await this.getDisplayWindowChannelsManager().fetchPvaType(channelName, ioTimeout);
     };
 
-
-
-    // tcaGetPvaType = async (channelName: string): Promise<undefined | any> => {
-    //     const windowAgentsManager = this.getWindowAgentsManager();
-    //     const mainProcess = windowAgentsManager.getMainProcess();
-    //     const channelAgentsManager = mainProcess.getChannelAgentsManager();
-    //     const channelType = ChannelAgentsManager.determineChannelType(channelName);
-    //     let pvaType: any = undefined;
-
-    //     if (channelType !== "pva") {
-    //         return undefined;
-    //     }
-
-    //     let connectSuccess = false;
-    //     connectSuccess = await this.addAndConnectChannel(channelName, undefined);
-
-    //     let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-
-    //     if (!connectSuccess || channelAgent === undefined) {
-    //         Log.debug("0", `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
-    //         return { value: undefined };
-    //     }
-
-    //     if (channelAgent instanceof CaChannelAgent) {
-    //         // (3)
-    //         pvaType = await channelAgent.fetchPvaType();
-    //     }
-
-    //     // (4)
-    //     if (this.checkChannelOperations(channelName) === false) {
-    //         // ! shall we remove channel after get meta?
-    //         // this.removeChannel(channelName);
-    //     }
-
-    //     return JSON.parse(JSON.stringify(pvaType));
-    // };
-
-    /**
-     * Write meta data to LocalChannel, not applicable to CaChannel<br>
-     *
-     * It can be done once
-     */
     tcaPutMeta = (
         channelName: string,
         dbrMetaData: {
@@ -663,164 +362,53 @@ export class DisplayWindowAgent {
             strings: string[];
         }
     ): void => {
-        const channelAgentsManager = this.getWindowAgentsManager().getMainProcess().getChannelAgentsManager();
-        const channelType = channelAgentsManager.determineChannelType(channelName);
-
-        if ((channelType !== "local") && (channelType !== "global")) {
-            return;
-        }
-
-        this.addAndConnectLocalChannel(channelName);
-
-        const channelAgent = channelAgentsManager.getChannelAgent(channelName);
-
-        if (channelAgent instanceof LocalChannelAgent && channelAgent.metaDataInitialized === true) {
-            channelAgent.metaDataInitialized = true;
-            channelAgent.setValue(dbrMetaData["value"]);
-            channelAgent.setDbrType(dbrMetaData["type"]);
-            channelAgent.setDbrStrings(dbrMetaData["strings"]);
-        } else {
-            Log.error("0", `Cannot find the agent for local channel ${channelName}`);
-        }
+        this.getDisplayWindowChannelsManager().tcaPutMeta(channelName, dbrMetaData);
     };
 
-    /**
-     * PUT <br>
-     *
-     * Create the channel if not exist.  <br>
-     *
-     * (1) If the channel does not exist, create and connect it. If failed, return `undefined`. <br>
-     *
-     * (2) Put if the profile allows <br>
-     *
-     * (3) Reduce the number of clients on `CaChannelAgent`, and check the lifecycle of the `CaChannelAgent`.
-     *
-     * @returns {Promise<undefined | number>} undefined if the CA operation fails, the IO ID for synchronous version (waitNotify = false), the ECA status code for asynchronous version (waitNotify = true). PVA always returns a Status
-     */
     tcaPut = async (channelName: string, dbrData: type_dbrData | type_LocalChannel_data, ioTimeout: number, pvaValueField: string, waitNotify: boolean): Promise<number | undefined | type_pva_status> => {
-        const windowAgentsManager = this.getWindowAgentsManager();
-        const mainProcess = windowAgentsManager.getMainProcess();
-        const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelType = channelAgentsManager.determineChannelType(channelName);
-        let putStatus: number | undefined | type_pva_status = undefined;
-        // (1)
-        if (channelType === "ca" || channelType === "pva") {
-            const t0 = Date.now();
-            const connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
-
-            const t1 = Date.now();
-            // timeout
-            if (t1 - t0 > ioTimeout * 1000) {
-                return putStatus;
-            }
-            let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-            if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
-                Log.debug("0", `tcaPut: EPICS channel ${channelName} cannot be created/connected.`);
-                return putStatus;
-            }
-            // (2)
-            const selectedProfile = this.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
-            if (selectedProfile === undefined) {
-                Log.error(-1, "No profile selected, quit PUT operation.")
-                return putStatus;
-            }
-            const disablePut = selectedProfile.getDisablePut();
-            if (`${disablePut}`.toLowerCase() === "yes") {
-                Log.warn(-1, "This profile does allow PUT operation for", channelName);
-                return putStatus;
-            } else {
-                if (channelType === "ca") {
-                    putStatus = await channelAgent.put(this.getId(), dbrData, waitNotify, ioTimeout);
-                } else {
-                    putStatus = await channelAgent.putPva(this.getId(), dbrData, ioTimeout, pvaValueField);
-                }
-
-                // log PUT operation: PV name, host name, new value
-                Log.info("TCA PUT: ", channelName, os.hostname(), JSON.stringify(dbrData).substring(0, 30))
-
-                // (3)
-                // channelAgent.reduceClientsNum();
-                if (this.checkChannelOperations(channelName) === false) {
-                    this.removeChannel(channelName);
-                }
-
-                return putStatus;
-            }
-        } else {
-            // local channel
-            const connectSuccess = this.addAndConnectLocalChannel(channelName);
-            let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-            if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-                Log.debug("0", `tcaPut: Local channel ${channelName} cannot be created/connected.`);
-                return putStatus;
-            }
-            channelAgent.put(this.getId(), dbrData as type_LocalChannel_data);
-        }
-        return putStatus;
+        return await this.getDisplayWindowChannelsManager().tcaPut(channelName, dbrData, ioTimeout, pvaValueField, waitNotify);
     };
 
-    /**
-     * Create a monitor for the channel. <br>
-     *
-     * (1) If the channel does not exist, create and connect it. The connection attampt never times out. <br>
-     *
-     * (2) Create the monitor, the callback function adds new data to interval. <br>
-     *     PVA and CA channels have same method
-     *
-     * (3) Check the number of "clients" of `CaChannelAgent`. If no "client", destroy this channel <br>
-     *
-     * **Note**: The connection never times out. This is
-     * different from the GET or PUT operation, where the connection always times out
-     *
-     * @param {string} channelName Channel name
-     * @returns {Promise<boolean>} `true` if sucess, `false` if failed
-     */
     tcaMonitor = async (channelName: string): Promise<boolean> => {
-        const windowAgentsManager = this.getWindowAgentsManager();
-        const mainProcess = windowAgentsManager.getMainProcess();
-        const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelType = channelAgentsManager.determineChannelType(channelName);
-
-        if (channelType === "pva") {
-            const promiseObj = this.promises.getPromise("fetch-pva-type");
-            await promiseObj;
-        } else {
-            const promiseObj = this.promises.getPromise("tca-get-meta");
-            await promiseObj;
-
-        }
-
-
-        if (channelType == "ca" || channelType == "pva") {
-            // (1)
-            const connectSuccess = await this.addAndConnectChannel(channelName, undefined);
-
-            let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-            if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
-                Log.debug("0", `tcaMonitor: EPICS channel ${channelName} cannot be created/connected.`);
-                return false;
-            }
-            // (2)
-            await channelAgent.createMonitor(this.getId());
-        } else {
-            const connectSuccess = await this.addAndConnectLocalChannel(channelName);
-            let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-            if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-                Log.debug("0", `tcaMonitor: Local channel ${channelName} cannot be created/connected.`);
-                return false;
-            }
-            // (2)
-            channelAgent.createMonitor(this.getId());
-        }
-        // (3)
-        // channelAgent.reduceClientsNum();
-        if (this.checkChannelOperations(channelName) === false) {
-            this.removeChannel(channelName);
-        }
-        return true;
+        return await this.getDisplayWindowChannelsManager().tcaMonitor(channelName);
     };
 
-    // ---------------------------------------------------------------------------------
+    removeAllChannels = () => {
+        this.getDisplayWindowChannelsManager().removeAllChannels();
+    };
+
+    removeChannel = (channelName: string) => {
+        this.getDisplayWindowChannelsManager().removeChannel(channelName);
+    };
+
+    checkChannelOperations = (channelName: string): boolean => {
+        return this.getDisplayWindowChannelsManager().checkChannelOperations(channelName);
+    };
+
+    addAndConnectChannel = async (channelName: string, ioTimeout: number | undefined = undefined): Promise<boolean> => {
+        return await this.getDisplayWindowChannelsManager().addAndConnectChannel(channelName, ioTimeout);
+    };
+
+    addAndConnectLocalChannel = (channelName: string): boolean => {
+        return this.getDisplayWindowChannelsManager().addAndConnectLocalChannel(channelName);
+    };
+
+    addChannelAgent = (agent: CaChannelAgent | LocalChannelAgent) => {
+        this.getDisplayWindowChannelsManager().addChannelAgent(agent);
+    };
+
+    removeChannelAgent = (agent: CaChannelAgent | LocalChannelAgent) => {
+        this.getDisplayWindowChannelsManager().removeChannelAgent(agent);
+    };
+
+    addNewChannelData = (channelName: string, newData: type_dbrData | type_LocalChannel_data | type_pva_value) => {
+        this.getDisplayWindowChannelsManager().addNewChannelData(channelName, newData);
+    };
+
+    checkChannelsState = () => {
+        this.getDisplayWindowChannelsManager().checkChannelsState();
+    };
+
     /**
      * Clean up the server side for the display window or embedded iframe display.
      *
@@ -845,41 +433,30 @@ export class DisplayWindowAgent {
         Log.info("0", "close display window", this.getId())
         // (7)
         // this.getWindowAgentsManager().getMainProcess().releaseDisplayWindowHtmlIndex(this.getId());
-        // (1)
-        this.removeAllChannels();
-        // (2)
-        clearInterval(this._sendChannelsDataInterval);
-        this._newChannelData = {};
+        // (1) and (2)
+        this.getDisplayWindowChannelsManager().handleWindowClosed();
         // (3)
         this.getWindowAgentsManager().removeAgent(this.getId());
         // (4)
-        // remove thumbnail interval
         clearInterval(this._takeThumbnailInterval);
-        // remove thumbnail on display window
         this.removeThumbnail(this.getId());
 
         // (5) terminate websocket thread
         this.terminateWebSocketClientThread();
 
-        // check if there is any other BrowserWindow,
         const hasPreloadedBrowserWindow = this.getWindowAgentsManager().preloadedDisplayWindowAgent === undefined ? 0 : 1;
         const hasPreviewBrowserWindow = this.getWindowAgentsManager().previewDisplayWindowAgent === undefined ? 0 : 1;
         const numBrowserWindows = Object.keys(this.getWindowAgentsManager().getAgents()).length;
 
-        // if (numBrowserWindows - hasPreloadedBrowserView - hasPreloadedBrowserWindow <= 0) {
         if (numBrowserWindows - hasPreloadedBrowserWindow - hasPreviewBrowserWindow <= 0) {
             if (this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" || this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "ssh-client") {
-                // quit on desktop mode
                 this.getWindowAgentsManager().getMainProcess().quit();
             }
         }
 
-        // (6) destroy client object on the WebSocket IPC server
-        // const mainProcesses = this.getWindowAgentsManager().getMainProcess().getMainProcesses();
         const ipcManager = this.getWindowAgentsManager().getMainProcess().getIpcManager();
         ipcManager.removeClient(this.getId());
 
-        // (8)
         const mainProcess = this.getWindowAgentsManager().getMainProcess();
         const caSnooperServer = mainProcess.getCaSnooperServer();
         if (caSnooperServer !== undefined) {
@@ -890,295 +467,7 @@ export class DisplayWindowAgent {
             caswServer.stopCaswServer(this.getId());
         }
 
-        // (9)
         this.getWindowAgentsManager().setDockMenu();
-
-    };
-
-    // remove all channels, destroy them if necessary
-    removeAllChannels = () => {
-        for (let channelName of Object.keys(this.getChannelAgents())) {
-            this.removeChannel(channelName);
-        }
-    };
-
-    /**
-     * Remove the channel from this display. If no active PUT/GET/MONITOR operation on this channel,
-     * destroy the channel. <br>
-     *
-     * (1) remove the CaChannelAgent from this DisplayWindowAgent <br>
-     *
-     * (2) remove this DisplayWindowAgent from the CaChannelAgent <br>
-     *
-     * (3) if this channel is not used by any other display window, destroy the CaChannelAgent and
-     *     the corresponding Channel. Even if this display window is still monitoring this channel
-     *     or there is outstanding GET/PUT operation initiated from this display window,
-     *     it can destroy the channel. <br>
-     *
-     * @param {string} channelName Channel name.
-     *
-     */
-    removeChannel = (channelName: string) => {
-        const channelAgent = this.getChannelAgent(channelName);
-        const displayWindowAgent = this;
-        if (channelAgent === undefined) {
-            return;
-        }
-
-        if (channelAgent instanceof CaChannelAgent) {
-            const displayWindowId = this.getId();
-            const operations = channelAgent.getDisplayWindowOperations(displayWindowId);
-            if (operations !== undefined && operations[3] > 0) {
-                operations[3] = operations[3] - 1;
-                if (operations[3] > 0) {
-                    // ! the connecting can be interrupted!
-                    // return;
-                }
-            }
-        }
-
-        if (channelAgent instanceof LocalChannelAgent) {
-            // (1)
-            displayWindowAgent.removeChannelAgent(channelAgent);
-            // (2)
-            channelAgent.removeDisplayWindowOperations(this.getId());
-        } else {
-            // (1)
-            displayWindowAgent.removeChannelAgent(channelAgent);
-            // (2)
-            channelAgent.removeDisplayWindowOperations(this.getId());
-        }
-        // (3)
-        if (Object.keys(channelAgent.getDisplayWindowsOperations()).length === 0) {
-            channelAgent.checkLifeCycle();
-        }
-    };
-
-    /**
-     * Check if there is any outstanding GET/PUT/MONITOR operations on the channel initiated by this
-     * display window. <br>
-     *
-     * @return {boolean} `true` if there are operations; `false` if there is no operation.
-     */
-    checkChannelOperations = (channelName: string): boolean => {
-        const windowAgentsManager = this.getWindowAgentsManager();
-        const mainProcess = windowAgentsManager.getMainProcess();
-        const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelAgent = channelAgentsManager.getChannelAgent(channelName);
-        if (!(channelAgent instanceof LocalChannelAgent || channelAgent instanceof CaChannelAgent)) {
-            return false;
-        } else {
-            const operations = channelAgent.getDisplayWindowOperations(this.getId());
-            if (operations === undefined) {
-                return false;
-            } else {
-                let total = operations[0] + operations[1] + operations[2];
-                // ! ignore connecting
-                // if (operations[3] !== undefined) {
-                // 	total = total + operations[3];
-                // }
-                if (total === 0) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        }
-    };
-
-    /**
-     * Add and connect a channel from this display <br>
-     *
-     * If this channel does not exist in ChannelAgentsManager, create the corresponding data structure.
-     * Then try to connect this channel with IOC. If connection failed, clean up and return `false`.
-     *
-     * (1) create `CaChannelAgent` object if not exist for this channel name <br>
-     *
-     * (2) if the channel did not exist, or if the channel exist but the channel and display window are
-     * not linked together, add this `DisplayWindowAgent` to the new `CaChannelAgent` registry <br>
-     *
-     * (3) if the channel did not exist, add the new `CaChannelAgent` to this `DisplayWindowAgent` registry <br>
-     *
-     * (4) connect the channel (blocked by `await`). If success, return, if not, remove this channel fromt his display.
-     *
-     * @param {string} channelName Channel name
-     * @param {number | undefined} ioTimeout Time out [second] when try to resolve the channel. `undefined` means never timeout.
-     * @returns {Promise<boolean>} `true` when success, `false` when failed.
-     * @todo Channel is being connected with timeout t1, and there is another `addAndConnectChannel()` comes in with timeout t2.
-     * How to handle this situation. Currently the second one also uses the first timeout.
-     *
-     */
-    addAndConnectChannel = async (channelName: string, ioTimeout: number | undefined = undefined): Promise<boolean> => {
-        const windowAgentsManager = this.getWindowAgentsManager();
-        const mainProcess = windowAgentsManager.getMainProcess();
-        const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        // (1)
-        let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-        if (channelAgent === undefined) {
-            channelAgent = channelAgentsManager.createChannelAgent(channelName);
-
-            if (!(channelAgent instanceof CaChannelAgent)) {
-                return false;
-            }
-            const displayWindowAgent = this;
-            // (2)
-            // channelAgent.addDisplayWindowAgent(displayWindowAgent);
-            channelAgent.initDisplayWindowOperations(this.getId());
-            // (3)
-            displayWindowAgent.addChannelAgent(channelAgent);
-        } else {
-            if (!(channelAgent instanceof CaChannelAgent)) {
-                return false;
-            }
-            if (channelAgent.getDisplayWindowsOperations()[this.getId()] === undefined) {
-                const displayWindowAgent = this;
-                // (2)
-                // channelAgent.addDisplayWindowAgent(displayWindowAgent);
-                channelAgent.initDisplayWindowOperations(this.getId());
-                // (3)
-                displayWindowAgent.addChannelAgent(channelAgent);
-            }
-        }
-        // (4)
-        // blocks here
-        channelAgent.addDisplayWindowOperation(this.getId(), DisplayOperations.CONNECT);
-        const success = await channelAgent.connect(ioTimeout);
-        channelAgent.removeDisplayWindowOperation(this.getId(), DisplayOperations.CONNECT);
-        if (!success) {
-            this.removeChannel(channelName);
-        }
-        return success;
-    };
-
-    /**
-     * Add and connect a channel from this display <br>
-     *
-     * If this channel does not exist in ChannelAgentsManager, create the corresponding data structure.
-     * Then try to connect this channel with IOC. If connection failed, clean up and return `false`.
-     *
-     * (1) create `CaChannelAgent` object if not exist for this channel name <br>
-     *
-     * (2) if the channel did not exist, or if the channel exist but the channel and display window are
-     * not linked together, add this `DisplayWindowAgent` to the new `CaChannelAgent` registry <br>
-     *
-     * (3) if the channel did not exist, add the new `CaChannelAgent` to this `DisplayWindowAgent` registry <br>
-     *
-     * (4) connect the channel (blocked by `await`). If success, return, if not, remove this channel fromt his display.
-     *
-     * @param {string} channelName Channel name
-     * @param {number | undefined} ioTimeout Time out [second] when try to resolve the channel. `undefined` means never timeout.
-     * @returns {Promise<boolean>} `true` when success, `false` when failed.
-     * @todo Channel is being connected with timeout t1, and there is another `addAndConnectChannel()` comes in with timeout t2.
-     * How to handle this situation. Currently the second one also uses the first timeout.
-     *
-     */
-    addAndConnectLocalChannel = (channelName: string): boolean => {
-        const windowAgentsManager = this.getWindowAgentsManager();
-        const mainProcess = windowAgentsManager.getMainProcess();
-        const channelAgentsManager = mainProcess.getChannelAgentsManager();
-
-        // (1)
-        let channelAgent = channelAgentsManager.getChannelAgent(channelName);
-        if (channelAgent === undefined) {
-            channelAgent = channelAgentsManager.createChannelAgent(channelName);
-            if (!(channelAgent instanceof LocalChannelAgent)) {
-                return false;
-            }
-            const displayWindowAgent = this;
-            // (2)
-            // channelAgent.addDisplayWindowAgent(displayWindowAgent);
-            channelAgent.initDisplayWindowOperations(this.getId());
-            // (3)
-            displayWindowAgent.addChannelAgent(channelAgent);
-        } else {
-            if (!(channelAgent instanceof LocalChannelAgent)) {
-                return false;
-            }
-            if (channelAgent.getDisplayWindowsOperations()[this.getId()] === undefined) {
-                const displayWindowAgent = this;
-                // (2)
-                // channelAgent.addDisplayWindowAgent(displayWindowAgent);
-                channelAgent.initDisplayWindowOperations(this.getId());
-                // (3)
-                displayWindowAgent.addChannelAgent(channelAgent);
-            }
-        }
-        // (4)
-        // blocks here
-        // const success = await channelAgent.connect(ioTimeout);
-        // if (!success) {
-        // 	this.removeChannel(channelName);
-        // }
-        return true;
-    };
-
-    /**
-     * Add a `CaChannelAgent` to the channel registry.
-     *
-     * @param {CaChannelAgent} agent The `CaChannelAgent` object
-     */
-    addChannelAgent = (agent: CaChannelAgent | LocalChannelAgent) => {
-        const channelName = agent.getChannelName();
-        this.getChannelAgents()[channelName] = agent;
-    };
-
-    /**
-     * Remove a `CaChannelAgent` from the channel registry.
-     *
-     * @param {CaChannelAgent} agent The `CaChannelAgent` object
-     */
-    removeChannelAgent = (agent: CaChannelAgent | LocalChannelAgent) => {
-        const channelName = agent.getChannelName();
-        delete this.getChannelAgents()[channelName];
-    };
-
-    /**
-     * Add new data to update interval. The new data will be pushed to display window
-     * periodically. <br>
-     * 
-     * If there is already a data in this._newChannelData, change the data type to Array and
-     * push the new data to the end of the array.
-     *
-     * It is invoked in the monitor listener and the channel state check routine (`this.checkChannelsState()`).
-     *
-     * @param {string} channelName Channel name
-     * @param {type_dbrData} newData The new data
-     *
-     */
-    addNewChannelData = (channelName: string, newData: type_dbrData | type_LocalChannel_data | type_pva_value) => {
-        const data = this._newChannelData;
-        const existingData = data[channelName];
-        if (existingData !== undefined && newData !== undefined) {
-            if (Array.isArray(existingData)) {
-                this._newChannelData[channelName] = [...(existingData), newData] as (type_pva_value | type_dbrData)[]
-            } else {
-                this._newChannelData[channelName] = [existingData, newData] as (type_pva_value | type_dbrData)[]
-            };
-        } else {
-            this._newChannelData[channelName] = newData;
-        }
-    };
-
-    /**
-     * Check the state of the channel. <br>
-     *
-     * If the channel is not in "CREATED" state,
-     * e.g. in "RESOLVED" or "DISCONNECTED" state, add a `undefined` value to the
-     * periodically interval.
-     * @todo do it not that frequently
-     */
-    checkChannelsState = () => {
-        for (let channelAgent of Object.values(this.getChannelAgents())) {
-            if (channelAgent instanceof LocalChannelAgent) {
-                continue;
-            }
-            const oldState = channelAgent.getOldStateStr();
-            const newState = channelAgent.getStateStr();
-            if (oldState === "CREATED" && newState !== "CREATED") {
-                const channelName = channelAgent.getChannelName();
-                this.addNewChannelData(channelName, { value: undefined });
-            }
-        }
     };
 
     // --------------------- context menu --------------
@@ -1569,62 +858,6 @@ export class DisplayWindowAgent {
         }
     }
 
-    // sendFromMainProcess(channel: string, ...args: any[]) {
-    //     if (args[args.length - 1] === "temporarily-disable-log-mechanism") {
-    //         args.splice(args.length - 1, 1);
-    //     }
-
-    //     const processId = this.getWindowAgentsManager().getMainProcess().getProcessId();
-    //     const ipcManager = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager();
-
-    //     const mainProcessMode = this.getWindowAgentsManager().getMainProcess().getMainProcessMode();
-
-    //     if (mainProcessMode === "ssh-server") {
-    //         // forward all messages to tcp client in ssh-server mode
-    //         const ipcManagerOnMainProcesses = this.getWindowAgentsManager().getMainProcess().getMainProcesses().getIpcManager();
-    //         const sshServer = ipcManagerOnMainProcesses.getSshServer();
-    //         if (sshServer !== undefined) {
-    //             sshServer.sendToTcpClient(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: args }));
-    //         }
-    //     } else {
-
-    //         const wsClient = ipcManager.getClients()[this.getId()];
-
-    //         if (wsClient === undefined) {
-    //             // temporarily disable writing the LogViewer to avoid stack overflow
-    //             Log.debug("0", "Cannot find WebSocket IPC client for window", this.getId());
-    //             return;
-    //         }
-
-    //         try {
-    //             // add processId
-    //             // this._browserWindow?.webContents.send(channel, processId, ...args);
-    //             // wsClient.send(channel, ...[processId, ...args]);
-    //             Log.debug("0", "send from main process:", { processId: processId, windowId: this.getId(), eventName: channel, data: args })
-    //             if (typeof wsClient !== "string") {
-    //                 wsClient.send(JSON.stringify({ processId: processId, windowId: this.getId(), eventName: channel, data: args }));
-    //             }
-
-    //             if (channel === "new-channel-data") {
-    //                 const webSocketMonitorClient = this.getWebSocketMonitorClient();
-
-    //                 const webSocketMonitorData: Record<string, any> = {};
-    //                 if (webSocketMonitorClient !== undefined) {
-    //                     for (let channelName of Object.keys(args[0])) {
-    //                         if (this.getWebSocketMonitorChannelNames().includes(channelName)) {
-    //                             webSocketMonitorData[channelName] = { ...args[0][channelName], channelName: channelName };
-    //                         }
-    //                     }
-    //                     if (Object.keys(webSocketMonitorData).length > 0) {
-    //                         webSocketMonitorClient.send(JSON.stringify({ command: "MONITOR", dbrDataObj: webSocketMonitorData }));
-    //                     }
-    //                 }
-    //             }
-    //         } catch (e) {
-    //             Log.error("0", e);
-    //         }
-    //     }
-    // }
 
     // --------------------- window --------------------
 
@@ -1669,193 +902,8 @@ export class DisplayWindowAgent {
         }
     };
 
-    /**
-     * Create a display window. <br>
-     *
-     * Create
-     */
     createBrowserWindow = async (options: any = undefined) => {
-        const mainProcesMode = this.getWindowAgentsManager().getMainProcess().getMainProcessMode();
-        if (mainProcesMode === "ssh-server") {
-            // tell client to create a GUI window
-            await this.createBrowserWindowInSshSeverMode(options);
-        } else if (mainProcesMode === "ssh-client" || mainProcesMode === "desktop") {
-            await this.createBrowserWindowInDesktopMode(options);
-        } else if (mainProcesMode === "web") {
-            await this.createBrowserWindowInWebMode(options);
-        }
-    };
-
-    private createBrowserWindowInDesktopMode = async (options: any) => {
-        const canvasWidgetTdl = this.getTdl().Canvas;
-        let windowName = canvasWidgetTdl?.windowName;
-        let title = windowName;
-        if (title === undefined || title.trim() === "") {
-            if (this.getTdlFileName().trim() !== "") {
-                title = this.getTdlFileName();
-            } else {
-                title = this.getId();
-            }
-        }
-
-        let modal = false;
-
-        // FileBrowser modal window
-        let parent: undefined | BrowserWindow = undefined;
-        const utilityOptions = options["utilityOptions"];
-        const utilityType = options["utilityType"];
-        if (utilityOptions !== undefined && utilityType === "FileBrowser") {
-            if (utilityOptions["parentDisplayWindowId"] !== undefined) {
-                const parentDisplayWindowAgent = this.getWindowAgentsManager().getAgent(utilityOptions["parentDisplayWindowId"]);
-                if (parentDisplayWindowAgent instanceof DisplayWindowAgent) {
-                    parent = parentDisplayWindowAgent.getBrowserWindow();
-                    modal = true;
-                }
-            }
-        }
-        const windowOptions: Electron.BrowserWindowConstructorOptions = {
-            width: 800,
-            height: 500,
-            backgroundColor: `rgb(255, 255, 255)`,
-            title: `${title}`,
-            resizable: true,
-            autoHideMenuBar: true,
-            minWidth: 100,
-            minHeight: 100,
-            // modal window: for file browser, this may not work on Linux
-            modal: modal,
-            parent: parent,
-            frame: true,
-            show: !this.hiddenWindow, // hide preloaded window
-
-            icon: path.join(__dirname, '../../../common/resources/webpages/tdm-logo.png'),
-            webPreferences: {
-                preload: path.join(__dirname, 'preload.js'), // <-- preload script here
-                nodeIntegration: true, // use node.js
-                contextIsolation: true, // to use preload, must be true
-                nodeIntegrationInWorker: true,
-                sandbox: false,
-                webviewTag: true,
-                backgroundThrottling: false,
-                webSecurity: false,
-                defaultFontFamily: {
-                    standard: "Arial",
-                },
-            },
-        };
-        try {
-            // await app.whenReady();
-            app.focus({ steal: true });
-            const window = new BrowserWindow(windowOptions);
-            this._browserWindow = window;
-            this._browserWindow.webContents.setWindowOpenHandler(({ url }: any) => {
-                Log.debug("0", `open new window ${url}`);
-                return { action: "allow" };
-            });
-
-            // events
-            // ! in ssh-client mode, once the window is asked to close, close it immeidately
-            // ! otherwise the window-will-be-closed message from main process may never arrive at
-            // ! the renderer process, causing the window hanging 
-            // if (mainProcesMode !== "ssh-client") {
-            this._browserWindow.on("closed", this.handleWindowClosed);
-            this._browserWindow.on("close", (event: Electron.Event) => {
-                // if the window close button is pressed for the first time, or it is not ready to close,
-                // e.g. the file is not saved, do not close the window immediately, instead, call handler
-                if (this.getDisplayWindowLifeCycleManager().isReadyToClose() === false) {
-                    // set the readyToClose to true in case the communication between the 
-                    // renderer process and main process is broken.
-                    // If we choose to not close the window immediately, it is set back to false in this.handleWindowClose()
-                    this.getDisplayWindowLifeCycleManager().setReadyToClose(true);
-                    event.preventDefault();
-                    this.handleWindowClose();
-                } else {
-                    // do not do anything
-                }
-            });
-            // }
-
-            // context menu for editable element, e.g. input box, to show cut/copy/paste options
-            // see https://www.electronjs.org/docs/latest/api/menu-item
-            // this is the the 2nd place that listens to events from renderer process other than the IpcManagerOnMainProcess
-            this._browserWindow.webContents.on("context-menu", (_: any, props: any) => {
-                const menu = new Menu();
-                if (props.isEditable) {
-                    menu.append(new MenuItem({ label: "Cut", role: "cut" }));
-                    menu.append(new MenuItem({ label: "Copy", role: "copy" }));
-                    menu.append(new MenuItem({ label: "Paste", role: "paste" }));
-                    menu.append(new MenuItem({ label: "mergeAllWindows", role: "mergeAllWindows" }));
-                    menu.popup();
-                }
-            });
-            window.once("ready-to-show", () => {
-                // Chrome caches the zoom level of an html
-                // reset the zoom level to 1 each time when a window is opened
-                window.webContents.setZoomFactor(1);
-            });
-
-            // open development tools
-            // this._window.webContents.openDevTools({ mode: "right" });
-
-            // the Promise resolves when there is no blocking function running
-            // on webpage, i.e. when all modules in DisplayWindowClient.js are loaded
-            // and DisplayWindowClient object is created
-
-            // the data URL is used for passing the IPC server port and display window ID to client
-            // in this way, the webContents.send() is no longer used between the renderer process and main process
-            const ipcServerPort = this.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
-            const hostname = this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop" ?
-                "127.0.0.1"
-                : this.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
-            await window.loadURL(
-                url.format({
-                    pathname: path.join(__dirname, `DisplayWindow.html`),
-                    protocol: "file:",
-                    slashes: true,
-                    query: {
-                        ipcServerPort: `${ipcServerPort}`,
-                        displayWindowId: `${this.getId()}`,
-                        hostname: `${hostname}`,
-                    },
-                })
-            );
-        } catch (e) {
-            Log.error(e);
-        }
-    }
-
-    private createBrowserWindowInSshSeverMode = (options: any) => {
-        // tell client to create a GUI window with a display window id
-        const sshServer = this.getWindowAgentsManager().getMainProcess().getIpcManager().getSshServer();
-        if (sshServer !== undefined) {
-            options["windowId"] = this.getId();
-            sshServer.sendToTcpClient(JSON.stringify({ command: "create-display-window-step-2", data: options }))
-        }
-    }
-
-    /**
-     * create a new window in web browser when the main process in web mode
-     * 
-     * This is initiated by sendPostRequestCommand("open-tdl-file") in renderer process, 
-     * not by sendFromRendererProcess("open-tdl-file"). On the main process, the 
-     * web server (not the websocket IPC server) handles this request, and invokes handleOpenTdlFile() 
-     * in main process IpcManager.
-     * 
-     * @param httpResponse http request object, the request method could be POST or GET
-     */
-    private createBrowserWindowInWebMode = (options: any = undefined) => {
-
-        // httpResponse is undefined 
-        if (options["windowId"] !== undefined) {
-            // if (httpResponse === undefined) {
-            const initiatedByWindowAgent = this.getWindowAgentsManager().getAgent(options["windowId"])
-            if (initiatedByWindowAgent instanceof DisplayWindowAgent) {
-                initiatedByWindowAgent.sendFromMainProcess("display-window-id-for-open-tdl-file", {
-                    displayWindowId: this.getId(),
-                });
-            }
-            return;
-        }
+        await this.getDisplayWindowLifeCycleManager().createBrowserWindow(options);
     };
 
     showAboutTdm = () => {
@@ -2054,10 +1102,10 @@ export class DisplayWindowAgent {
     // 	return mainProcess.getChannelAgentsManager();
     // };
     getChannelAgents = () => {
-        return this._channelAgents;
+        return this.getDisplayWindowChannelsManager().getChannelAgents();
     };
     getChannelAgent = (channelName: string) => {
-        return this.getChannelAgents()[channelName];
+        return this.getDisplayWindowChannelsManager().getChannelAgent(channelName);
     };
     getTdl = (): Record<string, any> => {
         return this._tdl;
@@ -2075,12 +1123,20 @@ export class DisplayWindowAgent {
         return this._browserWindow;
     };
 
+    setBrowserWindow = (newBrowserWindow: any) => {
+        this._browserWindow = newBrowserWindow;
+    };
+
     getContextMenu = () => {
         return this._contextMenu;
     };
 
     getDisplayWindowFile = () => {
         return this._displayWindowFile;
+    };
+
+    getDisplayWindowChannelsManager = () => {
+        return this._displayWindowChannelsManager;
     };
 
     getDisplayWindowLifeCycleManager = () => {
