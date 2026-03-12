@@ -13,32 +13,7 @@ export class DisplayWindowIpc {
         this._displayWindowAgent = displayWindowAgent;
     }
 
-    setWebSocketMonitorClient = (webSocketMonitorClient: WebSocket | undefined) => {
-        this._webSocketMonitorClient = webSocketMonitorClient;
-    };
-
-    getWebSocketMonitorClient = () => {
-        return this._webSocketMonitorClient;
-    };
-
-    getWebSocketMonitorChannelNames = () => {
-        return this._webSocketMonitorChannelNames;
-    };
-
-    setWebSocketMonitorChannelNames = (newNames: string[]) => {
-        this._webSocketMonitorChannelNames = newNames;
-    };
-
-    addWebSocketMonitorChannelName = (newName: string) => {
-        this.setWebSocketMonitorChannelNames([...new Set([...this._webSocketMonitorChannelNames, newName])]);
-    };
-
-    removeWebSocketMonitorChannels = () => {
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        for (const channelName of this.getWebSocketMonitorChannelNames()) {
-            displayWindowAgent.removeChannel(channelName);
-        }
-    };
+    // ------------------------- IPC -------------------------
 
     sendFromMainProcess = <T extends keyof IpcEventArgType2>(channel: T, arg: IpcEventArgType2[T]): void => {
         const displayWindowAgent = this.getDisplayWindowAgent();
@@ -89,6 +64,37 @@ export class DisplayWindowIpc {
         } catch (e) {
             Log.error("0", e);
         }
+    };
+
+    // ------------------- web socket monitor ------------------
+
+    addWebSocketMonitorChannelName = (newName: string) => {
+        this.setWebSocketMonitorChannelNames([...new Set([...this._webSocketMonitorChannelNames, newName])]);
+    };
+
+    removeWebSocketMonitorChannels = () => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        for (const channelName of this.getWebSocketMonitorChannelNames()) {
+            displayWindowAgent.removeChannel(channelName);
+        }
+    };
+
+    // ------------------- setters and getters ------------------
+
+    setWebSocketMonitorClient = (webSocketMonitorClient: WebSocket | undefined) => {
+        this._webSocketMonitorClient = webSocketMonitorClient;
+    };
+
+    getWebSocketMonitorClient = () => {
+        return this._webSocketMonitorClient;
+    };
+
+    setWebSocketMonitorChannelNames = (newNames: string[]) => {
+        this._webSocketMonitorChannelNames = newNames;
+    };
+
+    getWebSocketMonitorChannelNames = () => {
+        return this._webSocketMonitorChannelNames;
     };
 
     getDisplayWindowAgent = () => {

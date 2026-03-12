@@ -6,15 +6,59 @@ import { Log } from "../../../common/Log";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
 
 /**
- * 
- * provide file operations for the particualr display window
+ * Handles file save flows for a display window in desktop and SSH server modes.
  */
 export class DisplayWindowFile {
     private readonly displayWindowAgent: DisplayWindowAgent;
+
     constructor(displayWindowAgent: DisplayWindowAgent) {
         this.displayWindowAgent = displayWindowAgent;
     }
 
+    private readonly saveOptionsByType: Record<IpcEventArgType["window-will-be-closed-user-select"]["dataType"], { filters: { name: string, extensions: string[] }[], defaultFileName: string, defaultExtension: string }> = {
+        "tdl": {
+            filters: [{ name: "tdl", extensions: ["tdl", "json"] }],
+            defaultFileName: "untitled.tdl",
+            defaultExtension: ".tdl",
+        },
+        "data-viewer": {
+            filters: [{ name: "json", extensions: ["json"] }],
+            defaultFileName: "data.json",
+            defaultExtension: ".json",
+        },
+        "text": {
+            filters: [
+                { name: "text", extensions: ["txt"] },
+                { name: "all", extensions: ["*"] },
+            ],
+            defaultFileName: "untitled.txt",
+            defaultExtension: ".txt",
+        },
+    };
+
+    private canWriteToPath = (fileName: string): boolean => {
+        try {
+            if (fs.existsSync(fileName)) {
+                fs.accessSync(fileName, fs.constants.W_OK);
+                return true;
+            }
+
+            fs.accessSync(path.dirname(fileName), fs.constants.W_OK);
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
+    private writeFile = (fileName: string, fileContent: string): string => {
+        try {
+            fs.writeFileSync(fileName, fileContent);
+            return "";
+        } catch (error) {
+            Log.error("0", `Cannot save file ${fileName}`, `${error}`);
+            return `Cannot save file ${fileName}`;
+        }
+    };
 
     /**
      * provided file name, data type, and file content, save the data to a local file
@@ -24,39 +68,11 @@ export class DisplayWindowFile {
      * Returns an empty string on success or an error message when the save is cancelled or fails.
      */
     saveFileInDesktopMode = (dataType: IpcEventArgType["window-will-be-closed-user-select"]["dataType"], fileName: string, fileContent: string): string => {
-        const saveOptionsByType: Record<IpcEventArgType["window-will-be-closed-user-select"]["dataType"], { filters: { name: string, extensions: string[] }[], defaultFileName: string, defaultExtension: string }> = {
-            "tdl": {
-                filters: [{ name: "tdl", extensions: ["tdl", "json"] }],
-                defaultFileName: "untitled.tdl",
-                defaultExtension: ".tdl",
-            },
-            "data-viewer": {
-                filters: [{ name: "json", extensions: ["json"] }],
-                defaultFileName: "data.json",
-                defaultExtension: ".json",
-            },
-            "text": {
-                filters: [
-                    { name: "text", extensions: ["txt"] },
-                    { name: "all", extensions: ["*"] },
-                ],
-                defaultFileName: "untitled.txt",
-                defaultExtension: ".txt",
-            },
-        };
-
-        const saveOptions = saveOptionsByType[dataType];
+        const saveOptions = this.saveOptionsByType[dataType];
         const trimmedFileName = fileName.trim();
 
-        if (trimmedFileName !== "") {
-            try {
-                fs.accessSync(trimmedFileName, fs.constants.W_OK);
-                fs.writeFileSync(trimmedFileName, fileContent);
-                return "";
-            } catch (error) {
-                Log.error("0", `Cannot save file ${trimmedFileName}`, `${error}`);
-                return `Cannot save file ${trimmedFileName}`;
-            }
+        if (trimmedFileName !== "" && this.canWriteToPath(trimmedFileName)) {
+            return this.writeFile(trimmedFileName, fileContent);
         }
 
         const selectedFileName = dialog.showSaveDialogSync({
@@ -73,13 +89,7 @@ export class DisplayWindowFile {
             ? `${selectedFileName}${saveOptions.defaultExtension}`
             : selectedFileName;
 
-        try {
-            fs.writeFileSync(saveFileName, fileContent);
-            return "";
-        } catch (error) {
-            Log.error("0", `Cannot save file ${saveFileName}`, `${error}`);
-            return `Cannot save file ${saveFileName}`;
-        }
+        return this.writeFile(saveFileName, fileContent);
     }
 
     /**
@@ -114,13 +124,7 @@ export class DisplayWindowFile {
             return "prompted";
         }
 
-        try {
-            fs.writeFileSync(trimmedFileName, fileContent);
-            return "";
-        } catch (error) {
-            Log.error("0", `Cannot save file ${trimmedFileName}`, `${error}`);
-            return `Cannot save file ${trimmedFileName}`;
-        }
+        return this.writeFile(trimmedFileName, fileContent);
     }
 
     // ------------------- getters -----------------

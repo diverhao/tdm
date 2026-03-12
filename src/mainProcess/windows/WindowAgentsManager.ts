@@ -257,22 +257,6 @@ export class WindowAgentsManager {
             return undefined;
         } else {
 
-
-            // Log.debug("0", `Try to create a new display window for ${tdlFileName === "" ? "<blank string>" : tdlFileName}`);
-            // // (0)
-            // let displayWindowAgent = this.replacePreloadedDisplayWindow(options);
-            // if (displayWindowAgent !== undefined) {
-            // 	Log.debug("0", `Preloaded display window is consumed, created a new one.`);
-            // 	this.createPreloadedDisplayWindow();
-            // 	return displayWindowAgent;
-            // } else {
-            // 	if (this.creatingPreloadedDisplayWindow === true) {
-            // 		Log.debug("0", `Preloaded display window does not exist, but it is being created.`);
-            // 	} else {
-            // 		Log.debug("0", `Preloaded display window does not exist, create one in background.`);
-            // 		this.createPreloadedDisplayWindow();
-            // 	}
-            // }
             try {
                 // (1)
                 const displayWindowId = this.obtainDisplayWindowId();

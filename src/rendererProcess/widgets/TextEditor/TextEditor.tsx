@@ -35,6 +35,7 @@ export class TextEditor extends BaseWidget {
 
     private _fileName: string = "";
     private _modified: boolean = false;
+    getFileContent = () => { return "" };
 
     constructor(widgetTdl: type_TextEditor_tdl) {
         super(widgetTdl);
@@ -52,7 +53,6 @@ export class TextEditor extends BaseWidget {
 
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -79,21 +79,10 @@ export class TextEditor extends BaseWidget {
         );
     };
 
-    getFileContent = () => { return "" };
 
-    getLanguageExtension = (fileName: string) => {
-        const extension = path.extname(fileName).toLowerCase();
-        if (extension === ".json") {
-            return json();
-        }
-        if (extension === ".py") {
-            return python();
-        }
-        return [];
-    };
 
     _ElementAreaRaw = (): React.JSX.Element => {
-        const [fileContent, setFileContent] = React.useState(this.getText()["fileName"] === "" ? this.getText()["fileContent"] : "");
+        const [fileContent, setFileContent] = React.useState(this.getText()["fileName"]);
         this.setFileContent = setFileContent;
         this.getFileContent = () => { return fileContent };
 
@@ -503,6 +492,18 @@ export class TextEditor extends BaseWidget {
     }
 
 
+    getLanguageExtension = (fileName: string) => {
+        const extension = path.extname(fileName).toLowerCase();
+        if (extension === ".json") {
+            return json();
+        }
+        if (extension === ".py") {
+            return python();
+        }
+        return [];
+    };
+
+
     // -------------------- getters and setters ---------------------
 
 
@@ -533,14 +534,13 @@ export class TextEditor extends BaseWidget {
         return defaultTdl;
     };
 
-    generateDefaultTdl: () => any = TextEditor.generateDefaultTdl;
-
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
-        // todo
-        // result["text"]["fileContent"] = result["text"]["fileName"] === "" ? this.getFileContents() : "";
+        result.text["fileContent"] = "";
         return result;
     }
+
+    generateDefaultTdl: () => any = TextEditor.generateDefaultTdl;
 
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_TextEditor_tdl => {
         const result = this.generateDefaultTdl();

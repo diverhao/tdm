@@ -6,7 +6,15 @@ import { DisplayWindowAgent } from "../../windows/DisplayWindow/DisplayWindowAge
 import { Log } from "../../../common/Log";
 
 /**
- * when we close the window:
+ * when we create a display window
+ * 
+ * mostly starts from 
+ * 
+ */
+
+/**
+ * 
+ * when we close the display window:
  *
  *  [User clicks window close button]
  *                 |
