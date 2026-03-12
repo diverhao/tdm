@@ -3,7 +3,7 @@ import { MainProcess } from "../mainProcess/MainProcess";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { Worker } from 'worker_threads';
 import { Log } from "../../common/Log";
-import { showDisplayWindowError, showDisplayWindowInfo } from "../ipc/shared/SharedServices";
+import { showDisplayWindowError, showDisplayWindowInfo } from "../ipc/WindowMessageBox";
 
 
 export class EdlFileConverterThread {

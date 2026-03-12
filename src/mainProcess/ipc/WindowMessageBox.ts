@@ -1,5 +1,5 @@
-import { DisplayWindowAgent } from "../../windows/DisplayWindow/DisplayWindowAgent";
-import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
+import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
+import { IpcEventArgType2 } from "../../common/IpcEventArgType";
 
 type type_DialogShowMessageBoxInfo = IpcEventArgType2["dialog-show-message-box"]["info"];
 type type_DialogShowMessageBoxExtraInfo = Omit<Partial<type_DialogShowMessageBoxInfo>, "messageType" | "humanReadableMessages" | "rawMessages">;

@@ -178,15 +178,28 @@ export type IpcEventArgType = {
 
     "window-will-be-closed": {
         displayWindowId: string;
-        close: boolean;
+        widgetKey: string;
+        closeImmediately: boolean;
         tdlFileName?: string;
         tdl?: type_tdl;
         // try to save the contents if we are closing a TextEditor utility window
         textEditorFileName?: string;
         textEditorContents?: string;
         dataViewerData?: Record<string, Record<string, number[] | string[]>>;
-        widgetKey?: string;
         saveConfirmation?: "Save" | "Don't Save" | "Cancel",
+    },
+
+    "window-will-be-closed-user-select": {
+        displayWindowId: string;
+        widgetKey: string;
+        saveConfirmation?: "Save" | "Don't Save" | "Cancel",
+        // close: boolean;
+        tdlFileName?: string;
+        tdl?: type_tdl;
+        // try to save the contents if we are closing a TextEditor utility window
+        textEditorFileName?: string;
+        textEditorContents?: string;
+        dataViewerData?: Record<string, Record<string, number[] | string[]>>;
     },
 
     "main-window-will-be-closed": {

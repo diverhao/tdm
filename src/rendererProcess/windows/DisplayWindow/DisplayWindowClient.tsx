@@ -99,7 +99,7 @@ export class DisplayWindowClient {
     private _symbolGallery: SymbolGallery;
     private _channelNameHint: ChannelNameHint;
 
-    private _textEditorModified: boolean = false;
+    // private _textEditorModified: boolean = false;
 
     constructor(displayWindowId: string, ipcServerPort: number | undefined, hostname: string | undefined = undefined) {
         // set log level
@@ -1325,7 +1325,7 @@ export class DisplayWindowClient {
                 const reader = new FileReader();
                 reader.onload = (event: any) => {
                     const fileContents = event.target.result;
-                    widget.loadFileContents({
+                    widget.updateFileContents({
                         fileName: fileName,
                         fileContent: fileContents,
                         readable: true,
@@ -1343,7 +1343,7 @@ export class DisplayWindowClient {
             const reader = new FileReader();
             reader.onload = (event: any) => {
                 const fileContents = event.target.result;
-                widget.loadFileContents({
+                widget.updateFileContents({
                     fileName: fileName,
                     fileContent: fileContents,
                     readable: true,
@@ -1662,14 +1662,6 @@ export class DisplayWindowClient {
 
     getSymbolGallery = () => {
         return this._symbolGallery;
-    }
-
-    getTextEditorModified = () => {
-        return this._textEditorModified;
-    }
-
-    setTextEditorModified = (newState: boolean) => {
-        this._textEditorModified = newState;
     }
 
     getProfileContents = () => {

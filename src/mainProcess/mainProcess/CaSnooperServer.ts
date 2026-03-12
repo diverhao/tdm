@@ -2,7 +2,7 @@ import { MainProcess } from "./MainProcess";
 import dgram from "dgram";
 import { Log } from "../../common/Log";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
-import { showDisplayWindowError } from "../ipc/shared/SharedServices";
+import { showDisplayWindowError } from "../ipc/WindowMessageBox";
 
 type type_CaUdpMessage = {
     command: number,

@@ -5,7 +5,7 @@ import { DisplayWindowAgent } from "../../windows/DisplayWindow/DisplayWindowAge
 import path from "path";
 import { IpcManagerOnMainProcess } from "../../mainProcess/IpcManagerOnMainProcess";
 import { Log } from "../../../common/Log";
-import { showDisplayWindowError } from "../shared/SharedServices";
+import { showDisplayWindowError } from "../WindowMessageBox";
 
 const textEditorHardFileSizeLimit = 10 * 1024 * 1024;
 

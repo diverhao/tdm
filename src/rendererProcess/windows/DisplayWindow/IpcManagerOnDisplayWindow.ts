@@ -1110,23 +1110,27 @@ export class IpcManagerOnDisplayWindow {
                             break;
                         }
                     }
+                    if (textEditorWidget === undefined) {
+                        return;
+                    }
+                    // if content is modified
+                    const isModified = textEditorWidget.getModified();
                     // if it is modified, bring up the prompt
-                    if (this.getDisplayWindowClient().getTextEditorModified() === true) {
-                        if (textEditorWidget !== undefined) {
-                            this.sendFromRendererProcess("window-will-be-closed", {
-                                displayWindowId: displayWindowId,
-                                close: false,
-                                tdlFileName: undefined,
-                                tdl: undefined,
-                                // TextEditor utility window specific contents
-                                textEditorFileName: textEditorWidget.getFileName(),
-                                // todo:
-                                // textEditorContents: textEditorWidget.getFileContents(),
-                                textEditorContents: "",
-                                widgetKey: textEditorWidget.getWidgetKey(),
-                            });
-                            return;
-                        }
+                    if (textEditorWidget !== undefined) {
+                        this.sendFromRendererProcess("window-will-be-closed", {
+                            displayWindowId: displayWindowId,
+                            close: false,
+                            tdlFileName: undefined,
+                            tdl: undefined,
+                            // TextEditor utility window specific contents
+                            textEditorFileName: textEditorWidget.getFileName(),
+                            // todo:
+                            // textEditorContents: textEditorWidget.getFileContents(),
+                            textEditorContents: "",
+                            widgetKey: textEditorWidget.getWidgetKey(),
+                        });
+                        return;
+
                     }
                 } else if (windowName.startsWith("TDM Data Viewer")) {
                     // if it contains any trace data, bring up the prompt to Save/Do not save/Cancel
@@ -1352,26 +1356,26 @@ export class IpcManagerOnDisplayWindow {
                     );
                 };
             }
-        // } else if (command === "open-text-file-large-confirm") {
-        //     const buttons = info["buttons"];
-        //     if (buttons !== undefined && buttons.length === 2) {
-        //         const attachment = info["attachment"];
-        //         // Yes
-        //         buttons[0]["handleClick"] = () => {
-        //             // this command is from TextEditor window, we should use open-text-file event
-        //             this.sendFromRendererProcess("open-text-file",
-        //                 { ...attachment }
-        //             );
-        //         };
-        //         // No
-        //         buttons[1]["handleClick"] = () => {
-        //             // do nothing, do not send back the attachment, otherwise
-        //             // the open file dialog pops again
-        //             // this.sendFromRendererProcess("open-text-file",
-        //             //     { ...attachment, largeFileConfirmOpen: "No" }
-        //             // );
-        //         };
-        //     }
+            // } else if (command === "open-text-file-large-confirm") {
+            //     const buttons = info["buttons"];
+            //     if (buttons !== undefined && buttons.length === 2) {
+            //         const attachment = info["attachment"];
+            //         // Yes
+            //         buttons[0]["handleClick"] = () => {
+            //             // this command is from TextEditor window, we should use open-text-file event
+            //             this.sendFromRendererProcess("open-text-file",
+            //                 { ...attachment }
+            //             );
+            //         };
+            //         // No
+            //         buttons[1]["handleClick"] = () => {
+            //             // do nothing, do not send back the attachment, otherwise
+            //             // the open file dialog pops again
+            //             // this.sendFromRendererProcess("open-text-file",
+            //             //     { ...attachment, largeFileConfirmOpen: "No" }
+            //             // );
+            //         };
+            //     }
         }
 
         this.getDisplayWindowClient().getPrompt().createElement("dialog-message-box", info);
@@ -1629,7 +1633,7 @@ export class IpcManagerOnDisplayWindow {
         if (result["widgetKey"].startsWith("TextEditor_")) {
             const widget = g_widgets1.getWidget(result["widgetKey"]);
             if (widget instanceof TextEditor) {
-                widget.loadFileContents({
+                widget.updateFileContents({
                     fileName: result["fileName"],
                     fileContent: result["fileContent"],
                     readable: result["readable"],
@@ -1640,18 +1644,11 @@ export class IpcManagerOnDisplayWindow {
     }
 
     handleUpdateTextEditorFileName = (event: string, status: IpcEventArgType2["update-text-editor-file-name"]) => {
-        if (status["widgetKey"].startsWith("TextEditor_")) {
-            const widget = g_widgets1.getWidget(status["widgetKey"]);
-            if (widget instanceof TextEditor) {
-                // todo:
-                // widget.setWindowName(status["fileName"], false);
-                // widget.setFileName(status["fileName"], false);
-                widget.setModified(false);
-                // re-render
-                if (widget.setFileNameState !== undefined) {
-                    widget.setFileNameState(status["fileName"]);
-                }
-            }
+        const widget = g_widgets1.getWidget(status["widgetKey"]);
+        if (widget instanceof TextEditor) {
+            widget.updateFileName(status["fileName"]);
+        } else {
+            Log.error("Cannot update TextEditor file name: widget is missing or not TextEditor", status["widgetKey"]);
         }
     }
 

@@ -1881,7 +1881,6 @@ export class DisplayWindowAgent {
     handleWindowClose = () => {
         if (
             this.getWindowAgentsManager().preloadedDisplayWindowAgent === this
-            // || this.getWindowAgentsManager().preloadedEmbeddedDisplayAgent === this
         ) {
             this.getBrowserWindow()?.webContents.close();
             Log.error("0", `You are trying to close a preloaded display window or preloaded embedded display`);

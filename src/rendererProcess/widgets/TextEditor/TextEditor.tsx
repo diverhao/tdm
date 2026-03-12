@@ -17,28 +17,24 @@ import path from "path";
 import { defaultTextEditorTdl, type_TextEditor_tdl } from "../../../common/types/type_widget_tdl";
 
 /**
- * tdl comes with text["fileName"] and text["fileContent"]
- * 
- * if fileName is an empty string, then skip trying to read the file,
- * honor the fileContent, no matter if it is empty or not; 
- * 
- * if fileName is not empty, ignore the fileContent, try to read the file
- * 
+ * TextEditor widget.
+ *
+ * Startup source of content:
+ * - If `text.fileName` is non-empty, TextEditor loads file content from main process.
+ * - If `text.fileName` is empty, TextEditor uses `text.fileContent` as initial content.
+ *
+ * During runtime, this widget:
+ * - manages open/save/save-as IPC requests,
+ * - tracks modified state for close confirmation,
+ * - updates window title with file name and modified marker.
  */
 
 export class TextEditor extends BaseWidget {
     private setFileContent: any;
     setFileNameState: any;
 
-    // private setFileWritableState: React.Dispatch<React.SetStateAction<boolean>> | undefined;
-    // private fileWritable: boolean = false;
-
-    // private _fileContent: string = "";
     private _fileName: string = "";
-
-    // 2.5 MB text file contains more than 2.5 million characters.
-    // Above this threshold, keep the editor in read-only mode.
-    private fileLimit: number = 2.5 * 1024 * 1024;
+    private _modified: boolean = false;
 
     constructor(widgetTdl: type_TextEditor_tdl) {
         super(widgetTdl);
@@ -47,11 +43,6 @@ export class TextEditor extends BaseWidget {
         this.setReadWriteType("write");
 
         this._fileName = widgetTdl.text["fileName"];
-        // if (this._fileName === "") {
-        // this._fileContent = widgetTdl.text["fileContent"]
-        // }
-
-        // this.fileWritable = widgetTdl.text["fileName"] === "";
 
         this.registerUtilityWindowResizeCallback((_event: UIEvent) => {
             g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
@@ -88,7 +79,7 @@ export class TextEditor extends BaseWidget {
         );
     };
 
-    getFileContent = () => {return ""};
+    getFileContent = () => { return "" };
 
     getLanguageExtension = (fileName: string) => {
         const extension = path.extname(fileName).toLowerCase();
@@ -102,33 +93,24 @@ export class TextEditor extends BaseWidget {
     };
 
     _ElementAreaRaw = (): React.JSX.Element => {
-        // const initialFileName = this.getFileName();
-        // const initialFileContents = initialFileName === "" ? this.getText()["fileContent"] : "";
-
         const [fileContent, setFileContent] = React.useState(this.getText()["fileName"] === "" ? this.getText()["fileContent"] : "");
         this.setFileContent = setFileContent;
-        this.getFileContent = () => {return fileContent};
+        this.getFileContent = () => { return fileContent };
 
         const [fileName, setFileName] = React.useState(this.getFileName());
         this.setFileNameState = setFileName;
 
-        // const [fileWritable, setFileWritable] = React.useState(this.fileWritable);
         const editorContainerRef = React.useRef<HTMLDivElement>(null);
         const editorViewRef = React.useRef<EditorView | null>(null);
         const languageCompartment = React.useRef(new Compartment()).current;
-        // const fileContentRef = React.useRef(fileContent);
         const suppressEditorChangeRef = React.useRef(false);
-        // this.setFileContent = setFileContent;
-        // this.setFileNameState = setFileName;
-        // this.setFileWritableState = setFileWritable;
-        // const isEditorReadOnly = !(fileWritable && fileContents.length <= this.fileLimit);
 
         // request file content if the file name is not empty
         React.useEffect(() => {
             if (this.getFileName() === "") {
                 return;
             }
-            this.openTextFile(this.getFileName(), "", false);
+            this.initFileContent();
         }, []);
 
         // create the editor element, it will be attached under element editorContainerRef.current
@@ -158,12 +140,8 @@ export class TextEditor extends BaseWidget {
                                 return;
                             }
                             const newFileContents = update.state.doc.toString();
-                            // if (this.getFileName() === "") {
-                            //     this.getText()["fileContent"] = newFileContents;
-                            // }
-                            // this.currentFileContents = newFileContents;
-                            // this.setWindowName(this.getFileName(), true, newFileContents);
-                            // this.setModified(true);
+                            this.setModified(true);
+                            this.upateWindowTitle(this.getFileName());
                             setFileContent(newFileContents);
                         }),
                         EditorView.theme({
@@ -281,9 +259,6 @@ export class TextEditor extends BaseWidget {
                     <div>
                         {fileName === "" ? "[Empty file name]" : fileName}
                     </div>
-                    <div style={{ marginTop: 10 }}>
-                        {fileContent.length > this.fileLimit ? <div style={{ color: "rgba(255,0,0,1)" }}>The file is larger than 2.5 MB, you can only view it. This editor is designed for casual editing.</div> : ""}
-                    </div>
                 </div>
                 {/* separator line */}
                 <div style={{
@@ -325,7 +300,7 @@ export class TextEditor extends BaseWidget {
         const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
         return (
             <ElementRectangleButton marginRight={10} handleClick={() => {
-                this.openTextFile("", "", true);
+                this.openTextFile();
             }}>
                 {mainProcessMode === "web" ? "Open file on this computer" : "Open File"}
             </ElementRectangleButton>
@@ -358,40 +333,81 @@ export class TextEditor extends BaseWidget {
 
     // -------------------- helpers ----------------
 
-
     /**
-     * Invoked upon the "text-file-contents" event 
+     * Initialize editor content from the current file name.
+     *
+     * This runs when TextEditor starts with a non-empty file name. In desktop/ssh mode,
+     * it requests file content from main process; in web mode, it delegates to the web
+     * open-file flow. The reply is handled by `updateFileContents`.
      */
-    loadFileContents = (result: {
+    initFileContent = () => {
+        const fileName = this.getFileName();
+        if (fileName === "") {
+            return;
+        }
+
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        if (displayWindowClient.getMainProcessMode() === "web") {
+            displayWindowClient.openTextFileInTextEditorInWebMode(this);
+            return;
+        }
+
+        displayWindowClient.getIpcManager().sendFromRendererProcess("open-text-file", {
+            displayWindowId: displayWindowClient.getWindowId(),
+            widgetKey: this.getWidgetKey(),
+            fileName: fileName,
+            fileContent: "",
+            manualOpen: false,
+            openNewWindow: false,
+        });
+    }
+    /**
+     * Apply file name/content returned by the open-file IPC response.
+     *
+     * This updates local editor state, clears modified status, and refreshes window title.
+     */
+    updateFileContents = (result: {
         fileName: string,
         fileContent: string
         readable: boolean,
         writable: boolean,
     }) => {
-        // this.currentFileContents = result["fileContents"];
-        // this.setModified(false);
-        // this.setWritable(result["writable"]);
-        // this.setFileName(result["fileName"], false, result["fileContents"]);
-        this.setFileName(result["fileName"]);
+        const fileName = result["fileName"];
+        this.setFileName(fileName);
         if (this.setFileNameState !== undefined) {
-            this.setFileNameState(result["fileName"]);
+            this.setFileNameState(fileName);
         }
         if (this.setFileContent !== undefined) {
             this.setFileContent(result["fileContent"]);
         }
-        // if (this.setFileNameState !== undefined) {
-        // this.setFileNameState(this.getFileName());
-        // }
+        this.setModified(false);
+        this.upateWindowTitle(fileName);
+    }
+
+    /**
+     * Update file name after a successful save/save-as operation.
+     *
+     * This resets modified status, updates title, and re-renders filename UI.
+     */
+    updateFileName = (newFileName: string) => {
+        this.setFileName(newFileName);
+        this.setModified(false);
+        this.upateWindowTitle(newFileName);
+        // re-render
+        if (this.setFileNameState !== undefined) {
+            this.setFileNameState(newFileName);
+        }
     }
 
 
     /**
-     * raise prompt to let user select a file to open
-     * 
-     * if this window's fileName and fileContent are both "", open the file in the
-     * current window; if not, open in new window
+     * Open file action from toolbar.
+     *
+     * Prompts user to select a file (desktop/ssh) or uses the web picker (web mode).
+     * If current editor already has file name/content, request opening in a new TextEditor
+     * window to preserve existing unsaved content.
      */
-    openTextFile = (fileName: string, fileContent: string, manualOpen: boolean) => {
+    openTextFile = () => {
 
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         if (displayWindowClient.getMainProcessMode() === "web") {
@@ -414,6 +430,12 @@ export class TextEditor extends BaseWidget {
         });
     }
 
+
+    /**
+     * Save current editor content to the current file path.
+     *
+     * If no file path is set, main process treats this as save-as flow.
+     */
     saveFile = () => {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         displayWindowClient.getIpcManager().sendFromRendererProcess("save-text-file", {
@@ -424,94 +446,74 @@ export class TextEditor extends BaseWidget {
         });
     }
 
+    /**
+     * Save current editor content to a new file path.
+     *
+     * In web mode this downloads a file to the browser client. In desktop/ssh mode,
+     * this triggers save-as in main process by sending an empty file name.
+     */
     saveFileAs = () => {
-        // todo
-        // const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        // if (displayWindowClient.getMainProcessMode() === "web") {
-        //     const blob = new Blob([this.getFileContents()], { type: "text/text" });
-        //     const relativePath = path.basename(this.getFileName());
-        //     displayWindowClient.downloadData(blob, relativePath, "Save Text File", "text/text", []);
-        //     return;
-        // }
-        // displayWindowClient.getIpcManager().sendFromRendererProcess("save-text-file", {
-        //     displayWindowId: displayWindowClient.getWindowId(),
-        //     widgetKey: this.getWidgetKey(),
-        //     fileName: "",
-        //     fileContents: this.getFileContents(),
-        // });
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        if (displayWindowClient.getMainProcessMode() === "web") {
+            const blob = new Blob([this.getFileContent()], { type: "text/text" });
+            const relativePath = path.basename(this.getFileName());
+            displayWindowClient.downloadData(blob, relativePath, "Save Text File", "text/text", []);
+            return;
+        }
+        displayWindowClient.getIpcManager().sendFromRendererProcess("save-text-file", {
+            displayWindowId: displayWindowClient.getWindowId(),
+            widgetKey: this.getWidgetKey(),
+            fileName: "",
+            fileContents: this.getFileContent(),
+        });
     }
 
-    // setFileName = (newFileName: string, modified: boolean = false, fileContents: string = this.currentFileContents) => {
-    //     this.getText()["fileName"] = newFileName;
-    //     this.getText()["fileContent"] = newFileName === "" ? fileContents : "";
-    //     // update window title
-    //     this.setWindowName(newFileName, modified, fileContents);
-    // }
 
-    setWindowName = (newFileName: string, modified: boolean = false, fileContents: string) => {
+    /**
+     * Recompute and apply the utility window title for TextEditor.
+     *
+     * Title format:
+     * `TDM Text Editor -- <fileNameOrPlaceholder> [Modified]`
+     * where `[Modified]` is included only when `this.getModified()` is true.
+     */
+    upateWindowTitle = (newFileName: string) => {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const canvas = g_widgets1.getWidget("Canvas");
-        if (canvas instanceof Canvas) {
-            let oldWindowName = canvas.getWindowName();
-            let newWindowName = "";
-            const writable = this.getWritable(fileContents);
-            if (newFileName === "") {
-                newWindowName = "TDM Text Editor -- [Empty file name]";
-            } else {
-                if (modified) {
-                    if (writable === false) {
-                        newWindowName = "TDM Text Editor -- " + newFileName + " [Read Only]" + " [Modified]";
-                    } else {
-                        newWindowName = "TDM Text Editor -- " + newFileName + " [Modified]";
-                    }
-                } else {
-                    if (writable === false) {
-                        newWindowName = "TDM Text Editor -- " + newFileName + " [Read Only]";
-                    } else {
-                        newWindowName = "TDM Text Editor -- " + newFileName;
-                    }
-                }
-            }
-            if (newWindowName !== oldWindowName) {
-                canvas.setWindowName(newWindowName);
-                displayWindowClient.updateWindowTitle();
-            }
+        if (!(canvas instanceof Canvas)) {
+            return;
+        }
+
+        let fileNameSection = "";
+        let modifiedSection = "";
+        if (newFileName === "") {
+            fileNameSection = "[Empty file name]";
+        } else {
+            fileNameSection = newFileName;
+        }
+        if (this.getModified() === true) {
+            modifiedSection = "[Modified]";
+        }
+
+        let oldWindowName = canvas.getWindowName();
+        let newWindowName = "TDM Text Editor -- " + fileNameSection + " " + modifiedSection;
+        if (newWindowName !== oldWindowName) {
+            canvas.setWindowName(newWindowName);
+            displayWindowClient.updateWindowTitle();
         }
     }
 
-    getModified = () => {
-        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        return displayWindowClient.getTextEditorModified();
-    }
-
-    setModified = (newState: boolean) => {
-        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        displayWindowClient.setTextEditorModified(newState);
-    }
-
-    getWritable = (fileContents: string) => {
-        // return this.fileWritable === true && fileContents.length <= this.fileLimit;
-        // todo
-        return true;
-    }
-
-    setWritable = (writable: boolean) => {
-        // this.fileWritable = writable;
-        // if (this.setFileWritableState !== undefined) {
-        //     this.setFileWritableState(writable);
-        // }
-        // this.setWindowName(this.getFileName(), this.getModified());
-    }
 
     // -------------------- getters and setters ---------------------
 
-    // getFileContent = () => {
-    //     return this._fileContent;
-    // }
 
-    // setFileContent = (newContent: string) => {
-    //     this._fileContent = newContent;
-    // }
+
+    getModified = () => {
+        return this._modified;
+    }
+
+    setModified = (newState: boolean) => {
+        this._modified = newState;
+    }
 
     getFileName = () => {
         return this._fileName;
@@ -520,6 +522,8 @@ export class TextEditor extends BaseWidget {
     setFileName = (newName: string) => {
         this._fileName = newName;
     }
+
+
 
     // -------------------------- tdl -------------------------------
 

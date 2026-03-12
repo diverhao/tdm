@@ -20,7 +20,7 @@ import https from "https";
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import { IncomingMessage } from "http";
 import { TextEditorHandlers } from "../ipc/TextEditor/TextEditorHandlers";
-import { showDisplayWindowError, showDisplayWindowInfo, showDisplayWindowWarning } from "../ipc/shared/SharedServices";
+import { showDisplayWindowError, showDisplayWindowInfo, showDisplayWindowWarning } from "../ipc/WindowMessageBox";
 
 /**
  * Manage IPC messages sent from renderer process.
@@ -1647,8 +1647,10 @@ export class IpcManagerOnMainProcess {
                         };
                         windowAgentsManager.createDisplayWindow(options);
                     } else {
-                        Log.error("0", `Cannot read file ${tdlFileName}`);
+                        Log.error("0", `Cannot read file ${tdlFileName}. FileReader.readTdlFile() returned undefined.`);
                     }
+                }).catch((e) => {
+                    Log.error("0", `Cannot read file ${tdlFileName}`, e);
                 });
 
             } else if (path.extname(tdlFileName) === ".db" || path.extname(tdlFileName) === ".template") {
