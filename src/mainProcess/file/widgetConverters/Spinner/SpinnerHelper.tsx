@@ -1,6 +1,6 @@
 import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
-import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper, type_BaseWidget_tdl } from "../BaseWidget/BaseWidgetHelper";
 
 export type type_Spinner_tdl = {

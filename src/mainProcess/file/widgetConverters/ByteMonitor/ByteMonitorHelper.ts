@@ -1,9 +1,9 @@
 import { Log } from "../../../../common/Log";
-import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
-import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
+import { EdlConverter } from "../../EdlConverter";
 import { defaultByteMonitorTdl, type_ByteMonitor_tdl } from "../../../../common/types/type_widget_tdl";
 
 export class ByteMonitorHelper extends BaseWidgetHelper {
@@ -73,8 +73,7 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
                     if (EdlConverter.isRuledColor(indexStr)) {
                         // then tdl["itermColors"][0] and [1] are determined by this property
                         const dynamicColorRules = EdlConverter.ruledColors[indexStr];
-                        const colorValue0 = Object.values(dynamicColorRules)[0];
-                        const colorValue1 = Object.values(dynamicColorRules)[1];
+                        const [colorValue0, colorValue1] = Object.values(dynamicColorRules) as [number, number, number][];
                         tdl["itemColors"][0] = rgbaArrayToRgbaStr([...colorValue0, 100]);
                         tdl["itemColors"][1] = rgbaArrayToRgbaStr([...colorValue1, 100]);
                         onColorIsRuledColor = true;

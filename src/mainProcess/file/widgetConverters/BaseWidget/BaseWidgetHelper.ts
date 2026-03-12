@@ -1,4 +1,4 @@
-import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { v4 as uuidv4 } from "uuid";
 
 type type_rule_tdl = {

@@ -1,7 +1,7 @@
 import { Log } from "../../../../common/Log";
-import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
+import { EdlConverter } from "../../EdlConverter";
 import { v4 as uuidv4 } from "uuid";
 import { defaultScaledSliderTdl, type_ScaledSlider_tdl } from "../../../../common/types/type_widget_tdl";
 import { generateWidgetKey } from "../../../../common/GlobalMethods";

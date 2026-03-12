@@ -3,7 +3,7 @@ import { Log } from "../../../../common/Log";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 // import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as fs from "fs";
-import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
+import { EdlConverter } from "../../EdlConverter";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import { GlobalVariables } from "../../../../common/GlobalVariables";

@@ -1,8 +1,8 @@
-import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { Log } from "../../../../common/Log";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { generateWidgetKey, rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
-import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
+import { EdlConverter } from "../../EdlConverter";
 import { v4 as uuidv4 } from "uuid";
 import { defaultRectangleTdl, type_Rectangle_tdl } from "../../../../common/types/type_widget_tdl";
 

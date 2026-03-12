@@ -1,7 +1,7 @@
 import { generateWidgetKey } from "../../../../common/GlobalMethods";
 import { Log } from "../../../../common/Log";
 import { defaultLEDMultiStateTdl, type_LEDMultiState_tdl } from "../../../../common/types/type_widget_tdl";
-import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 
 export class LEDMultiStateHelper extends BaseWidgetHelper {

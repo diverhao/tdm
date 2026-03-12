@@ -2237,9 +2237,7 @@ export class IpcManagerOnMainProcess {
                 // if not an embedded window, take a thumbnail
                 // take thumbnail only for regular window, not for embedded window
                 // pre-loaded display does not take thumbnail
-                displayWindowAgent._takeThumbnailInterval = setInterval(() => {
-                    displayWindowAgent.takeThumbnail();
-                }, 5000);
+                displayWindowAgent.startThumbnailInterval();
 
                 displayWindowAgent.takeThumbnail(windowName, tdlFileName);
                 setTimeout(() => {

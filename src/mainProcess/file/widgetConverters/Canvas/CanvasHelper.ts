@@ -1,6 +1,6 @@
-import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { Log } from "../../../../common/Log";
-import { EdlConverter } from "../../../windows/DisplayWindow/EdlConverter";
+import { EdlConverter } from "../../EdlConverter";
 
 export type type_Canvas_tdl = Record<string, any> & {
     type: "Canvas";

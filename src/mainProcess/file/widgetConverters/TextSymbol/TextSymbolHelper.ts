@@ -1,7 +1,7 @@
 import { generateRgbaColor, generateWidgetKey } from "../../../../common/GlobalMethods";
 import { Log } from "../../../../common/Log";
 import { defaultTextSymbolTdl, type_TextSymbol_tdl } from "../../../../common/types/type_widget_tdl";
-import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 
 

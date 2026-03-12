@@ -1,4 +1,4 @@
-import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { Log } from "../../../../common/Log";
 import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import { defaultMediaTdl, type_Media_tdl } from "../../../../common/types/type_widget_tdl";

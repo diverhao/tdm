@@ -1,5 +1,5 @@
 import { Log } from "../../../../common/Log";
-import { BobPropertyConverter } from "../../../windows/DisplayWindow/BobPropertyConverter";
+import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
 import { defaultSlideButtonTdl, type_SlideButton_tdl } from "../../../../common/types/type_widget_tdl";

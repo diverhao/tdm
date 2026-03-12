@@ -1,4 +1,4 @@
-import { DataViewerHelper } from "../../file/widgetConverters/DataViewer/DataViewerHelper";
+import { DataViewerHelper } from "./widgetConverters/DataViewer/DataViewerHelper";
 
 
 export class StpConverter {
