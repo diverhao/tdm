@@ -3,7 +3,6 @@ import { MainProcess } from "../mainProcess/MainProcess";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { Worker } from 'worker_threads';
 import { Log } from "../../common/Log";
-import { showDisplayWindowError, showDisplayWindowInfo } from "../ipc/WindowMessageBox";
 
 
 export class EdlFileConverterThread {
@@ -35,7 +34,7 @@ export class EdlFileConverterThread {
                     widgetKey: options["widgetKey"],
                 });
 
-                showDisplayWindowError(displayWindowAgent, [`There is already a file converter session running.`, "TDM can only run one file converter at a time"]);
+                displayWindowAgent.showError([`There is already a file converter session running.`, "TDM can only run one file converter at a time"]);
             }
         } else {
             worker = new Worker(path.join(__dirname, '../helpers/EdlFileConverterThread.js'), {
@@ -86,7 +85,7 @@ export class EdlFileConverterThread {
                         status: "success",
                         widgetKey: options["widgetKey"],
                     });
-                    showDisplayWindowInfo(displayWindowAgent, [`All files successfully converted.`]);
+                    displayWindowAgent.showInfo([`All files successfully converted.`]);
                 } else {
                 }
             });
@@ -106,7 +105,7 @@ export class EdlFileConverterThread {
                     widgetKey: options["widgetKey"],
                 });
 
-                showDisplayWindowError(displayWindowAgent, [`File converter tool quits unexpectedly.`], [`${error}`]);
+                displayWindowAgent.showError([`File converter tool quits unexpectedly.`], [`${error}`]);
             });
 
             worker.on('exit', (code) => {
@@ -125,7 +124,7 @@ export class EdlFileConverterThread {
                         status: "success",
                         widgetKey: options["widgetKey"],
                     });
-                    showDisplayWindowInfo(displayWindowAgent, [`All files successfully converted.`]);
+                    displayWindowAgent.showInfo([`All files successfully converted.`]);
                 } else {
                     // externally terminated, code === 1, i.e. the Stop button is clicked
                     this.stopThread("User request to quit file converter thread");

@@ -5,7 +5,6 @@ import { DisplayWindowAgent } from "../../windows/DisplayWindow/DisplayWindowAge
 import path from "path";
 import { IpcManagerOnMainProcess } from "../../mainProcess/IpcManagerOnMainProcess";
 import { Log } from "../../../common/Log";
-import { showDisplayWindowError } from "../WindowMessageBox";
 
 const textEditorHardFileSizeLimit = 10 * 1024 * 1024;
 
@@ -69,7 +68,7 @@ export class TextEditorHandlers {
 
         if (fileNameToBeOpened !== "") {
             if (path.isAbsolute(fileNameToBeOpened) === false) {
-                showDisplayWindowError(displayWindowAgent, [`Text file path must be absolute: ${fileNameToBeOpened}`]);
+                displayWindowAgent.showError([`Text file path must be absolute: ${fileNameToBeOpened}`]);
                 return;
             }
 
@@ -77,7 +76,7 @@ export class TextEditorHandlers {
                 fs.accessSync(fileNameToBeOpened, fs.constants.F_OK);
                 fs.accessSync(fileNameToBeOpened, fs.constants.R_OK);
             } catch (e) {
-                showDisplayWindowError(displayWindowAgent, [`Error opening file ${fileNameToBeOpened}`], [`${e}`]);
+                displayWindowAgent.showError([`Error opening file ${fileNameToBeOpened}`], [`${e}`]);
                 return;
             }
         } else {
@@ -114,7 +113,7 @@ export class TextEditorHandlers {
             const fileStats = fs.statSync(fileNameToBeOpened);
             const fileSize = fileStats.size;
             if (fileSize >= textEditorHardFileSizeLimit) {
-                showDisplayWindowError(displayWindowAgent, [`This file is too large (${Math.round(fileSize / 1024 / 1024)} MB) to open. Please select a smaller file.`]);
+                displayWindowAgent.showError([`This file is too large (${Math.round(fileSize / 1024 / 1024)} MB) to open. Please select a smaller file.`]);
                 return;
             }
             try {
@@ -129,7 +128,7 @@ export class TextEditorHandlers {
                 });
             } catch (e) {
                 Log.error(e);
-                showDisplayWindowError(displayWindowAgent, [`Failed to open file ${fileNameToBeOpened}`], [`${e}`]);
+                displayWindowAgent.showError([`Failed to open file ${fileNameToBeOpened}`], [`${e}`]);
             }
         }
     }
@@ -191,7 +190,7 @@ export class TextEditorHandlers {
             });
             return true;
         } catch (e) {
-            showDisplayWindowError(displayWindowAgent, [`Error saving file ${fileName}`], [`${e}`]);
+            displayWindowAgent.showError([`Error saving file ${fileName}`], [`${e}`]);
             Log.error("0", e);
             return false;
         }

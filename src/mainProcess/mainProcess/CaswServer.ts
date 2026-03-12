@@ -2,7 +2,6 @@ import { MainProcess } from "./MainProcess";
 import dgram from "dgram";
 import { Log } from "../../common/Log";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
-import { showDisplayWindowError } from "../ipc/WindowMessageBox";
 
 type type_CaUdpMessage = {
     command: number,
@@ -97,8 +96,7 @@ export class CaswServer {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
 
         if (displayWindowAgent instanceof DisplayWindowAgent) {
-
-            showDisplayWindowError(displayWindowAgent, [`Failed to start CA snooper service`], [errMsg]);
+            displayWindowAgent.showError([`Failed to start CA snooper service`], [errMsg]);
         }
 
 

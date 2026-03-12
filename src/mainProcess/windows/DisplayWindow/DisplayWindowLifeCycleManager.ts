@@ -3,7 +3,6 @@ import * as path from "path";
 import * as url from "url";
 import { IpcEventArgType } from "../../../common/IpcEventArgType";
 import { DisplayWindowAgent } from "../../windows/DisplayWindow/DisplayWindowAgent";
-import { showDisplayWindowError } from "../../ipc/WindowMessageBox";
 import { Log } from "../../../common/Log";
 
 /**
@@ -417,7 +416,7 @@ export class DisplayWindowLifeCycleManager {
             } else if (failedReason === "No file selected") {
                 this.setReadyToClose(false);
             } else {
-                showDisplayWindowError(displayWindowAgent, [failedReason]);
+                displayWindowAgent.showError([failedReason]);
                 Log.error("0", failedReason);
                 this.setReadyToClose(false);
             }
@@ -425,7 +424,7 @@ export class DisplayWindowLifeCycleManager {
         } else if (mainProcessMode === "web") {
             // todo: should be able to save
             const failedReason = "Cannot save file in web mode";
-            showDisplayWindowError(displayWindowAgent, [failedReason]);
+            displayWindowAgent.showError([failedReason]);
             Log.error("0", failedReason, displayWindowId);
             this.setReadyToClose(false);
             return;
@@ -434,7 +433,7 @@ export class DisplayWindowLifeCycleManager {
             if (result === "") {
                 this.closeBrowserWindow();
             } else if (result !== "prompted") {
-                showDisplayWindowError(displayWindowAgent, [result]);
+                displayWindowAgent.showError([result]);
                 Log.error("0", result);
                 this.setReadyToClose(false);
             }

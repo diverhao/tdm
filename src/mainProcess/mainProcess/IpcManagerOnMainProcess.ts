@@ -20,7 +20,6 @@ import https from "https";
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import { IncomingMessage } from "http";
 import { TextEditorHandlers } from "../ipc/TextEditor/TextEditorHandlers";
-import { showDisplayWindowError, showDisplayWindowInfo, showDisplayWindowWarning } from "../ipc/WindowMessageBox";
 
 /**
  * Manage IPC messages sent from renderer process.
@@ -1240,7 +1239,7 @@ export class IpcManagerOnMainProcess {
         //                             if (err) {
         //                                 // error when saving file, do not close the window
         //                                 Log.error("0", err);
-        //                                 showDisplayWindowError(displayWindowAgent, [`Error saving file ${tdlFileName}`], [`${err}`]);
+        //                                 displayWindowAgent.showError([`Error saving file ${tdlFileName}`], [`${err}`]);
         //                                 displayWindowAgent.readyToClose = false;
         //                             } else {
         //                                 // update tdlFileName on client side, absolute path
@@ -1267,8 +1266,7 @@ export class IpcManagerOnMainProcess {
         //                 displayWindowAgent.readyToClose = false;
         //                 return;
         //             } else {
-        //                 showDisplayWindowWarning(
-        //                     displayWindowAgent,
+        //                 displayWindowAgent.showWarning(
         //                     data["widgetKey"] !== undefined && data["widgetKey"].startsWith("DataViewer_")
         //                         ? [`Do you want to save the data? They will be lost if you don't save them.`]
         //                         : [`Do you want to save the changes you made? Your changes will be lost if you don't save them.`],
@@ -2073,7 +2071,7 @@ export class IpcManagerOnMainProcess {
             if (allowToSave === false) {
                 const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(windowId);
                 if (displayWindowAgent instanceof DisplayWindowAgent) {
-                    showDisplayWindowError(displayWindowAgent, [`You are not allowed to visit ${tdlFileName1}.`]);
+                    displayWindowAgent.showError([`You are not allowed to visit ${tdlFileName1}.`]);
                 }
                 return;
             }
@@ -2128,7 +2126,7 @@ export class IpcManagerOnMainProcess {
             fs.writeFile(tdlFileName, JSON.stringify(tdl, null, 4), (err) => {
                 if (err) {
                     Log.error("0", err);
-                    showDisplayWindowError(displayWindowAgent, [`Failed to save ${tdlFileName}`, "Please check the file permission."], ["Below is the raw message:", `${err}`]);
+                    displayWindowAgent.showError([`Failed to save ${tdlFileName}`, "Please check the file permission."], ["Below is the raw message:", `${err}`]);
 
                 } else {
                     Log.info("0", `Saved tdl to file ${tdlFileName}`);
@@ -2193,14 +2191,14 @@ export class IpcManagerOnMainProcess {
             }
 
             if (fileName === undefined) {
-                showDisplayWindowError(displayWindowAgent, [`Failed to save file: file not selected`], [""]);
+                displayWindowAgent.showError([`Failed to save file: file not selected`], [""]);
                 return;
             }
 
             fs.writeFile(fileName, JSON.stringify(data, null, 4), (err) => {
                 if (err) {
                     Log.error("0", err);
-                    showDisplayWindowError(displayWindowAgent, [`Failed to save ${fileName}`, "Please check the file permission."], ["Below is the raw message:", `${err}`]);
+                    displayWindowAgent.showError([`Failed to save ${fileName}`, "Please check the file permission."], ["Below is the raw message:", `${err}`]);
 
                 } else {
                     Log.info("0", `Saved tdl to file ${fileName}`);
@@ -2972,7 +2970,7 @@ export class IpcManagerOnMainProcess {
                     // a failed spawn is not catched, but in the error event
                     const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
                     if (displayWindowAgent instanceof DisplayWindowAgent) {
-                        showDisplayWindowError(displayWindowAgent, [`Failed to execute command "${data["command"]}"`], [`${err}`]);
+                        displayWindowAgent.showError([`Failed to execute command "${data["command"]}"`], [`${err}`]);
                     }
                 });
             }
@@ -2981,7 +2979,7 @@ export class IpcManagerOnMainProcess {
             // spawn failed
             const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
             if (displayWindowAgent instanceof DisplayWindowAgent) {
-                showDisplayWindowError(displayWindowAgent, [`Failed to execute command "${data["command"]}"`], [`${e}`]);
+                displayWindowAgent.showError([`Failed to execute command "${data["command"]}"`], [`${e}`]);
             }
         }
     }
@@ -3044,7 +3042,7 @@ export class IpcManagerOnMainProcess {
                     Log.debug("0", "Successfully saved DataViewer data to", fileName);
                 } catch (e) {
                     Log.error("0", `Cannot save DataViewer data to file ${fileName}`);
-                    showDisplayWindowError(displayWindowAgent, [`Cannot save DataViewer data to file ${fileName}`], [`${e}`]);
+                    displayWindowAgent.showError([`Cannot save DataViewer data to file ${fileName}`], [`${e}`]);
                 }
             }
         }
@@ -3219,7 +3217,7 @@ export class IpcManagerOnMainProcess {
             if (allowToRead === false) {
                 const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
                 if (displayWindowAgent instanceof DisplayWindowAgent) {
-                    showDisplayWindowError(displayWindowAgent, [`You are not allowed to visit ${folderPath}.`]);
+                    displayWindowAgent.showError([`You are not allowed to visit ${folderPath}.`]);
                 }
                 return;
             }
@@ -3261,7 +3259,7 @@ export class IpcManagerOnMainProcess {
             Log.error("0", `File Browser -- Failed to read folder ${options["folderPath"]}`);
             const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
             if (displayWindowAgent instanceof DisplayWindowAgent) {
-                showDisplayWindowError(displayWindowAgent, [`Failed to read folder ${options["folderPath"]}.`]);
+                displayWindowAgent.showError([`Failed to read folder ${options["folderPath"]}.`]);
                 // let 
                 displayWindowAgent.sendFromMainProcess("fetch-folder-content", {
                     widgetKey: options["widgetKey"],
@@ -3301,7 +3299,7 @@ export class IpcManagerOnMainProcess {
             if (allowToWrite === false) {
                 const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(message["displayWindowId"]);
                 if (displayWindowAgent instanceof DisplayWindowAgent) {
-                    showDisplayWindowError(displayWindowAgent, [`You are not allowed to ${message["command"].replaceAll("-", " ")} for ${folderPath}.`]);
+                    displayWindowAgent.showError([`You are not allowed to ${message["command"].replaceAll("-", " ")} for ${folderPath}.`]);
                 }
                 return;
             }
@@ -3333,7 +3331,7 @@ export class IpcManagerOnMainProcess {
                 } catch (err) {
                     Log.error('Error renaming file:', err);
                     // send error message to renderer process
-                    showDisplayWindowError(displayWindowAgent, [`Failed to change file name from ${oldName} to ${newName}`, `Reason: ${err}`]);
+                    displayWindowAgent.showError([`Failed to change file name from ${oldName} to ${newName}`, `Reason: ${err}`]);
 
                     displayWindowAgent.sendFromMainProcess("file-browser-command", {
                         ...message,
@@ -3356,7 +3354,7 @@ export class IpcManagerOnMainProcess {
                 })
 
             } catch (e) {
-                showDisplayWindowError(displayWindowAgent, [`Failed to create file ${fullFileName}`, `Reason ${e}`]);
+                displayWindowAgent.showError([`Failed to create file ${fullFileName}`, `Reason ${e}`]);
                 displayWindowAgent.sendFromMainProcess("file-browser-command", {
                     ...message,
                     success: false,
@@ -3376,7 +3374,7 @@ export class IpcManagerOnMainProcess {
                 })
 
             } catch (e) {
-                showDisplayWindowError(displayWindowAgent, [`Failed to create file ${fullFolderName}`, `Reason: ${e}`]);
+                displayWindowAgent.showError([`Failed to create file ${fullFolderName}`, `Reason: ${e}`]);
                 displayWindowAgent.sendFromMainProcess("file-browser-command", {
                     ...message,
                     success: false,
@@ -3636,7 +3634,7 @@ export class IpcManagerOnMainProcess {
             }
 
             if (!fs.existsSync(options["src"])) {
-                showDisplayWindowError(displayWindowAgent, [`Source folder/file does not exist.`]);
+                displayWindowAgent.showError([`Source folder/file does not exist.`]);
                 displayWindowAgent.sendFromMainProcess("file-converter-command", {
                     type: "all-file-conversion-finished",
                     status: "failed",
@@ -3645,7 +3643,7 @@ export class IpcManagerOnMainProcess {
                 return;
             }
             if (!fs.existsSync(options["dest"])) {
-                showDisplayWindowError(displayWindowAgent, [`Destination folder/file does not exist.`]);
+                displayWindowAgent.showError([`Destination folder/file does not exist.`]);
                 displayWindowAgent.sendFromMainProcess("file-converter-command", {
                     type: "all-file-conversion-finished",
                     status: "failed",
@@ -3654,7 +3652,7 @@ export class IpcManagerOnMainProcess {
                 return;
             }
             if (options["depth"] > 50 || options["depth"] < 1) {
-                showDisplayWindowError(displayWindowAgent, [`File search depath wrong: should be between 1 and 50 (both inclusive).`]);
+                displayWindowAgent.showError([`File search depath wrong: should be between 1 and 50 (both inclusive).`]);
                 displayWindowAgent.sendFromMainProcess("file-converter-command", {
                     type: "all-file-conversion-finished",
                     status: "failed",
@@ -3678,9 +3676,9 @@ export class IpcManagerOnMainProcess {
 
             fs.writeFile(data["fileName"], buffer as Uint8Array, (err) => {
                 if (err) {
-                    showDisplayWindowError(displayWindowAgent, [`Failed to save video to ${data["fileName"]}`], [err.toString()]);
+                    displayWindowAgent.showError([`Failed to save video to ${data["fileName"]}`], [err.toString()]);
                 } else {
-                    showDisplayWindowInfo(displayWindowAgent, [`Video file saved to ${data["fileName"]}`]);
+                    displayWindowAgent.showInfo([`Video file saved to ${data["fileName"]}`]);
                 }
             });
         }

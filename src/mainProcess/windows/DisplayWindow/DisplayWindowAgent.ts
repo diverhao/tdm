@@ -14,9 +14,15 @@ import { DisplayWindowLifeCycleManager } from "./DisplayWindowLifeCycleManager";
 import { DisplayWindowUtilities } from "./DisplayWindowUtilities";
 
 /**
- * The main process side representation of a display window. <br>
+ * Owns the main-process state and coordination for a single display window.
  *
- * Its lifecycle comes along with the display window.
+ * A `DisplayWindowAgent` is created when the application opens a display and
+ * stays alive for as long as that window exists. It holds the window's TDL,
+ * runtime options, macros, editability flags, and helper managers, and it
+ * coordinates the work that has to happen on the main-process side while the
+ * renderer is running.
+ *
+ * Its lifecycle matches the lifecycle of the display window it represents.
  */
 export class DisplayWindowAgent {
     /**
@@ -330,6 +336,34 @@ export class DisplayWindowAgent {
         await this.getDisplayWindowUtilities().printToPdf();
     };
 
+    showNotification = (info: IpcEventArgType2["dialog-show-message-box"]["info"]): void => {
+        this.getDisplayWindowUtilities().showNotification(info);
+    };
+
+    showError = (
+        humanReadableMessages: string[],
+        rawMessages: string[] = [],
+        extraInfo: Omit<Partial<IpcEventArgType2["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
+    ): void => {
+        this.getDisplayWindowUtilities().showError(humanReadableMessages, rawMessages, extraInfo);
+    };
+
+    showInfo = (
+        humanReadableMessages: string[],
+        rawMessages: string[] = [],
+        extraInfo: Omit<Partial<IpcEventArgType2["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
+    ): void => {
+        this.getDisplayWindowUtilities().showInfo(humanReadableMessages, rawMessages, extraInfo);
+    };
+
+    showWarning = (
+        humanReadableMessages: string[],
+        rawMessages: string[] = [],
+        extraInfo: Omit<Partial<IpcEventArgType2["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
+    ): void => {
+        this.getDisplayWindowUtilities().showWarning(humanReadableMessages, rawMessages, extraInfo);
+    };
+
     takeScreenshot = () => {
         this.getDisplayWindowUtilities().takeScreenshot();
     };
@@ -615,23 +649,8 @@ export class DisplayWindowAgent {
 
     // --------------------- hash ----------------------
 
-    /**
-     * Calculate hash for this display window based on file name and macros.<br>
-     * 
-     * If this file name is "", the hash is a random uuid. <br>
-     * 
-     * When the file name or macros is changed, update the hash.
-     */
-    static calcHash = (fullTdlFileName: string, macros: [string, string][]) => {
-        if (fullTdlFileName === "") {
-            return uuidv4();
-        } else {
-            return fullTdlFileName + JSON.stringify(macros);
-        }
-    };
-
     updateHash = () => {
-        this.setHash(DisplayWindowAgent.calcHash(this._tdlFileName, this._macros));
+        this.setHash(DisplayWindowUtilities.calcHash(this._tdlFileName, this._macros));
     };
 
     setHash = (newHash: string) => {

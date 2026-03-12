@@ -1,5 +1,6 @@
 import { MainWindowAgent } from "./MainWindow/MainWindowAgent";
 import { DisplayWindowAgent } from "./DisplayWindow/DisplayWindowAgent";
+import { DisplayWindowUtilities } from "./DisplayWindow/DisplayWindowUtilities";
 import { app, Menu } from "electron";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { v4 as uuid } from "uuid";
@@ -233,7 +234,7 @@ export class WindowAgentsManager {
 
 
     checkExistedDisplayWindow = (tdlFileName: string, macros: [string, string][]): DisplayWindowAgent | undefined => {
-        const hash = DisplayWindowAgent.calcHash(tdlFileName, macros);
+        const hash = DisplayWindowUtilities.calcHash(tdlFileName, macros);
         for (let displayWindowAgent of Object.values(this.getAgents())) {
             if (displayWindowAgent instanceof DisplayWindowAgent) {
                 if (hash === displayWindowAgent.getHash()) {

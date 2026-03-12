@@ -7,6 +7,11 @@ import { generateAboutInfo, getCurrentDateTimeStr } from "../../global/GlobalMet
 import { Log } from "../../../common/Log";
 import { ContextMenuDesktop } from "./ContextMenuDesktop";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
+import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
+import { v4 as uuidv4 } from "uuid";
+
+type type_DialogShowMessageBoxInfo = IpcEventArgType2["dialog-show-message-box"]["info"];
+type type_DialogShowMessageBoxExtraInfo = Omit<Partial<type_DialogShowMessageBoxInfo>, "messageType" | "humanReadableMessages" | "rawMessages">;
 
 export class DisplayWindowUtilities {
 
@@ -20,10 +25,54 @@ export class DisplayWindowUtilities {
         this._contextMenu = new ContextMenuDesktop(displayWindowAgent);
     }
 
-    handleWindowClosed = () => {
-        this.stopThumbnailInterval();
-        this.removeThumbnail(this.getDisplayWindowAgent().getId());
+    // ---------------------- IPC ----------------------
+
+    showNotification = (info: type_DialogShowMessageBoxInfo): void => {
+        this.getDisplayWindowAgent().sendFromMainProcess("dialog-show-message-box", {
+            info: info,
+        });
     };
+
+    showError = (
+        humanReadableMessages: string[],
+        rawMessages: string[] = [],
+        extraInfo: type_DialogShowMessageBoxExtraInfo = {},
+    ): void => {
+        this.showNotification({
+            ...extraInfo,
+            messageType: "error",
+            humanReadableMessages,
+            rawMessages,
+        });
+    };
+
+    showInfo = (
+        humanReadableMessages: string[],
+        rawMessages: string[] = [],
+        extraInfo: type_DialogShowMessageBoxExtraInfo = {},
+    ): void => {
+        this.showNotification({
+            ...extraInfo,
+            messageType: "info",
+            humanReadableMessages,
+            rawMessages,
+        });
+    };
+
+    showWarning = (
+        humanReadableMessages: string[],
+        rawMessages: string[] = [],
+        extraInfo: type_DialogShowMessageBoxExtraInfo = {},
+    ): void => {
+        this.showNotification({
+            ...extraInfo,
+            messageType: "warning",
+            humanReadableMessages,
+            rawMessages,
+        });
+    };
+
+    // --------------------- context menu --------------
 
     showContextMenu = (mode: string, widgetKeys: string[], options: Record<string, any>) => {
         const contextMenuTemplate = this.getContextMenu().getTemplate(mode, widgetKeys, options);
@@ -73,6 +122,12 @@ export class DisplayWindowUtilities {
         }
     };
 
+    getContextMenu = () => {
+        return this._contextMenu;
+    };
+
+    // --------------------- utilities ----------------
+
     printToPdf = async () => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const browserWindow = displayWindowAgent.getBrowserWindow();
@@ -97,21 +152,25 @@ export class DisplayWindowUtilities {
                 }
                 fs.writeFile(pdfFileName, pdfContentsBuffer as Uint8Array, (err) => {
                     if (err) {
-                        displayWindowAgent.sendFromMainProcess("dialog-show-message-box",
-                            {
-                                info: {
-                                    messageType: "error",
-                                    humanReadableMessages: [`Failed saving pdf as ${pdfFileName}`],
-                                    rawMessages: [err.toString()]
-                                }
-                            }
-                        );
+                        this.showError([`Failed saving pdf as ${pdfFileName}`], [err.toString()]);
                     }
                 });
             }
         } catch (e) {
             Log.error("0", e);
         }
+    };
+
+    print = () => {
+        const browserWindow = this.getDisplayWindowAgent().getBrowserWindow();
+        if (browserWindow === undefined) {
+            Log.error("0", "Browser window does not exist");
+            return;
+        }
+        browserWindow.webContents.print({
+            printBackground: true,
+            color: true,
+        });
     };
 
     showAboutTdm = () => {
@@ -161,15 +220,7 @@ export class DisplayWindowUtilities {
             }
             fs.writeFile(imageFileName, image.toPNG() as Uint8Array, (err) => {
                 if (err) {
-                    displayWindowAgent.sendFromMainProcess("dialog-show-message-box",
-                        {
-                            info: {
-                                messageType: "error",
-                                humanReadableMessages: [`Failed saving screenshot to folder ${imageFileName}`],
-                                rawMessages: [err.toString()]
-                            }
-                        }
-                    );
+                    this.showError([`Failed saving screenshot to folder ${imageFileName}`], [err.toString()]);
                 }
             });
         });
@@ -204,30 +255,14 @@ export class DisplayWindowUtilities {
             const imageFileName = path.join(saveFolder, "TDM-screenshot-" + getCurrentDateTimeStr(true) + ".png");
             fs.writeFile(imageFileName, image.toPNG() as Uint8Array, (err) => {
                 if (err) {
-                    displayWindowAgent.sendFromMainProcess("dialog-show-message-box",
-                        {
-                            info: {
-                                messageType: "error",
-                                humanReadableMessages: [`Failed saving screenshot to folder ${saveFolder}`],
-                                rawMessages: [err.toString()]
-                            }
-                        }
-                    );
+                    this.showError([`Failed saving screenshot to folder ${saveFolder}`], [err.toString()]);
                 } else {
                     Log.info("Save screenshot to", imageFileName);
                 }
             });
         }).catch((err: any) => {
             Log.error("0", err);
-            displayWindowAgent.sendFromMainProcess("dialog-show-message-box",
-                {
-                    info: {
-                        messageType: "error",
-                        humanReadableMessages: [`Failed saving screenshot to folder ${saveFolder}`],
-                        rawMessages: [err.toString()]
-                    }
-                }
-            );
+            this.showError([`Failed saving screenshot to folder ${saveFolder}`], [err.toString()]);
         });
     };
 
@@ -241,6 +276,110 @@ export class DisplayWindowUtilities {
             clipboard.writeImage(image);
         });
     };
+
+    startRecordVideo = () => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        let saveFolder = homedir();
+        const selectedProfile = displayWindowAgent.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+        if (selectedProfile !== undefined) {
+            try {
+                const saveFolderTmp = selectedProfile.getEntry("EPICS Custom Environment", "Video Saving Folder");
+                if (saveFolderTmp === undefined) {
+                    throw new Error("Cannot find Video Saving Folder setting");
+                }
+                if (fs.existsSync(saveFolderTmp)) {
+                    fs.accessSync(saveFolderTmp, fs.constants.W_OK);
+                    saveFolder = saveFolderTmp;
+                }
+            } catch (e) {
+                Log.error("0", e);
+            }
+        }
+
+        const browserWindow = displayWindowAgent.getBrowserWindow();
+        if (browserWindow instanceof BrowserWindow) {
+            const windowTitle = browserWindow.getTitle();
+            desktopCapturer.getSources({ types: ["window"] }).then(async (sources: Electron.DesktopCapturerSource[]) => {
+                for (const source of sources) {
+                    Log.debug("0", source.name);
+                    if (source.name === windowTitle) {
+                        displayWindowAgent.sendFromMainProcess("start-record-video",
+                            {
+                                sourceId: source.id,
+                                folder: saveFolder
+                            }
+                        );
+                        break;
+                    }
+                }
+            });
+        }
+    };
+
+    getProcessInfo = async (withThumbnail: boolean) => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const visible = (displayWindowAgent.getWindowAgentsManager().preloadedDisplayWindowAgent === displayWindowAgent) ? "No" : "Yes";
+
+        const webContents = displayWindowAgent.getWebContents();
+        let pid = -1;
+        if (webContents !== undefined) {
+            pid = webContents.getOSProcessId();
+        }
+
+        let usage = {
+            "CPU usage [%]": -1,
+            "Memory usage [MB]": -1,
+            "Uptime [s]": -1,
+        };
+        if (pid !== -1) {
+            usage = await new Promise<{
+                "CPU usage [%]": number,
+                "Memory usage [MB]": number,
+                "Uptime [s]": number,
+            }>((resolve) => {
+                pidusage(pid, (err: any, stats: any) => {
+                    if (err) {
+                        resolve({
+                            "CPU usage [%]": -1,
+                            "Memory usage [MB]": -1,
+                            "Uptime [s]": -1,
+                        });
+                    } else {
+                        resolve({
+                            "CPU usage [%]": stats["cpu"],
+                            "Memory usage [MB]": Math.round(stats["memory"] / 1024 / 1024),
+                            "Uptime [s]": Math.round(stats["elapsed"] / 1000),
+                        });
+                    }
+                });
+            });
+        }
+
+        return {
+            "Type": "Display Window",
+            "Window ID": displayWindowAgent.getId(),
+            "Visible": visible,
+            "TDL file name": displayWindowAgent.getTdlFileName(),
+            "Window name": displayWindowAgent.getWindowName(),
+            "Editable": displayWindowAgent.isEditable() === true ? "Yes" : "No",
+            "Uptime [second]": usage["Uptime [s]"],
+            "Process ID": pid,
+            "CPU usage [%]": usage["CPU usage [%]"],
+            "Memory usage [MB]": usage["Memory usage [MB]"],
+            "Thumbnail": withThumbnail ? displayWindowAgent.getThumbnail() : "",
+            "Script": displayWindowAgent.getDisplayWindowAttachedScript().getWindowAttachedScriptName(),
+            "Script PID": displayWindowAgent.getDisplayWindowAttachedScript().getWindowAttachedScriptPid() === undefined ? "N/A" : `${displayWindowAgent.getDisplayWindowAttachedScript().getWindowAttachedScriptPid()}`,
+        };
+    };
+
+    // --------------------- window lifecycle ---------
+
+    handleWindowClosed = () => {
+        this.stopThumbnailInterval();
+        this.removeThumbnail(this.getDisplayWindowAgent().getId());
+    };
+
+    // --------------------- thumbnail ----------------
 
     updateThumbnail = (
         displayWindowId: string,
@@ -346,119 +485,27 @@ export class DisplayWindowUtilities {
         this._takeThumbnailInterval = undefined;
     };
 
-    print = () => {
-        const browserWindow = this.getDisplayWindowAgent().getBrowserWindow();
-        if (browserWindow === undefined) {
-            Log.error("0", "Browser window does not exist");
-            return;
-        }
-        browserWindow.webContents.print({
-            printBackground: true,
-            color: true,
-        });
-    };
-
-    startRecordVideo = () => {
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        let saveFolder = homedir();
-        const selectedProfile = displayWindowAgent.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
-        if (selectedProfile !== undefined) {
-            try {
-                const saveFolderTmp = selectedProfile.getEntry("EPICS Custom Environment", "Video Saving Folder");
-                if (saveFolderTmp === undefined) {
-                    throw new Error("Cannot find Video Saving Folder setting");
-                }
-                if (fs.existsSync(saveFolderTmp)) {
-                    fs.accessSync(saveFolderTmp, fs.constants.W_OK);
-                    saveFolder = saveFolderTmp;
-                }
-            } catch (e) {
-                Log.error("0", e);
-            }
-        }
-
-        const browserWindow = displayWindowAgent.getBrowserWindow();
-        if (browserWindow instanceof BrowserWindow) {
-            const windowTitle = browserWindow.getTitle();
-            desktopCapturer.getSources({ types: ["window"] }).then(async (sources: Electron.DesktopCapturerSource[]) => {
-                for (const source of sources) {
-                    Log.debug("0", source.name);
-                    if (source.name === windowTitle) {
-                        displayWindowAgent.sendFromMainProcess("start-record-video",
-                            {
-                                sourceId: source.id,
-                                folder: saveFolder
-                            }
-                        );
-                        break;
-                    }
-                }
-            });
-        }
-    };
-
-    getProcessInfo = async (withThumbnail: boolean) => {
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        const visible = (displayWindowAgent.getWindowAgentsManager().preloadedDisplayWindowAgent === displayWindowAgent) ? "No" : "Yes";
-
-        const webContents = displayWindowAgent.getWebContents();
-        let pid = -1;
-        if (webContents !== undefined) {
-            pid = webContents.getOSProcessId();
-        }
-
-        let usage = {
-            "CPU usage [%]": -1,
-            "Memory usage [MB]": -1,
-            "Uptime [s]": -1,
-        };
-        if (pid !== -1) {
-            usage = await new Promise<{
-                "CPU usage [%]": number,
-                "Memory usage [MB]": number,
-                "Uptime [s]": number,
-            }>((resolve) => {
-                pidusage(pid, (err: any, stats: any) => {
-                    if (err) {
-                        resolve({
-                            "CPU usage [%]": -1,
-                            "Memory usage [MB]": -1,
-                            "Uptime [s]": -1,
-                        });
-                    } else {
-                        resolve({
-                            "CPU usage [%]": stats["cpu"],
-                            "Memory usage [MB]": Math.round(stats["memory"] / 1024 / 1024),
-                            "Uptime [s]": Math.round(stats["elapsed"] / 1000),
-                        });
-                    }
-                });
-            });
-        }
-
-        return {
-            "Type": "Display Window",
-            "Window ID": displayWindowAgent.getId(),
-            "Visible": visible,
-            "TDL file name": displayWindowAgent.getTdlFileName(),
-            "Window name": displayWindowAgent.getWindowName(),
-            "Editable": displayWindowAgent.isEditable() === true ? "Yes" : "No",
-            "Uptime [second]": usage["Uptime [s]"],
-            "Process ID": pid,
-            "CPU usage [%]": usage["CPU usage [%]"],
-            "Memory usage [MB]": usage["Memory usage [MB]"],
-            "Thumbnail": withThumbnail ? displayWindowAgent.getThumbnail() : "",
-            "Script": displayWindowAgent.getDisplayWindowAttachedScript().getWindowAttachedScriptName(),
-            "Script PID": displayWindowAgent.getDisplayWindowAttachedScript().getWindowAttachedScriptPid() === undefined ? "N/A" : `${displayWindowAgent.getDisplayWindowAttachedScript().getWindowAttachedScriptPid()}`,
-        };
-    };
-
-    getContextMenu = () => {
-        return this._contextMenu;
-    };
+    // --------------------- managers ------------------
 
     getDisplayWindowAgent = () => {
         return this._displayWindowAgent;
+    };
+
+    // --------------------- hash ----------------------
+
+    /**
+     * Calculate hash for a display window based on file name and macros.<br>
+     *
+     * If the file name is "", the hash is a random uuid. <br>
+     *
+     * When the file name or macros changes, recalculate the hash.
+     */
+    static calcHash = (fullTdlFileName: string, macros: [string, string][]) => {
+        if (fullTdlFileName === "") {
+            return uuidv4();
+        } else {
+            return fullTdlFileName + JSON.stringify(macros);
+        }
     };
 
 }
