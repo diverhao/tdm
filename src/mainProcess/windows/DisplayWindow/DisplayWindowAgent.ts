@@ -21,6 +21,8 @@ import * as os from "os";
 import { getCurrentDateTimeStr } from "../../global/GlobalMethods";
 import { Promises, PVA_STATUS_TYPE, type_pva_status, type_pva_value } from "epics-tca";
 import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
+import { DisplayWindowFile } from "./DisplayWindowFile";
+import { DisplayWindowLifeCycleManager } from "./DisplayWindowLifeCycleManager";
 
 /**
  * The main process side representation of a display window. <br>
@@ -102,6 +104,10 @@ export class DisplayWindowAgent {
     private forFileBrowserWindowId: string = '';
     private forFileBrowserWidgetKey: string = '';
 
+    private readonly _displayWindowFile: DisplayWindowFile;
+
+    private readonly _displayWindowLifeCycleManager: DisplayWindowLifeCycleManager;
+
     // private _htmlIndex: string = "";
 
     /**
@@ -135,13 +141,6 @@ export class DisplayWindowAgent {
      * This window is hidden. It is changed to true by this.show()
      */
     hiddenWindow: boolean;
-
-    /**
-     * If true, this window is in between "close" and "closed", the further "close" event won't do anything.
-     * 
-     * We can use this bit to control if we want to close the window forcefully
-     */
-    readyToClose: boolean = false;
 
     _macros: [string, string][];
     _isUtilityWindow: boolean;
@@ -210,6 +209,8 @@ export class DisplayWindowAgent {
         this._options = options;
         this.hiddenWindow = options["hide"];
         this._contextMenu = new ContextMenuDesktop(this);
+        this._displayWindowFile = new DisplayWindowFile(this);
+        this._displayWindowLifeCycleManager = new DisplayWindowLifeCycleManager(this);
         // this._mainProcessId = this.getWindowAgentsManager().getMainProcess().getProcessId();
         // obtain and assign display window ID
         // this.setHtmlIndex(this.getWindowAgentsManager().getMainProcess().obtainDisplayWindowHtmlIndex());
@@ -1471,7 +1472,7 @@ export class DisplayWindowAgent {
                 const imageBuffer = resizedImage.toPNG();
                 const imageBase64 = imageBuffer.toString("base64");
                 const displayWindowId = this.getId();
-                if (this.readyToClose === false) {
+                if (this.getDisplayWindowLifeCycleManager().isReadyToClose() === false) {
                     this.updateThumbnail(displayWindowId, `data:image/png;base64,${imageBase64}`, windowName, tdlFileName);
                 }
                 ;
@@ -1761,11 +1762,11 @@ export class DisplayWindowAgent {
             this._browserWindow.on("close", (event: Electron.Event) => {
                 // if the window close button is pressed for the first time, or it is not ready to close,
                 // e.g. the file is not saved, do not close the window immediately, instead, call handler
-                if (this.readyToClose === false) {
+                if (this.getDisplayWindowLifeCycleManager().isReadyToClose() === false) {
                     // set the readyToClose to true in case the communication between the 
                     // renderer process and main process is broken.
                     // If we choose to not close the window immediately, it is set back to false in this.handleWindowClose()
-                    this.readyToClose = true;
+                    this.getDisplayWindowLifeCycleManager().setReadyToClose(true);
                     event.preventDefault();
                     this.handleWindowClose();
                 } else {
@@ -2039,12 +2040,7 @@ export class DisplayWindowAgent {
     };
 
     close = () => {
-        const browserWindow = this.getBrowserWindow();
-        if (browserWindow instanceof BrowserWindow) {
-            browserWindow.close();
-        } else {
-            Log.error("0", `Error: cannot close window ${this.getId()}`);
-        }
+        this.getDisplayWindowLifeCycleManager().close();
     };
 
     // ----------------- getters and setters ------------------------
@@ -2081,6 +2077,14 @@ export class DisplayWindowAgent {
 
     getContextMenu = () => {
         return this._contextMenu;
+    };
+
+    getDisplayWindowFile = () => {
+        return this._displayWindowFile;
+    };
+
+    getDisplayWindowLifeCycleManager = () => {
+        return this._displayWindowLifeCycleManager;
     };
 
     setIsWebpage = () => {

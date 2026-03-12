@@ -1075,13 +1075,18 @@ export class IpcManagerOnDisplayWindow {
         videoRecorder.start(folder);
     };
 
+    /**
+     * Handles a window close request by checking for unsaved display, text editor,
+     * or data viewer changes and prompting the user to save, discard, or cancel.
+     */
     handleWindowWillBeClosed = (event: string, data: IpcEventArgType2["window-will-be-closed"]) => {
-        Log.info("window will be closed")
-        const history = this.getDisplayWindowClient().getActionHistory();
-        const isUtilityWindow = this.getDisplayWindowClient().getIsUtilityWindow();
-        const displayWindowId = this.getDisplayWindowClient().getWindowId();
-        const tdlFileName = this.getDisplayWindowClient().getTdlFileName();
-        const tdl = this.getDisplayWindowClient().generateTdl();
+        Log.info("window will be closed");
+        const displayWindowClient = this.getDisplayWindowClient();
+        const history = displayWindowClient.getActionHistory();
+        const isUtilityWindow = displayWindowClient.getIsUtilityWindow();
+        const displayWindowId = displayWindowClient.getWindowId();
+        const tdlFileName = displayWindowClient.getTdlFileName();
+        const prompt = displayWindowClient.getPrompt();
 
         const canvas = g_widgets1.getWidget("Canvas");
         let windowName = "";
@@ -1089,105 +1094,209 @@ export class IpcManagerOnDisplayWindow {
             windowName = canvas.getWindowName();
         }
 
-        // windows that can be closed immediately
-        // (1) window is not modified since opening
-        // (2) utility window: Text Editor and Data Viewer
-        if (history.getCurrentTdlIndex() > 0
-            || tdlFileName === ""
-            || (isUtilityWindow && windowName.startsWith("TDM Text Editor"))
-            || (isUtilityWindow && windowName.startsWith("TDM Data Viewer"))
-        ) {
-            // don't close window yet, pop up save dialog
-            if (isUtilityWindow) {
-                // utility window: close immediately except modified TextEditor
-                // if it is a Text Editor utility window
-                if (windowName.startsWith("TDM Text Editor")) {
-                    // find the widget
-                    let textEditorWidget: TextEditor | undefined = undefined;
-                    for (let widget of g_widgets1.getWidgets2().values()) {
-                        if (widget instanceof TextEditor) {
-                            textEditorWidget = widget;
-                            break;
-                        }
-                    }
-                    if (textEditorWidget === undefined) {
-                        return;
-                    }
-                    // if content is modified
-                    const isModified = textEditorWidget.getModified();
-                    // if it is modified, bring up the prompt
-                    if (textEditorWidget !== undefined) {
-                        this.sendFromRendererProcess("window-will-be-closed", {
-                            displayWindowId: displayWindowId,
-                            close: false,
-                            tdlFileName: undefined,
-                            tdl: undefined,
-                            // TextEditor utility window specific contents
-                            textEditorFileName: textEditorWidget.getFileName(),
-                            // todo:
-                            // textEditorContents: textEditorWidget.getFileContents(),
-                            textEditorContents: "",
-                            widgetKey: textEditorWidget.getWidgetKey(),
-                        });
-                        return;
-
-                    }
-                } else if (windowName.startsWith("TDM Data Viewer")) {
-                    // if it contains any trace data, bring up the prompt to Save/Do not save/Cancel
-                    let dataViewerWidget: DataViewer | undefined = undefined;
-                    for (let widget of g_widgets1.getWidgets2().values()) {
-                        if (widget instanceof DataViewer) {
-                            dataViewerWidget = widget;
-                            break;
-                        }
-                    }
-                    if (dataViewerWidget !== undefined) {
-                        // console.log(dataViewerWidget.hasData())
-                        if (dataViewerWidget.hasData() === true) {
-                            this.sendFromRendererProcess("window-will-be-closed", {
-                                displayWindowId: displayWindowId,
-                                close: false,
-                                tdlFileName: undefined,
-                                tdl: undefined,
-                                widgetKey: dataViewerWidget.getWidgetKey(),
-                            });
-                            return;
-                        }
-                    }
-                }
-
-                this.sendFromRendererProcess("window-will-be-closed", {
-                    displayWindowId: displayWindowId,
-                    close: true,
-                });
-            } else {
-                Log.debug("Window for TDL", tdlFileName, "will be closed", history.getCurrentTdlIndex());
-                // regular window, save it
-                this.sendFromRendererProcess("window-will-be-closed",
-                    {
-                        displayWindowId: displayWindowId,
-                        close: !this.getDisplayWindowClient().getActionHistory().getModified(),
-                        tdlFileName: tdlFileName, // if "", the window is an in-memory window
-                        tdl: tdl as type_tdl,
-                    }
-                );
-                // todo: what is this behavior
-                this.sendFromRendererProcess("window-will-be-closed",
-                    {
-                        displayWindowId: displayWindowId,
-                        tdlFileName: tdlFileName,
-                        close: false
-                    }
-                );
-            }
-        } else {
-            // window that has not been modified, close immediately
-            this.sendFromRendererProcess("window-will-be-closed", {
-                displayWindowId: displayWindowId,
-                close: true,
+        const sendUserSelect = (
+            select: IpcEventArgType["window-will-be-closed-user-select"]["select"],
+            widgetKey: string,
+            fileName: string,
+            fileContent: string,
+            dataType: IpcEventArgType["window-will-be-closed-user-select"]["dataType"],
+        ) => {
+            prompt.removeElement();
+            this.sendFromRendererProcess("window-will-be-closed-user-select", {
+                displayWindowId,
+                widgetKey,
+                select,
+                fileName,
+                fileContent,
+                dataType,
             });
+        };
+
+        let widgetKey = "";
+        let fileName = "";
+        let fileContent = "";
+        let dataType: IpcEventArgType["window-will-be-closed-user-select"]["dataType"] = "tdl";
+        let humanReadableMessage = "This window has unsaved changes.";
+        let shouldPrompt = false;
+
+        if (isUtilityWindow && windowName.startsWith("TDM Text Editor")) {
+            for (const widget of g_widgets1.getWidgets2().values()) {
+                if (widget instanceof TextEditor && widget.getModified()) {
+                    widgetKey = widget.getWidgetKey();
+                    fileName = widget.getFileName();
+                    fileContent = widget.getFileContent();
+                    dataType = "text";
+                    humanReadableMessage = "Save changes to the text file before closing?";
+                    shouldPrompt = true;
+                    break;
+                }
+            }
+        } else if (isUtilityWindow && windowName.startsWith("TDM Data Viewer")) {
+            for (const widget of g_widgets1.getWidgets2().values()) {
+                if (widget instanceof DataViewer && widget.hasData()) {
+                    widgetKey = widget.getWidgetKey();
+                    fileContent = JSON.stringify(widget.getPlot().prepareExportData(), null, 4);
+                    dataType = "data-viewer";
+                    humanReadableMessage = "Save Data Viewer data before closing?";
+                    shouldPrompt = true;
+                    break;
+                }
+            }
+        } else if (history.getModified()) {
+            fileName = tdlFileName;
+            fileContent = JSON.stringify(displayWindowClient.generateTdl(), null, 4);
+            dataType = "tdl";
+            humanReadableMessage = "Save changes to this display before closing?";
+            shouldPrompt = true;
         }
+
+        if (!shouldPrompt) {
+            sendUserSelect("don't save", "", "", "", "tdl");
+            return;
+        }
+
+        prompt.createElement("dialog-message-box", {
+            command: "window-will-be-closed-confirm",
+            messageType: "warning",
+            humanReadableMessages: [humanReadableMessage],
+            rawMessages: [],
+            buttons: [
+                {
+                    text: "Save",
+                    handleClick: () => {
+                        sendUserSelect("save", widgetKey, fileName, fileContent, dataType);
+                    },
+                },
+                {
+                    text: "Don't Save",
+                    handleClick: () => {
+                        sendUserSelect("don't save", widgetKey, fileName, fileContent, dataType);
+                    },
+                },
+                {
+                    text: "Cancel",
+                    handleClick: () => {
+                        sendUserSelect("cancel", widgetKey, fileName, fileContent, dataType);
+                    },
+                },
+            ],
+        });
     };
+
+
+    // handleWindowWillBeClosed0 = (event: string, data: IpcEventArgType2["window-will-be-closed"]) => {
+    //     Log.info("window will be closed")
+    //     const history = this.getDisplayWindowClient().getActionHistory();
+    //     const isUtilityWindow = this.getDisplayWindowClient().getIsUtilityWindow();
+    //     const displayWindowId = this.getDisplayWindowClient().getWindowId();
+    //     const tdlFileName = this.getDisplayWindowClient().getTdlFileName();
+    //     const tdl = this.getDisplayWindowClient().generateTdl();
+
+    //     const canvas = g_widgets1.getWidget("Canvas");
+    //     let windowName = "";
+    //     if (canvas instanceof Canvas) {
+    //         windowName = canvas.getWindowName();
+    //     }
+
+    //     // windows that can be closed immediately
+    //     // (1) window is not modified since opening
+    //     // (2) utility window: Text Editor and Data Viewer
+    //     if (history.getCurrentTdlIndex() > 0
+    //         || tdlFileName === ""
+    //         || (isUtilityWindow && windowName.startsWith("TDM Text Editor"))
+    //         || (isUtilityWindow && windowName.startsWith("TDM Data Viewer"))
+    //     ) {
+    //         // don't close window yet, pop up save dialog
+    //         if (isUtilityWindow) {
+    //             // utility window: close immediately except modified TextEditor
+    //             // if it is a Text Editor utility window
+    //             if (windowName.startsWith("TDM Text Editor")) {
+    //                 // find the widget
+    //                 let textEditorWidget: TextEditor | undefined = undefined;
+    //                 for (let widget of g_widgets1.getWidgets2().values()) {
+    //                     if (widget instanceof TextEditor) {
+    //                         textEditorWidget = widget;
+    //                         break;
+    //                     }
+    //                 }
+    //                 if (textEditorWidget === undefined) {
+    //                     return;
+    //                 }
+    //                 // if content is modified
+    //                 const isModified = textEditorWidget.getModified();
+    //                 // if it is modified, bring up the prompt
+    //                 if (textEditorWidget !== undefined) {
+    //                     this.sendFromRendererProcess("window-will-be-closed", {
+    //                         displayWindowId: displayWindowId,
+    //                         close: false,
+    //                         tdlFileName: undefined,
+    //                         tdl: undefined,
+    //                         // TextEditor utility window specific contents
+    //                         textEditorFileName: textEditorWidget.getFileName(),
+    //                         // todo:
+    //                         // textEditorContents: textEditorWidget.getFileContents(),
+    //                         textEditorContents: "",
+    //                         widgetKey: textEditorWidget.getWidgetKey(),
+    //                     });
+    //                     return;
+
+    //                 }
+    //             } else if (windowName.startsWith("TDM Data Viewer")) {
+    //                 // if it contains any trace data, bring up the prompt to Save/Do not save/Cancel
+    //                 let dataViewerWidget: DataViewer | undefined = undefined;
+    //                 for (let widget of g_widgets1.getWidgets2().values()) {
+    //                     if (widget instanceof DataViewer) {
+    //                         dataViewerWidget = widget;
+    //                         break;
+    //                     }
+    //                 }
+    //                 if (dataViewerWidget !== undefined) {
+    //                     // console.log(dataViewerWidget.hasData())
+    //                     if (dataViewerWidget.hasData() === true) {
+    //                         this.sendFromRendererProcess("window-will-be-closed", {
+    //                             displayWindowId: displayWindowId,
+    //                             close: false,
+    //                             tdlFileName: undefined,
+    //                             tdl: undefined,
+    //                             widgetKey: dataViewerWidget.getWidgetKey(),
+    //                         });
+    //                         return;
+    //                     }
+    //                 }
+    //             }
+
+    //             this.sendFromRendererProcess("window-will-be-closed", {
+    //                 displayWindowId: displayWindowId,
+    //                 close: true,
+    //             });
+    //         } else {
+    //             Log.debug("Window for TDL", tdlFileName, "will be closed", history.getCurrentTdlIndex());
+    //             // regular window, save it
+    //             this.sendFromRendererProcess("window-will-be-closed",
+    //                 {
+    //                     displayWindowId: displayWindowId,
+    //                     close: !this.getDisplayWindowClient().getActionHistory().getModified(),
+    //                     tdlFileName: tdlFileName, // if "", the window is an in-memory window
+    //                     tdl: tdl as type_tdl,
+    //                 }
+    //             );
+    //             // todo: what is this behavior
+    //             this.sendFromRendererProcess("window-will-be-closed",
+    //                 {
+    //                     displayWindowId: displayWindowId,
+    //                     tdlFileName: tdlFileName,
+    //                     close: false
+    //                 }
+    //             );
+    //         }
+    //     } else {
+    //         // window that has not been modified, close immediately
+    //         this.sendFromRendererProcess("window-will-be-closed", {
+    //             displayWindowId: displayWindowId,
+    //             close: true,
+    //         });
+    //     }
+    // };
 
     getIpcServerPort = () => {
         return this.ipcServerPort;
@@ -1324,58 +1433,6 @@ export class IpcManagerOnDisplayWindow {
                     });
                 };
             }
-        } else if (command === "window-will-be-closed-confirm") {
-            const buttons = info["buttons"];
-            if (buttons !== undefined && buttons.length === 3) {
-                const attachment = info["attachment"];
-                buttons[0]["handleClick"] = () => {
-                    const widgetKey = attachment["widgetKey"];
-                    if (widgetKey !== undefined) {
-                        const widget = g_widgets1.getWidget2(widgetKey);
-                        if (widget instanceof DataViewer) {
-                            const data = widget.getPlot().prepareExportData();
-                            this.sendFromRendererProcess("window-will-be-closed",
-                                { ...{ ...attachment, dataViewerData: data }, saveConfirmation: "Save" }
-                            );
-                            return;
-                        }
-                    }
-
-                    this.sendFromRendererProcess("window-will-be-closed",
-                        { ...attachment, saveConfirmation: "Save" }
-                    );
-                };
-                buttons[1]["handleClick"] = () => {
-                    this.sendFromRendererProcess("window-will-be-closed",
-                        { ...attachment, saveConfirmation: "Don't Save" }
-                    );
-                };
-                buttons[2]["handleClick"] = () => {
-                    this.sendFromRendererProcess("window-will-be-closed",
-                        { ...attachment, saveConfirmation: "Cancel" }
-                    );
-                };
-            }
-            // } else if (command === "open-text-file-large-confirm") {
-            //     const buttons = info["buttons"];
-            //     if (buttons !== undefined && buttons.length === 2) {
-            //         const attachment = info["attachment"];
-            //         // Yes
-            //         buttons[0]["handleClick"] = () => {
-            //             // this command is from TextEditor window, we should use open-text-file event
-            //             this.sendFromRendererProcess("open-text-file",
-            //                 { ...attachment }
-            //             );
-            //         };
-            //         // No
-            //         buttons[1]["handleClick"] = () => {
-            //             // do nothing, do not send back the attachment, otherwise
-            //             // the open file dialog pops again
-            //             // this.sendFromRendererProcess("open-text-file",
-            //             //     { ...attachment, largeFileConfirmOpen: "No" }
-            //             // );
-            //         };
-            //     }
         }
 
         this.getDisplayWindowClient().getPrompt().createElement("dialog-message-box", info);
@@ -1420,6 +1477,20 @@ export class IpcManagerOnDisplayWindow {
                         this.sendFromRendererProcess("window-will-be-closed",
                             attachment
                         );
+                    }
+                };
+                buttons[1]["handleClick"] = () => {
+                };
+            }
+        } else if (command === "window-will-be-closed-user-select-save") {
+            const buttons = info["buttons"];
+            const attachment = info["attachment"];
+            if (buttons !== undefined && buttons.length === 2) {
+                buttons[0]["handleClick"] = () => {
+                    const fileName = prompt.getDialogInputBoxText();
+                    if (fileName !== "") {
+                        attachment["fileName"] = fileName;
+                        this.sendFromRendererProcess("window-will-be-closed-user-select", attachment);
                     }
                 };
                 buttons[1]["handleClick"] = () => {

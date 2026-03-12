@@ -257,9 +257,10 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("close-window", this.handleCloseWindow);
         this.ipcMain.on("main-window-will-be-closed", this.handleMainWindowWillBeClosed);
         // ------------------- display window ------------------
-        // set title
+
         this.ipcMain.on("set-window-title", this.handleSetWindowTitle);
         this.ipcMain.on("window-will-be-closed", this.handleWindowWillBeClosed);
+        this.ipcMain.on("window-will-be-closed-user-select", this.handleWindowWillBeClosedUserSelect);
         this.ipcMain.on("open-default-display-windows", this.handleOpenDefaultDisplayWindows);
         this.ipcMain.on("create-blank-display-window", this.handleCreateBlankDisplayWindow); // done
         this.ipcMain.on("zoom-window", this.handleZoomWindow);
@@ -1043,265 +1044,275 @@ export class IpcManagerOnMainProcess {
         }
     };
 
+    handleWindowWillBeClosedUserSelect = (event: WebSocket, data: IpcEventArgType["window-will-be-closed-user-select"]) => {
+        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
+        const displayWindowAgent = windowAgentsManager.getAgent(data["displayWindowId"]);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            displayWindowAgent.getDisplayWindowLifeCycleManager().handleWindowWillBeClosedUserSelect(data);
+        }
+    }
+
     /**
+     * todo: should be removed, there will be no such an event 
+     * 
      * display window will be closed
      * 
      * If we choose not to close the window immediately, set the readyToClose back to false.
      */
     handleWindowWillBeClosed = (event: WebSocket | string, data: IpcEventArgType["window-will-be-closed"]) => {
-        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-        const displayWindowAgent = windowAgentsManager.getAgent(data["displayWindowId"]);
-        // close browser window in desktop mode or ssh-server mode
-        const closeBrowserWindow = () => {
-            const mode = this.getMainProcess().getMainProcessMode();
-            if (displayWindowAgent instanceof DisplayWindowAgent) {
-                // the DisplayWindowAgent.handleWindowClosed() won't e called
-                displayWindowAgent.readyToClose = true;
-                const browserWindow = displayWindowAgent.getBrowserWindow();
-                if (mode === "desktop") {
-                    if (browserWindow !== undefined) {
-                        browserWindow.webContents.close();
-                    }
-                } else if (mode === "ssh-server") {
-                    // (1) clean up the local stuff
-                    displayWindowAgent.handleWindowClosed();
-                    // (2) tell the ssh-client to close the window
-                    const sshServer = this.getMainProcess().getIpcManager().getSshServer();
-                    // fs.writeFileSync("/Users/haohao/tdm.log", `window will be closed, tell the ssh-client to close window =====================\n`, { flag: "a" });
-                    if (sshServer !== undefined) {
-                        // this is a tcp command, not websocket
-                        // fs.writeFileSync("/Users/haohao/tdm.log", `window will be closed, tell the ssh-client to close window B =====================\n`, { flag: "a" });
-                        sshServer.sendToTcpClient(JSON.stringify(
-                            {
-                                command: "close-browser-window",
-                                data: {
-                                    mainProcessId: "0",
-                                    displayWindowId: data["displayWindowId"],
-                                }
-                            }
-                        ))
-                    }
-                }
-            }
-        }
+        // const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
+        // const displayWindowAgent = windowAgentsManager.getAgent(data["displayWindowId"]);
+        // // close browser window in desktop mode or ssh-server mode
+        // const closeBrowserWindow = () => {
+        //     const mode = this.getMainProcess().getMainProcessMode();
+        //     if (displayWindowAgent instanceof DisplayWindowAgent) {
+        //         // the DisplayWindowAgent.handleWindowClosed() won't e called
+        //         displayWindowAgent.readyToClose = true;
+        //         const browserWindow = displayWindowAgent.getBrowserWindow();
+        //         if (mode === "desktop") {
+        //             if (browserWindow !== undefined) {
+        //                 browserWindow.webContents.close();
+        //             }
+        //         } else if (mode === "ssh-server") {
+        //             // (1) clean up the local stuff
+        //             displayWindowAgent.handleWindowClosed();
+        //             // (2) tell the ssh-client to close the window
+        //             const sshServer = this.getMainProcess().getIpcManager().getSshServer();
+        //             // fs.writeFileSync("/Users/haohao/tdm.log", `window will be closed, tell the ssh-client to close window =====================\n`, { flag: "a" });
+        //             if (sshServer !== undefined) {
+        //                 // this is a tcp command, not websocket
+        //                 // fs.writeFileSync("/Users/haohao/tdm.log", `window will be closed, tell the ssh-client to close window B =====================\n`, { flag: "a" });
+        //                 sshServer.sendToTcpClient(JSON.stringify(
+        //                     {
+        //                         command: "close-browser-window",
+        //                         data: {
+        //                             mainProcessId: "0",
+        //                             displayWindowId: data["displayWindowId"],
+        //                         }
+        //                     }
+        //                 ))
+        //             }
+        //         }
+        //     }
+        // }
 
-        if (displayWindowAgent instanceof DisplayWindowAgent) {
-            const browserWindow = displayWindowAgent.getBrowserWindow();
-            const mode = this.getMainProcess().getMainProcessMode();
-            if (
-                mode === "ssh-server" ||
-                // real display window need to be saved
-                (browserWindow instanceof BrowserWindow &&
-                    // preloaded displays don't need to be saved
-                    windowAgentsManager.preloadedDisplayWindowAgent !== displayWindowAgent
-                    // embedded displays don't need to be saved
-                    // && windowAgentsManager.preloadedEmbeddedDisplayAgent !== displayWindowAgent
-                )
-            ) {
-                // desktop mode and ssh-client mode 
-                // 
-                // no save, the client determines that this window do not need to be saved:
-                // (1) it is a utility window, or
-                // (2) it is not modified since opening
-                if (data["close"]) {
-                    // it emits "close" event, readyToClose is used to prevent recursive invocation of
-                    // "close" event handler
-                    closeBrowserWindow();
-                } else {
-                    if (data["saveConfirmation"] === "Save") {
-                        // TextEditor utility window has unsaved contents
-                        if (data["textEditorFileName"] !== undefined
-                            && data["displayWindowId"] !== undefined
-                            && data["widgetKey"] !== undefined
-                            && data["textEditorContents"]) {
-                            const saveSuccess = this.getTextEditorHandlers().handleSaveTextFile("", {
-                                displayWindowId: data["displayWindowId"],
-                                widgetKey: data["widgetKey"],
-                                fileContents: data["textEditorContents"],
-                                fileName: data["textEditorFileName"],
-                            });
-                            if (saveSuccess) {
-                                closeBrowserWindow();
-                            } else {
-                                // failed to save, restore state
-                                displayWindowAgent.readyToClose = false;
-                            }
-                        } else if (data["widgetKey"] !== undefined && data["widgetKey"].startsWith("DataViewer") && data["dataViewerData"] !== undefined) {
-                            // save DataViewer data
-                            // const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+        // if (displayWindowAgent instanceof DisplayWindowAgent) {
+        //     const browserWindow = displayWindowAgent.getBrowserWindow();
+        //     const mode = this.getMainProcess().getMainProcessMode();
+        //     if (
+        //         mode === "ssh-server" ||
+        //         // real display window need to be saved
+        //         (browserWindow instanceof BrowserWindow &&
+        //             // preloaded displays don't need to be saved
+        //             windowAgentsManager.preloadedDisplayWindowAgent !== displayWindowAgent
+        //             // embedded displays don't need to be saved
+        //             // && windowAgentsManager.preloadedEmbeddedDisplayAgent !== displayWindowAgent
+        //         )
+        //     ) {
+        //         // desktop mode and ssh-client mode 
+        //         // 
+        //         // no save, the client determines that this window do not need to be saved:
+        //         // (1) it is a utility window, or
+        //         // (2) it is not modified since opening
+        //         if (data["close"]) {
+        //             // it emits "close" event, readyToClose is used to prevent recursive invocation of
+        //             // "close" event handler
+        //             closeBrowserWindow();
+        //         } else {
+        //             if (data["saveConfirmation"] === "Save") {
+        //                 // TextEditor utility window has unsaved contents
+        //                 if (data["textEditorFileName"] !== undefined
+        //                     && data["displayWindowId"] !== undefined
+        //                     && data["widgetKey"] !== undefined
+        //                     && data["textEditorContents"]) {
+        //                     const saveSuccess = this.getTextEditorHandlers().handleSaveTextFile("", {
+        //                         displayWindowId: data["displayWindowId"],
+        //                         widgetKey: data["widgetKey"],
+        //                         fileContents: data["textEditorContents"],
+        //                         fileName: data["textEditorFileName"],
+        //                     });
+        //                     if (saveSuccess) {
+        //                         closeBrowserWindow();
+        //                     } else {
+        //                         // failed to save, restore state
+        //                         displayWindowAgent.readyToClose = false;
+        //                     }
+        //                 } else if (data["widgetKey"] !== undefined && data["widgetKey"].startsWith("DataViewer") && data["dataViewerData"] !== undefined) {
+        //                     // save DataViewer data
+        //                     // const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
 
-                            let fileName = "";
+        //                     let fileName = "";
 
-                            if (browserWindow instanceof BrowserWindow) {
-                                if (this.getMainProcess().getMainProcessMode() === "desktop") {
-                                    fileName = dialog.showSaveDialogSync(browserWindow, {
-                                        title: "Select a file to save to",
-                                        filters: [
-                                            {
-                                                name: "json",
-                                                extensions: ["json"],
-                                            },
-                                        ],
-                                    });
-                                } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
-                                    // todo
-                                    // displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
-                                    //     {
-                                    //         command: "data-viewer-export-data",
-                                    //         humanReadableMessages: ["Save file to"], // each string has a new line
-                                    //         buttons: [
-                                    //             {
-                                    //                 text: "OK",
-                                    //             },
-                                    //             {
-                                    //                 text: "Cancel",
-                                    //             }
-                                    //         ],
-                                    //         defaultInputText: "",
-                                    //         attachment: {
-                                    //             displayWindowId: displayWindowId,
-                                    //             data: data,
-                                    //             fileName1: fileName1,
-                                    //         }
-                                    //     }
-                                    // );
-                                    // return;
-                                }
-                            }
-                            try {
-                                fs.writeFileSync(fileName, JSON.stringify(data["dataViewerData"], null, 4));
-                                Log.debug("0", "Successfully saved DataViewer data to", fileName);
-                                closeBrowserWindow();
-                            } catch (e) {
-                                // if Cancel or error, do not close the window
-                                Log.error("0", `Cannot save DataViewer data to file ${fileName}`);
-                                displayWindowAgent.readyToClose = false;
+        //                     if (browserWindow instanceof BrowserWindow) {
+        //                         if (this.getMainProcess().getMainProcessMode() === "desktop") {
+        //                             fileName = dialog.showSaveDialogSync(browserWindow, {
+        //                                 title: "Select a file to save to",
+        //                                 filters: [
+        //                                     {
+        //                                         name: "json",
+        //                                         extensions: ["json"],
+        //                                     },
+        //                                 ],
+        //                             });
+        //                         } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
+        //                             // todo
+        //                             // displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
+        //                             //     {
+        //                             //         command: "data-viewer-export-data",
+        //                             //         humanReadableMessages: ["Save file to"], // each string has a new line
+        //                             //         buttons: [
+        //                             //             {
+        //                             //                 text: "OK",
+        //                             //             },
+        //                             //             {
+        //                             //                 text: "Cancel",
+        //                             //             }
+        //                             //         ],
+        //                             //         defaultInputText: "",
+        //                             //         attachment: {
+        //                             //             displayWindowId: displayWindowId,
+        //                             //             data: data,
+        //                             //             fileName1: fileName1,
+        //                             //         }
+        //                             //     }
+        //                             // );
+        //                             // return;
+        //                         }
+        //                     }
+        //                     try {
+        //                         fs.writeFileSync(fileName, JSON.stringify(data["dataViewerData"], null, 4));
+        //                         Log.debug("0", "Successfully saved DataViewer data to", fileName);
+        //                         closeBrowserWindow();
+        //                     } catch (e) {
+        //                         // if Cancel or error, do not close the window
+        //                         Log.error("0", `Cannot save DataViewer data to file ${fileName}`);
+        //                         displayWindowAgent.readyToClose = false;
 
-                                // displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                                //     // command?: string | undefined,
-                                //     messageType: "error", // | "warning" | "info", // symbol
-                                //     humanReadableMessages: [`Cannot save DataViewer data to file ${fileName}`], // each string has a new line
-                                //     rawMessages: [`${e}`], // computer generated messages
-                                //     // buttons?: type_DialogMessageBoxButton[] | undefined,
-                                //     // attachment?: any,
-                                // })
-                            }
-                            return;
-                        } else {
-                            // any other types of window
-                            let tdlFileName: string | undefined = data["tdlFileName"];
-                            // Save as: it is an in-memory display
-                            if (tdlFileName === "") {
-                                if (this.getMainProcess().getMainProcessMode() === "desktop") {
+        //                         // displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+        //                         //     // command?: string | undefined,
+        //                         //     messageType: "error", // | "warning" | "info", // symbol
+        //                         //     humanReadableMessages: [`Cannot save DataViewer data to file ${fileName}`], // each string has a new line
+        //                         //     rawMessages: [`${e}`], // computer generated messages
+        //                         //     // buttons?: type_DialogMessageBoxButton[] | undefined,
+        //                         //     // attachment?: any,
+        //                         // })
+        //                     }
+        //                     return;
+        //                 } else {
+        //                     // any other types of window
+        //                     let tdlFileName: string | undefined = data["tdlFileName"];
+        //                     // Save as: it is an in-memory display
+        //                     if (tdlFileName === "") {
+        //                         if (this.getMainProcess().getMainProcessMode() === "desktop") {
 
-                                    // a in-memory display, save as
-                                    tdlFileName = dialog.showSaveDialogSync({
-                                        title: "Save",
-                                        defaultPath: path.dirname(tdlFileName),
-                                        filters: [{ name: "tdl", extensions: ["tdl", "json"] }],
-                                    });
-                                } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
-                                    displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
-                                        {
-                                            info:
-                                            {
-                                                command: "window-will-be-closed",
-                                                humanReadableMessages: ["Save diaplay to"], // each string has a new line
-                                                buttons: [
-                                                    {
-                                                        text: "OK",
-                                                    },
-                                                    {
-                                                        text: "Cancel",
-                                                    }
-                                                ],
-                                                defaultInputText: "",
-                                                attachment: data,
-                                            }
-                                        }
-                                    );
-                                    return;
-                                }
-                            }
-                            if (tdlFileName !== undefined) {
-                                // save file
-                                fs.writeFile(tdlFileName, JSON.stringify(data["tdl"], null, 4), (err) => {
-                                    if (err) {
-                                        // error when saving file, do not close the window
-                                        Log.error("0", err);
-                                        showDisplayWindowError(displayWindowAgent, [`Error saving file ${tdlFileName}`], [`${err}`]);
-                                        displayWindowAgent.readyToClose = false;
-                                    } else {
-                                        // update tdlFileName on client side, absolute path
-                                        displayWindowAgent.sendFromMainProcess("tdl-file-saved",
-                                            {
-                                                newTdlFileName: tdlFileName
-                                            }
-                                        );
-                                        closeBrowserWindow();
+        //                             // a in-memory display, save as
+        //                             tdlFileName = dialog.showSaveDialogSync({
+        //                                 title: "Save",
+        //                                 defaultPath: path.dirname(tdlFileName),
+        //                                 filters: [{ name: "tdl", extensions: ["tdl", "json"] }],
+        //                             });
+        //                         } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
+        //                             displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
+        //                                 {
+        //                                     info:
+        //                                     {
+        //                                         command: "window-will-be-closed",
+        //                                         humanReadableMessages: ["Save diaplay to"], // each string has a new line
+        //                                         buttons: [
+        //                                             {
+        //                                                 text: "OK",
+        //                                             },
+        //                                             {
+        //                                                 text: "Cancel",
+        //                                             }
+        //                                         ],
+        //                                         defaultInputText: "",
+        //                                         attachment: data,
+        //                                     }
+        //                                 }
+        //                             );
+        //                             return;
+        //                         }
+        //                     }
+        //                     if (tdlFileName !== undefined) {
+        //                         // save file
+        //                         fs.writeFile(tdlFileName, JSON.stringify(data["tdl"], null, 4), (err) => {
+        //                             if (err) {
+        //                                 // error when saving file, do not close the window
+        //                                 Log.error("0", err);
+        //                                 showDisplayWindowError(displayWindowAgent, [`Error saving file ${tdlFileName}`], [`${err}`]);
+        //                                 displayWindowAgent.readyToClose = false;
+        //                             } else {
+        //                                 // update tdlFileName on client side, absolute path
+        //                                 displayWindowAgent.sendFromMainProcess("tdl-file-saved",
+        //                                     {
+        //                                         newTdlFileName: tdlFileName
+        //                                     }
+        //                                 );
+        //                                 closeBrowserWindow();
 
-                                    }
-                                });
-                            } else {
-                                // cancel the file saving dialog, do not close the window
-                                displayWindowAgent.readyToClose = false;
-                            }
-                        }
-                    } else if (data["saveConfirmation"] === "Don't Save") {
-                        // Don't Save
-                        closeBrowserWindow();
-                        return;
-                    } else if (data["saveConfirmation"] === "Cancel") {
-                        // Cancel
-                        displayWindowAgent.readyToClose = false;
-                        return;
-                    } else {
-                        showDisplayWindowWarning(
-                            displayWindowAgent,
-                            data["widgetKey"] !== undefined && data["widgetKey"].startsWith("DataViewer_")
-                                ? [`Do you want to save the data? They will be lost if you don't save them.`]
-                                : [`Do you want to save the changes you made? Your changes will be lost if you don't save them.`],
-                            [],
-                            {
-                                command: "window-will-be-closed-confirm",
-                                buttons: [
-                                    {
-                                        text: "Save",
-                                    },
-                                    {
-                                        text: "Don't Save",
-                                    },
-                                    {
-                                        text: "Cancel",
-                                    }
-                                ],
-                                // on render window, this is modified and sent back
-                                // the saveConfirmation is changed from undefined to
-                                // "Save", "Don't Save", or "Cancel"
-                                attachment: data,
-                            }
-                        );
-                        return;
-                    }
-                }
-            } else if (browserWindow === undefined) {
-                // // ssh-server mode
-                // fs.writeFileSync("/Users/haohao/tdm.log", `window will be closed ===================== B ${displayWindowAgent.getId()}\n`, { flag: "a" });
-                // // DisplayWindowAgent.browserWindow is undefined, we are in ssh-server mode 
-                // const sshServer = this.getMainProcess().getMainProcesses().getIpcManager().getSshServer();
-                // if (sshServer !== undefined) {
-                //     sshServer.sendToTcpClient(JSON.stringify(
-                //         {
-                //             command: "close-webcontents-in-ssh",
-                //             data: {
-                //                 mainProcessId: this.getMainProcess().getWindowAgentsManager().getMainProcess().getProcessId(),
-                //                 displayWindowId: data["displayWindowId"],
-                //             }
-                //         }
-                //     ))
-                // }
-            }
-        }
+        //                             }
+        //                         });
+        //                     } else {
+        //                         // cancel the file saving dialog, do not close the window
+        //                         displayWindowAgent.readyToClose = false;
+        //                     }
+        //                 }
+        //             } else if (data["saveConfirmation"] === "Don't Save") {
+        //                 // Don't Save
+        //                 closeBrowserWindow();
+        //                 return;
+        //             } else if (data["saveConfirmation"] === "Cancel") {
+        //                 // Cancel
+        //                 displayWindowAgent.readyToClose = false;
+        //                 return;
+        //             } else {
+        //                 showDisplayWindowWarning(
+        //                     displayWindowAgent,
+        //                     data["widgetKey"] !== undefined && data["widgetKey"].startsWith("DataViewer_")
+        //                         ? [`Do you want to save the data? They will be lost if you don't save them.`]
+        //                         : [`Do you want to save the changes you made? Your changes will be lost if you don't save them.`],
+        //                     [],
+        //                     {
+        //                         command: "window-will-be-closed-confirm",
+        //                         buttons: [
+        //                             {
+        //                                 text: "Save",
+        //                             },
+        //                             {
+        //                                 text: "Don't Save",
+        //                             },
+        //                             {
+        //                                 text: "Cancel",
+        //                             }
+        //                         ],
+        //                         // on render window, this is modified and sent back
+        //                         // the saveConfirmation is changed from undefined to
+        //                         // "Save", "Don't Save", or "Cancel"
+        //                         attachment: data,
+        //                     }
+        //                 );
+        //                 return;
+        //             }
+        //         }
+        //     } else if (browserWindow === undefined) {
+        //         // // ssh-server mode
+        //         // fs.writeFileSync("/Users/haohao/tdm.log", `window will be closed ===================== B ${displayWindowAgent.getId()}\n`, { flag: "a" });
+        //         // // DisplayWindowAgent.browserWindow is undefined, we are in ssh-server mode 
+        //         // const sshServer = this.getMainProcess().getMainProcesses().getIpcManager().getSshServer();
+        //         // if (sshServer !== undefined) {
+        //         //     sshServer.sendToTcpClient(JSON.stringify(
+        //         //         {
+        //         //             command: "close-webcontents-in-ssh",
+        //         //             data: {
+        //         //                 mainProcessId: this.getMainProcess().getWindowAgentsManager().getMainProcess().getProcessId(),
+        //         //                 displayWindowId: data["displayWindowId"],
+        //         //             }
+        //         //         }
+        //         //     ))
+        //         // }
+        //     }
+        // }
     };
 
     handleMainWindowWillBeClosed = (event: WebSocket | string, data: IpcEventArgType["main-window-will-be-closed"]) => {

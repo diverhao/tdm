@@ -192,14 +192,10 @@ export type IpcEventArgType = {
     "window-will-be-closed-user-select": {
         displayWindowId: string;
         widgetKey: string;
-        saveConfirmation?: "Save" | "Don't Save" | "Cancel",
-        // close: boolean;
-        tdlFileName?: string;
-        tdl?: type_tdl;
-        // try to save the contents if we are closing a TextEditor utility window
-        textEditorFileName?: string;
-        textEditorContents?: string;
-        dataViewerData?: Record<string, Record<string, number[] | string[]>>;
+        select: "save" | "don't save" | "cancel";
+        fileName: string;
+        fileContent: string;
+        dataType: "tdl" | "data-viewer" | "text";
     },
 
     "main-window-will-be-closed": {

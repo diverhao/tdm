@@ -99,8 +99,6 @@ export class DisplayWindowClient {
     private _symbolGallery: SymbolGallery;
     private _channelNameHint: ChannelNameHint;
 
-    // private _textEditorModified: boolean = false;
-
     constructor(displayWindowId: string, ipcServerPort: number | undefined, hostname: string | undefined = undefined) {
         // set log level
         Log.setLogLevel(type_log_levels.info);

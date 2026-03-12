@@ -46,8 +46,6 @@ export class TextEditorHandlers {
      * - files >= `textEditorHardFileSizeLimit` are rejected before reading.
      */
     handleOpenTextFile = async (event: WebSocket | string, options: IpcEventArgType["open-text-file"]) => {
-        console.log("---------------- open a text file -------------------", options)
-
 
         const ipcManager = this.getIpcManager();
         const { displayWindowId, widgetKey, fileContent, manualOpen, openNewWindow } = options;

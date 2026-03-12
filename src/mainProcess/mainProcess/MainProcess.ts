@@ -112,6 +112,7 @@ export class MainProcess {
     // symbol gallery data
     private _symbolGalleryData: Record<string, Record<string, string>> = {};
 
+
     constructor(
         // mainProcesses: MainProcesses,
         args: type_args,
@@ -347,7 +348,11 @@ export class MainProcess {
             // ! need to be fixed
             if (this.getMainProcessMode() === "ssh-client") {
                 // close the window forcefully
-                windowAgent.readyToClose = true;
+                if ("getDisplayWindowLifeCycleManager" in windowAgent) {
+                    windowAgent.getDisplayWindowLifeCycleManager().setReadyToClose(true);
+                } else {
+                    windowAgent.readyToClose = true;
+                }
             }
             windowAgent.getBrowserWindow()?.close();
         }
