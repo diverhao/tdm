@@ -314,6 +314,7 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("save-profiles-as", this.handleSaveProfilesAs);
 
         // ---------------- file -------------------------
+        this.ipcMain.on("input-file-path", this.handleInputFilePath);
         this.ipcMain.on("select-a-file", this.handleSelectAFile);
         this.ipcMain.on("get-symbol-gallery", this.handleGetSymbolGallery);
         // ----------------- embedded display ------------------
@@ -2207,6 +2208,32 @@ export class IpcManagerOnMainProcess {
     };
 
     // ---------------------- general file --------------------------
+
+
+    /**
+     * Handle the file path input from the renderer process. <br>
+     *
+     * This is typically invoked when the user manually types in a file path (e.g. in SSH server mode)
+     * instead of using a native file dialog. <br>
+     *
+     * It resolves the pending file selection promise on the corresponding Display Window's
+     * `DisplayWindowFile` object by calling its `selectFileInputResolve` with the provided file name,
+     * then resets the resolve function to a no-op to prevent duplicate invocations.
+     *
+     * @param {string} displayWindowId The ID of the display window that requested the file path input.
+     * @param {string} fileName The file path entered by the user.
+     */
+    handleInputFilePath = (event: WebSocket | string, data: IpcEventArgType["input-file-path"]) => {
+        const { displayWindowId, fileName } = data;
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            const resolveFunc = displayWindowAgent.getDisplayWindowFile().selectFileInputResolve;
+            resolveFunc(fileName);
+        } else {
+            Log.error();
+        }
+    };
+
     handleSelectAFile = (event: WebSocket | string, data: IpcEventArgType["select-a-file"]) => {
         let { options, fileName1, } = data;
         if (fileName1 === undefined) {
@@ -2486,52 +2513,58 @@ export class IpcManagerOnMainProcess {
             fileName1 = "";
         }
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
-        if (displayWindowAgent instanceof DisplayWindowAgent) {
-            const displayWindowFile = displayWindowAgent.getDisplayWindowFile();
-            const fileContent = JSON.stringify(data, null, 4);
-            const mainProcessMode = this.getMainProcess().getMainProcessMode();
-
-            if (mainProcessMode === "desktop") {
-                const failedReason = displayWindowFile.saveFileInDesktopMode("data-viewer", fileName1, fileContent);
-                if (failedReason !== "" && failedReason !== "No file selected") {
-                    Log.error("0", failedReason);
-                    displayWindowAgent.showError([failedReason]);
-                }
-                return;
-            }
-
-            if (mainProcessMode === "ssh-server") {
-                if (fileName1.trim() === "") {
-                    displayWindowAgent.sendFromMainProcess("dialog-show-input-box", {
-                        info: {
-                            command: "data-viewer-export-data",
-                            humanReadableMessages: ["Save file to"],
-                            buttons: [
-                                {
-                                    text: "OK",
-                                },
-                                {
-                                    text: "Cancel",
-                                }
-                            ],
-                            defaultInputText: "",
-                            attachment: {
-                                displayWindowId: displayWindowId,
-                                data: data,
-                                fileName1: fileName1,
-                            }
-                        }
-                    });
-                    return;
-                }
-
-                const failedReason = displayWindowFile.saveFileToPath(fileName1, fileContent);
-                if (failedReason !== "") {
-                    Log.error("0", failedReason);
-                    displayWindowAgent.showError([failedReason]);
-                }
-            }
+        if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
+            Log.error(`Cannot find window agent for ${displayWindowId}`)
+            return;
         }
+
+        const displayWindowFile = displayWindowAgent.getDisplayWindowFile();
+        const fileContent = JSON.stringify(data, null, 4);
+        const mainProcessMode = this.getMainProcess().getMainProcessMode();
+
+        displayWindowFile.saveFile(fileName1, fileContent, "data-viewer");
+
+        // if (mainProcessMode === "desktop") {
+        //     const failedReason = displayWindowFile.saveFileInDesktopMode("data-viewer", fileName1, fileContent);
+        //     if (failedReason !== "" && failedReason !== "No file selected") {
+        //         Log.error("0", failedReason);
+        //         displayWindowAgent.showError([failedReason]);
+        //     }
+        //     return;
+        // }
+
+        // if (mainProcessMode === "ssh-server") {
+        //     if (fileName1.trim() === "") {
+        //         displayWindowAgent.sendFromMainProcess("dialog-show-input-box", {
+        //             info: {
+        //                 command: "data-viewer-export-data",
+        //                 humanReadableMessages: ["Save file to"],
+        //                 buttons: [
+        //                     {
+        //                         text: "OK",
+        //                     },
+        //                     {
+        //                         text: "Cancel",
+        //                     }
+        //                 ],
+        //                 defaultInputText: "",
+        //                 attachment: {
+        //                     displayWindowId: displayWindowId,
+        //                     data: data,
+        //                     fileName1: fileName1,
+        //                 }
+        //             }
+        //         });
+        //         return;
+        //     }
+
+        //     const failedReason = displayWindowFile.saveFileToPath(fileName1, fileContent);
+        //     if (failedReason !== "") {
+        //         Log.error("0", failedReason);
+        //         displayWindowAgent.showError([failedReason]);
+        //     }
+
+        // }
     };
 
     handleProcessesInfo = async (event: WebSocket | string, data: IpcEventArgType["processes-info"]) => {

@@ -2,11 +2,8 @@ import * as fs from "fs";
 import { dialog } from "electron";
 import { IpcEventArgType } from "../../../common/IpcEventArgType";
 import { DisplayWindowAgent } from "../../windows/DisplayWindow/DisplayWindowAgent";
-import path from "path";
 import { IpcManagerOnMainProcess } from "../../mainProcess/IpcManagerOnMainProcess";
 import { Log } from "../../../common/Log";
-
-const textEditorHardFileSizeLimit = 10 * 1024 * 1024;
 
 
 /**
@@ -47,45 +44,24 @@ export class TextEditorHandlers {
     handleOpenTextFile = async (event: WebSocket | string, options: IpcEventArgType["open-text-file"]) => {
 
         const ipcManager = this.getIpcManager();
-        const { displayWindowId, widgetKey, fileContent, manualOpen, openNewWindow } = options;
-        let fileNameToBeOpened = options["fileName"];
+        const { displayWindowId, widgetKey, openNewWindow, fileName, fileContent, manualOpen } = options;
         const displayWindowAgent = ipcManager.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
 
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
             return;
         }
 
-        // obtain the file name from user selection
-        // (1)
-        if (manualOpen === true) {
-            const selectedFileName = this._selectTextFileToOpen(options);
-            if (selectedFileName === undefined) {
-                return;
-            } else {
-                fileNameToBeOpened = selectedFileName;
-            }
+        const result = await displayWindowAgent.getDisplayWindowFile().openFile(fileName, fileContent, manualOpen, "text");
+        if (result === undefined) {
+            return;
         }
 
-        if (fileNameToBeOpened !== "") {
-            if (path.isAbsolute(fileNameToBeOpened) === false) {
-                displayWindowAgent.showError([`Text file path must be absolute: ${fileNameToBeOpened}`]);
-                return;
-            }
-
-            try {
-                fs.accessSync(fileNameToBeOpened, fs.constants.F_OK);
-                fs.accessSync(fileNameToBeOpened, fs.constants.R_OK);
-            } catch (e) {
-                displayWindowAgent.showError([`Error opening file ${fileNameToBeOpened}`], [`${e}`]);
-                return;
-            }
-        } else {
-            // (2)
+        if (result["fileName"] === "") {
             ipcManager.createUtilityDisplayWindow("", {
                 utilityType: "TextEditor",
                 utilityOptions: {
-                    fileName: "",
-                    fileContent: fileContent,
+                    fileName: result["fileName"],
+                    fileContent: result["fileContent"],
                 },
                 windowId: displayWindowId,
             });
@@ -96,40 +72,20 @@ export class TextEditorHandlers {
             ipcManager.createUtilityDisplayWindow("", {
                 utilityType: "TextEditor",
                 utilityOptions: {
-                    fileName: fileNameToBeOpened,
+                    fileName: result["fileName"],
                     fileContent: "",
                 },
                 windowId: displayWindowId,
             });
         } else {
-            let writable = false;
-            try {
-                fs.accessSync(fileNameToBeOpened, fs.constants.W_OK);
-                writable = true;
-            } catch (e) {
-                writable = false;
-            }
-
-            const fileStats = fs.statSync(fileNameToBeOpened);
-            const fileSize = fileStats.size;
-            if (fileSize >= textEditorHardFileSizeLimit) {
-                displayWindowAgent.showError([`This file is too large (${Math.round(fileSize / 1024 / 1024)} MB) to open. Please select a smaller file.`]);
-                return;
-            }
-            try {
-                const openedFileContents = await fs.promises.readFile(fileNameToBeOpened, "utf-8");
-                displayWindowAgent.sendFromMainProcess("text-file-contents", {
-                    displayWindowId: displayWindowId,
-                    widgetKey: widgetKey,
-                    fileName: fileNameToBeOpened,
-                    fileContent: openedFileContents,
-                    readable: true,
-                    writable: writable,
-                });
-            } catch (e) {
-                Log.error(e);
-                displayWindowAgent.showError([`Failed to open file ${fileNameToBeOpened}`], [`${e}`]);
-            }
+            displayWindowAgent.sendFromMainProcess("text-file-contents", {
+                displayWindowId: displayWindowId,
+                widgetKey: widgetKey,
+                fileName: result["fileName"],
+                fileContent: result["fileContent"],
+                readable: true,
+                writable: result["writable"],
+            });
         }
     }
 
@@ -194,61 +150,6 @@ export class TextEditorHandlers {
             Log.error("0", e);
             return false;
         }
-    }
-
-    /**
-     * Ask user to select a file to open.
-     *
-     * Desktop mode opens the native file picker and returns the selected absolute path.
-     * SSH/Web mode cannot select locally in main process, so it asks the renderer to show
-     * an input-box dialog and returns `undefined` to indicate deferred handling.
-     *
-     * @returns Selected file path if available; otherwise `undefined` (cancel/error/deferred prompt).
-     */
-    private _selectTextFileToOpen = (options: IpcEventArgType["open-text-file"]): string | undefined => {
-        const ipcManager = this.getIpcManager();
-        const { displayWindowId } = options;
-
-        const windowAgent = ipcManager.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
-        if (!(windowAgent instanceof DisplayWindowAgent)) {
-            return undefined;
-        }
-
-
-        let fileNameToBeOpened = "";
-
-        try {
-            if (ipcManager.getMainProcess().getMainProcessMode() === "desktop") {
-                const fileNames = dialog.showOpenDialogSync({ title: "Open text file" });
-                if (fileNames === undefined || fileNames.length === 0) {
-                    return;
-                }
-                fileNameToBeOpened = fileNames[0];
-            } else if (ipcManager.getMainProcess().getMainProcessMode() === "ssh-server" || ipcManager.getMainProcess().getMainProcessMode() === "web") {
-                windowAgent.sendFromMainProcess("dialog-show-input-box",
-                    {
-                        info: {
-                            command: "open-text-file",
-                            humanReadableMessages: ["Open a file"],
-                            buttons: [
-                                {
-                                    text: "OK",
-                                },
-                                {
-                                    text: "Cancel",
-                                }
-                            ],
-                            defaultInputText: "",
-                            attachment: options,
-                        }
-                    }
-                );
-                return undefined;
-            }
-        } catch (e) {
-            return undefined;
-        }
-        return fileNameToBeOpened;
     }
 
     // -------------------- helpers ----------------------

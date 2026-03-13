@@ -1,41 +1,155 @@
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
+import { IpcEventArgType, type_fileType } from "../../../common/IpcEventArgType";
 import * as fs from "fs";
 import { dialog } from "electron";
 import path from "path";
 import { Log } from "../../../common/Log";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
 import { FileReader } from "../../file/FileReader";
+import { fileDialogOptionsByType } from "../../../common/types/type_Files";
+
+const fileSizeLimit = 1024 * 1024 * 20;
 
 /**
  * Handles file save flows for a display window in desktop and SSH server modes.
  */
 export class DisplayWindowFile {
     private readonly displayWindowAgent: DisplayWindowAgent;
+    selectFileInputResolve: (value: any) => void = () => { };
 
     constructor(displayWindowAgent: DisplayWindowAgent) {
         this.displayWindowAgent = displayWindowAgent;
     }
 
-    private readonly saveOptionsByType: Record<IpcEventArgType["window-will-be-closed-user-select"]["dataType"], { filters: { name: string, extensions: string[] }[], defaultFileName: string, defaultExtension: string }> = {
-        "tdl": {
-            filters: [{ name: "tdl", extensions: ["tdl", "json"] }],
-            defaultFileName: "untitled.tdl",
-            defaultExtension: ".tdl",
-        },
-        "data-viewer": {
-            filters: [{ name: "json", extensions: ["json"] }],
-            defaultFileName: "data.json",
-            defaultExtension: ".json",
-        },
-        "text": {
-            filters: [
-                { name: "text", extensions: ["txt"] },
-                { name: "all", extensions: ["*"] },
-            ],
-            defaultFileName: "untitled.txt",
-            defaultExtension: ".txt",
-        },
-    };
+    // -------------------- read file ----------------------
+
+
+    /**
+     * Open a file
+     *
+     * Behavior matrix:
+     * | # | fileName      | fileContent| manualOpen  | action                                |
+     * |---|---------------|------------|-------------|---------------------------------------|
+     * | 1 | ignored       | ignored    | true        | prompt user to pick a file, then open |
+     * | 2 | absolute path | ignored    | false       | open specified file                   |
+     * | 3 | ""            | any string | false       | return the file name and content      |
+     *
+     * Notes:
+     * - `fileName` must be an absolute path when provided.
+     * - files >= `textEditorHardFileSizeLimit` are rejected before reading.
+     */
+    openFile = async (fileName: string, fileContent: string, manualOpen: boolean, fileType: type_fileType): Promise<{ fileName: string, fileContent: string, writable: boolean } | undefined> => {
+
+        const displayWindowAgent = this.getDisplayWindowAgent();
+
+        if (manualOpen === true) {
+            const selectedFileName = await this.selectFile(fileType);
+            if (selectedFileName === undefined) {
+                return undefined;
+            } else {
+                fileName = selectedFileName;
+            }
+        }
+
+        if (fileName === "") {
+            return {
+                fileName: "",
+                fileContent: fileContent,
+                writable: false,
+            }
+        } else {
+            if (path.isAbsolute(fileName) === false) {
+                displayWindowAgent.showError([`Text file path must be absolute: ${fileName}`]);
+                return undefined;
+            }
+
+            try {
+                fs.accessSync(fileName, fs.constants.F_OK);
+                fs.accessSync(fileName, fs.constants.R_OK);
+            } catch (e) {
+                displayWindowAgent.showError([`Error opening file ${fileName}`], [`${e}`]);
+                return undefined;
+            }
+            const fileStats = fs.statSync(fileName);
+            const fileSize = fileStats.size;
+            if (fileSize >= fileSizeLimit) {
+                displayWindowAgent.showError([`This file is too large (${Math.round(fileSize / 1024 / 1024)} MB) to open. Please select a smaller file.`]);
+                return undefined;
+            }
+            let writable = false;
+            try {
+                fs.accessSync(fileName, fs.constants.W_OK);
+                writable = true;
+            } catch (e) {
+                writable = false;
+            }
+            try {
+                fileContent = await fs.promises.readFile(fileName, "utf-8");
+                return {
+                    fileName: fileName,
+                    fileContent: fileContent,
+                    writable: writable,
+                }
+            } catch (e) {
+                displayWindowAgent.showError([`Failed to read file ${fileName}`]);
+                return undefined;
+            }
+        }
+    }
+
+    /**
+     * Ask user to select a file. 
+     *
+     * Desktop mode opens the native file picker and returns the selected absolute path.
+     * SSH/Web mode cannot select locally in main process, so it asks the renderer to show
+     * an input-box dialog and returns `undefined` to indicate deferred handling.
+     *
+     * @returns Selected file path if available; otherwise `undefined` (cancel/error/deferred prompt).
+     */
+    private selectFile = async (fileType: type_fileType): Promise<string | undefined> => {
+
+        const mainProcessMode = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getMainProcessMode();
+
+        try {
+            if (mainProcessMode === "desktop") {
+                const fileNames = dialog.showOpenDialogSync({
+                    title: fileDialogOptionsByType[fileType].displayText,
+                    filters: fileDialogOptionsByType[fileType].filters,
+                });
+                if (fileNames === undefined || fileNames.length === 0) {
+                    return undefined;
+                }
+                return fileNames[0];
+            } else if (mainProcessMode === "ssh-server" || mainProcessMode === "web") {
+                const displayWindowAgent = this.getDisplayWindowAgent();
+                displayWindowAgent.showInputBox({
+                    command: "input-file-path",
+                    humanReadableMessages: ["Type the file absolute path"],
+                    buttons: [
+                        {
+                            text: "OK",
+                        },
+                        {
+                            text: "Cancel",
+                        }
+                    ],
+                    defaultInputText: "",
+                });
+                const fileName = await new Promise<string>((resolve, reject) => {
+                    this.selectFileInputResolve = resolve;
+                });
+                return fileName;
+            } else {
+                Log.error("Main process has no mode", mainProcessMode);
+            }
+        } catch (e) {
+            Log.error(e);
+        }
+        return undefined;
+    }
+
+
+
+    // ------------------ write file -----------------------
 
     private canWriteToPath = (fileName: string): boolean => {
         try {
@@ -51,15 +165,101 @@ export class DisplayWindowFile {
         }
     };
 
-    private writeFile = (fileName: string, fileContent: string): string => {
+    private writeFile = (fileName: string, fileContent: string): boolean => {
         try {
             fs.writeFileSync(fileName, fileContent);
-            return "";
+            return true;
         } catch (error) {
             Log.error("0", `Cannot save file ${fileName}`, `${error}`);
-            return `Cannot save file ${fileName}`;
+            return false;
         }
     };
+
+    /**
+     * Save arbitrary file content, prompting for a destination when needed.
+     *
+     * - If `fileName` is non-empty and writable, writes directly.
+     * - Otherwise shows a save dialog in desktop mode or an input box in SSH mode to collect a path.
+     * Returns `true` on successful write; `false` on user cancel or write failure (after showing an error).
+     * @param fileName Absolute path hint; can be empty to force prompting.
+     * @param fileContent Serialized payload to write.
+     * @param dataType File category used to pick dialog defaults and filters.
+     * @returns Promise that resolves `true` on successful write, `false` otherwise.
+     */
+    saveFile = async (fileName: string, fileContent: string, dataType: type_fileType,): Promise<boolean> => {
+        const saveOptions = fileDialogOptionsByType[dataType];
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const mainProcessMode = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
+        fileName = fileName.trim();
+
+        // file writable, just write
+        if (fileName !== "" && this.canWriteToPath(fileName)) {
+            const result = this.writeFile(fileName, fileContent);
+            if (result === true) {
+                return true;
+            } else {
+                displayWindowAgent.showError([`Failed to save file ${fileName}`])
+                return false;
+            }
+        }
+
+        // file not writable, ask user to select a file
+        if (mainProcessMode === "desktop") {
+
+            fileName = dialog.showSaveDialogSync({
+                title: "Select a file to save to",
+                defaultPath: saveOptions.defaultFileName,
+                filters: saveOptions.filters,
+            });
+        } else if (mainProcessMode === "ssh-server") {
+            displayWindowAgent.showInputBox({
+                command: "input-file-path",
+                humanReadableMessages: ["Type the file absolute path"],
+                buttons: [
+                    {
+                        text: "OK",
+                    },
+                    {
+                        text: "Cancel",
+                    }
+                ],
+                defaultInputText: "",
+            });
+            fileName = await new Promise<string>((resolve, reject) => {
+                this.selectFileInputResolve = resolve;
+            });
+        }
+
+        if (fileName === undefined || fileName === "") {
+            // user cancels the selection, do not show notification
+            return false;
+        }
+
+        const success = this.writeFile(fileName, fileContent);
+        if (success) {
+            return true;
+        } else {
+            displayWindowAgent.showError([`Failed to save file ${fileName}`])
+            return false;
+        }
+    }
+
+    // --------------------- event handlers -----------------------
+
+
+    saveTdlFile = async (options: IpcEventArgType["save-tdl-file"]): Promise<void> => {
+        const { windowId, tdl, tdlFileName1 } = options;
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const mainProcess = displayWindowAgent.getWindowAgentsManager().getMainProcess();
+        const mainProcessMode = mainProcess.getMainProcessMode();
+        const success = await this.saveFile(tdlFileName1, JSON.stringify(tdl), "tdl");
+
+        if (success) {
+            displayWindowAgent.sendFromMainProcess("tdl-file-saved", {
+                newTdlFileName: tdlFileName1
+            });
+        }
+    }
 
     loadTdlFile = async (options: IpcEventArgType["load-tdl-file"]): Promise<void> => {
         const { tdlFileName, mode, editable, externalMacros, replaceMacros, currentTdlFolder } = options;
@@ -101,158 +301,7 @@ export class DisplayWindowFile {
         });
     }
 
-    saveTdlFile = (options: IpcEventArgType["save-tdl-file"]): void => {
-        const { windowId, tdl, tdlFileName1 } = options;
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        const mainProcess = displayWindowAgent.getWindowAgentsManager().getMainProcess();
-        const mainProcessMode = mainProcess.getMainProcessMode();
-
-        if (mainProcessMode === "web") {
-            const bookmarks = mainProcess.getProfiles().getSelectedProfile()?.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
-            let allowToSave = false;
-            if (Array.isArray(bookmarks)) {
-                for (const bookmark of bookmarks) {
-                    const bookmarkFolder = bookmark[0];
-                    const permissionToWrite = bookmark[1];
-                    if (tdlFileName1.includes(bookmarkFolder) && typeof permissionToWrite === "string" && permissionToWrite.toLowerCase() === "yes") {
-                        allowToSave = true;
-                        break;
-                    }
-                }
-            }
-            if (allowToSave === false) {
-                displayWindowAgent.showError([`You are not allowed to visit ${tdlFileName1}.`]);
-                return;
-            }
-        }
-
-        let tdlFileName: string | undefined = tdlFileName1;
-        Log.debug("0", "We are going to save TDL", tdlFileName1);
-        try {
-            if (tdlFileName === "" || tdlFileName.endsWith(".edl") || tdlFileName.endsWith(".stp") || tdlFileName.endsWith(".bob")) {
-                if (mainProcessMode === "desktop") {
-                    tdlFileName = dialog.showSaveDialogSync({ title: "Save tdl file", filters: [{ name: "tdl", extensions: ["tdl", "json"] }] });
-                } else if (mainProcessMode === "ssh-server") {
-                    displayWindowAgent.sendFromMainProcess("dialog-show-input-box", {
-                        info: {
-                            command: "save-tdl-file",
-                            humanReadableMessages: ["Save display to"],
-                            buttons: [
-                                {
-                                    text: "OK",
-                                },
-                                {
-                                    text: "Cancel",
-                                }
-                            ],
-                            defaultInputText: "",
-                            attachment: {
-                                windowId: windowId,
-                                tdl: tdl,
-                                tdlFileName1: "",
-                            }
-                        }
-                    });
-                    return;
-                }
-            }
-
-            if (tdlFileName === undefined) {
-                Log.debug("0", "Did not select TDL file name, cancel saving tdl");
-                return;
-            }
-
-            fs.writeFileSync(tdlFileName, JSON.stringify(tdl, null, 4));
-            
-            Log.info("0", `Saved tdl to file ${tdlFileName}`);
-            displayWindowAgent.sendFromMainProcess("tdl-file-saved", {
-                newTdlFileName: tdlFileName
-            });
-
-        } catch (e) {
-            Log.error(e);
-            displayWindowAgent.showError([`Failed to save ${tdlFileName}`, "Please check the file permission."], ["Below is the raw message:", `${e}`]);
-        }
-    }
-
-    /**
-     * provided file name, data type, and file content, save the data to a local file
-     * 
-     * If `fileName` is a writable path, save directly to that file. Otherwise show a save dialog,
-     * choose the default name and extension from `dataType`, and write the content to the selected path.
-     * Returns an empty string on success or an error message when the save is cancelled or fails.
-     */
-    saveFileInDesktopMode = (dataType: IpcEventArgType["window-will-be-closed-user-select"]["dataType"], fileName: string, fileContent: string): string => {
-        const saveOptions = this.saveOptionsByType[dataType];
-        const trimmedFileName = fileName.trim();
-
-        if (trimmedFileName !== "" && this.canWriteToPath(trimmedFileName)) {
-            return this.writeFile(trimmedFileName, fileContent);
-        }
-
-        const selectedFileName = dialog.showSaveDialogSync({
-            title: "Select a file to save to",
-            defaultPath: saveOptions.defaultFileName,
-            filters: saveOptions.filters,
-        });
-
-        if (selectedFileName === undefined || selectedFileName === "") {
-            return "No file selected";
-        }
-
-        const saveFileName = path.extname(selectedFileName) === ""
-            ? `${selectedFileName}${saveOptions.defaultExtension}`
-            : selectedFileName;
-
-        return this.writeFile(saveFileName, fileContent);
-    }
-
-    /**
-     * Save directly to a provided path without showing a dialog.
-     */
-    saveFileToPath = (fileName: string, fileContent: string): string => {
-        const trimmedFileName = fileName.trim();
-        if (trimmedFileName === "") {
-            return "No file selected";
-        }
-        return this.writeFile(trimmedFileName, fileContent);
-    }
-
-    /**
-     * Save file content while running against an SSH server.
-     *
-     * If no file path is provided, prompt the renderer for a destination and return `"prompted"`.
-     * Otherwise write directly to the supplied path and return an empty string on success or an
-     * error message on failure.
-     */
-    saveFileInSshServerMode = (data: IpcEventArgType["window-will-be-closed-user-select"]): "" | "prompted" | string => {
-        const { fileName, fileContent } = data;
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        const trimmedFileName = fileName.trim();
-
-        if (trimmedFileName === "") {
-            displayWindowAgent.sendFromMainProcess("dialog-show-input-box", {
-                info: {
-                    command: "window-will-be-closed-user-select-save",
-                    humanReadableMessages: ["Save file to"],
-                    buttons: [
-                        {
-                            text: "OK",
-                        },
-                        {
-                            text: "Cancel",
-                        }
-                    ],
-                    defaultInputText: "",
-                    attachment: data,
-                }
-            });
-            return "prompted";
-        }
-
-        return this.writeFile(trimmedFileName, fileContent);
-    }
-
+    
     // ------------------- getters -----------------
 
     getDisplayWindowAgent = () => {

@@ -33,6 +33,8 @@ export type type_args = {
     site: string;
 };
 
+// types of files that we can open
+export type type_fileType = "tdl" | "data-viewer" | "text";
 
 export type type_about_info = {
     "Authors": string[],
@@ -95,7 +97,6 @@ export type type_DialogMessageBox = {
 
 export type type_DialogInputBox = {
     command: string,
-    // messageType: "save" | "warning" | "info", // symbol
     humanReadableMessages: string[], // each string has a new line
     buttons?: type_DialogInputBoxButton[],
     defaultInputText: string,
@@ -121,6 +122,11 @@ export type IpcEventArgType = {
     "new-tdm-process": {
 
     },
+
+    "input-file-path": {
+        displayWindowId: string,
+        fileName: string,
+    }
 
     "get-symbol-gallery": {
         page: number,
@@ -195,7 +201,7 @@ export type IpcEventArgType = {
         select: "save" | "don't save" | "cancel";
         fileName: string;
         fileContent: string;
-        dataType: "tdl" | "data-viewer" | "text";
+        dataType: type_fileType;
     },
 
     "main-window-will-be-closed": {

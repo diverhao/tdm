@@ -374,10 +374,10 @@ export class DisplayWindowLifeCycleManager {
      * 
      * These windows are
      *  - TextEditor utility window
-    *  - DataViewer utility window
+     *  - DataViewer utility window
      *  - modified display window
      */
-    handleWindowWillBeClosedUserSelect = (data: IpcEventArgType["window-will-be-closed-user-select"]) => {
+    handleWindowWillBeClosedUserSelect = async (data: IpcEventArgType["window-will-be-closed-user-select"]) => {
         const {
             displayWindowId,
             widgetKey,
@@ -417,38 +417,44 @@ export class DisplayWindowLifeCycleManager {
         }
 
         const displayWindowFile = displayWindowAgent.getDisplayWindowFile();
-        if (mainProcessMode === "desktop") {
-            const failedReason = displayWindowFile.saveFileInDesktopMode(dataType, fileName, fileContent);
-            if (failedReason === "") {
-                this.closeBrowserWindow();
-            } else if (failedReason === "No file selected") {
-                this.setReadyToClose(false);
-            } else {
-                displayWindowAgent.showError([failedReason]);
-                Log.error("0", failedReason);
-                this.setReadyToClose(false);
-            }
-            return;
-        } else if (mainProcessMode === "web") {
-            // todo: should be able to save
-            const failedReason = "Cannot save file in web mode";
-            displayWindowAgent.showError([failedReason]);
-            Log.error("0", failedReason, displayWindowId);
-            this.setReadyToClose(false);
-            return;
-        } else if (mainProcessMode === "ssh-server") {
-            const result = displayWindowFile.saveFileInSshServerMode(data);
-            if (result === "") {
-                this.closeBrowserWindow();
-            } else if (result !== "prompted") {
-                displayWindowAgent.showError([result]);
-                Log.error("0", result);
-                this.setReadyToClose(false);
-            }
-            return;
+
+        const success = await displayWindowFile.saveFile(fileName, fileContent, dataType);
+        if (success) {
+            this.closeBrowserWindow();
         } else {
-            Log.error("0", `Unexpected main process mode while closing display window: ${mainProcessMode}`, displayWindowId);
+            this.setReadyToClose(false);
         }
+        return;
+
+
+        // if (mainProcessMode === "desktop") {
+        //     const success = await displayWindowFile.saveFileInDesktopMode(fileName, fileContent, dataType);
+        //     if (success) {
+        //         this.closeBrowserWindow();
+        //     } else {
+        //         this.setReadyToClose(false);
+        //     }
+        //     return;
+        // } else if (mainProcessMode === "web") {
+        //     // todo: should be able to save
+        //     const failedReason = "Cannot save file in web mode";
+        //     displayWindowAgent.showError([failedReason]);
+        //     Log.error("0", failedReason, displayWindowId);
+        //     this.setReadyToClose(false);
+        //     return;
+        // } else if (mainProcessMode === "ssh-server") {
+        //     const result = displayWindowFile.saveFileInSshServerMode(data);
+        //     if (result === "") {
+        //         this.closeBrowserWindow();
+        //     } else if (result !== "prompted") {
+        //         displayWindowAgent.showError([result]);
+        //         Log.error("0", result);
+        //         this.setReadyToClose(false);
+        //     }
+        //     return;
+        // } else {
+        //     Log.error("0", `Unexpected main process mode while closing display window: ${mainProcessMode}`, displayWindowId);
+        // }
 
     };
 
