@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from "uuid";
 
 type type_DialogShowMessageBoxInfo = IpcEventArgType2["dialog-show-message-box"]["info"];
 type type_DialogShowMessageBoxExtraInfo = Omit<Partial<type_DialogShowMessageBoxInfo>, "messageType" | "humanReadableMessages" | "rawMessages">;
+type type_DialogShowInputBoxInfo = IpcEventArgType2["dialog-show-input-box"]["info"];
 
 export class DisplayWindowUtilities {
 
@@ -29,6 +30,12 @@ export class DisplayWindowUtilities {
 
     showNotification = (info: type_DialogShowMessageBoxInfo): void => {
         this.getDisplayWindowAgent().sendFromMainProcess("dialog-show-message-box", {
+            info: info,
+        });
+    };
+
+    showInputBox = (info: type_DialogShowInputBoxInfo): void => {
+        this.getDisplayWindowAgent().sendFromMainProcess("dialog-show-input-box", {
             info: info,
         });
     };

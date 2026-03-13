@@ -5,6 +5,7 @@ import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { type_DialogInputBox, type_DialogMessageBox, type_DialogMessageBoxButton } from "../../../common/IpcEventArgType";
 import { TdmLogo } from "../../global/Images";
+import { PromptInputBoxHandlers } from "./PromptInputBoxHandlers";
 
 
 
@@ -18,6 +19,7 @@ export abstract class Prompt {
     private readonly _id = "element-prompt";
     private _nameElementMap: Record<string, ({ args }: any) => React.JSX.Element> = {}
     dialogInputBoxText = "";
+    private readonly _promptInputBoxHandlers: PromptInputBoxHandlers;
 
     getDialogInputBoxText = () => {
         return this.dialogInputBoxText;
@@ -33,6 +35,11 @@ export abstract class Prompt {
         this.getNameElementMap()["about-tdm"] = this._ElementAboutTdm;
         this.getNameElementMap()["dialog-message-box"] = this._ElementDialogMessageBox;
         this.getNameElementMap()["dialog-input-box"] = this._ElementDialogInputBox;
+        this._promptInputBoxHandlers = new PromptInputBoxHandlers(this);
+    }
+
+    getPromptInputBoxHandlers = () => {
+        return this._promptInputBoxHandlers;
     }
 
     startEventListeners = () => {

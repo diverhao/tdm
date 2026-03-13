@@ -119,6 +119,38 @@ export class MainWindowAgent {
         this.getMainWindowUtilities().showContextMenu(menu);
     };
 
+    showNotification = (info: IpcEventArgType3["dialog-show-message-box"]["info"]): void => {
+        this.getMainWindowUtilities().showNotification(info);
+    };
+
+    showInputBox = (info: IpcEventArgType3["dialog-show-input-box"]["info"]): void => {
+        this.getMainWindowUtilities().showInputBox(info);
+    };
+
+    showError = (
+        humanReadableMessages: string[],
+        rawMessages: string[] = [],
+        extraInfo: Omit<Partial<IpcEventArgType3["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
+    ): void => {
+        this.getMainWindowUtilities().showError(humanReadableMessages, rawMessages, extraInfo);
+    };
+
+    showInfo = (
+        humanReadableMessages: string[],
+        rawMessages: string[] = [],
+        extraInfo: Omit<Partial<IpcEventArgType3["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
+    ): void => {
+        this.getMainWindowUtilities().showInfo(humanReadableMessages, rawMessages, extraInfo);
+    };
+
+    showWarning = (
+        humanReadableMessages: string[],
+        rawMessages: string[] = [],
+        extraInfo: Omit<Partial<IpcEventArgType3["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
+    ): void => {
+        this.getMainWindowUtilities().showWarning(humanReadableMessages, rawMessages, extraInfo);
+    };
+
     // ---------------------- IPC -----------------------------
 
     /**

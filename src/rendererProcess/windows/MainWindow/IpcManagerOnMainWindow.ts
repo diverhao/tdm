@@ -4,7 +4,7 @@ import { MainWindowProfileRunPage } from "../../../rendererProcess/mainWindow/Ma
 import { Log } from "../../../common/Log";
 import { MainWindowProfileEditPage } from "../../../rendererProcess/mainWindow/MainWindowProfileEditPage";
 import { MainWindowStartupPage } from "../../../rendererProcess/mainWindow/MainWindowStartupPage";
-import { IpcEventArgType, IpcEventArgType3, type_DialogInputBox, type_DialogMessageBox } from "../../../common/IpcEventArgType";
+import { IpcEventArgType, IpcEventArgType3, type_DialogMessageBox } from "../../../common/IpcEventArgType";
 
 /**
  * Manage IPC messages sent from main process for main window. <br>
@@ -410,70 +410,18 @@ export class IpcManagerOnMainWindow {
 
     handleDialogShowInputBox = (event: undefined, data: IpcEventArgType3["dialog-show-input-box"]) => {
         const { info } = data;
-        const command = info["command"];
         const prompt = this.getMainWindowClient().getPrompt();
-        if (command === "open-profiles") {
-            const buttons = info["buttons"];
-            // OK, Cancel
-            if (buttons !== undefined && buttons.length === 2) {
-                buttons[0]["handleClick"] = () => {
-                    const fileName = prompt.getDialogInputBoxText();
-                    if (fileName !== "") {
-                        this.sendFromRendererProcess("open-profiles",
-                            {
-                                profilesFileName1: fileName
-                            }
-                        );
-                    }
-                };
-                buttons[1]["handleClick"] = () => {
-                    // this.sendFromRendererProcess("quit-tdm-process", true);
-                };
-            }
-        } else if (command === "hide") {
-            this.getMainWindowClient().getPrompt().removeElement();
-        } else if (command === "save-profiles-as") {
-            const buttons = info["buttons"];
-            const attachment = info["attachment"];
-            // OK, Cancel
-            if (buttons !== undefined && buttons.length === 2) {
-                buttons[0]["handleClick"] = () => {
-                    const filePath = prompt.getDialogInputBoxText();
-                    if (filePath !== "") {
-                        attachment["filePath1"] = filePath;
-                        this.sendFromRendererProcess("save-profiles-as",
-                            {
-                                modifiedProfiles: attachment["modifiedProfiles"],
-                                filePath1: attachment["filePath1"],
 
-                            }
-                        );
-                    }
-                };
-                buttons[1]["handleClick"] = () => {
-                };
+        const shouldCreateElement = prompt.getPromptInputBoxHandlers().handleDialogShowInputBox(
+            info,
+            (channelName, payload) => {
+                this.sendFromRendererProcess(channelName, payload);
             }
+        );
 
-        } else if (command === "open-tdl-file") {
-            const buttons = info["buttons"];
-            const attachment = info["attachment"];
-            // OK, Cancel
-            if (buttons !== undefined && buttons.length === 2) {
-                buttons[0]["handleClick"] = () => {
-                    const tdlFileName = prompt.getDialogInputBoxText();
-                    if (tdlFileName !== "") {
-                        attachment["tdlFileNames"] = [tdlFileName];
-                        this.sendFromRendererProcess("open-tdl-file",
-                            attachment
-                        );
-                    }
-                };
-                buttons[1]["handleClick"] = () => {
-                    // this.sendFromRendererProcess("quit-tdm-process", true);
-                };
-            }
+        if (shouldCreateElement) {
+            prompt.createElement("dialog-input-box", info);
         }
-        this.getMainWindowClient().getPrompt().createElement("dialog-input-box", info);
     };
 
 

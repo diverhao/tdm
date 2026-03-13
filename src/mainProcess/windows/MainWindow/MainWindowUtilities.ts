@@ -1,8 +1,13 @@
 import { BrowserWindow, Menu } from "electron";
 import pidusage from "pidusage";
+import { IpcEventArgType3 } from "../../../common/IpcEventArgType";
 import { Log } from "../../../common/Log";
 import { generateAboutInfo } from "../../global/GlobalMethods";
 import { MainWindowAgent } from "./MainWindowAgent";
+
+type type_DialogShowMessageBoxInfo = IpcEventArgType3["dialog-show-message-box"]["info"];
+type type_DialogShowMessageBoxExtraInfo = Omit<Partial<type_DialogShowMessageBoxInfo>, "messageType" | "humanReadableMessages" | "rawMessages">;
+type type_DialogShowInputBoxInfo = IpcEventArgType3["dialog-show-input-box"]["info"];
 
 export class MainWindowUtilities {
     private readonly _mainWindowAgent: MainWindowAgent;
@@ -62,6 +67,57 @@ export class MainWindowUtilities {
         }
         const contextMenu = Menu.buildFromTemplate(contextMenuTemplate);
         contextMenu.popup();
+    };
+
+    showNotification = (info: type_DialogShowMessageBoxInfo): void => {
+        this.getMainWindowAgent().sendFromMainProcess("dialog-show-message-box", {
+            info: info,
+        });
+    };
+
+    showInputBox = (info: type_DialogShowInputBoxInfo): void => {
+        this.getMainWindowAgent().sendFromMainProcess("dialog-show-input-box", {
+            info: info,
+        });
+    };
+
+    showError = (
+        humanReadableMessages: string[],
+        rawMessages: string[] = [],
+        extraInfo: type_DialogShowMessageBoxExtraInfo = {},
+    ): void => {
+        this.showNotification({
+            ...extraInfo,
+            messageType: "error",
+            humanReadableMessages,
+            rawMessages,
+        });
+    };
+
+    showInfo = (
+        humanReadableMessages: string[],
+        rawMessages: string[] = [],
+        extraInfo: type_DialogShowMessageBoxExtraInfo = {},
+    ): void => {
+        this.showNotification({
+            ...extraInfo,
+            messageType: "info",
+            humanReadableMessages,
+            rawMessages,
+        });
+    };
+
+    showWarning = (
+        humanReadableMessages: string[],
+        rawMessages: string[] = [],
+        extraInfo: type_DialogShowMessageBoxExtraInfo = {},
+    ): void => {
+        this.showNotification({
+            ...extraInfo,
+            messageType: "warning",
+            humanReadableMessages,
+            rawMessages,
+        });
     };
 
     showAboutTdm = () => {

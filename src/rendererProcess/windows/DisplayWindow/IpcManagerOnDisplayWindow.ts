@@ -2,7 +2,6 @@ import { DisplayWindowClient } from "./DisplayWindowClient";
 import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
 import { rendererWindowStatus, type_widget } from "../../../rendererProcess/global/Widgets";
 import { g_flushWidgets } from "../../../rendererProcess/helperWidgets/Root/Root";
-import { type_tdl } from "../../../common/GlobalVariables";
 import { DataViewer } from "../../../rendererProcess/widgets/DataViewer/DataViewer";
 import { BaseWidget } from "../../../rendererProcess/widgets/BaseWidget/BaseWidget";
 import { ScaledSlider } from "../../../rendererProcess/widgets/ScaledSlider/ScaledSlider";
@@ -27,15 +26,10 @@ import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/Chan
 import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
 import { Repeater } from "../../../rendererProcess/widgets/Repeater/Repeater";
 import { FileBrowser } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
-import { v4 as uuidv4 } from "uuid";
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 import { Image } from "../../../rendererProcess/widgets/Image/Image";
 import { IpcEventArgType, IpcEventArgType2 } from "../../../common/IpcEventArgType";
 import { Table } from "../../widgets/Table/Table";
-
-
-// var recorder;
-// var blobs = [];
 
 
 /**
@@ -108,20 +102,6 @@ export class IpcManagerOnDisplayWindow {
                     reconnect: reconnect,
                 }
             )
-
-            // client.send(
-            //     JSON.stringify({
-            //         processId: this.getDisplayWindowClient().getProcessId(),
-            //         windowId: this.getDisplayWindowClient().getWindowId(),
-            //         eventName: "websocket-ipc-connected-on-display-window",
-            //         data: [{
-            //             processId: this.getDisplayWindowClient().getProcessId(),
-            //             windowId: this.getDisplayWindowClient().getWindowId(),
-            //             reconnect: reconnect,
-            //         }],
-            //     })
-            // );
-
         };
 
         client.onerror = (err: any) => {
@@ -168,9 +148,6 @@ export class IpcManagerOnDisplayWindow {
         const processId = message["processId"];
         const eventName = message["eventName"];
         const windowId = message["windowId"];
-        // console.log("received message from main process via websocket IPC", message)
-
-        // find callback for this event
         const callback = this.eventListeners[eventName];
         if (callback !== undefined) {
             // invoke callback
@@ -217,207 +194,6 @@ export class IpcManagerOnDisplayWindow {
     getDisplayWindowClient = (): DisplayWindowClient => {
         return this._displayWindowClient;
     };
-
-    /**
-     * Start to listen to events from main process.
-     */
-
-    // listens to all events from main process
-    startToListen = () => {
-        this.ipcRenderer.on("context-menu-command", this.handleContextMenuCommand);
-        this.ipcRenderer.on("new-channel-data", this.handleNewChannelData);
-        this.ipcRenderer.on("new-archive-data", this.handleNewArchiveData);
-        this.ipcRenderer.on("new-tdl", this.handleNewTdl);
-        this.ipcRenderer.on("selected-profile-contents", this.handleSelectedProfileContents);
-        this.ipcRenderer.on("tca-get-result", this.handleTcaGetResult);
-        this.ipcRenderer.on("tca-put-result", this.handleTcaPutResult);
-
-        this.ipcRenderer.on("fetch-pva-type", this.handleFetchPvaType);
-        this.ipcRenderer.on("dialog-show-message-box", this.handleDialogShowMessageBox);
-        this.ipcRenderer.on("dialog-show-input-box", this.handleDialogShowInputBox);
-        this.ipcRenderer.on("tdl-file-saved", this.handleTdlFileSaved);
-        this.ipcRenderer.on("select-a-file", this.handleSelectAFile);
-        this.ipcRenderer.on("widget-specific-action", this.handleWidgetSpecificAction);
-        this.ipcRenderer.on("local-font-names", this.handleLocalFontNames);
-        this.ipcRenderer.on("load-db-file-contents", this.handleLoadDbFileContents);
-
-        this.ipcRenderer.on("get-symbol-gallery", this.handleGetSymbolGallery);
-
-        this.ipcRenderer.on("start-record-video", this.handleStartRecordVideo);
-
-        this.ipcRenderer.on("window-will-be-closed", this.handleWindowWillBeClosed);
-
-        this.ipcRenderer.on("obtained-iframe-uuid", this.handleObtainedIframeUuid);
-        this.ipcRenderer.on("read-embedded-display-tdl", this.handleReadEmbeddedDisplayTdl);
-
-        this.ipcRenderer.on("request-epics-dbd", this.handleRequestEpicsDbd);
-
-        // ssh-client requested a file from ssh-server, here is the contents of the
-        // file sent from ssh server
-        this.ipcRenderer.on("ssh-file-contents", this.handleSshFileContents);
-        this.ipcRenderer.on("show-about-tdm", this.handleShowAboutTdm);
-
-        this.ipcRenderer.on("terminal-command-result", this.handleTerminalCommandResult);
-
-        this.ipcRenderer.on("processes-info", this.handleProcessesInfo)
-        this.ipcRenderer.on("epics-stats", this.handleEpicsStats)
-        this.ipcRenderer.on("ca-snooper-data", this.handleCaSnooperData)
-        this.ipcRenderer.on("ca-sw-data", this.handleCaswData)
-        this.ipcRenderer.on("text-file-contents", this.handleTextFileContents)
-        this.ipcRenderer.on("update-text-editor-file-name", this.handleUpdateTextEditorFileName)
-        this.ipcRenderer.on("update-text-editor-modified-status", this.handleUpdateTextEditorModifiedStatus)
-        this.ipcRenderer.on("new-log", this.handleNewLog)
-        this.ipcRenderer.on("file-converter-command", this.handleFileConverterCommand);
-        // file browser
-        this.ipcRenderer.on("fetch-folder-content", this.handleFetchFolderContent);
-        this.ipcRenderer.on("file-browser-command", this.handleFileBrowserCommand);
-        this.ipcRenderer.on("fetch-thumbnail", this.handleFetchThumbnail)
-
-        // site info
-        this.ipcRenderer.on("site-info", this.handleSiteInfo)
-        this.ipcRenderer.on("display-window-id-for-open-tdl-file", this.handleDisplayWindowIdForOpenTdlFile)
-
-        this.ipcRenderer.on("get-media-content", this.handleGetMediaContent)
-
-        this.ipcRenderer.on("pong", this.handlePong)
-
-        this.ipcRenderer.on("bounce-back", this.handleBounceBack);
-    };
-
-    handleObtainedIframeUuid = (
-        event: string,
-        options: IpcEventArgType2["obtained-iframe-uuid"]
-    ) => {
-        const widget = g_widgets1.getWidget2(options["widgetKey"]);
-        if (widget instanceof Repeater) {
-            widget.loadHtml(options["iframeDisplayId"]);
-            widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
-        }
-    };
-
-    handleReadEmbeddedDisplayTdl = (
-        event: string,
-        data: IpcEventArgType2["read-embedded-display-tdl"]
-    ) => {
-        // this macros is from parent EmbeddedDisplay and its ancestors
-        const { widgetKey, tdl, fullTdlFileName, macros, widgetWidth, widgetHeight, resize, tdlFileName } = data;
-        const embeddedDisplayWidget = g_widgets1.getWidget(widgetKey);
-        const embeddedDisplayWidgetKey = widgetKey;
-
-
-        if (!(embeddedDisplayWidget instanceof EmbeddedDisplay)) {
-            return;
-        }
-
-        if (tdl === undefined || fullTdlFileName === undefined) {
-            // cannot read file
-            embeddedDisplayWidget.loadingText = `Failed to load ${tdlFileName}`;
-        } else {
-            // continue the jobsAsOperatingModeBegins() in EmbeddedDisplay
-            // (2)
-            const canvasWidgetTdl = tdl["Canvas"];
-            let scalingFactor = 1;
-            if (resize === "fit") {
-                const canvasWidth = canvasWidgetTdl.style["width"];
-                const canvasHeight = canvasWidgetTdl.style["height"];
-                if (typeof canvasHeight === "number" && typeof canvasWidth === "number") {
-                    scalingFactor = Math.min(widgetWidth / canvasWidth, widgetHeight / canvasHeight);
-                }
-            }
-
-            const canvasBackgroundColor = canvasWidgetTdl["style"]["backgroundColor"];
-            let canvasMacros = canvasWidgetTdl["macros"];
-            // it contains (1) item macros passed along from EmbeddedDisplay widget, e.g. the item macros in EmbeddedDisplay 
-            //             (2) the macros defined in Canvas of the TDL file
-            let allMacros = [...macros, ...canvasMacros];
-
-            embeddedDisplayWidget.setFullTdlFileName(fullTdlFileName);
-
-            const embeddedDisplayWidgetTop = embeddedDisplayWidget.getStyle()["top"];
-            const embeddedDisplayWidgetLeft = embeddedDisplayWidget.getStyle()["left"];
-            // (3)
-            embeddedDisplayWidget.getStyle()["backgroundColor"] = canvasBackgroundColor;
-
-            const widgetMapPairs: [string, BaseWidget][] = [];
-
-            // (4)
-            embeddedDisplayWidget.removeChildWidgets();
-            for (const widgetTdl of Object.values(tdl)) {
-                if (!widgetTdl["widgetKey"].includes("Canvas")) {
-                    // (4.1)
-                    const widgetKey = widgetTdl["widgetKey"];
-                    const newWidgetKey = widgetKey.split("_")[0] + "_" + uuidv4();
-                    widgetTdl["widgetKey"] = newWidgetKey;
-                    widgetTdl["key"] = newWidgetKey;
-                    widgetTdl["style"]["top"] = widgetTdl["style"]["top"] * scalingFactor + embeddedDisplayWidgetTop;
-                    widgetTdl["style"]["left"] = widgetTdl["style"]["left"] * scalingFactor + embeddedDisplayWidgetLeft;
-                    widgetTdl["style"]["width"] = widgetTdl["style"]["width"] * scalingFactor;
-                    widgetTdl["style"]["height"] = widgetTdl["style"]["height"] * scalingFactor;
-                    widgetTdl["style"]["fontSize"] = widgetTdl["style"]["fontSize"] * scalingFactor;
-                    // (5)
-                    const widget = g_widgets1.createWidget(widgetTdl, false);
-                    if (widget instanceof BaseWidget) {
-                        // (5.1)
-                        widget.setMacros(allMacros);
-                        // (6)
-                        widget.setEmbeddedDisplayWidgetKey(embeddedDisplayWidgetKey);
-                        embeddedDisplayWidget.appendChildWidgetKey(newWidgetKey);
-                        // todo: (7)
-                        // (7.1)
-                        widget.jobsAsOperatingModeBegins();
-                        // (7.2)
-                        widget.processChannelNames(allMacros);
-                        // will be used to re-construct widgets
-                        widgetMapPairs.push([newWidgetKey, widget]);
-                    } else {
-                        // skip this widget
-                    }
-                } else {
-                    // do nothing
-                }
-            }
-            embeddedDisplayWidget.loadingText = ``;
-
-            const widgetsMap = g_widgets1.getWidgets();
-            for (const widgetMapPair of widgetMapPairs) {
-                widgetsMap.delete(widgetMapPair[0]);
-            }
-            g_widgets1._widgets = this.insertAfter(widgetsMap, embeddedDisplayWidgetKey, widgetMapPairs);
-
-
-            // (8)
-            embeddedDisplayWidget.connectAllTcaChannels();
-
-
-        }
-        // (9) the new widgets are already added to the list
-        g_widgets1.addToForceUpdateWidgets(widgetKey);
-        g_flushWidgets();
-    }
-
-    insertAfter(map: Map<string, type_widget | undefined>, afterKey: string, entriesToInsert: [string, BaseWidget][]) {
-        const newMap = new Map();
-        for (const [key, value] of map) {
-            newMap.set(key, value);
-            if (key === afterKey) {
-                for (const [k, v] of entriesToInsert) {
-                    newMap.set(k, v);
-                }
-            }
-        }
-        return newMap;
-    }
-
-    handleRequestEpicsDbd = (event: string, result: IpcEventArgType2["request-epics-dbd"]) => {
-        const widget = g_widgets1.getWidget(result["widgetKey"]);
-        if (widget instanceof ChannelGraph || widget instanceof Probe) {
-            widget.processDbd({
-                menus: result["menus"],
-                recordTypes: result["recordTypes"],
-            })
-        }
-
-    }
 
     /**
      * Drag and drop one or more tdl files to the DisplayWindow to open the files. <br>
@@ -544,6 +320,71 @@ export class IpcManagerOnDisplayWindow {
             Log.debug("File has left the Drop Space");
         });
     };
+
+    /**
+     * Start to listen to events from main process.
+     */
+    startToListen = () => {
+        this.ipcRenderer.on("context-menu-command", this.handleContextMenuCommand);
+        this.ipcRenderer.on("new-channel-data", this.handleNewChannelData);
+        this.ipcRenderer.on("new-archive-data", this.handleNewArchiveData);
+        this.ipcRenderer.on("new-tdl", this.handleNewTdl);
+        this.ipcRenderer.on("selected-profile-contents", this.handleSelectedProfileContents);
+        this.ipcRenderer.on("tca-get-result", this.handleTcaGetResult);
+        this.ipcRenderer.on("tca-put-result", this.handleTcaPutResult);
+
+        this.ipcRenderer.on("fetch-pva-type", this.handleFetchPvaType);
+        this.ipcRenderer.on("dialog-show-message-box", this.handleDialogShowMessageBox);
+        this.ipcRenderer.on("dialog-show-input-box", this.handleDialogShowInputBox);
+        this.ipcRenderer.on("tdl-file-saved", this.handleTdlFileSaved);
+        this.ipcRenderer.on("select-a-file", this.handleSelectAFile);
+        this.ipcRenderer.on("widget-specific-action", this.handleWidgetSpecificAction);
+        this.ipcRenderer.on("local-font-names", this.handleLocalFontNames);
+        this.ipcRenderer.on("load-db-file-contents", this.handleLoadDbFileContents);
+
+        this.ipcRenderer.on("get-symbol-gallery", this.handleGetSymbolGallery);
+
+        this.ipcRenderer.on("start-record-video", this.handleStartRecordVideo);
+
+        this.ipcRenderer.on("window-will-be-closed", this.handleWindowWillBeClosed);
+
+        this.ipcRenderer.on("obtained-iframe-uuid", this.handleObtainedIframeUuid);
+        this.ipcRenderer.on("read-embedded-display-tdl", this.handleReadEmbeddedDisplayTdl);
+
+        this.ipcRenderer.on("request-epics-dbd", this.handleRequestEpicsDbd);
+
+        // ssh-client requested a file from ssh-server, here is the contents of the
+        // file sent from ssh server
+        this.ipcRenderer.on("ssh-file-contents", this.handleSshFileContents);
+        this.ipcRenderer.on("show-about-tdm", this.handleShowAboutTdm);
+
+        this.ipcRenderer.on("terminal-command-result", this.handleTerminalCommandResult);
+
+        this.ipcRenderer.on("processes-info", this.handleProcessesInfo)
+        this.ipcRenderer.on("epics-stats", this.handleEpicsStats)
+        this.ipcRenderer.on("ca-snooper-data", this.handleCaSnooperData)
+        this.ipcRenderer.on("ca-sw-data", this.handleCaswData)
+        this.ipcRenderer.on("text-file-contents", this.handleTextFileContents)
+        this.ipcRenderer.on("update-text-editor-file-name", this.handleUpdateTextEditorFileName)
+        this.ipcRenderer.on("update-text-editor-modified-status", this.handleUpdateTextEditorModifiedStatus)
+        this.ipcRenderer.on("new-log", this.handleNewLog)
+        this.ipcRenderer.on("file-converter-command", this.handleFileConverterCommand);
+        // file browser
+        this.ipcRenderer.on("fetch-folder-content", this.handleFetchFolderContent);
+        this.ipcRenderer.on("file-browser-command", this.handleFileBrowserCommand);
+        this.ipcRenderer.on("fetch-thumbnail", this.handleFetchThumbnail)
+
+        // site info
+        this.ipcRenderer.on("site-info", this.handleSiteInfo)
+        this.ipcRenderer.on("display-window-id-for-open-tdl-file", this.handleDisplayWindowIdForOpenTdlFile)
+
+        this.ipcRenderer.on("get-media-content", this.handleGetMediaContent)
+
+        this.ipcRenderer.on("pong", this.handlePong)
+
+        this.ipcRenderer.on("bounce-back", this.handleBounceBack);
+    };
+
 
     // ----------------------- event handlers -----------------------------
 
@@ -718,6 +559,40 @@ export class IpcManagerOnDisplayWindow {
             g_widgets1.openHelpWindow();
         }
     };
+
+    handleObtainedIframeUuid = (
+        event: string,
+        options: IpcEventArgType2["obtained-iframe-uuid"]
+    ) => {
+        const widget = g_widgets1.getWidget2(options["widgetKey"]);
+        if (widget instanceof Repeater) {
+            widget.loadHtml(options["iframeDisplayId"]);
+            widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
+        }
+    };
+
+    handleReadEmbeddedDisplayTdl = (
+        event: string,
+        data: IpcEventArgType2["read-embedded-display-tdl"]
+    ) => {
+        const embeddedDisplayWidget = g_widgets1.getWidget(data["widgetKey"]);
+        if (!(embeddedDisplayWidget instanceof EmbeddedDisplay)) {
+            return;
+        }
+
+        embeddedDisplayWidget.loadDisplayFromTdl(data);
+    }
+
+    handleRequestEpicsDbd = (event: string, result: IpcEventArgType2["request-epics-dbd"]) => {
+        const widget = g_widgets1.getWidget(result["widgetKey"]);
+        if (widget instanceof ChannelGraph || widget instanceof Probe) {
+            widget.processDbd({
+                menus: result["menus"],
+                recordTypes: result["recordTypes"],
+            })
+        }
+
+    }
 
     handleTdlFileSaved = (event: string, data: IpcEventArgType2["tdl-file-saved"]) => {
         const { newTdlFileName } = data;
@@ -1185,119 +1060,6 @@ export class IpcManagerOnDisplayWindow {
     };
 
 
-    // handleWindowWillBeClosed0 = (event: string, data: IpcEventArgType2["window-will-be-closed"]) => {
-    //     Log.info("window will be closed")
-    //     const history = this.getDisplayWindowClient().getActionHistory();
-    //     const isUtilityWindow = this.getDisplayWindowClient().getIsUtilityWindow();
-    //     const displayWindowId = this.getDisplayWindowClient().getWindowId();
-    //     const tdlFileName = this.getDisplayWindowClient().getTdlFileName();
-    //     const tdl = this.getDisplayWindowClient().generateTdl();
-
-    //     const canvas = g_widgets1.getWidget("Canvas");
-    //     let windowName = "";
-    //     if (canvas instanceof Canvas) {
-    //         windowName = canvas.getWindowName();
-    //     }
-
-    //     // windows that can be closed immediately
-    //     // (1) window is not modified since opening
-    //     // (2) utility window: Text Editor and Data Viewer
-    //     if (history.getCurrentTdlIndex() > 0
-    //         || tdlFileName === ""
-    //         || (isUtilityWindow && windowName.startsWith("TDM Text Editor"))
-    //         || (isUtilityWindow && windowName.startsWith("TDM Data Viewer"))
-    //     ) {
-    //         // don't close window yet, pop up save dialog
-    //         if (isUtilityWindow) {
-    //             // utility window: close immediately except modified TextEditor
-    //             // if it is a Text Editor utility window
-    //             if (windowName.startsWith("TDM Text Editor")) {
-    //                 // find the widget
-    //                 let textEditorWidget: TextEditor | undefined = undefined;
-    //                 for (let widget of g_widgets1.getWidgets2().values()) {
-    //                     if (widget instanceof TextEditor) {
-    //                         textEditorWidget = widget;
-    //                         break;
-    //                     }
-    //                 }
-    //                 if (textEditorWidget === undefined) {
-    //                     return;
-    //                 }
-    //                 // if content is modified
-    //                 const isModified = textEditorWidget.getModified();
-    //                 // if it is modified, bring up the prompt
-    //                 if (textEditorWidget !== undefined) {
-    //                     this.sendFromRendererProcess("window-will-be-closed", {
-    //                         displayWindowId: displayWindowId,
-    //                         close: false,
-    //                         tdlFileName: undefined,
-    //                         tdl: undefined,
-    //                         // TextEditor utility window specific contents
-    //                         textEditorFileName: textEditorWidget.getFileName(),
-    //                         // todo:
-    //                         // textEditorContents: textEditorWidget.getFileContents(),
-    //                         textEditorContents: "",
-    //                         widgetKey: textEditorWidget.getWidgetKey(),
-    //                     });
-    //                     return;
-
-    //                 }
-    //             } else if (windowName.startsWith("TDM Data Viewer")) {
-    //                 // if it contains any trace data, bring up the prompt to Save/Do not save/Cancel
-    //                 let dataViewerWidget: DataViewer | undefined = undefined;
-    //                 for (let widget of g_widgets1.getWidgets2().values()) {
-    //                     if (widget instanceof DataViewer) {
-    //                         dataViewerWidget = widget;
-    //                         break;
-    //                     }
-    //                 }
-    //                 if (dataViewerWidget !== undefined) {
-    //                     // console.log(dataViewerWidget.hasData())
-    //                     if (dataViewerWidget.hasData() === true) {
-    //                         this.sendFromRendererProcess("window-will-be-closed", {
-    //                             displayWindowId: displayWindowId,
-    //                             close: false,
-    //                             tdlFileName: undefined,
-    //                             tdl: undefined,
-    //                             widgetKey: dataViewerWidget.getWidgetKey(),
-    //                         });
-    //                         return;
-    //                     }
-    //                 }
-    //             }
-
-    //             this.sendFromRendererProcess("window-will-be-closed", {
-    //                 displayWindowId: displayWindowId,
-    //                 close: true,
-    //             });
-    //         } else {
-    //             Log.debug("Window for TDL", tdlFileName, "will be closed", history.getCurrentTdlIndex());
-    //             // regular window, save it
-    //             this.sendFromRendererProcess("window-will-be-closed",
-    //                 {
-    //                     displayWindowId: displayWindowId,
-    //                     close: !this.getDisplayWindowClient().getActionHistory().getModified(),
-    //                     tdlFileName: tdlFileName, // if "", the window is an in-memory window
-    //                     tdl: tdl as type_tdl,
-    //                 }
-    //             );
-    //             // todo: what is this behavior
-    //             this.sendFromRendererProcess("window-will-be-closed",
-    //                 {
-    //                     displayWindowId: displayWindowId,
-    //                     tdlFileName: tdlFileName,
-    //                     close: false
-    //                 }
-    //             );
-    //         }
-    //     } else {
-    //         // window that has not been modified, close immediately
-    //         this.sendFromRendererProcess("window-will-be-closed", {
-    //             displayWindowId: displayWindowId,
-    //             close: true,
-    //         });
-    //     }
-    // };
 
     getIpcServerPort = () => {
         return this.ipcServerPort;
@@ -1365,45 +1127,7 @@ export class IpcManagerOnDisplayWindow {
     handleFileBrowserCommand = (event: string, message: IpcEventArgType2["file-browser-command"]) => {
         const widget = g_widgets1.getWidget(message["widgetKey"]);
         if (widget instanceof FileBrowser) {
-
-            if (message["command"] === "change-item-name") {
-
-                if (message["success"] === true) {
-                    widget.setItemNameBeingEdited(false);
-                    // set folderContent
-                    const folder = message["folder"];
-                    const oldName = message["oldName"];
-                    const newName = message["newName"];
-                    if (folder === undefined || oldName === undefined || newName === undefined) {
-                        return;
-                    }
-
-                    const folderContent = widget.getFolderContent();
-                    for (const item of folderContent) {
-                        if (item["name"] === oldName) {
-                            item["name"] = newName;
-                            break;
-                        }
-                    }
-                    widget.forceUpdate({});
-                } else {
-                    // change back to the old name automatically
-                    widget.forceUpdate({});
-                }
-            } else if (message["command"] === "create-tdl-file") {
-                if (message["success"] === true) {
-                    widget.fetchFolderContent();
-                } else {
-                    // do nothing
-                }
-            } else if (message["command"] === "create-folder") {
-                if (message["success"] === true) {
-                    widget.fetchFolderContent();
-                } else {
-                    // do nothing
-                }
-            }
-
+            widget.handleFileBrowserCommand(message);
         }
     }
 
@@ -1441,175 +1165,17 @@ export class IpcManagerOnDisplayWindow {
 
     handleDialogShowInputBox = (event: undefined, data: IpcEventArgType2["dialog-show-input-box"]) => {
         const { info } = data;
-        const command = info["command"];
         const prompt = this.getDisplayWindowClient().getPrompt();
-        if (command === "save-tdl-file") {
-            const buttons = info["buttons"];
-            const attachment = info["attachment"];
-            // OK, Cancel
-            if (buttons !== undefined && buttons.length === 2) {
-                buttons[0]["handleClick"] = () => {
-                    const tdlFileName = prompt.getDialogInputBoxText();
-                    if (tdlFileName !== "") {
-                        attachment["tdlFileName1"] = prompt.getDialogInputBoxText();
-                        this.sendFromRendererProcess("save-tdl-file",
-                            {
-                                windowId: attachment["windowId"],
-                                tdl: attachment["tdl"],
-                                tdlFileName1: attachment["tdlFileName1"],
-                            }
-                        );
-                    }
-                };
-                buttons[1]["handleClick"] = () => {
-                };
+        const shouldCreateElement = prompt.getPromptInputBoxHandlers().handleDialogShowInputBox(
+            info,
+            (channelName, payload) => {
+                this.sendFromRendererProcess(channelName, payload);
             }
-        } else if (command === "hide") {
-            this.getDisplayWindowClient().getPrompt().removeElement();
-        } else if (command === "window-will-be-closed") {
-            const buttons = info["buttons"];
-            const attachment = info["attachment"];
-            // OK, Cancel
-            if (buttons !== undefined && buttons.length === 2) {
-                buttons[0]["handleClick"] = () => {
-                    const tdlFileName = prompt.getDialogInputBoxText();
-                    if (tdlFileName !== "") {
-                        attachment["tdlFileName"] = tdlFileName;
-                        this.sendFromRendererProcess("window-will-be-closed",
-                            attachment
-                        );
-                    }
-                };
-                buttons[1]["handleClick"] = () => {
-                };
-            }
-        } else if (command === "window-will-be-closed-user-select-save") {
-            const buttons = info["buttons"];
-            const attachment = info["attachment"];
-            if (buttons !== undefined && buttons.length === 2) {
-                buttons[0]["handleClick"] = () => {
-                    const fileName = prompt.getDialogInputBoxText();
-                    if (fileName !== "") {
-                        attachment["fileName"] = fileName;
-                        this.sendFromRendererProcess("window-will-be-closed-user-select", attachment);
-                    }
-                };
-                buttons[1]["handleClick"] = () => {
-                };
-            }
-        } else if (command === "save-data-to-file") {
-            const buttons = info["buttons"];
-            const attachment = info["attachment"];
-            // OK, Cancel
-            if (buttons !== undefined && buttons.length === 2) {
-                buttons[0]["handleClick"] = () => {
-                    const fileName = prompt.getDialogInputBoxText();
-                    if (fileName !== "") {
-                        attachment["fileName"] = fileName;
-                        this.sendFromRendererProcess("save-data-to-file",
-                            attachment
-                        );
-                    }
-                };
-                buttons[1]["handleClick"] = () => {
-                };
-            }
-        } else if (command === "data-viewer-export-data") {
-            const buttons = info["buttons"];
-            const attachment = info["attachment"];
-            // OK, Cancel
-            if (buttons !== undefined && buttons.length === 2) {
-                buttons[0]["handleClick"] = () => {
-                    const fileName = prompt.getDialogInputBoxText();
-                    if (fileName !== "") {
-                        attachment["fileName1"] = fileName;
-                        this.sendFromRendererProcess("data-viewer-export-data",
-                            {
-                                displayWindowId: attachment["displayWindowId"],
-                                data: attachment["data"],
-                                fileName1: attachment["fileName1"],
-                            }
-                        );
-                    }
-                };
-                buttons[1]["handleClick"] = () => {
-                };
-            }
-        } else if (command === "save-text-file") {
-            const buttons = info["buttons"];
-            const attachment = info["attachment"];
-            // OK, Cancel
-            if (buttons !== undefined && buttons.length === 2) {
-                buttons[0]["handleClick"] = () => {
-                    const fileName = prompt.getDialogInputBoxText();
-                    if (fileName !== "") {
-                        attachment["fileName"] = fileName;
-                        this.sendFromRendererProcess("save-text-file",
-                            attachment
-                        );
-                    }
-                };
-                buttons[1]["handleClick"] = () => {
-                };
-            }
-        } else if (command === "select-a-file") {
-            const buttons = info["buttons"];
-            const attachment = info["attachment"];
-            // OK, Cancel
-            if (buttons !== undefined && buttons.length === 2) {
-                buttons[0]["handleClick"] = () => {
-                    const fileName = prompt.getDialogInputBoxText();
-                    if (fileName !== "") {
-                        this.sendFromRendererProcess("select-a-file",
-                            {
-                                options: attachment,
-                                fileName1: fileName,
-                            }
-                        );
-                    }
-                };
-                buttons[1]["handleClick"] = () => {
-                };
-            }
-        } else if (command === "open-text-file") {
-            // this command is initiated from a TextEditor window, we should use "open-text-file" event
-            const buttons = info["buttons"];
-            const attachment = info["attachment"];
-            // OK, Cancel
-            if (buttons !== undefined && buttons.length === 2) {
-                buttons[0]["handleClick"] = () => {
-                    const fileName = prompt.getDialogInputBoxText();
-                    if (fileName !== "") {
-                        attachment["fileName"] = fileName;
-                        this.sendFromRendererProcess("open-text-file",
-                            attachment,
-                        );
-                    }
-                };
-                buttons[1]["handleClick"] = () => {
-                };
-            }
-        } else if (command === "open-tdl-file") {
-            const buttons = info["buttons"];
-            const attachment = info["attachment"];
-            // OK, Cancel
-            if (buttons !== undefined && buttons.length === 2) {
-                buttons[0]["handleClick"] = () => {
-                    const tdlFileName = prompt.getDialogInputBoxText();
-                    if (tdlFileName !== "") {
-                        attachment["tdlFileNames"] = [tdlFileName];
-                        this.sendFromRendererProcess("open-tdl-file",
-                            attachment
-                        );
-                    }
-                };
-                buttons[1]["handleClick"] = () => {
-                    // this.sendFromRendererProcess("quit-tdm-process", true);
-                };
-            }
-        }
+        );
 
-        this.getDisplayWindowClient().getPrompt().createElement("dialog-input-box", info);
+        if (shouldCreateElement) {
+            prompt.createElement("dialog-input-box", info);
+        }
     };
 
 

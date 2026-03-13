@@ -67,6 +67,19 @@ export const insertToMap = (map: Map<string, any>, index: number, newKey: string
     }
 };
 
+export const insertAfter = <K, V>(map: Map<K, V>, afterKey: K, entriesToInsert: [K, V][]) => {
+    const newMap = new Map<K, V>();
+    for (const [key, value] of map) {
+        newMap.set(key, value);
+        if (key === afterKey) {
+            for (const [insertKey, insertValue] of entriesToInsert) {
+                newMap.set(insertKey, insertValue);
+            }
+        }
+    }
+    return newMap;
+};
+
 /**
  * Delete a map entry according to the index
  */

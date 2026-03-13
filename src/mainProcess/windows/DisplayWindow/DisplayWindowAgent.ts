@@ -340,6 +340,10 @@ export class DisplayWindowAgent {
         this.getDisplayWindowUtilities().showNotification(info);
     };
 
+    showInputBox = (info: IpcEventArgType2["dialog-show-input-box"]["info"]): void => {
+        this.getDisplayWindowUtilities().showInputBox(info);
+    };
+
     showError = (
         humanReadableMessages: string[],
         rawMessages: string[] = [],

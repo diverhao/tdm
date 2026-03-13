@@ -1,5 +1,6 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { GlobalVariables } from "../../../common/GlobalVariables";
+import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
@@ -14,6 +15,7 @@ import * as path from "path";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Log } from "../../../common/Log";
 import { TcaChannel } from "../../channel/TcaChannel";
+import { v4 as uuidv4 } from "uuid";
 
 export type type_EmbeddedDisplay_tdl = {
     type: string;
@@ -626,6 +628,76 @@ export class EmbeddedDisplay extends BaseWidget {
     jobsAsOperatingModeBegins(): void {
         this.selectTab(0, true);
         super.jobsAsOperatingModeBegins()
+    }
+
+    loadDisplayFromTdl = (data: IpcEventArgType2["read-embedded-display-tdl"]) => {
+        const { tdl, fullTdlFileName, macros, widgetWidth, widgetHeight, resize, tdlFileName } = data;
+        const widgetKey = this.getWidgetKey();
+
+        if (tdl === undefined || fullTdlFileName === undefined) {
+            this.loadingText = `Failed to load ${tdlFileName}`;
+            g_widgets1.addToForceUpdateWidgets(widgetKey);
+            g_flushWidgets();
+            return;
+        }
+
+        const canvasWidgetTdl = tdl["Canvas"];
+        let scalingFactor = 1;
+        if (resize === "fit") {
+            const canvasWidth = canvasWidgetTdl.style["width"];
+            const canvasHeight = canvasWidgetTdl.style["height"];
+            if (typeof canvasHeight === "number" && typeof canvasWidth === "number") {
+                scalingFactor = Math.min(widgetWidth / canvasWidth, widgetHeight / canvasHeight);
+            }
+        }
+
+        const canvasBackgroundColor = canvasWidgetTdl["style"]["backgroundColor"];
+        const canvasMacros = canvasWidgetTdl["macros"];
+        const allMacros = [...macros, ...canvasMacros];
+
+        this.setFullTdlFileName(fullTdlFileName);
+
+        const embeddedDisplayWidgetTop = this.getStyle()["top"];
+        const embeddedDisplayWidgetLeft = this.getStyle()["left"];
+        this.getStyle()["backgroundColor"] = canvasBackgroundColor;
+
+        const widgetMapPairs: [string, BaseWidget][] = [];
+
+        this.removeChildWidgets();
+        for (const widgetTdl of Object.values(tdl)) {
+            if (!widgetTdl["widgetKey"].includes("Canvas")) {
+                const oldWidgetKey = widgetTdl["widgetKey"];
+                const newWidgetKey = oldWidgetKey.split("_")[0] + "_" + uuidv4();
+                widgetTdl["widgetKey"] = newWidgetKey;
+                widgetTdl["key"] = newWidgetKey;
+                widgetTdl["style"]["top"] = widgetTdl["style"]["top"] * scalingFactor + embeddedDisplayWidgetTop;
+                widgetTdl["style"]["left"] = widgetTdl["style"]["left"] * scalingFactor + embeddedDisplayWidgetLeft;
+                widgetTdl["style"]["width"] = widgetTdl["style"]["width"] * scalingFactor;
+                widgetTdl["style"]["height"] = widgetTdl["style"]["height"] * scalingFactor;
+                widgetTdl["style"]["fontSize"] = widgetTdl["style"]["fontSize"] * scalingFactor;
+                const widget = g_widgets1.createWidget(widgetTdl, false);
+                if (widget instanceof BaseWidget) {
+                    widget.setMacros(allMacros);
+                    widget.setEmbeddedDisplayWidgetKey(widgetKey);
+                    this.appendChildWidgetKey(newWidgetKey);
+                    widget.jobsAsOperatingModeBegins();
+                    widget.processChannelNames(allMacros);
+                    widgetMapPairs.push([newWidgetKey, widget]);
+                }
+            }
+        }
+
+        this.loadingText = ``;
+
+        const widgetsMap = g_widgets1.getWidgets();
+        for (const widgetMapPair of widgetMapPairs) {
+            widgetsMap.delete(widgetMapPair[0]);
+        }
+        g_widgets1._widgets = GlobalMethods.insertAfter(widgetsMap, widgetKey, widgetMapPairs);
+
+        this.connectAllTcaChannels();
+        g_widgets1.addToForceUpdateWidgets(widgetKey);
+        g_flushWidgets();
     }
 
     /**

@@ -13,7 +13,7 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Log } from "../../../common/Log";
 import path from "path";
 import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
-import { type_folder_content, type_single_file_folder } from "../../../common/IpcEventArgType";
+import { IpcEventArgType2, type_folder_content, type_single_file_folder } from "../../../common/IpcEventArgType";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 
 
@@ -1118,6 +1118,51 @@ export class FileBrowser extends BaseWidget {
             // send command to main process after confirming the change, i.e. hit Enter key
             // in main process: try to change name, if succeeded, send OK message, nothing need to be done on client; 
             //                                      if failed, send NOT_OK message and re-read folder, client change things back;
+        }
+    }
+
+    handleFileBrowserCommand = (message: IpcEventArgType2["file-browser-command"]) => {
+        const handlers: Record<IpcEventArgType2["file-browser-command"]["command"], (message: IpcEventArgType2["file-browser-command"]) => void> = {
+            "change-item-name": this._handleChangeItemNameCommand,
+            "create-tdl-file": this._handleCreateTdlFileCommand,
+            "create-folder": this._handleCreateFolderCommand,
+        };
+
+        handlers[message["command"]](message);
+    }
+
+    private _handleChangeItemNameCommand = (message: IpcEventArgType2["file-browser-command"]) => {
+        if (message["success"] === true) {
+            this.setItemNameBeingEdited(false);
+            const folder = message["folder"];
+            const oldName = message["oldName"];
+            const newName = message["newName"];
+            if (folder === undefined || oldName === undefined || newName === undefined) {
+                return;
+            }
+
+            const folderContent = this.getFolderContent();
+            for (const item of folderContent) {
+                if (item["name"] === oldName) {
+                    item["name"] = newName;
+                    break;
+                }
+            }
+            this.forceUpdate({});
+        } else {
+            this.forceUpdate({});
+        }
+    }
+
+    private _handleCreateTdlFileCommand = (message: IpcEventArgType2["file-browser-command"]) => {
+        if (message["success"] === true) {
+            this.fetchFolderContent();
+        }
+    }
+
+    private _handleCreateFolderCommand = (message: IpcEventArgType2["file-browser-command"]) => {
+        if (message["success"] === true) {
+            this.fetchFolderContent();
         }
     }
 

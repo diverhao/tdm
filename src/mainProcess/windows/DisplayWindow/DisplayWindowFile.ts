@@ -4,6 +4,7 @@ import { dialog } from "electron";
 import path from "path";
 import { Log } from "../../../common/Log";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
+import { FileReader } from "../../file/FileReader";
 
 /**
  * Handles file save flows for a display window in desktop and SSH server modes.
@@ -59,6 +60,120 @@ export class DisplayWindowFile {
             return `Cannot save file ${fileName}`;
         }
     };
+
+    loadTdlFile = async (options: IpcEventArgType["load-tdl-file"]): Promise<void> => {
+        const { tdlFileName, mode, editable, externalMacros, replaceMacros, currentTdlFolder } = options;
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const selectedProfile = displayWindowAgent.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+        if (selectedProfile === undefined) {
+            Log.error("0", "Profile not selected.");
+            return;
+        }
+
+        if (tdlFileName === "") {
+            displayWindowAgent.sendFromMainProcess("new-tdl", {
+                newTdl: FileReader.getBlankWhiteTdl(),
+                tdlFileName: "",
+                initialModeStr: mode,
+                editable: editable,
+                externalMacros: externalMacros,
+                useExternalMacros: replaceMacros,
+                utilityType: undefined,
+                utilityOptions: {},
+            });
+            return;
+        }
+
+        const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder);
+        if (tdlResult === undefined) {
+            return;
+        }
+
+        displayWindowAgent.sendFromMainProcess("new-tdl", {
+            newTdl: tdlResult["tdl"],
+            tdlFileName: tdlResult["fullTdlFileName"],
+            initialModeStr: mode,
+            editable: editable,
+            externalMacros: externalMacros,
+            useExternalMacros: replaceMacros,
+            utilityType: undefined,
+            utilityOptions: {},
+        });
+    }
+
+    saveTdlFile = (options: IpcEventArgType["save-tdl-file"]): void => {
+        const { windowId, tdl, tdlFileName1 } = options;
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const mainProcess = displayWindowAgent.getWindowAgentsManager().getMainProcess();
+        const mainProcessMode = mainProcess.getMainProcessMode();
+
+        if (mainProcessMode === "web") {
+            const bookmarks = mainProcess.getProfiles().getSelectedProfile()?.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
+            let allowToSave = false;
+            if (Array.isArray(bookmarks)) {
+                for (const bookmark of bookmarks) {
+                    const bookmarkFolder = bookmark[0];
+                    const permissionToWrite = bookmark[1];
+                    if (tdlFileName1.includes(bookmarkFolder) && typeof permissionToWrite === "string" && permissionToWrite.toLowerCase() === "yes") {
+                        allowToSave = true;
+                        break;
+                    }
+                }
+            }
+            if (allowToSave === false) {
+                displayWindowAgent.showError([`You are not allowed to visit ${tdlFileName1}.`]);
+                return;
+            }
+        }
+
+        let tdlFileName: string | undefined = tdlFileName1;
+        Log.debug("0", "We are going to save TDL", tdlFileName1);
+        try {
+            if (tdlFileName === "" || tdlFileName.endsWith(".edl") || tdlFileName.endsWith(".stp") || tdlFileName.endsWith(".bob")) {
+                if (mainProcessMode === "desktop") {
+                    tdlFileName = dialog.showSaveDialogSync({ title: "Save tdl file", filters: [{ name: "tdl", extensions: ["tdl", "json"] }] });
+                } else if (mainProcessMode === "ssh-server") {
+                    displayWindowAgent.sendFromMainProcess("dialog-show-input-box", {
+                        info: {
+                            command: "save-tdl-file",
+                            humanReadableMessages: ["Save display to"],
+                            buttons: [
+                                {
+                                    text: "OK",
+                                },
+                                {
+                                    text: "Cancel",
+                                }
+                            ],
+                            defaultInputText: "",
+                            attachment: {
+                                windowId: windowId,
+                                tdl: tdl,
+                                tdlFileName1: "",
+                            }
+                        }
+                    });
+                    return;
+                }
+            }
+
+            if (tdlFileName === undefined) {
+                Log.debug("0", "Did not select TDL file name, cancel saving tdl");
+                return;
+            }
+
+            fs.writeFileSync(tdlFileName, JSON.stringify(tdl, null, 4));
+            
+            Log.info("0", `Saved tdl to file ${tdlFileName}`);
+            displayWindowAgent.sendFromMainProcess("tdl-file-saved", {
+                newTdlFileName: tdlFileName
+            });
+
+        } catch (e) {
+            Log.error(e);
+            displayWindowAgent.showError([`Failed to save ${tdlFileName}`, "Please check the file permission."], ["Below is the raw message:", `${e}`]);
+        }
+    }
 
     /**
      * provided file name, data type, and file content, save the data to a local file
