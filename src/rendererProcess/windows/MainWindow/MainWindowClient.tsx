@@ -6,6 +6,7 @@ import { MainWindowStartupPage } from "../../../rendererProcess/mainWindow/MainW
 import { MainWindowProfileRunPage } from "../../../rendererProcess/mainWindow/MainWindowProfileRunPage";
 import { IpcManagerOnMainWindow } from "./IpcManagerOnMainWindow";
 import { FontsData } from "../../../rendererProcess/global/FontsData";
+import { disableImageDragging } from "../../../rendererProcess/global/disableImageDragging";
 import { PromptOnMainWindow } from "../../../rendererProcess/helperWidgets/Prompt/PromptOnMainWindow";
 import { Log } from "../../../common/Log";
 
@@ -63,6 +64,7 @@ export class MainWindowClient {
     private _site: string = "";
 
     constructor(mainWindowId: string, ipcServerPort: number, hostname: string | undefined = undefined) {
+        disableImageDragging();
         this._loadCustomFonts();
         this._windowId = mainWindowId;
         this.setProcessId(mainWindowId);

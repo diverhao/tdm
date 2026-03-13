@@ -416,6 +416,7 @@ export class DataViewerPlotControls {
                         }}
                     >
                         <img
+                            draggable={false}
                             style={{
                                 width: "100%",
                                 height: "100%",

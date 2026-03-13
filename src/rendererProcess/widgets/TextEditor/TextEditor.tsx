@@ -1,11 +1,15 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { Compartment, EditorState } from "@codemirror/state";
-import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import { EditorView, keymap } from "@codemirror/view";
-import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
-import { json } from "@codemirror/lang-json";
-import { python } from "@codemirror/lang-python";
+import { EditorView } from "@codemirror/view";
+import { StreamLanguage, defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { c, cpp } from "@codemirror/legacy-modes/mode/clike";
+import { javascript, json, typescript } from "@codemirror/legacy-modes/mode/javascript";
+import { julia } from "@codemirror/legacy-modes/mode/julia";
+import { python } from "@codemirror/legacy-modes/mode/python";
+import { rust } from "@codemirror/legacy-modes/mode/rust";
+import { shell } from "@codemirror/legacy-modes/mode/shell";
+import { xml } from "@codemirror/legacy-modes/mode/xml";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -15,6 +19,34 @@ import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import path from "path";
 import { defaultTextEditorTdl, type_TextEditor_tdl } from "../../../common/types/type_widget_tdl";
+
+const textEditorLanguageExtensions: Record<string, any> = {
+    ".py": StreamLanguage.define(python),
+    ".js": StreamLanguage.define(javascript),
+    ".jsx": StreamLanguage.define(javascript),
+    ".mjs": StreamLanguage.define(javascript),
+    ".cjs": StreamLanguage.define(javascript),
+    ".tdl": StreamLanguage.define(json),
+    ".ts": StreamLanguage.define(typescript),
+    ".tsx": StreamLanguage.define(typescript),
+    ".mts": StreamLanguage.define(typescript),
+    ".cts": StreamLanguage.define(typescript),
+    ".sh": StreamLanguage.define(shell),
+    ".bash": StreamLanguage.define(shell),
+    ".zsh": StreamLanguage.define(shell),
+    ".c": StreamLanguage.define(c),
+    ".h": StreamLanguage.define(c),
+    ".db": StreamLanguage.define(julia),
+    ".cpp": StreamLanguage.define(cpp),
+    ".cc": StreamLanguage.define(cpp),
+    ".cxx": StreamLanguage.define(cpp),
+    ".hpp": StreamLanguage.define(cpp),
+    ".hh": StreamLanguage.define(cpp),
+    ".hxx": StreamLanguage.define(cpp),
+    ".bob": StreamLanguage.define(xml),
+    ".plt": StreamLanguage.define(xml),
+    ".rs": StreamLanguage.define(rust),
+};
 
 /**
  * TextEditor widget.
@@ -114,8 +146,6 @@ export class TextEditor extends BaseWidget {
                     // initial content displayed
                     doc: fileContent,
                     extensions: [
-                        history(),
-                        keymap.of([...defaultKeymap, ...historyKeymap]),
                         syntaxHighlighting(defaultHighlightStyle),
                         languageCompartment.of(this.getLanguageExtension(fileName)),
                         // user edit callback function
@@ -494,13 +524,7 @@ export class TextEditor extends BaseWidget {
 
     getLanguageExtension = (fileName: string) => {
         const extension = path.extname(fileName).toLowerCase();
-        if (extension === ".json") {
-            return json();
-        }
-        if (extension === ".py") {
-            return python();
-        }
-        return [];
+        return textEditorLanguageExtensions[extension] ?? [];
     };
 
 
@@ -536,6 +560,7 @@ export class TextEditor extends BaseWidget {
 
     getTdlCopy(newKey: boolean = true): Record<string, any> {
         const result = super.getTdlCopy(newKey);
+        // do not save fileContent
         result.text["fileContent"] = "";
         return result;
     }

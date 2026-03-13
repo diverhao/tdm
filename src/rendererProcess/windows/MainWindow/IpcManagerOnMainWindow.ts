@@ -345,6 +345,7 @@ export class IpcManagerOnMainWindow {
      */
     private _handleAfterProfileSelected = (event: undefined, data: IpcEventArgType3["after-profile-selected"]) => {
         const { profileName } = data;
+        console.log("--------------------------profileName", profileName)
         this.getMainWindowClient().setSelectedProfileName(profileName);
         this.getMainWindowClient().setProfileRunPage(new MainWindowProfileRunPage(this.getMainWindowClient()));
         this.getMainWindowClient().setState(mainWindowState.run);

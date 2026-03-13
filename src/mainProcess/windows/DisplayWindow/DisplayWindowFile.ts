@@ -93,6 +93,17 @@ export class DisplayWindowFile {
     }
 
     /**
+     * Save directly to a provided path without showing a dialog.
+     */
+    saveFileToPath = (fileName: string, fileContent: string): string => {
+        const trimmedFileName = fileName.trim();
+        if (trimmedFileName === "") {
+            return "No file selected";
+        }
+        return this.writeFile(trimmedFileName, fileContent);
+    }
+
+    /**
      * Save file content while running against an SSH server.
      *
      * If no file path is provided, prompt the renderer for a destination and return `"prompted"`.

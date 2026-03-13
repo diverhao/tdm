@@ -3,6 +3,29 @@ import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 
+const disableImageDrag = (children: React.ReactNode): React.ReactNode => {
+    return React.Children.map(children, (child) => {
+        if (!React.isValidElement(child)) {
+            return child;
+        }
+
+        if (typeof child.type === "string" && child.type === "img") {
+            return React.cloneElement(child as React.ReactElement<any>, {
+                draggable: false,
+            });
+        }
+
+        const childChildren = (child.props as { children?: React.ReactNode }).children;
+        if (childChildren === undefined) {
+            return child;
+        }
+
+        return React.cloneElement(child as React.ReactElement<any>, {
+            children: disableImageDrag(childChildren),
+        });
+    });
+};
+
 /**
  * Used on sidebar, for Canvas, Action Button (open display), Embedded Display, and PvTable setting page
  */
@@ -455,7 +478,7 @@ export const ElementSmallButton = ({ children, onMouseDown }: any) => {
                 onMouseDown(event);
             }}
         >
-            {children}
+            {disableImageDrag(children)}
         </div>
     )
 }
@@ -490,7 +513,7 @@ export const ElementButton = ({ children, onClick, style }: { children?: React.R
                 if (onClick) onClick(event)
             }}
         >
-            {children}
+            {disableImageDrag(children)}
         </div>
     )
 }

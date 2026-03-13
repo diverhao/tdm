@@ -11,7 +11,7 @@ import { SshClient, type_sshServerConfig } from "./SshClient";
 import { CaSnooperServer } from "./CaSnooperServer";
 import { CaswServer } from "./CaswServer";
 import { Sql } from "../archive/Sql";
-import { type_args } from "../../common/IpcEventArgType";
+import { IpcEventArgType, type_args } from "../../common/IpcEventArgType";
 import * as path from "path";
 import { EdlFileConverterThread } from "../file/EdlFileConverterThread";
 import { WsOpenerServer } from "./WsOpenerServer";
@@ -21,6 +21,7 @@ import { Profiles } from "../profile/Profiles";
 import * as fs from "fs";
 import { LocalFontsReader } from "../file/LocalFontsReader";
 import { openTdlFileAsRequestedByAnotherInstance } from "../global/GlobalMethods";
+import { spawn } from "child_process";
 
 /**
  * Represents a main process.
@@ -503,7 +504,107 @@ export class MainProcess {
         }
     }
 
+    /**
+     * Start a new detached TDM process using the current executable and arguments.
+     *
+     * The child process is launched with ignored stdio and unreferenced so it can
+     * continue running independently of the current process.
+     */
+    spawnNewTdmProcess = () => {
+        const args = process.argv;
 
+        const newProcess = spawn(args[0], args.slice(1), {
+            detached: true,    // Key option for detachment
+            stdio: 'ignore',   // Important: detach from parent's stdio
+        });
+
+        // Unref the child process to allow parent to exit independently
+        newProcess.unref();
+        Log.info("Creating a new TDM instance with args:", args);
+    };
+
+    /**
+     * Requests this TDM process to quit.
+     * 
+     * This request is only initiated from main window.
+     *
+     * In `ssh-client` mode this is handled by the remote ssh server, so no local
+     * action is taken. When `confirmToQuit` is `true`, the process quits
+     * immediately. Otherwise, this checks for modified display windows and shows
+     * a confirmation dialog before quitting when needed.
+     *
+     * @param confirmToQuit Whether the user has already confirmed that the
+     * process should quit.
+     */
+    requestQuitTdmProcess = (confirmToQuit: boolean) => {
+
+        const mainProcessMode = this.getMainProcessMode();
+
+        // in ssh-client mode, the quit-tdm-process is handled in ssh-server
+        if (mainProcessMode === "ssh-client") {
+            return;
+        }
+
+        // we have confirmed in the message box to quit
+        if (confirmToQuit === true) {
+            if (mainProcessMode === "ssh-server") {
+                const sshServer = this.getIpcManager().getSshServer();
+                sshServer?.sendToTcpClient(JSON.stringify(
+                    { command: "quit-tdm-process-immediately", data: {} }));
+                setTimeout(() => {
+                    this.quit()
+                }, 1000)
+            } else {
+                this.quit()
+            }
+            return;
+        }
+
+        // check if there is any modified windows
+        const windowAgentsManager = this.getWindowAgentsManager();
+        const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
+        if (mainWindowAgent === undefined) {
+            return;
+        }
+        const modifiedDisplayWindows = windowAgentsManager.getModifiedDisplayWindows();
+        if (modifiedDisplayWindows.length > 0) {
+            let message = `${modifiedDisplayWindows.length === 1 ? "This" : "These"} display window${modifiedDisplayWindows.length === 1 ? "" : "s"}s ${modifiedDisplayWindows.length === 1 ? "is" : "are"} modified\n`;
+            for (let windowName of modifiedDisplayWindows) {
+                message = message + "\n" + windowName + "\n";
+            }
+            message = message + "\n" + `Do you want to continue to exit?`;
+            mainWindowAgent.sendFromMainProcess("dialog-show-message-box", {
+                info: {
+                    // the callback fro buttons is added according to the command
+                    command: "quit-tdm-process-confirm",
+                    messageType: "warning",
+                    humanReadableMessages: [message],
+                    rawMessages: [],
+                    buttons: [
+                        {
+                            text: "OK",
+                        },
+                        {
+                            text: "Cancel",
+                        }
+                    ]
+                }
+            });
+            return;
+        } else {
+
+            if (mainProcessMode === "ssh-server") {
+                const sshServer = this.getIpcManager().getSshServer();
+                sshServer?.sendToTcpClient(JSON.stringify(
+                    { command: "quit-tdm-process-immediately", data: {} }));
+                setTimeout(() => {
+                    this.quit()
+                }, 1000)
+            } else {
+                this.quit()
+            }
+        }
+    }
 
 
     // ------------------- getters and setters --------------------

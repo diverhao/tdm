@@ -327,7 +327,7 @@ export class MainWindowProfileRunPage {
             });
         }
         const quitTdmProcess = () => {
-            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("quit-tdm-process", {});
+            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("quit-tdm-process", {confirmToQuit: false});
         }
         const openTalhk = () => {
             const mainWindowId = this.getMainWindowClient().getWindowId();

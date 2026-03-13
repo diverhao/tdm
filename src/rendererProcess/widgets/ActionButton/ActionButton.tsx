@@ -529,21 +529,10 @@ export class ActionButton extends BaseWidget {
 
     closeDisplayWindow = (index: number) => {
         const tdl = this.getActions()[index] as type_action_closedisplaywindow;
-        let quitTDM = tdl["quitTDM"];
-        if (typeof quitTDM !== "boolean") {
-            quitTDM = false;
-        }
-
-        if (quitTDM === true) {
-            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-            const ipcManager = displayWindowClient.getIpcManager();
-            ipcManager.sendFromRendererProcess("quit-tdm-process", {});
-        } else {
-            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-            const ipcManager = displayWindowClient.getIpcManager();
-            const displayWindowId = displayWindowClient.getWindowId();
-            ipcManager.sendFromRendererProcess("close-window", { displayWindowId: displayWindowId });
-        }
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const ipcManager = displayWindowClient.getIpcManager();
+        const displayWindowId = displayWindowClient.getWindowId();
+        ipcManager.sendFromRendererProcess("close-window", { displayWindowId: displayWindowId });
     };
 
 

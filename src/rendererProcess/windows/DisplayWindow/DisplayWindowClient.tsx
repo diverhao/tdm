@@ -48,6 +48,7 @@ import { toBlob } from "dom-to-image-more";
 import { ChannelNameHint } from "../../../rendererProcess/helperWidgets/ChannelNameHint/ChannelNameHint";
 import { Table } from "../../widgets/Table/Table";
 import { SymbolGallery } from "../../helperWidgets/SymbolGallery/SymbolGallery";
+import { disableImageDragging } from "../../global/disableImageDragging";
 
 console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Finished loading modules.")
 
@@ -102,6 +103,7 @@ export class DisplayWindowClient {
     constructor(displayWindowId: string, ipcServerPort: number | undefined, hostname: string | undefined = undefined) {
         // set log level
         Log.setLogLevel(type_log_levels.info);
+        disableImageDragging();
 
         Log.debug("Start to create DisplayWindowClient object");
         this._loadCustomFonts();

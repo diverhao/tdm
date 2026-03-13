@@ -357,91 +357,21 @@ export class IpcManagerOnMainProcess {
     };
 
     // ---------------- TDM process ----------------------------
-
+    /**
+     * IPC handler for requests to open a new TDM instance.
+     *
+     * Delegates process creation to `MainProcess.spawnNewTdmProcess()`.
+     */
     handleNewTdmProcess = (event: WebSocket | string, options: IpcEventArgType["new-tdm-process"]) => {
-        const args = process.argv;
-
-        const newProcess = spawn(args[0], args.slice(1), {
-            detached: true,    // Key option for detachment
-            stdio: 'ignore',   // Important: detach from parent's stdio
-        });
-
-        // Unref the child process to allow parent to exit independently
-        newProcess.unref();
-        Log.info("Creating a new TDM instance with args:", args);
+        this.getMainProcess().spawnNewTdmProcess();
     };
 
     /**
-     * Quit this process, initiated from main window
+     * Quit this process
      */
     handleQuitTdmProcess = (event: WebSocket | string, option: IpcEventArgType["quit-tdm-process"]) => {
-        const mainProcessMode = this.getMainProcess().getMainProcessMode();
-
-        // in ssh-client mode, the quit-tdm-process is handled in ssh-server
-        if (mainProcessMode === "ssh-client") {
-            return;
-        }
-
-        // we have confirmed in the message box to quit
-        if (option["confirmToQuit"] === true) {
-            // this.getMainProcess().quit()
-            if (mainProcessMode === "ssh-server") {
-                const sshServer = this.getMainProcess().getIpcManager().getSshServer();
-                sshServer?.sendToTcpClient(JSON.stringify(
-                    { command: "quit-tdm-process-immediately", data: {} }));
-                setTimeout(() => {
-                    this.getMainProcess().quit()
-                }, 1000)
-            } else {
-                this.getMainProcess().quit()
-            }
-            return;
-        }
-
-        // check if there is any modified windows
-        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-        const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
-        if (mainWindowAgent === undefined) {
-            return;
-        }
-        const modifiedDisplayWindows = windowAgentsManager.getModifiedDisplayWindows();
-        if (modifiedDisplayWindows.length > 0) {
-            let message = `${modifiedDisplayWindows.length === 1 ? "This" : "These"} display window${modifiedDisplayWindows.length === 1 ? "" : "s"}s ${modifiedDisplayWindows.length === 1 ? "is" : "are"} modified\n`;
-            for (let windowName of modifiedDisplayWindows) {
-                message = message + "\n" + windowName + "\n";
-            }
-            message = message + "\n" + `Do you want to continue to exit?`;
-            mainWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                info: {
-                    // the callback fro buttons is added according to the command
-                    command: "quit-tdm-process-confirm",
-                    messageType: "warning",
-                    humanReadableMessages: [message],
-                    rawMessages: [],
-                    buttons: [
-                        {
-                            text: "OK",
-                        },
-                        {
-                            text: "Cancel",
-                        }
-                    ]
-                }
-            });
-            return;
-        } else {
-
-            if (mainProcessMode === "ssh-server") {
-                const sshServer = this.getMainProcess().getIpcManager().getSshServer();
-                sshServer?.sendToTcpClient(JSON.stringify(
-                    { command: "quit-tdm-process-immediately", data: {} }));
-                setTimeout(() => {
-                    this.getMainProcess().quit()
-                }, 1000)
-            } else {
-                this.getMainProcess().quit()
-            }
-        }
+        let { confirmToQuit } = option;
+        this.getMainProcess().requestQuitTdmProcess(confirmToQuit);
     }
 
     /**
@@ -966,34 +896,36 @@ export class IpcManagerOnMainProcess {
         if (mainWindowAgent instanceof MainWindowAgent) {
             mainWindowAgent.focus();
         } else {
-            if (this.getMainProcess().getMainProcessMode() === "desktop" || this.getMainProcess().getMainProcessMode() === "ssh-client") {
+            const mainProcessMode = this.getMainProcess().getMainProcessMode();
+            if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
                 // re-create main window
                 await windowAgentsManager.createMainWindow();
                 mainWindowAgent = windowAgentsManager.getMainWindowAgent();
-                if (mainWindowAgent instanceof MainWindowAgent) {
-                    const selectedProfileName = this.getMainProcess().getProfiles().getSelectedProfileName();
-                    mainWindowAgent.sendFromMainProcess("after-profile-selected", {
-                        profileName: selectedProfileName
-                    });
-
-                    if (this.getMainProcess().getMainProcessMode() === "desktop") {
-                        // update thumbnails immediately for desktop
-                        const displayWindowAgents = windowAgentsManager.getAgents();
-                        for (let displayWindowId of Object.keys(displayWindowAgents)) {
-                            const displayWindowAgent = displayWindowAgents[displayWindowId];
-                            // not main window
-                            if (displayWindowAgent instanceof DisplayWindowAgent) {
-                                // not pre-loaded display window
-                                if (displayWindowAgent !== windowAgentsManager.preloadedDisplayWindowAgent) {
-                                    // must be a display window, not embedded window: (-1, 0, 1, ..., 10000)
-                                    const windowName = displayWindowAgent.getWindowName();
-                                    const tdlFileName = displayWindowAgent.getTdlFileName();
-                                    displayWindowAgent.takeThumbnail(windowName, tdlFileName);
-                                }
-                            }
-                        }
-                    }
+                if (!(mainWindowAgent instanceof MainWindowAgent)) {
+                    return;
                 }
+                const selectedProfileName = this.getMainProcess().getProfiles().getSelectedProfileName();
+                mainWindowAgent?.sendFromMainProcess("after-profile-selected", {
+                    profileName: selectedProfileName
+                });
+
+                // if (mainProcessMode === "desktop") {
+                //     // update thumbnails immediately for desktop
+                //     const displayWindowAgents = windowAgentsManager.getAgents();
+                //     for (let displayWindowId of Object.keys(displayWindowAgents)) {
+                //         const displayWindowAgent = displayWindowAgents[displayWindowId];
+                //         // not main window
+                //         if (displayWindowAgent instanceof DisplayWindowAgent) {
+                //             // not pre-loaded display window
+                //             if (displayWindowAgent !== windowAgentsManager.preloadedDisplayWindowAgent) {
+                //                 // must be a display window, not embedded window: (-1, 0, 1, ..., 10000)
+                //                 const windowName = displayWindowAgent.getWindowName();
+                //                 const tdlFileName = displayWindowAgent.getTdlFileName();
+                //                 displayWindowAgent.takeThumbnail(windowName, tdlFileName);
+                //             }
+                //         }
+                //     }
+                // }
             }
         }
     };
@@ -2996,53 +2928,48 @@ export class IpcManagerOnMainProcess {
         }
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
-            const browserWindow = displayWindowAgent.getBrowserWindow();
-            if (browserWindow instanceof BrowserWindow) {
-                let fileName = fileName1;
+            const displayWindowFile = displayWindowAgent.getDisplayWindowFile();
+            const fileContent = JSON.stringify(data, null, 4);
+            const mainProcessMode = this.getMainProcess().getMainProcessMode();
 
-                if (fileName === "") {
-                    if (this.getMainProcess().getMainProcessMode() === "desktop") {
-                        fileName = dialog.showSaveDialogSync(browserWindow, {
-                            title: "Select a file to save to",
-                            filters: [
-                                {
-                                    name: "json",
-                                    extensions: ["json"],
-                                },
-                            ],
-                        });
-                    } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
-                        displayWindowAgent.sendFromMainProcess("dialog-show-input-box",
-                            {
-                                info: {
-                                    command: "data-viewer-export-data",
-                                    humanReadableMessages: ["Save file to"], // each string has a new line
-                                    buttons: [
-                                        {
-                                            text: "OK",
-                                        },
-                                        {
-                                            text: "Cancel",
-                                        }
-                                    ],
-                                    defaultInputText: "",
-                                    attachment: {
-                                        displayWindowId: displayWindowId,
-                                        data: data,
-                                        fileName1: fileName1,
-                                    }
-                                }
-                            }
-                        );
-                        return;
-                    }
+            if (mainProcessMode === "desktop") {
+                const failedReason = displayWindowFile.saveFileInDesktopMode("data-viewer", fileName1, fileContent);
+                if (failedReason !== "" && failedReason !== "No file selected") {
+                    Log.error("0", failedReason);
+                    displayWindowAgent.showError([failedReason]);
                 }
-                try {
-                    fs.writeFileSync(fileName, JSON.stringify(data, null, 4));
-                    Log.debug("0", "Successfully saved DataViewer data to", fileName);
-                } catch (e) {
-                    Log.error("0", `Cannot save DataViewer data to file ${fileName}`);
-                    displayWindowAgent.showError([`Cannot save DataViewer data to file ${fileName}`], [`${e}`]);
+                return;
+            }
+
+            if (mainProcessMode === "ssh-server") {
+                if (fileName1.trim() === "") {
+                    displayWindowAgent.sendFromMainProcess("dialog-show-input-box", {
+                        info: {
+                            command: "data-viewer-export-data",
+                            humanReadableMessages: ["Save file to"],
+                            buttons: [
+                                {
+                                    text: "OK",
+                                },
+                                {
+                                    text: "Cancel",
+                                }
+                            ],
+                            defaultInputText: "",
+                            attachment: {
+                                displayWindowId: displayWindowId,
+                                data: data,
+                                fileName1: fileName1,
+                            }
+                        }
+                    });
+                    return;
+                }
+
+                const failedReason = displayWindowFile.saveFileToPath(fileName1, fileContent);
+                if (failedReason !== "") {
+                    Log.error("0", failedReason);
+                    displayWindowAgent.showError([failedReason]);
                 }
             }
         }

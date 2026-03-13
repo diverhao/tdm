@@ -137,7 +137,7 @@ export type IpcEventArgType = {
     };
 
     "quit-tdm-process": {
-        confirmToQuit?: boolean
+        confirmToQuit: boolean
     }
 
     "websocket-ipc-connected-on-display-window": {
