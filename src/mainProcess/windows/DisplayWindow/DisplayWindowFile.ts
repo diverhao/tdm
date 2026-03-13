@@ -301,7 +301,92 @@ export class DisplayWindowFile {
         });
     }
 
-    
+    saveDataViewerData = (
+        options: IpcEventArgType["data-viewer-export-data"]
+    ) => {
+        let { fileName1, displayWindowId, data } = options;
+        if (fileName1 === undefined) {
+            fileName1 = "";
+        }
+        const displayWindowAgent = this.getDisplayWindowAgent();
+
+        const displayWindowFile = displayWindowAgent.getDisplayWindowFile();
+        const fileContent = JSON.stringify(data, null, 4);
+        displayWindowFile.saveFile(fileName1, fileContent, "data-viewer");
+    };
+
+    readFolder = (options: IpcEventArgType["fetch-folder-content"]) => {
+        const { displayWindowId, widgetKey, folderPath } = options;
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const mainProcess = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess();
+
+        // web mode: only the folders and their sub-folders explicitly defined in bookmarks can be visited
+        if (mainProcess.getMainProcessMode() === "web") {
+            const folderPath = options["folderPath"];
+            let allowToRead = false;
+            const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
+            if (selectedProfile !== undefined) {
+                const bookmarks = selectedProfile.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
+                if (bookmarks !== undefined) {
+                    for (const bookmark of bookmarks) {
+                        const bookmarkFolder = bookmark[0];
+                        if (typeof bookmarkFolder === "string") {
+                            if (folderPath.includes(bookmarkFolder)) {
+                                allowToRead = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (allowToRead === false) {
+                displayWindowAgent.showError([`You are not allowed to visit ${folderPath}.`]);
+                return;
+            }
+        }
+
+
+        try {
+            // read the folder
+            const rawResult = fs.readdirSync(folderPath);
+            const result: {
+                name: string, // only the name
+                type: "file" | "folder",
+                size: number,
+                timeModified: number,
+            }[] = [];
+            for (const name of rawResult) {
+                const fullPath = path.join(folderPath, name);
+                const stats = fs.statSync(fullPath);
+                const type = stats.isDirectory() ? "folder" : "file";
+                const size = stats.size; // byte
+                const timeModified = stats.mtime; // Date 
+                result.push({
+                    name: name,
+                    type: type,
+                    size: size,
+                    timeModified: timeModified.getTime(),
+                });
+            }
+            // send back
+            displayWindowAgent.sendFromMainProcess("fetch-folder-content", {
+                widgetKey: widgetKey,
+                folderContent: result,
+            })
+        } catch (e) {
+            Log.error("0", `File Browser -- Failed to read folder ${options["folderPath"]}`);
+            displayWindowAgent.showError([`Failed to read folder ${options["folderPath"]}.`]);
+            // let 
+            displayWindowAgent.sendFromMainProcess("fetch-folder-content", {
+                widgetKey: options["widgetKey"],
+                folderContent: [],
+                success: false,
+            })
+        }
+    }
+
+
+
     // ------------------- getters -----------------
 
     getDisplayWindowAgent = () => {

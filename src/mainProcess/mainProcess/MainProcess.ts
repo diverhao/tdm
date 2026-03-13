@@ -22,6 +22,9 @@ import * as fs from "fs";
 import { LocalFontsReader } from "../file/LocalFontsReader";
 import { openTdlFileAsRequestedByAnotherInstance } from "../global/GlobalMethods";
 import { spawn } from "child_process";
+import pidusage from "pidusage";
+import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
+import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 
 /**
  * Represents a main process.
@@ -604,6 +607,87 @@ export class MainProcess {
                 this.quit()
             }
         }
+    }
+
+
+    getRuntimeInfo = async (data: IpcEventArgType["processes-info"]) => {
+        const processesInfo: {
+            "Type": string;
+            "Window ID": string;
+            "Visible": string;
+            "TDL file name": string;
+            "Window name": string;
+            "Editable": string;
+            "Uptime [second]": number;
+            "Process ID": number;
+            "CPU usage [%]": number;
+            "Memory usage [MB]": number;
+            "Thumbnail": string;
+            "Script": string;
+            "Script PID": string;
+        }[] = [];
+
+        /**
+         * the CPU usage for the process in electron.js is not correct
+         * 
+         * the memory usage given in electron.js process API is the compressed memory. 
+         * at least in macos, the memory usage given by pidUsage is uncompressed, which is more than twice the size of compressed memory.
+         * the pidUsage's memroy is consistent with ps and htop. So we choose to use its result.
+         * 
+         * uptime in both electron process API and pidUsage is correct
+         * 
+         * Conclusion: use pidUsage in both main and renderer processes for consistency
+         */
+        const mainProcessUsage = await new Promise<{
+            "CPU usage [%]": number,
+            "Memory usage [MB]": number,
+            "Uptime [s]": number,
+        }>((resolve, reject) => {
+            pidusage(process.pid, (err: any, stats: any) => {
+                if (err) {
+                    resolve({
+                        "CPU usage [%]": -1,
+                        "Memory usage [MB]": -1,
+                        "Uptime [s]": -1,
+                    });
+                } else {
+                    resolve({
+                        "CPU usage [%]": stats["cpu"],
+                        "Memory usage [MB]": Math.round(stats["memory"] / 1024 / 1024),
+                        "Uptime [s]": Math.round(stats["elapsed"] / 1000),
+                    })
+                }
+            })
+        })
+
+        const mainProcessInfo = {
+            "Type": "Main Process",
+            "Window ID": "Not available",
+            "Visible": "No",
+            "TDL file name": "Not available",
+            "Window name": "Not available",
+            "Editable": "No",
+            "Uptime [second]": mainProcessUsage["Uptime [s]"],
+            "Process ID": process.pid,
+            "CPU usage [%]": mainProcessUsage["CPU usage [%]"],
+            "Memory usage [MB]": mainProcessUsage["Memory usage [MB]"],
+            "Thumbnail": "",
+            "Script": "",
+            "Script PID": "N/A",
+        }
+
+        processesInfo.push(mainProcessInfo);
+
+        // get display windows info
+        for (let windowAgent of Object.values(this.getWindowAgentsManager().getAgents())) {
+            if ((windowAgent instanceof DisplayWindowAgent) || (windowAgent instanceof MainWindowAgent)) {
+                const processInfo = await windowAgent.getProcessInfo(data["withThumbnail"]);
+                processesInfo.push(processInfo);
+            }
+        }
+
+        return processesInfo;
+
     }
 
 

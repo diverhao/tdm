@@ -2352,93 +2352,91 @@ export class IpcManagerOnMainProcess {
     // -------------------- embedded display events ----------------------
 
     /**
-     * (1) create display window agent
+     * do not show any error message in display window
      */
-    handleObtainIframeUuid = (event: WebSocket | string, options: IpcEventArgType["obtain-iframe-uuid"],) => {
+    handleObtainIframeUuid = async (event: WebSocket | string, options: IpcEventArgType["obtain-iframe-uuid"],) => {
 
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
 
-        if (options["tdl"] === undefined) {
-
-            FileReader.readTdlFile(options["tdlFileName"], selectedProfile, options["currentTdlFolder"]).then((tdlFileResult) => {
-                if (tdlFileResult !== undefined) {
-                    const tdl = tdlFileResult.tdl;
-                    // do not block (await)
-                    this.getMainProcess().getWindowAgentsManager().createIframeDisplay(
-                        {
-                            tdl: tdl,
-                            mode: options["mode"],
-                            editable: false,
-                            // tdlFileName: options["tdlFileName"],
-                            tdlFileName: tdlFileResult["fullTdlFileName"],
-                            macros: options["macros"],
-                            replaceMacros: options["replaceMacros"],
-                            hide: false,
-                            utilityType: undefined,
-                            utilityOptions: undefined,
-                        },
-                        options["widgetKey"],
-                        options["displayWindowId"]
-                    );
+        let { tdl, tdlFileName, currentTdlFolder, mode, macros, replaceMacros, displayWindowId, widgetKey } = options;
+        if (tdl === undefined) {
+            try {
+                const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder);
+                if (tdlResult === undefined) {
+                    Log.error(`Cannot read file ${tdlFileName}`);
+                    return;
+                } else {
+                    ({ tdl, fullTdlFileName: tdlFileName } = tdlResult);
                 }
-            });
-        } else {
-            const tdl = options["tdl"];
+            } catch (e) {
+                Log.error(`Cannot read file ${tdlFileName}`, e);
+                return;
+            }
+        }
+
+        this.getMainProcess().getWindowAgentsManager().createIframeDisplay(
+            {
+                tdl: tdl,
+                mode: mode,
+                editable: false,
+                tdlFileName: tdlFileName,
+                macros: macros,
+                replaceMacros: replaceMacros,
+                hide: false,
+                utilityType: undefined,
+                utilityOptions: undefined,
+            },
+            widgetKey,
+            displayWindowId,
+        );
+    };
+
+    handleSwitchIframeDisplayTab = async (event: WebSocket | string, options: IpcEventArgType["switch-iframe-display-tab"],) => {
+        Log.debug("0", "try to obtain iframe uuid");
+        let { mode, tdlFileName, macros, displayWindowId, widgetKey, currentTdlFolder } = options;
+        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        try {
+            const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder);
+            if (tdlResult === undefined) {
+                Log.error("0", `Cannot read file ${tdlFileName}`);
+                return;
+            }
+            const { tdl, fullTdlFileName } = tdlResult;
+
+            // do not block (await)
             this.getMainProcess().getWindowAgentsManager().createIframeDisplay(
                 {
                     tdl: tdl,
                     mode: options["mode"],
                     editable: false,
-                    tdlFileName: options["tdlFileName"],
-                    macros: options["macros"],
-                    replaceMacros: options["replaceMacros"],
+                    tdlFileName: fullTdlFileName,
+                    macros: macros,
+                    replaceMacros: false,
                     hide: false,
                     utilityType: undefined,
                     utilityOptions: undefined,
                 },
-                options["widgetKey"],
-                options["displayWindowId"]
+                widgetKey,
+                displayWindowId
             );
+        } catch (e) {
+            Log.error("0", `Failed to switch iframe display tab for widget ${widgetKey} in display window ${displayWindowId} using TDL ${tdlFileName}.`, e);
+            // we are not really closing the display window, just closing the iframe's window agent
+            const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["iframeDisplayId"]);
+            if (displayWindowAgent instanceof DisplayWindowAgent) {
+                displayWindowAgent.handleWindowClosed();
+            } else {
+                Log.error(`Cannot find iframe display window ${options["iframeDisplayId"]} after switch-iframe-display-tab failure.`);
+            }
         }
-    };
-
-    handleSwitchIframeDisplayTab = (event: WebSocket | string, options: IpcEventArgType["switch-iframe-display-tab"],) => {
-        Log.debug("0", "try to obtain iframe uuid");
-        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-        FileReader.readTdlFile(options["tdlFileName"], selectedProfile, options["currentTdlFolder"])
-            .then((tdlFileResult) => {
-                if (tdlFileResult !== undefined) {
-                    const tdl = tdlFileResult.tdl;
-                    // do not block (await)
-                    this.getMainProcess().getWindowAgentsManager().createIframeDisplay(
-                        {
-                            tdl: tdl,
-                            mode: options["mode"],
-                            editable: false,
-                            tdlFileName: tdlFileResult["fullTdlFileName"],
-                            macros: options["macros"],
-                            replaceMacros: false,
-                            hide: false,
-                            utilityType: undefined,
-                            utilityOptions: undefined,
-                        },
-                        options["widgetKey"],
-                        options["displayWindowId"]
-                    );
-                }
-            })
-            .finally(() => {
-                const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["iframeDisplayId"]);
-                if (displayWindowAgent instanceof DisplayWindowAgent) {
-                    displayWindowAgent.handleWindowClosed();
-                }
-            });
     };
 
     handleCloseIframeDisplay = (event: WebSocket | string, options: IpcEventArgType["close-iframe-display"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             displayWindowAgent.handleWindowClosed();
+        } else {
+            Log.error(`Cannot find iframe display window ${options["displayWindowId"]} to close.`);
         }
     };
 
@@ -2508,142 +2506,20 @@ export class IpcManagerOnMainProcess {
         event: WebSocket | string,
         options: IpcEventArgType["data-viewer-export-data"]
     ) => {
-        let { fileName1, displayWindowId, data } = options;
-        if (fileName1 === undefined) {
-            fileName1 = "";
-        }
+        let { displayWindowId } = options;
+
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
             Log.error(`Cannot find window agent for ${displayWindowId}`)
             return;
         }
-
-        const displayWindowFile = displayWindowAgent.getDisplayWindowFile();
-        const fileContent = JSON.stringify(data, null, 4);
-        const mainProcessMode = this.getMainProcess().getMainProcessMode();
-
-        displayWindowFile.saveFile(fileName1, fileContent, "data-viewer");
-
-        // if (mainProcessMode === "desktop") {
-        //     const failedReason = displayWindowFile.saveFileInDesktopMode("data-viewer", fileName1, fileContent);
-        //     if (failedReason !== "" && failedReason !== "No file selected") {
-        //         Log.error("0", failedReason);
-        //         displayWindowAgent.showError([failedReason]);
-        //     }
-        //     return;
-        // }
-
-        // if (mainProcessMode === "ssh-server") {
-        //     if (fileName1.trim() === "") {
-        //         displayWindowAgent.sendFromMainProcess("dialog-show-input-box", {
-        //             info: {
-        //                 command: "data-viewer-export-data",
-        //                 humanReadableMessages: ["Save file to"],
-        //                 buttons: [
-        //                     {
-        //                         text: "OK",
-        //                     },
-        //                     {
-        //                         text: "Cancel",
-        //                     }
-        //                 ],
-        //                 defaultInputText: "",
-        //                 attachment: {
-        //                     displayWindowId: displayWindowId,
-        //                     data: data,
-        //                     fileName1: fileName1,
-        //                 }
-        //             }
-        //         });
-        //         return;
-        //     }
-
-        //     const failedReason = displayWindowFile.saveFileToPath(fileName1, fileContent);
-        //     if (failedReason !== "") {
-        //         Log.error("0", failedReason);
-        //         displayWindowAgent.showError([failedReason]);
-        //     }
-
-        // }
+        displayWindowAgent.getDisplayWindowFile().saveDataViewerData(options);
     };
 
     handleProcessesInfo = async (event: WebSocket | string, data: IpcEventArgType["processes-info"]) => {
-        const processesInfo: {
-            "Type": string;
-            "Window ID": string;
-            "Visible": string;
-            "TDL file name": string;
-            "Window name": string;
-            "Editable": string;
-            "Uptime [second]": number;
-            "Process ID": number;
-            "CPU usage [%]": number;
-            "Memory usage [MB]": number;
-            "Thumbnail": string;
-            "Script": string;
-            "Script PID": string;
-        }[] = [];
+        const processesInfo = await this.getMainProcess().getRuntimeInfo(data);
 
-        /**
-         * the CPU usage for the process in electron.js is not correct
-         * 
-         * the memory usage given in electron.js process API is the compressed memory. 
-         * at least in macos, the memory usage given by pidUsage is uncompressed, which is more than twice the size of compressed memory.
-         * the pidUsage's memroy is consistent with ps and htop. So we choose to use its result.
-         * 
-         * uptime in both electron process API and pidUsage is correct
-         * 
-         * Conclusion: use pidUsage in both main and renderer processes for consistency
-         */
-        const mainProcessUsage = await new Promise<{
-            "CPU usage [%]": number,
-            "Memory usage [MB]": number,
-            "Uptime [s]": number,
-        }>((resolve, reject) => {
-            pidusage(process.pid, (err: any, stats: any) => {
-                if (err) {
-                    resolve({
-                        "CPU usage [%]": -1,
-                        "Memory usage [MB]": -1,
-                        "Uptime [s]": -1,
-                    });
-                } else {
-                    resolve({
-                        "CPU usage [%]": stats["cpu"],
-                        "Memory usage [MB]": Math.round(stats["memory"] / 1024 / 1024),
-                        "Uptime [s]": Math.round(stats["elapsed"] / 1000),
-                    })
-                }
-            })
-        })
-
-        const mainProcessInfo = {
-            "Type": "Main Process",
-            "Window ID": "Not available",
-            "Visible": "No",
-            "TDL file name": "Not available",
-            "Window name": "Not available",
-            "Editable": "No",
-            "Uptime [second]": mainProcessUsage["Uptime [s]"],
-            "Process ID": process.pid,
-            "CPU usage [%]": mainProcessUsage["CPU usage [%]"],
-            "Memory usage [MB]": mainProcessUsage["Memory usage [MB]"],
-            "Thumbnail": "",
-            "Script": "",
-            "Script PID": "N/A",
-        }
-
-        processesInfo.push(mainProcessInfo);
-
-        // get display windows info
-        for (let windowAgent of Object.values(this.getMainProcess().getWindowAgentsManager().getAgents())) {
-            if ((windowAgent instanceof DisplayWindowAgent) || (windowAgent instanceof MainWindowAgent)) {
-                const processInfo = await windowAgent.getProcessInfo(data["withThumbnail"]);
-                processesInfo.push(processInfo);
-            }
-        }
-
-        // send back to the window
+        // send back 
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             displayWindowAgent.sendFromMainProcess("processes-info", {
@@ -2657,19 +2533,20 @@ export class IpcManagerOnMainProcess {
 
         const channelAgentsManager = this.getMainProcess().getChannelAgentsManager();
         const epicsContext = channelAgentsManager.getContext();
-        if (epicsContext !== undefined) {
-            const epicsStats = channelAgentsManager.generateEpicsStats();
-
-            const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
-            if (displayWindowAgent instanceof DisplayWindowAgent) {
-                displayWindowAgent.sendFromMainProcess("epics-stats", {
-                    widgetKey: data["widgetKey"],
-                    epicsStats: epicsStats as any,
-                });
-            }
-
+        if (epicsContext === undefined) {
+            Log.error("0", "EPICS context not initialized");
+            return;
         }
 
+        const epicsStats = channelAgentsManager.generateEpicsStats();
+
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            displayWindowAgent.sendFromMainProcess("epics-stats", {
+                widgetKey: data["widgetKey"],
+                epicsStats: epicsStats as any,
+            });
+        }
     }
 
     handleCaSnooperCommand = (event: WebSocket | string, options: IpcEventArgType["ca-snooper-command"]) => {
@@ -2714,80 +2591,13 @@ export class IpcManagerOnMainProcess {
 
     handleFetchFolderContent = (event: WebSocket | string, options: IpcEventArgType["fetch-folder-content"]) => {
 
-        // web mode: only the folders and their sub-folders explicitly defined in bookmarks can be visited
-        if (this.getMainProcess().getMainProcessMode() === "web") {
-            const folderPath = options["folderPath"];
-            let allowToRead = false;
-            const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-            if (selectedProfile !== undefined) {
-                const bookmarks = selectedProfile.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
-                if (bookmarks !== undefined) {
-                    for (const bookmark of bookmarks) {
-                        const bookmarkFolder = bookmark[0];
-                        if (typeof bookmarkFolder === "string") {
-                            if (folderPath.includes(bookmarkFolder)) {
-                                allowToRead = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            if (allowToRead === false) {
-                const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
-                if (displayWindowAgent instanceof DisplayWindowAgent) {
-                    displayWindowAgent.showError([`You are not allowed to visit ${folderPath}.`]);
-                }
-                return;
-            }
+        const { displayWindowId } = options;
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            displayWindowAgent.getDisplayWindowFile().readFolder(options);
+        } else {
+            Log.error(`No such display window ${displayWindowId}. Cancel reading folder content.`);
         }
-
-
-        try {
-            // read the folder
-            const folderPath = options["folderPath"];
-            const rawResult = fs.readdirSync(folderPath);
-            const result: {
-                name: string, // only the name
-                type: "file" | "folder",
-                size: number,
-                timeModified: number,
-            }[] = [];
-            for (const name of rawResult) {
-                const fullPath = path.join(folderPath, name);
-                const stats = fs.statSync(fullPath);
-                const type = stats.isDirectory() ? "folder" : "file";
-                const size = stats.size; // byte
-                const timeModified = stats.mtime; // Date 
-                result.push({
-                    name: name,
-                    type: type,
-                    size: size,
-                    timeModified: timeModified.getTime(),
-                });
-            }
-            // send back
-            const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
-            if (displayWindowAgent instanceof DisplayWindowAgent) {
-                displayWindowAgent.sendFromMainProcess("fetch-folder-content", {
-                    widgetKey: options["widgetKey"],
-                    folderContent: result,
-                })
-            }
-        } catch (e) {
-            Log.error("0", `File Browser -- Failed to read folder ${options["folderPath"]}`);
-            const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
-            if (displayWindowAgent instanceof DisplayWindowAgent) {
-                displayWindowAgent.showError([`Failed to read folder ${options["folderPath"]}.`]);
-                // let 
-                displayWindowAgent.sendFromMainProcess("fetch-folder-content", {
-                    widgetKey: options["widgetKey"],
-                    folderContent: [],
-                    success: false,
-                })
-            }
-        }
-
     }
 
     handleFileBrowserCommand = (event: WebSocket | string, message: IpcEventArgType["file-browser-command"]) => {
@@ -3097,9 +2907,11 @@ export class IpcManagerOnMainProcess {
                 displayWindowAgent.takeScreenshotToClipboard();
             } else if (options["destination"] === "folder") {
                 displayWindowAgent.takeScreenshotToFolder();
+            } else {
+                Log.error(`Unsupported screenshot destination ${options["destination"]} for display window ${options["displayWindowId"]}. Cancel taking screenshot.`);
             }
         } else {
-
+            Log.error(`No such display window ${options["displayWindowId"]}. Cancel taking screenshot.`);
         }
     }
 
