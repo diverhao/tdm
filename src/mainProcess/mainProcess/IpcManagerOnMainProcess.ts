@@ -10,7 +10,6 @@ import { Log } from "../../common/Log";
 import { type_sshServerConfig } from "./SshClient";
 import * as os from "os";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
-import pidusage from "pidusage";
 import { spawn } from "child_process";
 import { Environment } from "epics-tca";
 import { IpcEventArgType, type_DialogMessageBox } from "../../common/IpcEventArgType";
@@ -2242,63 +2241,15 @@ export class IpcManagerOnMainProcess {
 
         const displayWindowId = options["displayWindowId"];
         if (displayWindowId === undefined) {
+            Log.error("select-a-file request missing displayWindowId. Cancel selecting file.");
             return;
         }
+
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId) as DisplayWindowAgent;
-        let fileNames: string[] | undefined = undefined;
-        if (fileName1 !== "") {
-            fileNames = [fileName1];
-        } else if (fileName1 === "") {
-            if (this.getMainProcess().getMainProcessMode() === "desktop") {
-                const fileFilters = options["filterType"] === "tdl"
-                    ? [{ name: "tdl", extensions: ["tdl", "edl", "stp", "bob", "db", "template"] }]
-                    : options["filterType"] === "media"
-                        ? [{ name: "media", extensions: ["jpg", "jpeg", "png", "gif", "svg", "bmp", "pdf", "mp4", "ogg", "webm", "mp3", "mov"] }]
-                        : options["filterType"] === "script"
-                            ? [{ name: "script", extensions: ["py", "js"] }]
-                            : options["filterType"] === "file-converter"
-                                ? [{ name: "EDM Files", extensions: ["edl"] }]
-                                : [{ name: "picture", extensions: ["jpg", "jpeg", "png", "gif", "svg", "bmp"] }];
-                // default to open file
-                let properties = options["properties"] === undefined ? ["openFile"] : options["properties"];
-                // ! linux cannot select any file if properties is set, if it is not set, we cannot select folder
-                // ! file-converter is the only
-                if (options["filterType"] === "file-converter" && os.platform() === "linux") {
-                    properties = undefined;
-                }
-                fileNames = dialog.showOpenDialogSync({
-                    title: "Select a file",
-                    filters: fileFilters,
-                    properties: properties,
-                });
-            } else if (this.getMainProcess().getMainProcessMode() === "ssh-server" || this.getMainProcess().getMainProcessMode() === "web") {
-                displayWindowAgent.sendFromMainProcess("dialog-show-input-box", {
-                    info: {
-                        command: "select-a-file",
-                        humanReadableMessages: ["Select a file"], // each string has a new line
-                        buttons: [
-                            {
-                                text: "OK",
-                            },
-                            {
-                                text: "Cancel",
-                            }
-                        ],
-                        defaultInputText: "",
-                        attachment: options
-                    }
-                })
-                return;
-            }
-        }
-        if (fileNames !== undefined) {
-            const fileName = fileNames[0];
-            if (fileName !== undefined) {
-                // bounce back options
-                displayWindowAgent.sendFromMainProcess("select-a-file", {
-                    options, fileName
-                });
-            }
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            displayWindowAgent.getDisplayWindowFile().selectAFile(data);
+        } else {
+            Log.error(`No such display window ${displayWindowId}. Cancel selecting file.`);
         }
     };
 

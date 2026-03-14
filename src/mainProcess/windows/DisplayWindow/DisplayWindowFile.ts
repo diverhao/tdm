@@ -1,11 +1,12 @@
-import { IpcEventArgType, type_fileType } from "../../../common/IpcEventArgType";
+import { IpcEventArgType } from "../../../common/IpcEventArgType";
 import * as fs from "fs";
 import { dialog } from "electron";
 import path from "path";
 import { Log } from "../../../common/Log";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
 import { FileReader } from "../../file/FileReader";
-import { fileDialogOptionsByType } from "../../../common/types/type_Files";
+import { fileDialogOptionsByType, isOfFileType, type_fileType } from "../../../common/types/type_Files";
+import * as os from "os";
 
 const fileSizeLimit = 1024 * 1024 * 20;
 
@@ -384,6 +385,29 @@ export class DisplayWindowFile {
             })
         }
     }
+
+
+    selectAFile = async (data: IpcEventArgType["select-a-file"]) => {
+        let { options, fileName1, } = data;
+        if (fileName1 === undefined) {
+            fileName1 = "";
+        }
+        const displayWindowAgent = this.getDisplayWindowAgent();
+
+        const fileType = options["filterType"];
+        if (!isOfFileType(fileType)) {
+            displayWindowAgent.showError([`Invalid filter type: ${fileType}`])
+            return;
+        }
+        const fileName = await this.selectFile(fileType);
+        if (fileName === undefined) {
+            // do not show error message on display window, the user may just canceled it
+        } else {
+            displayWindowAgent.sendFromMainProcess("select-a-file", {
+                options, fileName
+            });
+        }
+    };
 
 
 

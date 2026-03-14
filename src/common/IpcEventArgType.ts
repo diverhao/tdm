@@ -6,6 +6,7 @@ import { type_pva_value } from "./GlobalVariables";
 import { Channel_DBR_TYPES, type_dbrData } from "./GlobalVariables";
 import { type_LocalChannel_data } from "./GlobalVariables";
 import { type_tdl } from "./GlobalVariables";
+import { type_fileType } from "./types/type_Files";
 
 
 /**
@@ -32,9 +33,6 @@ export type type_args = {
     httpServerPort: number;
     site: string;
 };
-
-// types of files that we can open
-export type type_fileType = "tdl" | "data-viewer" | "text";
 
 export type type_about_info = {
     "Authors": string[],
