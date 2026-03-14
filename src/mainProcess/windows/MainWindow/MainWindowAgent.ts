@@ -2,6 +2,7 @@ import { WebContents, BrowserWindow } from "electron";
 import { WindowAgentsManager } from "../WindowAgentsManager";
 import { IpcEventArgType3 } from "../../../common/IpcEventArgType";
 import { MainWindowIpc } from "./MainWindowIpc";
+import { MainWindowFile } from "./MainWindowFile";
 import { MainWindowLifeCycleManager } from "./MainWindowLifeCycleManager";
 import { MainWindowUtilities } from "./MainWindowUtilities";
 
@@ -14,6 +15,7 @@ export class MainWindowAgent {
     private _id: string = "";
     private _windowAgentsManager: WindowAgentsManager;
     private readonly _mainWindowIpc: MainWindowIpc;
+    private readonly _mainWindowFile: MainWindowFile;
     private readonly _mainWindowLifeCycleManager: MainWindowLifeCycleManager;
     private readonly _mainWindowUtilities: MainWindowUtilities;
 
@@ -21,6 +23,7 @@ export class MainWindowAgent {
         this._windowAgentsManager = windowAgentsManager;
         this._id = "0";
         this._mainWindowIpc = new MainWindowIpc(this);
+        this._mainWindowFile = new MainWindowFile(this);
         this._mainWindowLifeCycleManager = new MainWindowLifeCycleManager(this);
         this._mainWindowUtilities = new MainWindowUtilities(this);
     }
@@ -219,6 +222,10 @@ export class MainWindowAgent {
 
     getMainWindowIpc = () => {
         return this._mainWindowIpc;
+    };
+
+    getMainWindowFile = () => {
+        return this._mainWindowFile;
     };
 
     getMainWindowLifeCycleManager = () => {

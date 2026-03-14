@@ -1,4 +1,4 @@
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
+import { IpcEventArgType, type_DialogMessageBox } from "../../../common/IpcEventArgType";
 import * as fs from "fs";
 import { dialog } from "electron";
 import path from "path";
@@ -246,6 +246,111 @@ export class DisplayWindowFile {
     }
 
     // --------------------- event handlers -----------------------
+
+    /**
+     * Open one or more TDL files, create Display Window for each TDL file.
+     * 
+     * A TDL file may be .tdl, .db, .bob, .edl, .stp, and .template
+     * 
+     *  - for desktop mode, it create an electron.js BrowserWindow (or replace the preloaded BrowserWindow)
+     *  - for web mode, it opens new tab for the first tdl file
+     * 
+     * There are 4 cases depending on parameters `tdl` and `tdlFileNames`
+     * 
+     *  (1) if `tdl` is defined, open the new display window with this tdl content
+     * 
+     *  (2) if `tdlFileNames` is undefined, show file open prompt, let the user select one or more
+     *    TDL files to open
+     * 
+     *  (3) if `tdlFileNames` is an empty array, create a blank display window, with editing mode
+     * 
+     *  (4) if `tdlFileNames` is a non-empty string array, the strings are considered as TDL file names
+     *    open each one in separate Display Window
+     * 
+     * @param tdl the JSON object that represents the TDL
+     * 
+     * @param tdlFileNames undefined or string array, TDL file names, can be absolute or relative
+     * 
+     * @param mode editing or operating
+     * 
+     * @param editable if the display is editable
+     * 
+     * @param macros the externally provided macros, it will append to the profile-provided macros
+     *               but it may be overridden by the TDL-provided macros
+     * 
+     * @param replaceMacros whether to replace the macros 
+     * 
+     * @param currentTdlFolder a folder that is used for resolving the TDL file absolute path
+     *                         it has the highest priority in TDL path resolution
+     * 
+     * @param windowId the window ID that initiated this TDL file open
+     * 
+     * @param sendContentsToWindow whether to send file back to display window, only used by .db 
+     */
+    openTdlFiles = async (data: IpcEventArgType["open-tdl-file"]) => {
+        const { options } = data;
+        let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = options;
+        const mainProcess = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess();
+        const windowAgentsManager = mainProcess.getWindowAgentsManager();
+        const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
+        if (selectedProfile === undefined) {
+            Log.error("Profile not selected!");
+            return;
+        }
+
+        const windowAgent = this.getDisplayWindowAgent();
+
+        try {
+            if (tdl !== undefined) { // the tdl content is provided, skip reading files from hard drive, available in all modes
+                // (1)
+                const tdlFileName = tdlFileNames === undefined ? "" : tdlFileNames[0];
+                windowAgentsManager.createDisplayWindow(
+                    {
+                        tdl: tdl,
+                        mode: mode,
+                        editable: editable,
+                        tdlFileName: tdlFileName,
+                        macros: macros,
+                        replaceMacros: replaceMacros,
+                        hide: false,
+                        windowId: windowId,
+                    },
+                );
+            } else if (tdlFileNames === undefined) { // manually select the file, only available in desktop mode
+                // (2)
+                let defaultPath = "";
+                if (currentTdlFolder !== undefined && fs.existsSync(currentTdlFolder)) {
+                    defaultPath = currentTdlFolder;
+                }
+                // modify tdlFileNames to a string array
+
+                const tdlFileName = await this.selectFile("tdl");
+                if (tdlFileName === undefined) {
+                    Log.error("No TDL file selected.");
+                    return;
+                }
+
+                // the manually opened TDL file's editing permission and its mode are determined by Profile
+                editable = selectedProfile.getEditable();
+                mode = selectedProfile.getManuallyOpenedTdlMode();
+                if (mode === "editing") {
+                    editable = true;
+                }
+
+                windowAgentsManager.createDisplayWindows([tdlFileName], mode, editable, options["macros"], options["currentTdlFolder"], windowId);
+
+            } else if (tdlFileNames.length === 0) { // create a blank window, available in all modes
+                // (3)
+                windowAgentsManager.createBlankDisplayWindow(options["windowId"]);
+            } else if (tdlFileNames.length > 0) { // open all the files, available in all modes
+                // (4)
+                windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, options["macros"], options["currentTdlFolder"], windowId);
+            }
+        } catch (e) {
+            Log.error(e);
+            windowAgent.showError([`Failed to open file ${tdlFileNames}`], [`${e}`]);
+        }
+    };
 
     private sendFileConverterFinished = (widgetKey: string, status: "success" | "failed") => {
         this.getDisplayWindowAgent().sendFromMainProcess("file-converter-command", {

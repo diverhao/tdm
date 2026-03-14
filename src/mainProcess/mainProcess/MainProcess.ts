@@ -692,6 +692,223 @@ export class MainProcess {
     }
 
 
+
+    /**
+     * Invoked upon the profile is selected. <br>
+     *
+     * In desktop mode, this method is invoked by "profile-selected" event. In web mode, this method is invoked by
+     * /command/profile-selected POST request.
+     * 
+     * The profile may be a local profile or a ssh configuration <br>
+     *
+     * (1) set the selected profile name in Profiles object <br>
+     *
+     * (2) create ChannelAgentsManger and CA Context according to the selected profile info, set the channel agent manager variable in main process object <br>
+     *
+     * (3) open default display windows in this profile <br>
+     *
+     * (4) create preloaded display window and preloaded embedded display <br>
+     *
+     * (4) refresh main window contents to run mode
+     *
+     * @param {string} selectedProfileName The profile name
+     *
+     * @param {string} args The command line arguments. We can select the profile from command line.
+     */
+    initializeFromProfile = async (profileName: string, args: type_args | undefined): Promise<any> => {
+
+        const mainProcess = this;
+        const mainProcessMode = mainProcess.getMainProcessMode();
+        const profiles = mainProcess.getProfiles();
+        const windowAgentsManager = mainProcess.getWindowAgentsManager();
+
+        profiles.setSelectedProfileName(profileName);
+        const selectedProfile = profiles.getSelectedProfile();
+        if (selectedProfile === undefined) {
+            return;
+        }
+        Log.info("Main process for", mainProcessMode, "mode started. Profile is", profileName);
+
+
+        // todo: what is this?
+        // select to run a new process as ssh-client mode, it can only be started from desktop mode
+        if (mainProcessMode === "desktop" && selectedProfile.isSshConfig()) {
+
+            // connect to remote
+            // const mainProcesses = this.getMainProcess().getMainProcesses();
+            const sshConfigRaw = selectedProfile.getCategory("SSH Configuration");
+            const sshServerConfig: type_sshServerConfig = {
+                ip: sshConfigRaw["Host Name/IP Address"]["value"],
+                port: parseInt(sshConfigRaw["Port"]["value"]),
+                userName: sshConfigRaw["User Name"]["value"],
+                privateKeyFile: sshConfigRaw["Private Key File"]["value"],
+                tdmCommand: sshConfigRaw["TDM Command"]["value"],
+            };
+            Log.info("We are going to run a new process on remote ssh using config", sshServerConfig)
+
+            if (typeof sshServerConfig.ip === "string" && !isNaN(sshServerConfig.port) && typeof sshServerConfig.userName === "string" && typeof sshServerConfig.privateKeyFile === "string") {
+                // const callingProcessId = this.getMainProcess().getMain();
+                const callingProcessId = "0";
+                const args = this.getRawArgs();
+                new MainProcess(args, undefined, "ssh-client", { ...sshServerConfig, callingProcessId: callingProcessId });
+            } else {
+                Log.error("Profiles file error: Cannot create main process for ssh config", profileName);
+            }
+        } else if (mainProcessMode === "web") {
+
+            // create epcis-tca CA and PVA context
+            // do not open default wind
+            await mainProcess.getChannelAgentsManager().createAndInitContext();
+
+        } else if (mainProcessMode === "desktop") {
+
+            /**
+             * (1) create epics-tca CA and PVA context 
+             * 
+             * (2) create SQL
+             * 
+             * (3) open default TDL files
+             * 
+             * (4) prepare main window, i.e. change title, telling main window to switch to run mode, etc
+             */
+
+            // (1)
+            await this.getChannelAgentsManager().createAndInitContext();
+            // (2)
+            this.createSql();
+
+            // (3)
+            let tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
+            let macros = selectedProfile.getMacros();
+            let currentTdlFolder: undefined | string = undefined;
+            if (args !== undefined) {
+                currentTdlFolder = args["cwd"] === "" ? undefined : args["cwd"];
+                if (args["alsoOpenDefaults"]) {
+                    tdlFileNames.push(...args["fileNames"]);
+                } else {
+                    tdlFileNames = args["fileNames"];
+                }
+
+                // args["macros"] overrides profile-defined macros
+                macros = [...args["macros"], ...macros];
+            }
+
+            const mode = selectedProfile.getMode() as "editing" | "operating";
+            const editable = selectedProfile.getEditable();
+            windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, currentTdlFolder, undefined);
+
+
+            /**
+             * (4) For Main Window in desktop mode:
+             * 
+             * (a) wait for the main window URL to be loaded
+             *     the event is emitted when the .loadURL() is done when creating the BrowserWindow in MainWindowAgent
+             * 
+             * (b) wait for the main window's websocket IPC established
+             *     the event is emitted when the websocket-ipc-connected is received in main process from main window
+             * 
+             * (c) change main window title with selected profile name
+             * 
+             * (d) tell main window to switch to run mode by sending "after-profile-selected" to main window
+             * 
+             * (e) create preview Display Window for File Browser, it is an invisible Display Window dedicated
+             *     for the File Browser utility window
+             */
+            const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
+            if (mainWindowAgent instanceof MainWindowAgent) {
+                // (a)
+                await mainWindowAgent.loadURLPromise;
+                // (b)
+                await mainWindowAgent.websocketIpcConnectedPromise;
+                // (c)
+                const oldTitle = mainWindowAgent.getTitle();
+                const newTitle = oldTitle + " -- " + profileName;
+                mainWindowAgent.setTitle(newTitle);
+                // (d)
+                mainWindowAgent.sendFromMainProcess("after-profile-selected", {
+                    profileName: profileName,
+                });
+                // (e)
+                windowAgentsManager.createPreviewDisplayWindow();
+            }
+        } else if (mainProcessMode === "ssh-server") {
+
+            /**
+             * (1) create epics-tca CA and PVA context 
+             * 
+             * (2) create SQL
+             * 
+             * (3) open default TDL files
+             * 
+             * (4) prepare main window, i.e. change title, telling main window to switch to run mode, etc
+             */
+
+            // (1)
+            await this.getChannelAgentsManager().createAndInitContext();
+            // (2)
+            this.createSql();
+
+            // (3)
+            let tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
+            let macros = selectedProfile.getMacros();
+            let currentTdlFolder: undefined | string = undefined;
+            if (args !== undefined) {
+                currentTdlFolder = args["cwd"] === "" ? undefined : args["cwd"];
+                if (args["alsoOpenDefaults"]) {
+                    tdlFileNames.push(...args["fileNames"]);
+                } else {
+                    tdlFileNames = args["fileNames"];
+                }
+
+                // args["macros"] overrides profile-defined macros
+                macros = [...args["macros"], ...macros];
+            }
+
+            const mode = selectedProfile.getMode() as "editing" | "operating";
+            const editable = selectedProfile.getEditable();
+            windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, currentTdlFolder, undefined);
+
+
+            /**
+             * (4) For Main Window in desktop mode:
+             * 
+             * (a) wait for the main window URL to be loaded
+             *     the event is emitted when the .loadURL() is done when creating the BrowserWindow in MainWindowAgent
+             * 
+             * (b) wait for the main window's websocket IPC established
+             *     the event is emitted when the websocket-ipc-connected is received in main process from main window
+             * 
+             * (c) change main window title with selected profile name
+             * 
+             * (d) tell main window to switch to run mode by sending "after-profile-selected" to main window
+             * 
+             * (e) create preview Display Window for File Browser, it is an invisible Display Window dedicated
+             *     for the File Browser utility window
+             */
+
+            const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
+            if (mainWindowAgent instanceof MainWindowAgent) {
+                // (a)
+                await mainWindowAgent.loadURLPromise;
+                // (b)
+                // the websocket is never connected in ssh server 
+                // await mainWindowAgent.websocketIpcConnectedPromise;
+                // (c)
+                const oldTitle = mainWindowAgent.getTitle();
+                const newTitle = oldTitle + " -- " + profileName;
+                mainWindowAgent.setTitle(newTitle);
+                // (d)
+                mainWindowAgent.sendFromMainProcess("after-profile-selected", {
+                    profileName: profileName,
+                });
+                // (e)
+                // do not create preview display window in ssh client
+                // windowAgentsManager.createPreviewDisplayWindow();
+            }
+        }
+    }
+
+
     // ------------------- getters and setters --------------------
 
     getMainProcessMode = () => {

@@ -460,7 +460,7 @@ export class IpcManagerOnMainProcess {
         if (resolve === undefined) {
             Log.error(`Display window ${displayWindowId} new TDL rendered with no pending resolver.`);
         } else {
-            resolve({windowName, tdlFileName});
+            resolve({ windowName, tdlFileName });
         }
     };
 
@@ -566,87 +566,11 @@ export class IpcManagerOnMainProcess {
      * Only invoked in main window in startup page.
      */
     handleOpenProfiles = async (event: WebSocket | string, options: IpcEventArgType["open-profiles"]) => {
-        let { profilesFileName1 } = options;
-        if (profilesFileName1 === undefined) {
-            profilesFileName1 = "";
-        }
         const mainWindowAgent = this.getMainProcess().getWindowAgentsManager().getMainWindowAgent();
         if (mainWindowAgent === undefined) {
             return;
         }
-        // open dialog and select file
-        let profilesFileName = profilesFileName1;
-        if (profilesFileName === "") {
-            if (this.getMainProcess().getMainProcessMode() === "desktop") {
-                try {
-                    const profilesFileNames = dialog.showOpenDialogSync({ title: "Open JSON file", filters: [{ name: "json", extensions: ["json"] }] });
-                    if (profilesFileNames === undefined) {
-                        // canceled
-                        return;
-                    }
-                    if (profilesFileNames.length !== 1) {
-                        mainWindowAgent.showError(["Only one file can be selected"]);
-                    } else {
-                        profilesFileName = profilesFileNames[0];
-                    }
-                } catch (e) {
-                    mainWindowAgent.showError([`${e}`]);
-                    return;
-                }
-            } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
-                mainWindowAgent.showInputBox({
-                    command: "open-profiles",
-                    humanReadableMessages: ["Open profiles file"], // each string has a new line
-                    buttons: [
-                        {
-                            text: "OK",
-                        },
-                        {
-                            text: "Cancel",
-                        }
-                    ],
-                    defaultInputText: "",
-                    // attachment: {}
-                });
-                return;
-            }
-        }
-        try {
-            const profiles = this.getMainProcess().getProfiles();
-            profiles.createProfiles(profilesFileName);
-
-            // we are manually loading a profiles file, so we need to update the log file
-            this.getMainProcess().enableLogToFile();
-
-            // read default and OS-defined EPICS environment variables
-            // in main window editing page, we need env default and env os
-            const env = Environment.getTempInstance();
-            let envDefault = env.getEnvDefault();
-            let envOs = env.getEnvOs();
-            if (typeof envOs !== "object") {
-                envOs = {};
-            }
-
-            if (typeof envDefault !== "object") {
-                envDefault = {};
-            }
-
-            const site = this.getMainProcess().getSite();
-
-            // tell main window to update
-            mainWindowAgent.sendFromMainProcess("after-main-window-gui-created",
-                {
-                    profiles: profiles.serialize(),
-                    profilesFileName: profilesFileName,
-                    envDefault: envDefault,
-                    envOs: envOs,
-                    logFileName: this.getMainProcess().getLogFileName(),
-                    site: site,
-                }
-            );
-        } catch (e) {
-            mainWindowAgent.showError([`${profilesFileName} is not a valid TDM profiles file, or it cannot be opened or created.`]);
-        }
+        await mainWindowAgent.getMainWindowFile().openProfiles(options);
     };
 
     /**
@@ -658,163 +582,21 @@ export class IpcManagerOnMainProcess {
      * @param {Record<string, any>} modifiedProfiles The JSON format profile
      * @returns {boolean} `true` if successfully save; `false` if failed.
      */
-    handleSaveProfiles = (event: WebSocket | string, options: IpcEventArgType["save-profiles"]): boolean => {
-        const profiles = this.getMainProcess().getProfiles();
-        let { filePath1, modifiedProfiles } = options;
-        if (filePath1 === undefined) {
-            filePath1 = "";
-        }
-        const mainProcessMode = this.getMainProcess().getMainProcessMode();
-        if (mainProcessMode === "web") {
-            // do not save to web server
-            return false;
-        }
-
-        let filePath: string | undefined = profiles.getFilePath();
-        if (filePath === "") {
-            // try the external file path
-            filePath = filePath1;
-        }
-        const mainWindowAgent = this.getMainProcess().getWindowAgentsManager().getMainWindowAgent()
-        if (mainWindowAgent === undefined) {
-            return false;
-        }
-        if (filePath === "") {
-            // save as
-            if (this.getMainProcess().getMainProcessMode() === "desktop") {
-                filePath = dialog.showSaveDialogSync({
-                    title: "Select a file to save to",
-                });
-                if (filePath === undefined) {
-                    Log.info("No Profiles file selected, cancel saving");
-                    return false;
-                }
-            } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
-
-                mainWindowAgent.showInputBox({
-                    command: "save-profiles",
-                    humanReadableMessages: ["Save profiles to"], // each string has a new line
-                    buttons: [
-                        {
-                            text: "OK",
-                        },
-                        {
-                            text: "Cancel",
-                        }
-                    ],
-                    defaultInputText: "",
-                    attachment: {
-                        modifiedProfiles: modifiedProfiles,
-                        filePath1: filePath1,
-                    }
-                });
-                return false;
-            }
-        }
-
-
-        try {
-            // save first
-            const profiles = this.getMainProcess().getProfiles();
-            profiles.updateProfiles(filePath, modifiedProfiles);
-            profiles.save();
-
-            // update log
-            this.getMainProcess().enableLogToFile();
-            // always tell main window the log file name, if the log file is not accessible, it is ""
-            mainWindowAgent.sendFromMainProcess("log-file-name",
-                {
-                    logFileName: this.getMainProcess().getLogFileName()
-                }
-            );
-        } catch (e) {
-            Log.error(e);
-            mainWindowAgent.sendFromMainProcess("dialog-show-message-box",
-                {
-                    info: {
-                        messageType: "error",
-                        humanReadableMessages: [`Error save file to ${filePath}.`],
-                        rawMessages: [],
-                    }
-                }
-            )
-
-            return false;
-        }
-        return true;
-    };
-
-    // create new Profiles object
-    handleSaveProfilesAs = (event: WebSocket | string, options: IpcEventArgType["save-profiles-as"]): boolean => {
-        let { filePath1, modifiedProfiles } = options;
-        if (filePath1 === undefined) {
-            filePath1 = "";
-        }
-        const mainProcessMode = this.getMainProcess().getMainProcessMode();
-        if (mainProcessMode === "web") {
-            // do not save to web server
-            return false;
-        }
-
+    handleSaveProfiles = async (event: WebSocket | string, options: IpcEventArgType["save-profiles"]): Promise<boolean> => {
         const mainWindowAgent = this.getMainProcess().getWindowAgentsManager().getMainWindowAgent();
         if (mainWindowAgent === undefined) {
             return false;
         }
-        let filePath = filePath1;
-        if (filePath1 === "") {
-            if (this.getMainProcess().getMainProcessMode() === "desktop") {
-                let filePath = dialog.showSaveDialogSync({
-                    title: "Select a file to save to",
-                });
-                if (filePath === undefined) {
-                    Log.error("No file selected, cancel saving Profiles file.");
-                    return false;
-                }
-            } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
+        return await mainWindowAgent.getMainWindowFile().saveProfiles(options);
+    };
 
-                mainWindowAgent.showInputBox({
-                    command: "save-profiles-as",
-                    humanReadableMessages: ["Save profiles to"], // each string has a new line
-                    buttons: [
-                        {
-                            text: "OK",
-                        },
-                        {
-                            text: "Cancel",
-                        }
-                    ],
-                    defaultInputText: "",
-                    attachment: {
-                        modifiedProfiles: modifiedProfiles,
-                        filePath1: filePath1,
-                    }
-                });
-                return false;
-            }
-        }
-
-        // always tell main window the log file name, if the log file is not accessible, it is ""
-        mainWindowAgent.sendFromMainProcess("log-file-name",
-            {
-                logFileName: this.getMainProcess().getLogFileName()
-            }
-        );
-
-        try {
-            // save first
-            const profiles = this.getMainProcess().getProfiles();
-            profiles.updateProfiles(filePath, modifiedProfiles);
-            profiles.save();
-
-            // update log
-            this.getMainProcess().enableLogToFile();
-        } catch (e) {
-            Log.error(e);
-            mainWindowAgent.showError([`Error save file to ${filePath}.`], [`${e}`]);
-
+    // create new Profiles object
+    handleSaveProfilesAs = async (event: WebSocket | string, options: IpcEventArgType["save-profiles-as"]): Promise<boolean> => {
+        const mainWindowAgent = this.getMainProcess().getWindowAgentsManager().getMainWindowAgent();
+        if (mainWindowAgent === undefined) {
             return false;
         }
-        return true;
+        return await mainWindowAgent.getMainWindowFile().saveProfilesAs(options);
     };
 
 
@@ -967,218 +749,11 @@ export class IpcManagerOnMainProcess {
 
     /**
      * Invoked upon the profile is selected. <br>
-     *
-     * In desktop mode, this method is invoked by "profile-selected" event. In web mode, this method is invoked by
-     * /command/profile-selected POST request.
-     * 
-     * The profile may be a local profile or a ssh configuration <br>
-     *
-     * (1) set the selected profile name in Profiles object <br>
-     *
-     * (2) create ChannelAgentsManger and CA Context according to the selected profile info, set the channel agent manager variable in main process object <br>
-     *
-     * (3) open default display windows in this profile <br>
-     *
-     * (4) create preloaded display window and preloaded embedded display <br>
-     *
-     * (4) refresh main window contents to run mode
-     *
-     * @param {string} selectedProfileName The profile name
-     *
-     * @param {string} args The command line arguments. We can select the profile from command line.
      */
     handleProfileSelected = async (event: WebSocket | string, option: IpcEventArgType["profile-selected"]): Promise<any> => {
-        const { selectedProfileName, args, openDefaultDisplayWindows } = option;
-
+        const { selectedProfileName, args } = option;
         const mainProcess = this.getMainProcess();
-        const mainProcessMode = mainProcess.getMainProcessMode();
-        const profiles = mainProcess.getProfiles();
-        const windowAgentsManager = mainProcess.getWindowAgentsManager();
-
-        profiles.setSelectedProfileName(selectedProfileName);
-        const selectedProfile = profiles.getSelectedProfile();
-        if (selectedProfile === undefined) {
-            return;
-        }
-        Log.info("Main process for", mainProcessMode, "mode started. Profile is", selectedProfileName);
-
-
-        // todo: what is this?
-        // select to run a new process as ssh-client mode, it can only be started from desktop mode
-        if (mainProcessMode === "desktop" && selectedProfile !== undefined && selectedProfile.isSshConfig()) {
-
-            // connect to remote
-            // const mainProcesses = this.getMainProcess().getMainProcesses();
-            const sshConfigRaw = selectedProfile.getCategory("SSH Configuration");
-            const sshServerConfig: type_sshServerConfig = {
-                ip: sshConfigRaw["Host Name/IP Address"]["value"],
-                port: parseInt(sshConfigRaw["Port"]["value"]),
-                userName: sshConfigRaw["User Name"]["value"],
-                privateKeyFile: sshConfigRaw["Private Key File"]["value"],
-                tdmCommand: sshConfigRaw["TDM Command"]["value"],
-            };
-            Log.info("We are going to run a new process on remote ssh using config", sshServerConfig)
-
-            if (typeof sshServerConfig.ip === "string" && !isNaN(sshServerConfig.port) && typeof sshServerConfig.userName === "string" && typeof sshServerConfig.privateKeyFile === "string") {
-                // const callingProcessId = this.getMainProcess().getMain();
-                const callingProcessId = "0";
-                const args = this.getMainProcess().getRawArgs();
-                new MainProcess(args, undefined, "ssh-client", { ...sshServerConfig, callingProcessId: callingProcessId });
-            } else {
-                Log.error("Profiles file error: Cannot create main process for ssh config", selectedProfileName);
-            }
-        } else if (mainProcessMode === "web") {
-
-            // create epcis-tca CA and PVA context
-            // do not open default wind
-            await mainProcess.getChannelAgentsManager().createAndInitContext();
-
-        } else if (mainProcessMode === "desktop") {
-
-            /**
-             * (1) create epics-tca CA and PVA context 
-             * 
-             * (2) create SQL
-             * 
-             * (3) open default TDL files
-             * 
-             * (4) prepare main window, i.e. change title, telling main window to switch to run mode, etc
-             */
-
-            // (1)
-            await this.getMainProcess().getChannelAgentsManager().createAndInitContext();
-            // (2)
-            this.getMainProcess().createSql();
-
-            // (3)
-            let tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
-            let macros = selectedProfile.getMacros();
-            let currentTdlFolder: undefined | string = undefined;
-            if (args !== undefined) {
-                currentTdlFolder = args["cwd"] === "" ? undefined : args["cwd"];
-                if (args["alsoOpenDefaults"]) {
-                    tdlFileNames.push(...args["fileNames"]);
-                } else {
-                    tdlFileNames = args["fileNames"];
-                }
-
-                // args["macros"] overrides profile-defined macros
-                macros = [...args["macros"], ...macros];
-            }
-
-            const mode = selectedProfile.getMode() as "editing" | "operating";
-            const editable = selectedProfile.getEditable();
-            windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, currentTdlFolder, undefined);
-
-
-            /**
-             * (4) For Main Window in desktop mode:
-             * 
-             * (a) wait for the main window URL to be loaded
-             *     the event is emitted when the .loadURL() is done when creating the BrowserWindow in MainWindowAgent
-             * 
-             * (b) wait for the main window's websocket IPC established
-             *     the event is emitted when the websocket-ipc-connected is received in main process from main window
-             * 
-             * (c) change main window title with selected profile name
-             * 
-             * (d) tell main window to switch to run mode by sending "after-profile-selected" to main window
-             * 
-             * (e) create preview Display Window for File Browser, it is an invisible Display Window dedicated
-             *     for the File Browser utility window
-             */
-            const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
-            if (mainWindowAgent instanceof MainWindowAgent) {
-                // (a)
-                await mainWindowAgent.loadURLPromise;
-                // (b)
-                await mainWindowAgent.websocketIpcConnectedPromise;
-                // (c)
-                const oldTitle = mainWindowAgent.getTitle();
-                const newTitle = oldTitle + " -- " + selectedProfileName;
-                mainWindowAgent.setTitle(newTitle);
-                // (d)
-                mainWindowAgent.sendFromMainProcess("after-profile-selected", {
-                    profileName: selectedProfileName,
-                });
-                // (e)
-                windowAgentsManager.createPreviewDisplayWindow();
-            }
-        } else if (mainProcessMode === "ssh-server") {
-
-            /**
-             * (1) create epics-tca CA and PVA context 
-             * 
-             * (2) create SQL
-             * 
-             * (3) open default TDL files
-             * 
-             * (4) prepare main window, i.e. change title, telling main window to switch to run mode, etc
-             */
-
-            // (1)
-            await this.getMainProcess().getChannelAgentsManager().createAndInitContext();
-            // (2)
-            this.getMainProcess().createSql();
-
-            // (3)
-            let tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
-            let macros = selectedProfile.getMacros();
-            let currentTdlFolder: undefined | string = undefined;
-            if (args !== undefined) {
-                currentTdlFolder = args["cwd"] === "" ? undefined : args["cwd"];
-                if (args["alsoOpenDefaults"]) {
-                    tdlFileNames.push(...args["fileNames"]);
-                } else {
-                    tdlFileNames = args["fileNames"];
-                }
-
-                // args["macros"] overrides profile-defined macros
-                macros = [...args["macros"], ...macros];
-            }
-
-            const mode = selectedProfile.getMode() as "editing" | "operating";
-            const editable = selectedProfile.getEditable();
-            windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, currentTdlFolder, undefined);
-
-
-            /**
-             * (4) For Main Window in desktop mode:
-             * 
-             * (a) wait for the main window URL to be loaded
-             *     the event is emitted when the .loadURL() is done when creating the BrowserWindow in MainWindowAgent
-             * 
-             * (b) wait for the main window's websocket IPC established
-             *     the event is emitted when the websocket-ipc-connected is received in main process from main window
-             * 
-             * (c) change main window title with selected profile name
-             * 
-             * (d) tell main window to switch to run mode by sending "after-profile-selected" to main window
-             * 
-             * (e) create preview Display Window for File Browser, it is an invisible Display Window dedicated
-             *     for the File Browser utility window
-             */
-
-            const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
-            if (mainWindowAgent instanceof MainWindowAgent) {
-                // (a)
-                await mainWindowAgent.loadURLPromise;
-                // (b)
-                // the websocket is never connected in ssh server 
-                // await mainWindowAgent.websocketIpcConnectedPromise;
-                // (c)
-                const oldTitle = mainWindowAgent.getTitle();
-                const newTitle = oldTitle + " -- " + selectedProfileName;
-                mainWindowAgent.setTitle(newTitle);
-                // (d)
-                mainWindowAgent.sendFromMainProcess("after-profile-selected", {
-                    profileName: selectedProfileName,
-                });
-                // (e)
-                // do not create preview display window in ssh client
-                // windowAgentsManager.createPreviewDisplayWindow();
-            }
-        }
+        mainProcess.initializeFromProfile(selectedProfileName, args);
     }
 
     /**
@@ -1318,19 +893,25 @@ export class IpcManagerOnMainProcess {
      * 
      * @param sendContentsToWindow whether to send file back to display window, only used by .db 
      */
-    handleOpenTdlFiles = (event: WebSocket | string, data: IpcEventArgType["open-tdl-file"]) => {
+    handleOpenTdlFiles = async (event: WebSocket | string, data: IpcEventArgType["open-tdl-file"]) => {
         const { options } = data;
         let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
+
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
             Log.error("Profile not selected!");
             return;
         }
 
-        let windowAgent: MainWindowAgent | DisplayWindowAgent | undefined = undefined;
-        if (windowId !== undefined) {
-            windowAgent = windowAgentsManager.getAgent(windowId);
+        let windowAgent: MainWindowAgent | DisplayWindowAgent | undefined = windowAgentsManager.getAgent(windowId);
+
+        if (windowAgent === undefined) {
+            Log.error(`Cannot find window with ID ${windowId}. Cancel opening TDL file.`);
+            return;
+        } else if (windowAgent instanceof DisplayWindowAgent) {
+            await windowAgent.getDisplayWindowFile().openTdlFiles(data);
+            return;
         }
 
         try {
@@ -1397,8 +978,8 @@ export class IpcManagerOnMainProcess {
                     };
                     if (windowAgent instanceof MainWindowAgent) {
                         windowAgent.sendFromMainProcess("dialog-show-input-box", dialogInfo);
-                    } else if (windowAgent instanceof DisplayWindowAgent) {
-                        windowAgent.sendFromMainProcess("dialog-show-input-box", dialogInfo);
+                        // } else if (windowAgent instanceof DisplayWindowAgent) {
+                        //     windowAgent.sendFromMainProcess("dialog-show-input-box", dialogInfo);
                     }
                     return;
                 }
@@ -1434,8 +1015,8 @@ export class IpcManagerOnMainProcess {
                 };
                 if (windowAgent instanceof MainWindowAgent) {
                     windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-                } else if (windowAgent instanceof DisplayWindowAgent) {
-                    windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
+                    // } else if (windowAgent instanceof DisplayWindowAgent) {
+                    //     windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
                 }
 
             }
@@ -2139,18 +1720,20 @@ export class IpcManagerOnMainProcess {
      * This is typically invoked when the user manually types in a file path (e.g. in SSH server mode)
      * instead of using a native file dialog. <br>
      *
-     * It resolves the pending file selection promise on the corresponding Display Window's
-     * `DisplayWindowFile` object by calling its `selectFileInputResolve` with the provided file name,
-     * then resets the resolve function to a no-op to prevent duplicate invocations.
+     * It resolves the pending file selection promise on the corresponding window file helper
+     * with the provided file name.
      *
-     * @param {string} displayWindowId The ID of the display window that requested the file path input.
+     * @param {string} windowId The ID of the window that requested the file path input.
      * @param {string} fileName The file path entered by the user.
      */
     handleInputFilePath = (event: WebSocket | string, data: IpcEventArgType["input-file-path"]) => {
-        const { displayWindowId, fileName } = data;
-        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
-        if (displayWindowAgent instanceof DisplayWindowAgent) {
-            const resolveFunc = displayWindowAgent.getDisplayWindowFile().selectFileInputResolve;
+        const { windowId, fileName } = data;
+        const windowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(windowId);
+        if (windowAgent instanceof MainWindowAgent) {
+            const resolveFunc = windowAgent.getMainWindowFile().selectFileInputResolve;
+            resolveFunc(fileName);
+        } else if (windowAgent instanceof DisplayWindowAgent) {
+            const resolveFunc = windowAgent.getDisplayWindowFile().selectFileInputResolve;
             resolveFunc(fileName);
         } else {
             Log.error();

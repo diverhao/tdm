@@ -1,5 +1,4 @@
 import { IpcEventArgType, type_DialogInputBox } from "../../../common/IpcEventArgType";
-import { g_widgets1 } from "../../global/GlobalVariables";
 import type { Prompt } from "./Prompt";
 
 type type_SendFromRendererProcess = (channelName: keyof IpcEventArgType, data: any) => void;
@@ -154,13 +153,15 @@ export class PromptInputBoxHandlers {
     }
 
     private _handleInputFilePath = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
-        const attachment = info["attachment"];
         this._setTwoButtonHandlers(info, () => {
             const fileName = this.getPrompt().getDialogInputBoxText();
             if (fileName !== "") {
-                const displayWindowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
+                const windowId = this._getWindowId();
+                if (windowId === undefined) {
+                    return;
+                }
                 sendFromRendererProcess("input-file-path", {
-                    displayWindowId: displayWindowId,
+                    windowId: windowId,
                     fileName: fileName
                 });
             }
@@ -191,4 +192,20 @@ export class PromptInputBoxHandlers {
     getPrompt = () => {
         return this._prompt;
     }
+
+    private _getWindowId = (): string | undefined => {
+        const prompt = this.getPrompt() as Prompt & {
+            getDisplayWindowClient?: () => { getWindowId: () => string };
+            getMainWindowClient?: () => { getWindowId: () => string };
+        };
+
+        if (typeof prompt.getDisplayWindowClient === "function") {
+            return prompt.getDisplayWindowClient().getWindowId();
+        }
+        if (typeof prompt.getMainWindowClient === "function") {
+            return prompt.getMainWindowClient().getWindowId();
+        }
+
+        return undefined;
+    };
 }

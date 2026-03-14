@@ -122,7 +122,7 @@ export type IpcEventArgType = {
     },
 
     "input-file-path": {
-        displayWindowId: string,
+        windowId: string,
         fileName: string,
     }
 
