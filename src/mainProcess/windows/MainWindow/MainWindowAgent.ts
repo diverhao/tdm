@@ -44,29 +44,29 @@ export class MainWindowAgent {
         this.getMainWindowLifeCycleManager().setLoadURLPromise(newLoadURLPromise);
     }
 
-    get websocketIpcConnectedResolve(): any {
-        return this.getMainWindowIpc().getWebsocketIpcConnectedResolve();
-    }
+    // get websocketIpcConnectedResolve(): any {
+    //     return this.getMainWindowIpc().getWebsocketIpcConnectedResolve();
+    // }
 
-    set websocketIpcConnectedResolve(newResolve: any) {
-        this.getMainWindowIpc().setWebsocketIpcConnectedResolve(newResolve);
-    }
+    // set websocketIpcConnectedResolve(newResolve: any) {
+    //     this.getMainWindowIpc().setWebsocketIpcConnectedResolve(newResolve);
+    // }
 
-    get websocketIpcConnectedReject(): any {
-        return this.getMainWindowIpc().getWebsocketIpcConnectedReject();
-    }
+    // get websocketIpcConnectedReject(): any {
+    //     return this.getMainWindowIpc().getWebsocketIpcConnectedReject();
+    // }
 
-    set websocketIpcConnectedReject(newReject: any) {
-        this.getMainWindowIpc().setWebsocketIpcConnectedReject(newReject);
-    }
+    // set websocketIpcConnectedReject(newReject: any) {
+    //     this.getMainWindowIpc().setWebsocketIpcConnectedReject(newReject);
+    // }
 
-    get websocketIpcConnectedPromise(): Promise<string> {
-        return this.getMainWindowIpc().getWebsocketIpcConnectedPromise();
-    }
+    // get websocketIpcConnectedPromise(): Promise<string> {
+    //     return this.getMainWindowIpc().getWebsocketIpcConnectedPromise();
+    // }
 
-    set websocketIpcConnectedPromise(newPromise: Promise<string>) {
-        this.getMainWindowIpc().setWebsocketIpcConnectedPromise(newPromise);
-    }
+    // set websocketIpcConnectedPromise(newPromise: Promise<string>) {
+    //     this.getMainWindowIpc().setWebsocketIpcConnectedPromise(newPromise);
+    // }
 
     // ---------------------- GUI (BrowserWindow) ---------------------------
 

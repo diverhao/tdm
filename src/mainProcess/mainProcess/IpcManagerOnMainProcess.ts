@@ -468,92 +468,31 @@ export class IpcManagerOnMainProcess {
     handleWebsocketIpcConnectedOnMainWindow = (event: WebSocket | string, data: IpcEventArgType["websocket-ipc-connected-on-main-window"]) => {
 
         // the main processes' ipc manager
-        const ipcManager = this.getMainProcess().getIpcManager();
         const mainProcess = this.getMainProcess();
-        const mainProcessMode = mainProcess.getMainProcessMode();
         const windowId = data["windowId"];
         const reconnect = data["reconnect"];
         Log.info("register window", windowId, "for WebSocket IPC");
 
-        if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-client") {
-            // desktop mode: websocket client on main/display window
-            ipcManager.getClients()[windowId] = event;
-        } else if (mainProcessMode === "ssh-server") {
-            // ssh-server mode: an arbitrary string
-            // in this way the DisplayWindowAgent.sendFromMainProcess() or MainWindowAgent.sendFromMainProcess()
-            // on the calling process won't send message to the windows
-            ipcManager.getClients()[windowId] = windowId;
-        }
+        this.registerClient(event, windowId);
 
         if (reconnect === true) {
             return;
         }
 
-        // lift the block in create window method
         const windowAgent = mainProcess.getWindowAgentsManager().getAgent(windowId);
-
         if (!(windowAgent instanceof MainWindowAgent)) {
             return;
         }
 
-        // ws opener server port
-        const wsOpenerServer = this.getMainProcess().getWsOpenerServer();
-        const wsOpenerPort = wsOpenerServer.getPort();
-        windowAgent.sendFromMainProcess("update-ws-opener-port", { newPort: wsOpenerPort });
-
-        // read default and OS-defined EPICS environment variables
-        // in main window editing page, we need env default and env os
-        const env = Environment.getTempInstance();
-        let envDefault = env.getEnvDefault();
-        let envOs = env.getEnvOs();
-
-        if (typeof envDefault !== "object") {
-            envDefault = {};
+        // lift the block in create window in MainWindowLifeCycleManager.createBrowserWindow()
+        const lifeCycleManager = windowAgent.getMainWindowLifeCycleManager();
+        const resolve = lifeCycleManager.websocketIpcConnectedResolve;
+        lifeCycleManager.websocketIpcConnectedResolve = undefined;
+        if (resolve === undefined) {
+            Log.error(`Main window ${windowId} WebSocket IPC connected with no pending resolver.`);
+        } else {
+            resolve();
         }
-        if (typeof envOs !== "object") {
-            envOs = {};
-        }
-
-        const site = this.getMainProcess().getSite();
-
-        windowAgent.sendFromMainProcess(
-            "after-main-window-gui-created",
-            {
-                profiles: this.getMainProcess().getProfiles().serialize(),
-                profilesFileName: this.getMainProcess().getProfiles().getFilePath(),
-                envDefault: envDefault,
-                envOs: envOs,
-                logFileName: this.getMainProcess().getLogFileName(),
-                site: site,
-            }
-        );
-
-        // "Emitted when the application is activated"
-        app.on("activate", async () => {
-            // On macOS it's common to re-create a window in the app when the
-            // dock icon is clicked and there are no other windows open.
-            if (BrowserWindow.getAllWindows().length === 0) {
-                // must be async
-                await windowAgent.createBrowserWindow();
-                // mainWindowAgent.sendFromMainProcess("uuid", processId);
-                windowAgent.sendFromMainProcess(
-                    "after-main-window-gui-created",
-                    {
-                        profiles: this.getMainProcess().getProfiles().serialize(),
-                        profilesFileName: this.getMainProcess().getProfiles().getFilePath(),
-                        envDefault: envDefault,
-                        envOs: envOs,
-                        logFileName: this.getMainProcess().getLogFileName(),
-                        site,
-                    }
-                );
-
-                // if (cmdLineSelectedProfile !== "") {
-                // 	mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", cmdLineSelectedProfile);
-                // }
-            }
-        });
-        windowAgent.websocketIpcConnectedResolve();
     }
 
     // ----------------------- Profiles ------------------------
@@ -1849,9 +1788,6 @@ export class IpcManagerOnMainProcess {
                 return;
             }
         }
-
-
-
 
         if (message["command"] === "change-item-name") {
             const folder = message["folder"];

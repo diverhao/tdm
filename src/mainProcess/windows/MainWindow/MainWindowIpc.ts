@@ -4,16 +4,9 @@ import { MainWindowAgent } from "./MainWindowAgent";
 
 export class MainWindowIpc {
     private readonly _mainWindowAgent: MainWindowAgent;
-    private _websocketIpcConnectedResolve: any;
-    private _websocketIpcConnectedReject: any;
-    private _websocketIpcConnectedPromise: Promise<string>;
 
     constructor(mainWindowAgent: MainWindowAgent) {
         this._mainWindowAgent = mainWindowAgent;
-        this._websocketIpcConnectedPromise = new Promise((resolve, reject) => {
-            this._websocketIpcConnectedResolve = resolve;
-            this._websocketIpcConnectedReject = reject;
-        });
     }
 
     sendFromMainProcess = <T extends keyof IpcEventArgType3>(channel: T, arg: IpcEventArgType3[T]): void => {
@@ -44,31 +37,7 @@ export class MainWindowIpc {
             Log.error(e);
         }
     };
-
-    getWebsocketIpcConnectedResolve = () => {
-        return this._websocketIpcConnectedResolve;
-    };
-
-    setWebsocketIpcConnectedResolve = (newResolve: any) => {
-        this._websocketIpcConnectedResolve = newResolve;
-    };
-
-    getWebsocketIpcConnectedReject = () => {
-        return this._websocketIpcConnectedReject;
-    };
-
-    setWebsocketIpcConnectedReject = (newReject: any) => {
-        this._websocketIpcConnectedReject = newReject;
-    };
-
-    getWebsocketIpcConnectedPromise = () => {
-        return this._websocketIpcConnectedPromise;
-    };
-
-    setWebsocketIpcConnectedPromise = (newPromise: Promise<string>) => {
-        this._websocketIpcConnectedPromise = newPromise;
-    };
-
+    
     getMainWindowAgent = () => {
         return this._mainWindowAgent;
     };

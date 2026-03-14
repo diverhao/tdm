@@ -819,7 +819,7 @@ export class MainProcess {
                 // (a)
                 await mainWindowAgent.loadURLPromise;
                 // (b)
-                await mainWindowAgent.websocketIpcConnectedPromise;
+                // await mainWindowAgent.websocketIpcConnectedPromise;
                 // (c)
                 const oldTitle = mainWindowAgent.getTitle();
                 const newTitle = oldTitle + " -- " + profileName;

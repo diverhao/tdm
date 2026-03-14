@@ -1,14 +1,17 @@
-import { BrowserWindow, WebContents } from "electron";
+import { app, BrowserWindow, WebContents } from "electron";
 import * as path from "path";
 import * as url from "url";
 import { Log } from "../../../common/Log";
 import { MainWindowAgent } from "./MainWindowAgent";
+import { Environment } from "epics-tca";
 
 export class MainWindowLifeCycleManager {
     private readonly _mainWindowAgent: MainWindowAgent;
     private _browserWindow: BrowserWindow | undefined;
     private _readyToClose = false;
     private _loadURLPromise: Promise<void> | undefined = undefined;
+    websocketIpcConnectedResolve: ((value?: unknown) => void) | undefined = undefined;
+    websocketIpcConnectedPromise: Promise<unknown> | undefined = undefined;
 
     constructor(mainWindowAgent: MainWindowAgent) {
         this._mainWindowAgent = mainWindowAgent;
@@ -85,13 +88,17 @@ export class MainWindowLifeCycleManager {
                     },
                 }),
             ));
-            
-            await this.getLoadURLPromise();
-            await mainWindowAgent.getMainWindowIpc().getWebsocketIpcConnectedPromise();
-            return;
-        }
 
-        if (mainProcesMode === "web") {
+            await this.getLoadURLPromise();
+            this.websocketIpcConnectedPromise = new Promise((resolve, reject) => {
+                this.websocketIpcConnectedResolve = resolve;
+            });
+            await this.websocketIpcConnectedPromise;
+            this.refreshWebsocketOpener();
+            this.sendBasicMainWindowInfo();
+
+            return;
+        } else if (mainProcesMode === "web") {
             const ipcServerPort = windowAgentsManager.getMainProcess().getIpcManager().getPort();
 
             httpResponse.send(
@@ -121,6 +128,73 @@ export class MainWindowLifeCycleManager {
         Log.error("Wrong main process mode");
     };
 
+    refreshWebsocketOpener = () => {
+        // ws opener server port
+        const mainWindowAgent = this.getMainWindowAgent();
+        const mainProcess = mainWindowAgent.getWindowAgentsManager().getMainProcess();
+        const wsOpenerServer = mainProcess.getWsOpenerServer();
+        const wsOpenerPort = wsOpenerServer.getPort();
+        this.getMainWindowAgent().sendFromMainProcess("update-ws-opener-port", { newPort: wsOpenerPort });
+    }
+
+    sendBasicMainWindowInfo = () => {
+        const mainWindowAgent = this.getMainWindowAgent();
+        const mainProcess = mainWindowAgent.getWindowAgentsManager().getMainProcess();
+
+        // read default and OS-defined EPICS environment variables
+        // in main window editing page, we need env default and env os
+        const env = Environment.getTempInstance();
+        let envDefault = env.getEnvDefault();
+        let envOs = env.getEnvOs();
+
+        if (typeof envDefault !== "object") {
+            envDefault = {};
+        }
+        if (typeof envOs !== "object") {
+            envOs = {};
+        }
+
+        const site = mainProcess.getSite();
+
+        mainWindowAgent.sendFromMainProcess(
+            "after-main-window-gui-created",
+            {
+                profiles: mainProcess.getProfiles().serialize(),
+                profilesFileName: mainProcess.getProfiles().getFilePath(),
+                envDefault: envDefault,
+                envOs: envOs,
+                logFileName: mainProcess.getLogFileName(),
+                site: site,
+            }
+        );
+
+        // "Emitted when the application is activated"
+        app.on("activate", async () => {
+            // On macOS it's common to re-create a window in the app when the
+            // dock icon is clicked and there are no other windows open.
+            if (BrowserWindow.getAllWindows().length === 0) {
+                // must be async
+                await mainWindowAgent.createBrowserWindow();
+                // mainWindowAgent.sendFromMainProcess("uuid", processId);
+                mainWindowAgent.sendFromMainProcess(
+                    "after-main-window-gui-created",
+                    {
+                        profiles: mainProcess.getProfiles().serialize(),
+                        profilesFileName: mainProcess.getProfiles().getFilePath(),
+                        envDefault: envDefault,
+                        envOs: envOs,
+                        logFileName: mainProcess.getLogFileName(),
+                        site,
+                    }
+                );
+
+                // if (cmdLineSelectedProfile !== "") {
+                // 	mainWindowAgent.sendFromMainProcess("cmd-line-selected-profile", cmdLineSelectedProfile);
+                // }
+            }
+        });
+    }
+
     getWebContents = (): WebContents | undefined => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow === undefined) {
@@ -146,6 +220,8 @@ export class MainWindowLifeCycleManager {
                 windowAgentsManager.getMainProcess().quit();
             }
         }
+
+        this.websocketIpcConnectedResolve?.();
 
         const ipcManager = windowAgentsManager.getMainProcess().getIpcManager();
         ipcManager.removeClient(mainWindowAgent.getId());

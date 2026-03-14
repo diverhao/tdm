@@ -61,6 +61,7 @@ export class DisplayWindowLifeCycleManager {
      * renderer connects to the main-process WebSocket IPC channel.
      */
     websocketIpcConnectedResolve: ((value?: unknown) => void) | undefined = undefined;
+    websocketIpcConnectedPromise: Promise<unknown> | undefined = undefined;
 
     /**
      * One-shot resolver for the promise that waits until the renderer finishes
@@ -86,9 +87,10 @@ export class DisplayWindowLifeCycleManager {
         }
 
         // wait for IPC websocket connected, then send the basic info and tdl
-        await new Promise((resolve, reject) => {
+        this.websocketIpcConnectedPromise = new Promise((resolve, reject) => {
             this.websocketIpcConnectedResolve = resolve;
         });
+        await this.websocketIpcConnectedPromise;
         this.sendBasicDisplayWindowInfo();
         await this.updateTdl();
     };
@@ -456,6 +458,8 @@ export class DisplayWindowLifeCycleManager {
                 displayWindowAgent.getWindowAgentsManager().getMainProcess().quit();
             }
         }
+
+        this.websocketIpcConnectedResolve?.();
 
         const ipcManager = displayWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager();
         ipcManager.removeClient(displayWindowAgent.getId());
