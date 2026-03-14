@@ -120,7 +120,7 @@ export class CaChannelAgent {
             if (this._channelCreationPromise === undefined) {
                 const context = this.getChannelAgentsManager().getContext();
                 if (context === undefined) {
-                    Log.error("0", "Context not initialized");
+                    Log.error("Context not initialized");
                     this.connecting = false;
                     return false;
                 }
@@ -224,7 +224,7 @@ export class CaChannelAgent {
             return data;
 
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
             return { value: undefined };
@@ -269,7 +269,7 @@ export class CaChannelAgent {
             }
         } catch (e) {
 
-            Log.error("0", e);
+            Log.error(e);
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
             return { value: undefined };
@@ -324,7 +324,7 @@ export class CaChannelAgent {
             }
             putStatus = await channel.put(newValue, ioTimeout, waitNotify);
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
             putStatus = undefined;
         }
         // this.reduceClientsNum();
@@ -369,7 +369,7 @@ export class CaChannelAgent {
             }
             putStatus = await channel.putPva(pvRequest, [newValue], ioTimeout);
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
         }
         // this.reduceClientsNum();
         // this.addPutOperation();
@@ -534,7 +534,7 @@ export class CaChannelAgent {
                 }
             }
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
         }
         // (2)
         this.getChannelAgentsManager().removeChannelAgent(this.getChannelName());

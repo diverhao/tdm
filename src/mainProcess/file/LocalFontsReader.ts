@@ -155,7 +155,7 @@ export class LocalFontsReader {
             fs.readFile(fontName,
                 (err: any, data: Buffer) => {
                     if (err !== null) {
-                        Log.error("-1", "error reading")
+                        Log.error("error reading")
                         resolve(undefined);
                     } else {
                         try {
@@ -223,13 +223,13 @@ export class LocalFontsReader {
                 folders.push(path.join(winDir, 'Fonts'));
             }
         } else {
-            Log.error("-1", "OS", platform, "is not recognized");
+            Log.error("OS", platform, "is not recognized");
         }
         return folders;
     }
 
     static getFontFileNames = async (folderName: string, result: string[]) => {
-        Log.debug("-1", "reading", folderName);
+        Log.debug("reading", folderName);
         try {
             const entries = await fsPromises.readdir(folderName, { withFileTypes: true });
             for (const entry of entries) {
@@ -242,11 +242,11 @@ export class LocalFontsReader {
                     }
                 } else {
                     // soft link ...
-                    Log.error("-1", "Error: entry", entry.name, "is not a file or folder");
+                    Log.error("Error: entry", entry.name, "is not a file or folder");
                 }
             }
         } catch (e) {
-            Log.error("-1", "Error reading folder", folderName, e);
+            Log.error("Error reading folder", folderName, e);
         }
     }
 

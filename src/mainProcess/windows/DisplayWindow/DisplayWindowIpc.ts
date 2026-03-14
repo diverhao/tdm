@@ -32,12 +32,12 @@ export class DisplayWindowIpc {
         const wsClient = ipcManager.getClients()[displayWindowAgent.getId()];
 
         if (wsClient === undefined) {
-            Log.debug("0", "Cannot find WebSocket IPC client for window", displayWindowAgent.getId());
+            Log.debug("Cannot find WebSocket IPC client for window", displayWindowAgent.getId());
             return;
         }
 
         try {
-            Log.debug("0", "send from main process:", { processId: "0", windowId: displayWindowAgent.getId(), eventName: channel, data: [arg] });
+            Log.debug("send from main process:", { processId: "0", windowId: displayWindowAgent.getId(), eventName: channel, data: [arg] });
             if (typeof wsClient !== "string") {
                 const str = JSON.stringify({ processId: "0", windowId: displayWindowAgent.getId(), eventName: channel, data: [arg] });
                 wsClient.send(str);
@@ -62,7 +62,7 @@ export class DisplayWindowIpc {
                 }
             }
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
         }
     };
 

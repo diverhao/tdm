@@ -233,6 +233,7 @@ export class FileConverter extends BaseWidget {
                                 g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("file-converter-command",
                                     {
                                         command: "stop",
+                                        displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
                                     }
                                 )
                                 // stop timer

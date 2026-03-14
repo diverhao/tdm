@@ -147,7 +147,7 @@ export class TextEditorHandlers {
             return true;
         } catch (e) {
             displayWindowAgent.showError([`Error saving file ${fileName}`], [`${e}`]);
-            Log.error("0", e);
+            Log.error(e);
             return false;
         }
     }

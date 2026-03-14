@@ -255,12 +255,12 @@ export class WebServer {
                 // same as the "/login" POST request
                 const mainProcess = this.getMainProcess();
                 if (mainProcess === undefined) {
-                    Log.error("-1", "Cannot find main process 0 in web mode. Quit.")
+                    Log.error("Cannot find main process 0 in web mode. Quit.")
                     return;
                 }
                 const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
-                    Log.error("-1", "Profile not selected in web mode. Quit.")
+                    Log.error("Profile not selected in web mode. Quit.")
                     return;
                 }
 
@@ -272,7 +272,7 @@ export class WebServer {
 
         // start http server
         this._server.get("/main", async (request: IncomingMessage, response: any, next: any) => {
-            Log.info("0", "New https connection coming in from", request.socket.address());
+            Log.info("New https connection coming in from", request.socket.address());
             const mainProcess = this.getMainProcess();
             const profiles = mainProcess.getProfiles();
             const windowAgentsManager = mainProcess.getWindowAgentsManager();
@@ -341,12 +341,12 @@ export class WebServer {
             (req: any, res: any, next: any) => {
                 const mainProcess = this.getMainProcess();
                 if (mainProcess === undefined) {
-                    Log.error("-1", "Cannot find main process 0 in web mode. Quit.")
+                    Log.error("Cannot find main process 0 in web mode. Quit.")
                     return;
                 }
                 const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
-                    Log.error("-1", "Profile not selected in web mode. Quit.")
+                    Log.error("Profile not selected in web mode. Quit.")
                     return;
                 }
 
@@ -360,7 +360,7 @@ export class WebServer {
             async (request: any, response: any) => {
                 // the received JSON is automatically parsed
                 const command = request.body["command"];
-                Log.debug("-1", "Received POST request from", request.socket.address(), "command =", command);
+                Log.debug("Received POST request from", request.socket.address(), "command =", command);
                 const data = request.body["data"];
                 if (command === "profile-selected") {
                     // const profileName = data;
@@ -373,7 +373,7 @@ export class WebServer {
                     const options = data;
                     options["postCommand"] = command;
                     // const {displayWindowId, tdlFileName, mode, macros,editable, replaceMacros } = options;
-                    // Log.info("-1", data);
+                    // Log.info(data);
                     // this.getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
                     //     {
                     //         options: options,
@@ -386,7 +386,7 @@ export class WebServer {
                     })
                 } else if (command === "duplicate-display") {
                     // const options = data;
-                    // Log.debug("-1", data);
+                    // Log.debug(data);
                     // this.getMainProcess().getIpcManager().handleDuplicateDisplay(undefined,
                     //     {
                     //         options: options,
@@ -396,7 +396,7 @@ export class WebServer {
                 } else if (command === "create-utility-display-window") {
                     // const utilityType = data["utilityType"];
                     // const utilityOptions = data["utilityOptions"];
-                    // Log.debug("-1", data);
+                    // Log.debug(data);
                     // this.getMainProcess().getIpcManager().createUtilityDisplayWindow(undefined,
                     //     {
                     //         utilityType: utilityType,
@@ -405,17 +405,17 @@ export class WebServer {
                     //     }
                     // );
                 } else if (command === "create-new-display-in-web-mode") {
-                    // Log.debug("-1", data);
+                    // Log.debug(data);
                     // this.getMainProcess().getWindowAgentsManager().createBlankDisplayWindow(response);
                 } else if (command === "media") {
-                    // Log.debug("-1", data);
+                    // Log.debug(data);
                     // try {
                     //     const fullFileName = data["fullFileName"];
                     //     const fileBuffer = fs.readFileSync(fullFileName);
                     //     const fileBase64Str = fileBuffer.toString("base64");
                     //     response.send(JSON.stringify({ content: fileBase64Str }));
                     // } catch (e) {
-                    //     Log.error("-1", "Cannot read file", data["imageFileName"])
+                    //     Log.error("Cannot read file", data["imageFileName"])
                     //     response.send(JSON.stringify({ image: "" }));
                     // }
                 } else if (command === "get-ipc-server-port") {
@@ -467,7 +467,7 @@ export class WebServer {
                             }
                         })
                     } else {
-                        Log.error("0", `Failed to refresh the webpage for file ${tdlFileName}`);
+                        Log.error(`Failed to refresh the webpage for file ${tdlFileName}`);
                     }
                 }
             });

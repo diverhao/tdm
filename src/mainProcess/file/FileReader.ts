@@ -42,37 +42,37 @@ export class FileReader {
         // try hard drive
         try {
             fileContents = JSON.parse(fs.readFileSync(filePath).toString());
-            Log.debug("-1", `Found file ${filePath} on hard drive`);
+            Log.debug(`Found file ${filePath} on hard drive`);
             return fileContents;
         } catch (e) {
-            Log.error("-1", "Cannot read profile file", filePath, "from local disk");
-            Log.error("-1", e);
+            Log.error("Cannot read profile file", filePath, "from local disk");
+            Log.error(e);
         }
 
         // try network
         try {
             fileContents = await this.fetchWithTimeout(filePath);
-            Log.debug("-1", `Found file ${filePath} on network`);
+            Log.debug(`Found file ${filePath} on network`);
             return fileContents;
         } catch (e) {
-            Log.error("-1", "Cannot read profile file", filePath, "at network", e);
+            Log.error("Cannot read profile file", filePath, "at network", e);
         }
 
         if (readProfileJSON) {
             // read file failed, copy the default profile
             try {
-                Log.debug("-1", "Trying to create default file", filePath, "from", path.join(__dirname, "../../common/resources/tdls/profiles_default.json"));
+                Log.debug("Trying to create default file", filePath, "from", path.join(__dirname, "../../common/resources/tdls/profiles_default.json"));
                 fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
                 fs.copyFileSync(path.join(__dirname, "../../common/resources/tdls/profiles_default.json"), filePath);
                 // copy GetStarted.tdl
                 fs.copyFileSync(path.join(__dirname, "../../common/resources/tdls/GetStarted.tdl"), path.join(path.dirname(filePath), "GetStarted.tdl"));
-                Log.debug("-1", "Created an empty file", filePath);
-                Log.debug("-1", "read this file");
+                Log.debug("Created an empty file", filePath);
+                Log.debug("read this file");
                 fileContents = JSON.parse(fs.readFileSync(filePath).toString());
                 return fileContents;
             } catch (e) {
-                Log.error("-1", e);
+                Log.error(e);
                 throw new Error(`Cannot create empty file ${filePath}`);
             }
         } else {
@@ -85,37 +85,37 @@ export class FileReader {
         // try hard drive
         try {
             fileContents = JSON.parse(fs.readFileSync(filePath).toString());
-            Log.debug("-1", `Found file ${filePath} on hard drive`);
+            Log.debug(`Found file ${filePath} on hard drive`);
             return fileContents;
         } catch (e) {
-            Log.error("-1", "Cannot read profile file", filePath, "from local disk");
-            Log.error("-1", e);
+            Log.error("Cannot read profile file", filePath, "from local disk");
+            Log.error(e);
         }
 
         // try network
         // try {
         //     fileContents = await this.fetchWithTimeout(filePath);
-        //     Log.debug("-1", `Found file ${filePath} on network`);
+        //     Log.debug(`Found file ${filePath} on network`);
         //     return fileContents;
         // } catch (e) {
-        //     Log.error("-1", "Cannot read profile file", filePath, "at network", e);
+        //     Log.error("Cannot read profile file", filePath, "at network", e);
         // }
 
         if (readProfileJSON) {
             // read file failed, copy the default profile
             try {
-                Log.debug("-1", "Trying to create default file", filePath, "from", path.join(__dirname, "../../common/resources/tdls/profiles_default.json"));
+                Log.debug("Trying to create default file", filePath, "from", path.join(__dirname, "../../common/resources/tdls/profiles_default.json"));
                 fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
                 fs.copyFileSync(path.join(__dirname, "../../common/resources/tdls/profiles_default.json"), filePath);
                 // copy GetStarted.tdl
                 fs.copyFileSync(path.join(__dirname, "../../common/resources/tdls/GetStarted.tdl"), path.join(path.dirname(filePath), "GetStarted.tdl"));
-                Log.debug("-1", "Created an empty file", filePath);
-                Log.debug("-1", "read this file");
+                Log.debug("Created an empty file", filePath);
+                Log.debug("read this file");
                 fileContents = JSON.parse(fs.readFileSync(filePath).toString());
                 return fileContents;
             } catch (e) {
-                Log.error("-1", e);
+                Log.error(e);
                 throw new Error(`Cannot create empty file ${filePath}`);
             }
         } else {
@@ -126,7 +126,7 @@ export class FileReader {
     static readDb = (fileName: string, profile?: Profile, currentTdlFolder?: string) => {
         const fullFileName = this.resolveTdlFileName(fileName, profile, currentTdlFolder);
         if (fullFileName === undefined) {
-            Log.debug("-1", "readTdlFile() cannot find file", fileName);
+            Log.debug("readTdlFile() cannot find file", fileName);
             return undefined;
         }
 
@@ -143,7 +143,7 @@ export class FileReader {
     static parseDb = (dbFileContentsRaw: string) => {
         // const fullFileName = this.resolveTdlFileName(fileName, profile, currentTdlFolder);
         // if (fullFileName === undefined) {
-        //     Log.debug("-1", "readTdlFile() cannot find file", fileName);
+        //     Log.debug("readTdlFile() cannot find file", fileName);
         //     return undefined;
         // }
 
@@ -201,7 +201,7 @@ export class FileReader {
                 const body = record.match(regRecordBody);
                 // parse header
                 if (header === null || header?.length !== 1) {
-                    Log.error("-1", "header wrong");
+                    Log.error("header wrong");
                 } else {
                     const headerContent = header[0];
                     const headerContentArray = headerContent
@@ -233,7 +233,7 @@ export class FileReader {
                         }
                     }
                 } else {
-                    Log.error("-1", "record body wrong");
+                    Log.error("record body wrong");
                 }
                 result.push(structuredClone(resultRecord));
             }
@@ -417,7 +417,7 @@ export class FileReader {
         convertEdlSuffix: boolean = false,
         parentPort: MessagePort | null | undefined = undefined,
     ) => {
-        Log.debug("-1", "Trying to read edl file", edlFileName);
+        Log.debug("Trying to read edl file", edlFileName);
 
         const t0 = Date.now();
         if (parentPort && destinationFolder && path.isAbsolute(edlFileName)) {
@@ -564,7 +564,7 @@ export class FileReader {
                                 // do not quit
                                 fs.copyFileSync(fileAndFolderFullName, newFileAndFolderFullName);
                             } catch (e) {
-                                Log.error("-1", e);
+                                Log.error(e);
                             }
                         } else {
                             // do not copy

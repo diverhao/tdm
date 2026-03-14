@@ -204,7 +204,7 @@ export class ContextMenuDesktop {
                         }
                     );
                 } else {
-                    Log.error("0", "main process mode must be desktop");
+                    Log.error("main process mode must be desktop");
                 }
             },
         },
@@ -1045,7 +1045,7 @@ export class ContextMenuDesktop {
                         }
                     );
                 } else {
-                    Log.error("0", "main process mode must be desktop");
+                    Log.error("main process mode must be desktop");
                 }
             },
 
@@ -1335,7 +1335,7 @@ export class ContextMenuDesktop {
                         }
                     );
                 } else {
-                    Log.error("0", "main process mode must be desktop");
+                    Log.error("main process mode must be desktop");
                 }
             },
 

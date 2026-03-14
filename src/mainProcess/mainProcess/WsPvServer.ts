@@ -19,12 +19,12 @@ export class WsPvServer {
     }
 
     quit = () => {
-        Log.info("0", "Close WebSocket PV Server");
+        Log.info("Close WebSocket PV Server");
         this.server?.close();
     };
 
     createServer = () => {
-        Log.info("0", `Creating WebSocket PV server on port ${this.getPort()}`);
+        Log.info(`Creating WebSocket PV server on port ${this.getPort()}`);
         this.server = new WebSocket.Server({
             host: "127.0.0.1",
             port: this.getPort(),
@@ -32,7 +32,7 @@ export class WsPvServer {
 
         this.server.on("error", (err: Error) => {
             if (err["message"].includes("EADDRINUSE")) {
-                Log.debug("0", `Port ${this.port} is occupied aaa, try port ${this.port + 1}`);
+                Log.debug(`Port ${this.port} is occupied aaa, try port ${this.port + 1}`);
                 this.port = this.port + 1;
                 this.createServer();
             }
@@ -46,19 +46,19 @@ export class WsPvServer {
                     const type = message["type"];
                     const args = message["args"];
                     if (type === "fatal") {
-                        Log.fatal("0", args);
+                        Log.fatal(args);
                     } else if (type === "error") {
-                        Log.error("0", args);
+                        Log.error(args);
                     } else if (type === "warn") {
-                        Log.warn("0", args);
+                        Log.warn(args);
                     } else if (type === "info") {
-                        Log.info("0", args);
+                        Log.info(args);
                     } else if (type === "debug") {
-                        Log.debug("0", args);
+                        Log.debug(args);
                     } else if (type === "trace") {
-                        Log.trace("0", args);
+                        Log.trace(args);
                     } else {
-                        Log.error("0", "Received the following WS PV log message, but it is in wrong format");
+                        Log.error("Received the following WS PV log message, but it is in wrong format");
                     }
                     return;
                 }
@@ -68,7 +68,7 @@ export class WsPvServer {
                 const displayWindowId = message["displayWindowId"];
 
                 if (channelName === undefined || command === undefined || displayWindowId === undefined) {
-                    Log.debug("0", "Message does not have channelName, command, or displayWindowId");
+                    Log.debug("Message does not have channelName, command, or displayWindowId");
                     return;
                 }
                 if ((channelName as string).startsWith("loc://") && !(channelName as string).includes("@window_")) {
@@ -78,14 +78,14 @@ export class WsPvServer {
                 const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
                 const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
                 if (displayWindowAgent === undefined || displayWindowAgent instanceof MainWindowAgent) {
-                    Log.debug("0", `Cannot find display window ${displayWindowId}`);
+                    Log.debug(`Cannot find display window ${displayWindowId}`);
                     // the incoming request looks suspacious, do not reply
                     return;
                 }
 
 
                 if (command === "GET") {
-                    Log.debug("0", `WebSocket PV server, GET ${message}`);
+                    Log.debug(`WebSocket PV server, GET ${message}`);
                     const dbrData = await this.getIpcManager().handleTcaGet("",
                         {
                             channelName: channelName,
@@ -128,7 +128,7 @@ export class WsPvServer {
                         }
                     );
                 } else {
-                    Log.debug("0", `Unknow command ${command}`);
+                    Log.debug(`Unknow command ${command}`);
                 }
             });
 
@@ -139,7 +139,7 @@ export class WsPvServer {
                 for (const displayWindowAgent of Object.values(displayWindowAgents)) {
                     if (displayWindowAgent instanceof DisplayWindowAgent) {
                         if (wsClient === displayWindowAgent.getWebSocketMonitorClient()) {
-                            Log.debug("0", `Remove WebSocket PV for display window ${displayWindowAgent.getId()}`);
+                            Log.debug(`Remove WebSocket PV for display window ${displayWindowAgent.getId()}`);
                             displayWindowAgent.setWebSocketMonitorClient(undefined);
                             displayWindowAgent.setWebSocketMonitorChannelNames([]);
                         }

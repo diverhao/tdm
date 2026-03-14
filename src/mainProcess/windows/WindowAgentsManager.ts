@@ -151,7 +151,7 @@ export class WindowAgentsManager {
             // check if the window already exist
             const exisitedDisplayWindow = this.checkExistedDisplayWindow(tdlFileName, macros);
             if (exisitedDisplayWindow !== undefined) {
-                Log.debug("0", `File ${tdlFileName} is already opened.`);
+                Log.debug(`File ${tdlFileName} is already opened.`);
                 // bring up this window if in desktop mode
                 // if (this.get) {
                 exisitedDisplayWindow.show();
@@ -178,15 +178,13 @@ export class WindowAgentsManager {
             if (mainProcessMode === "desktop") {
                 const exisitedDisplayWindow = this.checkExistedDisplayWindow(tdlFileName, macros);
                 if (exisitedDisplayWindow !== undefined) {
-                    Log.debug("0", `File ${tdlFileName} is already opened.`);
+                    Log.debug(`File ${tdlFileName} is already opened.`);
                     // bring up this window if in desktop mode
                     exisitedDisplayWindow.show();
                     return undefined;
                 }
             }
-            Log.debug(
-                "0",
-                `Try to create a new display window for ${tdlFileName === "" ? "<blank string>" : tdlFileName} in  mode`
+            Log.debug(`Try to create a new display window for ${tdlFileName === "" ? "<blank string>" : tdlFileName} in  mode`
             );
             // (0)
             // preloaded window only for desktop mode, always create a new display if modal === true
@@ -195,15 +193,15 @@ export class WindowAgentsManager {
                 if (mainProcessMode !== "ssh-server") {
                     let displayWindowAgent = this.replacePreloadedDisplayWindow(options);
                     if (displayWindowAgent !== undefined) {
-                        Log.debug("0", `Preloaded display window is consumed, created a new one.`);
+                        Log.debug(`Preloaded display window is consumed, created a new one.`);
 
                         this.createPreloadedDisplayWindow();
                         return displayWindowAgent;
                     } else {
                         if (this.creatingPreloadedDisplayWindow === true) {
-                            Log.debug("0", `Preloaded display window does not exist, but it is being created.`);
+                            Log.debug(`Preloaded display window does not exist, but it is being created.`);
                         } else {
-                            Log.debug("0", `Preloaded display window does not exist, create one in background.`);
+                            Log.debug(`Preloaded display window does not exist, create one in background.`);
                             this.createPreloadedDisplayWindow();
                         }
                     }
@@ -226,7 +224,7 @@ export class WindowAgentsManager {
                 await displayWindowAgent.createBrowserWindow(options);
                 return displayWindowAgent;
             } catch (e) {
-                Log.error("0", e);
+                Log.error(e);
                 return undefined;
             }
         }
@@ -299,14 +297,14 @@ export class WindowAgentsManager {
                         }))
                     }
                 }
-                Log.info("0", "we have obtained ifram uuid", displayWindowId);
+                Log.info("we have obtained ifram uuid", displayWindowId);
                 await displayWindowAgent.creationPromise;
-                Log.debug("0", "lifted", displayWindowAgent.getId());
+                Log.debug("lifted", displayWindowAgent.getId());
 
                 // (4)
                 const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
                 if (selectedProfile === undefined) {
-                    Log.error("0", "Profile not selected!");
+                    Log.error("Profile not selected!");
                     return undefined;
                 }
                 displayWindowAgent.sendFromMainProcess("selected-profile-contents",
@@ -326,13 +324,11 @@ export class WindowAgentsManager {
                     utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
                 });
 
-                Log.debug(
-                    "0",
-                    `Created display window ${displayWindowAgent.getId()} for ${tdlFileName === "" ? "<blank string>" : tdlFileName}`
+                Log.debug(`Created display window ${displayWindowAgent.getId()} for ${tdlFileName === "" ? "<blank string>" : tdlFileName}`
                 );
                 return displayWindowAgent;
             } catch (e) {
-                Log.error("0", e);
+                Log.error(e);
                 return undefined;
             }
         }
@@ -387,7 +383,7 @@ export class WindowAgentsManager {
                         };
                         this.createDisplayWindow(options);
                     } else {
-                        Log.error("0", `Cannot read file ${tdlFileName}`);
+                        Log.error(`Cannot read file ${tdlFileName}`);
                     }
                 })
 
@@ -444,7 +440,7 @@ export class WindowAgentsManager {
         // return undefined;
 
         let { mode, editable, tdl, tdlFileName, macros, replaceMacros } = options;
-        Log.debug("0", `Trying to replace preloaded display window with ${tdlFileName}.`);
+        Log.debug(`Trying to replace preloaded display window with ${tdlFileName}.`);
         // (1)
         let displayWindowAgent = this.preloadedDisplayWindowAgent;
         if (displayWindowAgent === undefined) {
@@ -478,7 +474,7 @@ export class WindowAgentsManager {
             utilityType: options["utilityType"] as any,
             utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
         });
-        Log.info("0", `Replaced preloaded display window ${displayWindowAgent.getId()} with new TDL: ${options["tdlFileName"]}`);
+        Log.info(`Replaced preloaded display window ${displayWindowAgent.getId()} with new TDL: ${options["tdlFileName"]}`);
         return displayWindowAgent;
     };
 
@@ -519,14 +515,14 @@ export class WindowAgentsManager {
         };
         const displayWindowAgent = await this.createDisplayWindow(options);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
-            Log.info("0", `Created preload display window ${displayWindowAgent.getId()}`);
+            Log.info(`Created preload display window ${displayWindowAgent.getId()}`);
             // (3)
             // this is done inside this.createDisplayWindow() method to prevent race condition
             // this.preloadedDisplayWindowAgent = displayWindowAgent;
             this.creatingPreloadedDisplayWindow = false;
             return displayWindowAgent;
         } else {
-            Log.error("0", `Failed to create preloaded display window`);
+            Log.error(`Failed to create preloaded display window`);
             this.creatingPreloadedDisplayWindow = false;
             return undefined;
         }
@@ -555,14 +551,14 @@ export class WindowAgentsManager {
         };
         const displayWindowAgent = await this.createDisplayWindow(options);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
-            Log.info("0", `Created preview display window ${displayWindowAgent.getId()}`);
+            Log.info(`Created preview display window ${displayWindowAgent.getId()}`);
             // (3)
             // this is done inside this.createDisplayWindow() to prevent race condition
             // this.previewDisplayWindowAgent = displayWindowAgent;
             this.creatingPreviewDisplayWindow = false;
             return displayWindowAgent;
         } else {
-            Log.error("0", `Failed to create preview display window`);
+            Log.error(`Failed to create preview display window`);
             this.creatingPreviewDisplayWindow = false;
             return undefined;
         }
@@ -635,11 +631,11 @@ export class WindowAgentsManager {
             const displayWindowAgent = await this.createDisplayWindow(windowOptions);
 
             if (displayWindowAgent === undefined) {
-                Log.error("0", `Cannot create display window for utility ${utilityType}`);
+                Log.error(`Cannot create display window for utility ${utilityType}`);
                 return;
             }
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
         }
     };
 
@@ -687,7 +683,7 @@ export class WindowAgentsManager {
                 await displayWindowAgent.createWebBrowserWindow(url);
             }
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
         }
     };
 

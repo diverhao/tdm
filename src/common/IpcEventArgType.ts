@@ -538,6 +538,7 @@ export type IpcEventArgType = {
     } |
     {
         command: "stop",
+        displayWindowId: string,
     },
 
     "save-video-file": {

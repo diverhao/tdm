@@ -131,7 +131,7 @@ export class DisplayWindowLifeCycleManager {
             const window = new BrowserWindow(windowOptions);
             this.setBrowserWindow(window);
             window.webContents.setWindowOpenHandler(({ url }: any) => {
-                Log.debug("0", `open new window ${url}`);
+                Log.debug(`open new window ${url}`);
                 return { action: "allow" };
             });
 
@@ -207,7 +207,7 @@ export class DisplayWindowLifeCycleManager {
         if (browserWindow instanceof BrowserWindow) {
             browserWindow.close();
         } else {
-            Log.error("0", `Error: cannot close window ${displayWindowAgent.getId()}`);
+            Log.error(`Error: cannot close window ${displayWindowAgent.getId()}`);
         }
     };
 
@@ -215,7 +215,7 @@ export class DisplayWindowLifeCycleManager {
         const displayWindowAgent = this.getDisplayWindowAgent();
         if (displayWindowAgent.getWindowAgentsManager().preloadedDisplayWindowAgent === displayWindowAgent) {
             this.getBrowserWindow()?.webContents.close();
-            Log.error("0", `You are trying to close a preloaded display window or preloaded embedded display`);
+            Log.error(`You are trying to close a preloaded display window or preloaded embedded display`);
             return;
         }
         displayWindowAgent.sendFromMainProcess("window-will-be-closed", {});
@@ -224,7 +224,7 @@ export class DisplayWindowLifeCycleManager {
     handleWindowClosed = () => {
         const displayWindowAgent = this.getDisplayWindowAgent();
 
-        Log.info("0", "close display window", displayWindowAgent.getId());
+        Log.info("close display window", displayWindowAgent.getId());
         displayWindowAgent.getDisplayWindowChannelsManager().handleWindowClosed();
         displayWindowAgent.getWindowAgentsManager().removeAgent(displayWindowAgent.getId());
         displayWindowAgent.getDisplayWindowUtilities().handleWindowClosed();
@@ -346,11 +346,11 @@ export class DisplayWindowLifeCycleManager {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const browserWindow = this.getBrowserWindow();
         if (browserWindow instanceof BrowserWindow) {
-            Log.debug("0", `Show display window ${displayWindowAgent.getId()} with ${displayWindowAgent.getTdlFileName()}`);
+            Log.debug(`Show display window ${displayWindowAgent.getId()} with ${displayWindowAgent.getTdlFileName()}`);
             this.setHiddenWindow(false);
             browserWindow.show();
         } else {
-            Log.error("0", `Error: cannot show window ${displayWindowAgent.getId()}`);
+            Log.error(`Error: cannot show window ${displayWindowAgent.getId()}`);
         }
     };
 
@@ -363,7 +363,7 @@ export class DisplayWindowLifeCycleManager {
             }
             browserWindow.focus();
         } else {
-            Log.error("0", `Error: cannot focus window ${displayWindowAgent.getId()}`);
+            Log.error(`Error: cannot focus window ${displayWindowAgent.getId()}`);
         }
     };
 
@@ -390,7 +390,7 @@ export class DisplayWindowLifeCycleManager {
 
         const displayWindowAgent = this.getDisplayWindowAgent();
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
-            Log.error("0", `Cannot handle "window-will-be-closed": invalid displayWindowAgent for displayWindowId=${displayWindowId}`);
+            Log.error(`Cannot handle "window-will-be-closed": invalid displayWindowAgent for displayWindowId=${displayWindowId}`);
             return
         }
         if (select === "don't save") {
@@ -439,7 +439,7 @@ export class DisplayWindowLifeCycleManager {
         //     // todo: should be able to save
         //     const failedReason = "Cannot save file in web mode";
         //     displayWindowAgent.showError([failedReason]);
-        //     Log.error("0", failedReason, displayWindowId);
+        //     Log.error(failedReason, displayWindowId);
         //     this.setReadyToClose(false);
         //     return;
         // } else if (mainProcessMode === "ssh-server") {
@@ -448,12 +448,12 @@ export class DisplayWindowLifeCycleManager {
         //         this.closeBrowserWindow();
         //     } else if (result !== "prompted") {
         //         displayWindowAgent.showError([result]);
-        //         Log.error("0", result);
+        //         Log.error(result);
         //         this.setReadyToClose(false);
         //     }
         //     return;
         // } else {
-        //     Log.error("0", `Unexpected main process mode while closing display window: ${mainProcessMode}`, displayWindowId);
+        //     Log.error(`Unexpected main process mode while closing display window: ${mainProcessMode}`, displayWindowId);
         // }
 
     };
@@ -470,7 +470,7 @@ export class DisplayWindowLifeCycleManager {
         } else if (mainProcessMode === "ssh-server") {
             this.closeBrowserWindowInSshServerMode();
         } else {
-            Log.error("0", `Cannot close browser window: unsupported main process mode ${mainProcessMode} for displayWindowId=${displayWindowId}`);
+            Log.error(`Cannot close browser window: unsupported main process mode ${mainProcessMode} for displayWindowId=${displayWindowId}`);
         }
     }
 
@@ -482,7 +482,7 @@ export class DisplayWindowLifeCycleManager {
         if (browserWindow !== undefined) {
             browserWindow.webContents.close();
         } else {
-            Log.error("0", `Cannot close browser window in desktop mode: browserWindow is undefined for displayWindowId=${displayWindowId}`);
+            Log.error(`Cannot close browser window in desktop mode: browserWindow is undefined for displayWindowId=${displayWindowId}`);
         }
     }
 
@@ -509,7 +509,7 @@ export class DisplayWindowLifeCycleManager {
                 }
             ))
         } else {
-            Log.error("0", `Cannot close browser window in ssh-server mode: sshServer is undefined for displayWindowId=${displayWindowId}`);
+            Log.error(`Cannot close browser window in ssh-server mode: sshServer is undefined for displayWindowId=${displayWindowId}`);
         }
     };
 

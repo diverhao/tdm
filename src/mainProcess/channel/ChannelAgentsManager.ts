@@ -57,7 +57,7 @@ export class ChannelAgentsManager {
     createAndInitContext = async () => {
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (this._context === undefined && selectedProfile !== undefined) {
-            Log.info("0", "Creating EPICS CA context");
+            Log.info("Creating EPICS CA context");
             let epicsLogLevel: type_log_levels = type_log_levels.error;
             const epicsLogLevelEntryValue = selectedProfile.getEpicsLogLevel();
             if (epicsLogLevelEntryValue !== undefined) {
@@ -68,7 +68,7 @@ export class ChannelAgentsManager {
             this._context = new Context({ ...epicsCaSettings, ...epicsTcaLibSettings }, epicsLogLevel);
             await this._context.initialize();
         } else {
-            Log.info("0", "EPICS CA context already exists");
+            Log.info("EPICS CA context already exists");
         }
     };
 

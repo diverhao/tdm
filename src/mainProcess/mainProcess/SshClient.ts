@@ -150,7 +150,7 @@ export class SshClient {
 
         // (1)
         sshClient.on("ready", () => {
-            Log.info("0", "Successfully connected to SSH server", `${this.getServerIP()}:${this.getServerSshPort()}`);
+            Log.info("Successfully connected to SSH server", `${this.getServerIP()}:${this.getServerSshPort()}`);
             resolveFunc();
         });
 
@@ -515,7 +515,7 @@ export class SshClient {
 
             if (command !== undefined) {
                 // (1)
-                Log.debug("0", "recevied data from TCP server:", data.toString())
+                Log.debug("recevied data from TCP server:", data.toString())
                 const callback = this.tcpEventListeners[command];
                 if (callback !== undefined) {
                     const data = dataJSON["data"];
@@ -647,7 +647,7 @@ export class SshClient {
         if (tcpStream !== undefined) {
             tcpStream.write(JSON.stringify(message));
         } else {
-            Log.error("0", "SSH WebSocket error: there is no forward out stream");
+            Log.error("SSH WebSocket error: there is no forward out stream");
         }
     }
 

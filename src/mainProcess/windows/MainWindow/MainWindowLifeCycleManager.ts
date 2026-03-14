@@ -133,7 +133,7 @@ export class MainWindowLifeCycleManager {
         const mainWindowAgent = this.getMainWindowAgent();
         const windowAgentsManager = mainWindowAgent.getWindowAgentsManager();
 
-        Log.info("0", "close main window", mainWindowAgent.getId());
+        Log.info("close main window", mainWindowAgent.getId());
         windowAgentsManager.removeAgent(mainWindowAgent.getId());
 
         const hasPreloadedBrowserWindow = windowAgentsManager.preloadedDisplayWindowAgent === undefined ? 0 : 1;
@@ -174,7 +174,7 @@ export class MainWindowLifeCycleManager {
     show = () => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow === undefined) {
-            Log.error("0", "Main window does not exist, nothing to pop up");
+            Log.error("Main window does not exist, nothing to pop up");
             return;
         }
         browserWindow.show();
@@ -192,7 +192,7 @@ export class MainWindowLifeCycleManager {
             }
             browserWindow.focus();
         } else {
-            Log.error("0", "Main window does not exist, nothing to pop up");
+            Log.error("Main window does not exist, nothing to pop up");
         }
     };
 
@@ -202,7 +202,7 @@ export class MainWindowLifeCycleManager {
         if (browserWindow instanceof BrowserWindow) {
             browserWindow.close();
         } else {
-            Log.error("0", `Error: cannot close window ${mainWindowAgent.getId()}`);
+            Log.error(`Error: cannot close window ${mainWindowAgent.getId()}`);
         }
     };
 

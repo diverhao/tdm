@@ -44,24 +44,24 @@ export class Sql {
     periodicTaskFunc = async () => {
 
         if (this.getState() === SqlState.CONNECTING) {
-            Log.info("-1", "We are connecting to SQL db.");
+            Log.info("We are connecting to SQL db.");
             return;
         }
 
         await this.checkConnectionStatus();
 
         if (this.getState() === SqlState.CONNECTED) {
-            Log.info("-1", "We are connected to SQL db.");
+            Log.info("We are connected to SQL db.");
             return;
         } else {
-            Log.error("-1", "Seems like the SQL db connection is broken, re-connect.")
+            Log.error("Seems like the SQL db connection is broken, re-connect.")
             this.reconnectDb()
         }
     }
 
     connectDb = async () => {
         if (this.getState() === SqlState.CONNECTED || this.getState() === SqlState.CONNECTING) {
-            Log.info("-1", "We already initiated to connect SQL db, be patient ...");
+            Log.info("We already initiated to connect SQL db, be patient ...");
             return;
         }
         this.setState(SqlState.CONNECTING);
@@ -74,11 +74,11 @@ export class Sql {
                 }
             ));
             this.setState(SqlState.CONNECTED);
-            Log.info("-1", "Successfully connected to Oracle Database");
+            Log.info("Successfully connected to Oracle Database");
         } catch (e) {
             this.setState(SqlState.DISCONNECTED);
             this.setConnection(undefined);
-            Log.error("-1", e);
+            Log.error(e);
         }
     }
 

@@ -171,7 +171,7 @@ export class DisplayWindowFile {
             fs.writeFileSync(fileName, fileContent);
             return true;
         } catch (error) {
-            Log.error("0", `Cannot save file ${fileName}`, `${error}`);
+            Log.error(`Cannot save file ${fileName}`, `${error}`);
             return false;
         }
     };
@@ -247,6 +247,40 @@ export class DisplayWindowFile {
 
     // --------------------- event handlers -----------------------
 
+    private sendFileConverterFinished = (widgetKey: string, status: "success" | "failed") => {
+        this.getDisplayWindowAgent().sendFromMainProcess("file-converter-command", {
+            type: "all-file-conversion-finished",
+            status: status,
+            widgetKey: widgetKey,
+        });
+    };
+
+    executeFileConverterCommand = (options: IpcEventArgType["file-converter-command"]) => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const mainProcess = displayWindowAgent.getWindowAgentsManager().getMainProcess();
+
+        if (options["command"] === "start") {
+            if (!fs.existsSync(options["src"])) {
+                displayWindowAgent.showError([`Source folder/file does not exist.`]);
+                this.sendFileConverterFinished(options["widgetKey"], "failed");
+                return;
+            }
+            if (!fs.existsSync(options["dest"])) {
+                displayWindowAgent.showError([`Destination folder/file does not exist.`]);
+                this.sendFileConverterFinished(options["widgetKey"], "failed");
+                return;
+            }
+            if (options["depth"] > 50 || options["depth"] < 1) {
+                displayWindowAgent.showError([`File search depath wrong: should be between 1 and 50 (both inclusive).`]);
+                this.sendFileConverterFinished(options["widgetKey"], "failed");
+                return;
+            }
+            mainProcess.getEdlFileConverterThread().startThread(options);
+        } else {
+            mainProcess.getEdlFileConverterThread().stopThread();
+        }
+    };
+
 
     saveTdlFile = async (options: IpcEventArgType["save-tdl-file"]): Promise<void> => {
         const { windowId, tdl, tdlFileName1 } = options;
@@ -267,7 +301,7 @@ export class DisplayWindowFile {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const selectedProfile = displayWindowAgent.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
-            Log.error("0", "Profile not selected.");
+            Log.error("Profile not selected.");
             return;
         }
 
@@ -375,7 +409,7 @@ export class DisplayWindowFile {
                 folderContent: result,
             })
         } catch (e) {
-            Log.error("0", `File Browser -- Failed to read folder ${options["folderPath"]}`);
+            Log.error(`File Browser -- Failed to read folder ${options["folderPath"]}`);
             displayWindowAgent.showError([`Failed to read folder ${options["folderPath"]}.`]);
             // let 
             displayWindowAgent.sendFromMainProcess("fetch-folder-content", {
@@ -408,7 +442,6 @@ export class DisplayWindowFile {
             });
         }
     };
-
 
 
     // ------------------- getters -----------------

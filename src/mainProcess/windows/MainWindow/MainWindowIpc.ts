@@ -32,7 +32,7 @@ export class MainWindowIpc {
         const wsClient = ipcManagerOnMainProcesses.getClients()[mainWindowAgent.getId()];
 
         if (wsClient === undefined) {
-            Log.error("0", "Cannot find WebSocket IPC client for window", mainWindowAgent.getId());
+            Log.error("Cannot find WebSocket IPC client for window", mainWindowAgent.getId());
             return;
         }
 
@@ -41,7 +41,7 @@ export class MainWindowIpc {
                 wsClient.send(JSON.stringify({ processId: "0", windowId: mainWindowAgent.getId(), eventName: channel, data: [arg] }));
             }
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
         }
     };
 

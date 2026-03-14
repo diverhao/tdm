@@ -47,7 +47,7 @@ export class EdlFileConverterThread {
 
             // Communicate with the worker
             worker.on('message', (message) => {
-                Log.debug("0", "Received message from file converter thread:", message);
+                Log.debug("Received message from file converter thread:", message);
                 const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
                 if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
                     // the display window is closed, quit the thread
@@ -91,7 +91,7 @@ export class EdlFileConverterThread {
             });
 
             worker.on('error', (error) => {
-                Log.error("0", 'File converter thread error:', error);
+                Log.error('File converter thread error:', error);
                 this.stopThread("Error in file converter thread");
                 const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
                 if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
@@ -144,7 +144,7 @@ export class EdlFileConverterThread {
     }
 
     stopThread = (reason: string = "") => {
-        Log.debug("0", "File converter thread stopped:", reason);
+        Log.debug("File converter thread stopped:", reason);
         const worker = this.getThread();
         if (worker !== undefined) {
             worker.terminate();

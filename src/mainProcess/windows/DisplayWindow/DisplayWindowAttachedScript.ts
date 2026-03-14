@@ -17,7 +17,7 @@ export class DisplayWindowAttachedScript {
     createWebSocketClientThread = (port: number, script: string) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         if (!(script.endsWith(".py") || script.endsWith(".js"))) {
-            Log.debug("0", `Script ${script} won't run for window ${displayWindowAgent.getId()}.`);
+            Log.debug(`Script ${script} won't run for window ${displayWindowAgent.getId()}.`);
             displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
                 info: {
                     messageType: "error",
@@ -32,13 +32,13 @@ export class DisplayWindowAttachedScript {
         }
 
         if (displayWindowAgent.getWindowAgentsManager().preloadedDisplayWindowAgent === displayWindowAgent) {
-            Log.debug("0", "This is a preloaded display window, skip creating websocket client thread");
+            Log.debug("This is a preloaded display window, skip creating websocket client thread");
             return;
         }
 
         try {
             if (script.endsWith(".py")) {
-                Log.info("0", `Create new Python thread for display window ${displayWindowAgent.getId()}`);
+                Log.info(`Create new Python thread for display window ${displayWindowAgent.getId()}`);
                 const selectedProfile = displayWindowAgent.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
                 if (selectedProfile !== undefined) {
                     const pythonCommand = selectedProfile.getEntry("EPICS Custom Environment", "Python Command");
@@ -51,15 +51,15 @@ export class DisplayWindowAttachedScript {
                             this._windowAttachedScriptPid = this._webSocketClientThread.pid;
                         }
                         this._webSocketClientThread.stdout?.on("data", (data) => {
-                            Log.debug("0", `Python stdout: ${data}`);
+                            Log.debug(`Python stdout: ${data}`);
                         });
                         this._webSocketClientThread.stderr?.on("data", (data) => {
-                            Log.error("0", `Python stderr: ${data}`);
+                            Log.error(`Python stderr: ${data}`);
                         });
                     }
                 }
             } else if (script.endsWith(".js")) {
-                Log.debug("0", `Create new Javascript thread on display window ${displayWindowAgent.getId()}`);
+                Log.debug(`Create new Javascript thread on display window ${displayWindowAgent.getId()}`);
                 this._webSocketClientThread = new Worker(script, {
                     workerData: {
                         mainProcessId: "0",
@@ -72,11 +72,11 @@ export class DisplayWindowAttachedScript {
                 this._windowAttachedScriptPid = process.pid;
             }
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
         }
 
         this._webSocketClientThread?.on("error", (err: Error) => {
-            Log.error("0", err);
+            Log.error(err);
             displayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
                 info: {
                     messageType: "error",
@@ -89,14 +89,14 @@ export class DisplayWindowAttachedScript {
 
     terminateWebSocketClientThread = () => {
         const displayWindowAgent = this.getDisplayWindowAgent();
-        Log.debug("0", `Terminate websocket client thread for display window ${displayWindowAgent.getId()}`);
+        Log.debug(`Terminate websocket client thread for display window ${displayWindowAgent.getId()}`);
 
         if (this._webSocketClientThread instanceof Worker) {
             this._webSocketClientThread.terminate();
         } else if (this._webSocketClientThread instanceof child_process.ChildProcess) {
             this._webSocketClientThread.kill();
         } else {
-            Log.debug("0", "There was no worker thread for WebSocket client");
+            Log.debug("There was no worker thread for WebSocket client");
         }
     };
 

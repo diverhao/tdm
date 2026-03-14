@@ -13,7 +13,7 @@ import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import { spawn } from "child_process";
 import { Environment } from "epics-tca";
 import { IpcEventArgType, type_DialogMessageBox } from "../../common/IpcEventArgType";
-import { fileToDataUri, generateKeyAndCert, scanSymbolGallery } from "../global/GlobalMethods";
+import { fileToDataUri, generateKeyAndCert } from "../global/GlobalMethods";
 import { SshServer } from "./SshServer";
 import https from "https";
 import { WebSocketServer, WebSocket, RawData } from "ws";
@@ -99,18 +99,18 @@ export class IpcManagerOnMainProcess {
                     (key, value) =>
                         value === null ? undefined : value
                 );
-                Log.debug("-1", "IPC websocket server received message", message);
+                Log.debug("IPC websocket server received message", message);
                 this.handleMessage(wsClient, message);
             });
 
             wsClient.on("error", (err: Error) => {
-                Log.error("-1", "WebSocket IPC client got an error", err)
+                Log.error("WebSocket IPC client got an error", err)
             });
 
             // websocket connection closed, do nothing
             // if the display window is still alive, it will try to reconnect
             wsClient.on("close", (code: number, reason: Buffer) => {
-                Log.info("-1", "WebSocket client closed.", code, reason.toString());
+                Log.info("WebSocket client closed.", code, reason.toString());
             });
         });
     };
@@ -166,7 +166,7 @@ export class IpcManagerOnMainProcess {
                 // same as desktoip or web mode, always register the websocket client
                 // also forward the message to to ssh server, so that the window can be registered
                 if (this.getClients()[fullWindowId] === undefined) {
-                    Log.debug("-1", "register window", windowId, "for WebSocket IPC");
+                    Log.debug("register window", windowId, "for WebSocket IPC");
                     this.getClients()[fullWindowId] = wsClient;
                     // lift the block in create window method
                     // const windowAgent = mainProcess.getWindowAgentsManager().getAgent(windowId);
@@ -185,7 +185,7 @@ export class IpcManagerOnMainProcess {
                     sshClient.sendToTcpServer(message);
                     // sshClient.sendToTcpServer(tcpMessage);
                 } else {
-                    Log.error("-1", "Error: the main process", processId, "is not a ssh client");
+                    Log.error("Error: the main process", processId, "is not a ssh client");
                 }
             }
         } else if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-server") {
@@ -223,7 +223,7 @@ export class IpcManagerOnMainProcess {
         }
         // (2)
         delete this.getClients()[id];
-        Log.info("-1", "Remove websocket IPC client", id);
+        Log.info("Remove websocket IPC client", id);
     };
 
 
@@ -402,7 +402,7 @@ export class IpcManagerOnMainProcess {
         const mainProcessMode = mainProcess.getMainProcessMode();
         const windowId = data["windowId"];
         const reconnect = data["reconnect"];
-        Log.info("-1", "register window", windowId, "for WebSocket IPC");
+        Log.info("register window", windowId, "for WebSocket IPC");
         if (mainProcessMode === "desktop" || mainProcessMode === "web") {
             // desktop mode: websocket client on main/display window
 
@@ -425,7 +425,7 @@ export class IpcManagerOnMainProcess {
         }
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
-            Log.error("0", "Profile not selected!");
+            Log.error("Profile not selected!");
             return undefined;
         }
         windowAgent.sendFromMainProcess("selected-profile-contents",
@@ -469,7 +469,7 @@ export class IpcManagerOnMainProcess {
         //     // we need to undo the above operation
         //     // no need to disconnec the websocket connection, the client 
         //     // will close the connection when the web page closes
-        //     Log.error("-1", "There is no display window agent for this window ID", data["windowId"], "on server side, stop.");
+        //     Log.error("There is no display window agent for this window ID", data["windowId"], "on server side, stop.");
         //     delete ipcManager.getClients()[windowId];
         // }
 
@@ -485,7 +485,7 @@ export class IpcManagerOnMainProcess {
         const mainProcessMode = mainProcess.getMainProcessMode();
         const windowId = data["windowId"];
         const reconnect = data["reconnect"];
-        Log.info("-1", "register window", windowId, "for WebSocket IPC");
+        Log.info("register window", windowId, "for WebSocket IPC");
 
         if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-client") {
             // desktop mode: websocket client on main/display window
@@ -698,7 +698,7 @@ export class IpcManagerOnMainProcess {
                     title: "Select a file to save to",
                 });
                 if (filePath === undefined) {
-                    Log.info("0", "No Profiles file selected, cancel saving");
+                    Log.info("No Profiles file selected, cancel saving");
                     return false;
                 }
             } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
@@ -740,7 +740,7 @@ export class IpcManagerOnMainProcess {
                 }
             );
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
             mainWindowAgent.sendFromMainProcess("dialog-show-message-box",
                 {
                     info: {
@@ -779,7 +779,7 @@ export class IpcManagerOnMainProcess {
                     title: "Select a file to save to",
                 });
                 if (filePath === undefined) {
-                    Log.error("0", "No file selected, cancel saving Profiles file.");
+                    Log.error("No file selected, cancel saving Profiles file.");
                     return false;
                 }
             } else if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
@@ -821,7 +821,7 @@ export class IpcManagerOnMainProcess {
             // update log
             this.getMainProcess().enableLogToFile();
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
             mainWindowAgent.showError([`Error save file to ${filePath}.`], [`${e}`]);
 
             return false;
@@ -1012,7 +1012,7 @@ export class IpcManagerOnMainProcess {
         if (selectedProfile === undefined) {
             return;
         }
-        Log.info(0, "Main process for", mainProcessMode, "mode started. Profile is", selectedProfileName);
+        Log.info("Main process for", mainProcessMode, "mode started. Profile is", selectedProfileName);
 
 
         // todo: what is this?
@@ -1029,7 +1029,7 @@ export class IpcManagerOnMainProcess {
                 privateKeyFile: sshConfigRaw["Private Key File"]["value"],
                 tdmCommand: sshConfigRaw["TDM Command"]["value"],
             };
-            Log.info("0", "We are going to run a new process on remote ssh using config", sshServerConfig)
+            Log.info("We are going to run a new process on remote ssh using config", sshServerConfig)
 
             if (typeof sshServerConfig.ip === "string" && !isNaN(sshServerConfig.port) && typeof sshServerConfig.userName === "string" && typeof sshServerConfig.privateKeyFile === "string") {
                 // const callingProcessId = this.getMainProcess().getMain();
@@ -1037,7 +1037,7 @@ export class IpcManagerOnMainProcess {
                 const args = this.getMainProcess().getRawArgs();
                 new MainProcess(args, undefined, "ssh-client", { ...sshServerConfig, callingProcessId: callingProcessId });
             } else {
-                Log.error("0", "Profiles file error: Cannot create main process for ssh config", selectedProfileName);
+                Log.error("Profiles file error: Cannot create main process for ssh config", selectedProfileName);
             }
         } else if (mainProcessMode === "web") {
 
@@ -1226,7 +1226,7 @@ export class IpcManagerOnMainProcess {
     handleOpenDefaultDisplayWindows = (event: WebSocket | string, options: IpcEventArgType["open-default-display-windows"]) => {
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
-            Log.error("0", `Profile not selected yet`);
+            Log.error(`Profile not selected yet`);
             return;
         }
 
@@ -1262,10 +1262,10 @@ export class IpcManagerOnMainProcess {
                         };
                         windowAgentsManager.createDisplayWindow(options);
                     } else {
-                        Log.error("0", `Cannot read file ${tdlFileName}. FileReader.readTdlFile() returned undefined.`);
+                        Log.error(`Cannot read file ${tdlFileName}. FileReader.readTdlFile() returned undefined.`);
                     }
                 }).catch((e) => {
-                    Log.error("0", `Cannot read file ${tdlFileName}`, e);
+                    Log.error(`Cannot read file ${tdlFileName}`, e);
                 });
 
             } else if (path.extname(tdlFileName) === ".db" || path.extname(tdlFileName) === ".template") {
@@ -1336,7 +1336,7 @@ export class IpcManagerOnMainProcess {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
-            Log.error("0", "Profile not selected!");
+            Log.error("Profile not selected!");
             return;
         }
 
@@ -1432,7 +1432,7 @@ export class IpcManagerOnMainProcess {
                 windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, options["macros"], options["currentTdlFolder"], windowId);
             }
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
             if (windowAgent !== undefined) {
                 const dialogInfo: { info: type_DialogMessageBox } = {
                     info: {
@@ -1459,7 +1459,7 @@ export class IpcManagerOnMainProcess {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
-            Log.error("0", "Profile not selected!");
+            Log.error("Profile not selected!");
             return;
         }
 
@@ -1503,7 +1503,7 @@ export class IpcManagerOnMainProcess {
                 // (4)
             }
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
             if (windowAgent !== undefined) {
                 const dialogInfo: { info: type_DialogMessageBox } = {
                     info: {
@@ -1548,7 +1548,7 @@ export class IpcManagerOnMainProcess {
                         tdlFileName: tdlFileName,
                     })
                 } else {
-                    Log.error("0", `Cannot read file ${tdlFileName}`);
+                    Log.error(`Cannot read file ${tdlFileName}`);
                     displayWindowAgent.sendFromMainProcess("read-embedded-display-tdl", {
                         displayWindowId: displayWindowId,
                         widgetKey: widgetKey,
@@ -1611,7 +1611,7 @@ export class IpcManagerOnMainProcess {
             }
             await displayWindowAgent.getDisplayWindowFile().loadTdlFile(options);
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
         }
     };
 
@@ -1627,7 +1627,7 @@ export class IpcManagerOnMainProcess {
         const { windowId } = options;
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(windowId);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
-            Log.error("0", `No such display window ${windowId}. Cancel saving file.`);
+            Log.error(`No such display window ${windowId}. Cancel saving file.`);
             return;
         }
 
@@ -1645,10 +1645,10 @@ export class IpcManagerOnMainProcess {
         }
 
         const { displayWindowId, data, preferredFileTypes } = options;
-        Log.debug("0", "We are going to save a file");
+        Log.debug("We are going to save a file");
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
-            Log.error("0", `No such display window ${displayWindowId}. Cancel saving file.`);
+            Log.error(`No such display window ${displayWindowId}. Cancel saving file.`);
             return;
         }
         try {
@@ -1688,11 +1688,11 @@ export class IpcManagerOnMainProcess {
 
             fs.writeFile(fileName, JSON.stringify(data, null, 4), (err) => {
                 if (err) {
-                    Log.error("0", err);
+                    Log.error(err);
                     displayWindowAgent.showError([`Failed to save ${fileName}`, "Please check the file permission."], ["Below is the raw message:", `${err}`]);
 
                 } else {
-                    Log.info("0", `Saved tdl to file ${fileName}`);
+                    Log.info(`Saved tdl to file ${fileName}`);
                 }
             });
         } catch (e) {
@@ -1817,19 +1817,19 @@ export class IpcManagerOnMainProcess {
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             // editing
             if (data["action"] === "terminate") {
-                Log.debug("0", "Terminate script", data["script"], "for window", data["displayWindowId"]);
+                Log.debug("Terminate script", data["script"], "for window", data["displayWindowId"]);
                 displayWindowAgent.terminateWebSocketClientThread();
                 displayWindowAgent.removeWebSocketMonitorChannels();
             } else if (data["action"] === "run") {
                 // operating
-                Log.debug("0", "Run script", data["script"], "for window", data["displayWindowId"]);
+                Log.debug("Run script", data["script"], "for window", data["displayWindowId"]);
                 const port = this.getMainProcess().getWsPvServer().getPort();
                 displayWindowAgent.createWebSocketClientThread(port, data["script"]);
             } else {
-                Log.error("0", "window-attached-script event error: action must be either run or terminate");
+                Log.error("window-attached-script event error: action must be either run or terminate");
             }
         } else {
-            Log.error("0", "Cannot set mode for a non-display-window");
+            Log.error("Cannot set mode for a non-display-window");
         }
     };
 
@@ -1937,7 +1937,7 @@ export class IpcManagerOnMainProcess {
         }
         // (2)
         // ioId and widgetKey are bounced back
-        Log.debug("0", "tca-get-meta result for", channelName, "is", data);
+        Log.debug("tca-get-meta result for", channelName, "is", data);
         if (channelAgentsManager.determineChannelType(channelName) === "pva") {
             displayWindowAgent.sendFromMainProcess("fetch-pva-type",
                 {
@@ -1974,7 +1974,7 @@ export class IpcManagerOnMainProcess {
         let data = await displayWindowAgent.fetchPvaType(channelName, timeout);
         // (2)
         // ioId and widgetKey are bounced back
-        Log.debug("0", "fetch Pva Type for", channelName, "is", data);
+        Log.debug("fetch Pva Type for", channelName, "is", data);
         displayWindowAgent.sendFromMainProcess("fetch-pva-type",
             {
                 channelName, widgetKey, fullPvaType: data, ioId
@@ -2120,7 +2120,7 @@ export class IpcManagerOnMainProcess {
                         try {
                             scriptFileContents = fs.readFileSync(scriptFullFileName, "utf-8");
                         } catch (e) {
-                            Log.error("0", "Cannot read script file", scriptFullFileName, e);
+                            Log.error("Cannot read script file", scriptFullFileName, e);
                         }
                     } else if ((!scriptFileName.trim().endsWith(".py") || !scriptFileName.trim().endsWith(".js"))) {
                         scriptFullFileName = scriptFileName;
@@ -2233,6 +2233,16 @@ export class IpcManagerOnMainProcess {
         }
     };
 
+    /**
+     * Handle a file selection request from the renderer process. <br>
+     *
+     * This validates that the request includes a target display window ID, normalizes the optional
+     * initial file name to an empty string, and forwards the request to the corresponding
+     * `DisplayWindowFile` helper for native file selection handling.
+     *
+     * @param {WebSocket | string} event The IPC event source. Included for handler signature consistency.
+     * @param {IpcEventArgType["select-a-file"]} data The file selection request payload.
+     */
     handleSelectAFile = (event: WebSocket | string, data: IpcEventArgType["select-a-file"]) => {
         let { options, fileName1, } = data;
         if (fileName1 === undefined) {
@@ -2254,50 +2264,7 @@ export class IpcManagerOnMainProcess {
     };
 
     handleGetSymbolGallery = (event: WebSocket | string, options: IpcEventArgType["get-symbol-gallery"]) => {
-
-        const { page, update, displayWindowId, widgetKey } = options;
-        const mainProcess = this.getMainProcess();
-
-        if (update === true || Object.keys(mainProcess.getSymbolGalleryData()).length === 0) {
-            // Custom folder paths to scan directly (from options or empty array if not provided)
-            const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-
-            let customFolders: string[] = [];
-            if (selectedProfile !== undefined) {
-                const symbolLibrarySetting = selectedProfile.getEntry("EPICS Custom Environment", "Symbol Library");
-                if (Array.isArray(symbolLibrarySetting)) {
-                    customFolders = symbolLibrarySetting;
-                }
-            }
-
-            // Built-in gallery folder - scans its immediate subfolders
-            const builtInGalleryFolder = path.join(__dirname, "../../common/resources/symbolGallery");
-
-            const galleryData = scanSymbolGallery(customFolders, builtInGalleryFolder);
-            mainProcess.setSymbolGalleryData(galleryData);
-        }
-
-        const galleryData = mainProcess.getSymbolGalleryData();
-
-        // send back the requested page data
-        const displayWindowAgent = mainProcess.getWindowAgentsManager().getAgent(displayWindowId);
-        if (displayWindowAgent instanceof DisplayWindowAgent) {
-            const pageNames = Object.keys(galleryData);
-            const pageName = pageNames[page];
-            let pageImages: Record<string, string> = {};
-            if (typeof pageName === "string") {
-                pageImages = galleryData[pageName];
-            }
-
-            // send back the current page data to client
-            displayWindowAgent.sendFromMainProcess("get-symbol-gallery", {
-                displayWindowId: displayWindowId,
-                widgetKey: widgetKey,
-                pageNames: pageNames,
-                page: page,
-                pageImages: pageImages,
-            })
-        }
+        this.getMainProcess().getSymbolGallery().handleGetSymbolGallery(options);
     }
 
     // -------------------- embedded display events ----------------------
@@ -2343,13 +2310,13 @@ export class IpcManagerOnMainProcess {
     };
 
     handleSwitchIframeDisplayTab = async (event: WebSocket | string, options: IpcEventArgType["switch-iframe-display-tab"],) => {
-        Log.debug("0", "try to obtain iframe uuid");
+        Log.debug("try to obtain iframe uuid");
         let { mode, tdlFileName, macros, displayWindowId, widgetKey, currentTdlFolder } = options;
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         try {
             const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder);
             if (tdlResult === undefined) {
-                Log.error("0", `Cannot read file ${tdlFileName}`);
+                Log.error(`Cannot read file ${tdlFileName}`);
                 return;
             }
             const { tdl, fullTdlFileName } = tdlResult;
@@ -2371,7 +2338,7 @@ export class IpcManagerOnMainProcess {
                 displayWindowId
             );
         } catch (e) {
-            Log.error("0", `Failed to switch iframe display tab for widget ${widgetKey} in display window ${displayWindowId} using TDL ${tdlFileName}.`, e);
+            Log.error(`Failed to switch iframe display tab for widget ${widgetKey} in display window ${displayWindowId} using TDL ${tdlFileName}.`, e);
             // we are not really closing the display window, just closing the iframe's window agent
             const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["iframeDisplayId"]);
             if (displayWindowAgent instanceof DisplayWindowAgent) {
@@ -2422,15 +2389,15 @@ export class IpcManagerOnMainProcess {
                 const childProcess = spawn(commandHead, commandArray);
 
                 childProcess.stdout.on("data", (data) => {
-                    Log.info("0", `stdout: ${data}`);
+                    Log.info(`stdout: ${data}`);
                 });
 
                 childProcess.stderr.on("data", (data) => {
-                    Log.info("0", `stderr: ${data}`);
+                    Log.info(`stderr: ${data}`);
                 });
 
                 childProcess.on("close", (code) => {
-                    Log.info("0", `child process exited with code ${code}`);
+                    Log.info(`child process exited with code ${code}`);
                 });
 
                 childProcess.on("error", (err) => {
@@ -2485,7 +2452,7 @@ export class IpcManagerOnMainProcess {
         const channelAgentsManager = this.getMainProcess().getChannelAgentsManager();
         const epicsContext = channelAgentsManager.getContext();
         if (epicsContext === undefined) {
-            Log.error("0", "EPICS context not initialized");
+            Log.error("EPICS context not initialized");
             return;
         }
 
@@ -2672,7 +2639,7 @@ export class IpcManagerOnMainProcess {
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         if (selectedProfile === undefined) {
-            Log.error("0", "Profile not selected!");
+            Log.error("Profile not selected!");
             return;
         }
 
@@ -2706,7 +2673,7 @@ export class IpcManagerOnMainProcess {
                         // utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
                     });
                 } else {
-                    Log.error("0", `Cannot read tdl file ${tdlFileName}`);
+                    Log.error(`Cannot read tdl file ${tdlFileName}`);
                     if (fileBrowserDisplayWindowAgent instanceof DisplayWindowAgent) {
                         fileBrowserDisplayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
                             info: {
@@ -2721,7 +2688,7 @@ export class IpcManagerOnMainProcess {
                     }
                 }
             } else {
-                Log.error("0", `Cannot read tdl file ${tdlFileName}`);
+                Log.error(`Cannot read tdl file ${tdlFileName}`);
                 if (fileBrowserDisplayWindowAgent instanceof DisplayWindowAgent) {
                     fileBrowserDisplayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
                         info: {
@@ -2744,14 +2711,14 @@ export class IpcManagerOnMainProcess {
 
     // --------------------- ssh login ----------------------
     handleSshPasswordPromptResult = (event: WebSocket | string, result: IpcEventArgType["ssh-password-prompt-result"]) => {
-        Log.info("0", result)
+        Log.info(result)
         const sshMainProcess = this.getMainProcess(); //.getMainProcesses().getProcess(result["sshMainProcessId"]);
         if (sshMainProcess instanceof MainProcess) {
             sshMainProcess.getSshClient()?._passwordPromptResolve({
                 password: result["password"],
             });
         } else {
-            Log.error("0", "Cannot find main process", result["sshMainProcessId"]);
+            Log.error("Cannot find main process", result["sshMainProcessId"]);
         }
     }
 
@@ -2761,7 +2728,7 @@ export class IpcManagerOnMainProcess {
             // simply quit
             sshMainProcess.quit();
         } else {
-            Log.error("0", "Cannot find main process", data["sshMainProcessId"]);
+            Log.error("Cannot find main process", data["sshMainProcessId"]);
         }
 
     }
@@ -2885,7 +2852,7 @@ export class IpcManagerOnMainProcess {
                 // result = await sql.getChannelData(options["channelName"], options["startTime"], options["endTime"]);
                 result = await sql.getChannelDataForDataViewer(options["channelName"], options["startTime"], options["endTime"]);
             } catch (e) {
-                Log.error(-1, "FAiled to request archive data", e);
+                Log.error("FAiled to request archive data", e);
                 return;
             }
         }
@@ -2896,7 +2863,7 @@ export class IpcManagerOnMainProcess {
                 archiveData: result,
             });
         } else {
-            Log.error("0", "Cannot obtain archive data for", options["channelName"], "from", options["startTime"], "to", options["endTime"]);
+            Log.error("Cannot obtain archive data for", options["channelName"], "from", options["startTime"], "to", options["endTime"]);
         }
     }
 
@@ -2908,43 +2875,11 @@ export class IpcManagerOnMainProcess {
     }
 
     handleFileConverterCommand = (event: WebSocket | string, options: IpcEventArgType["file-converter-command"]) => {
-
-        if (options["command"] === "start") {
-            const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
-            if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
-                return;
-            }
-
-            if (!fs.existsSync(options["src"])) {
-                displayWindowAgent.showError([`Source folder/file does not exist.`]);
-                displayWindowAgent.sendFromMainProcess("file-converter-command", {
-                    type: "all-file-conversion-finished",
-                    status: "failed",
-                    widgetKey: options["widgetKey"],
-                });
-                return;
-            }
-            if (!fs.existsSync(options["dest"])) {
-                displayWindowAgent.showError([`Destination folder/file does not exist.`]);
-                displayWindowAgent.sendFromMainProcess("file-converter-command", {
-                    type: "all-file-conversion-finished",
-                    status: "failed",
-                    widgetKey: options["widgetKey"],
-                });
-                return;
-            }
-            if (options["depth"] > 50 || options["depth"] < 1) {
-                displayWindowAgent.showError([`File search depath wrong: should be between 1 and 50 (both inclusive).`]);
-                displayWindowAgent.sendFromMainProcess("file-converter-command", {
-                    type: "all-file-conversion-finished",
-                    status: "failed",
-                    widgetKey: options["widgetKey"],
-                });
-                return;
-            }
-            this.getMainProcess().getEdlFileConverterThread().startThread(options);
-        } else if (options["command"] === "stop") {
-            this.getMainProcess().getEdlFileConverterThread().stopThread();
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            displayWindowAgent.getDisplayWindowFile().executeFileConverterCommand(options);
+        } else {
+            Log.error(`No such display window ${options["displayWindowId"]}. Cancel file converter command.`);
         }
     }
 
@@ -2980,7 +2915,7 @@ export class IpcManagerOnMainProcess {
                 })
 
             } catch (e) {
-                Log.error("-1", "Cannot read file", fullFileName)
+                Log.error("Cannot read file", fullFileName)
             }
         }
 

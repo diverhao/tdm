@@ -25,6 +25,7 @@ import { spawn } from "child_process";
 import pidusage from "pidusage";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
+import { SymbolGallery } from "./SymbolGallery";
 
 /**
  * Represents a main process.
@@ -107,15 +108,14 @@ export class MainProcess {
     // profiles
     private _profiles: Profiles;
 
+    // symbol gallery cache and request handling
+    private readonly _symbolGallery: SymbolGallery;
+
     // log stream for writing to file
     private _logStream: undefined | fs.WriteStream = undefined;
 
     // we are connecting to ssh
     private _connectingToSsh: boolean = false;
-
-    // symbol gallery data
-    private _symbolGalleryData: Record<string, Record<string, string>> = {};
-
 
     constructor(
         // mainProcesses: MainProcesses,
@@ -136,6 +136,7 @@ export class MainProcess {
         // create an empty first, then read the profiles file and update the profiles
         this._profiles = new Profiles(args["settings"], {});
         this._profiles.createProfiles(args["settings"]);
+        this._symbolGallery = new SymbolGallery(this);
 
         // main-process-mode specific initialization
         if (args["mainProcessMode"] === "web") {
@@ -202,7 +203,7 @@ export class MainProcess {
                     this._sshClient = new SshClient(this, sshServerConfig as any)
                 }, 1000)
                 // } else {
-                // Log.error(0, "Input for MainProcess constructor error: sshServerConfig cannot be undefined in ssh-client mode");
+                // Log.error("Input for MainProcess constructor error: sshServerConfig cannot be undefined in ssh-client mode");
                 // todo: quit
                 // }
             })
@@ -296,7 +297,7 @@ export class MainProcess {
                     connectionString: connectionString,
                 }));
             } else {
-                Log.error(0, "Archive cannot be connected");
+                Log.error("Archive cannot be connected");
             }
         }
     }
@@ -774,16 +775,12 @@ export class MainProcess {
         return this._profiles;
     }
 
-    getSymbolGalleryData = () => {
-        return this._symbolGalleryData;
-    }
-
-    setSymbolGalleryData = (newData: Record<string, Record<string, string>>) => {
-        this._symbolGalleryData = newData;
-    }
-
     setProfiles = (newProfiles: Profiles) => {
         this._profiles = newProfiles;
+    }
+
+    getSymbolGallery = () => {
+        return this._symbolGallery;
     }
 
     /**

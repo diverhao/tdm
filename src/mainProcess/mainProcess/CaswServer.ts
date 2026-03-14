@@ -55,10 +55,10 @@ export class CaswServer {
             this.getDisplayWindowIds().splice(index, 1);
         }
         if (this.getDisplayWindowIds().length === 0 || forceClose === true) {
-            Log.info("0", "------------------- close CASW server ---------------------------- ")
+            Log.info("------------------- close CASW server ---------------------------- ")
             this.closeServer();
         } else {
-            Log.info("0", "-------------------- not close CASW server ---------------------------- ")
+            Log.info("-------------------- not close CASW server ---------------------------- ")
         }
     }
 
@@ -179,8 +179,8 @@ export class CaswServer {
         })
 
         this.udpServer.on('message', (msg: Buffer, rinfo: dgram.RemoteInfo) => {
-            Log.debug(-1, `Server received: ${msg} from ${rinfo.address}:${rinfo.port}`);
-            Log.debug(-1, "raw message", msg, rinfo)
+            Log.debug(`Server received: ${msg} from ${rinfo.address}:${rinfo.port}`);
+            Log.debug("raw message", msg, rinfo)
             const data = this.decodeCaUdpMessage(msg, rinfo);
             for (let displayWindowId of this.getDisplayWindowIds()) {
                 const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);

@@ -51,7 +51,7 @@ export class DisplayWindowChannelsManager {
             }
             const channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
-                Log.error("0", `tcaGet: EPICS channel ${channelName} cannot be created/connected.`);
+                Log.error(`tcaGet: EPICS channel ${channelName} cannot be created/connected.`);
                 return { value: undefined };
             }
             const channelProtocol = channelAgent.getProtocol();
@@ -66,7 +66,7 @@ export class DisplayWindowChannelsManager {
             const connectSuccess = this.addAndConnectLocalChannel(channelName);
             const channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-                Log.debug("0", `tcaGet: Local channel ${channelName} cannot be created/connected.`);
+                Log.debug(`tcaGet: Local channel ${channelName} cannot be created/connected.`);
                 return result;
             }
             result = channelAgent.getDbrData();
@@ -96,7 +96,7 @@ export class DisplayWindowChannelsManager {
 
             const channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined) {
-                Log.debug("0", `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
+                Log.debug(`tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
                 return { value: undefined };
             }
 
@@ -105,7 +105,7 @@ export class DisplayWindowChannelsManager {
                     const dbrTypeNum_GR = channelAgent.getDbrTypeNum_GR();
                     const dbrTypeNum_CTRL = channelAgent.getDbrTypeNum_CTRL();
                     if (dbrTypeNum_GR === undefined) {
-                        Log.debug("0", `Channel ${channelName} does not have a GR type data.`);
+                        Log.debug(`Channel ${channelName} does not have a GR type data.`);
                         return { value: undefined };
                     }
                     result = await channelAgent.get(displayWindowAgent.getId(), dbrTypeNum_CTRL, ioTimeout);
@@ -125,7 +125,7 @@ export class DisplayWindowChannelsManager {
             const connectSuccess = this.addAndConnectLocalChannel(channelName);
             const channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-                Log.debug("0", `tcaGetMeta: Local channel ${channelName} cannot be created/connected.`);
+                Log.debug(`tcaGetMeta: Local channel ${channelName} cannot be created/connected.`);
                 return result;
             }
             result = channelAgent.getDbrData();
@@ -159,7 +159,7 @@ export class DisplayWindowChannelsManager {
 
         const channelAgent = channelAgentsManager.getChannelAgent(channelName);
         if (!connectSuccess || channelAgent === undefined) {
-            Log.debug("0", `tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
+            Log.debug(`tcaGetMeta: EPICS channel ${channelName} cannot be created/connected.`);
             return undefined;
         }
 
@@ -200,7 +200,7 @@ export class DisplayWindowChannelsManager {
             channelAgent.setDbrType(dbrMetaData["type"]);
             channelAgent.setDbrStrings(dbrMetaData["strings"]);
         } else {
-            Log.error("0", `Cannot find the agent for local channel ${channelName}`);
+            Log.error(`Cannot find the agent for local channel ${channelName}`);
         }
     };
 
@@ -221,18 +221,18 @@ export class DisplayWindowChannelsManager {
             }
             const channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
-                Log.debug("0", `tcaPut: EPICS channel ${channelName} cannot be created/connected.`);
+                Log.debug(`tcaPut: EPICS channel ${channelName} cannot be created/connected.`);
                 return putStatus;
             }
 
             const selectedProfile = displayWindowAgent.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
             if (selectedProfile === undefined) {
-                Log.error(-1, "No profile selected, quit PUT operation.");
+                Log.error("No profile selected, quit PUT operation.");
                 return putStatus;
             }
             const disablePut = selectedProfile.getDisablePut();
             if (`${disablePut}`.toLowerCase() === "yes") {
-                Log.warn(-1, "This profile does allow PUT operation for", channelName);
+                Log.warn("This profile does allow PUT operation for", channelName);
                 return putStatus;
             }
 
@@ -252,7 +252,7 @@ export class DisplayWindowChannelsManager {
         const connectSuccess = this.addAndConnectLocalChannel(channelName);
         const channelAgent = channelAgentsManager.getChannelAgent(channelName);
         if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-            Log.debug("0", `tcaPut: Local channel ${channelName} cannot be created/connected.`);
+            Log.debug(`tcaPut: Local channel ${channelName} cannot be created/connected.`);
             return putStatus;
         }
         channelAgent.put(displayWindowAgent.getId(), dbrData as type_LocalChannel_data);
@@ -276,7 +276,7 @@ export class DisplayWindowChannelsManager {
             const connectSuccess = await this.addAndConnectChannel(channelName, undefined);
             const channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
-                Log.debug("0", `tcaMonitor: EPICS channel ${channelName} cannot be created/connected.`);
+                Log.debug(`tcaMonitor: EPICS channel ${channelName} cannot be created/connected.`);
                 return false;
             }
             await channelAgent.createMonitor(displayWindowAgent.getId());
@@ -284,7 +284,7 @@ export class DisplayWindowChannelsManager {
             const connectSuccess = this.addAndConnectLocalChannel(channelName);
             const channelAgent = channelAgentsManager.getChannelAgent(channelName);
             if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-                Log.debug("0", `tcaMonitor: Local channel ${channelName} cannot be created/connected.`);
+                Log.debug(`tcaMonitor: Local channel ${channelName} cannot be created/connected.`);
                 return false;
             }
             channelAgent.createMonitor(displayWindowAgent.getId());

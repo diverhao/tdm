@@ -87,7 +87,7 @@ export class DisplayWindowUtilities {
             const menu = Menu.buildFromTemplate(contextMenuTemplate);
             menu.popup();
         } else {
-            Log.error("0", "Cannot show context menu");
+            Log.error("Cannot show context menu");
         }
     };
 
@@ -125,7 +125,7 @@ export class DisplayWindowUtilities {
             const menu = Menu.buildFromTemplate(contextMenuTemplate);
             menu.popup();
         } else {
-            Log.error("0", "Cannot show context menu");
+            Log.error("Cannot show context menu");
         }
     };
 
@@ -154,7 +154,7 @@ export class DisplayWindowUtilities {
             if (pdfContentsBuffer instanceof Buffer) {
                 const pdfFileName = dialog.showSaveDialogSync({ title: "save pdf file", filters: [{ name: "pdf", extensions: ["pdf"] }] });
                 if (pdfFileName === undefined) {
-                    Log.debug("0", "pdf file not selected.");
+                    Log.debug("pdf file not selected.");
                     return;
                 }
                 fs.writeFile(pdfFileName, pdfContentsBuffer as Uint8Array, (err) => {
@@ -164,14 +164,14 @@ export class DisplayWindowUtilities {
                 });
             }
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
         }
     };
 
     print = () => {
         const browserWindow = this.getDisplayWindowAgent().getBrowserWindow();
         if (browserWindow === undefined) {
-            Log.error("0", "Browser window does not exist");
+            Log.error("Browser window does not exist");
             return;
         }
         browserWindow.webContents.print({
@@ -203,7 +203,7 @@ export class DisplayWindowUtilities {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const browserWindow = displayWindowAgent.getBrowserWindow();
         if (browserWindow instanceof BrowserWindow) {
-            Log.debug("0", displayWindowAgent.getId());
+            Log.debug(displayWindowAgent.getId());
             browserWindow.webContents.setZoomFactor(level);
         }
     };
@@ -212,7 +212,7 @@ export class DisplayWindowUtilities {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const browserWindow = displayWindowAgent.getBrowserWindow();
         if (browserWindow === undefined) {
-            Log.error("0", "Browser window does not exist");
+            Log.error("Browser window does not exist");
             return;
         }
         const webContents = browserWindow.webContents;
@@ -222,7 +222,7 @@ export class DisplayWindowUtilities {
                 filters: [{ name: "Image Files", extensions: ["png"] }],
             });
             if (imageFileName === undefined) {
-                Log.debug("0", "Image file not selected, image not saved");
+                Log.debug("Image file not selected, image not saved");
                 return;
             }
             fs.writeFile(imageFileName, image.toPNG() as Uint8Array, (err) => {
@@ -237,7 +237,7 @@ export class DisplayWindowUtilities {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const browserWindow = displayWindowAgent.getBrowserWindow();
         if (browserWindow === undefined) {
-            Log.error("0", "Browser window does not exist");
+            Log.error("Browser window does not exist");
             return;
         }
         let saveFolder = homedir();
@@ -255,7 +255,7 @@ export class DisplayWindowUtilities {
                         saveFolder = saveFolderTmp;
                     }
                 } catch (e) {
-                    Log.error("0", e);
+                    Log.error(e);
                 }
             }
 
@@ -268,7 +268,7 @@ export class DisplayWindowUtilities {
                 }
             });
         }).catch((err: any) => {
-            Log.error("0", err);
+            Log.error(err);
             this.showError([`Failed saving screenshot to folder ${saveFolder}`], [err.toString()]);
         });
     };
@@ -276,7 +276,7 @@ export class DisplayWindowUtilities {
     takeScreenshotToClipboard = () => {
         const browserWindow = this.getDisplayWindowAgent().getBrowserWindow();
         if (browserWindow === undefined) {
-            Log.error("0", "Browser window does not exist");
+            Log.error("Browser window does not exist");
             return;
         }
         browserWindow.webContents.capturePage().then((image: Electron.NativeImage) => {
@@ -299,7 +299,7 @@ export class DisplayWindowUtilities {
                     saveFolder = saveFolderTmp;
                 }
             } catch (e) {
-                Log.error("0", e);
+                Log.error(e);
             }
         }
 
@@ -308,7 +308,7 @@ export class DisplayWindowUtilities {
             const windowTitle = browserWindow.getTitle();
             desktopCapturer.getSources({ types: ["window"] }).then(async (sources: Electron.DesktopCapturerSource[]) => {
                 for (const source of sources) {
-                    Log.debug("0", source.name);
+                    Log.debug(source.name);
                     if (source.name === windowTitle) {
                         displayWindowAgent.sendFromMainProcess("start-record-video",
                             {
@@ -420,7 +420,7 @@ export class DisplayWindowUtilities {
                 }
             );
         } else {
-            Log.error("0", "Main window not ready");
+            Log.error("Main window not ready");
         }
     };
 
@@ -475,7 +475,7 @@ export class DisplayWindowUtilities {
                 }
             }
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
         }
     };
 

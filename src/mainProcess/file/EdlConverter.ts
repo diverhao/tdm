@@ -36,7 +36,7 @@ export class EdlConverter {
     ) => {
 
         for (let widgetKey of Object.keys(edlJSON)) {
-            Log.info("-1", "converting ", widgetKey);
+            Log.info("converting ", widgetKey);
             const widgetEdlJSON = edlJSON[widgetKey];
             if (widgetKey === "ScreenProperties") {
                 tdl["Canvas"] = CanvasHelper.convertEdlToTdl(widgetEdlJSON);
@@ -119,7 +119,7 @@ export class EdlConverter {
             } else if (widgetKey.includes("Embedded Window")) {
                 tdl[widgetKey] = EmbeddedDisplayHelper.convertEdlToTdl(edlJSON[widgetKey], convertEdlSufffix);
             } else {
-                Log.error("-1", "Unknown widget key", widgetKey);
+                Log.error("Unknown widget key", widgetKey);
             }
         }
         if (!inGroup) {
@@ -248,7 +248,7 @@ export class EdlConverter {
             widgetTdl["groupNames"].push(groupName);
             widgetTdl["rules"].push(...groupVisibilityRules);
         }
-        Log.debug("-1", "group ends");
+        Log.debug("group ends");
     };
 
     static readArray = (startingLine: number, fileLines: string[]) => {
@@ -1007,7 +1007,7 @@ export class EdlConverter {
     ) => {
         const indexStr = color.split(" ")[1].replaceAll(`"`, "").trim();
         if (indexStr === undefined) {
-            Log.error("-1", "color", color, "format wrong");
+            Log.error("color", color, "format wrong");
             return `rgba(0, 0, 0, 1)`;
         } else {
             if (this.isRuledColor(indexStr)) {
@@ -1040,7 +1040,7 @@ export class EdlConverter {
                     // const index = indexStr;
                     return rgbaArrayToRgbaStr([...rgbArray, 100]);
                 } else {
-                    Log.error("-1", "Color index", indexStr, "not found");
+                    Log.error("Color index", indexStr, "not found");
                     return `rgba(0, 0, 0, 1)`;
                 }
             }
@@ -1399,7 +1399,7 @@ export class EdlConverter {
                 column2.push(parseFloat(elementRow[1]));
             }
         } catch (e) {
-            Log.error("-1", e);
+            Log.error(e);
             return [[], []];
         }
         return [column1, column2];
@@ -1672,7 +1672,7 @@ export class EdlConverter {
         } else if (type === 3) {
             return [rule_NO_ALARM, rule_MINOR, rule_MAJOR, rule_INVALID, rule_UNDEFINED_to_INVISIBLE];
         } else {
-            Log.error("-1", "wrong type for lineAlarm");
+            Log.error("wrong type for lineAlarm");
             return [];
         }
     };
@@ -1741,7 +1741,7 @@ export class EdlConverter {
         } else if (type === 3) {
             return [rule_NO_ALARM, rule_MINOR, rule_MAJOR, rule_INVALID, rule_UNDEFINED_to_INVISIBLE];
         } else {
-            Log.error("-1", "wrong type for lineAlarm");
+            Log.error("wrong type for lineAlarm");
             return [];
         }
     };
@@ -1809,7 +1809,7 @@ export class EdlConverter {
         } else if (type === 3) {
             return [rule_NO_ALARM, rule_MINOR, rule_MAJOR, rule_INVALID, rule_UNDEFINED_to_INVISIBLE];
         } else {
-            Log.error("-1", "wrong type for lineAlarm");
+            Log.error("wrong type for lineAlarm");
             return [];
         }
     };
@@ -1878,7 +1878,7 @@ export class EdlConverter {
         } else if (type === 3) {
             return [rule_NO_ALARM, rule_MINOR, rule_MAJOR, rule_INVALID, rule_UNDEFINED_to_INVISIBLE];
         } else {
-            Log.error("-1", "wrong type for lineAlarm");
+            Log.error("wrong type for lineAlarm");
             return [];
         }
     };
@@ -1947,7 +1947,7 @@ export class EdlConverter {
         } else if (type === 3) {
             return [rule_NO_ALARM, rule_MINOR, rule_MAJOR, rule_INVALID, rule_UNDEFINED_to_INVISIBLE];
         } else {
-            Log.error("-1", "wrong type for lineAlarm");
+            Log.error("wrong type for lineAlarm");
             return [];
         }
     };
@@ -2016,7 +2016,7 @@ export class EdlConverter {
         } else if (type === 3) {
             return [rule_NO_ALARM, rule_MINOR, rule_MAJOR, rule_INVALID, rule_UNDEFINED_to_INVISIBLE];
         } else {
-            Log.error("-1", "wrong type for lineAlarm");
+            Log.error("wrong type for lineAlarm");
             return [];
         }
     };

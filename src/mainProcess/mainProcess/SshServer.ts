@@ -96,7 +96,7 @@ export class SshServer {
                 // clear the self destruction countdown of the insance
                 this.clearSelfDestructionCountDown();
 
-                Log.debug("-1", "SSH TCP server got a client:", socket.remoteAddress, socket.remotePort)
+                Log.debug("SSH TCP server got a client:", socket.remoteAddress, socket.remotePort)
 
                 this.startTcpEventListeners();
 

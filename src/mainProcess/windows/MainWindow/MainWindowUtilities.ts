@@ -171,7 +171,7 @@ export class MainWindowUtilities {
                 });
             }
         } catch (e) {
-            Log.error("0", e);
+            Log.error(e);
         }
         return thumbnail;
     };

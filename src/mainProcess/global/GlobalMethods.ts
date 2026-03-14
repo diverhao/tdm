@@ -268,7 +268,7 @@ export const openTdlInNewInstance = (args: type_args) => {
         if (typeof filePath === "string") {
             openTdlFileAsRequestedByAnotherInstance(filePath, mainProcess);
         } else {
-            Log.error(-1, "The file path provided by the 2nd instance is not valid.");
+            Log.error("The file path provided by the 2nd instance is not valid.");
         }
     });
 
@@ -384,7 +384,7 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
 
     // (1)
     if (path.isAbsolute(filePath) === false && args === undefined) {
-        Log.error("-1", `The file path ${filePath} is not an absolute path. Cannot open it.`);
+        Log.error(`The file path ${filePath} is not an absolute path. Cannot open it.`);
         return;
     }
 
@@ -595,7 +595,7 @@ export const scanSymbolGallery = (folderPaths: string[], galleryFolder: string):
     const scanFolder = (folderPath: string, keyName: string) => {
         try {
             if (!fs.existsSync(folderPath)) {
-                Log.warn("0", `Folder does not exist: ${folderPath}`);
+                Log.warn(`Folder does not exist: ${folderPath}`);
                 return;
             }
 
@@ -625,7 +625,7 @@ export const scanSymbolGallery = (folderPaths: string[], galleryFolder: string):
 
                 // Check file size (< 50 kB)
                 if (fileStats.size > maxFileSizeBytes) {
-                    Log.warn("0", `Skipping large image file: ${filePath} (${Math.round(fileStats.size / 1024)} KB)`);
+                    Log.warn(`Skipping large image file: ${filePath} (${Math.round(fileStats.size / 1024)} KB)`);
                     continue;
                 }
 
@@ -645,13 +645,13 @@ export const scanSymbolGallery = (folderPaths: string[], galleryFolder: string):
                         result[keyName][file] = `data:${mimeType};base64,${base64String}`;
                     }
 
-                    Log.debug("0", `Loaded image: ${keyName}/${file}`);
+                    Log.debug(`Loaded image: ${keyName}/${file}`);
                 } catch (err) {
-                    Log.error("0", `Failed to read image file: ${filePath}`, err);
+                    Log.error(`Failed to read image file: ${filePath}`, err);
                 }
             }
         } catch (err) {
-            Log.error("0", `Failed to scan folder: ${folderPath}`, err);
+            Log.error(`Failed to scan folder: ${folderPath}`, err);
         }
     };
 
@@ -676,10 +676,10 @@ export const scanSymbolGallery = (folderPaths: string[], galleryFolder: string):
                 }
             }
         } else {
-            Log.warn("0", `Gallery folder does not exist: ${galleryFolder}`);
+            Log.warn(`Gallery folder does not exist: ${galleryFolder}`);
         }
     } catch (err) {
-        Log.error("0", `Failed to scan gallery folders`, err);
+        Log.error(`Failed to scan gallery folders`, err);
     }
 
     return result;
@@ -733,7 +733,7 @@ export const fileToDataUri = (filePath: string, maxSizeKb?: number): string => {
     try {
         // Validate file exists
         if (!fs.existsSync(filePath)) {
-            Log.error("0", `File does not exist: ${filePath}`);
+            Log.error(`File does not exist: ${filePath}`);
             return "";
         }
 
@@ -749,14 +749,14 @@ export const fileToDataUri = (filePath: string, maxSizeKb?: number): string => {
 
         // Check file size
         if (fileSizeKb > limit) {
-            Log.warn("0", `File too large: ${filePath} (${Math.round(fileSizeKb)} KB, limit: ${limit} KB)`);
+            Log.warn(`File too large: ${filePath} (${Math.round(fileSizeKb)} KB, limit: ${limit} KB)`);
             return "";
         }
 
         // Get MIME type
         const mimeType = getMimeType(ext);
         if (!mimeType) {
-            Log.warn("0", `Unsupported file type: ${ext}`);
+            Log.warn(`Unsupported file type: ${ext}`);
             return "";
         }
 
@@ -768,11 +768,11 @@ export const fileToDataUri = (filePath: string, maxSizeKb?: number): string => {
         
         // Create and return data URI
         const dataUri = `data:${mimeType};base64,${base64String}`;
-        Log.debug("0", `Converted file to data URI: ${filePath} (${Math.round(fileSizeKb)} KB, ${mimeType})`);
+        Log.debug(`Converted file to data URI: ${filePath} (${Math.round(fileSizeKb)} KB, ${mimeType})`);
         return dataUri;
 
     } catch (error) {
-        Log.error("0", `Error converting file to data URI: ${filePath}`, error);
+        Log.error(`Error converting file to data URI: ${filePath}`, error);
         return "";
     }
 };

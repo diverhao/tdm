@@ -189,7 +189,7 @@ Options:
         if (logLevel !== undefined) {
             Log.setLogLevel(logLevel);
         } else {
-            Log.error("-1", "Error parsing --log-level argument", logLevelRawStr);
+            Log.error("Error parsing --log-level argument", logLevelRawStr);
         }
     }
 
@@ -239,7 +239,7 @@ Options:
         // wrong format
         // "--attach abcd"
         // return -1;
-        Log.fatal("-1", `Wrong --attach argument ${portRawStr}, quit TDM.`);
+        Log.fatal(`Wrong --attach argument ${portRawStr}, quit TDM.`);
         process.exit();
         return -1;
     };

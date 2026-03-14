@@ -25,12 +25,12 @@ export class WsOpenerServer {
     }
 
     quit = () => {
-        Log.info("-1", "Close WS Opener Server")
+        Log.info("Close WS Opener Server")
         this.server?.close();
     }
 
     createServer = () => {
-        Log.info("-1", `Creating WebSocket opener server on port ${this.getPort()}`);
+        Log.info(`Creating WebSocket opener server on port ${this.getPort()}`);
 
         const mainProcess = this.getMainProcess();
 
@@ -42,13 +42,13 @@ export class WsOpenerServer {
         this.server.on("error", (err: Error) => {
             if (err["message"].includes("EADDRINUSE")) {
                 if (this._flexibleAttach === true) {
-                    Log.info("-1", `WebSocket opener port ${this.getPort()} is occupied, try port ${this.getPort() + 1}`);
+                    Log.info(`WebSocket opener port ${this.getPort()} is occupied, try port ${this.getPort() + 1}`);
                     let newPort = this.getPort() + 1;
                     this.setPort(newPort);
                     this.updatePort();
                     this.createServer();
                 } else {
-                    Log.fatal("-1", `WebSocket opener port ${this.getPort()} is occupied, and flexibleAttach is false, quit TDM.`);
+                    Log.fatal(`WebSocket opener port ${this.getPort()} is occupied, and flexibleAttach is false, quit TDM.`);
                     mainProcess.quit();
                 }
             }
@@ -56,7 +56,7 @@ export class WsOpenerServer {
 
         // when the display window becomes operating mode
         this.server.on("connection", (wsClient: WebSocket, request: IncomingMessage) => {
-            Log.info("-1", `WebSocket Opener Server got a connection`);
+            Log.info(`WebSocket Opener Server got a connection`);
             wsClient.on("message", async (messageBuffer: RawData) => {
                 const message = JSON.parse(messageBuffer.toString());
                 this.handleMessage(message);
@@ -80,7 +80,7 @@ export class WsOpenerServer {
 
             // when the websocket client quits, un-MONITOR
             wsClient.on("close", () => {
-                Log.info("-1", `WebSocket Opener Server disconnects with client.`);
+                Log.info(`WebSocket Opener Server disconnects with client.`);
             });
         });
     };
@@ -97,7 +97,7 @@ export class WsOpenerServer {
                 }
             );
         } else {
-            Log.error(0, "Main window agent does not exist");
+            Log.error("Main window agent does not exist");
         }
 
     };
