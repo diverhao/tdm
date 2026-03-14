@@ -201,6 +201,21 @@ export class IpcManagerOnMainProcess {
         }
     };
 
+    private registerClient = (client: WebSocket | string, windowId: string) => {
+        const mainProcessMode = this.getMainProcess().getMainProcessMode();
+        Log.info("register window", windowId, "for WebSocket IPC");
+        if (mainProcessMode === "desktop" || mainProcessMode === "web") {
+            // desktop mode: websocket client on main/display window
+            this.getClients()[windowId] = client;
+        } else if (mainProcessMode === "ssh-server") {
+            // ssh-server mode: an arbitrary string
+            // in this way the DisplayWindowAgent.sendFromMainProcess() or MainWindowAgent.sendFromMainProcess()
+            // on the calling process won't send message to the windows
+            this.getClients()[windowId] = windowId;
+        }
+
+    }
+
 
 
     createSshServer = () => {
@@ -373,6 +388,7 @@ export class IpcManagerOnMainProcess {
         this.getMainProcess().requestQuitTdmProcess(confirmToQuit);
     }
 
+    // --------------------------- window creation -------------------
     /**
      * The renderer process window has connected to the websocket IPC server.
      * 
@@ -396,85 +412,57 @@ export class IpcManagerOnMainProcess {
      * 
      */
     handleWebsocketIpcConnectedOnDisplayWindow = async (event: WebSocket | string, data: IpcEventArgType["websocket-ipc-connected-on-display-window"]) => {
-        // the main processes' ipc manager
-        const ipcManager = this.getMainProcess().getIpcManager();
         const mainProcess = this.getMainProcess();
-        const mainProcessMode = mainProcess.getMainProcessMode();
         const windowId = data["windowId"];
         const reconnect = data["reconnect"];
-        Log.info("register window", windowId, "for WebSocket IPC");
-        if (mainProcessMode === "desktop" || mainProcessMode === "web") {
-            // desktop mode: websocket client on main/display window
 
-            ipcManager.getClients()[windowId] = event;
-        } else if (mainProcessMode === "ssh-server") {
-            // ssh-server mode: an arbitrary string
-            // in this way the DisplayWindowAgent.sendFromMainProcess() or MainWindowAgent.sendFromMainProcess()
-            // on the calling process won't send message to the windows
-            ipcManager.getClients()[windowId] = windowId;
-        }
+        this.registerClient(event, windowId);
 
         if (reconnect === true) {
             return;
         }
 
-        // lift the block in create window method
         const windowAgent = mainProcess.getWindowAgentsManager().getAgent(windowId);
         if (!(windowAgent instanceof DisplayWindowAgent)) {
             return;
         }
-        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-        if (selectedProfile === undefined) {
-            Log.error("Profile not selected!");
-            return undefined;
+
+        // lift the block in create window in DisplayWindowLifeCycleManager.createBrowserWindow()
+        const lifeCycleManager = windowAgent.getDisplayWindowLifeCycleManager();
+        const resolve = lifeCycleManager.websocketIpcConnectedResolve;
+        lifeCycleManager.websocketIpcConnectedResolve = undefined;
+        if (resolve === undefined) {
+            Log.error(`Display window ${windowId} WebSocket IPC connected with no pending resolver.`);
+        } else {
+            resolve();
         }
-        windowAgent.sendFromMainProcess("selected-profile-contents",
-            {
-                contents: selectedProfile.getContents()
-            }
-        );
-        const site = this.getMainProcess().getSite();
-        windowAgent.sendFromMainProcess("site-info", { site: site });
-
-
-        const tdl = windowAgent.getTdl() as type_tdl;
-        const tdlFileName = windowAgent.getTdlFileName();
-        const mode = windowAgent.getInitialMode();
-        const editable = windowAgent.isEditable();
-        const macros = windowAgent.getMacros();
-        const replaceMacros = windowAgent.getReplaceMacros();
-        const utilityType = windowAgent.getUtilityType();
-        const utilityOptions = windowAgent.getUtilityOptions();
-
-        windowAgent.sendFromMainProcess("new-tdl", {
-            newTdl: tdl,
-            tdlFileName: tdlFileName,
-            initialModeStr: mode,
-            editable: editable,
-            externalMacros: macros,
-            useExternalMacros: replaceMacros,
-            utilityType: utilityType as any, //options["utilityType"] as any,
-            utilityOptions: utilityOptions === undefined ? {} : utilityOptions, //options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
-        });
-
-
-        // windowAgent.sendFromMainProcess("preset-colors", selectedProfile.getCategory("Preset Colors"));
-
-
-
-        // } else if (windowAgent === undefined) {
-        //     // a client connects to the websocket IPC server, and provides a process ID and a window ID
-        //     // however, there is no such resource (i.e. DisplayWindowAgent) for this window ID
-        //     // this is a non-legit client, it may come from refreshing a web page
-        //     // we need to undo the above operation
-        //     // no need to disconnec the websocket connection, the client 
-        //     // will close the connection when the web page closes
-        //     Log.error("There is no display window agent for this window ID", data["windowId"], "on server side, stop.");
-        //     delete ipcManager.getClients()[windowId];
-        // }
-
     }
 
+    /**
+     * When the Root element of the new TDL in display window is rendered for the first time
+     * The display window sends back this message to notify the main
+     * process to show the pre-loaded window and update various fields. In this way, the pre-loaded window
+     * does not flash.
+     */
+    handleNewTdlRendered = async (event: WebSocket | string, options: IpcEventArgType["new-tdl-rendered"]) => {
+
+        const { displayWindowId, windowName, tdlFileName, mode } = options;
+        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
+        const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
+
+        if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
+            Log.error(`No such display window ${displayWindowId}. Cancel handling new TDL rendered event.`);
+            return;
+        }
+        const lifeCycleManager = displayWindowAgent.getDisplayWindowLifeCycleManager();
+        const resolve = lifeCycleManager.newTdlRenderedResolve;
+        lifeCycleManager.newTdlRenderedResolve = undefined;
+        if (resolve === undefined) {
+            Log.error(`Display window ${displayWindowId} new TDL rendered with no pending resolver.`);
+        } else {
+            resolve({windowName, tdlFileName});
+        }
+    };
 
 
     handleWebsocketIpcConnectedOnMainWindow = (event: WebSocket | string, data: IpcEventArgType["websocket-ipc-connected-on-main-window"]) => {
@@ -1699,70 +1687,6 @@ export class IpcManagerOnMainProcess {
             // errors should have been catched in callback
             Log.error(e);
         }
-    };
-
-
-    /**
-     * When the Root element of the new TDL in display window is rendered for the first time
-     * The display window sends back this message to notify the main
-     * process to show the pre-loaded window and update various fields. In this way, the pre-loaded window
-     * does not flash.
-     */
-    handleNewTdlRendered = async (event: WebSocket | string, options: IpcEventArgType["new-tdl-rendered"]) => {
-
-        const { displayWindowId, windowName, tdlFileName, mode } = options;
-        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-        const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
-        if (displayWindowAgent instanceof DisplayWindowAgent) {
-            // ignore the preloaded display window's new TDL, and ignore the iframe embedded display
-            if (displayWindowAgent !== windowAgentsManager.preloadedDisplayWindowAgent
-                && displayWindowAgent !== windowAgentsManager.previewDisplayWindowAgent
-                && displayWindowAgent.getBrowserWindow() !== undefined) {
-                displayWindowAgent.show();
-                // displayWindowAgent.setTdlFileName(tdlFileName);
-                displayWindowAgent.setWindowName(windowName);
-
-                // regular display window: start to take thumnail now, 1 s later, 3 s later, and every 5 s
-                // if not an embedded window, take a thumbnail
-                // take thumbnail only for regular window, not for embedded window
-                // pre-loaded display does not take thumbnail
-                displayWindowAgent.startThumbnailInterval();
-
-                displayWindowAgent.takeThumbnail(windowName, tdlFileName);
-                setTimeout(() => {
-                    displayWindowAgent.takeThumbnail(windowName, tdlFileName);
-                }, 1000);
-                setTimeout(() => {
-                    displayWindowAgent.takeThumbnail(windowName, tdlFileName);
-                }, 3000);
-                // send local font names to display window
-                displayWindowAgent.sendFromMainProcess("local-font-names",
-                    {
-                        localFontNames: this.getMainProcess().getLocalFontNames()
-                    }
-                );
-
-                this.getMainProcess().getWindowAgentsManager().setDockMenu();
-            } else if (displayWindowAgent === windowAgentsManager.previewDisplayWindowAgent) {
-                await displayWindowAgent.takeThumbnail();
-                const tdlFileName = displayWindowAgent.getTdlFileName();
-                const fileBrowserDisplayWindowId = displayWindowAgent.getForFileBrowserWindowId();
-                const fileBrowserWidgetKey = displayWindowAgent.getForFileBrowserWidgetKey();
-                if (fileBrowserDisplayWindowId !== "" && fileBrowserWidgetKey !== "") {
-                    const fileBrowserDisplayWindowAgent = windowAgentsManager.getAgent(fileBrowserDisplayWindowId);
-                    if (fileBrowserDisplayWindowAgent instanceof DisplayWindowAgent) {
-                        fileBrowserDisplayWindowAgent.sendFromMainProcess("fetch-thumbnail", {
-                            widgetKey: fileBrowserWidgetKey,
-                            tdlFileName: tdlFileName,
-                            image: displayWindowAgent.getThumbnail(),
-                        });
-                        displayWindowAgent.setForFileBrowserWindowId("");
-                        displayWindowAgent.setForFileBrowserWidgetKey("");
-                    }
-                }
-            }
-        }
-
     };
 
     handleZoomWindow = (event: WebSocket | string, options: IpcEventArgType["zoom-window"]) => {

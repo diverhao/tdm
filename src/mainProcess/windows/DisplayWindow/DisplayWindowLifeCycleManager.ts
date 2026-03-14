@@ -4,6 +4,7 @@ import * as url from "url";
 import { IpcEventArgType } from "../../../common/IpcEventArgType";
 import { DisplayWindowAgent } from "../../windows/DisplayWindow/DisplayWindowAgent";
 import { Log } from "../../../common/Log";
+import { type_tdl } from "../../../common/GlobalVariables";
 
 /**
  * when we create a display window
@@ -55,9 +56,23 @@ export class DisplayWindowLifeCycleManager {
     private _hiddenWindow = false;
     private _readyToClose = false;
 
+    /**
+     * One-shot resolver for the promise that blocks window startup until the
+     * renderer connects to the main-process WebSocket IPC channel.
+     */
+    websocketIpcConnectedResolve: ((value?: unknown) => void) | undefined = undefined;
+
+    /**
+     * One-shot resolver for the promise that waits until the renderer finishes
+     * the first render of a newly loaded TDL and reports its resolved metadata.
+     */
+    newTdlRenderedResolve: ((data: { windowName: string, tdlFileName: string }) => void) | undefined = undefined;
+
     constructor(displayWindowAgent: DisplayWindowAgent) {
         this._displayWindowAgent = displayWindowAgent;
     }
+
+    // ---------------------- window creation and initialization --------------
 
     createBrowserWindow = async (options: any = {}) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
@@ -69,7 +84,118 @@ export class DisplayWindowLifeCycleManager {
         } else if (mainProcessMode === "web") {
             await this.createBrowserWindowInWebMode(options);
         }
+
+        // wait for IPC websocket connected, then send the basic info and tdl
+        await new Promise((resolve, reject) => {
+            this.websocketIpcConnectedResolve = resolve;
+        });
+
+        this.sendBasicDisplayWindowInfo();
+        this.sendNewTdl();
+
+        // wait for new-tdl-rendered, it means the GUI is done
+        const { windowName, tdlFileName } = await new Promise<{ windowName: string, tdlFileName: string }>((resolve, reject) => {
+            this.newTdlRenderedResolve = resolve;
+        });
+        this.setupWindowAfterTdlRendered(windowName, tdlFileName);
     };
+
+    private setupWindowAfterTdlRendered = async (windowName: string, tdlFileName: string) => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const windowAgentsManager = displayWindowAgent.getWindowAgentsManager();
+        const mainProcess = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess();
+
+        // ignore the preloaded display window's new TDL, and ignore the iframe embedded display
+        if (displayWindowAgent !== windowAgentsManager.preloadedDisplayWindowAgent
+            && displayWindowAgent !== windowAgentsManager.previewDisplayWindowAgent
+            && displayWindowAgent.getBrowserWindow() !== undefined) {
+            displayWindowAgent.show();
+            // displayWindowAgent.setTdlFileName(tdlFileName);
+            displayWindowAgent.setWindowName(windowName);
+
+            // regular display window: start to take thumnail now, 1 s later, 3 s later, and every 5 s
+            // if not an embedded window, take a thumbnail
+            // take thumbnail only for regular window, not for embedded window
+            // pre-loaded display does not take thumbnail
+            displayWindowAgent.startThumbnailInterval();
+
+            displayWindowAgent.takeThumbnail(windowName, tdlFileName);
+            setTimeout(() => {
+                displayWindowAgent.takeThumbnail(windowName, tdlFileName);
+            }, 1000);
+            setTimeout(() => {
+                displayWindowAgent.takeThumbnail(windowName, tdlFileName);
+            }, 3000);
+            // send local font names to display window
+            displayWindowAgent.sendFromMainProcess("local-font-names",
+                {
+                    localFontNames: mainProcess.getLocalFontNames()
+                }
+            );
+
+            mainProcess.getWindowAgentsManager().setDockMenu();
+        } else if (displayWindowAgent === windowAgentsManager.previewDisplayWindowAgent) {
+            await displayWindowAgent.takeThumbnail();
+            const tdlFileName = displayWindowAgent.getTdlFileName();
+            const fileBrowserDisplayWindowId = displayWindowAgent.getForFileBrowserWindowId();
+            const fileBrowserWidgetKey = displayWindowAgent.getForFileBrowserWidgetKey();
+            if (fileBrowserDisplayWindowId !== "" && fileBrowserWidgetKey !== "") {
+                const fileBrowserDisplayWindowAgent = windowAgentsManager.getAgent(fileBrowserDisplayWindowId);
+                if (fileBrowserDisplayWindowAgent instanceof DisplayWindowAgent) {
+                    fileBrowserDisplayWindowAgent.sendFromMainProcess("fetch-thumbnail", {
+                        widgetKey: fileBrowserWidgetKey,
+                        tdlFileName: tdlFileName,
+                        image: displayWindowAgent.getThumbnail(),
+                    });
+                    displayWindowAgent.setForFileBrowserWindowId("");
+                    displayWindowAgent.setForFileBrowserWidgetKey("");
+                }
+            }
+        }
+
+    }
+
+    private sendBasicDisplayWindowInfo = () => {
+        const mainProcess = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess();
+        const displayWindowAgent = this.getDisplayWindowAgent();
+
+        const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
+        if (selectedProfile === undefined) {
+            Log.error("Profile not selected!");
+            return undefined;
+        }
+
+        displayWindowAgent.sendFromMainProcess("selected-profile-contents",
+            {
+                contents: selectedProfile.getContents()
+            }
+        );
+        const site = mainProcess.getSite();
+        displayWindowAgent.sendFromMainProcess("site-info", { site: site });
+    }
+
+    private sendNewTdl = () => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const tdl = displayWindowAgent.getTdl() as type_tdl;
+        const tdlFileName = displayWindowAgent.getTdlFileName();
+        const mode = displayWindowAgent.getInitialMode();
+        const editable = displayWindowAgent.isEditable();
+        const macros = displayWindowAgent.getMacros();
+        const replaceMacros = displayWindowAgent.getReplaceMacros();
+        const utilityType = displayWindowAgent.getUtilityType();
+        const utilityOptions = displayWindowAgent.getUtilityOptions();
+
+        displayWindowAgent.sendFromMainProcess("new-tdl", {
+            newTdl: tdl,
+            tdlFileName: tdlFileName,
+            initialModeStr: mode,
+            editable: editable,
+            externalMacros: macros,
+            useExternalMacros: replaceMacros,
+            utilityType: utilityType as any, //options["utilityType"] as any,
+            utilityOptions: utilityOptions === undefined ? {} : utilityOptions, //options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
+        });
+    }
 
     private createBrowserWindowInDesktopMode = async (options: any = {}) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
@@ -200,65 +326,7 @@ export class DisplayWindowLifeCycleManager {
         }
     };
 
-    close = () => {
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        const browserWindow = this.getBrowserWindow();
-
-        if (browserWindow instanceof BrowserWindow) {
-            browserWindow.close();
-        } else {
-            Log.error(`Error: cannot close window ${displayWindowAgent.getId()}`);
-        }
-    };
-
-    handleWindowClose = () => {
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        if (displayWindowAgent.getWindowAgentsManager().preloadedDisplayWindowAgent === displayWindowAgent) {
-            this.getBrowserWindow()?.webContents.close();
-            Log.error(`You are trying to close a preloaded display window or preloaded embedded display`);
-            return;
-        }
-        displayWindowAgent.sendFromMainProcess("window-will-be-closed", {});
-    };
-
-    handleWindowClosed = () => {
-        const displayWindowAgent = this.getDisplayWindowAgent();
-
-        Log.info("close display window", displayWindowAgent.getId());
-        displayWindowAgent.getDisplayWindowChannelsManager().handleWindowClosed();
-        displayWindowAgent.getWindowAgentsManager().removeAgent(displayWindowAgent.getId());
-        displayWindowAgent.getDisplayWindowUtilities().handleWindowClosed();
-
-        displayWindowAgent.terminateWebSocketClientThread();
-
-        const hasPreloadedBrowserWindow = displayWindowAgent.getWindowAgentsManager().preloadedDisplayWindowAgent === undefined ? 0 : 1;
-        const hasPreviewBrowserWindow = displayWindowAgent.getWindowAgentsManager().previewDisplayWindowAgent === undefined ? 0 : 1;
-        const numBrowserWindows = Object.keys(displayWindowAgent.getWindowAgentsManager().getAgents()).length;
-
-        if (numBrowserWindows - hasPreloadedBrowserWindow - hasPreviewBrowserWindow <= 0) {
-            const mainProcessMode = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
-            if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
-                displayWindowAgent.getWindowAgentsManager().getMainProcess().quit();
-            }
-        }
-
-        const ipcManager = displayWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager();
-        ipcManager.removeClient(displayWindowAgent.getId());
-
-        const mainProcess = displayWindowAgent.getWindowAgentsManager().getMainProcess();
-        const caSnooperServer = mainProcess.getCaSnooperServer();
-        if (caSnooperServer !== undefined) {
-            caSnooperServer.stopCaSnooperServer(displayWindowAgent.getId());
-        }
-        const caswServer = mainProcess.getCaswServer();
-        if (caswServer !== undefined) {
-            caswServer.stopCaswServer(displayWindowAgent.getId());
-        }
-
-        displayWindowAgent.getWindowAgentsManager().setDockMenu();
-        this.setBrowserWindow(undefined);
-    };
-
+    // webpage window, not web-mode window
     createWebBrowserWindow = async (url: string) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const mainProcessMode = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
@@ -342,30 +410,67 @@ export class DisplayWindowLifeCycleManager {
         });
     };
 
-    show = () => {
+    // ----------------------- window close ------------------
+
+    close = () => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const browserWindow = this.getBrowserWindow();
+
         if (browserWindow instanceof BrowserWindow) {
-            Log.debug(`Show display window ${displayWindowAgent.getId()} with ${displayWindowAgent.getTdlFileName()}`);
-            this.setHiddenWindow(false);
-            browserWindow.show();
+            browserWindow.close();
         } else {
-            Log.error(`Error: cannot show window ${displayWindowAgent.getId()}`);
+            Log.error(`Error: cannot close window ${displayWindowAgent.getId()}`);
         }
     };
 
-    focus = () => {
+    handleWindowClose = () => {
         const displayWindowAgent = this.getDisplayWindowAgent();
-        const browserWindow = this.getBrowserWindow();
-        if (browserWindow instanceof BrowserWindow) {
-            if (browserWindow.isMinimized()) {
-                browserWindow.restore();
-            }
-            browserWindow.focus();
-        } else {
-            Log.error(`Error: cannot focus window ${displayWindowAgent.getId()}`);
+        if (displayWindowAgent.getWindowAgentsManager().preloadedDisplayWindowAgent === displayWindowAgent) {
+            this.getBrowserWindow()?.webContents.close();
+            Log.error(`You are trying to close a preloaded display window or preloaded embedded display`);
+            return;
         }
+        displayWindowAgent.sendFromMainProcess("window-will-be-closed", {});
     };
+
+    handleWindowClosed = () => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+
+        Log.info("close display window", displayWindowAgent.getId());
+        displayWindowAgent.getDisplayWindowChannelsManager().handleWindowClosed();
+        displayWindowAgent.getWindowAgentsManager().removeAgent(displayWindowAgent.getId());
+        displayWindowAgent.getDisplayWindowUtilities().handleWindowClosed();
+
+        displayWindowAgent.terminateWebSocketClientThread();
+
+        const hasPreloadedBrowserWindow = displayWindowAgent.getWindowAgentsManager().preloadedDisplayWindowAgent === undefined ? 0 : 1;
+        const hasPreviewBrowserWindow = displayWindowAgent.getWindowAgentsManager().previewDisplayWindowAgent === undefined ? 0 : 1;
+        const numBrowserWindows = Object.keys(displayWindowAgent.getWindowAgentsManager().getAgents()).length;
+
+        if (numBrowserWindows - hasPreloadedBrowserWindow - hasPreviewBrowserWindow <= 0) {
+            const mainProcessMode = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
+            if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
+                displayWindowAgent.getWindowAgentsManager().getMainProcess().quit();
+            }
+        }
+
+        const ipcManager = displayWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager();
+        ipcManager.removeClient(displayWindowAgent.getId());
+
+        const mainProcess = displayWindowAgent.getWindowAgentsManager().getMainProcess();
+        const caSnooperServer = mainProcess.getCaSnooperServer();
+        if (caSnooperServer !== undefined) {
+            caSnooperServer.stopCaSnooperServer(displayWindowAgent.getId());
+        }
+        const caswServer = mainProcess.getCaswServer();
+        if (caswServer !== undefined) {
+            caswServer.stopCaswServer(displayWindowAgent.getId());
+        }
+
+        displayWindowAgent.getWindowAgentsManager().setDockMenu();
+        this.setBrowserWindow(undefined);
+    };
+
 
     /**
      * when a window is closed, normally just close it.
@@ -425,37 +530,6 @@ export class DisplayWindowLifeCycleManager {
             this.setReadyToClose(false);
         }
         return;
-
-
-        // if (mainProcessMode === "desktop") {
-        //     const success = await displayWindowFile.saveFileInDesktopMode(fileName, fileContent, dataType);
-        //     if (success) {
-        //         this.closeBrowserWindow();
-        //     } else {
-        //         this.setReadyToClose(false);
-        //     }
-        //     return;
-        // } else if (mainProcessMode === "web") {
-        //     // todo: should be able to save
-        //     const failedReason = "Cannot save file in web mode";
-        //     displayWindowAgent.showError([failedReason]);
-        //     Log.error(failedReason, displayWindowId);
-        //     this.setReadyToClose(false);
-        //     return;
-        // } else if (mainProcessMode === "ssh-server") {
-        //     const result = displayWindowFile.saveFileInSshServerMode(data);
-        //     if (result === "") {
-        //         this.closeBrowserWindow();
-        //     } else if (result !== "prompted") {
-        //         displayWindowAgent.showError([result]);
-        //         Log.error(result);
-        //         this.setReadyToClose(false);
-        //     }
-        //     return;
-        // } else {
-        //     Log.error(`Unexpected main process mode while closing display window: ${mainProcessMode}`, displayWindowId);
-        // }
-
     };
 
     closeBrowserWindow = () => {
@@ -512,6 +586,34 @@ export class DisplayWindowLifeCycleManager {
             Log.error(`Cannot close browser window in ssh-server mode: sshServer is undefined for displayWindowId=${displayWindowId}`);
         }
     };
+
+    // ------------------------- window appearance -------------------
+
+    show = () => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const browserWindow = this.getBrowserWindow();
+        if (browserWindow instanceof BrowserWindow) {
+            Log.debug(`Show display window ${displayWindowAgent.getId()} with ${displayWindowAgent.getTdlFileName()}`);
+            this.setHiddenWindow(false);
+            browserWindow.show();
+        } else {
+            Log.error(`Error: cannot show window ${displayWindowAgent.getId()}`);
+        }
+    };
+
+    focus = () => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const browserWindow = this.getBrowserWindow();
+        if (browserWindow instanceof BrowserWindow) {
+            if (browserWindow.isMinimized()) {
+                browserWindow.restore();
+            }
+            browserWindow.focus();
+        } else {
+            Log.error(`Error: cannot focus window ${displayWindowAgent.getId()}`);
+        }
+    };
+
 
     // -------------- getters and setters ------------------
 
