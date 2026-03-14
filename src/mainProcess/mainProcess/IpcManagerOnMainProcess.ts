@@ -854,6 +854,8 @@ export class IpcManagerOnMainProcess {
     // ---------------------- tdl file ---------------------
 
     /**
+     * Handle open tdl files request from MainWindow and DisplayWindow
+     * 
      * Open one or more TDL files, create Display Window for each TDL file.
      * 
      * A TDL file may be .tdl, .db, .bob, .edl, .stp, and .template
@@ -912,114 +914,11 @@ export class IpcManagerOnMainProcess {
         } else if (windowAgent instanceof DisplayWindowAgent) {
             await windowAgent.getDisplayWindowFile().openTdlFiles(data);
             return;
-        }
-
-        try {
-            if (tdl !== undefined) { // the tdl content is provided, skip reading files from hard drive, available in all modes
-                // (1)
-                const tdlFileName = tdlFileNames === undefined ? "" : tdlFileNames[0];
-                windowAgentsManager.createDisplayWindow(
-                    {
-                        tdl: tdl,
-                        mode: mode,
-                        editable: editable,
-                        tdlFileName: tdlFileName,
-                        macros: macros,
-                        replaceMacros: replaceMacros,
-                        hide: false,
-                        windowId: windowId,
-                    },
-                );
-            } else if (tdlFileNames === undefined) { // manually select the file, only available in desktop mode
-                // (2)
-                let defaultPath = "";
-                if (currentTdlFolder !== undefined && fs.existsSync(currentTdlFolder)) {
-                    defaultPath = currentTdlFolder;
-                }
-                // modify tdlFileNames to a string array
-                tdlFileNames = dialog.showOpenDialogSync({
-                    title: "open tdl file",
-                    filters: [{ name: "tdl", extensions: ["tdl", "json", "bob", "edl", "stp", "db", "template"] }],
-                    defaultPath: defaultPath,
-                    // properties: ["openFile", "openDirectory","multiSelections"],
-                    properties: ["openFile", "multiSelections"],
-                });
-
-                // at this point, the tdlFileNames must not be empty
-                if (!(Array.isArray(tdlFileNames) === true && tdlFileNames.length > 0)) {
-                    return;
-                }
-
-                // todo: ssh server mode, how to handle this situation
-                if (this.getMainProcess().getMainProcessMode() === "ssh-server") {
-
-                    if (windowId === undefined) {
-                        return;
-                    }
-                    if (windowAgent === undefined) {
-                        return;
-                    }
-
-                    const dialogInfo = {
-                        info: {
-                            command: "open-tdl-file",
-                            humanReadableMessages: ["Open TDL file"], // each string has a new line
-                            buttons: [
-                                {
-                                    text: "OK",
-                                },
-                                {
-                                    text: "Cancel",
-                                }
-                            ],
-                            defaultInputText: "",
-                            attachment: options,
-                        }
-                    };
-                    if (windowAgent instanceof MainWindowAgent) {
-                        windowAgent.sendFromMainProcess("dialog-show-input-box", dialogInfo);
-                        // } else if (windowAgent instanceof DisplayWindowAgent) {
-                        //     windowAgent.sendFromMainProcess("dialog-show-input-box", dialogInfo);
-                    }
-                    return;
-                }
-
-                // the manually opened TDL file's editing permission and its mode are determined by Profile
-                editable = selectedProfile.getEditable();
-                mode = selectedProfile.getManuallyOpenedTdlMode();
-                if (mode === "editing") {
-                    editable = true;
-                }
-
-                windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, options["macros"], options["currentTdlFolder"], windowId);
-
-            } else if (tdlFileNames.length === 0) { // create a blank window, available in all modes
-                // (3)
-                windowAgentsManager.createBlankDisplayWindow(options["windowId"]);
-            } else if (tdlFileNames.length > 0) { // open all the files, available in all modes
-                // (4)
-                windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, options["macros"], options["currentTdlFolder"], windowId);
-            }
-        } catch (e) {
-            Log.error(e);
-            if (windowAgent !== undefined) {
-                const dialogInfo: { info: type_DialogMessageBox } = {
-                    info: {
-                        // command?: string | undefined;
-                        messageType: "error", // | "warning" | "info";
-                        humanReadableMessages: [`Failed to open file ${tdlFileNames}`],
-                        rawMessages: [`${e}`],
-                        // buttons?: type_DialogMessageBoxButton[] | undefined;
-                        // attachment?: any;
-                    }
-                };
-                if (windowAgent instanceof MainWindowAgent) {
-                    windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-                    // } else if (windowAgent instanceof DisplayWindowAgent) {
-                    //     windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-                }
-
-            }
+        } else if (windowAgent instanceof MainWindowAgent) {
+            await windowAgent.getMainWindowFile().openTdlFiles(data);
+            return;
+        } else {
+            Log.error(`Unsupported window agent type for window ${windowId}. Cancel opening TDL file.`);
         }
     };
 
@@ -1574,116 +1473,8 @@ export class IpcManagerOnMainProcess {
      * @param windowId The display or main window ID that initiates the creation of utility window
     */
     createUtilityDisplayWindow = (event: WebSocket | string, options: IpcEventArgType["create-utility-display-window"]) => {
-        let { utilityType, utilityOptions, windowId } = options;
-        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-        if (utilityType === "ProfilesViewer") {
-            utilityOptions = {};
-            utilityOptions["profiles"] = this.getMainProcess().getProfiles().serialize();
-            utilityOptions["profilesFileName"] = this.getMainProcess().getProfiles().getFilePath();
-            const context = this.getMainProcess().getChannelAgentsManager().getContext();
-            if (context === undefined) {
-                utilityOptions["epics-ca-env"] = {};
-            } else {
-                const envInstance = context.getEnvInstance();
-                if (envInstance !== undefined) {
-                    utilityOptions["epics-ca-env"] = {
-                        "Values used in TDM runtime": envInstance.getEnv(),
-                        "TDM uses": envInstance.getEnvSource(),
-                        "User defined": envInstance.getEnvUser(),
-                        "Operating system defined": envInstance.getEnvOs(),
-                        "EPICS default": envInstance.getEnvDefault(),
-                    };
-                } else {
-                    utilityOptions["epics-ca-env"] = {};
-                }
-            }
-            utilityOptions["selected-profile-name"] = { "Selected profile": this.getMainProcess().getProfiles().getSelectedProfileName() };
-            utilityOptions["log-file-name"] = this.getMainProcess().getLogFileName();
-            utilityOptions["log-file-name-in-profiles"] = this.getMainProcess().getProfiles().getLogFile();
-        } else if (utilityType === "TdlViewer") {
-            // read script
-            // options:
-            // {
-            //     tdl: tdl,
-            //     externalMacros: externalMacros,
-            //     tdlFileName: tdlFileName,
-            // }
-            const tdl = utilityOptions["tdl"];
-            let scriptFullFileName = "";
-            let scriptFileContents = "";
-            if (tdl !== undefined) {
-                const canvasTdl = tdl["Canvas"];
-                if (canvasTdl !== undefined) {
-                    const scriptFileName = canvasTdl["script"];
-                    if (scriptFileName !== undefined && scriptFileName.trim() !== "" && (scriptFileName.trim().endsWith(".py") || scriptFileName.trim().endsWith(".js"))) {
-                        if (path.isAbsolute(scriptFileName)) {
-                            scriptFullFileName = scriptFileName;
-                        } else {
-                            scriptFullFileName = path.join(utilityOptions["tdlFileName"], scriptFileName);
-                        }
-                        // try to read the script file
-                        try {
-                            scriptFileContents = fs.readFileSync(scriptFullFileName, "utf-8");
-                        } catch (e) {
-                            Log.error("Cannot read script file", scriptFullFileName, e);
-                        }
-                    } else if ((!scriptFileName.trim().endsWith(".py") || !scriptFileName.trim().endsWith(".js"))) {
-                        scriptFullFileName = scriptFileName;
-                        scriptFileContents = "TDM can only run Python or JavaScript script."
-                    }
-                }
-            }
-            utilityOptions["scriptFullFileName"] = scriptFullFileName;
-            utilityOptions["scriptFileContents"] = scriptFileContents;
-        } else if (utilityType === "CaSnooper") {
-            let port = -1;
-            utilityOptions = {};
-            utilityOptions["profiles"] = this.getMainProcess().getProfiles().serialize();
-            utilityOptions["profilesFileName"] = this.getMainProcess().getProfiles().getFilePath();
-            const context = this.getMainProcess().getChannelAgentsManager().getContext();
-            if (context !== undefined) {
-                const envInstance = context.getEnvInstance();
-                if (envInstance !== undefined) {
-                    const env = envInstance.getEnv();
-                    if (typeof env !== "number" && typeof env !== "string" && !Array.isArray(env) && env !== undefined) {
-                        const portTmp = env["EPICS_CA_SERVER_PORT"];
-                        if (typeof portTmp === "number") {
-                            port = portTmp;
-                        }
-                    }
-                }
-            }
-            utilityOptions["EPICS_CA_SERVER_PORT"] = port;
-        } else if (utilityType === "Casw") {
-            let port = -1;
-            utilityOptions = {};
-            utilityOptions["profiles"] = this.getMainProcess().getProfiles().serialize();
-            utilityOptions["profilesFileName"] = this.getMainProcess().getProfiles().getFilePath();
-            const context = this.getMainProcess().getChannelAgentsManager().getContext();
-            if (context !== undefined) {
-                const envInstance = context.getEnvInstance();
-                if (envInstance !== undefined) {
-                    const env = envInstance.getEnv();
-                    if (typeof env !== "number" && typeof env !== "string" && !Array.isArray(env) && env !== undefined) {
-                        const portTmp = env["EPICS_CA_REPEATER_PORT"];
-                        if (typeof portTmp === "number") {
-                            port = portTmp;
-                        }
-                    }
-                }
-            }
-            utilityOptions["EPICS_CA_REPEATER_PORT"] = port;
-        } else if (utilityType === "Talhk") {
-            // utilityOptions
-            // { serverAddress: "http://localhost:4000" }
-        } else if (utilityType === "FileBrowser") {
-            // type of utilityOptions: {path: string, parentDisplayWindowId: string, modal: boolean}
-            if (utilityOptions["path"] === "$HOME") {
-                utilityOptions["path"] = os.homedir();
-            }
-        }
-
-        windowAgentsManager.createUtilityDisplayWindow(utilityType, utilityOptions, windowId);
+        const { utilityType, utilityOptions, windowId } = options;
+        this.getMainProcess().getWindowAgentsManager().getUtilityWindowFactory().createUtilityDisplayWindow(utilityType, utilityOptions, windowId);
     };
 
     // ----------------------- context menu -----------------

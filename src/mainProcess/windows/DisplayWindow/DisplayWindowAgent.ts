@@ -167,16 +167,33 @@ export class DisplayWindowAgent {
         return this._initialMode;
     };
 
+    setInitialMode = (newMode: "operating" | "editing") => {
+        this._initialMode = newMode;
+    }
+
     getReplaceMacros = () => {
         return this._replaceMacros;
+    };
+
+
+    setReplaceMacros = (replace: boolean) => {
+        this._replaceMacros = replace;
     };
 
     getUtilityType = () => {
         return this._utilityType;
     };
 
+    setUtilityType = (newType: string | undefined) => {
+        this._utilityType = newType;
+    };
+
     getUtilityOptions = () => {
         return this._utilityOptions;
+    };
+
+    setUtilityOptions = (newOptions: Record<string, any> | undefined) => {
+        this._utilityOptions = newOptions;
     };
 
     // --------------------- embedded display ---------

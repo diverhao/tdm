@@ -212,6 +212,59 @@ export class MainWindowFile {
 
     // ------------------- event handlers ------------------------
 
+    openTdlFiles = async (data: IpcEventArgType["open-tdl-file"]) => {
+        const { options } = data;
+        let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros } = options;
+        const mainProcess = this.getMainWindowAgent().getWindowAgentsManager().getMainProcess();
+        const windowAgentsManager = mainProcess.getWindowAgentsManager();
+        const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
+        if (selectedProfile === undefined) {
+            Log.error("Profile not selected!");
+            return;
+        }
+
+        const windowAgent = this.getMainWindowAgent();
+
+        try {
+            if (tdl !== undefined) {
+                const tdlFileName = tdlFileNames === undefined ? "" : tdlFileNames[0];
+                windowAgentsManager.createDisplayWindow(
+                    {
+                        tdl: tdl,
+                        mode: mode,
+                        editable: editable,
+                        tdlFileName: tdlFileName,
+                        macros: macros,
+                        replaceMacros: replaceMacros,
+                        hide: false,
+                        windowId: windowId,
+                    },
+                );
+            } else if (tdlFileNames === undefined) {
+                const tdlFileName = await this.selectFile("tdl");
+                if (tdlFileName === undefined) {
+                    Log.error("No TDL file selected.");
+                    return;
+                }
+
+                editable = selectedProfile.getEditable();
+                mode = selectedProfile.getManuallyOpenedTdlMode();
+                if (mode === "editing") {
+                    editable = true;
+                }
+
+                windowAgentsManager.createDisplayWindows([tdlFileName], mode, editable, options["macros"], options["currentTdlFolder"], windowId);
+            } else if (tdlFileNames.length === 0) {
+                windowAgentsManager.createBlankDisplayWindow(options["windowId"]);
+            } else if (tdlFileNames.length > 0) {
+                windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, options["macros"], options["currentTdlFolder"], windowId);
+            }
+        } catch (e) {
+            Log.error(e);
+            windowAgent.showError([`Failed to open file ${tdlFileNames}`], [`${e}`]);
+        }
+    };
+
     openProfiles = async (options: IpcEventArgType["open-profiles"]) => {
         let { profilesFileName1 } = options;
         if (profilesFileName1 === undefined) {

@@ -50,7 +50,7 @@ import { XYPlotHelper } from "./widgetConverters/XYPlot/XYPlotHelper";
 import { EmbeddedDisplayHelper } from "./widgetConverters/EmbeddedDisplay/EmbeddedDisplayHelper";
 import { GroupHelper } from "./widgetConverters/Group/GroupHelper";
 import { RepeaterHelper } from "./widgetConverters/Repeater/RepeaterHelper";
-import { UtilityWindow } from "../windows/UtilityWindow/UtilityWindow";
+import { UtilityWindowFactory } from "../windows/UtilityWindow/UtilityWindowFactory";
 import { defaultDataViewerTicksInfo } from "../../common/types/type_widget_tdl";
 
 export class BobPropertyConverter {
@@ -61,7 +61,7 @@ export class BobPropertyConverter {
     };
 
     static parsePlt = async (bobJson: Record<string, any>, tdl: Record<string, any>) => {
-        const canvasWidgetTdl = UtilityWindow.creatUtilityBlankTdl("DataViewer")["Canvas"];
+        const canvasWidgetTdl = UtilityWindowFactory.creatUtilityBlankTdl("DataViewer")["Canvas"];
         tdl["Canvas"] = canvasWidgetTdl;
 
         const databrowserData = bobJson["databrowser"];

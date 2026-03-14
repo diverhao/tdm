@@ -320,7 +320,7 @@ const treeStr = `
 │   │   │   ├── MainWindowAgent.ts
 │   │   │   └── MainWindowClient.tsx
 │   │   ├── UtilityWindow
-│   │   │   └── UtilityWindow.ts
+│   │   │   └── UtilityWindowFactory.ts
 │   │   └── WindowAgentsManager.ts
 │   ├── wsOpener
 │   │   └── WsOpenerServer.ts

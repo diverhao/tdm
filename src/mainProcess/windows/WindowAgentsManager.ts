@@ -3,8 +3,7 @@ import { DisplayWindowAgent } from "./DisplayWindow/DisplayWindowAgent";
 import { DisplayWindowUtilities } from "./DisplayWindow/DisplayWindowUtilities";
 import { app, Menu } from "electron";
 import { MainProcess } from "../mainProcess/MainProcess";
-import { v4 as uuid } from "uuid";
-import { UtilityWindow } from "./UtilityWindow/UtilityWindow";
+import { UtilityWindowFactory } from "./UtilityWindow/UtilityWindowFactory";
 import { type_tdl } from "../../common/GlobalVariables";
 import { FileReader } from "../file/FileReader";
 import { Log } from "../../common/Log";
@@ -48,12 +47,14 @@ export class WindowAgentsManager {
      */
     creatingEmbeddedDisplayMask: string[] = [];
     creatingEmbeddedDisplayBackdrop: string[] = [];
-    // private _mainProcessId: string;
+    private readonly _utilityWindowFactory: UtilityWindowFactory;
+    
 
     private _newestWindowId = 0;
 
     constructor(mainProcess: MainProcess) {
         this._mainProcess = mainProcess;
+        this._utilityWindowFactory = new UtilityWindowFactory(this);
         // this._mainProcessId = mainProcess.getProcessId();
         // this.createPreviewDisplayWindow();
     }
@@ -102,6 +103,10 @@ export class WindowAgentsManager {
 
     getMainProcess = (): MainProcess => {
         return this._mainProcess;
+    };
+
+    getUtilityWindowFactory = (): UtilityWindowFactory => {
+        return this._utilityWindowFactory;
     };
 
     // ------------------------------------- create display window ----------------------------------
@@ -153,9 +158,7 @@ export class WindowAgentsManager {
             if (exisitedDisplayWindow !== undefined) {
                 Log.debug(`File ${tdlFileName} is already opened.`);
                 // bring up this window if in desktop mode
-                // if (this.get) {
                 exisitedDisplayWindow.show();
-                // }
                 return undefined;
             }
 
@@ -194,7 +197,6 @@ export class WindowAgentsManager {
                     let displayWindowAgent = this.replacePreloadedDisplayWindow(options);
                     if (displayWindowAgent !== undefined) {
                         Log.debug(`Preloaded display window is consumed, created a new one.`);
-
                         this.createPreloadedDisplayWindow();
                         return displayWindowAgent;
                     } else {
@@ -431,7 +433,9 @@ export class WindowAgentsManager {
      *
      * (3) update meta data in display window agent, i.e. tdl file name <br>
      *
-     * (4) update TDL of the display window. No need to send profile, we already sent when the preloaded window was created <br>
+     * (4) update static info in DisplayWindowAgent, with new names, options and more
+     * 
+     * (5) update TDL of the display window. No need to send profile, we already sent when the preloaded window was created <br>
      * 
      */
     private replacePreloadedDisplayWindow = (options: type_options_createDisplayWindow): DisplayWindowAgent | undefined => {
@@ -439,7 +443,7 @@ export class WindowAgentsManager {
         // useful for debug
         // return undefined;
 
-        let { mode, editable, tdl, tdlFileName, macros, replaceMacros } = options;
+        let { mode, editable, tdl, tdlFileName, macros, replaceMacros, utilityOptions, utilityType } = options;
         Log.debug(`Trying to replace preloaded display window with ${tdlFileName}.`);
         // (1)
         let displayWindowAgent = this.preloadedDisplayWindowAgent;
@@ -464,16 +468,17 @@ export class WindowAgentsManager {
         }
 
         // (4)
-        displayWindowAgent.sendFromMainProcess("new-tdl", {
-            newTdl: tdl,
-            tdlFileName: tdlFileName,
-            initialModeStr: mode,
-            editable: editable,
-            externalMacros: macros,
-            useExternalMacros: replaceMacros,
-            utilityType: options["utilityType"] as any,
-            utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
-        });
+        displayWindowAgent.setTdl(tdl);
+        displayWindowAgent.setTdlFileName(tdlFileName);
+        displayWindowAgent.setInitialMode(mode);
+        displayWindowAgent.setEditable(editable);
+        displayWindowAgent.setMacros(macros);
+        displayWindowAgent.setReplaceMacros(replaceMacros);
+        displayWindowAgent.setUtilityType(utilityType);
+        displayWindowAgent.setUtilityOptions(utilityOptions);
+        
+        // (5)
+        displayWindowAgent.getDisplayWindowLifeCycleManager().updateTdl();
         Log.info(`Replaced preloaded display window ${displayWindowAgent.getId()} with new TDL: ${options["tdlFileName"]}`);
         return displayWindowAgent;
     };
@@ -588,55 +593,6 @@ export class WindowAgentsManager {
         };
         await this.createDisplayWindow(options);
 
-    };
-
-    // ----------------------- utility display window --------------------
-
-    // almost the same as this.createDisplayWindow()
-    // options are from the "create-utility-display-window" event, they are simply bounced back
-    createUtilityDisplayWindow = async (
-        utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "PvMonitor" | "Help" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph",
-        utilityOptions: Record<string, any>,
-        windowId: string,
-    ) => {
-        try {
-            if (utilityType === "ChannelGraph") {
-                // utilityOptions["recordTypesFieldNames"] = this.getMainProcess().getDbdFiles().getAllRecordTypeFieldNames();
-                // utilityOptions["recordTypesMenus"] = this.getMainProcess().getDbdFiles().getAllMenusChoices();
-                utilityOptions["recordTypes"] = this.getMainProcess().getChannelAgentsManager().getDbdFiles().getRecordTypes();
-                utilityOptions["menus"] = this.getMainProcess().getChannelAgentsManager().getDbdFiles().getMenus();
-            }
-
-            // normally a utility window is not editable, but the DataViewer's editable means it can 
-            // have "Save" in context menu. But still, it does not have "Edit Display" in context menu
-            let editable = false;
-            if (utilityType === "DataViewer" || utilityType === "Probe" || utilityType === "ChannelGraph" || utilityType === "PvTable" || utilityType === "PvMonitor" || utilityType === "SeqGraph") {
-                editable = true;
-            }
-
-            // (1)
-            const tdl = UtilityWindow.creatUtilityBlankTdl(utilityType) as type_tdl;
-            const windowOptions: type_options_createDisplayWindow = {
-                tdl: tdl,
-                mode: "operating" as "editing" | "operating",
-                editable: editable,
-                tdlFileName: "",
-                macros: [],
-                replaceMacros: false,
-                hide: false,
-                utilityType: utilityType,
-                utilityOptions: utilityOptions,
-                windowId: windowId,
-            };
-            const displayWindowAgent = await this.createDisplayWindow(windowOptions);
-
-            if (displayWindowAgent === undefined) {
-                Log.error(`Cannot create display window for utility ${utilityType}`);
-                return;
-            }
-        } catch (e) {
-            Log.error(e);
-        }
     };
 
     // ----------------------- web display window -------------------------------

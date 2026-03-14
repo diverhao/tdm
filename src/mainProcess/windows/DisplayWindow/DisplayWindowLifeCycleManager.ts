@@ -89,18 +89,21 @@ export class DisplayWindowLifeCycleManager {
         await new Promise((resolve, reject) => {
             this.websocketIpcConnectedResolve = resolve;
         });
-
         this.sendBasicDisplayWindowInfo();
-        this.sendNewTdl();
+        await this.updateTdl();
+    };
 
+    updateTdl = async () => {
+        this.sendNewTdl();
         // wait for new-tdl-rendered, it means the GUI is done
         const { windowName, tdlFileName } = await new Promise<{ windowName: string, tdlFileName: string }>((resolve, reject) => {
             this.newTdlRenderedResolve = resolve;
         });
         this.setupWindowAfterTdlRendered(windowName, tdlFileName);
-    };
+    }
 
     private setupWindowAfterTdlRendered = async (windowName: string, tdlFileName: string) => {
+
         const displayWindowAgent = this.getDisplayWindowAgent();
         const windowAgentsManager = displayWindowAgent.getWindowAgentsManager();
         const mainProcess = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess();
