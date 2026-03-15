@@ -57,14 +57,14 @@ export class DisplayWindowFileBrowser {
         previewDisplayWindowAgent.setForFileBrowserWindowId(this.getDisplayWindowAgent().getId());
         previewDisplayWindowAgent.setForFileBrowserWidgetKey(message["widgetKey"]);
 
-        previewDisplayWindowAgent.sendFromMainProcess("new-tdl", {
-            newTdl: tdlFileResult["tdl"],
-            tdlFileName: tdlFileName,
-            initialModeStr: "editing",
-            editable: false,
-            externalMacros: [],
-            useExternalMacros: false,
-        });
+        previewDisplayWindowAgent.setTdl(tdlFileResult["tdl"]);
+        previewDisplayWindowAgent.setTdlFileName(tdlFileName);
+        previewDisplayWindowAgent.setInitialMode("editing");
+        previewDisplayWindowAgent.setEditable(false);
+        previewDisplayWindowAgent.setMacros([]);
+
+        previewDisplayWindowAgent.getDisplayWindowLifeCycleManager().updateTdl();
+
     };
 
     private canExecuteFileBrowserCommand = (message: IpcEventArgType["file-browser-command"]): boolean => {

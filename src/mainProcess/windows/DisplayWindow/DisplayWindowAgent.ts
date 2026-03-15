@@ -7,7 +7,9 @@ import { v4 as uuidv4 } from "uuid";
 import { Promises, type_pva_status, type_pva_value } from "epics-tca";
 import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
 import { DisplayWindowAttachedScript } from "./DisplayWindowAttachedScript";
+import { DisplayWindowChannel } from "./DisplayWindowChannel";
 import { DisplayWindowChannelsManager } from "./DisplayWindowChannelsManager";
+import { DisplayWindowEmbeddedDisplay } from "./DisplayWindowEmbeddedDisplay";
 import { DisplayWindowFile } from "./DisplayWindowFile";
 import { DisplayWindowFileBrowser } from "./DisplayWindowFileBrowser";
 import { DisplayWindowIpc } from "./DisplayWindowIpc";
@@ -61,6 +63,10 @@ export class DisplayWindowAgent {
     private forFileBrowserWidgetKey: string = '';
 
     private readonly _displayWindowAttachedScript: DisplayWindowAttachedScript;
+
+    private readonly _displayWindowChannel: DisplayWindowChannel;
+
+    private readonly _displayWindowEmbeddedDisplay: DisplayWindowEmbeddedDisplay;
 
     private readonly _displayWindowFile: DisplayWindowFile;
 
@@ -149,6 +155,8 @@ export class DisplayWindowAgent {
         this._displayWindowLifeCycleManager = new DisplayWindowLifeCycleManager(this);
         this.hiddenWindow = options["hide"];
         this._displayWindowAttachedScript = new DisplayWindowAttachedScript(this);
+        this._displayWindowChannel = new DisplayWindowChannel(this);
+        this._displayWindowEmbeddedDisplay = new DisplayWindowEmbeddedDisplay(this);
         this._displayWindowFile = new DisplayWindowFile(this);
         this._displayWindowFileBrowser = new DisplayWindowFileBrowser(this);
         this._displayWindowIpc = new DisplayWindowIpc(this);
@@ -670,6 +678,14 @@ export class DisplayWindowAgent {
 
     getDisplayWindowAttachedScript = () => {
         return this._displayWindowAttachedScript;
+    };
+
+    getDisplayWindowChannel = () => {
+        return this._displayWindowChannel;
+    };
+
+    getDisplayWindowEmbeddedDisplay = () => {
+        return this._displayWindowEmbeddedDisplay;
     };
 
     getDisplayWindowLifeCycleManager = () => {

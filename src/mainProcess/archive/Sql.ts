@@ -115,6 +115,19 @@ export class Sql {
         return this.executeQuery(queryString);
     }
 
+    requestArchiveData = async (channelName: string, startTime: number, endTime: number): Promise<[number[], number[]] | undefined> => {
+        try {
+            const archiveData = await this.getChannelDataForDataViewer(channelName, startTime, endTime);
+            if (archiveData === undefined) {
+                Log.error("Cannot obtain archive data for", channelName, "from", startTime, "to", endTime);
+            }
+            return archiveData;
+        } catch (e) {
+            Log.error("Failed to request archive data", e);
+            return undefined;
+        }
+    }
+
     getChannelDataForDataViewer = async (channelName: string, startTime: number, endTime: number): Promise<[number[], number[]] | undefined> => {
         const connection = this.getConnection();
         if (connection === undefined) {

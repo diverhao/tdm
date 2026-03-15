@@ -26,6 +26,7 @@ import pidusage from "pidusage";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import { SymbolGallery } from "./SymbolGallery";
+import { Rpc } from "./Rpc";
 
 /**
  * Represents a main process.
@@ -111,6 +112,9 @@ export class MainProcess {
     // symbol gallery cache and request handling
     private readonly _symbolGallery: SymbolGallery;
 
+    // rpc handlers owned by this main process
+    private readonly _rpc: Rpc;
+
     // log stream for writing to file
     private _logStream: undefined | fs.WriteStream = undefined;
 
@@ -137,6 +141,7 @@ export class MainProcess {
         this._profiles = new Profiles(args["settings"], {});
         this._profiles.createProfiles(args["settings"]);
         this._symbolGallery = new SymbolGallery(this);
+        this._rpc = new Rpc(this);
 
         // main-process-mode specific initialization
         if (args["mainProcessMode"] === "web") {
@@ -946,6 +951,10 @@ export class MainProcess {
 
     getIpcManager = () => {
         return this._ipcManager;
+    };
+
+    getRpc = () => {
+        return this._rpc;
     };
 
     getWsPvServer = () => {

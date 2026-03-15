@@ -2,6 +2,7 @@ import { app, BrowserWindow, WebContents } from "electron";
 import * as path from "path";
 import * as url from "url";
 import { Log } from "../../../common/Log";
+import { IpcEventArgType } from "../../../common/IpcEventArgType";
 import { MainWindowAgent } from "./MainWindowAgent";
 import { Environment } from "epics-tca";
 
@@ -244,6 +245,45 @@ export class MainWindowLifeCycleManager {
             event.preventDefault();
             this.setReadyToClose(true);
             mainWindowAgent.sendFromMainProcess("window-will-be-closed", {});
+        }
+    };
+
+    handleWindowWillBeClosed = (data: IpcEventArgType["main-window-will-be-closed"]) => {
+        const mainProcess = this.getMainWindowAgent().getWindowAgentsManager().getMainProcess();
+        const mainProcessMode = mainProcess.getMainProcessMode();
+        const mainWindowId = data["mainWindowId"];
+
+        if (data["close"] !== true) {
+            Log.error(`Cannot close main window ${mainWindowId}: close flag is false.`);
+            return;
+        }
+
+        if (mainProcessMode === "desktop") {
+            const browserWindow = this.getBrowserWindow();
+            if (browserWindow !== undefined) {
+                browserWindow.webContents.close();
+            } else {
+                Log.error(`Cannot close main window ${mainWindowId} in desktop mode: browserWindow is undefined.`);
+            }
+        } else if (mainProcessMode === "ssh-server") {
+            this.handleWindowClosed();
+
+            const sshServer = mainProcess.getIpcManager().getSshServer();
+            if (sshServer !== undefined) {
+                sshServer.sendToTcpClient(JSON.stringify(
+                    {
+                        command: "close-browser-window",
+                        data: {
+                            mainProcessId: "0",
+                            mainWindowId: mainWindowId,
+                        }
+                    }
+                ));
+            } else {
+                Log.error(`Cannot close main window ${mainWindowId} in ssh-server mode: sshServer is undefined.`);
+            }
+        } else {
+            Log.error(`Cannot close main window ${mainWindowId}: unsupported main process mode ${mainProcessMode}.`);
         }
     };
 

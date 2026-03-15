@@ -63,6 +63,21 @@ export class WindowAgentsManager {
 
     // -------------------- profile ---------------------------
 
+    openDefaultDisplayWindows = async (windowId: string) => {
+        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        if (selectedProfile === undefined) {
+            Log.error(`Profile not selected yet`);
+            return;
+        }
+
+        const tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
+        const macros = selectedProfile.getMacros();
+        const mode = selectedProfile.getMode() as "editing" | "operating";
+        const editable = selectedProfile.getEditable();
+
+        await this.createDisplayWindows(tdlFileNames, mode, editable, macros, undefined, windowId);
+    };
+
     // ------------------ channel -------------------------
 
     // -------------------- display window agent --------------------------------
@@ -360,41 +375,39 @@ export class WindowAgentsManager {
 
         const profiles = this.getMainProcess().getProfiles();
         const selectedProfile = profiles.getSelectedProfile();
-        const ipcManager = this.getMainProcess().getIpcManager();
-        const mainProcessMode = this.getMainProcess().getMainProcessMode();
+        await Promise.all(tdlFileNames.map(async (tdlFileName) => {
+            const extension = path.extname(tdlFileName);
 
-        for (let tdlFileName of tdlFileNames) {
-
-            if (path.extname(tdlFileName) === ".tdl" || path.extname(tdlFileName) === ".bob" || path.extname(tdlFileName) === ".edl" || path.extname(tdlFileName) === ".stp" || path.extname(tdlFileName) === ".plt") {
-                // regular display window, .tdl, .edl, or .bob
-
-                // do it asynchronously to speed up
-                FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder).then((tdlResult) => {
-                    if (tdlResult !== undefined) {
-                        const tdl = tdlResult["tdl"];
-                        const fullTdlFileName = tdlResult["fullTdlFileName"];
-                        const options: type_options_createDisplayWindow = {
-                            tdl: tdl,
-                            mode: mode,
-                            editable: editable,
-                            tdlFileName: fullTdlFileName,
-                            macros: macros,
-                            replaceMacros: false,
-                            hide: false,
-                            windowId: windowId,
-                        };
-                        this.createDisplayWindow(options);
-                    } else {
+            if (extension === ".tdl" || extension === ".bob" || extension === ".edl" || extension === ".stp" || extension === ".plt") {
+                try {
+                    const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder);
+                    if (tdlResult === undefined) {
                         Log.error(`Cannot read file ${tdlFileName}`);
+                        return;
                     }
-                })
 
-            } else if (path.extname(tdlFileName) === ".db" || path.extname(tdlFileName) === ".template") {
-                // utility window
+                    const options: type_options_createDisplayWindow = {
+                        tdl: tdlResult["tdl"],
+                        mode: mode,
+                        editable: editable,
+                        tdlFileName: tdlResult["fullTdlFileName"],
+                        macros: macros,
+                        replaceMacros: false,
+                        hide: false,
+                        windowId: windowId,
+                    };
+                    await this.createDisplayWindow(options);
+                } catch (e) {
+                    Log.error(`Cannot read file ${tdlFileName}`, e);
+                }
+                return;
+            }
+
+            if (extension === ".db" || extension === ".template") {
                 if (windowId === undefined) {
-                    // utility window must have a initiate window
                     return;
                 }
+
                 const db = FileReader.readDb(tdlFileName, selectedProfile, currentTdlFolder);
                 const channelNames: string[] = [];
                 if (db !== undefined) {
@@ -405,13 +418,10 @@ export class WindowAgentsManager {
                         }
                     }
                 }
-                ipcManager.createUtilityDisplayWindow("", {
-                    utilityType: "PvTable",
-                    utilityOptions: { channelNames: channelNames },
-                    windowId: windowId,
-                });
+
+                this.getUtilityWindowFactory().createUtilityDisplayWindow("PvTable", { channelNames: channelNames }, windowId);
             }
-        }
+        }));
 
     }
 
@@ -664,6 +674,30 @@ export class WindowAgentsManager {
         // const ipcServerPort = this.getMainProcess().getMainProcesses().getIpcManager().getPort();
         // mainWindowAgent.getWebContents()?.send("websocket-ipc-server-port", ipcServerPort);
         return mainWindowAgent;
+    };
+
+    bringUpMainWindow = async () => {
+        let mainWindowAgent = this.getMainWindowAgent();
+        if (mainWindowAgent instanceof MainWindowAgent) {
+            mainWindowAgent.focus();
+            return;
+        }
+
+        const mainProcessMode = this.getMainProcess().getMainProcessMode();
+        if (mainProcessMode !== "desktop" && mainProcessMode !== "ssh-client") {
+            return;
+        }
+
+        await this.createMainWindow();
+        mainWindowAgent = this.getMainWindowAgent();
+        if (!(mainWindowAgent instanceof MainWindowAgent)) {
+            return;
+        }
+
+        const selectedProfileName = this.getMainProcess().getProfiles().getSelectedProfileName();
+        mainWindowAgent.sendFromMainProcess("after-profile-selected", {
+            profileName: selectedProfileName,
+        });
     };
 
     createMainWindowAgent = (): MainWindowAgent => {

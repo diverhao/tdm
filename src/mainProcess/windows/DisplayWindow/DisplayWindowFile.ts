@@ -194,6 +194,55 @@ export class DisplayWindowFile {
 
     // ------------------ write file -----------------------
 
+    saveDataToFile = async (options: IpcEventArgType["save-data-to-file"]): Promise<void> => {
+        const mainProcessMode = this.getMainProcess().getMainProcessMode();
+        if (mainProcessMode === "web") {
+            return;
+        }
+
+        const { data, preferredFileTypes } = options;
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        Log.debug("We are going to save a file");
+        let fileName = options["fileName"];
+
+        try {
+            if (fileName === undefined) {
+                if (mainProcessMode === "desktop") {
+                    fileName = dialog.showSaveDialogSync({ title: "Save data to file", filters: [{ name: "", extensions: preferredFileTypes }] });
+                } else if (mainProcessMode === "ssh-server") {
+                    displayWindowAgent.showInputBox({
+                        command: "save-data-to-file",
+                        humanReadableMessages: ["Save file to"],
+                        buttons: [
+                            {
+                                text: "OK",
+                            },
+                            {
+                                text: "Cancel",
+                            }
+                        ],
+                        defaultInputText: "",
+                        attachment: options,
+                    });
+                    return;
+                }
+            }
+
+            if (fileName === undefined) {
+                displayWindowAgent.showError([`Failed to save file: file not selected`], [""]);
+                return;
+            }
+
+            await fs.promises.writeFile(fileName, JSON.stringify(data, null, 4));
+            Log.info(`Saved tdl to file ${fileName}`);
+        } catch (e) {
+            Log.error(e);
+            if (fileName !== undefined) {
+                displayWindowAgent.showError([`Failed to save ${fileName}`, "Please check the file permission."], ["Below is the raw message:", `${e}`]);
+            }
+        }
+    };
+
     private canWriteToPath = (fileName: string): boolean => {
         try {
             if (fs.existsSync(fileName)) {
@@ -426,6 +475,19 @@ export class DisplayWindowFile {
         } else {
             mainProcess.getEdlFileConverterThread().stopThread();
         }
+    };
+
+    saveVideoFile = (options: IpcEventArgType["save-video-file"]) => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const buffer = Buffer.from(options["fileContents"], "base64");
+
+        fs.writeFile(options["fileName"], buffer, (err) => {
+            if (err) {
+                displayWindowAgent.showError([`Failed to save video to ${options["fileName"]}`], [err.toString()]);
+            } else {
+                displayWindowAgent.showInfo([`Video file saved to ${options["fileName"]}`]);
+            }
+        });
     };
 
 

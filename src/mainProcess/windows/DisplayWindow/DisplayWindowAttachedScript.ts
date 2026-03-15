@@ -1,5 +1,6 @@
 import * as child_process from "child_process";
 import { Worker } from "worker_threads";
+import { IpcEventArgType } from "../../../common/IpcEventArgType";
 import { Log } from "../../../common/Log";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
 
@@ -13,6 +14,21 @@ export class DisplayWindowAttachedScript {
     constructor(displayWindowAgent: DisplayWindowAgent) {
         this._displayWindowAgent = displayWindowAgent;
     }
+
+    handleWindowAttachedScript = (data: IpcEventArgType["window-attached-script"]) => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        if (data["action"] === "terminate") {
+            Log.debug("Terminate script", data["script"], "for window", data["displayWindowId"]);
+            this.terminateWebSocketClientThread();
+            displayWindowAgent.removeWebSocketMonitorChannels();
+        } else if (data["action"] === "run") {
+            Log.debug("Run script", data["script"], "for window", data["displayWindowId"]);
+            const port = displayWindowAgent.getWindowAgentsManager().getMainProcess().getWsPvServer().getPort();
+            this.createWebSocketClientThread(port, data["script"]);
+        } else {
+            Log.error("window-attached-script event error: action must be either run or terminate");
+        }
+    };
 
     createWebSocketClientThread = (port: number, script: string) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
