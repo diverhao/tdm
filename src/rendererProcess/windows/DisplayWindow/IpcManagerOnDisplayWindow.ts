@@ -577,6 +577,7 @@ export class IpcManagerOnDisplayWindow {
     ) => {
         const embeddedDisplayWidget = g_widgets1.getWidget(data["widgetKey"]);
         if (!(embeddedDisplayWidget instanceof EmbeddedDisplay)) {
+            Log.error("Cannot read embedded display TDL: widget is missing or not EmbeddedDisplay", data["widgetKey"]);
             return;
         }
 
@@ -754,7 +755,6 @@ export class IpcManagerOnDisplayWindow {
 
         for (const widget of dbrDataMappedWidgets) {
             if (widget instanceof XYPlot || widget instanceof Terminal || widget instanceof ChannelGraph || widget instanceof SeqGraph || widget instanceof Image) {
-                console.log("OKOKOK")
                 widget.mapDbrDataWitNewData(Object.keys(newDbrData));
             } else if (widget instanceof DataViewer) {
                 // remove force update, use the internal interval to update

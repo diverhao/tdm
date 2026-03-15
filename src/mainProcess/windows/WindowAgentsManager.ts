@@ -48,18 +48,14 @@ export class WindowAgentsManager {
     creatingEmbeddedDisplayMask: string[] = [];
     creatingEmbeddedDisplayBackdrop: string[] = [];
     private readonly _utilityWindowFactory: UtilityWindowFactory;
-    
+
 
     private _newestWindowId = 0;
 
     constructor(mainProcess: MainProcess) {
         this._mainProcess = mainProcess;
         this._utilityWindowFactory = new UtilityWindowFactory(this);
-        // this._mainProcessId = mainProcess.getProcessId();
-        // this.createPreviewDisplayWindow();
     }
-
-    // ------------------- tmp, will be formal ----------------------------------
 
     // -------------------- profile ---------------------------
 
@@ -375,7 +371,8 @@ export class WindowAgentsManager {
 
         const profiles = this.getMainProcess().getProfiles();
         const selectedProfile = profiles.getSelectedProfile();
-        await Promise.all(tdlFileNames.map(async (tdlFileName) => {
+        // await Promise.all(
+        tdlFileNames.map(async (tdlFileName) => {
             const extension = path.extname(tdlFileName);
 
             if (extension === ".tdl" || extension === ".bob" || extension === ".edl" || extension === ".stp" || extension === ".plt") {
@@ -396,14 +393,14 @@ export class WindowAgentsManager {
                         hide: false,
                         windowId: windowId,
                     };
-                    await this.createDisplayWindow(options);
+                    
+                    // await this.createDisplayWindow(options);
+                    this.createDisplayWindow(options);
                 } catch (e) {
                     Log.error(`Cannot read file ${tdlFileName}`, e);
                 }
                 return;
-            }
-
-            if (extension === ".db" || extension === ".template") {
+            } else if (extension === ".db" || extension === ".template") {
                 if (windowId === undefined) {
                     return;
                 }
@@ -421,7 +418,8 @@ export class WindowAgentsManager {
 
                 this.getUtilityWindowFactory().createUtilityDisplayWindow("PvTable", { channelNames: channelNames }, windowId);
             }
-        }));
+        });
+        // );
 
     }
 
@@ -486,7 +484,7 @@ export class WindowAgentsManager {
         displayWindowAgent.setReplaceMacros(replaceMacros);
         displayWindowAgent.setUtilityType(utilityType);
         displayWindowAgent.setUtilityOptions(utilityOptions);
-        
+
         // (5)
         displayWindowAgent.getDisplayWindowLifeCycleManager().updateTdl();
         Log.info(`Replaced preloaded display window ${displayWindowAgent.getId()} with new TDL: ${options["tdlFileName"]}`);
@@ -564,6 +562,7 @@ export class WindowAgentsManager {
             hide: true,
             isPreviewDisplayWindow: true,
         };
+
         const displayWindowAgent = await this.createDisplayWindow(options);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             Log.info(`Created preview display window ${displayWindowAgent.getId()}`);

@@ -336,16 +336,65 @@ export class IpcManagerOnMainProcess {
 
     // ------------------------- main process ------------------------
     /**
-     * IPC handler for requests to open a new TDM instance.
+     * IPC handler for `"new-tdm-process"` requests from a renderer window or a
+     * websocket IPC client.
      *
-     * Delegates process creation to `MainProcess.spawnNewTdmProcess()`.
+     * Flow:
+     * Renderer main window path
+     * `MainWindowProfileRunPage`
+     *   -> `newTdmProcess()`
+     *   -> `sendFromRendererProcess("new-tdm-process", {})`
+     *   -> `handleNewTdmProcess()`
+     *   -> `MainProcess.spawnNewTdmProcess()`
+     *   -> new detached TDM process starts its own main-process lifecycle
+     *   -> the new process establishes its own renderer/websocket IPC connections
+     *
+     * Notes:
+     * - In the renderer, `newTdmProcess()` is wired to the `"New TDM process"`
+     *   action on the main window profile/run page.
+     * - That action is removed in `"ssh-client"` mode, so renderer-originated
+     *   requests come from non-SSH main windows.
+     * - This handler performs no local validation and does not send a reply. It
+     *   only delegates process creation to `spawnNewTdmProcess()`.
+     *
+     * @param event The websocket client or string identifier representing the event source.
+     * @param options Payload for `"new-tdm-process"`; currently unused.
      */
     handleNewTdmProcess = (event: WebSocket | string, options: IpcEventArgType["new-tdm-process"]) => {
         this.getMainProcess().spawnNewTdmProcess();
     };
 
     /**
-     * Quit this process
+     * IPC handler for `"quit-tdm-process"` requests from a renderer window or a
+     * websocket IPC client.
+     *
+     * Flow:
+     * `MainWindowProfileRunPage`
+     *   -> `quitTdmProcess()`
+     *   -> `sendFromRendererProcess("quit-tdm-process", { confirmToQuit: false })`
+     *   -> `handleQuitTdmProcess()`
+     *   -> `MainProcess.requestQuitTdmProcess(false)`
+     *   -> main process either quits immediately or starts quit confirmation flow
+     *
+     * Renderer confirmation path
+     * `IpcManagerOnMainWindow` or `IpcManagerOnDisplayWindow`
+     *   -> user confirms `"quit-tdm-process-confirm"` dialog
+     *   -> `sendFromRendererProcess("quit-tdm-process", { confirmToQuit: true })`
+     *   -> `handleQuitTdmProcess()`
+     *   -> `MainProcess.requestQuitTdmProcess(true)`
+     *   -> main process quits the current TDM process
+     *
+     * Notes:
+     * - In the renderer, `quitTdmProcess()` is wired to the quit action on the
+     *   main window profile/run page.
+     * - This handler performs no local validation and does not send a reply. It
+     *   only delegates quit orchestration to `requestQuitTdmProcess()`.
+     * - `requestQuitTdmProcess()` decides whether to quit immediately or show
+     *   modified-window confirmation based on `confirmToQuit` and the current
+     *   main process mode.
+     *
+     * @param event The websocket client or string identifier representing the event source.
+     * @param option Payload for `"quit-tdm-process"` containing the quit confirmation state.
      */
     handleQuitTdmProcess = (event: WebSocket | string, option: IpcEventArgType["quit-tdm-process"]) => {
         let { confirmToQuit } = option;
@@ -393,8 +442,7 @@ export class IpcManagerOnMainProcess {
 
         // lift the block in create window in DisplayWindowLifeCycleManager.createBrowserWindow()
         const lifeCycleManager = windowAgent.getDisplayWindowLifeCycleManager();
-        const resolve = lifeCycleManager.websocketIpcConnectedResolve;
-        lifeCycleManager.websocketIpcConnectedResolve = undefined;
+        const resolve = lifeCycleManager.getWebsocketIpcConnectedResolve();
         if (resolve === undefined) {
             Log.error(`Display window ${windowId} WebSocket IPC connected with no pending resolver.`);
         } else {
@@ -631,8 +679,8 @@ export class IpcManagerOnMainProcess {
             return;
         }
         const lifeCycleManager = displayWindowAgent.getDisplayWindowLifeCycleManager();
-        const resolve = lifeCycleManager.newTdlRenderedResolve;
-        lifeCycleManager.newTdlRenderedResolve = undefined;
+        const resolve = lifeCycleManager.getNewTdlRenderedResolve();
+        lifeCycleManager.setNewTdlRenderedResolve(undefined);
         if (resolve === undefined) {
             Log.error(`Display window ${displayWindowId} new TDL rendered with no pending resolver.`);
         } else {

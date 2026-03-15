@@ -60,14 +60,17 @@ export class DisplayWindowLifeCycleManager {
      * One-shot resolver for the promise that blocks window startup until the
      * renderer connects to the main-process WebSocket IPC channel.
      */
-    websocketIpcConnectedResolve: ((value?: unknown) => void) | undefined = undefined;
+    private _websocketIpcConnectedResolve: ((value?: unknown) => void) | undefined = undefined;
+
     websocketIpcConnectedPromise: Promise<unknown> | undefined = undefined;
+
 
     /**
      * One-shot resolver for the promise that waits until the renderer finishes
      * the first render of a newly loaded TDL and reports its resolved metadata.
      */
-    newTdlRenderedResolve: ((data: { windowName: string, tdlFileName: string }) => void) | undefined = undefined;
+    newTdlRenderedPromise: Promise<{ windowName: string, tdlFileName: string }> | undefined = undefined;
+    private _newTdlRenderedResolve: ((data: { windowName: string, tdlFileName: string }) => void) | undefined = undefined;
 
     constructor(displayWindowAgent: DisplayWindowAgent) {
         this._displayWindowAgent = displayWindowAgent;
@@ -77,6 +80,25 @@ export class DisplayWindowLifeCycleManager {
 
     createBrowserWindow = async (options: any = {}) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
+
+        // the Promises must created as early as possible to prevent race condition
+        // ideally the workflow is
+        //  (1) electron API create BrowserWindow
+        //  (2) wait for the URL to be loaded
+        //  (3) wait for the WebSocket connection established (IpcManagerOnMainProcess.handleWebsocketIpcConnectedOnDisplayWindow)
+        //  (4) send basic info to display window (non-blocking)
+        //  (5) send TDL to display window
+        //  (6) wait for the new TDL rendered
+        // However, the step (3) may occur earlier than step 2, if we put the creation of Promise
+        // in between (2) and (3), then at step (3), there is a chance that the newly created Promise
+        // will never be resolved, because the websocket is already connected.
+        this.websocketIpcConnectedPromise = new Promise((resolve, reject) => {
+            this.setWebsocketIpcConnectedResolve(resolve);
+        });
+        this.newTdlRenderedPromise = new Promise<{ windowName: string, tdlFileName: string }>((resolve, reject) => {
+            this.setNewTdlRenderedResolve(resolve);
+        });
+
         const mainProcessMode = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
         if (mainProcessMode === "ssh-server") {
             await this.createBrowserWindowInSshSeverMode(options);
@@ -87,21 +109,26 @@ export class DisplayWindowLifeCycleManager {
         }
 
         // wait for IPC websocket connected, then send the basic info and tdl
-        this.websocketIpcConnectedPromise = new Promise((resolve, reject) => {
-            this.websocketIpcConnectedResolve = resolve;
-        });
         await this.websocketIpcConnectedPromise;
+        this.setWebsocketIpcConnectedResolve(undefined);
+
         this.sendBasicDisplayWindowInfo();
+
         await this.updateTdl();
     };
 
     updateTdl = async () => {
         this.sendNewTdl();
         // wait for new-tdl-rendered, it means the GUI is done
-        const { windowName, tdlFileName } = await new Promise<{ windowName: string, tdlFileName: string }>((resolve, reject) => {
-            this.newTdlRenderedResolve = resolve;
-        });
-        this.setupWindowAfterTdlRendered(windowName, tdlFileName);
+        const result = await this.newTdlRenderedPromise;
+        this.setNewTdlRenderedResolve(undefined);
+
+        if (result) {
+            const { windowName, tdlFileName } = result;
+            this.setupWindowAfterTdlRendered(windowName, tdlFileName);
+        } else {
+            Log.error(`Display window ${this.getDisplayWindowAgent().getId()} did not receive new TDL rendered metadata.`);
+        }
     }
 
     private setupWindowAfterTdlRendered = async (windowName: string, tdlFileName: string) => {
@@ -459,7 +486,7 @@ export class DisplayWindowLifeCycleManager {
             }
         }
 
-        this.websocketIpcConnectedResolve?.();
+        this.getWebsocketIpcConnectedResolve()?.();
 
         const ipcManager = displayWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager();
         ipcManager.removeClient(displayWindowAgent.getId());
@@ -650,6 +677,22 @@ export class DisplayWindowLifeCycleManager {
 
     getDisplayWindowAgent = () => {
         return this._displayWindowAgent;
+    };
+
+    getWebsocketIpcConnectedResolve = () => {
+        return this._websocketIpcConnectedResolve;
+    };
+
+    setWebsocketIpcConnectedResolve = (resolve: ((value?: unknown) => void) | undefined) => {
+        this._websocketIpcConnectedResolve = resolve;
+    };
+
+    getNewTdlRenderedResolve = () => {
+        return this._newTdlRenderedResolve;
+    };
+
+    setNewTdlRenderedResolve = (resolve: ((data: { windowName: string, tdlFileName: string }) => void) | undefined) => {
+        this._newTdlRenderedResolve = resolve;
     };
 
 }

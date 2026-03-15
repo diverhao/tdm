@@ -18,7 +18,7 @@ export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 	constructor(sidebar: BaseWidgetSidebar) {
 		super(sidebar);
 		const mainWidget = this.getMainWidget() as EmbeddedDisplay;
-		for (let ii = 0; ii < mainWidget.getTdlFileNames().length; ii++) {
+		for (let ii = 0; ii < mainWidget.getDisplays().length; ii++) {
 			this._members.push(new SidebarEmbeddedDisplayItem(this, ii));
 		}
 	}
@@ -113,14 +113,13 @@ export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 		}
 		const mainWidget = this.getMainWidget() as EmbeddedDisplay;
 
-		const newIndex = mainWidget.getItemNames().length;
-		mainWidget.getItemNames().push(`Display-${newIndex}`);
-        // todo
-		mainWidget.getItemMacros().push([["A","a"]]);
-        // tdl file name or URL
-		mainWidget.getTdlFileNames().push(isWebpage? path.join("../../../webpack/resources/tdls/blank.html"):  mainWidget.getDefaultTdlFileName());
-
-        mainWidget.getItemIsWebpage().push(isWebpage);
+		const newIndex = mainWidget.getDisplays().length;
+		mainWidget.getDisplays().push({
+			tdlFileName: isWebpage ? path.join("../../../webpack/resources/tdls/blank.html") : mainWidget.getDefaultTdlFileName(),
+			name: `Display-${newIndex}`,
+			macros: [["A", "a"]],
+			isWebpage,
+		});
 
         this.getMembers().push(new SidebarEmbeddedDisplayItem(this, newIndex));
 

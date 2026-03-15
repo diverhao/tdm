@@ -133,6 +133,102 @@ export const defaultLabelTdl: type_Label_tdl = {
     rules: [],
 };
 
+// ======================== EmbeddedDisplay TDL Schema ========================
+
+export const type_EmbeddedDisplay_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    useParentMacros: "boolean",
+    useExternalMacros: "boolean",
+    tabPosition: "string",
+    tabWidth: "number",
+    tabHeight: "number",
+    tabSelectedColor: "string",
+    tabDefaultColor: "string",
+    showTab: "boolean",
+    isWebpage: "boolean",
+    resize: "string",
+} as const satisfies TypeSchema;
+
+export const type_EmbeddedDisplay_display_tdl_schema = {
+    tdlFileName: "string",
+    name: "string",
+    macros: type_macros_tdl_schema,
+    isWebpage: "boolean",
+} as const satisfies TypeSchema;
+
+export const type_EmbeddedDisplay_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_style_tdl_schema,
+    text: type_EmbeddedDisplay_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+    displays: { arrayOf: type_EmbeddedDisplay_display_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_EmbeddedDisplay_text_tdl = Mutable<InferType<typeof type_EmbeddedDisplay_text_tdl_schema>>;
+export type type_EmbeddedDisplay_display_tdl = Omit<Mutable<InferType<typeof type_EmbeddedDisplay_display_tdl_schema>>, "macros"> & {
+    macros: type_macros_tdl;
+};
+export type type_EmbeddedDisplay_tdl = Omit<Mutable<InferType<typeof type_EmbeddedDisplay_tdl_schema>>, "displays"> & {
+    displays: type_EmbeddedDisplay_display_tdl[];
+};
+
+export const defaultEmbeddedDisplayTdl: type_EmbeddedDisplay_tdl = {
+    type: "EmbeddedDisplay",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 100,
+        top: 100,
+        width: 150,
+        height: 80,
+        backgroundColor: "rgba(240, 240, 240, 1)",
+        transform: "rotate(0deg)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(180, 180, 180, 1)",
+        color: "rgba(0,0,0,1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        boxSizing: "content-box",
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: true,
+        showUnit: false,
+        alarmBorder: false,
+        useParentMacros: false,
+        useExternalMacros: false,
+        tabPosition: "top",
+        tabWidth: 100,
+        tabHeight: 20,
+        tabSelectedColor: "rgba(180,180,180,1)",
+        tabDefaultColor: "rgba(220,220,220,1)",
+        showTab: true,
+        isWebpage: false,
+        resize: "none",
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+    displays: [],
+};
+
 // ======================== Polyline TDL Schema ========================
 
 export const type_Polyline_text_tdl_schema = {

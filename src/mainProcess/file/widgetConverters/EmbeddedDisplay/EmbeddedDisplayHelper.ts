@@ -1,109 +1,56 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
+import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 import * as GlobalMethods from "../../../../common/GlobalMethods";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 import { EdlConverter } from "../../EdlConverter";
 import { v4 as uuidv4 } from "uuid";
-
-export type type_EmbeddedDisplay_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    tdlFileNames: string[];
-    itemNames: string[];
-    itemMacros: [string, string][][];
-    itemIsWebpage: boolean[];
-};
+import { defaultEmbeddedDisplayTdl, type_EmbeddedDisplay_display_tdl, type_EmbeddedDisplay_tdl } from "../../../../common/types/type_widget_tdl";
 
 export class EmbeddedDisplayHelper extends BaseWidgetHelper {
-    static _defaultTdl: type_EmbeddedDisplay_tdl = {
-        type: "EmbeddedDisplay",
-        widgetKey: "",
-        key: "",
-        style: {
-            //basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(240, 240, 240, 1)",
-            // angle
-            transform: "rotate(0deg)",
-            // border, it is different from the "alarmBorder" below,
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // display tab text alignment
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            // wrapWord: true,
-            // showUnit: false,
-            // actually "alarm outline"
-            alarmBorder: false,
-            // macros
-            externalMacros: [],
-            useParentMacros: false,
-            useExternalMacros: false,
-            // tab
-            tabPosition: "top",
-            tabWidth: 100,
-            tabHeight: 20,
-            tabSelectedColor: "rgba(180,180,180,1)",
-            tabDefaultColor: "rgba(220,220,220,1)",
-            showTab: true,
-            // isWebpage: false,
-            resize: "none", // "none" | "crop" | "fit"
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        // tdl files names / web link
-        tdlFileNames: [],
-        // labels
-        itemNames: [],
-        // macros
-        itemMacros: [],
-        itemIsWebpage: [],
+    static generateDefaultTdl = (): type_EmbeddedDisplay_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultEmbeddedDisplayTdl.type);
+        return structuredClone({
+            ...defaultEmbeddedDisplayTdl,
+            widgetKey: widgetKey,
+        });
     };
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_EmbeddedDisplay_tdl => {
-        const result = super.generateDefaultTdl(type) as type_EmbeddedDisplay_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.tdlFileNames = structuredClone(this._defaultTdl.tdlFileNames);
-        result.itemNames = structuredClone(this._defaultTdl.itemNames);
-        result.itemMacros = structuredClone(this._defaultTdl.itemMacros);
-        result.itemIsWebpage = structuredClone(this._defaultTdl.itemIsWebpage);
-        return result;
+
+    static createDisplay = (
+        tdlFileName: string = "",
+        name: string = "",
+        macros: [string, string][] = [],
+        isWebpage: boolean = false
+    ): type_EmbeddedDisplay_display_tdl => {
+        return {
+            tdlFileName,
+            name,
+            macros,
+            isWebpage,
+        };
+    };
+
+    static legacyArraysToDisplays = (
+        tdlFileNames: unknown[] = [],
+        itemNames: unknown[] = [],
+        itemMacros: unknown[] = [],
+        itemIsWebpage: unknown[] = []
+    ): type_EmbeddedDisplay_display_tdl[] => {
+        const displayCount = Math.max(tdlFileNames.length, itemNames.length, itemMacros.length, itemIsWebpage.length);
+
+        return Array.from({ length: displayCount }, (_, index) =>
+            this.createDisplay(
+                typeof tdlFileNames[index] === "string" ? tdlFileNames[index] : "",
+                typeof itemNames[index] === "string" ? itemNames[index] : "",
+                Array.isArray(itemMacros[index]) ? (itemMacros[index] as [string, string][]) : [],
+                itemIsWebpage[index] === true
+            )
+        );
     };
 
     static convertEdlToTdl = (edl: Record<string, any>, convertEdlSufffix: boolean = false): type_EmbeddedDisplay_tdl | void => {
         Log.info("\n------------", `Parsing "Embedded Window"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("EmbeddedDisplay") as type_EmbeddedDisplay_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
 
         const propertyNames: string[] = [
@@ -135,10 +82,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
         // tdl["text"]["verticalAlign"] = "center";
         // tdl["text"]["wrapWord"] = false;
         tdl["text"]["showTab"] = false;
-        tdl["tdlFileNames"] = [];
-        tdl["itemNames"] = [];
-        tdl["itemMacros"] = [];
-        tdl["itemIsWebpage"] = [];
+        tdl["displays"] = [];
         tdl["text"]["useParentMacros"] = true;
         tdl["text"]["useExternalMacros"] = true;
         // const alarmPropertyNames: string[] = [];
@@ -166,10 +110,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
                             edl["symbols"],
                             convertEdlSufffix
                         );
-                        tdl["tdlFileNames"] = tdlFileNames;
-                        tdl["itemNames"] = itemNames;
-                        tdl["itemMacros"] = itemMacros;
-                        tdl["itemIsWebpage"] = itemIsWebpage;
+                        tdl["displays"] = this.legacyArraysToDisplays(tdlFileNames, itemNames, itemMacros, itemIsWebpage);
                         const filePv = EdlConverter.convertEdlPv(edl["filePv"]);
                         tdl["rules"].push({
                             boolExpression: `true`,
@@ -184,14 +125,8 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
                             if (!edlFile.includes(".edl")) {
                                 edlFile = edlFile + ".edl";
                             }
-                            tdl["tdlFileNames"] =
-                                convertEdlSufffix === true
-                                    ? [edlFile.replaceAll(".edl", ".tdl")]
-                                    : [edlFile];
-                            tdl["itemNames"] = [""];
-                            // todo
-                            tdl["itemMacros"] = [[]];
-                            tdl["itemIsWebpage"] = [false];
+                            const tdlFileName = convertEdlSufffix === true ? edlFile.replaceAll(".edl", ".tdl") : edlFile;
+                            tdl["displays"] = [this.createDisplay(tdlFileName, "", [], false)];
                         }
                     } else {
                         // ! stringPv
@@ -327,7 +262,7 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "embedded" | "navtabs" | "webbrowser", convertBobSufffix: boolean = false): type_EmbeddedDisplay_tdl => {
         Log.info("\n------------", `Parsing "embedded"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("EmbeddedDisplay");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "name", // not in tdm
@@ -367,7 +302,10 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
         tdl["style"]["height"] = 30;
         tdl["style"]["top"] = 0;
         tdl["style"]["left"] = 0;
-        tdl["itemIsWebpage"] = [];
+        let tdlFileNames: string[] = [];
+        let itemNames: string[] = [];
+        let itemMacros: [string, string][][] = [];
+        let itemIsWebpage: boolean[] = [];
 
 
         for (const propertyName of propertyNames) {
@@ -391,15 +329,15 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
                 } else if (propertyName === "rules") {
                     tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
                 } else if (propertyName === "macros") {
-                    tdl["itemMacros"].push(BobPropertyConverter.convertBobMacros(propertyValue));
+                    itemMacros.push(BobPropertyConverter.convertBobMacros(propertyValue));
                 } else if (propertyName === "file") {
                     const fileName = (BobPropertyConverter.convertBobString(propertyValue));
                     if (convertBobSufffix === true) {
-                        tdl["tdlFileNames"].push(fileName.replaceAll(".bob", ".tdl").replaceAll(".plt", ".tdl"))
+                        tdlFileNames.push(fileName.replaceAll(".bob", ".tdl").replaceAll(".plt", ".tdl"))
                     } else {
-                        tdl["tdlFileNames"].push(fileName);
+                        tdlFileNames.push(fileName);
                     }
-                    tdl["itemNames"].push("")
+                    itemNames.push("")
                 } else if (propertyName === "border_width") {
                     tdl["style"]["borderWidth"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "border_color") {
@@ -414,38 +352,28 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
                     tdl["style"]["fontFamily"] = font["fontFamily"];
                 } else if (propertyName === "tabs") {
                     const tabsResult = BobPropertyConverter.convertBobNavTabsTabs(propertyValue);
-                    tdl["tdlFileNames"] = tabsResult["tdlFileNames"];
-                    tdl["itemMacros"] = tabsResult["itemMacros"];
-                    tdl["itemNames"] = tabsResult["itemNames"];
+                    tdlFileNames = tabsResult["tdlFileNames"];
+                    itemMacros = tabsResult["itemMacros"];
+                    itemNames = tabsResult["itemNames"];
                 } else if (propertyName === "url") {
-                    tdl["tdlFileNames"].push(BobPropertyConverter.convertBobString(propertyValue));
-                    tdl["itemIsWebpage"].push(true);
-                    tdl["itemNames"].push("");
+                    tdlFileNames.push(BobPropertyConverter.convertBobString(propertyValue));
+                    itemIsWebpage.push(true);
+                    itemNames.push("");
                 } else {
                     Log.info("Skip property", `"${propertyName}"`);
                 }
             }
         }
 
-        if (type === "embedded") {
-            if (tdl["itemMacros"].length < 1 && tdl["tdlFileNames"].length > 0) {
-                tdl["itemMacros"].push([]);
-            }
-        } else if (type === "navtabs") {
-            for (const tdlFileName of tdl["tdlFileNames"]) {
-                tdl["itemIsWebpage"].push(false);
-            }
+        if (type === "navtabs") {
             // in navtabs, the tabs are part of the width and height
             tdl["style"]["top"] = tdl["style"]["top"] + 35;
             tdl["style"]["height"] = tdl["style"]["height"] - 35;
-        } else {
+        } else if (type !== "embedded") {
             tdl["text"]["showTab"] = false;
         }
 
-        tdl["itemIsWebpage"].length = 0;
-        for (let ii = 0; ii < tdl["tdlFileNames"].length; ii++) {
-            tdl["itemIsWebpage"].push(false);
-        }
+        tdl["displays"] = this.legacyArraysToDisplays(tdlFileNames, itemNames, itemMacros, itemIsWebpage);
 
         return tdl;
     };

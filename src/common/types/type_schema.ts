@@ -21,9 +21,10 @@
 //   "undefined"            — value === undefined
 //   "string[]"             — string array
 //   "number[]"             — number array
+//   "boolean[]"            — boolean array
 //   ["string", "undefined"]— union: string | undefined
 //   { field: "string" }    — nested object (recursive TypeSchema)
-//   { arrayOf: schema }    — array of objects matching schema
+//   { arrayOf: field }     — array of items matching any supported field descriptor
 //   { arrayOfUnion: [...] }— array where each item matches one of several schemas (union)
 //   { tuple: [...] }       — fixed-length tuple of primitive types
 //   { arrayOfTuple: [...] }— array of tuples
@@ -37,10 +38,11 @@ export type PrimitiveFieldType =
     | "boolean"
     | "undefined"
     | "string[]"
-    | "number[]";
+    | "number[]"
+    | "boolean[]";
 
 // --- Compound descriptors ---
-export type ArrayOfSchema = { arrayOf: TypeSchema };
+export type ArrayOfSchema = { arrayOf: FieldType };
 export type ArrayOfUnionSchema = { arrayOfUnion: readonly TypeSchema[] };
 export type TupleSchema = { tuple: readonly PrimitiveFieldType[] };
 export type ArrayOfTupleSchema = { arrayOfTuple: readonly PrimitiveFieldType[] };
@@ -52,7 +54,7 @@ export type FieldType =
     | PrimitiveFieldType            // e.g. "string"
     | PrimitiveFieldType[]          // e.g. ["string", "undefined"]  (union)
     | TypeSchema                    // nested object
-    | ArrayOfSchema                 // array of typed objects
+    | ArrayOfSchema                 // array of typed items
     | ArrayOfUnionSchema            // array where each item matches one of several schemas
     | TupleSchema                   // fixed-length tuple of primitive types
     | ArrayOfTupleSchema            // array of tuples
@@ -77,11 +79,12 @@ type MapSingle<T> =
     T extends "undefined" ? undefined :
     T extends "string[]" ? string[] :
     T extends "number[]" ? number[] :
+    T extends "boolean[]" ? boolean[] :
     T extends ArrayOfUnionSchema ? InferUnion<T["arrayOfUnion"][number]>[] :
     T extends ArrayOfTupleSchema ? InferTuple<T["arrayOfTuple"]>[] :
     T extends TupleSchema ? InferTuple<T["tuple"]> :
     T extends LiteralUnionSchema ? T["literalUnion"][number] :
-    T extends ArrayOfSchema ? InferType<T["arrayOf"]>[] :
+    T extends ArrayOfSchema ? MapField<T["arrayOf"]>[] :
     T extends DictionaryOfSchema ? Record<string, InferType<T["dictionaryOf"]>> :
     T extends TypeSchema ? { [K in keyof T]: MapField<T[K]> } :
     never;

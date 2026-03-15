@@ -27,17 +27,24 @@ export class SidebarEmbeddedDisplayItem {
         return this.getItems().getMainWidget() as EmbeddedDisplay;
     };
 
+    getDisplay = () => {
+        return this.getMainWidget().getDisplay(this.getIndex());
+    };
+
     _Element = () => {
         const mainWidget = this.getMainWidget();
-        const [itemName, setItemName] = React.useState(mainWidget.getItemNames()[this.getIndex()]);
-        const [tdlFileName, setTdlFileName] = React.useState(`${mainWidget.getTdlFileNames()[this.getIndex()]}`);
+        const currentDisplay = this.getDisplay();
+        const [itemName, setItemName] = React.useState(currentDisplay?.name ?? "");
+        const [tdlFileName, setTdlFileName] = React.useState(`${currentDisplay?.tdlFileName ?? ""}`);
         // const [macro, setMacro] = React.useState(`${mainWidget.getMacros()[this.getIndex()]}`);
 
         this._updateFromWidget = (newTdlFileName: string) => {
-
-            const mainWidget = this.getMainWidget();
+            const display = this.getDisplay();
+            if (display === undefined) {
+                return;
+            }
             // for runtime
-            mainWidget.getTdlFileNames()[this.getIndex()] = newTdlFileName;
+            display.tdlFileName = newTdlFileName;
             setTdlFileName(newTdlFileName);
 
             const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
@@ -74,12 +81,16 @@ export class SidebarEmbeddedDisplayItem {
                                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                     const displayWindowId = displayWindowClient.getWindowId();
                                     const mainWidget = this.getMainWidget();
+                                    const display = this.getDisplay();
+                                    if (display === undefined) {
+                                        return;
+                                    }
 
                                     const allMacros = mainWidget.getAllMacros();
-                                    const itemMacros = mainWidget.getItemMacros()[this.getIndex()];
+                                    const itemMacros = display.macros;
                                     const macros = [...itemMacros, ...allMacros];
 
-                                    let tdlFileName = mainWidget.getTdlFileNames()[this.getIndex()];
+                                    let tdlFileName = display.tdlFileName;
                                     // the tdl file name is expanded based on the macros for this EmbeddedDisplay widget
                                     // the itemMacros is for the child tdl 
                                     tdlFileName = BaseWidget.expandChannelName(tdlFileName, allMacros);
@@ -209,7 +220,7 @@ export class SidebarEmbeddedDisplayItem {
                             }}
                             // must use enter to change the value
                             onBlur={(event) => {
-                                const orig = mainWidget.getItemNames()[this.getIndex()];
+                                const orig = this.getDisplay()?.name ?? "";
                                 if (orig !== itemName) {
                                     setItemName(orig);
                                 }
@@ -251,7 +262,7 @@ export class SidebarEmbeddedDisplayItem {
                             }}
                             // must use enter to change the value
                             onBlur={(event) => {
-                                const orig = `${mainWidget.getTdlFileNames()[this.getIndex()]}`;
+                                const orig = `${this.getDisplay()?.tdlFileName ?? ""}`;
                                 if (orig !== tdlFileName) {
                                     setTdlFileName(orig);
                                 }
@@ -259,7 +270,7 @@ export class SidebarEmbeddedDisplayItem {
                         />
                     </form>
                 </div>
-                {mainWidget.getItemIsWebpage()[this.getIndex()] === true ? null : <this._ElementMacros></this._ElementMacros>}
+                {this.getDisplay()?.isWebpage === true ? null : <this._ElementMacros></this._ElementMacros>}
                 <div>&nbsp;</div>
             </this._BlockBody>
         );
@@ -275,7 +286,7 @@ export class SidebarEmbeddedDisplayItem {
                     <ElementMacrosTable
                         headlineName1={"Name"}
                         headlineName2={"Value"}
-                        macrosData={this.getMainWidget().getItemMacros()[this.getIndex()]}
+                        macrosData={this.getDisplay()?.macros ?? []}
                     >
                     </ElementMacrosTable>
                 </div>
@@ -308,11 +319,15 @@ export class SidebarEmbeddedDisplayItem {
         }
 
         const mainWidget = this.getMainWidget();
-        const oldVal = mainWidget.getItemNames()[this.getIndex()];
+        const display = this.getDisplay();
+        if (display === undefined) {
+            return;
+        }
+        const oldVal = display.name;
         if (propertyValue === oldVal) {
             return;
         } else {
-            mainWidget.getItemNames()[this.getIndex()] = `${propertyValue}`;
+            display.name = `${propertyValue}`;
         }
 
         const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
@@ -330,14 +345,18 @@ export class SidebarEmbeddedDisplayItem {
         }
 
         const mainWidget = this.getMainWidget();
-        const oldVal = `${mainWidget.getTdlFileNames()[this.getIndex()]}`;
+        const display = this.getDisplay();
+        if (display === undefined) {
+            return;
+        }
+        const oldVal = `${display.tdlFileName}`;
         if (propertyValue === oldVal) {
             return;
         } else {
-            mainWidget.getTdlFileNames()[this.getIndex()] = `${propertyValue}`;
+            display.tdlFileName = `${propertyValue}`;
         }
 
-        // if (mainWidget.getItemIsWebpage()[this.getIndex()] === true) {
+        // if (this.getDisplay()?.isWebpage === true) {
         // 	mainWidget.updateEmbeddedDisplayUrl(this.getIndex());
         // } else {
         // 	mainWidget.updateEmbeddedDisplayTdlFileName(this.getIndex());
@@ -358,27 +377,15 @@ export class SidebarEmbeddedDisplayItem {
         }
         const mainWidget = this.getMainWidget();
 
-        if (this.getIndex() >= mainWidget.getItemNames().length - 1) {
+        if (this.getIndex() >= mainWidget.getDisplays().length - 1) {
             return;
         }
 
         const thisIndex = this.getIndex();
 
-        const itemName = mainWidget.getItemNames()[thisIndex];
-        mainWidget.getItemNames().splice(thisIndex, 1);
-        mainWidget.getItemNames().splice(thisIndex + 1, 0, itemName);
-
-        const tdlFileName = mainWidget.getTdlFileNames()[thisIndex];
-        mainWidget.getTdlFileNames().splice(thisIndex, 1);
-        mainWidget.getTdlFileNames().splice(thisIndex + 1, 0, tdlFileName);
-
-        const macro = mainWidget.getItemMacros()[thisIndex];
-        mainWidget.getItemMacros().splice(thisIndex, 1);
-        mainWidget.getItemMacros().splice(thisIndex + 1, 0, macro);
-
-        const isWebpage = mainWidget.getItemIsWebpage()[thisIndex];
-        mainWidget.getItemIsWebpage().splice(thisIndex, 1);
-        mainWidget.getItemIsWebpage().splice(thisIndex + 1, 0, isWebpage);
+        const display = mainWidget.getDisplays()[thisIndex];
+        mainWidget.getDisplays().splice(thisIndex, 1);
+        mainWidget.getDisplays().splice(thisIndex + 1, 0, display);
 
         const member = this.getItems().getMembers()[thisIndex];
         const member2 = this.getItems().getMembers()[thisIndex + 1];
@@ -422,21 +429,9 @@ export class SidebarEmbeddedDisplayItem {
 
         const thisIndex = this.getIndex();
 
-        const itemName = mainWidget.getItemNames()[thisIndex];
-        mainWidget.getItemNames().splice(thisIndex, 1);
-        mainWidget.getItemNames().splice(thisIndex - 1, 0, itemName);
-
-        const tdlFileName = mainWidget.getTdlFileNames()[thisIndex];
-        mainWidget.getTdlFileNames().splice(thisIndex, 1);
-        mainWidget.getTdlFileNames().splice(thisIndex - 1, 0, tdlFileName);
-
-        const macro = mainWidget.getItemMacros()[thisIndex];
-        mainWidget.getItemMacros().splice(thisIndex, 1);
-        mainWidget.getItemMacros().splice(thisIndex - 1, 0, macro);
-
-        const isWebpage = mainWidget.getItemIsWebpage()[thisIndex];
-        mainWidget.getItemIsWebpage().splice(thisIndex, 1);
-        mainWidget.getItemIsWebpage().splice(thisIndex - 1, 0, isWebpage);
+        const display = mainWidget.getDisplays()[thisIndex];
+        mainWidget.getDisplays().splice(thisIndex, 1);
+        mainWidget.getDisplays().splice(thisIndex - 1, 0, display);
 
         const member = this.getItems().getMembers()[thisIndex];
         const member2 = this.getItems().getMembers()[thisIndex - 1];
@@ -473,23 +468,20 @@ export class SidebarEmbeddedDisplayItem {
             event.preventDefault();
         }
         const mainWidget = this.getMainWidget();
-        if (mainWidget.getItemNames().length <= 1 && mainWidget.getWidgetKey().includes("EmbeddedDisplay")) {
+        if (mainWidget.getDisplays().length <= 1 && mainWidget.getWidgetKey().includes("EmbeddedDisplay")) {
             return;
         }
 
         const thisIndex = this.getIndex();
 
-        mainWidget.getItemNames().splice(thisIndex, 1);
-        mainWidget.getTdlFileNames().splice(thisIndex, 1);
-        mainWidget.getItemMacros().splice(thisIndex, 1);
-        mainWidget.getItemIsWebpage().splice(thisIndex, 1);
+        mainWidget.getDisplays().splice(thisIndex, 1);
         this.getItems().getMembers().splice(thisIndex, 1);
 
         // mainWidget.updateEmbeddedDisplayRemoveTab(thisIndex);
 
         // the indices are updatd in main process in above "remove-tab" event
         // the tab #0 is selected in main process, without using the "select-tab" event
-        for (let ii = thisIndex; ii < mainWidget.getItemNames().length; ii++) {
+        for (let ii = thisIndex; ii < mainWidget.getDisplays().length; ii++) {
             const item = this.getItems().getMembers()[ii];
             item.setIndex(ii);
         }
@@ -511,7 +503,7 @@ export class SidebarEmbeddedDisplayItem {
 
     getElement = () => {
         const mainWidget = this.getMainWidget();
-        return <this._Element key={`${mainWidget.getItemNames()[this.getIndex()]}-${this.getIndex()}`}></this._Element>;
+        return <this._Element key={`${mainWidget.getDisplay(this.getIndex())?.name ?? ""}-${this.getIndex()}`}></this._Element>;
     };
 
     getIndex = () => {

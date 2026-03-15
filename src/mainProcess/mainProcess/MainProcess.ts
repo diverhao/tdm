@@ -514,6 +514,7 @@ export class MainProcess {
     }
 
     /**
+     * 
      * Start a new detached TDM process using the current executable and arguments.
      *
      * The child process is launched with ignored stdio and unreferenced so it can
@@ -824,7 +825,7 @@ export class MainProcess {
                 // (a)
                 await mainWindowAgent.loadURLPromise;
                 // (b)
-                // await mainWindowAgent.websocketIpcConnectedPromise;
+                await mainWindowAgent.getMainWindowLifeCycleManager().websocketIpcConnectedPromise;
                 // (c)
                 const oldTitle = mainWindowAgent.getTitle();
                 const newTitle = oldTitle + " -- " + profileName;
@@ -835,6 +836,8 @@ export class MainProcess {
                 });
                 // (e)
                 windowAgentsManager.createPreviewDisplayWindow();
+            } else {
+                Log.error("Main window agent does not exist");
             }
         } else if (mainProcessMode === "ssh-server") {
 

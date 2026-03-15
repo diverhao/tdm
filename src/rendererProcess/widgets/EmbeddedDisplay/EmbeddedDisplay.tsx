@@ -1,12 +1,11 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { EmbeddedDisplaySidebar } from "./EmbeddedDisplaySidebar";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { rendererWindowStatus } from "../../global/Widgets";
 import { EmbeddedDisplayRule } from "./EmbeddedDisplayRule";
@@ -16,40 +15,21 @@ import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Log } from "../../../common/Log";
 import { TcaChannel } from "../../channel/TcaChannel";
 import { v4 as uuidv4 } from "uuid";
-
-export type type_EmbeddedDisplay_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    tdlFileNames: string[];
-    itemNames: string[];
-    itemMacros: [string, string][][];
-    itemIsWebpage: boolean[];
-};
+import { defaultEmbeddedDisplayTdl, type_EmbeddedDisplay_display_tdl, type_EmbeddedDisplay_tdl } from "../../../common/types/type_widget_tdl";
 
 export class EmbeddedDisplay extends BaseWidget {
 
     _rules: BaseWidgetRules;
 
-    _tdlFileNames: string[];
+    _displays: type_EmbeddedDisplay_display_tdl[];
     _fullTdlFileName: string = "";
     // the widget keys for the currently selected tab
     _childWidgetKeys: string[] = [];
-
-    _itemNames: string[];
-    _itemMacros: [string, string][][];
-    _itemIsWebpage: boolean[];
 
     readonly titleBarHeight = window.outerHeight - window.innerHeight;
     readonly _defaultTdlFileName = `../../../webpack/resources/tdls/blank-red.tdl`;
     isMovingByEmbeddedDisplay: boolean = false;
     _selectedTab = 0;
-    // toBeSelectedTab = 0;
     _zerothDisplayCreated = false;
 
     // once assigned, never change
@@ -59,9 +39,36 @@ export class EmbeddedDisplay extends BaseWidget {
 
     loadingText = "";
 
-    private _tdlCanvasWidth: number | string = 100;
-    private _tdlCanvasHeight: number | string = 100;
 
+    static normalizeDisplays = (widgetTdl: type_EmbeddedDisplay_tdl | Record<string, any>): type_EmbeddedDisplay_display_tdl[] => {
+        const rawWidgetTdl = widgetTdl as Record<string, any>;
+
+        if (Array.isArray(rawWidgetTdl["displays"])) {
+            return structuredClone(
+                rawWidgetTdl["displays"].map((display: Record<string, any>) => ({
+                    tdlFileName: typeof display?.["tdlFileName"] === "string" ? display["tdlFileName"] : "",
+                    name: typeof display?.["name"] === "string" ? display["name"] : "",
+                    macros: Array.isArray(display?.["macros"]) ? display["macros"] : [],
+                    isWebpage: display?.["isWebpage"] === true,
+                }))
+            );
+        }
+
+        const tdlFileNames = Array.isArray(rawWidgetTdl["tdlFileNames"]) ? rawWidgetTdl["tdlFileNames"] : [];
+        const itemNames = Array.isArray(rawWidgetTdl["itemNames"]) ? rawWidgetTdl["itemNames"] : [];
+        const itemMacros = Array.isArray(rawWidgetTdl["itemMacros"]) ? rawWidgetTdl["itemMacros"] : [];
+        const itemIsWebpage = Array.isArray(rawWidgetTdl["itemIsWebpage"]) ? rawWidgetTdl["itemIsWebpage"] : [];
+        const displayCount = Math.max(tdlFileNames.length, itemNames.length, itemMacros.length, itemIsWebpage.length);
+
+        return structuredClone(
+            Array.from({ length: displayCount }, (_, index) => ({
+                tdlFileName: typeof tdlFileNames[index] === "string" ? tdlFileNames[index] : "",
+                name: typeof itemNames[index] === "string" ? itemNames[index] : "",
+                macros: Array.isArray(itemMacros[index]) ? itemMacros[index] : [],
+                isWebpage: itemIsWebpage[index] === true,
+            }))
+        );
+    };
 
     constructor(widgetTdl: type_EmbeddedDisplay_tdl) {
         super(widgetTdl);
@@ -69,25 +76,13 @@ export class EmbeddedDisplay extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._tdlFileNames = structuredClone(widgetTdl["tdlFileNames"]);
-        this._itemNames = structuredClone(widgetTdl["itemNames"]);
-        this._itemMacros = structuredClone(widgetTdl["itemMacros"]);
-        this._itemIsWebpage = structuredClone(widgetTdl["itemIsWebpage"]);
+        this._displays = EmbeddedDisplay.normalizeDisplays(widgetTdl);
 
         this._rules = new BaseWidgetRules(this, widgetTdl, EmbeddedDisplayRule);
     }
 
     // ------------------------------ elements ---------------------------------
 
-    // element = <> body (area + resizer) + sidebar </>
-    _useMemoedElement(): boolean {
-        if (this.isSelected()) {
-            return false;
-        } else {
-            return g_widgets1.getForceUpdateWidgets().has(this.getWidgetKey()) ? false : true;
-        }
-    }
-    // Body + sidebar
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -98,45 +93,23 @@ export class EmbeddedDisplay extends BaseWidget {
 
         this.updateAllStyleAndText();
 
-        // must do it for every widget
-        // React.useEffect(() => {
-        // 	if (!this.isMovingByEmbeddedDisplay && g_widgets1.isEditing()) {
-        // 		this.updateEmbeddedDisplayBounds();
-        // 	}
-        // });
-
-        // must do it for every widget
-        //! shall we do it for this widget?
-        // g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
-        this.widgetBeingRendered = true;
-        React.useEffect(() => {
-            this.widgetBeingRendered = false;
-        });
-
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this._sidebar?.getElement() : null}
-                </>
+                <div style={this.getElementBodyRawStyle()}>
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this._sidebar?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    // Text area and resizers
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={this.getElementBodyRawStyle()}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
+    _ElementArea = (): React.JSX.Element => {
+        const whiteSpace = this.getText().wrapWord ? "normal" : "pre";
+        const justifyContent = this.getText().horizontalAlign;
+        const alignItems = this.getText().verticalAlign;
+        const outline = this._getElementAreaRawOutlineStyle();
 
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         return (
             <div
                 style={{
@@ -148,20 +121,16 @@ export class EmbeddedDisplay extends BaseWidget {
                     height: "100%",
                     userSelect: "none",
                     overflow: "visible",
-                    whiteSpace: this.getText().wrapWord ? "normal" : "pre",
-                    justifyContent: this.getText().horizontalAlign,
-                    alignItems: this.getText().verticalAlign,
-                    fontFamily: this.getStyle().fontFamily,
-                    fontSize: this.getStyle().fontSize,
-                    fontStyle: this.getStyle().fontStyle,
-                    fontWeight: this.getStyle().fontWeight,
-                    outline: this._getElementAreaRawOutlineStyle(),
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    outline: outline,
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
             >
 
-                {this.getItemNames().length <= 1 || this.getText()["showTab"] === false ? null : (
+                {this.getDisplays().length <= 1 || this.getText()["showTab"] === false ? null : (
                     <this._ElementTabs></this._ElementTabs>
                 )}
 
@@ -175,6 +144,14 @@ export class EmbeddedDisplay extends BaseWidget {
         );
     };
 
+    _useMemoedElement(): boolean {
+        if (this.isSelected()) {
+            return false;
+        } else {
+            return g_widgets1.getForceUpdateWidgets().has(this.getWidgetKey()) ? false : true;
+        }
+    }
+
     _ElementIframe = () => {
 
         const webviewElementRef = React.useRef<HTMLIFrameElement>(null);
@@ -182,9 +159,11 @@ export class EmbeddedDisplay extends BaseWidget {
         let display: string = "none";
         let link = "";
 
-        if (g_widgets1.isEditing() === false && this.getItemIsWebpage()[this.getSelectedTab()] === true) {
+        const selectedDisplay = this.getDisplay(this.getSelectedTab());
+
+        if (g_widgets1.isEditing() === false && selectedDisplay?.isWebpage === true) {
             display = "";
-            link = this.getTdlFileNames()[this.getSelectedTab()];
+            link = selectedDisplay.tdlFileName;
         }
 
         return (
@@ -203,7 +182,64 @@ export class EmbeddedDisplay extends BaseWidget {
         )
     };
 
+    _ElementTabs = () => {
+        const [, forceUpdate] = React.useState({});
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "row" : "column",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    width:
+                        this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "100%" : this.getText()["tabWidth"],
+                    height:
+                        this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? this.getText()["tabHeight"] : "100%",
+                    position: "absolute",
+                    left: this.calcTabsLeft(),
+                    top: this.calcTabsTop(),
+                }}
+            >
+                {this.getDisplays().map((display, index: number) => {
+                    return (
+                        <div
+                            key={`${display.name}-${index}-${display.tdlFileName}`}
+                            style={{
+                                display: "inline-flex",
+                                justifyContent: this.getText()["horizontalAlign"],
+                                alignItems: "center",
+                                width:
+                                    this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom"
+                                        ? this.getText()["tabWidth"]
+                                        : "100%",
+                                height: this.getText()["tabHeight"],
+                                backgroundColor:
+                                    this.getSelectedTab() === index ? this.getText()["tabSelectedColor"] : this.getText()["tabDefaultColor"],
+                                // border: "solid 1px black",
+                                fontWeight: this.getSelectedTab() === index ? "bold" : "normal",
+                                overflow: "hidden",
+                                whiteSpace: "nowrap",
+                                padding: 4,
+                                borderRadius: 4,
+                                margin: 3,
+                            }}
+                            onMouseDown={(event) => {
+                                event.preventDefault();
+                                forceUpdate({});
+                                this.selectTab(index);
+                            }}
+                        >
+                            {display.name}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
 
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+
+    // ---------------------- helper functions ---------------------
 
     calcTabsLeft = () => {
         switch (this.getText()["tabPosition"]) {
@@ -232,216 +268,6 @@ export class EmbeddedDisplay extends BaseWidget {
             default:
                 Log.error("Error in tab calculation");
         }
-    };
-
-    _ElementTabs = () => {
-        const [, forceUpdate] = React.useState({});
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    flexDirection: this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "row" : "column",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                    width:
-                        this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "100%" : this.getText()["tabWidth"],
-                    height:
-                        this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? this.getText()["tabHeight"] : "100%",
-                    position: "absolute",
-                    left: this.calcTabsLeft(),
-                    top: this.calcTabsTop(),
-                }}
-            >
-                {this.getItemNames().map((itemName: string, index: number) => {
-                    return (
-                        <div
-                            key={`${itemName}-${index}-${this.getTdlFileNames()[index]}`}
-                            style={{
-                                display: "inline-flex",
-                                justifyContent: this.getText()["horizontalAlign"],
-                                alignItems: "center",
-                                width:
-                                    this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom"
-                                        ? this.getText()["tabWidth"]
-                                        : "100%",
-                                height: this.getText()["tabHeight"],
-                                backgroundColor:
-                                    this.getSelectedTab() === index ? this.getText()["tabSelectedColor"] : this.getText()["tabDefaultColor"],
-                                // border: "solid 1px black",
-                                fontWeight: this.getSelectedTab() === index ? "bold" : "normal",
-                                overflow: "hidden",
-                                whiteSpace: "nowrap",
-                                padding: 4,
-                                borderRadius: 4,
-                                margin: 3,
-                                // marginBottom: 5,
-                                // marginTop: 15,
-                                // marginLeft: 15,
-                            }}
-                            onMouseDown={(event) => {
-                                event.preventDefault();
-                                forceUpdate({});
-                                this.selectTab(index);
-                            }}
-                        >
-                            {itemName}
-                        </div>
-                    );
-                })}
-            </div>
-        );
-    };
-
-
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
-
-    // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = () => {
-        const value = this._getFirstChannelValue();
-        if (value === undefined) {
-            return "";
-        } else {
-            return value;
-        }
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
-        }
-    };
-
-    // -------------------------- tdl -------------------------------
-
-    static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_EmbeddedDisplay_tdl = {
-            type: "EmbeddedDisplay",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(240, 240, 240, 1)",
-                left: 100,
-                top: 100,
-                width: 150,
-                height: 80,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(180, 180, 180, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: true,
-                showUnit: false,
-                alarmBorder: false,
-                useParentMacros: false,
-                useExternalMacros: false,
-                tabPosition: "top",
-                tabWidth: 100,
-                tabHeight: 20,
-                tabSelectedColor: "rgba(180,180,180,1)",
-                tabDefaultColor: "rgba(220,220,220,1)",
-                showTab: true,
-                isWebpage: false,
-                resize: "none", // "none" "fit"
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            tdlFileNames: [],
-            itemNames: [],
-            itemMacros: [],
-            itemIsWebpage: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
-    };
-
-    generateDefaultTdl: () => any = EmbeddedDisplay.generateDefaultTdl;
-
-    // defined in super class
-    getTdlCopy(newKey: boolean = true) {
-        const result = super.getTdlCopy(newKey);
-        result["tdlFileNames"] = structuredClone(this.getTdlFileNames());
-        result["itemNames"] = structuredClone(this.getItemNames());
-        result["itemMacros"] = structuredClone(this.getItemMacros());
-        result["itemIsWebpage"] = structuredClone(this.getItemIsWebpage());
-        return result;
-    }
-
-    // --------------------- getters -------------------------
-
-    getTdlFileNames = () => {
-        return this._tdlFileNames;
-    };
-
-    getItemNames = () => {
-        return this._itemNames;
-    };
-
-    getItemMacros = () => {
-        return this._itemMacros;
-    };
-
-    getDefaultTdlFileName = () => {
-        return this._defaultTdlFileName;
-    };
-
-    getItemIsWebpage = () => {
-        return this._itemIsWebpage;
-    };
-
-
-    // ---------------------- embedded display ---------------------
-
-    getSelectedTab = () => {
-        return this._selectedTab;
-    };
-
-    setSelectedTab = (tabIndex: number) => {
-        this._selectedTab = tabIndex;
     };
 
     /**
@@ -484,69 +310,79 @@ export class EmbeddedDisplay extends BaseWidget {
      */
     selectTab = (index: number, forceSelect: boolean = false) => {
         if (g_widgets1.isEditing()) {
-            // do nothing
             return;
         }
+
+        if (this.getDisplays().length < 1) {
+            this.loadingText = "";
+            this.setSelectedTab(0);
+            return;
+        }
+
         if (index === this.getSelectedTab() && forceSelect === false) {
             return;
         }
-        this.loadingText = `Loading ${this.getTdlFileNames()[index]}`;
 
-        const oldTab = this.getSelectedTab();
-        const oldTabIsWeb = this.getItemIsWebpage()[oldTab];
-        const newTab = index;
-        const newTabIsWeb = this.getItemIsWebpage()[newTab];
 
+
+        const oldDisplay = this.getDisplay(this.getSelectedTab());
+        const oldTabIsWeb = oldDisplay?.isWebpage === true;
+        const newDisplay = this.getDisplay(index);
+        if (newDisplay === undefined) {
+            return;
+        }
+        const newTabIsWeb = newDisplay.isWebpage === true;
+
+        this.loadingText = `Loading ${newDisplay.tdlFileName}`;
         this.setSelectedTab(index);
 
         if (newTabIsWeb === false) {
 
+            // process macros
             // macros from: (1) user input (2) Canvas where this widget resides
             // this is all the macros that the EmbeddedDisplay widget have
             const allMacros = this.getAllMacros();
             // macros defined in EmbeddedDisplay widget for this TDL
-            const itemMacros = this.getItemMacros()[newTab];
-
+            const itemMacros = newDisplay.macros;
             // EmbeddedDisplay always inherits parent's macros
             const macros = [...itemMacros, ...allMacros];
 
-            let tdlFileName = this.getTdlFileNames()[this.getSelectedTab()];
+            // process tdl file name
             // the tdl file name is expanded based on the macros for this EmbeddedDisplay widget
             // the itemMacros is for the child tdl 
-            tdlFileName = BaseWidget.expandChannelName(tdlFileName, allMacros);
+            const tdlFileName = BaseWidget.expandChannelName(newDisplay.tdlFileName, allMacros);
 
 
-            if (typeof tdlFileName === "string") {
-                const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-                let currentTdlFolder = path.dirname(g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName());
+            const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
+            let currentTdlFolder = path.dirname(g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName());
 
-                // if this EmbeddedDisplay is inside another EmbeddedDisplay
-                // use the parent EmbeddedDisplay's path
-                if (this.getEmbeddedDisplayWidgetKey() !== "") {
-                    const parentWidget = g_widgets1.getWidget(this.getEmbeddedDisplayWidgetKey());
-                    if (parentWidget instanceof EmbeddedDisplay) {
-                        const parentFullTdlFileName = parentWidget.getFullTdlFileName();
-                        if (parentFullTdlFileName !== "") {
-                            currentTdlFolder = path.dirname(parentFullTdlFileName);
-                        }
+            // if this EmbeddedDisplay is inside another EmbeddedDisplay
+            // use the parent EmbeddedDisplay's path
+            if (this.getEmbeddedDisplayWidgetKey() !== "") {
+                const parentWidget = g_widgets1.getWidget(this.getEmbeddedDisplayWidgetKey());
+                if (parentWidget instanceof EmbeddedDisplay) {
+                    const parentFullTdlFileName = parentWidget.getFullTdlFileName();
+                    if (parentFullTdlFileName !== "") {
+                        currentTdlFolder = path.dirname(parentFullTdlFileName);
                     }
                 }
-
-                ipcManager.sendFromRendererProcess("read-embedded-display-tdl", {
-                    displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                    widgetKey: this.getWidgetKey(),
-                    tdlFileName: tdlFileName,
-                    // these macros are passed down to the widgets in TDL file, 
-                    // these macros are assigned to _macros for these widgets
-                    // In this way, we can pass all the parent display's macros and the item macros down
-                    // to each widget inside the EmbeddedDisplay's TDL file
-                    macros: macros,
-                    currentTdlFolder: currentTdlFolder,
-                    widgetWidth: this.getStyle()["width"],
-                    widgetHeight: this.getStyle()["height"],
-                    resize: this.getText()["resize"],
-                })
             }
+
+            ipcManager.sendFromRendererProcess("read-embedded-display-tdl", {
+                displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                widgetKey: this.getWidgetKey(),
+                tdlFileName: tdlFileName,
+                // these macros are passed down to the widgets in TDL file, 
+                // these macros are assigned to _macros for these widgets
+                // In this way, we can pass all the parent display's macros and the item macros down
+                // to each widget inside the EmbeddedDisplay's TDL file
+                macros: macros,
+                currentTdlFolder: currentTdlFolder,
+                widgetWidth: this.getStyle()["width"],
+                widgetHeight: this.getStyle()["height"],
+                resize: this.getText()["resize"],
+            })
+
         } else if (oldTabIsWeb === false && newTabIsWeb === true) {
             this.loadingText = "";
 
@@ -572,62 +408,10 @@ export class EmbeddedDisplay extends BaseWidget {
             if (childWidget instanceof EmbeddedDisplay) {
                 childWidget.removeChildWidgets();
             }
-            // console.log("removing", childWidgetKey)
             g_widgets1.removeWidget(childWidgetKey, false, false, true);
 
         }
         this.clearChildWidgetKeys();
-    }
-
-    // -------------------------- sidebar ---------------------------
-    createSidebar = () => {
-        if (this._sidebar === undefined) {
-            this._sidebar = new EmbeddedDisplaySidebar(this);
-        }
-    };
-
-    /**
-     * (1) remove the widgets from g_widgets1._widgets
-     * 
-     * (2) clear this._childWidgetKeys
-     */
-    jobsAsEditingModeBegins() {
-        this.loadingText = "";
-        this.removeChildWidgets();
-        super.jobsAsEditingModeBegins();
-    }
-
-    /**
-     * An item's macro may be "S=${S1}", where "S1" is this display window's macro <br>
-     * 
-     * It is the same as ActionButton.expandExternalMacros()
-     */
-    // expandItemMacros = (itemIndex: number) => {
-    //     const expandedItemMacros: [string, string][] = [];
-    //     let itemMacros = this.getItemMacros()[itemIndex];
-    //     if (itemMacros === null || itemMacros === undefined) {
-    //         itemMacros = [];
-    //     }
-    //     if (itemMacros !== undefined) {
-    //         const canvas = g_widgets1.getWidget2("Canvas");
-    //         if (canvas instanceof Canvas) {
-    //             const thisDisplayMacros = canvas.getMacros();
-    //             for (let macro of itemMacros) {
-    //                 expandedItemMacros.push([macro[0], BaseWidget.expandChannelName(macro[1], thisDisplayMacros)]);
-    //             }
-    //             if (this.getText()["useParentMacros"]) {
-    //                 expandedItemMacros.push(...thisDisplayMacros)
-    //             }
-    //         }
-    //     }
-    //     return expandedItemMacros;
-    // }
-
-
-
-    jobsAsOperatingModeBegins(): void {
-        this.selectTab(0, true);
-        super.jobsAsOperatingModeBegins()
     }
 
     loadDisplayFromTdl = (data: IpcEventArgType2["read-embedded-display-tdl"]) => {
@@ -709,12 +493,9 @@ export class EmbeddedDisplay extends BaseWidget {
 
         // (1)
         for (let childWidgetKey of this.getChildWidgetKeys()) {
-            Log.info("---", childWidgetKey)
             const childWidget = g_widgets1.getWidget(childWidgetKey);
-            Log.info("===", childWidget)
             if (childWidget instanceof BaseWidget) {
                 for (let channelNameLevel3 of childWidget.getChannelNamesLevel3()) {
-                    Log.info("connect all tca channels", channelNameLevel3)
                     const tcaChannel = g_widgets1.createTcaChannel(channelNameLevel3, childWidgetKey);
                     if (tcaChannel instanceof TcaChannel) {
                         tcaChannels.push(tcaChannel);
@@ -743,6 +524,56 @@ export class EmbeddedDisplay extends BaseWidget {
         }
     };
 
+
+    // -------------------------- tdl -------------------------------
+
+    static generateDefaultTdl = (): type_EmbeddedDisplay_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultEmbeddedDisplayTdl.type);
+        return structuredClone({
+            ...defaultEmbeddedDisplayTdl,
+            widgetKey: widgetKey,
+        });
+    };
+
+    generateDefaultTdl: () => type_EmbeddedDisplay_tdl = EmbeddedDisplay.generateDefaultTdl;
+
+    // defined in super class
+    getTdlCopy(newKey: boolean = true) {
+        const result = super.getTdlCopy(newKey);
+        result["displays"] = structuredClone(this.getDisplays());
+        return result;
+    }
+
+    // --------------------- getters and setters -------------------------
+
+    getDisplays = () => {
+        return this._displays;
+    };
+
+    getDisplay = (index: number) => {
+        return this.getDisplays()[index];
+    };
+
+    getTdlFileNames = () => {
+        return this.getDisplays().map((display) => display.tdlFileName);
+    };
+
+    getItemNames = () => {
+        return this.getDisplays().map((display) => display.name);
+    };
+
+    getItemMacros = () => {
+        return this.getDisplays().map((display) => display.macros);
+    };
+
+    getDefaultTdlFileName = () => {
+        return this._defaultTdlFileName;
+    };
+
+    getItemIsWebpage = () => {
+        return this.getDisplays().map((display) => display.isWebpage);
+    };
+
     setFullTdlFileName = (newName: string) => {
         this._fullTdlFileName = newName;
     }
@@ -761,6 +592,45 @@ export class EmbeddedDisplay extends BaseWidget {
 
     appendChildWidgetKey = (newWidgetKey: string) => {
         this._childWidgetKeys.push(newWidgetKey);
+    }
+
+    getSelectedTab = () => {
+        return this._selectedTab;
+    };
+
+    setSelectedTab = (tabIndex: number) => {
+        if (this.getDisplays().length < 1) {
+            this._selectedTab = 0;
+            return;
+        }
+        this._selectedTab = Math.min(Math.max(tabIndex, 0), this.getDisplays().length - 1);
+    };
+
+    // -------------------------- sidebar ---------------------------
+
+    createSidebar = () => {
+        if (this._sidebar === undefined) {
+            this._sidebar = new EmbeddedDisplaySidebar(this);
+        }
+    };
+
+    /**
+     * (1) remove the widgets from g_widgets1._widgets
+     * 
+     * (2) clear this._childWidgetKeys
+     */
+    jobsAsEditingModeBegins() {
+        this.loadingText = "";
+        this.removeChildWidgets();
+        super.jobsAsEditingModeBegins();
+    }
+
+
+    jobsAsOperatingModeBegins(): void {
+        if (this.getDisplays().length > 0) {
+            this.selectTab(0, true);
+        }
+        super.jobsAsOperatingModeBegins()
     }
 
 }
