@@ -8,11 +8,10 @@ import { type_tdl } from "../../common/GlobalVariables";
 import path from "path";
 import { Log } from "../../common/Log";
 import { type_sshServerConfig } from "./SshClient";
-import * as os from "os";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import { spawn } from "child_process";
 import { Environment } from "epics-tca";
-import { IpcEventArgType, type_DialogMessageBox } from "../../common/IpcEventArgType";
+import { IpcEventArgType } from "../../common/IpcEventArgType";
 import { fileToDataUri, generateKeyAndCert } from "../global/GlobalMethods";
 import { SshServer } from "./SshServer";
 import https from "https";
@@ -573,24 +572,6 @@ export class IpcManagerOnMainProcess {
                 mainWindowAgent?.sendFromMainProcess("after-profile-selected", {
                     profileName: selectedProfileName
                 });
-
-                // if (mainProcessMode === "desktop") {
-                //     // update thumbnails immediately for desktop
-                //     const displayWindowAgents = windowAgentsManager.getAgents();
-                //     for (let displayWindowId of Object.keys(displayWindowAgents)) {
-                //         const displayWindowAgent = displayWindowAgents[displayWindowId];
-                //         // not main window
-                //         if (displayWindowAgent instanceof DisplayWindowAgent) {
-                //             // not pre-loaded display window
-                //             if (displayWindowAgent !== windowAgentsManager.preloadedDisplayWindowAgent) {
-                //                 // must be a display window, not embedded window: (-1, 0, 1, ..., 10000)
-                //                 const windowName = displayWindowAgent.getWindowName();
-                //                 const tdlFileName = displayWindowAgent.getTdlFileName();
-                //                 displayWindowAgent.takeThumbnail(windowName, tdlFileName);
-                //             }
-                //         }
-                //     }
-                // }
             }
         }
     };
@@ -862,74 +843,13 @@ export class IpcManagerOnMainProcess {
     };
 
     handleLoadDbFileContents = async (event: WebSocket | string, data: IpcEventArgType["load-db-file-contents"]) => {
-        const { widgetKey, displayWindowId, dbFileName } = data;
-        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-        if (selectedProfile === undefined) {
-            Log.error("Profile not selected!");
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
+        if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
+            Log.error(`No such display window ${data["displayWindowId"]}. Cancel loading db file contents.`);
             return;
         }
 
-        const windowAgent = windowAgentsManager.getAgent(displayWindowId);
-        if (!(windowAgent instanceof DisplayWindowAgent)) {
-            return;
-        }
-
-        try {
-            if (dbFileName === undefined) { // manually select the file, only available in desktop mode
-                // (2)
-                // modify tdlFileNames to a string array
-                const dbFileNames = dialog.showOpenDialogSync({
-                    title: "open tdl file",
-                    filters: [{ name: "tdl", extensions: ["db", "template"] }],
-                    // defaultPath: defaultPath,
-                    // properties: ["openFile", "openDirectory","multiSelections"],
-                    properties: ["openFile", "multiSelections"],
-                });
-
-                // at this point, the tdlFileNames must not be empty
-                if (!(Array.isArray(dbFileNames) === true && dbFileNames.length > 0)) {
-                    return;
-                }
-
-                const dbFileName = dbFileNames[0];
-
-                // do it asynchronously to speed up
-                const dbFileContents = await FileReader.readDb(dbFileName, selectedProfile, undefined);
-                if (dbFileContents === undefined) {
-                    return;
-                }
-                // send back the contents
-                windowAgent.sendFromMainProcess("load-db-file-contents", {
-                    dbFileName: dbFileNames[0],
-                    displayWindowId: displayWindowId,
-                    widgetKey: widgetKey,
-                    dbFileContents: dbFileContents,
-                })
-            } else {
-                // (4)
-            }
-        } catch (e) {
-            Log.error(e);
-            if (windowAgent !== undefined) {
-                const dialogInfo: { info: type_DialogMessageBox } = {
-                    info: {
-                        // command?: string | undefined;
-                        messageType: "error", // | "warning" | "info";
-                        humanReadableMessages: [`Failed to open db file`],
-                        rawMessages: [`${e}`],
-                        // buttons?: type_DialogMessageBoxButton[] | undefined;
-                        // attachment?: any;
-                    }
-                };
-                if (windowAgent instanceof MainWindowAgent) {
-                    // windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-                } else if (windowAgent instanceof DisplayWindowAgent) {
-                    windowAgent.sendFromMainProcess("dialog-show-message-box", dialogInfo);
-                }
-
-            }
-        }
+        await displayWindowAgent.getDisplayWindowFile().loadDbFileContents(data);
     };
 
     handleReadEmbeddedDisplayTdl = async (event: WebSocket | string, data: IpcEventArgType["read-embedded-display-tdl"]) => {
@@ -1760,187 +1680,16 @@ export class IpcManagerOnMainProcess {
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
             return;
         }
-        // need explicit write permission in web mode
-        if (this.getMainProcess().getMainProcessMode() === "web") {
-            const folderPath = typeof message["folder"] === "string" ? message["folder"] : typeof message["fullFileName"] === "string" ? message["fullFileName"] : typeof message["fullFolderName"] === "string" ? message["fullFolderName"] : "";
-            let allowToWrite = false;
-            const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-            if (selectedProfile !== undefined) {
-                const bookmarks = selectedProfile.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
-                if (bookmarks !== undefined) {
-                    for (const bookmark of bookmarks) {
-                        const bookmarkFolder = bookmark[0];
-                        const permissionToWrite = bookmark[1];
-                        if (typeof bookmarkFolder === "string" && typeof permissionToWrite === "string") {
-                            if (folderPath.includes(bookmarkFolder) && permissionToWrite.toLowerCase() === "yes") {
-                                allowToWrite = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            if (allowToWrite === false) {
-                const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(message["displayWindowId"]);
-                if (displayWindowAgent instanceof DisplayWindowAgent) {
-                    displayWindowAgent.showError([`You are not allowed to ${message["command"].replaceAll("-", " ")} for ${folderPath}.`]);
-                }
-                return;
-            }
-        }
-
-        if (message["command"] === "change-item-name") {
-            const folder = message["folder"];
-            const oldName = message["oldName"];
-            const newName = message["newName"];
-            if (folder === undefined || oldName === undefined || newName === undefined) {
-                return;
-            }
-            const fullOldFileName = path.join(folder, oldName);
-            const fullNewFileName = path.join(folder, newName);
-            if (path.isAbsolute(fullOldFileName) && path.isAbsolute(fullNewFileName)) {
-                try {
-                    if (fs.existsSync(fullNewFileName)) {
-                        throw new Error(`File ${fullNewFileName} already exists`);
-                    }
-
-                    fs.renameSync(fullOldFileName, fullNewFileName);
-                    displayWindowAgent.sendFromMainProcess("file-browser-command", {
-                        ...message,
-                        success: true,
-                    })
-                } catch (err) {
-                    Log.error('Error renaming file:', err);
-                    // send error message to renderer process
-                    displayWindowAgent.showError([`Failed to change file name from ${oldName} to ${newName}`, `Reason: ${err}`]);
-
-                    displayWindowAgent.sendFromMainProcess("file-browser-command", {
-                        ...message,
-                        success: false,
-                    })
-                }
-            }
-        } else if (message["command"] === "create-tdl-file") {
-            const fullFileName = message["fullFileName"];
-            if (fullFileName === undefined) {
-                return;
-            }
-            // create empty tdl file
-            const tdl = FileReader.getBlankWhiteTdl();
-            try {
-                fs.writeFileSync(fullFileName, JSON.stringify(tdl, null, 4));
-                displayWindowAgent.sendFromMainProcess("file-browser-command", {
-                    ...message,
-                    success: true,
-                })
-
-            } catch (e) {
-                displayWindowAgent.showError([`Failed to create file ${fullFileName}`, `Reason ${e}`]);
-                displayWindowAgent.sendFromMainProcess("file-browser-command", {
-                    ...message,
-                    success: false,
-                })
-            }
-        } else if (message["command"] === "create-folder") {
-            const fullFolderName = message["fullFolderName"];
-            if (fullFolderName === undefined) {
-                return;
-            }
-            // create empty tdl file
-            try {
-                fs.mkdirSync(fullFolderName);
-                displayWindowAgent.sendFromMainProcess("file-browser-command", {
-                    ...message,
-                    success: true,
-                })
-
-            } catch (e) {
-                displayWindowAgent.showError([`Failed to create file ${fullFolderName}`, `Reason: ${e}`]);
-                displayWindowAgent.sendFromMainProcess("file-browser-command", {
-                    ...message,
-                    success: false,
-                })
-            }
-        }
+        displayWindowAgent.getDisplayWindowFileBrowser().executeFileBrowserCommand(message);
     }
 
     handleFetchThumbnail = async (event: WebSocket | string, message: IpcEventArgType["fetch-thumbnail"]) => {
-        // open this tdl file in preview display window
-        if (this.getMainProcess().getMainProcessMode() !== "desktop") {
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(message["displayWindowId"]);
+        if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
             return;
         }
 
-        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-        if (selectedProfile === undefined) {
-            Log.error("Profile not selected!");
-            return;
-        }
-
-        let editable = false;
-        const mode = "editing";
-        const fileBrowserDisplayWindowId = message["displayWindowId"];
-        let fileBrowserDisplayWindowAgent: MainWindowAgent | DisplayWindowAgent | undefined = undefined;
-        if (fileBrowserDisplayWindowId !== undefined) {
-            fileBrowserDisplayWindowAgent = windowAgentsManager.getAgent(fileBrowserDisplayWindowId);
-        }
-
-        const tdlFileName = message["tdlFileName"];
-
-        FileReader.readTdlFile(tdlFileName, selectedProfile).then((tdlFileResult) => {
-            if (tdlFileResult !== undefined) {
-                const tdl = tdlFileResult["tdl"];
-                const previewDisplayWindowAgent = this.getMainProcess().getWindowAgentsManager().previewDisplayWindowAgent;
-                if (previewDisplayWindowAgent instanceof DisplayWindowAgent) {
-                    // todo: race condition, 2 requests at the same time
-                    previewDisplayWindowAgent.setForFileBrowserWindowId(fileBrowserDisplayWindowId);
-                    previewDisplayWindowAgent.setForFileBrowserWidgetKey(message["widgetKey"]);
-
-                    previewDisplayWindowAgent.sendFromMainProcess("new-tdl", {
-                        newTdl: tdl,
-                        tdlFileName: tdlFileName,
-                        initialModeStr: mode,
-                        editable: editable,
-                        externalMacros: [],
-                        useExternalMacros: false,
-                        // utilityType: options["utilityType"],
-                        // utilityOptions: options["utilityOptions"] === undefined ? {} : options["utilityOptions"],
-                    });
-                } else {
-                    Log.error(`Cannot read tdl file ${tdlFileName}`);
-                    if (fileBrowserDisplayWindowAgent instanceof DisplayWindowAgent) {
-                        fileBrowserDisplayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                            info: {
-                                // command?: string | undefined;
-                                messageType: "error", // | "warning" | "info";
-                                humanReadableMessages: [`The hidden preview display is not ready.`],
-                                rawMessages: [],
-                                // buttons?: type_DialogMessageBoxButton[] | undefined;
-                                // attachment?: any;
-                            }
-                        })
-                    }
-                }
-            } else {
-                Log.error(`Cannot read tdl file ${tdlFileName}`);
-                if (fileBrowserDisplayWindowAgent instanceof DisplayWindowAgent) {
-                    fileBrowserDisplayWindowAgent.sendFromMainProcess("dialog-show-message-box", {
-                        info: {
-                            // command?: string | undefined;
-                            messageType: "error", // | "warning" | "info";
-                            humanReadableMessages: [`Failed to open file ${tdlFileName}`],
-                            rawMessages: [],
-                            // buttons?: type_DialogMessageBoxButton[] | undefined;
-                            // attachment?: any;
-                        }
-                    })
-                }
-            }
-        })
-
-
-        // take screenshot for this window
-        // send back
+        await displayWindowAgent.getDisplayWindowFileBrowser().fetchThumbnail(message);
     }
 
     // --------------------- ssh login ----------------------
@@ -1968,85 +1717,11 @@ export class IpcManagerOnMainProcess {
     }
 
     handleTerminalCommand = (event: WebSocket | string, data: IpcEventArgType["terminal-command"]) => {
-        let result: any = [];
-        if (data["command"] === "os.homedir") {
-            result = [os.homedir()];
-        } else if (data["command"] === "os.userInfo") {
-            result = [os.userInfo()];
-        } else if (data["command"] === "fs.readdir") {
-            // result = [os.userInfo()];
-            const dirName = data["args"][0];
-            fs.readdir(dirName, {},
-                (err, result) => {
-                    if (err) {
-                        return;
-                    }
-                    const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
-                    if (displayWindowAgent instanceof DisplayWindowAgent) {
-                        displayWindowAgent.sendFromMainProcess("terminal-command-result", {
-                            widgetKey: data["widgetKey"],
-                            ioId: data["ioId"],
-                            command: data["command"],
-                            result: [result],
-                        })
-                    }
-                })
-            return;
-        } else if (data["command"] === "fs.stat") {
-            // result = [os.userInfo()];
-            const dirOrFileName = data["args"][0];
-            fs.stat(dirOrFileName, {},
-                (err, result) => {
-                    if (err) {
-                        return;
-                    }
-                    const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
-                    if (displayWindowAgent instanceof DisplayWindowAgent) {
-                        displayWindowAgent.sendFromMainProcess("terminal-command-result", {
-                            widgetKey: data["widgetKey"],
-                            ioId: data["ioId"],
-                            command: data["command"],
-                            result: [result],
-                        })
-                    }
-                })
-            return;
-        } else if (data["command"] === "fs.isDirectory") {
-            // result = [os.userInfo()];
-            const dirOrFileName = data["args"][0];
-            fs.stat(dirOrFileName, {},
-                (err, stats) => {
-                    if (err) {
-                        return;
-                    }
-                    try {
-                        const result = stats.isDirectory();
-                        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
-                        if (displayWindowAgent instanceof DisplayWindowAgent) {
-                            displayWindowAgent.sendFromMainProcess("terminal-command-result", {
-                                widgetKey: data["widgetKey"],
-                                ioId: data["ioId"],
-                                command: data["command"],
-                                result: [result],
-                            })
-                        }
-                    } catch (e) {
-                        // do nothing, the timeout on TerminalIo will handle it
-                        Log.error(e);
-                    }
-                })
-            return;
-        }
-
-        // synchronous command
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
-            displayWindowAgent.sendFromMainProcess("terminal-command-result", {
-                widgetKey: data["widgetKey"],
-                ioId: data["ioId"],
-                command: data["command"],
-                result: result,
-            })
+            displayWindowAgent.getDisplayWindowTerminal().executeTerminalCommand(data);
+        } else {
+            Log.error(`No such display window ${data["displayWindowId"]}. Cancel terminal command ${data["command"]}.`);
         }
     }
 

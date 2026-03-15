@@ -9,8 +9,10 @@ import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
 import { DisplayWindowAttachedScript } from "./DisplayWindowAttachedScript";
 import { DisplayWindowChannelsManager } from "./DisplayWindowChannelsManager";
 import { DisplayWindowFile } from "./DisplayWindowFile";
+import { DisplayWindowFileBrowser } from "./DisplayWindowFileBrowser";
 import { DisplayWindowIpc } from "./DisplayWindowIpc";
 import { DisplayWindowLifeCycleManager } from "./DisplayWindowLifeCycleManager";
+import { DisplayWindowTerminal } from "./DisplayWindowTerminal";
 import { DisplayWindowUtilities } from "./DisplayWindowUtilities";
 
 /**
@@ -62,11 +64,15 @@ export class DisplayWindowAgent {
 
     private readonly _displayWindowFile: DisplayWindowFile;
 
+    private readonly _displayWindowFileBrowser: DisplayWindowFileBrowser;
+
     private readonly _displayWindowIpc: DisplayWindowIpc;
 
     private readonly _displayWindowChannelsManager: DisplayWindowChannelsManager;
 
     private readonly _displayWindowLifeCycleManager: DisplayWindowLifeCycleManager;
+
+    private readonly _displayWindowTerminal: DisplayWindowTerminal;
 
     private readonly _displayWindowUtilities: DisplayWindowUtilities;
 
@@ -144,8 +150,10 @@ export class DisplayWindowAgent {
         this.hiddenWindow = options["hide"];
         this._displayWindowAttachedScript = new DisplayWindowAttachedScript(this);
         this._displayWindowFile = new DisplayWindowFile(this);
+        this._displayWindowFileBrowser = new DisplayWindowFileBrowser(this);
         this._displayWindowIpc = new DisplayWindowIpc(this);
         this._displayWindowChannelsManager = new DisplayWindowChannelsManager(this);
+        this._displayWindowTerminal = new DisplayWindowTerminal(this);
         this._displayWindowUtilities = new DisplayWindowUtilities(this);
         // this._mainProcessId = this.getWindowAgentsManager().getMainProcess().getProcessId();
         // obtain and assign display window ID
@@ -648,6 +656,10 @@ export class DisplayWindowAgent {
         return this._displayWindowFile;
     };
 
+    getDisplayWindowFileBrowser = () => {
+        return this._displayWindowFileBrowser;
+    };
+
     getDisplayWindowIpc = () => {
         return this._displayWindowIpc;
     };
@@ -662,6 +674,10 @@ export class DisplayWindowAgent {
 
     getDisplayWindowLifeCycleManager = () => {
         return this._displayWindowLifeCycleManager;
+    };
+
+    getDisplayWindowTerminal = () => {
+        return this._displayWindowTerminal;
     };
 
     getDisplayWindowUtilities = () => {

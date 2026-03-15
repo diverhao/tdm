@@ -1,4 +1,4 @@
-import { IpcEventArgType, type_DialogMessageBox } from "../../../common/IpcEventArgType";
+import { IpcEventArgType } from "../../../common/IpcEventArgType";
 import * as fs from "fs";
 import { dialog } from "electron";
 import path from "path";
@@ -25,18 +25,25 @@ export class DisplayWindowFile {
 
 
     /**
-     * Open a file
+     * Open a file from disk or return in-memory content for a new unsaved file.
      *
      * Behavior matrix:
-     * | # | fileName      | fileContent| manualOpen  | action                                |
-     * |---|---------------|------------|-------------|---------------------------------------|
-     * | 1 | ignored       | ignored    | true        | prompt user to pick a file, then open |
-     * | 2 | absolute path | ignored    | false       | open specified file                   |
-     * | 3 | ""            | any string | false       | return the file name and content      |
+     * | # | fileName      | fileContent | manualOpen | action                                |
+     * |---|---------------|-------------|------------|---------------------------------------|
+     * | 1 | ignored       | ignored     | true       | prompt user to pick a file, then open |
+     * | 2 | absolute path | ignored     | false      | open specified file                   |
+     * | 3 | ""            | any string  | false      | return the file name and content      |
      *
      * Notes:
      * - `fileName` must be an absolute path when provided.
-     * - files >= `textEditorHardFileSizeLimit` are rejected before reading.
+     * - Files greater than or equal to `fileSizeLimit` are rejected before reading.
+     *
+     * @param fileName Absolute path to the file to open, or `""` to return `fileContent` as a new unsaved file.
+     * @param fileContent Initial content to return when `fileName === ""`.
+     * @param manualOpen When `true`, prompt the user to choose a file instead of using `fileName`.
+     * @param fileType File category used to configure the open-file dialog.
+     * @returns The opened file name, file contents, and writability flag, or `undefined` if selection is cancelled or opening fails.
+     *          I user cancels the prompt, simply return undefined. If failed to open file, show error box on display window.
      */
     openFile = async (fileName: string, fileContent: string, manualOpen: boolean, fileType: type_fileType): Promise<{ fileName: string, fileContent: string, writable: boolean } | undefined> => {
 
@@ -147,6 +154,41 @@ export class DisplayWindowFile {
         }
         return undefined;
     }
+
+    // -------------------- db file ----------------------
+
+    loadDbFileContents = async (data: IpcEventArgType["load-db-file-contents"]) => {
+        const { widgetKey, displayWindowId } = data;
+        let dbFileName = data["dbFileName"] ?? "";
+        const manualOpen = data["dbFileName"] === undefined || data["dbFileName"] === "";
+
+        try {
+            if (dbFileName !== "" && !path.isAbsolute(dbFileName)) {
+                const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+                dbFileName = FileReader.resolveTdlFileName(dbFileName, selectedProfile) ?? "";
+                if (dbFileName === "") {
+                    this.showError([`Failed to open db file ${data["dbFileName"]}`]);
+                    return;
+                }
+            }
+
+            const fileResult = await this.openFile(dbFileName, "", manualOpen, "db");
+            if (fileResult === undefined) {
+                return;
+            }
+
+            const dbFileContents = FileReader.parseDb(fileResult.fileContent);
+            this.getDisplayWindowAgent().sendFromMainProcess("load-db-file-contents", {
+                dbFileName: fileResult.fileName,
+                displayWindowId: displayWindowId,
+                widgetKey: widgetKey,
+                dbFileContents: dbFileContents,
+            });
+        } catch (e) {
+            Log.error(e);
+            this.showError([`Failed to open db file`], [`${e}`]);
+        }
+    };
 
 
 
@@ -548,10 +590,17 @@ export class DisplayWindowFile {
         }
     };
 
-
     // ------------------- getters -----------------
 
     getDisplayWindowAgent = () => {
         return this.displayWindowAgent;
+    };
+
+    private showError = (humanReadableMessages: string[], rawMessages: string[] = []) => {
+        this.getDisplayWindowAgent().showError(humanReadableMessages, rawMessages);
+    };
+
+    private getMainProcess = () => {
+        return this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess();
     };
 }

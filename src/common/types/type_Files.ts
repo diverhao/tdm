@@ -1,6 +1,6 @@
 
 // types of files that we can open
-export type type_fileType = "tdl" | "data-viewer" | "text" | "media" | "script" | "file-converter" | "picture";
+export type type_fileType = "tdl" | "db" | "data-viewer" | "text" | "media" | "script" | "file-converter" | "picture";
 
 export const isOfFileType = (value: unknown): value is type_fileType => typeof value === "string" && value in fileDialogOptionsByType;
 
@@ -10,6 +10,12 @@ export const fileDialogOptionsByType: Record<type_fileType, { filters: { name: s
         defaultFileName: "untitled.tdl",
         defaultExtension: ".tdl",
         displayText: "Open TDL file",
+    },
+    "db": {
+        filters: [{ name: "db", extensions: ["db", "template"] }],
+        defaultFileName: "untitled.db",
+        defaultExtension: ".db",
+        displayText: "Open DB file",
     },
     "media": {
         filters: [{ name: "media", extensions: ["jpg", "jpeg", "png", "gif", "svg", "bmp", "pdf", "mp4", "ogg", "webm", "mp3", "mov"] }],
