@@ -9,12 +9,11 @@ import { type_sshServerConfig } from "./SshClient";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import { Environment } from "epics-tca";
 import { IpcEventArgType } from "../../common/IpcEventArgType";
-import { fileToDataUri, generateKeyAndCert } from "../global/GlobalMethods";
+import { generateKeyAndCert } from "../global/GlobalMethods";
 import { SshServer } from "./SshServer";
 import https from "https";
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import { IncomingMessage } from "http";
-import { TextEditorHandlers } from "../ipc/TextEditor/TextEditorHandlers";
 
 /**
  * Manage IPC messages sent from renderer process.
@@ -29,19 +28,12 @@ export class IpcManagerOnMainProcess {
     private keyAndCert = generateKeyAndCert();
     private clients: Record<string, WebSocket | string> = {};
 
-    private _textEditorHandlers: TextEditorHandlers;
-
     constructor(mainProcess: MainProcess) {
         this._mainProcess = mainProcess;
-        this._textEditorHandlers = new TextEditorHandlers(this);
 
         this.createWebSocketIpcServer();
         this.startToListen();
 
-    }
-
-    getTextEditorHandlers = () => {
-        return this._textEditorHandlers;
     }
 
 
@@ -351,8 +343,8 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("request-archive-data", this.handleRequestArchiveData)
 
         // ----------------- Text editor -------------------------
-        this.ipcMain.on("save-text-file", this.getTextEditorHandlers().handleSaveTextFile)
-        this.ipcMain.on("open-text-file", this.getTextEditorHandlers().handleOpenTextFile)
+        this.ipcMain.on("save-text-file", this.handleSaveTextFile)
+        this.ipcMain.on("open-text-file", this.handleOpenTextFile)
 
         // ------------------ log viewer -------------------------
         this.ipcMain.on("register-log-viewer", this.handleRegisterLogViewer)
@@ -829,6 +821,25 @@ export class IpcManagerOnMainProcess {
             return;
         }
         displayWindowAgent.getDisplayWindowFile().saveDataToFile(options);
+    };
+
+    handleSaveTextFile = (event: WebSocket | string, data: IpcEventArgType["save-text-file"]): boolean => {
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            return displayWindowAgent.getDisplayWindowTextEditor().handleSaveTextFile(data);
+        } else {
+            Log.error(`No such display window ${data["displayWindowId"]}. Cancel saving text file ${data["fileName"]}.`);
+            return false;
+        }
+    };
+
+    handleOpenTextFile = async (event: WebSocket | string, options: IpcEventArgType["open-text-file"]) => {
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            await displayWindowAgent.getDisplayWindowTextEditor().handleOpenTextFile(options);
+        } else {
+            Log.error(`No such display window ${options["displayWindowId"]}. Cancel opening text file ${options["fileName"]}.`);
+        }
     };
 
     handleZoomWindow = (event: WebSocket | string, options: IpcEventArgType["zoom-window"]) => {
@@ -1383,23 +1394,12 @@ export class IpcManagerOnMainProcess {
     }
 
     handleGetMediaContent = (event: WebSocket | string, options: IpcEventArgType["get-media-content"]) => {
-        const { fullFileName, displayWindowId, widgetKey } = options;
-        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
-            try {
-                // size limit 10 MB
-                const fileBase64Str = fileToDataUri(fullFileName, 10240);
-                displayWindowAgent.sendFromMainProcess("get-media-content", {
-                    content: fileBase64Str,
-                    displayWindowId: displayWindowId,
-                    widgetKey: widgetKey,
-                })
-
-            } catch (e) {
-                Log.error("Cannot read file", fullFileName)
-            }
+            displayWindowAgent.getDisplayWindowFile().getMediaContent(options);
+        } else {
+            Log.error(`No such display window ${options["displayWindowId"]}. Cancel getting media content for ${options["fullFileName"]}.`);
         }
-
     }
 
 

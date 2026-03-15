@@ -5,6 +5,7 @@ import path from "path";
 import { Log } from "../../../common/Log";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
 import { FileReader } from "../../file/FileReader";
+import { fileToDataUri } from "../../global/GlobalMethods";
 import { fileDialogOptionsByType, isOfFileType, type_fileType } from "../../../common/types/type_Files";
 import * as os from "os";
 
@@ -488,6 +489,26 @@ export class DisplayWindowFile {
                 displayWindowAgent.showInfo([`Video file saved to ${options["fileName"]}`]);
             }
         });
+    };
+
+    getMediaContent = (options: IpcEventArgType["get-media-content"]) => {
+        const { fullFileName, displayWindowId, widgetKey } = options;
+        const displayWindowAgent = this.getDisplayWindowAgent();
+
+        if (fullFileName !== "") {
+            const fileBase64Str = fileToDataUri(fullFileName, 10240);
+            if (fileBase64Str !== "") {
+                displayWindowAgent.sendFromMainProcess("get-media-content", {
+                    content: fileBase64Str,
+                    displayWindowId: displayWindowId,
+                    widgetKey: widgetKey,
+                });
+            } else {
+                Log.error(`Cannot obtain media content from ${fullFileName} for widget ${widgetKey} in display window ${displayWindowId}.`);
+            }
+        } else {
+            Log.error(`Cannot obtain media content: empty file name for widget ${widgetKey} in display window ${displayWindowId}.`);
+        }
     };
 
 

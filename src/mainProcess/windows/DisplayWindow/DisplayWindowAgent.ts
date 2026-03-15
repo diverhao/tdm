@@ -15,6 +15,7 @@ import { DisplayWindowFileBrowser } from "./DisplayWindowFileBrowser";
 import { DisplayWindowIpc } from "./DisplayWindowIpc";
 import { DisplayWindowLifeCycleManager } from "./DisplayWindowLifeCycleManager";
 import { DisplayWindowTerminal } from "./DisplayWindowTerminal";
+import { DisplayWindowTextEditor } from "./DisplayWindowTextEditor";
 import { DisplayWindowUtilities } from "./DisplayWindowUtilities";
 
 /**
@@ -79,6 +80,8 @@ export class DisplayWindowAgent {
     private readonly _displayWindowLifeCycleManager: DisplayWindowLifeCycleManager;
 
     private readonly _displayWindowTerminal: DisplayWindowTerminal;
+
+    private readonly _displayWindowTextEditor: DisplayWindowTextEditor;
 
     private readonly _displayWindowUtilities: DisplayWindowUtilities;
 
@@ -162,6 +165,7 @@ export class DisplayWindowAgent {
         this._displayWindowIpc = new DisplayWindowIpc(this);
         this._displayWindowChannelsManager = new DisplayWindowChannelsManager(this);
         this._displayWindowTerminal = new DisplayWindowTerminal(this);
+        this._displayWindowTextEditor = new DisplayWindowTextEditor(this);
         this._displayWindowUtilities = new DisplayWindowUtilities(this);
         // this._mainProcessId = this.getWindowAgentsManager().getMainProcess().getProcessId();
         // obtain and assign display window ID
@@ -694,6 +698,10 @@ export class DisplayWindowAgent {
 
     getDisplayWindowTerminal = () => {
         return this._displayWindowTerminal;
+    };
+
+    getDisplayWindowTextEditor = () => {
+        return this._displayWindowTextEditor;
     };
 
     getDisplayWindowUtilities = () => {
