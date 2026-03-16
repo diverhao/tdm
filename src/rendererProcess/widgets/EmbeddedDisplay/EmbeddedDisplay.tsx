@@ -17,28 +17,18 @@ import { TcaChannel } from "../../channel/TcaChannel";
 import { v4 as uuidv4 } from "uuid";
 import { defaultEmbeddedDisplayTdl, type_EmbeddedDisplay_display_tdl, type_EmbeddedDisplay_tdl } from "../../../common/types/type_widget_tdl";
 
+export const defaultTdlFileName = `../../../webpack/resources/tdls/blank-red.tdl`;
+
 export class EmbeddedDisplay extends BaseWidget {
 
     _rules: BaseWidgetRules;
 
-    _displays: type_EmbeddedDisplay_display_tdl[];
-    _fullTdlFileName: string = "";
-    // the widget keys for the currently selected tab
-    _childWidgetKeys: string[] = [];
-
-    readonly titleBarHeight = window.outerHeight - window.innerHeight;
-    readonly _defaultTdlFileName = `../../../webpack/resources/tdls/blank-red.tdl`;
-    isMovingByEmbeddedDisplay: boolean = false;
-    _selectedTab = 0;
-    _zerothDisplayCreated = false;
-
-    // once assigned, never change
-    iframeDisplayId: string = "";
-
-    iframeBackgroundColor = 'rgba(0,0,0,0)';
-
-    loadingText = "";
-
+    private _displays: type_EmbeddedDisplay_display_tdl[];
+    private _fullTdlFileName: string = "";
+    private _childWidgetKeys: string[] = [];
+    private _selectedTab = 0;
+    private _loadingText = "";
+    private _loadingTextTimer: number | undefined = undefined;
 
     static normalizeDisplays = (widgetTdl: type_EmbeddedDisplay_tdl | Record<string, any>): type_EmbeddedDisplay_display_tdl[] => {
         const rawWidgetTdl = widgetTdl as Record<string, any>;
@@ -130,16 +120,9 @@ export class EmbeddedDisplay extends BaseWidget {
                 onDoubleClick={this._handleMouseDoubleClick}
             >
 
-                {this.getDisplays().length <= 1 || this.getText()["showTab"] === false ? null : (
-                    <this._ElementTabs></this._ElementTabs>
-                )}
-
-                {this.loadingText}
-
-                {g_widgets1.isEditing() === true ? "Embedded Display" : ""}
-
-                <this._ElementIframe></this._ElementIframe>
-
+                <this._ElementTabs></this._ElementTabs>
+                {this.getLoadingText()}
+                <this._ElementWebpage />
             </div>
         );
     };
@@ -152,71 +135,89 @@ export class EmbeddedDisplay extends BaseWidget {
         }
     }
 
-    _ElementIframe = () => {
-
-        const webviewElementRef = React.useRef<HTMLIFrameElement>(null);
-
-        let display: string = "none";
-        let link = "";
-
+    _ElementWebpage = () => {
         const selectedDisplay = this.getDisplay(this.getSelectedTab());
-
-        if (g_widgets1.isEditing() === false && selectedDisplay?.isWebpage === true) {
-            display = "";
-            link = selectedDisplay.tdlFileName;
+        if (selectedDisplay === undefined) {
+            return null;
         }
 
+        if (g_widgets1.isEditing() === true) {
+            return null;
+        }
+
+        if (selectedDisplay.isWebpage === false) {
+            return null;
+        }
+
+        const link = selectedDisplay.tdlFileName;
         return (
             <iframe
-                ref={webviewElementRef}
                 src={link}
                 id="embedded-display"
                 width="100%"
                 height="100%"
                 style={{
                     border: "none",
-                    display: display,
-                    // backgroundColor: this.iframeBackgroundColor,
                 }}
             ></iframe>
         )
     };
 
     _ElementTabs = () => {
-        const [, forceUpdate] = React.useState({});
+
+        const displays = this.getDisplays();
+        const text = this.getText();
+
+        if (displays.length <= 1) {
+            return null;
+        }
+
+        if (this.getText()["showTab"] === false) {
+            return null;
+        }
+
+        const width = this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "100%" : this.getText()["tabWidth"];
+        const height = this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? this.getText()["tabHeight"] : "100%";
+        const left = this.calcTabsLeft();
+        const top = this.calcTabsTop();
+        const flexDirection = this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "row" : "column";
+
         return (
             <div
                 style={{
                     display: "inline-flex",
-                    flexDirection: this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "row" : "column",
+                    flexDirection: flexDirection,
                     justifyContent: "flex-start",
                     alignItems: "center",
-                    width:
-                        this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "100%" : this.getText()["tabWidth"],
-                    height:
-                        this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? this.getText()["tabHeight"] : "100%",
+                    width: width,
+                    height: height,
                     position: "absolute",
-                    left: this.calcTabsLeft(),
-                    top: this.calcTabsTop(),
+                    left: left,
+                    top: top,
                 }}
             >
-                {this.getDisplays().map((display, index: number) => {
+                {displays.map((display: type_EmbeddedDisplay_display_tdl, index: number) => {
+                    const key = `${display.name}-${index}-${display.tdlFileName}`;
+
+                    const justifyContent =  this.getText()["horizontalAlign"];
+                    const width = text["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom"
+                        ? this.getText()["tabWidth"]
+                        : "100%";
+                    const height = this.getText()["tabHeight"];
+                    const backgroundColor = this.getSelectedTab() === index ? this.getText()["tabSelectedColor"] : this.getText()["tabDefaultColor"];
+                    const fontWeight = this.getSelectedTab() === index ? "bold" : "normal";
+
                     return (
                         <div
-                            key={`${display.name}-${index}-${display.tdlFileName}`}
+                            key={key}
                             style={{
                                 display: "inline-flex",
-                                justifyContent: this.getText()["horizontalAlign"],
+                                justifyContent: justifyContent,
                                 alignItems: "center",
-                                width:
-                                    this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom"
-                                        ? this.getText()["tabWidth"]
-                                        : "100%",
-                                height: this.getText()["tabHeight"],
-                                backgroundColor:
-                                    this.getSelectedTab() === index ? this.getText()["tabSelectedColor"] : this.getText()["tabDefaultColor"],
-                                // border: "solid 1px black",
-                                fontWeight: this.getSelectedTab() === index ? "bold" : "normal",
+                                width: width,
+                                height: height,
+                                backgroundColor: backgroundColor,
+                                fontWeight: fontWeight,
                                 overflow: "hidden",
                                 whiteSpace: "nowrap",
                                 padding: 4,
@@ -225,7 +226,6 @@ export class EmbeddedDisplay extends BaseWidget {
                             }}
                             onMouseDown={(event) => {
                                 event.preventDefault();
-                                forceUpdate({});
                                 this.selectTab(index);
                             }}
                         >
@@ -314,7 +314,7 @@ export class EmbeddedDisplay extends BaseWidget {
         }
 
         if (this.getDisplays().length < 1) {
-            this.loadingText = "";
+            this.setLoadingText("");
             this.setSelectedTab(0);
             return;
         }
@@ -333,7 +333,7 @@ export class EmbeddedDisplay extends BaseWidget {
         }
         const newTabIsWeb = newDisplay.isWebpage === true;
 
-        this.loadingText = `Loading ${newDisplay.tdlFileName}`;
+        this.scheduleLoadingText(`Loading ${newDisplay.tdlFileName}`);
         this.setSelectedTab(index);
 
         if (newTabIsWeb === false) {
@@ -384,14 +384,14 @@ export class EmbeddedDisplay extends BaseWidget {
             })
 
         } else if (oldTabIsWeb === false && newTabIsWeb === true) {
-            this.loadingText = "";
+            this.setLoadingText("");
 
             // clear the child widgets
             this.removeChildWidgets();
             // change the background color
             this.getStyle()["backgroundColor"] = "rgba(255,255,255,1)";
         } else if (oldTabIsWeb === true && newTabIsWeb === true) {
-            this.loadingText = "";
+            this.setLoadingText("");
             // do nothing
         }
         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
@@ -419,7 +419,7 @@ export class EmbeddedDisplay extends BaseWidget {
         const widgetKey = this.getWidgetKey();
 
         if (tdl === undefined || fullTdlFileName === undefined) {
-            this.loadingText = `Failed to load ${tdlFileName}`;
+            this.setLoadingText(`Failed to load ${tdlFileName}`);
             g_widgets1.addToForceUpdateWidgets(widgetKey);
             g_flushWidgets();
             return;
@@ -471,7 +471,7 @@ export class EmbeddedDisplay extends BaseWidget {
             }
         }
 
-        this.loadingText = ``;
+        this.setLoadingText("");
 
         const widgetsMap = g_widgets1.getWidgets();
         for (const widgetMapPair of widgetMapPairs) {
@@ -566,12 +566,35 @@ export class EmbeddedDisplay extends BaseWidget {
         return this.getDisplays().map((display) => display.macros);
     };
 
-    getDefaultTdlFileName = () => {
-        return this._defaultTdlFileName;
-    };
-
     getItemIsWebpage = () => {
         return this.getDisplays().map((display) => display.isWebpage);
+    };
+
+    setLoadingText = (newValue: string) => {
+        this.clearLoadingTextTimer();
+        this._loadingText = newValue;
+    };
+
+    scheduleLoadingText = (newValue: string, delayMs: number = 1000) => {
+        this.clearLoadingTextTimer();
+        this._loadingText = "";
+        this._loadingTextTimer = window.setTimeout(() => {
+            this._loadingTextTimer = undefined;
+            this._loadingText = newValue;
+            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+            g_flushWidgets();
+        }, delayMs);
+    };
+
+    getLoadingText = () => {
+        return this._loadingText;
+    };
+
+    clearLoadingTextTimer = () => {
+        if (this._loadingTextTimer !== undefined) {
+            window.clearTimeout(this._loadingTextTimer);
+            this._loadingTextTimer = undefined;
+        }
     };
 
     setFullTdlFileName = (newName: string) => {
@@ -586,12 +609,16 @@ export class EmbeddedDisplay extends BaseWidget {
         return this._childWidgetKeys;
     }
 
+    setChildWidgetKeys = (newChildWidgetKeys: string[]) => {
+        this._childWidgetKeys = newChildWidgetKeys;
+    }
+
     clearChildWidgetKeys = () => {
-        this._childWidgetKeys.length = 0;
+        this.setChildWidgetKeys([]);
     }
 
     appendChildWidgetKey = (newWidgetKey: string) => {
-        this._childWidgetKeys.push(newWidgetKey);
+        this.getChildWidgetKeys().push(newWidgetKey);
     }
 
     getSelectedTab = () => {
@@ -620,7 +647,7 @@ export class EmbeddedDisplay extends BaseWidget {
      * (2) clear this._childWidgetKeys
      */
     jobsAsEditingModeBegins() {
-        this.loadingText = "";
+        this.setLoadingText("Embedded Display");
         this.removeChildWidgets();
         super.jobsAsEditingModeBegins();
     }

@@ -2,7 +2,7 @@ import { SidebarComponent } from "./SidebarComponent";
 import * as React from "react";
 // import { ChoiceButtonSidebar } from "../../widgets/ChoiceButton/ChoiceButtonSidebar";
 // import { LEDSidebar } from "../../widgets/LED/LEDSidebar";
-import { EmbeddedDisplay } from "../../widgets/EmbeddedDisplay/EmbeddedDisplay";
+import { defaultTdlFileName, EmbeddedDisplay } from "../../widgets/EmbeddedDisplay/EmbeddedDisplay";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { SidebarEmbeddedDisplayItem } from "./SidebarEmbeddedDisplayItem";
@@ -115,7 +115,7 @@ export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 
 		const newIndex = mainWidget.getDisplays().length;
 		mainWidget.getDisplays().push({
-			tdlFileName: isWebpage ? path.join("../../../webpack/resources/tdls/blank.html") : mainWidget.getDefaultTdlFileName(),
+			tdlFileName: isWebpage ? path.join("../../../webpack/resources/tdls/blank.html") : defaultTdlFileName,
 			name: `Display-${newIndex}`,
 			macros: [["A", "a"]],
 			isWebpage,
