@@ -905,8 +905,8 @@ export class DisplayWindowClient {
             // default size is 100%
             const widgetTdl = ChannelGraph.generateWidgetTdl(utilityOptions);
             const widgetKey = widgetTdl.widgetKey;
-            widgetTdl.style.width = "100%";
-            widgetTdl.style.height = "100%";
+            widgetTdl.style.width = window.innerWidth;
+            widgetTdl.style.height = window.innerHeight;
             // widgetTdl.style.boxSizing = "border-box";
             // widgetTdl.style.padding = "20px";
 

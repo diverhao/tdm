@@ -2444,6 +2444,74 @@ export const defaultCalculatorTdl: type_Calculator_tdl = {
     rules: [],
 };
 
+// ======================== ChannelGraph TDL Schema ========================
+
+export const type_ChannelGraph_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    invisibleInOperation: "boolean",
+    format: "string",
+    scale: "number",
+} as const satisfies TypeSchema;
+
+export const type_ChannelGraph_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_style_tdl_schema,
+    text: type_ChannelGraph_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_ChannelGraph_text_tdl = Mutable<InferType<typeof type_ChannelGraph_text_tdl_schema>>;
+export type type_ChannelGraph_tdl = Mutable<InferType<typeof type_ChannelGraph_tdl_schema>>;
+
+export const defaultChannelGraphTdl: type_ChannelGraph_tdl = {
+    type: "ChannelGraph",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 0,
+        top: 0,
+        width: 500,
+        height: 500,
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        transform: "rotate(0deg)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(0, 0, 0, 1)",
+        color: "rgba(0,0,0,1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        boxSizing: "content-box",
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: false,
+        showUnit: true,
+        alarmBorder: true,
+        invisibleInOperation: false,
+        format: "default",
+        scale: 0,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
 // ======================== TextEditor TDL Schema ========================
 
 export const type_TextEditor_text_tdl_schema = {

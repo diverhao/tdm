@@ -3,7 +3,6 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { v4 as uuidv4 } from "uuid";
 import { DataSet } from "vis-data";
@@ -12,21 +11,10 @@ import { ElementRectangleButton } from "../../helperWidgets/SharedElements/Recta
 import { ChannelSeverity, menuScan, TcaChannel } from "../../channel/TcaChannel";
 import { DbdFiles } from "../../channel/DbdFiles";
 import { Log } from "../../../common/Log";
+import { defaultChannelGraphTdl, type_ChannelGraph_tdl } from "../../../common/types/type_widget_tdl";
+import { type_dbd, type_dbd_menus } from "../../../common/types/type_dbd";
 import { ChannelGraphSidebar } from "./ChannelGraphSidebar";
-
-
-export type type_ChannelGraph_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    recordTypes: Record<string, any>;
-    menus: Record<string, any>;
-};
+import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 
 enum type_nodeStatus {
     expaneded,
@@ -54,7 +42,7 @@ export enum colors {
 
 export class ChannelGraph extends BaseWidget {
     readonly rtypWaitingName: string = uuidv4();
-    _dbdFiles: DbdFiles;
+    _dbdFiles: DbdFiles = new DbdFiles({}, {});
 
     networkData: {
         nodes: DataSet<any, "id">;
@@ -142,9 +130,13 @@ export class ChannelGraph extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._dbdFiles = new DbdFiles(structuredClone(widgetTdl.recordTypes), structuredClone(widgetTdl.menus));
-
         this._sidebar = new ChannelGraphSidebar(this);
+
+
+        this.registerUtilityWindowResizeCallback((_event: UIEvent) => {
+            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+            g_flushWidgets();
+        });
     }
 
     // ------------------------------ elements ---------------------------------
@@ -1227,8 +1219,8 @@ export class ChannelGraph extends BaseWidget {
     }
 
     processDbd = (result: {
-        menus: Record<string, any>,
-        recordTypes: Record<string, any>,
+        menus: type_dbd_menus,
+        recordTypes: type_dbd,
     }) => {
         this._dbdFiles = new DbdFiles(result["recordTypes"], result["menus"]);
 
@@ -1266,38 +1258,25 @@ export class ChannelGraph extends BaseWidget {
     // only for TextUpdate and TextEntry
     // they are suitable to display array data in various formats,
     // other types of widgets, such as Meter, Spinner, Tanks, ProgressBar, Thermometer, ScaledSlider are not for array data
-    _getChannelValue = (raw: boolean = false) => {
-        const channelValue = this.getChannelValueForMonitorWidget(raw);
+    // _getChannelValue = (raw: boolean = false) => {
+    //     const channelValue = this.getChannelValueForMonitorWidget(raw);
 
-        if (typeof channelValue === "number" || typeof channelValue === "string") {
-            return this.formatScalarValue(channelValue);
-        } else if (Array.isArray(channelValue)) {
-            const result: any[] = [];
-            for (let element of channelValue) {
-                result.push(this.formatScalarValue(element));
-            }
-            if (this.getAllText()["format"] === "string") {
-                return result.join("");
-            } else {
-                return result;
-            }
-        } else {
-            return channelValue;
-        }
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
-        }
-    };
+    //     if (typeof channelValue === "number" || typeof channelValue === "string") {
+    //         return this.formatScalarValue(channelValue);
+    //     } else if (Array.isArray(channelValue)) {
+    //         const result: any[] = [];
+    //         for (let element of channelValue) {
+    //             result.push(this.formatScalarValue(element));
+    //         }
+    //         if (this.getAllText()["format"] === "string") {
+    //             return result.join("");
+    //         } else {
+    //             return result;
+    //         }
+    //     } else {
+    //         return channelValue;
+    //     }
+    // };
 
     getDbdFiles = () => {
         return this._dbdFiles;
@@ -1307,73 +1286,21 @@ export class ChannelGraph extends BaseWidget {
     // -------------------------- tdl -------------------------------
 
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_ChannelGraph_tdl = {
-            type: "ChannelGraph",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                width: 500,
-                height: 500,
-                backgroundColor: "rgba(255, 255, 255, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // border, it is different from the "alarmBorder" below,
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // text
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: true,
-                // actually "alarm outline"
-                alarmBorder: true,
-                invisibleInOperation: false,
-                // default, decimal, exponential, hexadecimal
-                format: "default",
-                // scale, >= 0
-                scale: 0,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            recordTypes: {},
-            menus: {},
-
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_ChannelGraph_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultChannelGraphTdl.type);
+        return structuredClone({
+            ...defaultChannelGraphTdl,
+            widgetKey: widgetKey,
+        });
     };
 
-    generateDefaultTdl: () => any = ChannelGraph.generateDefaultTdl;
+    generateDefaultTdl: () => type_ChannelGraph_tdl = ChannelGraph.generateDefaultTdl;
 
 
     // static method for generating a widget tdl with external PV name
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_ChannelGraph_tdl => {
         const result = this.generateDefaultTdl();
         result.channelNames = utilityOptions.channelNames as string[];
-        result.recordTypes = utilityOptions.recordTypes as Record<string, any>;
-        result.menus = utilityOptions.menus as Record<string, any>;
         return result;
     };
 
@@ -1385,9 +1312,6 @@ export class ChannelGraph extends BaseWidget {
         } else {
             result.channelNames = [];
         }
-
-        result.recordTypes = {};
-        result.menus = {};
         return result;
     }
 
@@ -1407,27 +1331,21 @@ export class ChannelGraph extends BaseWidget {
         super.jobsAsEditingModeBegins();
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const dbdAssigned = Object.keys(this.getDbdFiles().getRecordTypes()).length > 0;
-        const isUtilityWindow = displayWindowClient.getIsUtilityWindow();
-
-
-        if (isUtilityWindow) {
-        } else {
-            if (dbdAssigned) {
-                // switch from editing mode to operating mode, with the DBD files already loaded
-                // only need to expand node
-                if (this.getChannelNames().length > 0 && this.getChannelNames()[0].trim() !== "") {
-                    this.expandNode(this.getChannelNames()[0]).then(() => {
-                        this.forceUpdate();
-                    })
-                }
-            } else {
-                const ipcManager = displayWindowClient.getIpcManager();
-                // the reply will be handled by this.processDbd()
-                ipcManager.sendFromRendererProcess("request-epics-dbd", {
-                    displayWindowId: displayWindowClient.getWindowId(),
-                    widgetKey: this.getWidgetKey(),
+        if (dbdAssigned) {
+            // switch from editing mode to operating mode, with the DBD files already loaded
+            // only need to expand node
+            if (this.getChannelNames().length > 0 && this.getChannelNames()[0].trim() !== "") {
+                this.expandNode(this.getChannelNames()[0]).then(() => {
+                    this.forceUpdate();
                 })
             }
+        } else {
+            const ipcManager = displayWindowClient.getIpcManager();
+            // the reply will be handled by this.processDbd()
+            ipcManager.sendFromRendererProcess("request-epics-dbd", {
+                displayWindowId: displayWindowClient.getWindowId(),
+                widgetKey: this.getWidgetKey(),
+            })
         }
     }
 }

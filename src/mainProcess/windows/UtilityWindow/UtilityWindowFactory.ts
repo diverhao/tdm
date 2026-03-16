@@ -110,14 +110,6 @@ export class UtilityWindowFactory {
         };
     };
 
-    private buildChannelGraphUtilityOptions = (utilityOptions: Record<string, any>): Record<string, any> => {
-        return {
-            ...utilityOptions,
-            recordTypes: this.getMainProcess().getChannelAgentsManager().getDbdFiles().getRecordTypes(),
-            menus: this.getMainProcess().getChannelAgentsManager().getDbdFiles().getMenus(),
-        };
-    };
-
     private buildUtilityOptions = (
         utilityType: type_utilityWindowType,
         utilityOptions: Record<string, any>,
@@ -134,10 +126,6 @@ export class UtilityWindowFactory {
             nextUtilityOptions = this.buildCaswUtilityOptions();
         } else if (utilityType === "FileBrowser") {
             nextUtilityOptions = this.buildFileBrowserUtilityOptions(utilityOptions);
-        }
-
-        if (utilityType === "ChannelGraph") {
-            nextUtilityOptions = this.buildChannelGraphUtilityOptions(nextUtilityOptions);
         }
 
         return nextUtilityOptions;
