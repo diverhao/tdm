@@ -284,6 +284,7 @@ export class WebServer {
             let tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
             let tdlFileName = tdlFileNames[0];
             if (typeof tdlFileName !== "string") {
+                Log.error("No default TDL files");
                 return;
             }
             let macros = selectedProfile.getMacros();
@@ -293,6 +294,7 @@ export class WebServer {
 
             const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder)
             if (tdlResult === undefined) {
+                Log.error("Cannot read tdl files", tdlFileNames);
                 return;
             }
             const tdl = tdlResult["tdl"];
@@ -312,8 +314,6 @@ export class WebServer {
             if (displayWindowAgent instanceof DisplayWindowAgent) {
                 response.redirect(`/DisplayWindow.html?displayWindowId=${displayWindowAgent.getId()}`)
             }
-
-
         });
 
         // ------------------------ POST -----------------------------------

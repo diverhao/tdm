@@ -428,16 +428,21 @@ export class IpcManagerOnMainProcess {
         const mainProcess = this.getMainProcess();
         const windowId = data["windowId"];
         const reconnect = data["reconnect"];
-
         this.registerClient(event, windowId);
 
         if (reconnect === true) {
+            Log.debug("Reconnect for window", windowId);
             return;
         }
 
         const windowAgent = mainProcess.getWindowAgentsManager().getAgent(windowId);
         if (!(windowAgent instanceof DisplayWindowAgent)) {
+            Log.error("Window", windowId, "is not a Display Window");
             return;
+        }
+
+        if (mainProcess.getMainProcessMode() === "web") {
+            windowAgent.createBrowserWindow({windowId: windowId});
         }
 
         // lift the block in create window in DisplayWindowLifeCycleManager.createBrowserWindow()

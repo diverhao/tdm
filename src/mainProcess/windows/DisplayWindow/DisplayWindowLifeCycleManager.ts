@@ -105,7 +105,7 @@ export class DisplayWindowLifeCycleManager {
         } else if (mainProcessMode === "ssh-client" || mainProcessMode === "desktop") {
             await this.createBrowserWindowInDesktopMode(options);
         } else if (mainProcessMode === "web") {
-            await this.createBrowserWindowInWebMode(options);
+            this.createBrowserWindowInWebMode(options);
         }
 
         // wait for IPC websocket connected, then send the basic info and tdl
