@@ -39,6 +39,64 @@ export enum colors {
     dbfilenode = "rgb(177, 177, 61)",
 }
 
+// Define network options
+// https://rdrr.io/cran/visNetwork/man/visEdges.html
+// https://rdrr.io/cran/visNetwork/man/visNodes.html
+const networkOptions = {
+    edges: {
+        arrows: 'to',
+        font: {
+            color: '#000',
+            size: 12,
+            align: 'middle'
+        },
+        smooth: true,
+        chosen: {
+            edge: true,
+            label: false,
+        },
+        color: {
+        },
+        width: 1,
+        selectionWidth: 1.5,
+        labelHighlightBold: false,
+        arrowStrikethrough: true,
+    },
+    nodes: {
+        font: {
+            color: "black",
+        },
+        // color: {
+        //     background: colors.NO_ALARM,
+        //     highlight: {
+        //         background: colors.highlight,
+        //     },
+        // },
+        labelHighlightBold: false,
+        borderWidth: 0,
+        borderWidthSelected: 0,
+    },
+    interaction: {
+        hover: false,
+        multiselect: true,   // Enable multi-node selection
+        selectConnectedEdges: true, // Optionally select edges with nodes
+        zoomView: true,
+        dragView: true,
+    },
+    physics: {
+        enabled: true,
+        solver: 'forceAtlas2Based',
+        forceAtlas2Based: {
+            gravitationalConstant: -100, // Increase repulsion
+            springLength: 200, // minimum edge length
+            springConstant: 0.05
+        },
+        stabilization: {
+            enabled: true,
+            iterations: 200,
+        }
+    }
+};
 
 export class ChannelGraph extends BaseWidget {
     readonly rtypWaitingName: string = uuidv4();
@@ -63,66 +121,6 @@ export class ChannelGraph extends BaseWidget {
     setShowConfigPage: any = () => { };
 
     network: undefined | Network = undefined;
-
-
-    // Define network options
-    // https://rdrr.io/cran/visNetwork/man/visEdges.html
-    // https://rdrr.io/cran/visNetwork/man/visNodes.html
-    networkOptions = {
-        edges: {
-            arrows: 'to',
-            font: {
-                color: '#000',
-                size: 12,
-                align: 'middle'
-            },
-            smooth: true,
-            chosen: {
-                edge: true,
-                label: false,
-            },
-            color: {
-            },
-            width: 1,
-            selectionWidth: 1.5,
-            labelHighlightBold: false,
-            arrowStrikethrough: true,
-        },
-        nodes: {
-            font: {
-                color: "black",
-            },
-            // color: {
-            //     background: colors.NO_ALARM,
-            //     highlight: {
-            //         background: colors.highlight,
-            //     },
-            // },
-            labelHighlightBold: false,
-            borderWidth: 0,
-            borderWidthSelected: 0,
-        },
-        interaction: {
-            hover: false,
-            multiselect: true,   // Enable multi-node selection
-            selectConnectedEdges: true, // Optionally select edges with nodes
-            zoomView: true,
-            dragView: true,
-        },
-        physics: {
-            enabled: true,
-            solver: 'forceAtlas2Based',
-            forceAtlas2Based: {
-                gravitationalConstant: -100, // Increase repulsion
-                springLength: 200, // minimum edge length
-                springConstant: 0.05
-            },
-            stabilization: {
-                enabled: true,
-                iterations: 200,
-            }
-        }
-    };
 
     constructor(widgetTdl: type_ChannelGraph_tdl) {
         super(widgetTdl);
@@ -260,7 +258,7 @@ export class ChannelGraph extends BaseWidget {
                 } else {
                     if (elementRef.current !== null) {
 
-                        this.network = new Network(elementRef.current, this.networkData, this.networkOptions);
+                        this.network = new Network(elementRef.current, this.networkData, networkOptions);
                         this.networkClickCallback = (params: any) => {
                             this.handleClickNode(params);
                         };
@@ -1237,12 +1235,6 @@ export class ChannelGraph extends BaseWidget {
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
     _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
-
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
 
     // -------------------- helper functions ----------------
 
