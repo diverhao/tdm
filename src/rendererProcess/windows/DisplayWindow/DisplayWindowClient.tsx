@@ -113,14 +113,9 @@ export class DisplayWindowClient {
         // in web mode, the server does not provide the ipcServerPort, the websocket server
         // uses the https port (default 443)
         if (this.getMainProcessMode() === "web") {
-            const host = window.location.host;
-            if (ipcServerPort === -1 || ipcServerPort === undefined || isNaN(ipcServerPort)) {
-                ipcServerPort = parseInt(host.split(":")[1]);
-            }
-            // we may be using the default https port
-            if (isNaN(ipcServerPort)) {
-                ipcServerPort = 443;
-            }
+            // websocket port is same as http port
+            const httpPort = parseInt(window.location.port);
+            ipcServerPort = httpPort;
         } else {
             // in desktop, ssh-server, ssh-client modes, there must be an ipcServerPort
             if (ipcServerPort === -1 || ipcServerPort === undefined || isNaN(ipcServerPort)) {
@@ -1226,8 +1221,8 @@ export class DisplayWindowClient {
             Log.debug("Open TDL file", fileBlob);
             const reader = new FileReader();
             reader.onload = (event: any) => {
-                const fileContents = event.target.result;
-                const currentSite = `https://${window.location.host}/`;
+                // const fileContents = event.target.result;
+                // const currentSite = `https://${window.location.host}/`;
                 const tdlStr = event.target.result;
                 const tdl = JSON.parse(tdlStr);
                 this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
@@ -1453,7 +1448,8 @@ export class DisplayWindowClient {
 
         // update url by adding file name in browser address bar
         if (this.getMainProcessMode() === "web") {
-            const currentSite = `https://${window.location.host}/`;
+            // const currentSite = `https://${window.location.host}/`;
+            const currentSite = `${window.location.origin}/`;
             const newUrl = `${currentSite}DisplayWindow.html?displayWindowId=${this.getWindowId()}&file=${this.getTdlFileName()}`;
             window.history.replaceState({}, '', newUrl);
         }

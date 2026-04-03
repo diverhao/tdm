@@ -52,10 +52,10 @@ export class IpcManagerOnMainWindow {
 
         Log.info(`Trying to ${reconnect === true ? "re-" : ""}connect to ipc server`, this.ipcServerPort);
 
-        let serverAddress = `wss://127.0.0.1:${this.getIpcServerPort()}`
+        let serverAddress = `ws://127.0.0.1:${this.getIpcServerPort()}`
         if (this.getMainWindowClient().getMainProcessMode() === "web") {
             const host = window.location.host.split(":")[0];
-            serverAddress = `wss://${host}:${this.getIpcServerPort()}`;
+            serverAddress = `ws://${host}:${this.getIpcServerPort()}/ipc`;
         }
 
         const client = new WebSocket(serverAddress);
@@ -88,21 +88,6 @@ export class IpcManagerOnMainWindow {
                     reconnect: reconnect,
                 }
             )
-
-            // this.getWebSocketClient()?.send(
-            //     JSON.stringify({
-            //         // additional info
-            //         processId: this.getMainWindowClient().getProcessId(),
-            //         windowId: this.getMainWindowClient().getWindowId(),
-            //         eventName: "websocket-ipc-connected-on-main-window",
-            //         // the real data
-            //         data: [{
-            //             processId: this.getMainWindowClient().getProcessId(),
-            //             windowId: this.getMainWindowClient().getWindowId(),
-            //             reconnect: reconnect,
-            //         }],
-            //     })
-            // );
         };
 
         client.onmessage = (event: MessageEvent) => {

@@ -37,29 +37,32 @@ export class IpcManagerOnMainProcess {
      * This websocket server is attached to a https server, which has no role in anywhere.
      */
     createWebSocketIpcServer = () => {
-        Log.info('-1', `Creating WebSocket IPC server on port ${this.getPort()}`);
+        Log.info(`Creating WebSocket IPC server on port ${this.getPort()}`);
 
-        const key = this.getMainProcess().getMainProcessMode() === "web" ? this.getMainProcess().getWebServer()?.getHttpsOptions()?.key : this.keyAndCert.private;
-        const cert = this.getMainProcess().getMainProcessMode() === "web" ? this.getMainProcess().getWebServer()?.getHttpsOptions()?.cert : this.keyAndCert.cert;
-        // create a https server for the websocket server to attach to
-        const httpsServer = https.createServer({
-            key: key,
-            cert: cert,
-        });
-        this._wsServer = new WebSocketServer({ server: httpsServer });
+        const mainProcess = this.getMainProcess();
+        const mainProcessMode = mainProcess.getMainProcessMode();
+        let websocketServer: undefined | WebSocketServer = undefined;
+        if (mainProcessMode === "desktop") {
+            websocketServer = this.createWebSocketIpcServerDesktopMode();
+        } else if (mainProcessMode === "web") {
+            websocketServer = this.createWebSocketIpcServerWebMode();
+        } else {
+            Log.error("Not supported mode ...............");
+            return;
+        }
 
-        // listen to localhost ipv4 only
-        httpsServer.listen(this.getPort(), "127.0.0.1", () => {
-            Log.info('-1', `IPC: WebSocket server is listening on port ${this.getPort()}`);
-        });
+        if (websocketServer === undefined) {
+            Log.error("Failed to create websocket server for IPC");
+            return;
+        }
 
         /**
          * if the port is occupied, try the next port
          */
-        this._wsServer.on("error", (err: Error) => {
+        websocketServer.on("error", (err: Error) => {
             if (err["message"].includes("EADDRINUSE")) {
                 Log.info('-1', `IPC: Port ${this.getPort()} is occupied, try port ${this.getPort() + 1} for websocket IPC server`);
-                httpsServer.close();
+                // httpsServer.close();
                 let newPort = this.getPort() + 1;
                 this.setPort(newPort);
                 this.createWebSocketIpcServer();
@@ -73,8 +76,8 @@ export class IpcManagerOnMainProcess {
          * 
          * the renderer process will try to connect this websocket server when the display window becomes operating mode
          */
-        this._wsServer.on("connection", (wsClient: WebSocket, request: IncomingMessage) => {
-            Log.info('-1', `WebSocket IPC Server got a connection from ${request.socket.remoteAddress}:${request.socket.remotePort}`);
+        websocketServer.on("connection", (wsClient: WebSocket, request: IncomingMessage) => {
+            Log.info(`WebSocket IPC Server got a connection from ${request.socket.remoteAddress}:${request.socket.remotePort}`);
 
             wsClient.on("message", (messageBuffer: RawData) => {
                 const message = JSON.parse(messageBuffer.toString(),
@@ -96,6 +99,33 @@ export class IpcManagerOnMainProcess {
             });
         });
     };
+
+    createWebSocketIpcServerWebMode = () => {
+
+        const mainProcess = this.getMainProcess();
+
+        const webServer = mainProcess.getWebServer();
+        if (webServer === undefined) {
+            return;
+        }
+        const httpServer = webServer.getHttpServer();
+        if (httpServer === undefined) {
+            return;
+        }
+
+        const websocketServer = new WebSocketServer({
+            server: httpServer,
+            path: "/ipc",
+        });
+
+        return websocketServer;
+    }
+
+
+    createWebSocketIpcServerDesktopMode = () => {
+        const websocketServer = new WebSocketServer({ host: "127.0.0.1", port: this.getPort() });
+        return websocketServer;
+    }
 
 
     handleMessage = (wsClient: WebSocket | string, message: { processId: string; windowId: string; eventName: string; data: any[] }) => {
@@ -441,10 +471,6 @@ export class IpcManagerOnMainProcess {
             return;
         }
 
-        if (mainProcess.getMainProcessMode() === "web") {
-            windowAgent.createBrowserWindow({windowId: windowId});
-        }
-
         // lift the block in create window in DisplayWindowLifeCycleManager.createBrowserWindow()
         const lifeCycleManager = windowAgent.getDisplayWindowLifeCycleManager();
         const resolve = lifeCycleManager.getWebsocketIpcConnectedResolve();
@@ -738,6 +764,7 @@ export class IpcManagerOnMainProcess {
      * @param sendContentsToWindow whether to send file back to display window, only used by .db 
      */
     handleOpenTdlFiles = async (event: WebSocket | string, data: IpcEventArgType["open-tdl-file"]) => {
+
         const { options } = data;
         let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = options;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();

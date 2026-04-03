@@ -78,7 +78,7 @@ export class DisplayWindowLifeCycleManager {
 
     // ---------------------- window creation and initialization --------------
 
-    createBrowserWindow = async (options: any = {}) => {
+    createBrowserWindow = async (options: any = {}, webRootRequest: boolean = false) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
 
         // the Promises must created as early as possible to prevent race condition
@@ -105,7 +105,10 @@ export class DisplayWindowLifeCycleManager {
         } else if (mainProcessMode === "ssh-client" || mainProcessMode === "desktop") {
             await this.createBrowserWindowInDesktopMode(options);
         } else if (mainProcessMode === "web") {
-            this.createBrowserWindowInWebMode(options);
+            if (webRootRequest == true) {
+            } else {
+                this.createBrowserWindowInWebMode(options);
+            }
         }
 
         // wait for IPC websocket connected, then send the basic info and tdl

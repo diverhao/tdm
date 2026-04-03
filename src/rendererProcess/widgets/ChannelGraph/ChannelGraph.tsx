@@ -139,7 +139,6 @@ export class ChannelGraph extends BaseWidget {
 
     // ------------------------------ elements ---------------------------------
 
-    // Body + sidebar
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -152,28 +151,17 @@ export class ChannelGraph extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
-                </>
+                <div style={{ ...this.getElementBodyRawStyle() }}>
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
     getElementFallbackFunction = () => {
         return this._ElementFallback;
-    };
-
-    // Text area and resizers
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
-            <div style={{ ...this.getElementBodyRawStyle() }}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
     };
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
@@ -1234,42 +1222,8 @@ export class ChannelGraph extends BaseWidget {
 
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
 
     // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    // only for TextUpdate and TextEntry
-    // they are suitable to display array data in various formats,
-    // other types of widgets, such as Meter, Spinner, Tanks, ProgressBar, Thermometer, ScaledSlider are not for array data
-    // _getChannelValue = (raw: boolean = false) => {
-    //     const channelValue = this.getChannelValueForMonitorWidget(raw);
-
-    //     if (typeof channelValue === "number" || typeof channelValue === "string") {
-    //         return this.formatScalarValue(channelValue);
-    //     } else if (Array.isArray(channelValue)) {
-    //         const result: any[] = [];
-    //         for (let element of channelValue) {
-    //             result.push(this.formatScalarValue(element));
-    //         }
-    //         if (this.getAllText()["format"] === "string") {
-    //             return result.join("");
-    //         } else {
-    //             return result;
-    //         }
-    //     } else {
-    //         return channelValue;
-    //     }
-    // };
-
     getDbdFiles = () => {
         return this._dbdFiles;
     }

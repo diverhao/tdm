@@ -417,7 +417,8 @@ export class Repeater extends BaseWidget {
 
         let iframeSrc = `../../../mainProcess/windows/DisplayWindow/DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${this.iframeDisplayId}`;
         if (mainProcessMode === "web") {
-            const currentSite = `https://${window.location.host}/`;
+            // const currentSite = `https://${window.location.host}/`;
+            const currentSite = `${window.location.origin}/`;
             iframeSrc = `${currentSite}DisplayWindow.html?displayWindowId=${this.iframeDisplayId}`
         }
         return (

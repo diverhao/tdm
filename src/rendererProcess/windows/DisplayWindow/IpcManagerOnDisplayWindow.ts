@@ -70,16 +70,20 @@ export class IpcManagerOnDisplayWindow {
     }
 
     connectIpcServer = (reconnect: boolean = false) => {
-
         Log.info(`Trying to ${reconnect === true ? "re-" : ""}connect to ipc server`, this.getDisplayWindowClient().getWindowId(), this.ipcServerPort);
         if (this.getIpcServerPort() === -1) {
+            Log.error("Wrong websocket IPC server port", this.getIpcServerPort());
             return;
         }
-        let serverAddress = `wss://127.0.0.1:${this.getIpcServerPort()}`;
+
+        let serverAddress = `ws://127.0.0.1:${this.getIpcServerPort()}`;
         if (this.getDisplayWindowClient().getMainProcessMode() === "web") {
             const host = window.location.host.split(":")[0];
             Log.info("Web mode host:", host);
-            serverAddress = `wss://${host}:${this.getIpcServerPort()}`;
+            // serverAddress = `wss://${host}:${this.getIpcServerPort()}`;
+
+            const wsScheme = window.location.protocol === "https:" ? "wss:" : "ws:";
+            serverAddress = `${wsScheme}//${window.location.host}/ipc`;
         }
 
         const mainProcessMode = this.getDisplayWindowClient().getMainProcessMode();
@@ -1070,7 +1074,8 @@ export class IpcManagerOnDisplayWindow {
     };
 
     sendPostRequestCommand = (command: string, data: Record<string, any>) => {
-        const currentSite = `https://${window.location.host}/`;
+        const currentSite = `${window.location.origin}/`;
+
         Log.debug("currentSite = ", currentSite);
         return fetch(`${currentSite}command`, {
             method: "POST",
@@ -1311,7 +1316,8 @@ export class IpcManagerOnDisplayWindow {
 
     handleDisplayWindowIdForOpenTdlFile = (event: string, data: IpcEventArgType2["display-window-id-for-open-tdl-file"]) => {
         const { displayWindowId } = data;
-        const currentSite = `https://${window.location.host}/`;
+        // const currentSite = `https://${window.location.host}/`;
+        const currentSite = `${window.location.origin}/`;
         const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
         window.open(href, "_blank", "noopener, noreferrer")
     }

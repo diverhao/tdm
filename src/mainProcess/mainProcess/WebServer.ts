@@ -1,362 +1,79 @@
 import express, { Express } from "express";
-import https from "https";
-// import cors from "cors";
-
-import passport from "passport";
-import LdapStrategy from "passport-ldapauth";
-
+import http from "http";
 import session from "express-session";
-
 import { IncomingMessage, ServerResponse } from "http";
-import * as fs from "fs";
 import { Log } from "../../common/Log";
 import path from "path";
-import { Profile } from "../profile/Profile";
-import { Profiles } from "../profile/Profiles";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { FileReader } from "../file/FileReader";
 import { type_options_createDisplayWindow } from "../windows/WindowAgentsManager";
+import { type_tdl } from "../../common/GlobalVariables";
 
 export class WebServer {
     _server: Express | undefined;
     _mainProcess: MainProcess;
     _port: number;
-    _httpsOptions: { key: Buffer, cert: Buffer } | undefined = undefined;
-    _httpsServer: https.Server | undefined = undefined;
-    _authenticationMethod: "No authentication" | "LDAP" = "No authentication";
+    private _httpServer: http.Server | undefined;
 
     constructor(mainProcess: MainProcess, port: number) {
         this._port = port;
         this._mainProcess = mainProcess;
-        this.obtainLdapOptions()
+        // this.obtainLdapOptions()
         this.createServer();
-    }
-
-    // ------------------------ authentication ----------------------------
-
-    /**
-     * Set the authentication method used for this website
-     */
-    setAuthenticationMethod = (method: "No authentication" | "LDAP") => {
-        this._authenticationMethod = method;
-    }
-
-
-    // -------------------------- LDAP -----------------------------------
-
-    LDAP_OPTIONS: LdapStrategy.Options = {
-        server: {
-            url: "ldap://localhost:3890",
-            bindDN: "",
-            bindCredentials: "",
-            searchBase: "ou=users,dc=example,dc=com",
-            searchFilter: "(uid={{username}})",
-            searchScope: "sub",
-            tlsOptions: { rejectUnauthorized: false },
-        },
-    };
-
-    /**
-     * Read the LDAP options from profiles JSON file (not from the MainProcess or MainProcesses)
-     * This should be done before the profile is selected, so the web server will choose the first valid
-     * profile and use its LDAP and http options.
-     */
-    obtainLdapOptions = () => {
-
-        // read profiles file for https certificate and key file names
-        // this is done before creating the Profiles object
-        // then create the HttpServer object
-        const profilesFileName = this.getMainProcess().getProfiles().getFilePath();
-        const profilesJson = Profiles.readProfilesJsonSync(profilesFileName);
-        if (profilesJson === undefined) {
-            throw new Error("Web mode: failed to read profiles file. Quit");
-        }
-        let firstProfileJson = Object.values(profilesJson)[0];
-        if (Object.keys(profilesJson)[0] === "For All Profiles") {
-            firstProfileJson = Object.values(profilesJson)[1];
-        }
-        if (firstProfileJson === undefined) {
-            throw new Error("Web mode: no profile. Quit");
-        }
-        const webServerCategoryJson = firstProfileJson["Web Server"];
-        if (webServerCategoryJson === undefined) {
-            throw new Error("Web mode: no Web Server cateogry in first profile. Quit");
-        }
-        const httpsKeyFileProperty = webServerCategoryJson["Https Key File"];
-        const httpsCertificateProperty = webServerCategoryJson["Https Certificate"];
-        if (httpsKeyFileProperty === undefined || httpsCertificateProperty === undefined) {
-            throw new Error("Web mode: https key file or certificate property not defined in profile. Quit");
-        }
-        const httpsKeyFileName = httpsKeyFileProperty["value"];
-        const httpsCertificateFileName = httpsCertificateProperty["value"];
-        if (httpsKeyFileName === undefined || httpsCertificateFileName === undefined) {
-            throw new Error("Web mode: https key file name or certificate file name not defined in profile. Quit");
-        }
-
-        const authenticationMethodProperty = webServerCategoryJson["Authentication Method"];
-        if (authenticationMethodProperty === undefined) {
-            throw new Error("Web mode: Authentication Method not defined in profile. Quit");
-        }
-
-
-        const ldapUriProperty = webServerCategoryJson["LDAP URI"]
-        if (ldapUriProperty === undefined) {
-            throw new Error("");
-        }
-        const ldapDistinguishedNameProperty = webServerCategoryJson["LDAP Distinguished Name"]
-        if (ldapDistinguishedNameProperty === undefined) {
-            throw new Error("");
-        }
-        const ldapSearchBaseProperty = webServerCategoryJson["LDAP Search Base"]
-        if (ldapSearchBaseProperty === undefined) {
-            throw new Error("");
-        }
-        const ldapSearchFilterProperty = webServerCategoryJson["LDAP Search Filter"]
-        if (ldapSearchFilterProperty === undefined) {
-            throw new Error("");
-        }
-        const ldapSearchScopeProperty = webServerCategoryJson["LDAP Search Scope"]
-        if (ldapSearchScopeProperty === undefined) {
-            throw new Error("");
-        }
-        const ldapUri = ldapUriProperty["value"];
-        const ldapDistinguishedName = ldapDistinguishedNameProperty["value"];
-        const ldapSearchBase = ldapSearchBaseProperty["value"];
-        const ldapSearchFilter = ldapSearchFilterProperty["value"];
-        const ldapSearchScope = ldapSearchScopeProperty["value"];
-        const authenticationMethod = authenticationMethodProperty["value"];
-
-
-        const ldapOptions: { url: string, bindDN: string, searchBase: string, searchFilter: string, searchScope: string } = {
-            url: ldapUri,
-            bindDN: ldapDistinguishedName,
-            // bindCredentials: ldapBindCredentials,
-            searchBase: ldapSearchBase,
-            searchFilter: ldapSearchFilter,
-            searchScope: ldapSearchScope,
-        };
-
-        let keyFileContents: Buffer = Buffer.from("");
-        let certFileContents: Buffer = Buffer.from("");
-        try {
-            keyFileContents = fs.readFileSync(httpsKeyFileName);
-            certFileContents = fs.readFileSync(httpsCertificateFileName);
-        } catch (e) {
-            keyFileContents = fs.readFileSync(path.join(__dirname, "../../common/resources/profiles/server.key"));
-            certFileContents = fs.readFileSync(path.join(__dirname, "../../common/resources/profiles/server.cert"));
-        }
-
-        const httpsOptions = {
-            key: keyFileContents,
-            cert: certFileContents,
-        }
-        this.setHttpsOptions(httpsOptions);
-        this.setLdapOptions(ldapOptions);
-        this.setAuthenticationMethod(authenticationMethod);
-
-    }
-
-    setLdapOptions = (newOptions: { url: string, bindDN: string, searchBase: string, searchFilter: string, searchScope: string }) => {
-        this.LDAP_OPTIONS = {
-            server: {
-                ...this.LDAP_OPTIONS.server,
-                url: newOptions.url,
-                bindDN: newOptions.bindDN,
-                // bindCredentials: ldapBindCredentials,
-                searchBase: newOptions.searchBase,
-                searchFilter: newOptions.searchFilter,
-                searchScope: newOptions.searchScope as any,
-            },
-        };
-
     }
 
 
     createServer = () => {
 
-        // create Express.js web server
-        this._server = express();
-
-        Log.info("Authentication method for web server:", this._authenticationMethod);
-        if (this._authenticationMethod === "LDAP") {
-            Log.info("LDAP options:", this.LDAP_OPTIONS);
-        }
-
-        // ------------ LDAP authentication ------------------------
-
-        // tell passport.js to use LDAP authentication strategy
-        passport.use(new LdapStrategy(this.LDAP_OPTIONS));
-        passport.serializeUser((user, done) => done(null, user));
-        passport.deserializeUser((user: any, done) => done(null, user));
+        const server = express();
+        const httpServer = http.createServer(server);
 
         // ----------------------- midware stack ----------------------------
         // all incoming http request need to go through the midwares
 
         // parse JSON, increase the limit to 10 MB, we can get json via req.data
-        this._server.use(express.json({ limit: 10 * 1024 * 1024 }));
-        this._server.use(express.urlencoded({ limit: 10 * 1024 * 1024, extended: true }));
+        server.use(express.json({ limit: 10 * 1024 * 1024 }));
+        server.use(express.urlencoded({ limit: 10 * 1024 * 1024, extended: true }));
 
         // passport.js and session
         // express-session midware, passport.js depends on it
-        this._server.use(session({
+        server.use(session({
             secret: "secretKey",
             resave: false,
             saveUninitialized: true
         }));
-        // init passport.js
-        this._server.use(passport.initialize());
-        // add .user, .isAuthenticated(), to req
-        this._server.use(passport.session());
 
-
-        // authentication
-        this._server.use((req: any, res: any, next: any) => {
-            // Skip authentication for these routes
-            if (req.path === '/' || req.path === '/login' || req.path.startsWith("/resources/webpages/")) {
-                // proceed to next midware
-                next();
-                return;
-            }
-
-            if (this._authenticationMethod === "No authentication") {
-                // no authentication
-                next();
-                return;
-            } else if (this._authenticationMethod === "LDAP") {
-                // the authentication happens in the `/login` POST, after that the req.isAuthenticated() is always true
-                if (req.isAuthenticated()) {
-                    next(); // Proceed to the requested route if authenticated
-                    return
-                } else {
-                    // next() is not invoked, midware chain stops here
-                    res.status(403).send("Access Denied. Please <a href='/'>log in</a>.");
-                    return;
-                }
-            }
-        });
-
-        this._server.use(express.static(path.join(__dirname, "../../webpack")));
-        this._server.use("/webpack", express.static(path.join(__dirname, "../../webpack")));
+        server.use(express.static(path.join(__dirname, "../../webpack")));
+        server.use("/webpack", express.static(path.join(__dirname, "../../webpack")));
 
         // ----------------------- GET --------------------------------
 
-        // root access to login page
-        this._server.get("/", (req: any, res: any, next: any) => {
-
-            if (req.isAuthenticated && req.isAuthenticated()) {
-                // Already logged in!
-                return res.redirect('/main');
-            }
-            if (this._authenticationMethod === "LDAP") {
-                // use LDAP login
-                res.sendFile(path.join(__dirname, "../../common/resources/webpages/login.html"))
-            } else if (this._authenticationMethod === "No authentication") {
-                // same as the "/login" POST request
-                const mainProcess = this.getMainProcess();
-                if (mainProcess === undefined) {
-                    Log.error("Cannot find main process 0 in web mode. Quit.")
-                    return;
-                }
-                const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
-                if (selectedProfile === undefined) {
-                    Log.error("Profile not selected in web mode. Quit.")
-                    return;
-                }
-
-                req.session.user = "ABC"
-
-                res.redirect('/main');  // Redirect to the protected page
-            }
-        });
-
-        // start http server
-        this._server.get("/main", async (request: IncomingMessage, response: any, next: any) => {
-            Log.info("New https connection coming in from", request.socket.address());
-            const mainProcess = this.getMainProcess();
-            const profiles = mainProcess.getProfiles();
-            const windowAgentsManager = mainProcess.getWindowAgentsManager();
-            const selectedProfile = profiles.getSelectedProfile();
-            if (selectedProfile === undefined) {
-                return;
-            }
-
-            let tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
-            let tdlFileName = tdlFileNames[0];
-            if (typeof tdlFileName !== "string") {
-                Log.error("No default TDL files");
-                return;
-            }
-            let macros = selectedProfile.getMacros();
-            let currentTdlFolder: undefined | string = undefined;
-            const mode = selectedProfile.getMode() as "editing" | "operating";
-            const editable = selectedProfile.getEditable();
-
-            const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder)
+        server.get("/", async (request: IncomingMessage, response: any, next: any) => {
+            Log.info("New http connection coming in from", request.socket.address());
+            // read first tdl file
+            const tdlResult = await this.readFirstTdl();
             if (tdlResult === undefined) {
-                Log.error("Cannot read tdl files", tdlFileNames);
                 return;
             }
-            const tdl = tdlResult["tdl"];
-            const fullTdlFileName = tdlResult["fullTdlFileName"];
-            const options: type_options_createDisplayWindow = {
-                tdl: tdl,
-                mode: mode,
-                editable: editable,
-                tdlFileName: fullTdlFileName,
-                macros: macros,
-                replaceMacros: false,
-                hide: false,
-            };
-            const displayWindowId = windowAgentsManager.obtainDisplayWindowId();
-            const displayWindowAgent = await windowAgentsManager.createDisplayWindowAgent(options, displayWindowId);
-
+            const displayWindowAgent = await this.createFirstDisplayWindowAgent(tdlResult);
+            if (displayWindowAgent === undefined) {
+                return;
+            }
             if (displayWindowAgent instanceof DisplayWindowAgent) {
                 response.redirect(`/DisplayWindow.html?displayWindowId=${displayWindowAgent.getId()}`)
+                const lifeCycleManager = displayWindowAgent.getDisplayWindowLifeCycleManager();
+                // after the ipc is connected
+                lifeCycleManager.createBrowserWindow({}, true);
             }
         });
 
         // ------------------------ POST -----------------------------------
 
-        this._server.post('/login',
-
-            // authentication midware
-            (req: any, res: any, next: any) => {
-                if (this._authenticationMethod === "LDAP") {
-                    const ldapMidware = passport.authenticate("ldapauth", { session: true });
-                    ldapMidware(req, res, next);
-                    return;
-                } else if (this._authenticationMethod === "No authentication") {
-                    // proceed
-                    next();
-                    return;
-                } else {
-                    // proceed
-                    next();
-                    return;
-                }
-            },
-
-            // invoked only when the authentication midware calls next()
-            (req: any, res: any, next: any) => {
-                const mainProcess = this.getMainProcess();
-                if (mainProcess === undefined) {
-                    Log.error("Cannot find main process 0 in web mode. Quit.")
-                    return;
-                }
-                const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
-                if (selectedProfile === undefined) {
-                    Log.error("Profile not selected in web mode. Quit.")
-                    return;
-                }
-
-                res.redirect('/main');  // Redirect to the protected page
-            }
-        );
 
         // HTTP POST requests
         // normally the communication should be through websocket, but some commands can only be done in http
-        this._server.post("/command",
+        server.post("/command",
             async (request: any, response: any) => {
                 // the received JSON is automatically parsed
                 const command = request.body["command"];
@@ -472,16 +189,70 @@ export class WebServer {
                 }
             });
 
-        // ----------------------- https ------------------------------
-        const httpsOptions = this.getHttpsOptions();
-        if (httpsOptions === undefined) {
-            return;
-        }
-        // listen to all network interfaces
-        this._httpsServer = https.createServer(httpsOptions, this.getServer()).listen(this.getPort(), "0.0.0.0", () => {
-            Log.info(`HTTPS Server running on port ${this.getPort()}`);
-        });
+
+        httpServer.listen(this.getPort(), "127.0.0.1");
+
+        this._httpServer = httpServer;
+        this._server = server;
     };
+
+    readFirstTdl = async (): Promise<{ tdl: type_tdl; fullTdlFileName: string; } | undefined> => {
+        const mainProcess = this.getMainProcess();
+        const profiles = mainProcess.getProfiles();
+        const windowAgentsManager = mainProcess.getWindowAgentsManager();
+        const selectedProfile = profiles.getSelectedProfile();
+        if (selectedProfile === undefined) {
+            return undefined;
+        }
+
+        let tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
+        let tdlFileName = tdlFileNames[0];
+        if (typeof tdlFileName !== "string") {
+            Log.error("No default TDL files");
+            return undefined;
+        }
+        let macros = selectedProfile.getMacros();
+        let currentTdlFolder: undefined | string = undefined;
+        const mode = selectedProfile.getMode() as "editing" | "operating";
+        const editable = selectedProfile.getEditable();
+
+        const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder)
+        if (tdlResult === undefined) {
+            Log.error("Cannot read tdl files", tdlFileNames);
+            return undefined;
+        }
+
+        return tdlResult;
+    }
+
+    createFirstDisplayWindowAgent = async (tdlResult: { tdl: type_tdl; fullTdlFileName: string; }): Promise<DisplayWindowAgent | undefined> => {
+
+        const mainProcess = this.getMainProcess();
+        const windowAgentsManager = mainProcess.getWindowAgentsManager();
+        const profiles = mainProcess.getProfiles();
+        const selectedProfile = profiles.getSelectedProfile();
+        if (selectedProfile === undefined) {
+            return undefined;
+        }
+        let macros = selectedProfile.getMacros();
+        const mode = selectedProfile.getMode() as "editing" | "operating";
+        const editable = selectedProfile.getEditable();
+
+        const tdl = tdlResult["tdl"];
+        const fullTdlFileName = tdlResult["fullTdlFileName"];
+        const options: type_options_createDisplayWindow = {
+            tdl: tdl,
+            mode: mode,
+            editable: editable,
+            tdlFileName: fullTdlFileName,
+            macros: macros,
+            replaceMacros: false,
+            hide: false,
+        };
+        const displayWindowId = windowAgentsManager.obtainDisplayWindowId();
+        const displayWindowAgent = await windowAgentsManager.createDisplayWindowAgent(options, displayWindowId);
+        return displayWindowAgent;
+    }
 
     getServer = () => {
         return this._server;
@@ -499,16 +270,8 @@ export class WebServer {
         return this._mainProcess;
     };
 
-    getHttpsServer = () => {
-        return this._httpsServer;
-    }
-
-    setHttpsOptions = (newOptions: { key: Buffer, cert: Buffer }) => {
-        this._httpsOptions = newOptions;
-    }
-
-    getHttpsOptions = () => {
-        return this._httpsOptions;
+    getHttpServer = () => {
+        return this._httpServer;
     }
 
 }
