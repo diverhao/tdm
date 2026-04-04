@@ -630,7 +630,8 @@ export class ContextMenu {
             label: "Reload Display",
             accelerator: "CmdOrCtrl+r",
             click: () => {
-                this.getDisplayWindowClient().reloadDisplay();
+                g_widgets1.reloadTdlFile();
+                // this.getDisplayWindowClient().reloadDisplay();
                 // this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "reload-display", undefined);
             },
         },
@@ -1323,7 +1324,8 @@ export class ContextMenu {
             label: "Reload Display",
             accelerator: "CmdOrCtrl+r",
             click: () => {
-                this.getDisplayWindowClient().reloadDisplay();
+                // this.getDisplayWindowClient().reloadDisplay();
+                g_widgets1.reloadTdlFile();
                 // this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "reload-display", undefined);
             },
         },
@@ -1585,7 +1587,8 @@ export class ContextMenu {
             label: "Reload Display",
             accelerator: "CmdOrCtrl+r",
             click: () => {
-                this.getDisplayWindowClient().reloadDisplay();
+                // this.getDisplayWindowClient().reloadDisplay();
+                g_widgets1.reloadTdlFile();
                 // this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, "reload-display", undefined);
             },
         },

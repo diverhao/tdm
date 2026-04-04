@@ -393,7 +393,7 @@ export class WindowAgentsManager {
                         hide: false,
                         windowId: windowId,
                     };
-                    
+
                     // await this.createDisplayWindow(options);
                     this.createDisplayWindow(options);
                 } catch (e) {

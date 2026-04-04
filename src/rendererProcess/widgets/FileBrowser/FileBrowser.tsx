@@ -1282,7 +1282,6 @@ export class FileBrowser extends BaseWidget {
                         macros: [],
                         replaceMacros: false,
                         currentTdlFolder: this.getFolderPath(),
-                        // openInSameWindow: false,
                         windowId: displayWindowId,
                     }
                 })

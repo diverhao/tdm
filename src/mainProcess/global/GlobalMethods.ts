@@ -428,6 +428,7 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
                         attach: -1, // ignored as the attach port is set when the MainProcesses is created
                         flexibleAttach: true, // ignored, same reason as above
                         httpServerPort: 3000, // ignored, same reason as above
+                        httpServerBasePath: "/",
                         site: "", // ignored
                         mainProcessMode: "desktop", // this function is called only in desktop mode
                     },

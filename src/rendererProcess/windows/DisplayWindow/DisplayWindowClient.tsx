@@ -196,30 +196,6 @@ export class DisplayWindowClient {
         sessionStorage.setItem("pageData", JSON.stringify(pageData));
     }
 
-    /**
-     * After the window refreshed and the websocket is connected
-     */
-    // handlePageRefresh = async () => {
-    //     const pageDataStr = sessionStorage.getItem("pageData");
-
-    //     if (this.getMainProcessMode() === "web" && pageDataStr !== null) {
-    //         Log.info("Refresh web page.")
-    //         const currentSite = `https://${window.location.host}/`;
-    //         const pageData = JSON.parse(pageDataStr);
-
-    //         const response = await this.getIpcManager().sendPostRequestCommand(
-    //             "open-tdl-file", { ...pageData, count: sessionStorage.getItem("counter") }
-    //         )
-
-    //         const data = await response.json() as any;
-    //         const ipcServerPort = data["ipcServerPort"];
-    //         // it may come back a new display window ID
-    //         const displayWindowId = data["displayWindowId"];
-    //         const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
-    //         window.location.href = href;
-    //     }
-    // }
-
     moveWindow = (dx: number, dy: number) => {
         this.getIpcManager().sendFromRendererProcess("move-window", {
             displayWindowId: this.getWindowId(),
@@ -1480,12 +1456,6 @@ export class DisplayWindowClient {
         } catch (err) {
             Log.error('Error capturing screenshot:', err);
         }
-    }
-
-
-
-    reloadDisplay = () => {
-        location.reload();
     }
 
     // -------------------- context menu -------------------------

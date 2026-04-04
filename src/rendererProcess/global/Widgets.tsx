@@ -3124,7 +3124,8 @@ export class Widgets {
     // (3) remove all widgets hard, including Canvas and GroupSelection2, no flush to avoid white flash
     // (4) asks main process to read (not re-read per see) the tdl file, and send it
     //     mode, editable, external macros are all preserved
-    loadTdlFile = () => {
+    reloadTdlFile = () => {
+        console.log("------------------- reload tdl file")
         // (1)
         this.destroyAllTcaChannels();
         // (2)
@@ -3135,9 +3136,9 @@ export class Widgets {
         const externalMacros = structuredClone(this.getRoot().getExternalMacros());
         const externalReplaceMacros = this.getRoot().getUseExternalMacros();
         // (3)
-        this.removeAllWidgetsHard(false);
+        // this.removeAllWidgetsHard(false);
         // (4)
-        this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("load-tdl-file", {
+        this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("reload-tdl-file", {
             displayWindowId: windowId,
             tdlFileName: tdlFileName,
             mode: rendererWindowStatus,

@@ -50,7 +50,6 @@ export class PromptOnDisplayWindow extends Prompt {
                                 macros: [],
                                 replaceMacros: true, // not used
                                 // currentTdlFolder: currentTdlFolder,
-                                // openInSameWindow: false,
                                 windowId: this.getDisplayWindowClient().getWindowId(),
                             }
                         });
@@ -91,7 +90,6 @@ export class PromptOnDisplayWindow extends Prompt {
                                     macros: [],
                                     replaceMacros: true, // not used
                                     // currentTdlFolder: currentTdlFolder,
-                                    // openInSameWindow: false,
                                     windowId: this.getDisplayWindowClient().getWindowId(),
                                 }
                             });

@@ -10,6 +10,7 @@ import { SshServer } from "./SshServer";
 import https from "https";
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import { IncomingMessage } from "http";
+import { FileReader } from "../file/FileReader";
 
 /**
  * Manage IPC messages sent from renderer process.
@@ -301,7 +302,7 @@ export class IpcManagerOnMainProcess {
 
         // ------------------------- display window files ------------------------
         this.ipcMain.on("open-tdl-file", this.handleOpenTdlFiles);
-        this.ipcMain.on("load-tdl-file", this.handleLoadTdlFile);
+        this.ipcMain.on("reload-tdl-file", this.handleReloadTdlFile);
         this.ipcMain.on("save-tdl-file", this.handleSaveTdlFile);
         this.ipcMain.on("load-db-file-contents", this.handleLoadDbFileContents);
         this.ipcMain.on("save-data-to-file", this.handleSaveDataToFile);
@@ -791,6 +792,40 @@ export class IpcManagerOnMainProcess {
         }
     };
 
+
+    handleReloadTdlFile = async (event: WebSocket | string, data: IpcEventArgType["reload-tdl-file"]) => {
+
+        const { displayWindowId, tdlFileName, mode, editable, externalMacros, replaceMacros } = data;
+
+        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
+
+        const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
+        if (selectedProfile === undefined) {
+            Log.error("Profile not selected!");
+            return;
+        }
+
+        let displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
+
+        if (displayWindowAgent instanceof DisplayWindowAgent) {
+            const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile);
+            if (tdlResult === undefined) {
+                Log.error(`Cannot read file ${tdlFileName}`);
+                return;
+            }
+            const { tdl, fullTdlFileName } = tdlResult;
+            displayWindowAgent.setTdl(tdl);
+            displayWindowAgent.setInitialMode(mode);
+            displayWindowAgent.setMacros(externalMacros);
+            displayWindowAgent.setReplaceMacros(replaceMacros);
+
+            await displayWindowAgent.getDisplayWindowLifeCycleManager().updateTdl();
+
+        } else {
+            Log.error(`Unsupported window agent type for window ${displayWindowId}. Cancel opening TDL file.`);
+        }
+    };
+
     handleLoadDbFileContents = async (event: WebSocket | string, data: IpcEventArgType["load-db-file-contents"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
@@ -799,40 +834,6 @@ export class IpcManagerOnMainProcess {
         }
 
         await displayWindowAgent.getDisplayWindowFile().loadDbFileContents(data);
-    };
-
-    /**
-     * Re-read or read a tdl file and update the existing display window with the new TDL file. 
-     * It is similar to `open-tdl-file`, but it does not create a new Display Window.
-     * 
-     * This method does not accept TDL json as input argument.
-     * 
-     * @param {string} displayWindowId Display window ID, this display window will be updated.
-     * 
-     * @param {string} tdlFileName The absolute tdl file name that will be read/re-read. Can be an absolute
-     *                             file path or an empty string. If the empty string, we will load an blank TDL.
-     * 
-     * @param {"editing" | "operating"} mode The display window status (mode) of this display window
-     * 
-     * @param {boolean} editable If this display window is editable
-     * 
-     * @param {[string, string][]} macros Externally provided macros
-     * 
-     * @param {boolean} replaceMacros If the externally provided macros should replace internally defined macros
-     */
-    handleLoadTdlFile = async (event: WebSocket | string, options: IpcEventArgType["load-tdl-file"],) => {
-        const { displayWindowId } = options;
-        const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-        try {
-            const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
-            if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
-                const errMsg = `Display window ${displayWindowId} does not exists`;
-                throw new Error(errMsg);
-            }
-            await displayWindowAgent.getDisplayWindowFile().loadTdlFile(options);
-        } catch (e) {
-            Log.error(e);
-        }
     };
 
     /**

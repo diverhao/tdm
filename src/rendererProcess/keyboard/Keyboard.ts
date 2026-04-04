@@ -272,7 +272,7 @@ export class Keyboard {
 
     on_r_down = () => {
         if (this.onlyMetaDown()) {
-            g_widgets1.loadTdlFile();
+            g_widgets1.reloadTdlFile();
         }
     }
 

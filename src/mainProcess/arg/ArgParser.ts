@@ -17,6 +17,7 @@ const dashdashHelp = `--help`;
 const dashdashLogLevel = `--log-level`;
 const dashdashLogStackTrace = `--log-stack-trace`;
 const dashMainProcessMode = `--main-process-mode`; // "web" | "desktop"
+const dashdashHttpServerBasePath = `--http-server-base-path`;
 
 export class ArgParser {
     constructor() { }
@@ -61,6 +62,7 @@ Options:
             cwd: process.cwd(),
             mainProcessMode: "desktop",
             httpServerPort: defaultWebServerPort,
+            httpServerBasePath: "/",
             site: site,
         };
 
@@ -94,6 +96,9 @@ Options:
                     this.parseLogLevel(argv[ii]);
                 } else if (arg === dashdashLogStackTrace) {
                     this.parseLogStackTrace();
+                } else if (arg === dashdashHttpServerBasePath) {
+                    ii++;
+                    result["httpServerBasePath"] = argv[ii];
                 } else if (arg === dashdashAttach) {
                     let port = this.parseAttach(argv[ii + 1]);
                     if (port === -3) {
@@ -150,6 +155,7 @@ Options:
                 cwd: process.cwd(),
                 mainProcessMode: "desktop",
                 httpServerPort: 3000,
+                httpServerBasePath: "/",
                 site: site,
             };
             return resultTmp;

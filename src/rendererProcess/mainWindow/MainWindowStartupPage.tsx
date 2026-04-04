@@ -594,6 +594,7 @@ export class MainWindowStartupPage {
                             cwd: "",
                             mainProcessMode: "desktop", // | "web"; // "ssh-server" or "ssh-client" mode process can only be created inside the program
                             httpServerPort: 3000,
+                            httpServerBasePath: "/",
                             site: "",
                         }
 
@@ -627,27 +628,27 @@ export class MainWindowStartupPage {
             // in the desktop version, the above "profile-selected" event creates the display windows (BrowserWindow) 
             // from main process. In web version, we cannot create a new web browser tab/window from server side.
             // Basically we ask for the ipcServerPort and displayWindowId from web server.
-            else if (mainProcessMode === "web") {
-                const currentSite = window.location.href;
-                fetch(`${currentSite}command`, {
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        command: "profile-selected",
-                        data: profileName
-                    })
-                }).then((response: any) => {
-                    // decode string
-                    return response.json()
-                }).then(data => {
-                    const ipcServerPort = data["ipcServerPort"];
-                    const displayWindowId = data["displayWindowId"];
-                    // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`)
-                    window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`)
-                })
-            }
+            // else if (mainProcessMode === "web") {
+                // const currentSite = window.location.href;
+                // fetch(`${currentSite}command`, {
+                //     method: "POST",
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //     },
+                //     body: JSON.stringify({
+                //         command: "profile-selected",
+                //         data: profileName
+                //     })
+                // }).then((response: any) => {
+                //     // decode string
+                //     return response.json()
+                // }).then(data => {
+                //     const ipcServerPort = data["ipcServerPort"];
+                //     const displayWindowId = data["displayWindowId"];
+                //     // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`)
+                //     window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`)
+                // })
+            // }
         }, [profileName, mainProcessMode]);
 
         return (

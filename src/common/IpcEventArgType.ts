@@ -31,6 +31,7 @@ export type type_args = {
     cwd: string;
     mainProcessMode: "desktop" | "web" | "ssh-server" | "ssh-client"; // "ssh-client" mode process can only be created inside the program
     httpServerPort: number;
+    httpServerBasePath: string;
     site: string;
 };
 
@@ -257,14 +258,13 @@ export type IpcEventArgType = {
         },
     },
 
-    "load-tdl-file": {
+    "reload-tdl-file": {
         displayWindowId: string;
         tdlFileName: string;
         mode: "editing" | "operating";
         editable: boolean;
         externalMacros: [string, string][];
         replaceMacros: boolean;
-        currentTdlFolder?: string;
     },
 
     "save-tdl-file": {

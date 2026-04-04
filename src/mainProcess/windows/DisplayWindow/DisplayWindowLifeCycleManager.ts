@@ -95,9 +95,6 @@ export class DisplayWindowLifeCycleManager {
         this.websocketIpcConnectedPromise = new Promise((resolve, reject) => {
             this.setWebsocketIpcConnectedResolve(resolve);
         });
-        this.newTdlRenderedPromise = new Promise<{ windowName: string, tdlFileName: string }>((resolve, reject) => {
-            this.setNewTdlRenderedResolve(resolve);
-        });
 
         const mainProcessMode = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
         if (mainProcessMode === "ssh-server") {
@@ -118,11 +115,15 @@ export class DisplayWindowLifeCycleManager {
         this.sendBasicDisplayWindowInfo();
 
         await this.updateTdl();
+
     };
 
     updateTdl = async () => {
         this.sendNewTdl();
         // wait for new-tdl-rendered, it means the GUI is done
+        this.newTdlRenderedPromise = new Promise<{ windowName: string, tdlFileName: string }>((resolve, reject) => {
+            this.setNewTdlRenderedResolve(resolve);
+        });
         const result = await this.newTdlRenderedPromise;
         this.setNewTdlRenderedResolve(undefined);
 
@@ -367,7 +368,7 @@ export class DisplayWindowLifeCycleManager {
                     return;
                 }
 
-                
+
 
                 initiatedByWindowAgent.sendFromMainProcess("open-display-window-in-web-browser", {
                     displayWindowId: displayWindowAgent.getId(),

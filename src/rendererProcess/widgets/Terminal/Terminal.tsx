@@ -542,7 +542,6 @@ export class Terminal extends BaseWidget {
                             macros: [],
                             replaceMacros: false, // not used
                             currentTdlFolder: currentTdlFolder,
-                            // openInSameWindow: false,
                             windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
                         }
                     });

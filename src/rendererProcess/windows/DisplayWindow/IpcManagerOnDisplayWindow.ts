@@ -486,7 +486,7 @@ export class IpcManagerOnDisplayWindow {
         } else if (command === "execute-display") {
             g_widgets1.setMode(rendererWindowStatus.operating, true, true);
         } else if (command === "reload-display") {
-            g_widgets1.loadTdlFile();
+            g_widgets1.reloadTdlFile();
         } else if (command === "save-display") {
             g_widgets1.getRoot().getDisplayWindowClient().saveTdl(this.getDisplayWindowClient().getTdlFileName());
         } else if (command === "save-display-as") {
@@ -1319,20 +1319,11 @@ export class IpcManagerOnDisplayWindow {
 
     handleOpenDisplayWindowInWebBrowser = (event: string, data: IpcEventArgType2["open-display-window-in-web-browser"]) => {
         const { displayWindowId } = data;
-        // const currentSite = `https://${window.location.host}/`;
-        // const currentSite = `${window.location.origin}/`;
         const displayWindowClient = this.getDisplayWindowClient();
         const httpScheme = window.location.protocol;
-        // const webPath = displayWindowClient.getWebPath();
-        // const href = `${httpScheme}//${webPath}/DisplayWindow.html?displayWindowId=${displayWindowId}`;
-        // console.log("web path =============================", href, httpScheme)
-        // window.open(href, "_blank", "noopener, noreferrer")
-
-        const url = `${httpScheme}//${displayWindowClient.getWebPath()}/DisplayWindow.html?displayWindowId=${displayWindowId}`;
-        console.log("fetch ------------------------", url)
-        // fetch(url, {});
+        const webPath = displayWindowClient.getWebPath();
+        const url = `${httpScheme}//${webPath}/DisplayWindow.html?displayWindowId=${displayWindowId}`;
         window.open(url, "_blank", "noopener,noreferrer");
-
     }
 
     /**

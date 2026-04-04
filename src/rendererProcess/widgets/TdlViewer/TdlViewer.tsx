@@ -195,7 +195,6 @@ export class TdlViewer extends BaseWidget {
                                     macros: externalMacros,
                                     replaceMacros: false, // not used
                                     currentTdlFolder: "",
-                                    // openInSameWindow: false,
                                     windowId: displayWindowClient.getWindowId(),
                                 }
                             })

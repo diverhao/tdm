@@ -365,38 +365,21 @@ export class ActionButton extends BaseWidget {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const currentTdlFileName = displayWindowClient.getTdlFileName();
         const currentTdlFolder = path.dirname(currentTdlFileName);
-        const openInSameWindow = displayConfig["openInSameWindow"];
-
-        if (openInSameWindow === true) {
-            const displayWindowId = displayWindowClient.getWindowId();
-            ipcManager.sendFromRendererProcess(
-                "load-tdl-file", {
-                displayWindowId: displayWindowId,
-                tdlFileName: tdlFileName,
-                mode: mode,
-                editable: editable,
-                externalMacros: externalMacros,
-                replaceMacros: true,
-                currentTdlFolder: currentTdlFolder
-            }
-            );
+        if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
+            ipcManager.sendFromRendererProcess("open-tdl-file", {
+                options: {
+                    tdlFileNames: [tdlFileName],
+                    mode: mode,
+                    editable: editable,
+                    macros: externalMacros,
+                    replaceMacros: true, // not used
+                    currentTdlFolder: currentTdlFolder,
+                    windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
+                }
+            });
         } else {
-            if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-                ipcManager.sendFromRendererProcess("open-tdl-file", {
-                    options: {
-                        tdlFileNames: [tdlFileName],
-                        mode: mode,
-                        editable: editable,
-                        macros: externalMacros,
-                        replaceMacros: true, // not used
-                        currentTdlFolder: currentTdlFolder,
-                        windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                    }
-                });
-            } else {
-                // web mode
-                displayWindowClient.openTdlFileInWebMode(tdlFileName);
-            }
+            // web mode
+            displayWindowClient.openTdlFileInWebMode(tdlFileName);
         }
     };
 

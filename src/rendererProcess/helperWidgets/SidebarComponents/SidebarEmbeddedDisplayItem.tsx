@@ -119,7 +119,6 @@ export class SidebarEmbeddedDisplayItem {
                                             replaceMacros: true,
                                             currentTdlFolder: currentTdlFolder,
                                             windowId: displayWindowId,
-                                            // sendContentsToWindow?: boolean;
                                         }
                                     });
                                 }}

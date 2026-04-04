@@ -526,46 +526,6 @@ export class DisplayWindowFile {
         }
     }
 
-    loadTdlFile = async (options: IpcEventArgType["load-tdl-file"]): Promise<void> => {
-        const { tdlFileName, mode, editable, externalMacros, replaceMacros, currentTdlFolder } = options;
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        const selectedProfile = displayWindowAgent.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
-        if (selectedProfile === undefined) {
-            Log.error("Profile not selected.");
-            return;
-        }
-
-        if (tdlFileName === "") {
-            displayWindowAgent.sendFromMainProcess("new-tdl", {
-                newTdl: FileReader.getBlankWhiteTdl(),
-                tdlFileName: "",
-                initialModeStr: mode,
-                editable: editable,
-                externalMacros: externalMacros,
-                useExternalMacros: replaceMacros,
-                utilityType: undefined,
-                utilityOptions: {},
-            });
-            return;
-        }
-
-        const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder);
-        if (tdlResult === undefined) {
-            return;
-        }
-
-        displayWindowAgent.sendFromMainProcess("new-tdl", {
-            newTdl: tdlResult["tdl"],
-            tdlFileName: tdlResult["fullTdlFileName"],
-            initialModeStr: mode,
-            editable: editable,
-            externalMacros: externalMacros,
-            useExternalMacros: replaceMacros,
-            utilityType: undefined,
-            utilityOptions: {},
-        });
-    }
-
     saveDataViewerData = (
         options: IpcEventArgType["data-viewer-export-data"]
     ) => {

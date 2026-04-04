@@ -302,7 +302,6 @@ export class SidebarActionOpenDisplayItem {
                                 macros: externalMacros,
                                 replaceMacros: true, // not used
                                 currentTdlFolder: currentTdlFolder,
-                                // openInSameWindow: false,
                                 windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
                             }
                         });

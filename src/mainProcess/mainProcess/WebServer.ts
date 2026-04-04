@@ -60,7 +60,6 @@ export class WebServer {
                 return;
             }
             if (displayWindowAgent instanceof DisplayWindowAgent) {
-                console.log("indowId:", displayWindowAgent.getId())
                 response.type("html").send(generateDisplayWindowHtml({
                     basePath: this.getBasePath(),
                     displayWindowId: displayWindowAgent.getId(),
@@ -81,11 +80,42 @@ export class WebServer {
                 Log.error("Cannot extrat displayWindowId from GET");
                 return;
             }
+
             response.type("html").send(generateDisplayWindowHtml({
                 basePath: this.getBasePath(),
                 displayWindowId: displayWindowId,
             }));
+            // const lifeCycleManager = displayWindowAgent.getDisplayWindowLifeCycleManager();
+            // // after the ipc is connected
+            // lifeCycleManager.createBrowserWindow({}, true);
+
         })
+
+        // todo: test
+        server.set("trust proxy", true);
+
+        const authMiddleware = (req: any, res: any, next: any) => {
+            const remoteAddr = req.socket.remoteAddress;
+            if (remoteAddr !== "127.0.0.1" && remoteAddr !== "::1") {
+                return res.status(403).send("Forbidden");
+            }
+
+            const user = req.header("x-forwarded-user");
+            if (!user) {
+                return res.status(401).send("Unauthorized");
+            }
+
+            req.session.user = {
+                name: user,
+                email: req.header("x-forwarded-email") ?? "",
+                groups: (req.header("x-forwarded-groups") ?? "").split(",").map((s: string) => s.trim()).filter(Boolean),
+            };
+
+            next();
+        };
+
+        // server.use(authMiddleware);
+
 
         // order matters, put them at last
         server.use(this.getBaseRoute(), express.static(path.join(__dirname, "../../webpack")));
@@ -103,113 +133,9 @@ export class WebServer {
                 Log.debug("Received POST request from", request.socket.address(), "command =", command);
                 const data = request.body["data"];
                 if (command === "profile-selected") {
-                    // const profileName = data;
-                    // this.getMainProcess().getIpcManager().handleProfileSelected(undefined, {
-                    //     selectedProfileName: profileName,
-                    //     args: undefined,
-                    //     httpResponse: response,
-                    // });
-                } else if (command === "open-tdl-file") {
-                    // const options = data;
-                    // options["postCommand"] = command;
-                    // const {displayWindowId, tdlFileName, mode, macros,editable, replaceMacros } = options;
-                    // Log.info(data);
-                    // this.getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
-                    //     {
-                    //         options: options,
-                    //     }
-                    // );
-
-                    // response.redirect(`<html>OKOKOK</html>`)
-                    // response.json({
-                    //     abc: 333,
-                    // })
-                } else if (command === "duplicate-display") {
-                    // const options = data;
-                    // Log.debug(data);
-                    // this.getMainProcess().getIpcManager().handleDuplicateDisplay(undefined,
-                    //     {
-                    //         options: options,
-                    //         httpResponse: response,
-                    //     }
-                    // );
-                } else if (command === "create-utility-display-window") {
-                    // const utilityType = data["utilityType"];
-                    // const utilityOptions = data["utilityOptions"];
-                    // Log.debug(data);
-                    // this.getMainProcess().getIpcManager().createUtilityDisplayWindow(undefined,
-                    //     {
-                    //         utilityType: utilityType,
-                    //         utilityOptions: utilityOptions,
-                    //         httpResponse: response,
-                    //     }
-                    // );
-                } else if (command === "create-new-display-in-web-mode") {
-                    // Log.debug(data);
-                    // this.getMainProcess().getWindowAgentsManager().createBlankDisplayWindow(response);
-                } else if (command === "media") {
-                    // Log.debug(data);
-                    // try {
-                    //     const fullFileName = data["fullFileName"];
-                    //     const fileBuffer = fs.readFileSync(fullFileName);
-                    //     const fileBase64Str = fileBuffer.toString("base64");
-                    //     response.send(JSON.stringify({ content: fileBase64Str }));
-                    // } catch (e) {
-                    //     Log.error("Cannot read file", data["imageFileName"])
-                    //     response.send(JSON.stringify({ image: "" }));
-                    // }
-                } else if (command === "get-ipc-server-port") {
-                    // sent out during the DisplayWindow.html is loading, before the DisplayWindowClient object is created, the html file has had the 
-                    // display window ID, but needs the websocket IPC server port
-                    // after the html page obtains this port, it will 
-                    // this is not sent via IpcManagerOnDisplayWindow.sendPostRequestCommand()
-                    // it is directly sent through fetch API, beacuse the DisplayWindowClient is not created yet!
-                    // response.json({
-                    //     ipcServerPort: this.getMainProcess().getIpcManager().getPort(),
-                    // });
-
-                } else if (command === "create-display-window-agent") {
-                    // when a webpage refreshes, the server needs to re-create the DisplayWindowAgent object
-
-                    // the data contains the information of the page page
-                    const { tdlFileNames, mode, editable, macros, currentTdlFolder } = JSON.parse(data);
-                    const tdlFileName = tdlFileNames[0];
-                    const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
-                    const windowId = "0";
-
-                    // create the DisplayWindowAgent object for this web page, then send
-                    // back the display window ID, so that the webpage can proceed to load with 
-                    const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
-
-                    // read the file
-                    const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder)
-                    if (tdlResult !== undefined) {
-                        const tdl = tdlResult["tdl"];
-                        const fullTdlFileName = tdlResult["fullTdlFileName"];
-                        const options: type_options_createDisplayWindow = {
-                            tdl: tdl,
-                            mode: mode,
-                            editable: editable,
-                            tdlFileName: fullTdlFileName,
-                            macros: macros,
-                            replaceMacros: false,
-                            hide: false,
-                            windowId: windowId,
-                        };
-                        const displayWindowId = windowAgentsManager.obtainDisplayWindowId();
-                        await windowAgentsManager.createDisplayWindowAgent(options, displayWindowId);
-                        const ipcServerPort = this.getMainProcess().getIpcManager().getPort();
-                        response.json({
-                            command: "create-display-window-agent",
-                            data: {
-                                displayWindowId: displayWindowId,
-                                ipcServerPort: ipcServerPort,
-                            }
-                        })
-                    } else {
-                        Log.error(`Failed to refresh the webpage for file ${tdlFileName}`);
-                    }
+                } else {
                 }
+
             });
 
 
