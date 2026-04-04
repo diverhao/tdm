@@ -973,10 +973,16 @@ export class IpcManagerOnMainProcess {
         );
     };
 
+    /**
+     * client sends a ping every 10 seconds or when a new tdl is rendered
+     * 
+     * if the server does not receive the ping in 30 seconds, it will clear the resource
+     */
     handlePing = (event: WebSocket | string, data: IpcEventArgType["ping"]) => {
         const { displayWindowId } = data;
         const windowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (windowAgent instanceof DisplayWindowAgent) {
+            windowAgent.updateHeartBeat();
             windowAgent.sendFromMainProcess("pong", data)
         } else if (windowAgent === undefined) {
             Log.error(`No such display window ${displayWindowId}. Cancel ping response.`);

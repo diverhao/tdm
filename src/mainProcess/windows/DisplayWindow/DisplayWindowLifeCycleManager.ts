@@ -55,6 +55,19 @@ export class DisplayWindowLifeCycleManager {
     private _browserWindow: BrowserWindow | undefined;
     private _hiddenWindow = false;
     private _readyToClose = false;
+    private _lastHeartBeat = 0;
+
+    private checkHeartBeatInterval = setInterval(() => {
+        if (this.getLastHeartBeat() === 0) {
+            return;
+        }
+        if (Date.now() - this.getLastHeartBeat() > 30 * 1000) {
+            // destroy
+            Log.error("Lost heart beat from client, destroy local resource");
+            this.getDisplayWindowAgent().handleWindowClosed();
+        }
+    }, 1000)
+
 
     /**
      * One-shot resolver for the promise that blocks window startup until the
@@ -103,6 +116,7 @@ export class DisplayWindowLifeCycleManager {
             await this.createBrowserWindowInDesktopMode(options);
         } else if (mainProcessMode === "web") {
             if (webRootRequest == true) {
+                // see WebServer.ts for details
             } else {
                 this.createBrowserWindowInWebMode(options);
             }
@@ -507,6 +521,8 @@ export class DisplayWindowLifeCycleManager {
 
         this.getWebsocketIpcConnectedResolve()?.();
 
+        clearInterval(this.checkHeartBeatInterval);
+
         const ipcManager = displayWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager();
         ipcManager.removeClient(displayWindowAgent.getId());
 
@@ -714,4 +730,11 @@ export class DisplayWindowLifeCycleManager {
         this._newTdlRenderedResolve = resolve;
     };
 
+    updateHeartBeat = () => {
+        this._lastHeartBeat = Date.now();
+    }
+
+    getLastHeartBeat = () => {
+        return this._lastHeartBeat;
+    }
 }

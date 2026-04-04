@@ -485,6 +485,10 @@ export class DisplayWindowAgent {
 
     // --------------------- window lifecycle ---------
 
+    updateHeartBeat = () => {
+        this.getDisplayWindowLifeCycleManager().updateHeartBeat();
+    }
+    
     createBrowserWindow = async (options: any = undefined) => {
         await this.getDisplayWindowLifeCycleManager().createBrowserWindow(options);
     };

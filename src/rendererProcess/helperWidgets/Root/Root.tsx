@@ -131,10 +131,6 @@ export class Root {
                     }
                 );
                 Log.info("New tdl", this.getDisplayWindowClient().getTdlFileName(), "rendered")
-                if (this.getDisplayWindowClient().getMainProcessMode() === "web") {
-                    this.getDisplayWindowClient().savePageData();
-                    Log.info("Saved page data for refresh");
-                }
 
                 // lazy render ActionButtons
                 // because this rendering only happens once, for newly created ActionButton widget, 

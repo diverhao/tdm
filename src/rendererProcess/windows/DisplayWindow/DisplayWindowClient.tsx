@@ -100,10 +100,6 @@ export class DisplayWindowClient {
     private _symbolGallery: SymbolGallery;
     private _channelNameHint: ChannelNameHint;
 
-    private _basePath = "/";
-
-
-
     constructor(displayWindowId: string, ipcServerPort: number | undefined, hostname: string | undefined = undefined) {
         // set log level
         Log.setLogLevel(type_log_levels.info);
@@ -113,8 +109,6 @@ export class DisplayWindowClient {
         this._loadCustomFonts();
         // do it first
         this.setWindowId(displayWindowId);
-
-        this._basePath = (window as any).basePath;
 
         // in web mode, the server does not provide the ipcServerPort, the websocket server
         // uses the https port (default 443)
@@ -161,40 +155,6 @@ export class DisplayWindowClient {
     }
 
 
-    /**
-     * Save the page data after the webpage is rendered for the first time.
-     * 
-     * It is prepared for the page refreshing in web mode.
-     */
-    savePageData = () => {
-        // save page data only once
-        if (sessionStorage.getItem("pageData") !== null) {
-            return;
-        }
-
-        const tdlFileName = this.getTdlFileName();
-        const mode = g_widgets1.getRendererWindowStatusStr();
-        const editable = g_widgets1.getRoot().getEditable();
-
-        const canvas = g_widgets1.getWidget("Canvas") as Canvas;
-        const macros = canvas.getAllMacros();
-
-        const replaceMacros = false;
-
-        const currentTdlFolder = path.dirname(tdlFileName);
-        const openInSameWindow = true;
-        const pageData = {
-            tdlFileNames: [tdlFileName],
-            mode: mode,
-            editable: editable,
-            macros: macros,
-            replaceMacros: replaceMacros, // not used
-            currentTdlFolder: currentTdlFolder,
-            openInSameWindow: openInSameWindow,
-            windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-        };
-        sessionStorage.setItem("pageData", JSON.stringify(pageData));
-    }
 
     moveWindow = (dx: number, dy: number) => {
         this.getIpcManager().sendFromRendererProcess("move-window", {

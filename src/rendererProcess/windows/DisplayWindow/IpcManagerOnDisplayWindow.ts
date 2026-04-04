@@ -67,6 +67,14 @@ export class IpcManagerOnDisplayWindow {
             this.connectIpcServer(true);
         }
         // else: it is good, do nothing
+
+        // ping-poing
+
+        this.sendFromRendererProcess("ping", {
+            displayWindowId: this.getDisplayWindowClient().getWindowId(),
+            id: "0",
+            time: performance.now(),
+        })
     }
 
     connectIpcServer = (reconnect: boolean = false) => {
