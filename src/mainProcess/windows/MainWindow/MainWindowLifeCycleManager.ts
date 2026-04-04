@@ -102,27 +102,27 @@ export class MainWindowLifeCycleManager {
         } else if (mainProcesMode === "web") {
             const ipcServerPort = windowAgentsManager.getMainProcess().getIpcManager().getPort();
 
-            httpResponse.send(
-                `
-                <html>
-                    <body style="margin: 0px; padding: 0px">
-                        <div id="root"></div>
-                        <script>
-                            var exports = {};
-                        </script>
+            // httpResponse.send(
+            //     `
+            //     <html>
+            //         <body style="margin: 0px; padding: 0px">
+            //             <div id="root"></div>
+            //             <script>
+            //                 var exports = {};
+            //             </script>
     
-                        <script type="module" src="/MainWindowClient.js"></script>
+            //             <script type="module" src="/MainWindowClient.js"></script>
     
-                        <script type="module">
-                            const urlParams = new URLSearchParams(window.location.search);
-                            const ipcServerPort = urlParams.get("ipcServerPort");
-                            const mainWindowId = urlParams.get("mainWindowId");
-                            new window.MainWindowClientClass("${mainWindowAgent.getId()}", ${ipcServerPort});
-                        </script>
-                    </body>
-                </html>
-                `,
-            );
+            //             <script type="module">
+            //                 const urlParams = new URLSearchParams(window.location.search);
+            //                 const ipcServerPort = urlParams.get("ipcServerPort");
+            //                 const mainWindowId = urlParams.get("mainWindowId");
+            //                 new window.MainWindowClientClass("${mainWindowAgent.getId()}", ${ipcServerPort});
+            //             </script>
+            //         </body>
+            //     </html>
+            //     `,
+            // );
             return;
         }
 

@@ -115,7 +115,7 @@ export class IpcManagerOnMainProcess {
 
         const websocketServer = new WebSocketServer({
             server: httpServer,
-            path: "/ipc",
+            path: webServer.withBasePath("/ipc"),
         });
 
         return websocketServer;

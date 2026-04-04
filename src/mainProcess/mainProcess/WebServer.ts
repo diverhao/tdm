@@ -9,17 +9,19 @@ import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent"
 import { FileReader } from "../file/FileReader";
 import { type_options_createDisplayWindow } from "../windows/WindowAgentsManager";
 import { type_tdl } from "../../common/GlobalVariables";
+import { generateDisplayWindowHtml } from "../../common/GlobalMethods";
 
 export class WebServer {
-    _server: Express | undefined;
-    _mainProcess: MainProcess;
-    _port: number;
+    private _server: Express | undefined;
+    private _mainProcess: MainProcess;
+    private _port: number;
+    private _basePath: string;
     private _httpServer: http.Server | undefined;
 
-    constructor(mainProcess: MainProcess, port: number) {
+    constructor(mainProcess: MainProcess, port: number, basePath: string) {
         this._port = port;
         this._mainProcess = mainProcess;
-        // this.obtainLdapOptions()
+        this._basePath = this.normalizeBasePath(basePath);
         this.createServer();
     }
 
@@ -44,12 +46,9 @@ export class WebServer {
             saveUninitialized: true
         }));
 
-        server.use(express.static(path.join(__dirname, "../../webpack")));
-        server.use("/webpack", express.static(path.join(__dirname, "../../webpack")));
-
         // ----------------------- GET --------------------------------
 
-        server.get("/", async (request: IncomingMessage, response: any, next: any) => {
+        server.get(this.getBaseRoute(), async (request: IncomingMessage, response: any, next: any) => {
             Log.info("New http connection coming in from", request.socket.address());
             // read first tdl file
             const tdlResult = await this.readFirstTdl();
@@ -61,19 +60,43 @@ export class WebServer {
                 return;
             }
             if (displayWindowAgent instanceof DisplayWindowAgent) {
-                response.redirect(`/DisplayWindow.html?displayWindowId=${displayWindowAgent.getId()}`)
+                console.log("indowId:", displayWindowAgent.getId())
+                response.type("html").send(generateDisplayWindowHtml({
+                    basePath: this.getBasePath(),
+                    displayWindowId: displayWindowAgent.getId(),
+                }));
+
                 const lifeCycleManager = displayWindowAgent.getDisplayWindowLifeCycleManager();
                 // after the ipc is connected
                 lifeCycleManager.createBrowserWindow({}, true);
             }
         });
 
+        server.get(this.withBasePath("/DisplayWindow.html"), (request: any, response: any, next: any) => {
+            const displayWindowId =
+                typeof request.query.displayWindowId === "string"
+                    ? request.query.displayWindowId
+                    : "";
+            if (displayWindowId === "") {
+                Log.error("Cannot extrat displayWindowId from GET");
+                return;
+            }
+            response.type("html").send(generateDisplayWindowHtml({
+                basePath: this.getBasePath(),
+                displayWindowId: displayWindowId,
+            }));
+        })
+
+        // order matters, put them at last
+        server.use(this.getBaseRoute(), express.static(path.join(__dirname, "../../webpack")));
+        server.use(this.withBasePath("/webpack"), express.static(path.join(__dirname, "../../webpack")));
+
         // ------------------------ POST -----------------------------------
 
 
         // HTTP POST requests
         // normally the communication should be through websocket, but some commands can only be done in http
-        server.post("/command",
+        server.post(this.withBasePath("/command"),
             async (request: any, response: any) => {
                 // the received JSON is automatically parsed
                 const command = request.body["command"];
@@ -87,8 +110,8 @@ export class WebServer {
                     //     httpResponse: response,
                     // });
                 } else if (command === "open-tdl-file") {
-                    const options = data;
-                    options["postCommand"] = command;
+                    // const options = data;
+                    // options["postCommand"] = command;
                     // const {displayWindowId, tdlFileName, mode, macros,editable, replaceMacros } = options;
                     // Log.info(data);
                     // this.getMainProcess().getIpcManager().handleOpenTdlFiles(undefined,
@@ -98,9 +121,9 @@ export class WebServer {
                     // );
 
                     // response.redirect(`<html>OKOKOK</html>`)
-                    response.json({
-                        abc: 333,
-                    })
+                    // response.json({
+                    //     abc: 333,
+                    // })
                 } else if (command === "duplicate-display") {
                     // const options = data;
                     // Log.debug(data);
@@ -141,9 +164,9 @@ export class WebServer {
                     // after the html page obtains this port, it will 
                     // this is not sent via IpcManagerOnDisplayWindow.sendPostRequestCommand()
                     // it is directly sent through fetch API, beacuse the DisplayWindowClient is not created yet!
-                    response.json({
-                        ipcServerPort: this.getMainProcess().getIpcManager().getPort(),
-                    });
+                    // response.json({
+                    //     ipcServerPort: this.getMainProcess().getIpcManager().getPort(),
+                    // });
 
                 } else if (command === "create-display-window-agent") {
                     // when a webpage refreshes, the server needs to re-create the DisplayWindowAgent object
@@ -273,5 +296,24 @@ export class WebServer {
     getHttpServer = () => {
         return this._httpServer;
     }
+
+    getBasePath = () => {
+        return this._basePath;
+    }
+    private normalizeBasePath(basePath: string): string {
+        if (basePath === "" || basePath === "/") {
+            return "";
+        }
+        return basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
+    }
+
+    private getBaseRoute(): string {
+        return this._basePath === "" ? "/" : this._basePath;
+    }
+
+    withBasePath(suffix: string): string {
+        return this._basePath === "" ? suffix : `${this._basePath}${suffix}`;
+    }
+
 
 }

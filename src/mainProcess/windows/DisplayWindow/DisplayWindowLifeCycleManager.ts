@@ -354,7 +354,22 @@ export class DisplayWindowLifeCycleManager {
         if (options["windowId"] !== undefined) {
             const initiatedByWindowAgent = displayWindowAgent.getWindowAgentsManager().getAgent(options["windowId"]);
             if (initiatedByWindowAgent instanceof DisplayWindowAgent) {
-                initiatedByWindowAgent.sendFromMainProcess("display-window-id-for-open-tdl-file", {
+                const webServer = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getWebServer();
+                if (webServer === undefined) {
+                    // todo:
+                    Log.error("");
+                    return;
+                }
+                const httpServer = webServer.getHttpServer();
+                if (httpServer === undefined) {
+                    // todo:
+                    Log.error("");
+                    return;
+                }
+
+                
+
+                initiatedByWindowAgent.sendFromMainProcess("open-display-window-in-web-browser", {
                     displayWindowId: displayWindowAgent.getId(),
                 });
             }

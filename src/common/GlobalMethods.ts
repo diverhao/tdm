@@ -1381,3 +1381,68 @@ const _RGBA_COLORS: string[] = [
 export const generateRgbaColor = (index: number): string => {
     return _RGBA_COLORS[index % _RGBA_COLORS.length];
 };
+
+
+export function getBasePath(loc: Location): string {
+    let path = loc.pathname;
+
+    // Remove trailing slash, but keep root as "/".
+    path = path.replace(/\/+$/, "") || "/";
+
+    // Strip known TDM page names.
+    path = path.replace(/\/(?:DisplayWindow|MainWindow|HelpWindow)\.html$/, "") || "/";
+
+    return path;
+}
+
+export const generateDisplayWindowHtml = (option: {basePath: string, displayWindowId: string}) => {
+
+    const {basePath, displayWindowId} = option;
+
+    return (
+        `
+<!DOCTYPE html>
+
+<html>
+	<head>
+	</head>
+
+	<body style="-webkit-print-color-adjust: exact; width: 100%; height: 100%;">
+		<div id="root"></div>
+		<!-- one solution for Electron's "exports is not defined" error -->
+		<!-- We must also change "nodeIntegration" and "contextIsolation" in "app.js" -->
+		<!-- https://stackoverflow.com/questions/54619111/typescript-electron-exports-is-not-defined -->
+		<!-- another solution for Electron's "exports is not defined" error -->
+		<!-- manually define a global variable "exports" -->
+		<script>
+			var exports = {};
+            window.basePath = ${JSON.stringify(basePath)};
+		</script>
+
+		<!-- load from webpack package  -->
+		<!-- the webpack package is transpiled to ESM module type (import/export), it can be loade by both -->
+		<!-- electron.js and browser. The embedded display (iframe) can be correctly displayed in this way. -->
+		<!-- it takes a significant amount of time to bundle the stuff -->
+		<!-- one significant difference between bundled and un-bundled versions is the __dirname is always / in bundled -->
+		<!-- version. In un-bundled version, the __dirname is the .js file's path on hard drive -->
+		<!-- The relative path for img (e.g. "../../abc.svg") is w.r.t. this html file. The "file://" prefix should always -->
+		<!-- come with absolute path -->
+		<!-- it is recommended to use for production -->
+		<script type="module" src="${basePath}/webpack/DisplayWindowClient.js"></script>
+
+		<script type="module">
+			const urlParams = new URLSearchParams(window.location.search);
+			const ipcServerPort = urlParams.get("ipcServerPort");
+			// const displayWindowId = urlParams.get("displayWindowId");
+            const displayWindowId = ${JSON.stringify(displayWindowId)};
+			const hostnameRaw = urlParams.get("hostname"); // might be null
+			const hostname = hostnameRaw === null ? undefined : hostnameRaw;
+            console.log("display window Id", displayWindowId);
+            console.log("ipcServerPort", ipcServerPort, "displayWindowId", displayWindowId);
+			new window.DisplayWindowClientClass(displayWindowId, parseInt(ipcServerPort), hostname);
+		</script>
+	</body>
+</html>
+`
+    )
+}

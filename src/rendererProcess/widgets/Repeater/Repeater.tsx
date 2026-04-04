@@ -418,8 +418,11 @@ export class Repeater extends BaseWidget {
         let iframeSrc = `../../../mainProcess/windows/DisplayWindow/DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${this.iframeDisplayId}`;
         if (mainProcessMode === "web") {
             // const currentSite = `https://${window.location.host}/`;
-            const currentSite = `${window.location.origin}/`;
-            iframeSrc = `${currentSite}DisplayWindow.html?displayWindowId=${this.iframeDisplayId}`
+            // const currentSite = `${window.location.origin}/`;
+            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+            const httpScheme = window.location.protocol;
+            const webPath = displayWindowClient.getWebPath();
+            iframeSrc = `${httpScheme}//${webPath}/DisplayWindow.html?displayWindowId=${this.iframeDisplayId}`
         }
         return (
             <iframe

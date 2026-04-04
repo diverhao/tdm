@@ -100,6 +100,10 @@ export class DisplayWindowClient {
     private _symbolGallery: SymbolGallery;
     private _channelNameHint: ChannelNameHint;
 
+    private _basePath = "/";
+
+
+
     constructor(displayWindowId: string, ipcServerPort: number | undefined, hostname: string | undefined = undefined) {
         // set log level
         Log.setLogLevel(type_log_levels.info);
@@ -109,6 +113,8 @@ export class DisplayWindowClient {
         this._loadCustomFonts();
         // do it first
         this.setWindowId(displayWindowId);
+
+        this._basePath = (window as any).basePath;
 
         // in web mode, the server does not provide the ipcServerPort, the websocket server
         // uses the https port (default 443)
@@ -1264,44 +1270,6 @@ export class DisplayWindowClient {
                     windowId: this.getWindowId(),
                 }
             })
-
-
-            // const inputElement = document.createElement("input");
-            // inputElement.type = "file";
-            // inputElement.style.display = "none";
-            // inputElement.addEventListener("change", (event: any) => {
-            //     const tdlFileNameBlob = event.target.files[0];
-            //     const tdlFileName = tdlFileNameBlob["name"];
-            //     const reader = new FileReader();
-            //     reader.onload = (event: any) => {
-            //         const currentSite = `https://${window.location.host}/`;
-            //         // may be tdl or db file
-            //         const tdlStr = event.target.result;
-            //         this.getIpcManager().sendPostRequestCommand("open-tdl-file", {
-            //             tdlStr: tdlStr,
-            //             tdlFileNames: [tdlFileName],
-            //             mode: g_widgets1.isEditing() ? "editing" : "operating",
-            //             editable: true,
-            //             // external macros: user-provided and parent display macros
-            //             macros: [],
-            //             replaceMacros: true,
-            //             currentTdlFolder: undefined,
-            //         },
-            //         ).then((response: any) => {
-            //             // decode string
-            //             return response.json()
-            //         }).then(data => {
-            //             const ipcServerPort = data["ipcServerPort"];
-            //             const displayWindowId = data["displayWindowId"];
-            //             window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`)
-            //         })
-            //             ;
-            //     };
-            //     reader.readAsText(tdlFileNameBlob);
-            //     event.target.remove();
-            // })
-            // // document.body.appendChild(inputElement);
-            // // inputElement.click();
         }
     }
 
@@ -1449,8 +1417,10 @@ export class DisplayWindowClient {
         // update url by adding file name in browser address bar
         if (this.getMainProcessMode() === "web") {
             // const currentSite = `https://${window.location.host}/`;
-            const currentSite = `${window.location.origin}/`;
-            const newUrl = `${currentSite}DisplayWindow.html?displayWindowId=${this.getWindowId()}&file=${this.getTdlFileName()}`;
+            // const currentSite = `${window.location.origin}/`;
+            const httpScheme = window.location.protocol;
+            const webPath = this.getWebPath();
+            const newUrl = `${httpScheme}//${webPath}/DisplayWindow.html?displayWindowId=${this.getWindowId()}&file=${this.getTdlFileName()}`;
             window.history.replaceState({}, '', newUrl);
         }
     };
@@ -1784,6 +1754,37 @@ export class DisplayWindowClient {
             } else {
                 return pathName;
             }
+        }
+    }
+
+
+    calcBasePath = (): string => {
+        const loc = window.location;
+        let path = loc.pathname;
+
+        // Remove trailing slash, but keep root as "/".
+        path = path.replace(/\/+$/, "") || "/";
+
+        // Strip known TDM page names.
+        path = path.replace(/\/(?:DisplayWindow|MainWindow|HelpWindow)\.html$/, "") || "/";
+
+        return path;
+    }
+
+    getBasePath = () => {
+        return this._basePath;
+    }
+
+    getWebPath = () => {
+        const basePath = this.getBasePath();
+        return `${window.location.host}${basePath}`;
+    }
+
+    getResourcePath = () => {
+        if (this.getMainProcessMode() === "web") {
+            return this.getBasePath();
+        } else {
+            return "../../..";
         }
     }
 

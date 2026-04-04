@@ -85,7 +85,7 @@ export class DataViewerPlotControls {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../../webpack/resources/webpages/scale-2y.svg`}
+                            src={`${this.getPlot().getMainWidget().getBasePath()}/webpack/resources/webpages/scale-2y.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* re-scale the currently selected trace to vertical plot limits */}

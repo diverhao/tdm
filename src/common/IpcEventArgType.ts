@@ -840,7 +840,7 @@ export type IpcEventArgType2 = {
         site: string
     },
 
-    "display-window-id-for-open-tdl-file": {
+    "open-display-window-in-web-browser": {
         displayWindowId: string,
     },
 

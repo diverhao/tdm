@@ -146,7 +146,10 @@ export class MainProcess {
         // main-process-mode specific initialization
         if (args["mainProcessMode"] === "web") {
             // web server port must be the one that we assigned, if it is not available, quit TDM
-            this._webServer = new WebServer(this, args["httpServerPort"]);
+            // todo:
+            // const basepath = args["webServerBasePath"];
+            const basePath = "/aaa/";
+            this._webServer = new WebServer(this, args["httpServerPort"], basePath);
         } else if (args["mainProcessMode"] === "desktop") {
             // only show in desktop mode
             // Create a custom menu template

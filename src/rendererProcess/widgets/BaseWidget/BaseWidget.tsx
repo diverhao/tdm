@@ -1311,6 +1311,12 @@ export abstract class BaseWidget {
     setEmbeddedDisplayWidgetKey = (newKey: string) => {
         this._embeddedDisplayWidgetKey = newKey;
     }
+
+    getBasePath = () => {
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        return displayWindowClient.getBasePath();
+    }
+
     // ---------------------- setters -------------------------
 
     setStyle = (newStyle: Record<string, any>) => {

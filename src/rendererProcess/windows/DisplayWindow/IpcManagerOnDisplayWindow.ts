@@ -76,14 +76,15 @@ export class IpcManagerOnDisplayWindow {
             return;
         }
 
+        const displayWindowClient = this.getDisplayWindowClient();
+
         let serverAddress = `ws://127.0.0.1:${this.getIpcServerPort()}`;
-        if (this.getDisplayWindowClient().getMainProcessMode() === "web") {
+        if (displayWindowClient.getMainProcessMode() === "web") {
             const host = window.location.host.split(":")[0];
             Log.info("Web mode host:", host);
-            // serverAddress = `wss://${host}:${this.getIpcServerPort()}`;
 
             const wsScheme = window.location.protocol === "https:" ? "wss:" : "ws:";
-            serverAddress = `${wsScheme}//${window.location.host}/ipc`;
+            serverAddress = `${wsScheme}//${displayWindowClient.getWebPath()}/ipc`;
         }
 
         const mainProcessMode = this.getDisplayWindowClient().getMainProcessMode();
@@ -380,7 +381,7 @@ export class IpcManagerOnDisplayWindow {
 
         // site info
         this.ipcRenderer.on("site-info", this.handleSiteInfo)
-        this.ipcRenderer.on("display-window-id-for-open-tdl-file", this.handleDisplayWindowIdForOpenTdlFile)
+        this.ipcRenderer.on("open-display-window-in-web-browser", this.handleOpenDisplayWindowInWebBrowser)
 
         this.ipcRenderer.on("get-media-content", this.handleGetMediaContent)
 
@@ -1076,8 +1077,10 @@ export class IpcManagerOnDisplayWindow {
     sendPostRequestCommand = (command: string, data: Record<string, any>) => {
         const currentSite = `${window.location.origin}/`;
 
+        const displayWindowClient = this.getDisplayWindowClient();
         Log.debug("currentSite = ", currentSite);
-        return fetch(`${currentSite}command`, {
+        const httpScheme = window.location.protocol;
+        return fetch(`${httpScheme}//${displayWindowClient.getWebPath()}/command`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -1314,12 +1317,22 @@ export class IpcManagerOnDisplayWindow {
         }
     }
 
-    handleDisplayWindowIdForOpenTdlFile = (event: string, data: IpcEventArgType2["display-window-id-for-open-tdl-file"]) => {
+    handleOpenDisplayWindowInWebBrowser = (event: string, data: IpcEventArgType2["open-display-window-in-web-browser"]) => {
         const { displayWindowId } = data;
         // const currentSite = `https://${window.location.host}/`;
-        const currentSite = `${window.location.origin}/`;
-        const href = `${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`;
-        window.open(href, "_blank", "noopener, noreferrer")
+        // const currentSite = `${window.location.origin}/`;
+        const displayWindowClient = this.getDisplayWindowClient();
+        const httpScheme = window.location.protocol;
+        // const webPath = displayWindowClient.getWebPath();
+        // const href = `${httpScheme}//${webPath}/DisplayWindow.html?displayWindowId=${displayWindowId}`;
+        // console.log("web path =============================", href, httpScheme)
+        // window.open(href, "_blank", "noopener, noreferrer")
+
+        const url = `${httpScheme}//${displayWindowClient.getWebPath()}/DisplayWindow.html?displayWindowId=${displayWindowId}`;
+        console.log("fetch ------------------------", url)
+        // fetch(url, {});
+        window.open(url, "_blank", "noopener,noreferrer");
+
     }
 
     /**
