@@ -6,3 +6,13 @@ export let g_widgets1: Widgets = undefined; // g_widgets1_mockup;
 export const g_setWidgets1 = (widgets: Widgets) => {
     g_widgets1 = widgets;
 };
+
+export const getBasePath = () => {
+    if ((window as any).basePath === undefined) {
+        // desktop mode
+        return "../../..";
+    } else {
+        // web mode
+        return (window as any).basePath;
+    }
+}

@@ -13,7 +13,8 @@ import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMen
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../common/Log";
 import * as GlobalMethods from "../../common/GlobalMethods"
-import { generateArchiveCategory_SNS, generateWebServerCategory, generateWebServerCategory_SNS } from "../../common/ProfileCategoryGenerators";
+import { generateArchiveCategory_SNS} from "../../common/ProfileCategoryGenerators";
+import { getBasePath } from "../global/GlobalVariables";
 
 /**
  * Represents the profile editor. This editor edits one profile.  <br>
@@ -379,30 +380,6 @@ export class MainWindowProfileEditPage {
             this._forceUpdatePage();
         };
 
-        const addWebServerCategory = () => {
-            const categoryJson = generateWebServerCategory() as Record<string, any>;
-            const categoryName = Object.keys(categoryJson)[0]; // should be "Web Server"
-            if (Object.keys(this.getLocalProfile()).includes(categoryName)) {
-                Log.error("Web Server category already exists");
-                return;
-            }
-            this.getLocalProfile()[categoryName] = structuredClone(categoryJson[categoryName]);
-            selectCategory(undefined, categoryName);
-            this._forceUpdatePage();
-        }
-
-        const addWebServerCategory_SNS = () => {
-            const categoryJson = generateWebServerCategory_SNS() as Record<string, any>;
-            const categoryName = Object.keys(categoryJson)[0]; // should be "Web Server"
-            if (Object.keys(this.getLocalProfile()).includes(categoryName)) {
-                Log.error("Web Server category already exists");
-                return;
-            }
-            this.getLocalProfile()[categoryName] = structuredClone(categoryJson[categoryName]);
-            selectCategory(undefined, categoryName);
-            this._forceUpdatePage();
-        }
-
         const addArchiveCategory_SNS = () => {
             const categoryJson = generateArchiveCategory_SNS() as Record<string, any>;
             const categoryName = Object.keys(categoryJson)[0]; // should be "Web Server"
@@ -417,11 +394,9 @@ export class MainWindowProfileEditPage {
 
         const dropDownMenuCallbacks: Record<string, any> = {
             "Add Empty Category": () => { addCategory() },
-            // "Add Web Server Category": () => { addWebServerCategory() },
         };
 
         if (this.getMainWindowClient().getSite() === "sns-office-engineer") {
-            dropDownMenuCallbacks["Add Web Server Category for SNS"] = () => { addWebServerCategory_SNS() };
             dropDownMenuCallbacks["Add Archive Category for SNS"] = () => { addArchiveCategory_SNS() };
         }
 
@@ -1652,7 +1627,7 @@ export class MainWindowProfileEditPage {
                         style={{
                             height: "10px",
                         }}
-                        src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                        src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                     ></img>
                 </ElementArrayPropertyItemRight>
 
@@ -2229,7 +2204,7 @@ export class MainWindowProfileEditPage {
                             style={{
                                 height: "15px",
                             }}
-                            src={`../../../webpack/resources/webpages/modify-symbol.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/modify-symbol.svg`}
                         ></img>
                     </ElementArrayPropertyItemRight>
                     <ElementArrayPropertyItemRight
@@ -2241,7 +2216,7 @@ export class MainWindowProfileEditPage {
                             style={{
                                 height: "13px",
                             }}
-                            src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                         ></img>
                     </ElementArrayPropertyItemRight>
                     <ElementArrayPropertyItemRight

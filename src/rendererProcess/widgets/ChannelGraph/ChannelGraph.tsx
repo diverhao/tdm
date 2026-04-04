@@ -1,6 +1,6 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
@@ -387,7 +387,7 @@ export class ChannelGraph extends BaseWidget {
                                                     height: GlobalVariables.defaultFontSize * 0.8,
                                                     cursor: "pointer",
                                                 }}
-                                                src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                                                src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                                                 onClick={() => {
                                                     delete this.dbFiles[dbFileName];
                                                     forceUpdate({});
@@ -401,7 +401,7 @@ export class ChannelGraph extends BaseWidget {
                                                     height: GlobalVariables.defaultFontSize * 1,
                                                     cursor: "pointer",
                                                 }}
-                                                src={`../../../webpack/resources/webpages/modify-symbol.svg`}
+                                                src={`${getBasePath()}/webpack/resources/webpages/modify-symbol.svg`}
                                                 onClick={() => {
                                                     g_widgets1.openTextEditorWindow({
                                                         displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
@@ -421,7 +421,7 @@ export class ChannelGraph extends BaseWidget {
                                                     height: GlobalVariables.defaultFontSize * 0.8,
                                                     cursor: "pointer",
                                                 }}
-                                                src={`../../../webpack/resources/webpages/refresh-symbol.svg`}
+                                                src={`${getBasePath()}/webpack/resources/webpages/refresh-symbol.svg`}
                                                 onClick={() => {
                                                     this.openDbFile(dbFileName);
 

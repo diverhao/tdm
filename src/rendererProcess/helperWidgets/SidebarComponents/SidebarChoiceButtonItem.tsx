@@ -62,7 +62,7 @@
 //                             }}
 //                         >
 //                             <img
-//                                 src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+//                                 src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
 //                                 style={{
 //                                     width: "50%",
 //                                     height: "50%",

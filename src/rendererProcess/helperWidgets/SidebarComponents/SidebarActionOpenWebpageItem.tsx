@@ -5,7 +5,7 @@ import * as React from "react";
 // import { Group } from "../../widgets/Group/Group";
 import { ActionButton } from "../../widgets/ActionButton/ActionButton";
 // import { LED } from "../../widgets/LED/LED";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { Collapsible } from "../ColorPicker/Collapsible";
 import * as GlobalMethods from "../../../common/GlobalMethods";
@@ -74,7 +74,7 @@ export class SidebarActionOpenWebpageItem {
                             }}
                         >
                             <img
-                                src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                                 style={{
                                     width: "50%",
                                     height: "50%",

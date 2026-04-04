@@ -1,7 +1,7 @@
 import { SidebarActionItems } from "./SidebarActionItems";
 import * as React from "react";
 import { ActionButton } from "../../widgets/ActionButton/ActionButton";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { type_action_opendisplay_tdl } from "../../../common/types/type_widget_tdl";
 import { ElementMacroTd, ElementMacroTr, ElementMacroInput, ElementMacrosTable } from "../SharedElements/MacrosTable";
@@ -122,7 +122,7 @@ export class SidebarActionOpenDisplayItem {
                             }}
                         >
                             <img
-                                src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                                 style={{
                                     width: "50%",
                                     height: "50%",
@@ -149,7 +149,7 @@ export class SidebarActionOpenDisplayItem {
 							}}
 						>
 							<img
-								src="../../../webpack/resources/webpages/open-file-symbol.svg"
+								src={`${getBasePath()}/webpack/resources/webpages/open-file-symbol.svg`}
 								style={{
 									width: 20,
 									height: 15,
@@ -310,7 +310,7 @@ export class SidebarActionOpenDisplayItem {
                     }}
                 >
                     <img
-                        src={`../../../webpack/resources/webpages/open-link-symbol.svg`}
+                        src={`${getBasePath()}/webpack/resources/webpages/open-link-symbol.svg`}
                         style={{
                             width: "60%",
                             height: "60%",

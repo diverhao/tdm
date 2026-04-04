@@ -1,6 +1,6 @@
 import * as React from "react"
 import { GlobalVariables } from "../../../common/GlobalVariables";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 
 const disableImageDrag = (children: React.ReactNode): React.ReactNode => {
@@ -85,7 +85,7 @@ export const ElementMacrosTable = (
                             }}
                         >
                             <img
-                                src={`../../../webpack/resources/webpages/add-symbol.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/add-symbol.svg`}
                                 style={{
                                     width: "60%",
                                     height: "60%",
@@ -142,7 +142,7 @@ export const ElementMacrosTable = (
                                     }}
                                 >
                                     <img
-                                        src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                                        src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                                         style={{
                                             width: "50%",
                                             height: "50%",
@@ -216,7 +216,7 @@ export const ElementMacrosTableSingleColumnData = (
                             }}
                         >
                             <img
-                                src={`../../../webpack/resources/webpages/add-symbol.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/add-symbol.svg`}
                                 style={{
                                     width: "60%",
                                     height: "60%",
@@ -263,7 +263,7 @@ export const ElementMacrosTableSingleColumnData = (
                                     }}
                                 >
                                     <img
-                                        src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                                        src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                                         style={{
                                             width: "50%",
                                             height: "50%",

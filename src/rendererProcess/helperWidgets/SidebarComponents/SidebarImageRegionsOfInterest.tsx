@@ -1,6 +1,6 @@
 import { SidebarComponent } from "./SidebarComponent";
 import * as React from "react";
-import { g_widgets1,  } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { ElementButton } from "../SharedElements/MacrosTable";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
@@ -43,7 +43,7 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
                             }}
                         >
                             <img
-                                src={`../../../webpack/resources/webpages/add-symbol.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/add-symbol.svg`}
                                 style={{
                                     width: "60%",
                                     height: "60%",
@@ -107,7 +107,7 @@ export class SidebarImageRegionsOfInterest extends SidebarComponent {
                         }}
                     >
                         <img
-                            src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                             style={{
                                 width: "60%",
                                 height: "60%",

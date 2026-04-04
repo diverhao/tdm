@@ -3,7 +3,7 @@ import * as React from "react";
 // import { ChoiceButtonSidebar } from "../../widgets/ChoiceButton/ChoiceButtonSidebar";
 // import { LEDSidebar } from "../../widgets/LED/LEDSidebar";
 import { defaultTdlFileName, EmbeddedDisplay } from "../../widgets/EmbeddedDisplay/EmbeddedDisplay";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { SidebarEmbeddedDisplayItem } from "./SidebarEmbeddedDisplayItem";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
@@ -58,7 +58,7 @@ export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 							}}
 						>
 							<img
-								src={`../../../webpack/resources/webpages/add-symbol.svg`}
+								src={`${getBasePath()}/webpack/resources/webpages/add-symbol.svg`}
 								style={{
 									width: "60%",
 									height: "60%",
@@ -71,14 +71,14 @@ export class SidebarEmbeddedDisplayItems extends SidebarComponent {
 							}}
 						>
 							<img
-								src={`../../../webpack/resources/webpages/add-symbol.svg`}
+								src={`${getBasePath()}/webpack/resources/webpages/add-symbol.svg`}
 								style={{
 									width: "60%",
 									height: "60%",
 								}}
 							></img>
 							<img
-								src={`../../../webpack/resources/webpages/web-symbol.svg`}
+								src={`${getBasePath()}/webpack/resources/webpages/web-symbol.svg`}
 								style={{
 									width: "60%",
 									height: "60%",

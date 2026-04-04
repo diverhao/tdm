@@ -1,6 +1,6 @@
 import * as React from "react";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
 import { Polyline } from "../../widgets/Polyline/Polyline";
@@ -83,7 +83,7 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
                                                 }}
                                             >
                                                 <img
-                                                    src={`../../../webpack/resources/webpages/add-symbol.svg`}
+                                                    src={`${getBasePath()}/webpack/resources/webpages/add-symbol.svg`}
                                                     style={{
                                                         width: "50%",
                                                         height: "50%",
@@ -143,7 +143,7 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
                                                     }}
                                                 >
                                                     <img
-                                                        src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                                                        src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                                                         style={{
                                                             width: "50%",
                                                             height: "50%",

@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { type_rule_tdl } from "./BaseWidgetRule";
 import { BaseWidgetRule } from "./BaseWidgetRule";
 import { ElementButton } from "../../helperWidgets/SharedElements/MacrosTable";
+import { getBasePath } from "../../global/GlobalVariables";
 
 export type type_rules_tdl = type_rule_tdl[];
 
@@ -132,7 +133,7 @@ export class BaseWidgetRules {
 							}}
 						>
 							<img
-								src={`../../../webpack/resources/webpages/add-symbol.svg`}
+								src={`${getBasePath()}/webpack/resources/webpages/add-symbol.svg`}
 								style={{
 									width: "60%",
 									height: "60%",

@@ -138,37 +138,6 @@ export class Profile {
     };
 
 
-    getLdapUri = () => {
-        return this.getEntry("Web Server", "LDAP URI");
-    }
-
-
-    getLdapBindCredentials = () => {
-        return this.getEntry("Web Server", "LDAP Bind Credential");
-    }
-
-    getLdapSearchBase = () => {
-        return this.getEntry("Web Server", "LDAP Search Base");
-    }
-    getLdapSearchFilter = () => {
-        return this.getEntry("Web Server", "LDAP Search Filter");
-    }
-    getLdapSearchScope = () => {
-        return this.getEntry("Web Server", "LDAP Search Scope");
-    }
-
-    getLdapDistinguishedName = () => {
-        return this.getEntry("Web Server", "LDAP Distinguished Name");
-    }
-
-    getHttpsKeyFile = () => {
-        return this.getEntry("Web Server", "Https Key File");
-    }
-
-    getHttpsCertificate = () => {
-        return this.getEntry("Web Server", "Https Certificate");
-    }
-
     getEpicsLogLevel = () => {
         return this.getEntry("EPICS Custom Environment", "EPICS Log Level");
     }

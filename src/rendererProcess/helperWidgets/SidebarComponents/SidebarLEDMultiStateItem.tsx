@@ -2,7 +2,7 @@ import { SidebarLEDMultiStateItems } from "./SidebarLEDMultiStateItems";
 import * as React from "react";
 // import { LED } from "../../widgets/LED/LED";
 import { LEDMultiState } from "../../widgets/LEDMultiState/LEDMultiState";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { Collapsible } from "../ColorPicker/Collapsible";
 import * as GlobalMethods from "../../../common/GlobalMethods";
@@ -65,7 +65,7 @@ export class SidebarLEDMultiStateItem {
                             }}
                         >
                             <img
-                                src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                                 style={{
                                     width: "50%",
                                     height: "50%",

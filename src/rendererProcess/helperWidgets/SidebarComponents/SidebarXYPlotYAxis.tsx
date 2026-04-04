@@ -1,5 +1,5 @@
 import * as React from "react";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarXYPlotYAxes } from "./SidebarXYPlotYAxes";
 import { XYPlot } from "../../widgets/XYPlot/XYPlot";
@@ -127,9 +127,9 @@ export class SidebarXYPlotYAxis {
                 }}
             >
                 {hideContents ?
-                    <img src={`../../../webpack/resources/webpages/arrowDown-thin.svg`} width="12px"></img>
+                    <img src={`${getBasePath()}/webpack/resources/webpages/arrowDown-thin.svg`} width="12px"></img>
                     :
-                    <img src={`../../../webpack/resources/webpages/arrowUp-thin.svg`} width="12px"></img>
+                    <img src={`${getBasePath()}/webpack/resources/webpages/arrowUp-thin.svg`} width="12px"></img>
                 }
             </div>
         );
@@ -181,7 +181,7 @@ export class SidebarXYPlotYAxis {
                     g_flushWidgets();
                 }}
             >
-                <img src={`../../../webpack/resources/webpages/delete-symbol.svg`} width="12px"></img>
+                <img src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`} width="12px"></img>
             </div>
         );
     };

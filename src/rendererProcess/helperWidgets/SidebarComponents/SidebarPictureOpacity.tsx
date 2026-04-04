@@ -1,6 +1,6 @@
 import * as React from "react";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
 
@@ -170,7 +170,7 @@ export class SidebarPictureOpacity extends SidebarComponent {
 						>
 							{" "}
 							<img
-								src={`../../../webpack/resources/webpages/opacity-bar.png`}
+								src={`${getBasePath()}/webpack/resources/webpages/opacity-bar.png`}
 								style={{
 									width: "100%",
 									height: "100%",

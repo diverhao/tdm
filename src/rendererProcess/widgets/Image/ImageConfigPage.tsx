@@ -2,7 +2,7 @@ import * as React from "react";
 import type { ImagePlot } from "./ImagePlot";
 import { toolbarHeight } from "./Image";
 import { NDArray_ColorMode } from "../../../common/GlobalVariables";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { colorMapFunctions, colorMapArrays, grayColorMapArray } from "./ImageColorMapData";
 
 /**
@@ -55,7 +55,7 @@ export class ImageConfigPage {
                     {/* gear icon */}
                     <img
                         width={toolbarHeight}
-                        src={"../../../webpack/resources/webpages/settings.svg"}
+                        src={`${getBasePath()}/webpack/resources/webpages/settings.svg`}
                         onMouseDown={(event) => {
                             event.stopPropagation();
                             this.showConfigPage = !this.showConfigPage;
@@ -362,7 +362,7 @@ export class ImageConfigPage {
                 }}
             >
                 <img
-                    src={"../../../webpack/resources/webpages/scale-y.svg"}
+                    src={`${getBasePath()}/webpack/resources/webpages/scale-y.svg`}
                     width={toolbarHeight}
                 />
             </div>
@@ -388,7 +388,7 @@ export class ImageConfigPage {
                 }}
             >
                 <img
-                    src={"../../../webpack/resources/webpages/scale-2y.svg"}
+                    src={`${getBasePath()}/webpack/resources/webpages/scale-2y.svg`}
                     width={toolbarHeight}
                 />
             </div>
@@ -413,7 +413,7 @@ export class ImageConfigPage {
                 }}
             >
                 <img
-                    src={playing ? "../../../webpack/resources/webpages/pause.svg" : "../../../webpack/resources/webpages/play.svg"}
+                    src={playing ? `${getBasePath()}/webpack/resources/webpages/pause.svg` : `${getBasePath()}/webpack/resources/webpages/play.svg`}
                     width={toolbarHeight}
                 />
             </div>

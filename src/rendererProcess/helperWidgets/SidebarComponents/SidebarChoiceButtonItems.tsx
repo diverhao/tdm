@@ -46,7 +46,7 @@
 // 							}}
 // 						>
 // 							<img
-// 								src={`../../../webpack/resources/webpages/add-symbol.svg`}
+// 								src={`${getBasePath()}/webpack/resources/webpages/add-symbol.svg`}
 // 								style={{
 // 									width: "60%",
 // 									height: "60%",

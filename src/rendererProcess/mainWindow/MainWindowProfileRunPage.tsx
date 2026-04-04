@@ -4,6 +4,7 @@ import { MainWindowClient } from "../windows/MainWindow/MainWindowClient";
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
 import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
 import path from "path";
+import { getBasePath } from "../global/GlobalVariables";
 
 export class MainWindowProfileRunPage {
     private _profiles: Record<string, any>;
@@ -399,7 +400,7 @@ export class MainWindowProfileRunPage {
                         justifyContent: "center",
                         alignItems: "center",
                     }}>
-                        <img src="../../../webpack/resources/webpages/tdm-logo.svg" width="40px"></img>
+                        <img src={`${getBasePath()}/webpack/resources/webpages/tdm-logo.svg`} width="40px"></img>
                     </div>
                     <div style={{
                         margin: 5,

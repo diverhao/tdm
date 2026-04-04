@@ -1,7 +1,7 @@
 import { SidebarEmbeddedDisplayItems } from "./SidebarEmbeddedDisplayItems";
 import * as React from "react";
 import { EmbeddedDisplay } from "../../widgets/EmbeddedDisplay/EmbeddedDisplay";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { ElementButton, ElementMacrosTable } from "../SharedElements/MacrosTable";
 import { ElementMacroInput, ElementMacroTd, ElementMacroTr } from "../SharedElements/MacrosTable";
@@ -125,7 +125,7 @@ export class SidebarEmbeddedDisplayItem {
                                 }}
                             >
                                 <img
-                                    src={`../../../webpack/resources/webpages/view-file-symbol.svg`}
+                                    src={`${getBasePath()}/webpack/resources/webpages/view-file-symbol.svg`}
                                     style={{
                                         width: "75%",
                                         height: "75%",
@@ -149,7 +149,7 @@ export class SidebarEmbeddedDisplayItem {
                             }}
                         >
                             <img
-                                src={`../../../webpack/resources/webpages/open-file-symbol.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/open-file-symbol.svg`}
                                 style={{
                                     width: "75%",
                                     height: "75%",
@@ -177,7 +177,7 @@ export class SidebarEmbeddedDisplayItem {
                             }}
                         >
                             <img
-                                src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                                 style={{
                                     width: "50%",
                                     height: "50%",

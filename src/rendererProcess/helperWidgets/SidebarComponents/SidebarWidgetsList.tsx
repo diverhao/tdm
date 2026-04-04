@@ -6,7 +6,7 @@ import * as GlobalMethods from "../../../common/GlobalMethods"
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 import { GroupSelectionSidebar2 } from "../GroupSelection/GroupSelectionSidebar2";
 import { type_widget } from "../../global/Widgets";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { calcSidebarWidth } from "../../../common/GlobalVariables";
 
 /**
@@ -125,9 +125,9 @@ export class SidebarWidgetsList {
                     >
                         <h3>Widgets</h3>
                         {this.getStatus() === "expanded" ?
-                            <img src={`../../../webpack/resources/webpages/arrowDown.svg`} width="12px" height="12px"></img>
+                            <img src={`${getBasePath()}/webpack/resources/webpages/arrowDown.svg`} width="12px" height="12px"></img>
                             :
-                            <img src={`../../../webpack/resources/webpages/arrowUp.svg`} width="12px" height="12px"></img>
+                            <img src={`${getBasePath()}/webpack/resources/webpages/arrowUp.svg`} width="12px" height="12px"></img>
                         }
                     </div>
                     {/* contents */}

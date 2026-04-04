@@ -1383,17 +1383,6 @@ export const generateRgbaColor = (index: number): string => {
 };
 
 
-export function getBasePath(loc: Location): string {
-    let path = loc.pathname;
-
-    // Remove trailing slash, but keep root as "/".
-    path = path.replace(/\/+$/, "") || "/";
-
-    // Strip known TDM page names.
-    path = path.replace(/\/(?:DisplayWindow|MainWindow|HelpWindow)\.html$/, "") || "/";
-
-    return path;
-}
 
 export const generateDisplayWindowHtml = (option: {basePath: string, displayWindowId: string}) => {
 

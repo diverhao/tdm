@@ -5,7 +5,7 @@ import { AreaPage } from "./AreaPage";
 
 
 import { Talhk } from "../Talhk";
-import { g_widgets1 } from "../../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../../global/GlobalVariables";
 import { g_flushWidgets } from "../../../helperWidgets/Root/Root";
 
 export class BasePage {
@@ -22,7 +22,7 @@ export class BasePage {
     _mainWidget: Talhk;
     _serverAddress: string;
 
-    resourcePath = "../../../webpack/resources/webpages/"
+    resourcePath = `${getBasePath()}/webpack/resources/webpages/`
 
     getServerAddress = () => {
         return this._serverAddress

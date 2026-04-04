@@ -6,6 +6,7 @@ import { Log } from "../../common/Log";
 import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
 import { MainWindowClient, mainWindowState } from "../windows/MainWindow/MainWindowClient";
 import { generateDefaultProfile, generateDefaultSshProfile } from "../../common/ProfileCategoryGenerators";
+import { getBasePath } from "../global/GlobalVariables";
 
 
 export class MainWindowStartupPage {
@@ -252,25 +253,25 @@ export class MainWindowStartupPage {
                 <this._ElementBackgroundContainer
                     top={20}
                     left={10}
-                    fileName={`../../../webpack/resources/webpages/atom.svg`}
+                    fileName={`${getBasePath()}/webpack/resources/webpages/atom.svg`}
                 ></this._ElementBackgroundContainer>
 
                 <this._ElementBackgroundContainer
                     top={30}
                     left={90}
-                    fileName={`../../../webpack/resources/webpages/star.svg`}
+                    fileName={`${getBasePath()}/webpack/resources/webpages/star.svg`}
                 ></this._ElementBackgroundContainer>
 
                 <this._ElementBackgroundContainer
                     top={140}
                     left={0}
-                    fileName={`../../../webpack/resources/webpages/dna.svg`}
+                    fileName={`${getBasePath()}/webpack/resources/webpages/dna.svg`}
                 ></this._ElementBackgroundContainer>
 
                 <this._ElementBackgroundContainer
                     top={100}
                     left={40}
-                    fileName={`../../webpack/resources/webpages/chemistry.svg`}
+                    fileName={`${getBasePath()}/webpack/resources/webpages/chemistry.svg`}
                 ></this._ElementBackgroundContainer>
             </div>
         );
@@ -294,7 +295,7 @@ export class MainWindowStartupPage {
                 style={style}
             >
                 {/* <img src={`../../resources/webpages/tdm-logo.svg`} width="40px" height="40px"></img> */}
-                <img src={`../../../webpack/resources/webpages/tdm-logo.svg`} width="40px" height="40px"></img>
+                <img src={`${getBasePath()}/webpack/resources/webpages/tdm-logo.svg`} width="40px" height="40px"></img>
             </div>
         );
     };

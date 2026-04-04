@@ -1,6 +1,6 @@
 import * as React from "react";
 import { DisplayWindowClient } from "./DisplayWindowClient";
-import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../../rendererProcess/global/GlobalVariables";
 import { Log } from "../../../common/Log";
 import ReactDOM from 'react-dom/client';
 
@@ -261,7 +261,7 @@ export class ContextMenu {
                             }}>
                             </div>
                             <div>
-                                <img src="../../../webpack/resources/webpages/arrowRight-thin-white.svg" width="9px" height="9px">
+                                <img src={`${getBasePath()}/webpack/resources/webpages/arrowRight-thin-white.svg`} width="9px" height="9px">
                                 </img>
                             </div>
                         </>

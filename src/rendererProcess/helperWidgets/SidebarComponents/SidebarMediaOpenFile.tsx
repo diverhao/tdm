@@ -1,6 +1,6 @@
 import * as React from "react";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
 import { Media } from "../../widgets/Media/Media";
@@ -81,7 +81,7 @@ export class SidebarMediaOpenFile extends SidebarComponent {
                                 }}
                             >
                                 <img
-                                    src={`../../../webpack/resources/webpages/gallery.svg`}
+                                    src={`${getBasePath()}/webpack/resources/webpages/gallery.svg`}
                                     style={{
                                         width: 20,
                                         height: 15,
@@ -111,7 +111,7 @@ export class SidebarMediaOpenFile extends SidebarComponent {
                                 }}
                             >
                                 <img
-                                    src={`../../../webpack/resources/webpages/open-file-symbol.svg`}
+                                    src={`${getBasePath()}/webpack/resources/webpages/open-file-symbol.svg`}
                                     style={{
                                         width: 20,
                                         height: 15,

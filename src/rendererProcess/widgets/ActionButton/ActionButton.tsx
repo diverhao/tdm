@@ -1,6 +1,6 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { ActionButtonSidebar } from "./ActionButtonSidebar";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
@@ -203,7 +203,7 @@ export class ActionButton extends BaseWidget {
                 {/* text */}
                 {buttonText}
                 {/* dropdown arrow */}
-                <img src="../../../webpack/resources/webpages/arrowDown-thin.svg"
+                <img src={`${getBasePath()}/webpack/resources/webpages/arrowDown-thin.svg`}
                     style={{
                         width: this.getAllStyle()["fontSize"] * 0.7,
                         height: this.getAllStyle()["fontSize"] * 0.7,

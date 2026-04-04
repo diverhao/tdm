@@ -2,7 +2,7 @@ console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Start to load m
 
 import ReactDOM from "react-dom/client";
 import { getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
-import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../../rendererProcess/global/GlobalVariables";
 import { Canvas } from "../../../rendererProcess/helperWidgets/Canvas/Canvas";
 import { IpcManagerOnDisplayWindow } from "./IpcManagerOnDisplayWindow";
 import { type_tdl } from "../../../common/GlobalVariables";
@@ -1757,37 +1757,10 @@ export class DisplayWindowClient {
         }
     }
 
-
-    calcBasePath = (): string => {
-        const loc = window.location;
-        let path = loc.pathname;
-
-        // Remove trailing slash, but keep root as "/".
-        path = path.replace(/\/+$/, "") || "/";
-
-        // Strip known TDM page names.
-        path = path.replace(/\/(?:DisplayWindow|MainWindow|HelpWindow)\.html$/, "") || "/";
-
-        return path;
-    }
-
-    getBasePath = () => {
-        return this._basePath;
-    }
-
     getWebPath = () => {
-        const basePath = this.getBasePath();
+        const basePath = getBasePath();
         return `${window.location.host}${basePath}`;
     }
-
-    getResourcePath = () => {
-        if (this.getMainProcessMode() === "web") {
-            return this.getBasePath();
-        } else {
-            return "../../..";
-        }
-    }
-
 }
 
 

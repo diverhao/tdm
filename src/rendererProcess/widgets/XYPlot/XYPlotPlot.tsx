@@ -5,7 +5,7 @@ import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { calcTickPositions, calcTicks, mapPointToXy, mapXYsToPointsWebGl, mapXyToPoint, mapXyToPointGl, refineTicks } from "../../../common/GlobalMethods";
 import { getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { XYPlotPlotSettings } from "./XYPlotPlotSettings";
 import { XYPlotPlotWebGl } from "./XYPlotPlotWebGl";
@@ -416,7 +416,7 @@ export class XYPlotPlot {
                     }}
                 >
                     <img
-                        src={"../../../webpack/resources/webpages/gridlines.svg"}
+                        src={`${getBasePath()}/webpack/resources/webpages/gridlines.svg`}
                         style={{
                             width: "100%",
                             height: "100%",
@@ -813,7 +813,7 @@ export class XYPlotPlot {
                     }}
                 >
                     <img
-                        src={`../../../webpack/resources/webpages/copy-symbol.svg`}
+                        src={`${getBasePath()}/webpack/resources/webpages/copy-symbol.svg`}
                         height={(this.getMainWidget().getAllStyle()["fontSize"] * 3) / 4}
                     ></img>
                 </div>
@@ -860,7 +860,7 @@ export class XYPlotPlot {
                     }}
                 >
                     <img
-                        src={`../../../webpack/resources/webpages/settings.svg`}
+                        src={`${getBasePath()}/webpack/resources/webpages/settings.svg`}
                         height={this.getMainWidget().getAllStyle()["fontSize"]}
                     ></img>
                 </div>
@@ -898,7 +898,7 @@ export class XYPlotPlot {
                     }}
                 >
                     <img
-                        src={`../../../webpack/resources/webpages/legend-symbol.svg`}
+                        src={`${getBasePath()}/webpack/resources/webpages/legend-symbol.svg`}
                         width={this.getMainWidget().getAllStyle()["fontSize"]}
                     ></img>
                 </div>

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
 import { CanvasSidebar } from "../Canvas/CanvasSidebar";
@@ -108,7 +108,7 @@ export class SidebarCanvasScript {
                                 }}
                             >
                                 <img
-                                    src={`../../../webpack/resources/webpages/modify-symbol.svg`}
+                                    src={`${getBasePath()}/webpack/resources/webpages/modify-symbol.svg`}
                                     style={{
                                         width: 20,
                                         height: 15,
@@ -131,7 +131,7 @@ export class SidebarCanvasScript {
                                 }}
                             >
                                 <img
-                                    src={`../../../webpack/resources/webpages/open-file-symbol.svg`}
+                                    src={`${getBasePath()}/webpack/resources/webpages/open-file-symbol.svg`}
                                     style={{
                                         width: 20,
                                         height: 15,

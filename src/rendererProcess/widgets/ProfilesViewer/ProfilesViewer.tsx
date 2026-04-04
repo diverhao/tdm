@@ -1,6 +1,6 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
@@ -425,7 +425,7 @@ export class ProfilesViewer extends BaseWidget {
                                                         onClick={() => {
                                                             setShowAll(!showAll);
                                                         }}
-                                                        src={"../../../webpack/resources/webpages/arrowDown-thin.svg"}
+                                                        src={`${getBasePath()}/webpack/resources/webpages/arrowDown-thin.svg`}
                                                         width="10px"
                                                         height="10px">
 
@@ -478,7 +478,7 @@ export class ProfilesViewer extends BaseWidget {
                             onClick={() => {
                                 setShowAll(!showAll);
                             }}
-                            src={"../../../webpack/resources/webpages/arrowUp-thin.svg"}
+                            src={`${getBasePath()}/webpack/resources/webpages/arrowUp-thin.svg`}
                             width="10px"
                             height="10px">
                         </img>
@@ -766,13 +766,13 @@ export class ProfilesViewer extends BaseWidget {
                 >
                     {profileName}
                     {showJson ?
-                        <img src="../../../webpack/resources/webpages/arrowUp.svg" style={{
+                        <img src={`${getBasePath()}/webpack/resources/webpages/arrowUp.svg`} style={{
                             width: 8,
                             height: 8,
                             marginLeft: 15,
                         }}></img>
                         :
-                        <img src="../../../webpack/resources/webpages/arrowDown.svg" style={{
+                        <img src={`${getBasePath()}/webpack/resources/webpages/arrowDown.svg`} style={{
                             width: 8,
                             height: 8,
                             marginLeft: 15,

@@ -3,7 +3,7 @@ import * as React from "react";
 // import { ChoiceButtonSidebar } from "../../widgets/ChoiceButton/ChoiceButtonSidebar";
 // import { LEDSidebar } from "../../widgets/LED/LEDSidebar";
 import { LEDMultiState } from "../../widgets/LEDMultiState/LEDMultiState";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { SidebarLEDMultiStateItem } from "./SidebarLEDMultiStateItem";
 import { ElementButton } from "../SharedElements/MacrosTable";
@@ -47,7 +47,7 @@ export class SidebarLEDMultiStateItems extends SidebarComponent {
 							}}
 						>
 							<img
-								src={`../../../webpack/resources/webpages/add-symbol.svg`}
+								src={`${getBasePath()}/webpack/resources/webpages/add-symbol.svg`}
 								style={{
 									width: "60%",
 									height: "60%",

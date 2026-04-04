@@ -1,5 +1,5 @@
 import * as React from "react";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { DataViewerPlot } from "./DataViewerPlot";
 import { toolbarHeight } from "./DataViewerPlot";
 import { settingsIndexChoices } from "./DataViewerPlot";
@@ -85,7 +85,7 @@ export class DataViewerPlotControls {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`${this.getPlot().getMainWidget().getBasePath()}/webpack/resources/webpages/scale-2y.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/scale-2y.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* re-scale the currently selected trace to vertical plot limits */}
@@ -131,7 +131,7 @@ export class DataViewerPlotControls {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../../webpack/resources/webpages/scale-y.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/scale-y.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* setting page */}
@@ -151,7 +151,7 @@ export class DataViewerPlotControls {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../../webpack/resources/webpages/settings.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/settings.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* pause/play */}
@@ -182,7 +182,7 @@ export class DataViewerPlotControls {
                                     width: "100%",
                                     height: "100%",
                                 }}
-                                src={`../../../webpack/resources/webpages/pause.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/pause.svg`}
                             ></img>
                         ) : (
                             <img
@@ -190,7 +190,7 @@ export class DataViewerPlotControls {
                                     width: "100%",
                                     height: "100%",
                                 }}
-                                src={`../../../webpack/resources/webpages/play.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/play.svg`}
                             ></img>
                         )}
                     </this._StyledFigButton>{" "}
@@ -219,7 +219,7 @@ export class DataViewerPlotControls {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../../webpack/resources/webpages/horizontal-zoom-in.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/horizontal-zoom-in.svg`}
                         ></img>
                     </this._StyledFigButton>{" "}
                     {/* horizontal zoom out */}
@@ -247,7 +247,7 @@ export class DataViewerPlotControls {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../../webpack/resources/webpages/horizontal-zoom-out.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/horizontal-zoom-out.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* horizontal pan left */}
@@ -276,7 +276,7 @@ export class DataViewerPlotControls {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../../webpack/resources/webpages/horizontal-pan-left.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/horizontal-pan-left.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* horizontal pan right */}
@@ -304,7 +304,7 @@ export class DataViewerPlotControls {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../../webpack/resources/webpages/horizontal-pan-right.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/horizontal-pan-right.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* vertical zoom in*/}
@@ -345,7 +345,7 @@ export class DataViewerPlotControls {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../../webpack/resources/webpages/vertical-zoom-in.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/vertical-zoom-in.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* vertical zoom out*/}
@@ -383,7 +383,7 @@ export class DataViewerPlotControls {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../../webpack/resources/webpages/vertical-zoom-out.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/vertical-zoom-out.svg`}
                         ></img>
                     </this._StyledFigButton>
                     {/* vertical pan down*/}
@@ -421,7 +421,7 @@ export class DataViewerPlotControls {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../../webpack/resources/webpages/vertical-pan-down.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/vertical-pan-down.svg`}
                         ></img>
                     </this._StyledFigButton>{" "}
                     {/* vertical pan up*/}
@@ -458,7 +458,7 @@ export class DataViewerPlotControls {
                                 width: "100%",
                                 height: "100%",
                             }}
-                            src={`../../../webpack/resources/webpages/vertical-pan-up.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/vertical-pan-up.svg`}
                         ></img>
                     </this._StyledFigButton>{" "}
                     {/* export data */}
@@ -477,7 +477,7 @@ export class DataViewerPlotControls {
                                 width: "70%",
                                 height: "70%",
                             }}
-                            src={`../../../webpack/resources/webpages/save-to-file.svg`}
+                            src={`${getBasePath()}/webpack/resources/webpages/save-to-file.svg`}
                         ></img>
                     </this._StyledFigButton>{" "}
                     <this._ElementCursorPosition></this._ElementCursorPosition>
@@ -498,7 +498,7 @@ export class DataViewerPlotControls {
                             width: "100%",
                             height: "100%",
                         }}
-                        src={`../../../webpack/resources/webpages/download-from-cloud-symbol.svg`}
+                        src={`${getBasePath()}/webpack/resources/webpages/download-from-cloud-symbol.svg`}
                     ></img>
                 </this._StyledFigButton>{" "}
             </div>

@@ -2,7 +2,7 @@ import { SidebarComponent } from "./SidebarComponent";
 import * as React from "react";
 import { SidebarGroupItem } from "./SidebarGroupItem";
 import { Group } from "../../widgets/Group/Group";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { ElementButton } from "../SharedElements/MacrosTable";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
@@ -45,7 +45,7 @@ export class SidebarGroupItems extends SidebarComponent {
                             }}
                         >
                             <img
-                                src={`../../../webpack/resources/webpages/add-symbol.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/add-symbol.svg`}
                                 style={{
                                     width: "60%",
                                     height: "60%",

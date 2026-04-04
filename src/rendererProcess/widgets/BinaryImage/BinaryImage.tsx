@@ -1,6 +1,6 @@
 import * as React from "react";
 import { MouseEvent } from "react";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
@@ -123,7 +123,7 @@ export class BinaryImage extends BaseWidget {
                     objectFit: this.getAllText()["stretchToFit"] ? "fill" : "contain",
                     opacity: this.getAllText()["invisibleInOperation"] === true && !g_widgets1.isEditing() ? 0 : this.getAllText()["opacity"],
                 }}
-                src={g_widgets1.isEditing() === true ? "../../../webpack/resources/webpages/trend.svg" : `data:image/png;base64,${this._getChannelValue()}`}
+                src={g_widgets1.isEditing() === true ? `${getBasePath()}/webpack/resources/webpages/trend.svg` : `data:image/png;base64,${this._getChannelValue()}`}
             ></img>
         );
     };

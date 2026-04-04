@@ -1,6 +1,6 @@
 import * as React from "react";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
 import { XYPlot } from "../../widgets/XYPlot/XYPlot";
@@ -113,9 +113,9 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                 }}
             >
                 {hideContents ?
-                    <img src={`../../../webpack/resources/webpages/arrowDown-thin.svg`} width="12px"></img>
+                    <img src={`${getBasePath()}/webpack/resources/webpages/arrowDown-thin.svg`} width="12px"></img>
                     :
-                    <img src={`../../../webpack/resources/webpages/arrowUp-thin.svg`} width="12px"></img>
+                    <img src={`${getBasePath()}/webpack/resources/webpages/arrowUp-thin.svg`} width="12px"></img>
                 }
             </div>
         );
@@ -167,7 +167,7 @@ export class SidebarXYPlotXAxis extends SidebarComponent {
                     g_flushWidgets();
                 }}
             >
-                <img src={`../../../webpack/resources/webpages/add-symbol.svg`} width="12px"></img>
+                <img src={`${getBasePath()}/webpack/resources/webpages/add-symbol.svg`} width="12px"></img>
             </div>
         );
     };

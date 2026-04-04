@@ -1,7 +1,7 @@
 import { SidebarActionItems } from "./SidebarActionItems";
 import * as React from "react";
 import { ActionButton } from "../../widgets/ActionButton/ActionButton";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { type_action_closedisplaywindow } from "../../../common/types/type_widget_tdl";
 import { ElementButton } from "../SharedElements/MacrosTable";
@@ -66,7 +66,7 @@ export class SidebarActionCloseDisplayWindowItem {
                             }}
                         >
                             <img
-                                src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                                 style={{
                                     width: "50%",
                                     height: "50%",

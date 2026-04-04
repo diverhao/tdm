@@ -2,7 +2,7 @@ import { BaseWidgetRules } from "./BaseWidgetRules";
 import * as React from "react";
 import { ElementButton } from "../../helperWidgets/SharedElements/MacrosTable";
 import { RuleComponent } from "../../helperWidgets/RuleComponents/RuleComponent";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { evaluate } from "mathjs";
 import { GlobalVariables } from "../../../common/GlobalVariables";
@@ -803,7 +803,7 @@ export abstract class BaseWidgetRule {
                 }}
             >
                 <img
-                    src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                    src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                     style={{
                         width: "50%",
                         height: "50%",

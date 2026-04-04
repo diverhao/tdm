@@ -1,6 +1,6 @@
 import { SidebarDiscreteStateItems } from "./SidebarDiscreteStateItems";
 import * as React from "react";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { Collapsible } from "../ColorPicker/Collapsible";
 import * as GlobalMethods from "../../../common/GlobalMethods";
@@ -79,7 +79,7 @@ export class SidebarDiscreteStateItem {
                             }}
                         >
                             <img
-                                src={`../../../webpack/resources/webpages/delete-symbol.svg`}
+                                src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
                                 style={{
                                     width: "60%",
                                     height: "60%",
