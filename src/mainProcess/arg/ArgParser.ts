@@ -43,6 +43,7 @@ Options:
   --also-open-defaults                    Open default TDL files for the selected profile
                                           If this option is absent, default TDL files are not opened 
   --main-process-mode web                 Run the web server
+  --http-server-base-path "/abc"          http server's base path, http://127.0.0.1:3000/abc
   --http-server-port 3000                 Web server port if the main process mode is web
   navwogif.tdl /home/ringop/main.tdl      TDL file names
 

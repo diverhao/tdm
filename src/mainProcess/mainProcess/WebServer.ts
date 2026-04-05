@@ -38,8 +38,7 @@ export class WebServer {
         server.use(express.json({ limit: 10 * 1024 * 1024 }));
         server.use(express.urlencoded({ limit: 10 * 1024 * 1024, extended: true }));
 
-        // passport.js and session
-        // express-session midware, passport.js depends on it
+        // session 
         server.use(session({
             secret: "secretKey",
             resave: false,
@@ -48,6 +47,7 @@ export class WebServer {
 
         // ----------------------- GET --------------------------------
 
+        // user visit the base page
         server.get(this.getBaseRoute(), async (request: IncomingMessage, response: any, next: any) => {
             Log.info("New http connection coming in from", request.socket.address());
             // read first tdl file
@@ -71,6 +71,10 @@ export class WebServer {
             }
         });
 
+
+        // when we open a new tab from ActionButton for FileBrowser, it first sends command to let main process prepare 
+        // the resources, i.e. read TDL file, create DisplayWindowAgent, etc, then main process notify
+        // the client that "I'm ready to go", the client initiate such a GET request by `window.open(DisplayWindow.html,...)`
         server.get(this.withBasePath("/DisplayWindow.html"), (request: any, response: any, next: any) => {
             const displayWindowId =
                 typeof request.query.displayWindowId === "string"
@@ -81,14 +85,23 @@ export class WebServer {
                 return;
             }
 
-            response.type("html").send(generateDisplayWindowHtml({
-                basePath: this.getBasePath(),
-                displayWindowId: displayWindowId,
-            }));
-            // const lifeCycleManager = displayWindowAgent.getDisplayWindowLifeCycleManager();
-            // // after the ipc is connected
-            // lifeCycleManager.createBrowserWindow({}, true);
-
+            const nav = request.query.nav;
+            if (nav === "new") {
+                response.type("html").send(generateDisplayWindowHtml({
+                    basePath: this.getBasePath(),
+                    displayWindowId: displayWindowId,
+                }));
+            } else {
+                // no nav param means it's a refresh
+                return response.type("html").send(`
+                    <html>
+                        <h1 style="color:rgba(255, 115, 0, 0.68)">
+                            Do not refresh or forward/back TDM web page, use "Reload Display" in right click button.
+                        </h1>
+                        <img src="${this.withBasePath("/webpack")}/resources/webpages/context-menu-web-mode-reload-display.png" style="width:auto"></img>
+                    </html>
+                    `);
+            }
         })
 
         // todo: test
@@ -115,7 +128,6 @@ export class WebServer {
         };
 
         // server.use(authMiddleware);
-
 
         // order matters, put them at last
         server.use(this.getBaseRoute(), express.static(path.join(__dirname, "../../webpack")));

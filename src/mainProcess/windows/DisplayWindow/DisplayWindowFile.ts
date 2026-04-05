@@ -8,6 +8,7 @@ import { FileReader } from "../../file/FileReader";
 import { fileToDataUri } from "../../global/GlobalMethods";
 import { fileDialogOptionsByType, isOfFileType, type_fileType } from "../../../common/types/type_Files";
 import * as os from "os";
+import { Profile } from "../../profile/Profile";
 
 const fileSizeLimit = 1024 * 1024 * 20;
 
@@ -443,6 +444,27 @@ export class DisplayWindowFile {
             windowAgent.showError([`Failed to open file ${tdlFileNames}`], [`${e}`]);
         }
     };
+
+    /**
+     * Reload TDL file from web page or desktop mode
+     */
+    reloadTdlFile = async (data: IpcEventArgType["reload-tdl-file"], selectedProfile: Profile) => {
+        const { displayWindowId, tdlFileName, mode, editable, externalMacros, replaceMacros } = data;
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile);
+        if (tdlResult === undefined) {
+            Log.error(`Cannot read file ${tdlFileName}`);
+            return;
+        }
+        const { tdl, fullTdlFileName } = tdlResult;
+        displayWindowAgent.setTdl(tdl);
+        displayWindowAgent.setInitialMode(mode);
+        displayWindowAgent.setMacros(externalMacros);
+        displayWindowAgent.setReplaceMacros(replaceMacros);
+
+        await displayWindowAgent.getDisplayWindowLifeCycleManager().updateTdl();
+
+    }
 
     private sendFileConverterFinished = (widgetKey: string, status: "success" | "failed") => {
         this.getDisplayWindowAgent().sendFromMainProcess("file-converter-command", {

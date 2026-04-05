@@ -1330,7 +1330,7 @@ export class IpcManagerOnDisplayWindow {
         const displayWindowClient = this.getDisplayWindowClient();
         const httpScheme = window.location.protocol;
         const webPath = displayWindowClient.getWebPath();
-        const url = `${httpScheme}//${webPath}/DisplayWindow.html?displayWindowId=${displayWindowId}`;
+        const url = `${httpScheme}//${webPath}/DisplayWindow.html?displayWindowId=${displayWindowId}&nav=new`;
         window.open(url, "_blank", "noopener,noreferrer");
     }
 

@@ -151,6 +151,12 @@ export class DisplayWindowClient {
 
         this.checkWebGLSupported();
 
+
+        // if there is a `nav` parameter, remove it, it is for preventing refresh/back/forward
+        const url = new URL(window.location.href);
+        url.searchParams.delete("nav");
+        history.replaceState(null, "", url.toString());
+
         Log.debug("Finished creating DisplayWindowClient object");
     }
 
@@ -1150,7 +1156,14 @@ export class DisplayWindowClient {
     }
 
     /**
-     * In web mode, open a local file in web browser.
+     * In web mode, open a local file in web browser. It may be initiated by
+     * 
+     * (1) drop a tdl file in web browser, providing a file name and a blob
+     * 
+     * (2) ActionButton open, providing a file name
+     * 
+     * (3) click `Open Display` in context menu, providing nothing, user needs to input the file name
+     * 
      */
     openTdlFileInWebMode = (fileName: string | undefined = undefined, fileBlob: Blob | undefined = undefined) => {
         if (this.getMainProcessMode() !== "web") {
@@ -1184,7 +1197,8 @@ export class DisplayWindowClient {
             };
             reader.readAsText(fileBlob);
 
-        } else {
+        } else if (typeof fileName === "string") {
+            // only a file name is provided
             // manually select the file in web browser file prompt or read file on server (ActionButton open)
             let currentTdlFolder = undefined;
             try {
@@ -1192,11 +1206,10 @@ export class DisplayWindowClient {
             } catch (e) {
                 Log.error(e);
             }
-
             this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
                 options: {
                     // tdlStr: undefined,
-                    tdlFileNames: [fileName as string],
+                    tdlFileNames: [fileName],
                     mode: g_widgets1.isEditing() ? "editing" : "operating",
                     editable: true,
                     // external macros: user-provided and parent display macros
@@ -1206,6 +1219,57 @@ export class DisplayWindowClient {
                     windowId: this.getWindowId(),
                 }
             })
+
+        } else {
+            // nothing is provided
+            let currentTdlFolder: string | undefined = undefined;
+            try {
+                currentTdlFolder = path.dirname(this.getTdlFileName());
+            } catch (e) {
+                Log.error(e);
+            }
+            const ipcManager = this.getIpcManager();
+            ipcManager.handleDialogShowInputBox(undefined,
+                {
+                    info: {
+                        command: "",
+                        humanReadableMessages: ["Input a file path, which can be relative to this file or an absolute path on server."],
+                        buttons: [
+
+                            {
+                                text: "OK",
+                                handleClick: (dialogInputText?: string) => {
+                                    if (typeof dialogInputText !== "string") {
+                                        return;
+                                    }
+                                    this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
+                                        options: {
+                                            // tdlStr: undefined,
+                                            tdlFileNames: [dialogInputText],
+                                            mode: g_widgets1.isEditing() ? "editing" : "operating",
+                                            editable: true,
+                                            // external macros: user-provided and parent display macros
+                                            macros: [],
+                                            replaceMacros: true,
+                                            currentTdlFolder: currentTdlFolder,
+                                            windowId: this.getWindowId(),
+                                        }
+                                    })
+                                },
+                            },
+                            {
+                                text: "Cancel",
+                                handleClick: (dialogInputText?: string) => {
+                                    // do nothing
+                                },
+                            }
+                        ],
+                        defaultInputText: "",
+                        attachment: undefined,
+                    }
+                }
+            )
+
         }
     }
 

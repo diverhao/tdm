@@ -808,19 +808,7 @@ export class IpcManagerOnMainProcess {
         let displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
 
         if (displayWindowAgent instanceof DisplayWindowAgent) {
-            const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile);
-            if (tdlResult === undefined) {
-                Log.error(`Cannot read file ${tdlFileName}`);
-                return;
-            }
-            const { tdl, fullTdlFileName } = tdlResult;
-            displayWindowAgent.setTdl(tdl);
-            displayWindowAgent.setInitialMode(mode);
-            displayWindowAgent.setMacros(externalMacros);
-            displayWindowAgent.setReplaceMacros(replaceMacros);
-
-            await displayWindowAgent.getDisplayWindowLifeCycleManager().updateTdl();
-
+            displayWindowAgent.getDisplayWindowFile().reloadTdlFile(data, selectedProfile);
         } else {
             Log.error(`Unsupported window agent type for window ${displayWindowId}. Cancel opening TDL file.`);
         }
