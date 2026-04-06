@@ -6,7 +6,7 @@ import { Log } from "../../../common/Log";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
 import { FileReader } from "../../file/FileReader";
 import { fileToDataUri } from "../../global/GlobalMethods";
-import { fileDialogOptionsByType, isOfFileType, type_fileType } from "../../../common/types/type_Files";
+import { fileDialogOptionsByType, isOfFileType, type_filePermission, type_fileType } from "../../../common/types/type_Files";
 import * as os from "os";
 import { Profile } from "../../profile/Profile";
 
@@ -562,15 +562,19 @@ export class DisplayWindowFile {
         displayWindowFile.saveFile(fileName1, fileContent, "data-viewer");
     };
 
-    readFolder = (options: IpcEventArgType["fetch-folder-content"]) => {
-        const { displayWindowId, widgetKey, folderPath } = options;
-        const displayWindowAgent = this.getDisplayWindowAgent();
+    /**
+     * the read/write permission from TDM's point of view, it is not about the file/folder's permission
+     * from operating system's point of view
+     * 
+     * it does not check if the file/folder's existance or permission in file system
+     * 
+     * 
+     */
+    getPermission = (fileFolderPath: string): type_filePermission => {
         const mainProcess = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess();
-
-        // web mode: only the folders and their sub-folders explicitly defined in bookmarks can be visited
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        let allowToRead = false;
         if (mainProcess.getMainProcessMode() === "web") {
-            const folderPath = options["folderPath"];
-            let allowToRead = false;
             const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
             if (selectedProfile !== undefined) {
                 const bookmarks = selectedProfile.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
@@ -578,7 +582,7 @@ export class DisplayWindowFile {
                     for (const bookmark of bookmarks) {
                         const bookmarkFolder = bookmark[0];
                         if (typeof bookmarkFolder === "string") {
-                            if (folderPath.includes(bookmarkFolder)) {
+                            if (fileFolderPath.includes(bookmarkFolder)) {
                                 allowToRead = true;
                                 break;
                             }
@@ -586,12 +590,23 @@ export class DisplayWindowFile {
                     }
                 }
             }
-            if (allowToRead === false) {
-                displayWindowAgent.showError([`You are not allowed to visit ${folderPath}.`]);
-                return;
-            }
         }
+        if (allowToRead === false) {
+            return "no-access";
+        } else {
+            return "read-write";
+        }
+    }
 
+    readFolder = (options: IpcEventArgType["fetch-folder-content"]) => {
+        const { widgetKey, folderPath } = options;
+        const displayWindowAgent = this.getDisplayWindowAgent();
+
+        const fileTdmPermission = this.getPermission(folderPath);
+        if (fileTdmPermission === "no-access") {
+            displayWindowAgent.showError([`You are not allowed to visit ${folderPath}.`]);
+            return;
+        }
 
         try {
             // read the folder
@@ -621,7 +636,7 @@ export class DisplayWindowFile {
                 folderContent: result,
             })
         } catch (e) {
-            Log.error(`File Browser -- Failed to read folder ${options["folderPath"]}`);
+            Log.error(`Failed to read folder ${options["folderPath"]}`);
             displayWindowAgent.showError([`Failed to read folder ${options["folderPath"]}.`]);
             // let 
             displayWindowAgent.sendFromMainProcess("fetch-folder-content", {

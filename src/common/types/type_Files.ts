@@ -2,7 +2,10 @@
 // types of files that we can open
 export type type_fileType = "tdl" | "db" | "data-viewer" | "text" | "media" | "script" | "file-converter" | "picture";
 
+export type type_filePermission = "read-write" | "read-only" | "no-access";
+
 export const isOfFileType = (value: unknown): value is type_fileType => typeof value === "string" && value in fileDialogOptionsByType;
+
 
 export const fileDialogOptionsByType: Record<type_fileType, { filters: { name: string, extensions: string[] }[], defaultFileName: string, defaultExtension: string, displayText: string }> = {
     "tdl": {

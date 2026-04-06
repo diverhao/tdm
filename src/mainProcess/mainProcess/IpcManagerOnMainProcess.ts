@@ -1190,6 +1190,7 @@ export class IpcManagerOnMainProcess {
     handleFetchFolderContent = (event: WebSocket | string, options: IpcEventArgType["fetch-folder-content"]) => {
 
         const { displayWindowId } = options;
+        console.log("options ----------------------", options)
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             displayWindowAgent.getDisplayWindowFile().readFolder(options);
